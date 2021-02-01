@@ -363,6 +363,9 @@ namespace Opm
             pack_unpack<UDQActive, Serializer>(serializer);
             pack_unpack<NameOrder, Serializer>(serializer);
             pack_unpack<GroupOrder, Serializer>(serializer);
+
+            pack_unpack_map<int, VFPProdTable, Serializer>(serializer);
+            pack_unpack_map<int, VFPInjTable, Serializer>(serializer);
         }
 
         template <typename T, class Serializer>
@@ -412,6 +415,78 @@ namespace Opm
             }
         }
 
+
+        template <typename K, typename T, class Serializer>
+        void pack_unpack_map(Serializer& serializer) {
+            std::vector<T> value_list;
+            std::vector<std::size_t> index_list;
+
+            if (serializer.isSerializing())
+                pack_map<K,T>(value_list, index_list);
+
+            serializer.vector(value_list);
+            serializer.template vector<std::size_t, false>(index_list);
+
+            if (!serializer.isSerializing())
+                unpack_map<K,T>(value_list, index_list);
+        }
+
+
+        template <typename K, typename T>
+        void pack_map(std::vector<T>& value_list,
+                      std::vector<std::size_t>& index_list) {
+
+            const auto& last_map = this->snapshots.back().get_map<K,T>();
+            std::vector<K> key_list{ last_map.keys() };
+            std::unordered_map<K,T> current_value;
+
+            for (std::size_t index = 0; index < this->snapshots.size(); index++) {
+                auto& state = this->snapshots[index];
+                const auto& current_map = state.template get_map<K,T>();
+                for (const auto& key : key_list) {
+                    auto& value = current_map.get_ptr(key);
+                    if (value) {
+                        if (!(*value == current_value[key])) {
+                            value_list.push_back( *value );
+                            index_list.push_back( index );
+
+                            current_value[key] = *value;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        template <typename K, typename T>
+        void unpack_map(const std::vector<T>& value_list,
+                        const std::vector<std::size_t>& index_list) {
+
+            std::unordered_map<K, std::vector<std::pair<std::size_t, T>>> storage;
+            for (std::size_t storage_index = 0; storage_index < value_list.size(); storage_index++) {
+                const auto& value = value_list[storage_index];
+                const auto& time_index = index_list[storage_index];
+
+                storage[ value.name() ].emplace_back( time_index, value );
+            }
+
+            for (const auto& [key, values] : storage) {
+                for (std::size_t unique_index = 0; unique_index < values.size(); unique_index++) {
+                    const auto& [time_index, value] = values[unique_index];
+                    auto last_index = this->snapshots.size();
+                    if (unique_index < (values.size() - 1))
+                        last_index = values[unique_index + 1].first;
+
+                    auto& map_value = this->snapshots[time_index].template get_map<K,T>();
+                    map_value.update(std::move(value));
+
+                    for (std::size_t index=time_index + 1; index < last_index; index++) {
+                        auto& forward_map = this->snapshots[index].template get_map<K,T>();
+                        forward_map.update( key, map_value );
+                    }
+                }
+            }
+        }
 
 
     private:

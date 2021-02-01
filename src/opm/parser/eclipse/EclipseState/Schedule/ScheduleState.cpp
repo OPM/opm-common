@@ -135,28 +135,6 @@ void ScheduleState::update_whistctl(Well::ProducerCMode whistctl) {
 }
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
-    auto&& map_equal = [](const auto& map1, const auto& map2) {
-        if (map1.size() != map2.size())
-            return false;
-
-        auto it2 = map2.begin();
-        for (const auto& it1 : map1) {
-            if (it1.first != it2->first)
-                return false;
-
-            if (!(*it1.second == *it2->second))
-                return false;
-
-            ++it2;
-        }
-        return true;
-    };
-
-    if (!map_equal(this->m_vfpprod, other.m_vfpprod))
-        return false;
-
-    if (!map_equal(this->m_vfpinj, other.m_vfpinj))
-        return false;
 
     return this->m_start_time == other.m_start_time &&
            this->m_oilvap == other.m_oilvap &&
@@ -175,17 +153,17 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->gconsump.get() == other.gconsump.get() &&
            this->wlist_manager.get() == other.wlist_manager.get() &&
            this->rpt_config.get() == other.rpt_config.get() &&
-           this->udq_active.get() == other.udq_active.get();
+           this->udq_active.get() == other.udq_active.get() &&
+           this->vfpprod == other.vfpprod &&
+           this->vfpinj == other.vfpinj;
 }
 
 ScheduleState ScheduleState::serializeObject() {
     auto t1 = std::chrono::system_clock::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
-    ts.m_vfpprod.emplace( std::make_pair(77, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
-    ts.m_vfpprod.emplace( std::make_pair(78, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
-    ts.m_vfpinj.emplace( std::make_pair(177, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
-    ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
+    ts.vfpprod = map_member<int, VFPProdTable>::serializeObject();
+    ts.vfpinj = map_member<int, VFPInjTable>::serializeObject();
     ts.m_events = Events::serializeObject();
     ts.update_nupcol(77);
     ts.update_oilvap( Opm::OilVaporizationProperties::serializeObject() );
@@ -241,65 +219,6 @@ WellGroupEvents& ScheduleState::wellgroup_events() {
 
 const WellGroupEvents& ScheduleState::wellgroup_events() const {
     return this->m_wellgroup_events;
-}
-
-std::vector<std::reference_wrapper<const VFPProdTable>> ScheduleState::vfpprod() const {
-    std::vector<std::reference_wrapper<const VFPProdTable>> tables;
-    for (const auto& [_, table] : this->m_vfpprod) {
-        (void)_;
-        tables.push_back( std::cref( *table ));
-    }
-    return tables;
-}
-
-const VFPProdTable& ScheduleState::vfpprod(int table_id) const {
-    auto vfp_iter = this->m_vfpprod.find(table_id);
-    if (vfp_iter == this->m_vfpprod.end())
-        throw std::logic_error(fmt::format("No VFPPROD table with id: {} has been registered", table_id));
-
-    return *vfp_iter->second;
-}
-
-void ScheduleState::update_vfpprod(VFPProdTable vfpprod) {
-    int table_id = vfpprod.getTableNum();
-    this->m_vfpprod[table_id] = std::make_shared<VFPProdTable>( std::move(vfpprod) );
-}
-
-std::optional<std::reference_wrapper<const VFPProdTable>> ScheduleState::try_vfpprod(int table_id) const {
-    auto vfp_iter = this->m_vfpprod.find(table_id);
-    if (vfp_iter != this->m_vfpprod.end())
-        return std::cref(*vfp_iter->second);
-    return {};
-}
-
-
-std::vector<std::reference_wrapper<const VFPInjTable>> ScheduleState::vfpinj() const {
-    std::vector<std::reference_wrapper<const VFPInjTable>> tables;
-    for (const auto& [_, table] : this->m_vfpinj) {
-        (void)_;
-        tables.push_back( std::cref( *table ));
-    }
-    return tables;
-}
-
-std::optional<std::reference_wrapper<const VFPInjTable>> ScheduleState::try_vfpinj(int table_id) const {
-    auto vfp_iter = this->m_vfpinj.find(table_id);
-    if (vfp_iter != this->m_vfpinj.end())
-        return std::cref(*vfp_iter->second);
-    return {};
-}
-
-const VFPInjTable& ScheduleState::vfpinj(int table_id) const {
-    auto vfp_iter = this->m_vfpinj.find(table_id);
-    if (vfp_iter == this->m_vfpinj.end())
-        throw std::logic_error(fmt::format("No VFPINJ table with id: {} has been registered", table_id));
-
-    return *vfp_iter->second;
-}
-
-void ScheduleState::update_vfpinj(VFPInjTable vfpinj) {
-    int table_id = vfpinj.getTableNum();
-    this->m_vfpinj[table_id] = std::make_shared<VFPInjTable>( std::move(vfpinj) );
 }
 
 }

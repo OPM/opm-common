@@ -255,6 +255,57 @@ DATES             -- 7
 
 )";
 
+std::string VFP_deck1 = R"(
+START             -- 0
+10 MAI 2007 /
+SCHEDULE
+
+VFPINJ
+5  32.9   WAT   THP METRIC   BHP /
+1 3 5 /
+7 11 /
+1 1.5 2.5 3.5 /
+2 4.5 5.5 6.5 /
+
+DATES             -- 1
+ 10  JUN 2007 /
+/
+
+DATES             -- 2
+ 15  JUN 2007 /
+/
+
+DATES             -- 3
+ 20  JUN 2007 /
+/
+
+VFPINJ
+5  32.9   WAT   THP METRIC   BHP /
+1 3 5 /
+7 11 /
+1 1.5 2.5 3.4 /
+2 4.5 5.5 6.4 /
+
+DATES             -- 4
+ 10  JUL 2007 /
+/
+
+DATES             -- 5
+ 10  AUG 2007 /
+/
+
+DATES             -- 6
+ 10  SEP 2007 /
+/
+
+DATES             -- 7
+ 10  NOV 2007 /
+/
+)";
+
+
+
+
 static Schedule make_schedule(const std::string& deck_string) {
     const auto& deck = Parser{}.parseString(deck_string);
     auto python = std::make_shared<Python>();
@@ -358,6 +409,30 @@ BOOST_AUTO_TEST_CASE(SerializeGCONSUMP) {
     BOOST_CHECK( gconsump2 == sched0[3].gconsump());
     BOOST_CHECK( gconsump2 == sched0[4].gconsump());
     BOOST_CHECK( gconsump2 == sched0[5].gconsump());
+}
+
+
+BOOST_AUTO_TEST_CASE(SerializeVFP) {
+    auto sched = make_schedule(VFP_deck1);
+    auto sched0 = make_schedule(deck0);
+    auto vfpinj1 = sched[0].vfpinj;
+    auto vfpinj2 = sched[3].vfpinj;
+
+    {
+        std::vector<Opm::VFPInjTable> value_list;
+        std::vector<std::size_t> index_list;
+        sched.pack_map<int, Opm::VFPInjTable>( value_list, index_list );
+        BOOST_CHECK_EQUAL( value_list.size(), 2 );
+        sched0.unpack_map<int, Opm::VFPInjTable>( value_list, index_list );
+    }
+
+    BOOST_CHECK( vfpinj1 == sched0[0].vfpinj);
+    BOOST_CHECK( vfpinj1 == sched0[1].vfpinj);
+    BOOST_CHECK( vfpinj1 == sched0[2].vfpinj);
+
+    BOOST_CHECK( vfpinj2 == sched0[3].vfpinj);
+    BOOST_CHECK( vfpinj2 == sched0[4].vfpinj);
+    BOOST_CHECK( vfpinj2 == sched0[5].vfpinj);
 }
 
 

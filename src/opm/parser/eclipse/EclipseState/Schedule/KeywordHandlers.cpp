@@ -840,13 +840,13 @@ namespace {
     void Schedule::handleVFPINJ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto table = VFPInjTable(handlerContext.keyword, this->m_static.m_unit_system);
         this->snapshots.back().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
-        this->snapshots.back().update_vfpinj( std::move(table) );
+        this->snapshots.back().vfpinj.update( std::move(table) );
     }
 
     void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto table = VFPProdTable(handlerContext.keyword, this->m_static.m_unit_system);
         this->snapshots.back().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
-        this->snapshots.back().update_vfpprod( std::move(table) );
+        this->snapshots.back().vfpprod.update( std::move(table) );
     }
 
     void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
