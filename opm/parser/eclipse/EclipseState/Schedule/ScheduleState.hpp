@@ -170,17 +170,14 @@ namespace Opm {
                 if (this->m_data.size() != other.m_data.size())
                     return false;
 
-                auto it2 = other.m_data.begin();
-                for (const auto& it1 : this->m_data) {
-                    if (it1.first != it2->first)
+                for (const auto& [key1, ptr1] : this->m_data) {
+                    const auto& ptr2 = other.get_ptr(key1);
+                    if (!ptr2)
                         return false;
 
-                    if (!(*it1.second == *it2->second))
+                    if (!(*ptr1 == *ptr2))
                         return false;
-
-                    ++it2;
                 }
-
                 return true;
             }
 
