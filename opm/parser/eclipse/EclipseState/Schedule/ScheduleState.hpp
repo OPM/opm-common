@@ -258,6 +258,8 @@ namespace Opm {
         ptr_member<NameOrder> well_order;
         ptr_member<GroupOrder> group_order;
 
+        template <typename T> struct always_false1 : std::false_type {};
+
         template <typename T>
         ptr_member<T>& get() {
             if constexpr ( std::is_same_v<T, PAvg> )
@@ -282,9 +284,12 @@ namespace Opm {
                                   return this->well_order;
             else if constexpr ( std::is_same_v<T, GroupOrder> )
                                   return this->group_order;
+            else
+                static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
 
 
+        template <typename K, typename T> struct always_false2 : std::false_type {};
         template <typename K, typename T>
         map_member<K,T>& get_map() {
             if constexpr ( std::is_same_v<T, VFPProdTable> )
