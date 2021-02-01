@@ -3,10 +3,6 @@
   "sections": [
     "SOLUTION"
   ],
-  "size": {
-    "keyword": "AQUDIMS",
-    "item": "NANAQU"
-  },
   "items": [
     {
       "name": "DAT_DEPTH",
