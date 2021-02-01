@@ -3,5 +3,11 @@
   "sections": [
     "GRID"
   ],
-  "size": 1
+  "size": 1,
+  "items": [
+    {
+      "name": "BC_TYPE",
+      "value_type": "STRING"
+    }
+  ]
 }

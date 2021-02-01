@@ -3,6 +3,7 @@
   "sections": [
     "GRID"
   ],
+  "size": 1,
   "items": [
     {
       "name": "COUPLING",

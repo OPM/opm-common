@@ -3,6 +3,7 @@
   "sections": [
     "SCHEDULE"
   ],
+  "size": 1,
   "items": [
     {
       "name": "USE_ITERATIVE_SOLVER",
