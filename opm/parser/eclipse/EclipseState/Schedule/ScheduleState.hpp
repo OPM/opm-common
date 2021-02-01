@@ -149,7 +149,11 @@ namespace Opm {
             }
 
             void update(const K& key, const map_member<K,T>& other) {
-                this->m_data[key] = other.get_ptr(key);
+                auto other_ptr = other.get_ptr(key);
+                if (other_ptr)
+                    this->m_data[key] = other.get_ptr(key);
+                else
+                    throw std::logic_error(std::string{"Tried to update member: "} + std::to_string(key) + std::string{"with uninitialized object"});
             }
 
             const T& operator()(const K& key) const {
