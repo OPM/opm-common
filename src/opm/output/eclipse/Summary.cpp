@@ -1759,6 +1759,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
   {"BWSAT"      , Opm::UnitSystem::measure::identity},
   {"BSGAS"      , Opm::UnitSystem::measure::identity},
   {"BGSAT"      , Opm::UnitSystem::measure::identity},
+  {"BSOIL"      , Opm::UnitSystem::measure::identity},
   {"BOSAT"      , Opm::UnitSystem::measure::identity},
   {"BWKR"      , Opm::UnitSystem::measure::identity},
   {"BOKR"      , Opm::UnitSystem::measure::identity},
