@@ -685,13 +685,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPENConnections(record, currentStep, connection_status, runtime)) {
-                        auto [first_step, last_step] = well_ptr->statusRange();
-                        if (last_step)
-                            dynamic_state.update_range(first_step, *last_step, std::move(well_ptr));
-                        else
-                            dynamic_state.update(first_step, std::move(well_ptr));
-                    }
+                    if (well_ptr->handleWELOPENConnections(record, currentStep, connection_status, runtime))
+                        dynamic_state.update(currentStep, std::move(well_ptr));
                 }
 
                 this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);

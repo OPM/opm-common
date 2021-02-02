@@ -710,10 +710,9 @@ bool Well::updateStatus(Status well_state, std::size_t report_step, bool runtime
 
     if (runtime)
         this->status->status = well_state;
-    else {
-        this->status->last_step = report_step;
+    else
         this->status = std::make_shared<WellStatus>(well_state, report_step);
-    }
+
     return true;
 }
 
@@ -727,7 +726,6 @@ bool Well::updateStatus(Status well_state, std::size_t report_step, bool runtime
 
 void Well::commitStatus(std::size_t report_step) {
     auto well_state = this->status->status;
-    this->status->last_step = report_step;
     this->status = std::make_shared<WellStatus>(well_state, report_step);
 }
 
@@ -1090,10 +1088,6 @@ const Well::WellInjectionProperties& Well::getInjectionProperties() const {
     return *this->injection;
 }
 
-
-std::pair<std::size_t, std::optional<std::size_t>> Well::statusRange() const {
-    return std::make_pair( this->status->first_step, this->status->last_step);
-}
 
 Well::Status Well::getStatus() const {
     return this->status->status;

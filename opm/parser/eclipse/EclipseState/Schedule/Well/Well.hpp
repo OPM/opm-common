@@ -81,35 +81,33 @@ public:
 
     struct WellStatus {
         Status status;
-        std::size_t first_step;
-        std::optional<std::size_t> last_step;
 
         WellStatus() = default;
 
         WellStatus(Status st, std::size_t fs) :
             status(st),
-            first_step(fs)
+            m_first_step(fs)
         {}
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(status);
-            serializer(first_step);
-            serializer(last_step);
+            serializer(m_first_step);
         }
 
         bool operator==(const WellStatus& other) const {
             return this->status == other.status &&
-                   this->first_step == other.first_step &&
-                   this->last_step == other.last_step;
+                   this->m_first_step == other.m_first_step;
         }
 
         static WellStatus serializeObject() {
             WellStatus ws(Well::Status::AUTO, 77);
-            ws.last_step = 123;
             return ws;
         }
+
+    private:
+        std::size_t m_first_step;
     };
 
 
@@ -522,7 +520,6 @@ public:
     double getEfficiencyFactor() const;
     double getSolventFraction() const;
     Status getStatus() const;
-    std::pair<std::size_t, std::optional<std::size_t>> statusRange() const;
     void commitStatus(std::size_t report_step);
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
