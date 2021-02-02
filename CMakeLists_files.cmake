@@ -473,6 +473,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/PYACTION.DATA
           tests/0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA
           tests/2_WLIFT_MODEL5_NOINC.DATA
+          tests/4_NETWORK_MODEL5_MSW_ALL.DATA
           tests/act1.py
           tests/MSW.DATA
           tests/EXIT_TEST.DATA
@@ -843,6 +844,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/VectorItems/aquifer.hpp
         opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/group.hpp
+        opm/output/eclipse/VectorItems/network.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
         opm/output/eclipse/VectorItems/logihead.hpp
         opm/output/eclipse/VectorItems/msw.hpp

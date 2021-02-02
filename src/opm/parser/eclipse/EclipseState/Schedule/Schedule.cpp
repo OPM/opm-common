@@ -864,6 +864,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->snapshots[timeStep].wells.has(wellName);
     }
 
+    bool Schedule::hasGroup(const std::string& groupName, std::size_t timeStep) const {
+        return this->snapshots[timeStep].groups.has(groupName);
+    }
+
     std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name, std::size_t timeStep) const {
         const auto& sched_state = this->snapshots[timeStep];
         const auto& group = sched_state.groups.get(group_name);

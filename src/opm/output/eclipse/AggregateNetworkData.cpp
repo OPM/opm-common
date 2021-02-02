@@ -21,7 +21,7 @@
 #include <opm/output/eclipse/AggregateNetworkData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
-#include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/VectorItems/network.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -56,14 +56,9 @@
 // Class Opm::RestartIO::Helpers::AggregateNetworkData
 // ---------------------------------------------------------------------
 
+namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
-
-// maximum number of groups
-std::size_t ngmaxz(const std::vector<int>& inteHead)
-{
-    return inteHead[Opm::RestartIO::Helpers::VectorItems::NGMAXZ];
-}
 
 // maximum number of network nodes
 std::size_t nodmax(const std::vector<int>& inteHead)
@@ -137,6 +132,7 @@ std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const 
 
 int next_branch(int node_no, std::vector<int> inlets, std::vector<int> outlets)
 {
+    int nxt_br = 0;
     auto res_inlets = findInVector<int>(inlets, node_no);
     auto res_outlets = findInVector<int>(outlets, node_no);
 
@@ -145,18 +141,23 @@ int next_branch(int node_no, std::vector<int> inlets, std::vector<int> outlets)
     }
 
     if (res_outlets.first) {
-        return res_outlets.second + 1;
-    } else if (res_inlets.first) {
-        return (res_inlets.second + 1) * (-1);
+        nxt_br = res_outlets.second + 1;
     }
+    if (res_inlets.first) {
+        if (nxt_br > 0) {
+            nxt_br = (nxt_br > res_inlets.second + 1) ? (res_inlets.second + 1) * (-1) : nxt_br;
+        } else {
+            nxt_br = (res_inlets.second + 1) * (-1);
+        }
+    }
+    return nxt_br;
 }
 
 
 std::vector<int> inobrFunc( const Opm::Schedule&    sched,
-                            const std::size_t                 lookup_step,
-                            const std::vector<int>&           inteHead)
+                            const std::size_t       lookup_step
+                 )
 {
-    const auto& niobr = inteHead[Opm::RestartIO::Helpers::VectorItems::intehead::NINOBR];
     const auto& ntwNdNm = sched[lookup_step].network().insert_index_nd_names();
     const auto& branchPtrs = sched[lookup_step].network().branches();
 
@@ -180,7 +181,7 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
     newInobr.push_back(n1 * (-1));
     inlets[0] = used_flag;
 
-    while (n1 <= ntwNdNm.size()) {
+    while (static_cast<std::size_t>(n1) <= ntwNdNm.size()) {
         ind_br = next_branch(n1, inlets, outlets);
         while (ind_br != 0) {
             newInobr.push_back(ind_br);
@@ -225,7 +226,6 @@ double nodePressure(const Opm::Schedule&               sched,
         if (wgroup_name == nodeName) {
             if (well.isProducer()) {
                 const auto& pc = well.productionControls(smry);
-                const auto& predMode = well.predictionMode();
                 if (pc.thp_limit >= node_pres) {
                     node_pres = units.from_si(M::pressure, pc.thp_limit);
                     node_wgroup = true;
@@ -255,7 +255,7 @@ double nodePressure(const Opm::Schedule&               sched,
                         upt_br = network.uptree_branch(node_name).value();
                     } else {
                         std::stringstream str;
-                        str << "Node: " << nodeName << " has no uptree node with fixe pressure condition, uppermost node:  " << node_name;
+                        str << "Node: " << nodeName << " has no uptree node with fixed pressure condition, uppermost node:  " << node_name;
                         throw std::invalid_argument(str.str());
                     }
                 }
@@ -264,178 +264,142 @@ double nodePressure(const Opm::Schedule&               sched,
     }
     return node_pres;
 }
-
-struct branchDenVec
-{
-    std::vector<double> brDeno;
-    std::vector<double> brDeng;
-};
-
 
 struct nodeProps
 {
     double ndDeno;
+    double ndDenw;
     double ndDeng;
     double ndOpr;
+    double ndWpr;
     double ndGpr;
 };
 
-
-nodeProps nodeRateDensity(const Opm::EclipseState&                  es,
-                            const Opm::Schedule&                      sched,
-                            const ::Opm::SummaryState&                smry,
-                            const std::string&                        nodeName,
-                            const Opm::UnitSystem&                    units,
-                            const size_t                              lookup_step
-                            )
+nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
+                               const Opm::Schedule&                      sched,
+                               const ::Opm::SummaryState&                smry,
+                               const std::string&                        groupName,
+                               const size_t                              lookup_step
+                              )
 {
-    using M = ::Opm::UnitSystem::measure;
-
-    auto get = [&smry](const ::Opm::Well& well, const std::string& vector)
+    auto get = [&smry](const std::string& well_name, const std::string& vector)
     {
-        const auto key = vector + ':' + well;
+        const auto key = vector + ':' + well_name;
 
         return smry.has(key) ? smry.get(key) : 0.0;
     };
 
-    const auto& network = sched[lookup_step].network();
     const auto& stdDensityTable = es.getTableManager().getDensityTable();
-    //const auto& branchPtrs = sched[lookup_step].network().branches();
-    //bool node_wgroup = false;
-    const auto& wells = sched.getWells(lookup_step);
-    //const auto& curGroups = sched.restart_groups(lookup_step);
+
+    double deno = 0.;
+    double denw = 0.;
+    double deng = 0.;
+    double opr  = 0.;
+    double wpr  = 0.;
+    double gpr  = 0.;
+    double t_opr = 0.;
+    double t_wpr = 0.;
+    double t_gpr = 0.;
+
+    const auto& grp = sched.getGroup(groupName, lookup_step);
+    // Calculate average flow rate and surface condition densities for wells in group
+    for (const auto& well_name : grp.wells()) {
+        const auto& well = sched.getWell(well_name, lookup_step);
+        if (well.isProducer()) {
+            const auto& pvtNum = well.pvt_table_number();
+            t_opr = get(well.name(),"WOPR");
+            deno += t_opr * stdDensityTable[pvtNum-1].oil;
+            opr  += t_opr;
+            t_wpr = get(well.name(),"WWPR");
+            denw += t_wpr * stdDensityTable[pvtNum-1].water;
+            wpr  += t_wpr;
+            t_gpr = (get(well.name(),"WGPR") + get(well.name(),"WGLIR"))*well.getEfficiencyFactor();
+            deng += t_gpr * stdDensityTable[pvtNum-1].gas;
+            gpr  += t_gpr;
+        }
+    }
+    deno = (opr > 0.) ? deno/opr : 0.;
+    denw = (wpr > 0.) ? denw/wpr : 0.;
+    deng = (gpr > 0.) ? deng/gpr : 0.;
+
+    return {deno, denw, deng, opr, wpr, gpr};
+
+}
+
+nodeProps nodeRateDensity(const Opm::EclipseState&                  es,
+                          const Opm::Schedule&                      sched,
+                          const ::Opm::SummaryState&                smry,
+                          const std::string&                        nodeName,
+                          const Opm::UnitSystem&                    units,
+                          const size_t                              lookup_step
+                         )
+{
+    const auto& network = sched[lookup_step].network();
 
     std::vector<nodeProps> nd_prop_vec;
     nodeProps nd_prop;
 
-    double deno = 0.;
-    double deng = 0.;
-    double opr  = 0.;
-    double gpr  = 0.;
-    double t_opr = 0.;
-    double t_gpr = 0.;
-
-
-    //const auto& nodeName = branch.downtree_node();
     std::string node_nm = nodeName;
+    bool is_wel_grp = false;
     // loop over downtree branches
-    for (const auto& br : network.downtree_branches(nodeName)) {
-        node_nm = br.downtree_node();
-        // check if node is a group
-        if (sched.hasGroup(node_nm)) {
+    if ((network.has_node(node_nm)) && (network.downtree_branches(node_nm).size() > 0)) {
+        for (const auto& br : network.downtree_branches(nodeName)) {
+            node_nm = br.downtree_node();
+            // check if node is group
+            if (sched.hasGroup(node_nm, lookup_step)) {
+                // check if group is a well group
+                const auto& grp = sched.getGroup(node_nm, lookup_step);
+                is_wel_grp = (grp.wellgroup()) ? true : false;
+            }
+            if (is_wel_grp) {
+                // Calculate average flow rate and surface condition densities for wells in group
+                nd_prop = wellGroupRateDensity(es, sched, smry, node_nm, lookup_step);
+                nd_prop_vec.push_back(nd_prop);
+            } else {
+                // Network node (not group) - calculate the node rate avg. density for the relevant group
+                nd_prop = nodeRateDensity(es, sched, smry, node_nm, units, lookup_step);
+                nd_prop_vec.push_back(nd_prop);
+            }
+        }
+    } else {
+        //node is a group (bottom of network)
+        if (sched.hasGroup(node_nm, lookup_step)) {
             // check if group is a well group
             const auto& grp = sched.getGroup(node_nm, lookup_step);
             if (grp.wellgroup()) {
                 // Calculate average flow rate and surface condition densities for wells in group
-                for (const auto& well : wells) {
-                    const auto& wgroup_name = well.groupName();
-                    if (wgroup_name == node_nm) {
-                        if (well.isProducer()) {
-                            const auto& pc = well.productionControls(smry);
-                            const auto& pvtNum = well.pvt_table;
-                            t_opr = get(well,"WOPR");
-                            deno += t_opr * stdDensityTable[pvtNum].oil;
-                            opr  += t_opr;
-                            t_gpr = get(well,"WGPR");
-                            deng += t_gpr * stdDensityTable[pvtNum].gas;
-                            gpr  += t_gpr;
-                        }
-                    }
-                }
-                deno = deno/opr;
-                deng = deng/gpr;
-                nd_prop.ndDeno = deno;
-                nd_prop.ndOpr  = opr;
-                nd_prop.ndDeng = deng;
-                nd_prop.ndGpr  = gpr;
+                nd_prop = wellGroupRateDensity(es, sched, smry, node_nm, lookup_step);
                 nd_prop_vec.push_back(nd_prop);
             }
         } else {
-            // Node group - step one level down in the branch tree and repeat ...
-            nd_prop = nodeRateDensity(es, sched, smry, node_nm, units, lookup_step);
-            nd_prop_vec.push_back(nd_prop);
+            std::stringstream str;
+            str << "Node: " << node_nm << " should be a group but is not:  " << node_nm;
+            throw std::invalid_argument(str.str());
         }
     }
+
     // calculate the total rates and average densities and return object
-    deno = 0.;
-    deng = 0.;
-    opr  = 0.;
-    gpr  = 0.;
+    double deno = 0.;
+    double denw = 0.;
+    double deng = 0.;
+    double opr  = 0.;
+    double wpr  = 0.;
+    double gpr  = 0.;
+
     for (const auto& ndp : nd_prop_vec) {
         opr += ndp.ndOpr;
+        wpr += ndp.ndWpr;
         gpr += ndp.ndGpr;
         deno += ndp.ndDeno*ndp.ndOpr;
+        denw += ndp.ndDenw*ndp.ndWpr;
         deng += ndp.ndDeng*ndp.ndGpr;
     }
-    deno = deno/opr;
-    deng = deng/gpr;
+    deno = (opr > 0.) ? deno/opr : 0.;
+    denw = (wpr > 0.) ? denw/wpr : 0.;
+    deng = (gpr > 0.) ? deng/gpr : 0.;
 
-    return {deno, deng, opr, gpr};
+    return {deno, denw, deng, opr, wpr, gpr};
 }
-
-branchDenVec branchesDensity(const Opm::Schedule&                    sched,
-                             const ::Opm::SummaryState&                  smry,
-                             const ::Opm::Network::Branch&               branch,
-                             const Opm::UnitSystem&                      units,
-                             const size_t                                lookup_step
-                            )
-{
-    using M = ::Opm::UnitSystem::measure;
-    const auto& branchPtrs = sched[lookup_step].network().branches();
-    bool node_wgroup = false;
-    const auto& wells = sched.getWells(lookup_step);
-    auto& network = sched[lookup_step].network();
-
-    const auto& nodeName = branch.downtree_node();
-    // loop over all downtree branches
-    for (const auto
-
-            // If a node is a well group, set the node pressure to the well's thp-limit if this is larger than the default value (1.)
-    for (const auto& well : wells) {
-        const auto& wgroup_name = well.groupName();
-            if (wgroup_name == nodeName) {
-                if (well.isProducer()) {
-                    const auto& pc = well.productionControls(smry);
-                    const auto& predMode = well.predictionMode();
-                    if (pc.thp_limit >= node_pres) {
-                        node_pres = units.from_si(M::pressure, pc.thp_limit);
-                        node_wgroup = true;
-                    }
-                }
-            }
-        }
-
-    // for nodes that are not well groups, set the node pressure to the fixed pressure potentially higher in the node tree
-    if (!node_wgroup) {
-    if (fixedPressureNode(sched, nodeName, lookup_step)) {
-            // node is a fixed pressure node
-            node_pres = units.from_si(M::pressure, network.node(nodeName).terminal_pressure().value());
-        }
-        else {
-            // find fixed pressure higher in the node tree
-            bool fp_flag = false;
-            auto node_name = nodeName;
-            auto upt_br = network.uptree_branch(node_name).value();
-            while (!fp_flag) {
-                if (fixedPressureNode(sched, upt_br.uptree_node(), lookup_step)) {
-                    node_pres = units.from_si(M::pressure, network.node(upt_br.uptree_node()).terminal_pressure().value());
-                    fp_flag = true;
-                } else {
-                    node_name = upt_br.uptree_node();
-                    if (network.uptree_branch(node_name).has_value()) {
-                        upt_br = network.uptree_branch(node_name).value();
-                    } else {
-                        std::stringstream str;
-                        str << "Node: " << nodeName << " has no uptree node with fixe pressure condition, uppermost node:  " << node_name;
-                        throw std::invalid_argument(str.str());
-                    }
-                }
-            }
-        }
-    }
-    return node_pres;
-}
-
 
 namespace INode {
 std::size_t entriesPerNode(const std::vector<int>& inteHead)
@@ -498,10 +462,13 @@ void staticContrib(const Opm::Schedule&     sched,
                    INodeArray&              iNode)
 {
     //
-    iNode[0] = numberOfBranchesConnToNode(sched, nodeName, lookup_step);
-    iNode[1] = cumNumberOfBranchesConnToNode(sched, nodeName, lookup_step);
-    iNode[2] = sched.getGroup(nodeName, lookup_step).insert_index();
-    iNode[3] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 1 : 0;
+    using Ix = VI::INode::index;
+    iNode[Ix::NoBranchesConnToNode] = numberOfBranchesConnToNode(sched, nodeName, lookup_step);
+    iNode[Ix::CumNoBranchesConnToNode] = cumNumberOfBranchesConnToNode(sched, nodeName, lookup_step);
+    if (sched.hasGroup(nodeName, lookup_step)) {
+        iNode[Ix::Group] = sched.getGroup(nodeName, lookup_step).insert_index();
+    }
+    iNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 1 : 0;
     iNode[4] = 1;
 }
 
@@ -530,15 +497,16 @@ void staticContrib(const Opm::Schedule&         sched,
                    const std::size_t            lookup_step,
                    IBranArray&                  iBran)
 {
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::IBran::index;
     const auto& nodeNames = sched[lookup_step].network().insert_index_nd_names();
 
     auto dwntr_nd_res = findInVector<std::string>(nodeNames, branch.downtree_node());
-    iBran[0] = (dwntr_nd_res.first) ? dwntr_nd_res.second + 1 : 0 ;
+    iBran[Ix::DownTreeNode] = (dwntr_nd_res.first) ? dwntr_nd_res.second + 1 : 0 ;
 
     auto uptr_nd_res = findInVector<std::string>(nodeNames, branch.uptree_node());
-    iBran[1] = (uptr_nd_res.first) ? uptr_nd_res.second + 1 : 0 ;
+    iBran[Ix::UpTreeNode] = (uptr_nd_res.first) ? uptr_nd_res.second + 1 : 0 ;
 
-    iBran[2] = (branch.vfp_table().has_value()) ? branch.vfp_table().value() : 0;
+    iBran[Ix::VfpTableNo] = (branch.vfp_table().has_value()) ? branch.vfp_table().value() : 0;
 }
 } // Ibran
 
@@ -621,17 +589,16 @@ void dynamicContrib(const Opm::Schedule&      sched,
                     const Opm::UnitSystem&    units,
                     RNodeArray&               rNode)
 {
-    const auto& node = sched[lookup_step].network().node(nodeName);
-
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::RNode::index;
     // node dynamic pressure
     std::string compKey = "GPR:" + nodeName;
-    rNode[0] = (sumState.has(compKey)) ? sumState.get(compKey) : 0.;
+    rNode[Ix::NodePres] = (sumState.has(compKey)) ? sumState.get(compKey) : 0.;
 
     // equal to 0. for fixed pressure nodes, 1. otherwise
-    rNode[1] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 0. : 1.;
+    rNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 0. : 1.;
 
     // equal to i) highest well p_thp if wellgroup and ii) pressure of uptree node with fixed pressure
-    rNode[2] = nodePressure(sched, sumState, nodeName, units, lookup_step);
+    rNode[Ix::PressureLimit] = nodePressure(sched, sumState, nodeName, units, lookup_step);
 
     // fixed value
     rNode[15] = 1.;
@@ -658,21 +625,24 @@ allocate(const std::vector<int>& inteHead)
 }
 
 template <class RBranArray>
-void dynamicContrib(const Opm::Schedule&            sched,
+void dynamicContrib(const Opm::EclipseState&         es,
+                    const Opm::Schedule&             sched,
                     const Opm::Network::Branch&      branch,
                     const std::size_t                lookup_step,
                     const Opm::SummaryState&         sumState,
+                    const Opm::UnitSystem&           units,
                     RBranArray&                      rBran
                    )
 {
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::RBran::index;
     // branch (downtree node) rates
     const auto& dwntr_node = branch.downtree_node();
-    std::string compKey = "GOPR:" + dwntr_node;
-    rBran[0] = (sumState.has(compKey)) ? sumState.get(compKey) : 0.;
-    compKey = "GWPR:" + dwntr_node;
-    rBran[1] = (sumState.has(compKey)) ? sumState.get(compKey) : 0.;
-    compKey = "GGPR:" + dwntr_node;
-    rBran[2] = (sumState.has(compKey)) ? sumState.get(compKey) : 0.;
+    auto nodePrp = nodeRateDensity(es, sched, sumState, dwntr_node, units, lookup_step);
+    rBran[Ix::OilProdRate] = nodePrp.ndOpr;
+    rBran[Ix::WaterProdRate] = nodePrp.ndWpr;
+    rBran[Ix::GasProdRate] = nodePrp.ndGpr;
+    rBran[Ix::OilDensity] = nodePrp.ndDeno;
+    rBran[Ix::GasDensity] = nodePrp.ndDeng;
 }
 } // Rbran
 
@@ -691,9 +661,9 @@ AggregateNetworkData(const std::vector<int>& inteHead)
     : iNode_ (INode::allocate(inteHead))
     , iBran_ (IBran::allocate(inteHead))
     , iNobr_ (INobr::allocate(inteHead))
-    , zNode_ (ZNode::allocate(inteHead))
     , rNode_ (RNode::allocate(inteHead))
     , rBran_ (RBran::allocate(inteHead))
+    , zNode_ (ZNode::allocate(inteHead))
 {}
 
 // ---------------------------------------------------------------------
@@ -712,10 +682,10 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     auto ntwNdNm = sched[lookup_step].network().insert_index_nd_names();
     std::size_t wdmax = ntwNdNm.size();
     std::vector<const std::string*> ndNmPt(wdmax + 1 , nullptr );
-    std::size_t ind = 0;
+    std::size_t ind_nm = 0;
     for (const auto& nodeName : ntwNdNm) {
-        ndNmPt[ind] = &nodeName;
-        ind++;
+        ndNmPt[ind_nm] = &nodeName;
+        ind_nm++;
     }
 
     const auto& networkNodePtrs  =   ndNmPt;
@@ -740,7 +710,7 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     });
 
     // Define Static Contributions to INobr Array
-    const std::vector<int> inobr = inobrFunc(sched, lookup_step, inteHead);
+    const std::vector<int> inobr = inobrFunc(sched, lookup_step);
 
     // Define Static Contributions to INobr Array
     if (inobr.size() != entriesPerInobr(inteHead)) {
@@ -770,12 +740,13 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     });
 
     // Define Dynamic Contributions to RBran Array.
-    branchLoop(branchPtrs, [&es, &sched, sumState, lookup_step, this]
+    branchLoop(branchPtrs, [&es, &sched, sumState, units, lookup_step, this]
                (const Opm::Network::Branch& branch, const std::size_t branchID) -> void
     {
         auto ib = this->rBran_[branchID];
 
-        RBran::dynamicContrib(es, sched, branch, lookup_step, sumState, ib);
+        RBran::dynamicContrib(es, sched, branch, lookup_step, sumState, units, ib);
     });
 
 }
+

@@ -59,7 +59,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer.vector(m_branches);
-        serializer.vector(insert_indexed_node_names);
+        serializer(insert_indexed_node_names);
         serializer.map(m_nodes);
     }
 

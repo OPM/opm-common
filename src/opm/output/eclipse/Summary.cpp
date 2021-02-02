@@ -162,6 +162,7 @@ namespace {
             { "WGIGR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WWIGR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WMCTL", Opm::EclIO::SummaryNode::Type::Mode     },
+            { "WGLIR", Opm::EclIO::SummaryNode::Type::Rate     },
         };
         const auto extra_group_vectors = std::vector<ParamCTorArgs> {
             { "GOPGR", Opm::EclIO::SummaryNode::Type::Rate },

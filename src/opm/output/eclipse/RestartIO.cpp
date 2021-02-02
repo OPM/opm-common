@@ -270,19 +270,20 @@ namespace {
         rstFile.write("ZGRP", groupData.getZGroup());
     }
 
-    void writeNetwork(int                         sim_step,
-                    const UnitSystem&             units,
-                    const Schedule&               schedule,
-                    const Opm::SummaryState&      sumState,
-                    const std::vector<int>&       ih,
-                    EclIO::OutputStream::Restart& rstFile)
+    void writeNetwork(const Opm::EclipseState&      es,
+                      int                           sim_step,
+                      const UnitSystem&             units,
+                      const Schedule&               schedule,
+                      const Opm::SummaryState&      sumState,
+                      const std::vector<int>&       ih,
+                      EclIO::OutputStream::Restart& rstFile)
     {
         // write network data to restart file
         const size_t simStep = static_cast<size_t> (sim_step);
 
         auto  networkData = Helpers::AggregateNetworkData(ih);
 
-        networkData.captureDeclaredNetworkData(schedule, units, simStep, sumState, ih);
+        networkData.captureDeclaredNetworkData(es, schedule, units, simStep, sumState, ih);
 
         rstFile.write("INODE", networkData.getINode());
         rstFile.write("IBRAN", networkData.getIBran());
@@ -427,6 +428,7 @@ namespace {
                           const Phases&                 phases,
                           const UnitSystem&             units,
                           const EclipseGrid&            grid,
+                          const EclipseState&           es,
                           const Schedule&               schedule,
                           const data::WellRates&        wellSol,
                           const Opm::Action::State&     action_state,
@@ -437,7 +439,7 @@ namespace {
         writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
 
         //write network data
-        writeNetwork(sim_step, units, schedule, sumState, inteHD, rstFile);
+        writeNetwork(es, sim_step, units, schedule, sumState, inteHD, rstFile);
 
         // Write well and MSW data only when applicable (i.e., when present)
         const auto& wells = schedule.wellNames(sim_step);
@@ -718,7 +720,7 @@ void save(EclIO::OutputStream::Restart& rstFile,
 
     if (report_step > 0) {
         writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
-                         units, grid, schedule, value.wells, action_state, sumState,
+                         units, grid, es, schedule, value.wells, action_state, sumState,
                          inteHD, rstFile);
     }
 
