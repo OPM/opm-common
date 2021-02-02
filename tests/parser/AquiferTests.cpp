@@ -617,7 +617,7 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest){
 
     const Opm::NumericalAquifers num_aqu{numaquifer_deck, grid, ecl_state.fieldProps()};
     BOOST_CHECK(num_aqu.hasAquifer(1));
-    BOOST_CHECK(num_aqu.numAquifer() == 1);
+    BOOST_CHECK(num_aqu.size() == 1);
     const auto all_aquifer_cells = num_aqu.allAquiferCells();
     BOOST_CHECK(all_aquifer_cells.count(0) > 0);
     BOOST_CHECK(all_aquifer_cells.count(2) > 0);

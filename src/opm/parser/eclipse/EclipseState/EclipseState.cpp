@@ -68,8 +68,15 @@ namespace Opm {
     {
         if (this->aquifer().hasNumericalAquifer()) {
             const auto& numerical_aquifer = this->aquifer().numericalAquifers();
-            this->field_props.applyNumericalAquifer(numerical_aquifer);
-            numerical_aquifer.appendNNC(this->m_inputGrid, this->field_props, this->m_inputNnc);
+            // update field_props for numerical aquifer cells, and set the transmissiblity related to aquifer cells to
+            // be zero
+            this->field_props.apply_numerical_aquifers(numerical_aquifer);
+
+            // add NNCs between aquifer cells and first aquifer cell and aquifer connections
+            const auto& aquifer_nncs = numerical_aquifer.aquiferNNCs(this->m_inputGrid, this->field_props);
+            for (const auto& nnc_data : aquifer_nncs) {
+                this->m_inputNnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
+            }
         }
 
         m_inputGrid.resetACTNUM(this->field_props.actnum());

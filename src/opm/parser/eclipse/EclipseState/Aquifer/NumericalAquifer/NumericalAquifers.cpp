@@ -25,6 +25,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
@@ -115,7 +116,7 @@ namespace Opm {
         return this->m_aquifers == other.m_aquifers;
     }
 
-    size_t NumericalAquifers::numAquifer() const {
+    size_t NumericalAquifers::size() const {
         return this->m_aquifers.size();
     }
 
@@ -157,24 +158,25 @@ namespace Opm {
         return  trans;
     }
 
-    void NumericalAquifers::updateCellProps(const EclipseGrid& grid,
-                                            std::vector<double>& pore_volume,
-                                            std::vector<int>& satnum,
-                                            std::vector<int>& pvtnum) const {
-        for (const auto& [id, aquifer]: this->m_aquifers) {
-            aquifer.updateCellProps(grid, pore_volume, satnum, pvtnum);
-        }
-
-    }
-
-    void NumericalAquifers::appendNNC(const EclipseGrid& grid, const FieldPropsManager& fp, NNC& nnc) const {
-        for (const auto& [id, aquifer]: this->m_aquifers) {
-            aquifer.appendNNC(grid, fp, nnc);
-        }
-
-    }
-
     const std::unordered_map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
         return this->m_aquifers;
+    }
+
+    std::unordered_map<size_t, AquiferCellProps> NumericalAquifers::aquiferCellProps() const {
+        std::unordered_map<size_t, AquiferCellProps> cell_props;
+        for ([[maybe_unused]]const auto& [id, aquifer] : this->m_aquifers ) {
+            auto aqu_cell_props = aquifer.aquiferCellProps();
+            cell_props.insert(aqu_cell_props.begin(), aqu_cell_props.end());
+        }
+        return cell_props;
+    }
+
+    std::vector<NNCdata> NumericalAquifers::aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
+        std::vector<NNCdata> nncs;
+        for ([[maybe_unused]] const auto& [id, aquifer] : this->m_aquifers) {
+            auto aqu_nncs = aquifer.aquiferNNCs(grid, fp);
+            nncs.insert(nncs.end(), aqu_nncs.begin(), aqu_nncs.end());
+        }
+        return nncs;
     }
 }

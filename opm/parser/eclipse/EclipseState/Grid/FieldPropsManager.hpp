@@ -218,7 +218,7 @@ public:
     */
     virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
 
-    void applyNumericalAquifer(const NumericalAquifers& aquifers);
+    void apply_numerical_aquifers(const NumericalAquifers& aquifers);
 
 
     /*

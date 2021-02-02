@@ -142,8 +142,8 @@ bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
 }
 
-void FieldPropsManager::applyNumericalAquifer(const NumericalAquifers& aquifers) {
-    return this->fp->applyNumericalAquifers(aquifers);
+void FieldPropsManager::apply_numerical_aquifers(const NumericalAquifers& aquifers) {
+    return this->fp->apply_numerical_aquifers(aquifers);
 }
 
 template<class MapType>
