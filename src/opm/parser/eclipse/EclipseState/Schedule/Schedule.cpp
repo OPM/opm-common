@@ -566,7 +566,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         auto old_status = well2->getStatus();
         bool update = false;
-        if (well2->updateStatus(status, reportStep, runtime)) {
+        if (well2->updateStatus(status)) {
             this->updateWell(well2, reportStep);
             if (status == Well::Status::OPEN)
                 this->rft_config.addWellOpen(well_name, reportStep);
@@ -677,7 +677,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 if (!runtime) {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    well_ptr->commitStatus(currentStep);
                     this->updateWell(well_ptr, currentStep);
                 }
 
@@ -685,13 +684,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPENConnections(record, currentStep, connection_status, runtime)) {
-                        auto [first_step, last_step] = well_ptr->statusRange();
-                        if (last_step)
-                            dynamic_state.update_range(first_step, *last_step, std::move(well_ptr));
-                        else
-                            dynamic_state.update(first_step, std::move(well_ptr));
-                    }
+                    if (well_ptr->handleWELOPENConnections(record, currentStep, connection_status, runtime))
+                        dynamic_state.update(currentStep, std::move(well_ptr));
                 }
 
                 this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
