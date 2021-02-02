@@ -520,7 +520,9 @@ namespace Opm
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
-        bool updateWellStatus( const std::string& well, std::size_t reportStep, bool runtime, Well::Status status, std::optional<KeywordLocation> = {});
+        void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
+        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> = {});
+
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::size_t load_start,
                                     std::size_t load_end,
@@ -573,7 +575,8 @@ namespace Opm
         std::string simulationDays(std::size_t currentStep) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
-        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
+        void applyMESSAGES(const DeckKeyword&, std::size_t currentStep);
+        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
         void applyWRFT(const DeckKeyword&, std::size_t currentStep);
         void applyWRFTPLT(const DeckKeyword&, std::size_t currentStep);
 

@@ -241,11 +241,15 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
             BOOST_CHECK(w3.getStatus() ==  Well::Status::OPEN );
         }
         {
+            const auto& w2_5 = td.schedule.getWell("P2", 5);
             const auto& w2_6 = td.schedule.getWell("P2", 6);
+            BOOST_CHECK(w2_5.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w2_6.getStatus() == Well::Status::SHUT );
         }
         {
+            const auto& w4_10 = td.schedule.getWell("P4", 10);
             const auto& w4_11 = td.schedule.getWell("P4", 11);
+            BOOST_CHECK(w4_10.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w4_11.getStatus() == Well::Status::SHUT );
         }
     }
@@ -498,11 +502,15 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
             BOOST_CHECK(w3.getStatus() ==  Well::Status::OPEN );
         }
         {
+            const auto& w2_5 = td.schedule.getWell("P2", 5);
             const auto& w2_6 = td.schedule.getWell("P2", 6);
+            BOOST_CHECK(w2_5.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w2_6.getStatus() == Well::Status::SHUT );
         }
         {
+            const auto& w4_10 = td.schedule.getWell("P4", 10);
             const auto& w4_11 = td.schedule.getWell("P4", 11);
+            BOOST_CHECK(w4_10.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w4_11.getStatus() == Well::Status::SHUT );
         }
     }
