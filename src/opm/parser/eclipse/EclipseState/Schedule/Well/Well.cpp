@@ -717,19 +717,6 @@ bool Well::updateStatus(Status well_state, std::size_t report_step, bool runtime
 }
 
 
-/*
-  Down this path lies the road to madness. The point is that for runtime WELOPEN
-  events, both for wells and connections the time range where the WELOPEN is
-  active, in order to clamp this to WELOPEN events also for pure connection
-  events we have this function.
-*/
-
-void Well::commitStatus(std::size_t report_step) {
-    auto well_state = this->status->status;
-    this->status = std::make_shared<WellStatus>(well_state);
-}
-
-
 
 bool Well::updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime) {
     Connection::State connection_state;

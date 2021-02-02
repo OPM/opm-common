@@ -677,7 +677,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 if (!runtime) {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    well_ptr->commitStatus(currentStep);
                     this->updateWell(well_ptr, currentStep);
                 }
 

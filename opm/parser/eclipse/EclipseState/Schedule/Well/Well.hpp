@@ -515,7 +515,6 @@ public:
     double getEfficiencyFactor() const;
     double getSolventFraction() const;
     Status getStatus() const;
-    void commitStatus(std::size_t report_step);
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
 
