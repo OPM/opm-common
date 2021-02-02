@@ -184,11 +184,11 @@ namespace Opm {
             }
 
 
-            std::vector<std::reference_wrapper<const T>> operator()() const {
-                std::vector<std::reference_wrapper<const T>> as_vector;
+            std::vector<std::reference_wrapper<T>> operator()() const {
+                std::vector<std::reference_wrapper<T>> as_vector;
                 for (const auto& [_, elm_ptr] : this->m_data) {
                     (void)_;
-                    as_vector.push_back( std::cref(*elm_ptr));
+                    as_vector.push_back( std::ref(*elm_ptr));
                 }
                 return as_vector;
             }
@@ -328,6 +328,8 @@ namespace Opm {
                              return this->vfpinj;
             else if constexpr ( std::is_same_v<T, Group> )
                              return this->groups;
+            else if constexpr ( std::is_same_v<T, Well> )
+                                  return this->wells;
             else
                 static_assert(always_false2<K,T>::value, "Template type <K,T> not supported in get_map()");
         }
@@ -335,6 +337,7 @@ namespace Opm {
         map_member<int, VFPProdTable> vfpprod;
         map_member<int, VFPInjTable> vfpinj;
         map_member<std::string, Group> groups;
+        map_member<std::string, Well> wells;
 
 
 

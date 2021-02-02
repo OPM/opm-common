@@ -263,7 +263,6 @@ namespace Opm
         */
         std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
-        void updateWell(std::shared_ptr<Well> well, std::size_t reportStep);
         std::vector<std::string> changed_wells(std::size_t reportStep) const;
         const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
@@ -330,17 +329,11 @@ namespace Opm
         {
             m_sched_deck.serializeOp(serializer);
             m_timeMap.serializeOp(serializer);
-            auto splitWells = splitDynMap<UnorderedMap>(wells_static);
-            serializer.vector(splitWells.first);
-            serializer(splitWells.second);
             udq_config.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
             m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
-            if (!serializer.isSerializing()) {
-                reconstructDynMap<UnorderedMap>(splitWells.first, splitWells.second, wells_static);
-            }
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
 
@@ -359,6 +352,7 @@ namespace Opm
             pack_unpack_map<int, VFPProdTable, Serializer>(serializer);
             pack_unpack_map<int, VFPInjTable, Serializer>(serializer);
             pack_unpack_map<std::string, Group, Serializer>(serializer);
+            pack_unpack_map<std::string, Well, Serializer>(serializer);
         }
 
         template <typename T, class Serializer>
@@ -487,7 +481,6 @@ namespace Opm
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
-        WellMap wells_static;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
@@ -521,7 +514,7 @@ namespace Opm
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> = {});
+        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, std::optional<KeywordLocation> = {});
 
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::size_t load_start,
