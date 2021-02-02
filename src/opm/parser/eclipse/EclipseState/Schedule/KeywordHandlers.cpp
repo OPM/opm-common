@@ -159,7 +159,7 @@ namespace {
                 auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, handlerContext.currentStep)));
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                 connections->loadCOMPDAT(record, *handlerContext.grid_ptr, *handlerContext.fp_ptr, name, handlerContext.keyword.location());
-                if (well2->updateConnections(connections, handlerContext.currentStep, *handlerContext.grid_ptr, handlerContext.fp_ptr->get_int("PVTNUM"))) {
+                if (well2->updateConnections(connections, *handlerContext.grid_ptr, handlerContext.fp_ptr->get_int("PVTNUM"))) {
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                     wells.insert( name );
                 }
@@ -236,7 +236,7 @@ namespace {
             return;
         }
 
-        if (well_ptr->handleCOMPSEGS(handlerContext.keyword, handlerContext.grid, parseContext, errors))
+        if (well_ptr->handleCOMPSEGS(handlerContext.keyword, *handlerContext.grid_ptr, parseContext, errors))
             this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
 
@@ -1042,7 +1042,7 @@ namespace {
             const Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                this->updateWellStatus(well_name, handlerContext.currentStep, false, status, handlerContext.keyword.location());
+                this->updateWellStatus(well_name, handlerContext.currentStep, status, true, handlerContext.keyword.location());
                 bool update_well = false;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
@@ -1157,7 +1157,7 @@ namespace {
                 // Well::updateWellProductivityIndex() implicitly mutates
                 // internal state in the WellConnections class.
                 auto connections = std::make_shared<WellConnections>(well2->getConnections());
-                well2->updateConnections(std::move(connections), event_step, false, true);
+                well2->updateConnections(std::move(connections), true);
                 if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), event_step);
 

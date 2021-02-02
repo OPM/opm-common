@@ -565,9 +565,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         bool update = false;
+        auto old_status = well2->getStatus();
         if (well2->updateStatus(status, update_connections)) {
-            m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
-            this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
             this->updateWell(well2, reportStep);
             update = true;
             if (status == Well::Status::OPEN)
