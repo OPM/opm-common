@@ -153,7 +153,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
-    status(std::make_shared<WellStatus>(status_from_int(rst_well.well_status), report_step))
+    status(std::make_shared<WellStatus>(status_from_int(rst_well.well_status)))
 {
     using CModeVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
 
@@ -347,7 +347,7 @@ Well::Well(const std::string& wname_arg,
     connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
-    status(std::make_shared<WellStatus>(Status::SHUT, init_step))
+    status(std::make_shared<WellStatus>(Status::SHUT))
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
@@ -711,7 +711,7 @@ bool Well::updateStatus(Status well_state, std::size_t report_step, bool runtime
     if (runtime)
         this->status->status = well_state;
     else
-        this->status = std::make_shared<WellStatus>(well_state, report_step);
+        this->status = std::make_shared<WellStatus>(well_state);
 
     return true;
 }
@@ -726,7 +726,7 @@ bool Well::updateStatus(Status well_state, std::size_t report_step, bool runtime
 
 void Well::commitStatus(std::size_t report_step) {
     auto well_state = this->status->status;
-    this->status = std::make_shared<WellStatus>(well_state, report_step);
+    this->status = std::make_shared<WellStatus>(well_state);
 }
 
 

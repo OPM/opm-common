@@ -84,30 +84,25 @@ public:
 
         WellStatus() = default;
 
-        WellStatus(Status st, std::size_t fs) :
-            status(st),
-            m_first_step(fs)
+        WellStatus(Status st):
+            status(st)
         {}
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(status);
-            serializer(m_first_step);
         }
 
         bool operator==(const WellStatus& other) const {
-            return this->status == other.status &&
-                   this->m_first_step == other.m_first_step;
+            return this->status == other.status;
         }
 
         static WellStatus serializeObject() {
-            WellStatus ws(Well::Status::AUTO, 77);
+            WellStatus ws(Status::AUTO);
             return ws;
         }
 
-    private:
-        std::size_t m_first_step;
     };
 
 
