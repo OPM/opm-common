@@ -170,7 +170,7 @@ bool WellEconProductionLimits::onSecondaryMaxWaterCut() const {
     return (m_secondary_max_water_cut > 0.0);
 };
 
-bool WellEconProductionLimits::onMaxGasLiquidRatio() const { return (m_max_gas_oil_ratio > 0.0); };
+bool WellEconProductionLimits::onMaxGasLiquidRatio() const { return (m_max_gas_liquid_ratio > 0.0); };
 
 // assuming Celsius temperature is used internally
 bool WellEconProductionLimits::onMaxTemperature() const { return (m_max_temperature > -273.15); };
