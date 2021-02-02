@@ -79,33 +79,6 @@ public:
     static Status StatusFromString(const std::string& stringValue);
 
 
-    struct WellStatus {
-        Status status;
-
-        WellStatus() = default;
-
-        WellStatus(Status st):
-            status(st)
-        {}
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(status);
-        }
-
-        bool operator==(const WellStatus& other) const {
-            return this->status == other.status;
-        }
-
-        static WellStatus serializeObject() {
-            WellStatus ws(Status::AUTO);
-            return ws;
-        }
-
-    };
-
-
 
     /*
       The elements in this enum are used as bitmasks to keep track
@@ -572,7 +545,7 @@ public:
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, bool runtime, bool force = false);
     bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum);
-    bool updateStatus(Status status, std::size_t report_step, bool runtime);
+    bool updateStatus(Status status);
     bool updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
@@ -699,7 +672,7 @@ private:
     std::shared_ptr<WellProductionProperties> production;
     std::shared_ptr<WellInjectionProperties> injection;
     std::shared_ptr<WellSegments> segments;
-    std::shared_ptr<WellStatus> status;
+    Status status;
     PAvg m_pavg;
 };
 

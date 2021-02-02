@@ -566,7 +566,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         auto old_status = well2->getStatus();
         bool update = false;
-        if (well2->updateStatus(status, reportStep, runtime)) {
+        if (well2->updateStatus(status)) {
             this->updateWell(well2, reportStep);
             if (status == Well::Status::OPEN)
                 this->rft_config.addWellOpen(well_name, reportStep);
