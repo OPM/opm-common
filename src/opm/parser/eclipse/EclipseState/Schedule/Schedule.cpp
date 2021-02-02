@@ -19,7 +19,6 @@
 
 #include <algorithm>
 #include <ctime>
-#include <fnmatch.h>
 #include <functional>
 #include <iostream>
 #include <optional>
@@ -30,6 +29,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fnmatch.h>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -249,7 +249,6 @@ namespace {
         result.m_static = ScheduleStatic::serializeObject();
         result.m_timeMap = TimeMap::serializeObject();
         result.wells_static.insert({"test1", {{std::make_shared<Opm::Well>(Opm::Well::serializeObject())},1}});
-        result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
         result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
@@ -907,44 +906,33 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name, std::size_t timeStep) const {
-        if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: '" + group_name + "'");
+        const auto& sched_state = this->snapshots[timeStep];
+        const auto& group = sched_state.groups.get(group_name);
 
         std::vector<const Group*> child_groups;
-        const auto& dynamic_state = this->groups.at(group_name);
-        auto& group_ptr = dynamic_state.get(timeStep);
-        if (group_ptr) {
-            for (const auto& child_name : group_ptr->groups())
-                child_groups.push_back( std::addressof(this->getGroup(child_name, timeStep)));
-        }
+        for (const auto& child_name : group.groups())
+            child_groups.push_back( std::addressof(this->getGroup(child_name, timeStep)));
 
         return child_groups;
     }
 
     std::vector< Well > Schedule::getChildWells2(const std::string& group_name, std::size_t timeStep) const {
-        if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: '" + group_name + "'");
+        const auto& sched_state = this->snapshots[timeStep];
+        const auto& group = sched_state.groups.get(group_name);
 
-        const auto& dynamic_state = this->groups.at(group_name);
-        const auto& group_ptr = dynamic_state.get(timeStep);
-        if (group_ptr) {
-            std::vector<Well> wells;
+        std::vector<Well> wells;
 
-            if (group_ptr->groups().size()) {
-                for (const auto& child_name : group_ptr->groups()) {
-                    const auto& child_wells = getChildWells2(child_name, timeStep);
-                    wells.insert(wells.end(), child_wells.begin(), child_wells.end());
-                }
-            } else {
-                for (const auto& well_name : group_ptr->wells()) {
-                    wells.push_back( this->getWell(well_name, timeStep));
-                }
+        if (group.groups().size()) {
+            for (const auto& child_name : group.groups()) {
+                const auto& child_wells = this->getChildWells2(child_name, timeStep);
+                wells.insert(wells.end(), child_wells.begin(), child_wells.end());
             }
-
-            return wells;
         } else {
-            return {};
+            for (const auto& well_name : group.wells()) {
+                wells.push_back( this->getWell(well_name, timeStep));
+            }
         }
+        return wells;
     }
 
     /*
@@ -1012,20 +1000,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     const Group& Schedule::getGroup(const std::string& groupName, std::size_t timeStep) const {
-        if (this->groups.count(groupName) == 0)
-            throw std::invalid_argument("No such group: '" + groupName + "'");
-
-        const auto& dynamic_state = this->groups.at(groupName);
-        auto& group_ptr = dynamic_state.get(timeStep);
-        if (!group_ptr)
-            throw std::invalid_argument("Group: " + groupName + " not yet defined at step: " + std::to_string(timeStep));
-
-        return *group_ptr;
-    }
-
-    void Schedule::updateGroup(std::shared_ptr<Group> group, std::size_t reportStep) {
-        auto& dynamic_state = this->groups.at(group->name());
-        dynamic_state.update(reportStep, std::move(group));
+        return this->snapshots[timeStep].groups.get(groupName);
     }
 
 
@@ -1136,75 +1111,42 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::addGroup(const Group& group, std::size_t timeStep) {
-        this->groups.insert( std::make_pair( group.name(), DynamicState<std::shared_ptr<Group>>(this->m_timeMap, nullptr)));
-        auto group_ptr = std::make_shared<Group>(group);
-        auto& dynamic_state = this->groups.at(group.name());
-        dynamic_state.update(timeStep, group_ptr);
 
+    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
+        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
         auto& sched_state = this->snapshots.back();
+        auto insert_index = sched_state.groups.size();
+        sched_state.groups.update( Group{ groupName, insert_index, udq_undefined, this->m_static.m_unit_system} );
         sched_state.events().addEvent( ScheduleEvents::NEW_GROUP );
-        sched_state.wellgroup_events().addGroup(group.name());
+        sched_state.wellgroup_events().addGroup(groupName);
         {
             auto go = sched_state.group_order.get();
-            go.add( group.name() );
+            go.add( groupName );
             sched_state.group_order.update( std::move(go) );
         }
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
-        if (group.name() != "FIELD")
-            this->addGroupToGroup("FIELD", group_ptr->name(), timeStep);
+        if (groupName != "FIELD")
+            this->addGroupToGroup("FIELD", groupName, timeStep);
     }
 
-
-    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
-        const std::size_t insert_index = this->groups.size();
-        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
-        auto group = Group{ groupName, insert_index, udq_undefined, this->m_static.m_unit_system };
-        this->addGroup(group, timeStep);
-    }
-
-    std::size_t Schedule::numGroups() const {
-        return groups.size();
-    }
-
-    std::size_t Schedule::numGroups(std::size_t timeStep) const {
-        const auto group_names = this->groupNames(timeStep);
-        return group_names.size();
-    }
-
-    bool Schedule::hasGroup(const std::string& groupName) const {
-        return groups.count(groupName) > 0;
-    }
-
-    bool Schedule::hasGroup(const std::string& groupName, std::size_t timeStep) const {
-        if (timeStep >= this->size())
-            return false;
-
-        auto grpMap = this->groups.find(groupName);
-
-        return (grpMap != this->groups.end())
-            && grpMap->second.at(timeStep);
-    }
 
     void Schedule::addGroupToGroup( const std::string& parent_name, const std::string& child_name, std::size_t timeStep) {
-        // Add to new parent
-        auto& dynamic_state = this->groups.at(parent_name);
-        auto parent_ptr = std::make_shared<Group>( *dynamic_state[timeStep] );
-        if (parent_ptr->addGroup(child_name))
-            this->updateGroup(std::move(parent_ptr), timeStep);
+        auto parent_group = this->snapshots.back().groups.get(parent_name);
+        if (parent_group.addGroup(child_name))
+            this->snapshots.back().groups.update( std::move(parent_group) );
 
         // Check and update backreference in child
         const auto& child_group = this->getGroup(child_name, timeStep);
         if (child_group.parent() != parent_name) {
-            auto old_parent = std::make_shared<Group>( this->getGroup(child_group.parent(), timeStep) );
-            old_parent->delGroup(child_group.name());
-            this->updateGroup(std::move(old_parent), timeStep);
+            auto old_parent = this->snapshots.back().groups.get(child_group.parent());
+            old_parent.delGroup(child_group.name());
+            this->snapshots.back().groups.update( std::move(old_parent) );
 
-            auto new_child_group = std::make_shared<Group>( child_group );
-            new_child_group->updateParent(parent_name);
-            this->updateGroup(std::move(new_child_group), timeStep);
+            auto new_child_group = Group{ child_group };
+            new_child_group.updateParent(parent_name);
+            this->snapshots.back().groups.update( std::move(new_child_group) );
         }
     }
 
@@ -1218,15 +1160,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             this->snapshots.back().wellgroup_events().addEvent( well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE );
 
             // Remove well child reference from previous group
-            auto group = std::make_shared<Group>(this->getGroup(old_gname, timeStep));
-            group->delWell(well_name);
-            this->updateGroup(std::move(group), timeStep);
+            auto group = this->snapshots.back().groups.get( old_gname );
+            group.delWell(well_name);
+            this->snapshots.back().groups.update( std::move(group) );
         }
 
         // Add well child reference to new group
-        auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, timeStep));
-        group_ptr->addWell(well_name);
-        this->updateGroup(group_ptr, timeStep);
+        auto group = this->snapshots.back().groups.get( group_name );
+        group.addWell(well_name);
+        this->snapshots.back().groups.update( std::move(group) );
         this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_CHANGE );
     }
 
@@ -1435,7 +1377,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->m_timeMap == data.m_timeMap &&
                this->m_static == data.m_static &&
                compareMap(this->wells_static, data.wells_static) &&
-               compareMap(this->groups, data.groups) &&
                compareDynState(this->m_glo, data.m_glo) &&
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
@@ -1477,9 +1418,8 @@ namespace {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;
         for (const auto& rst_group : rst_state.groups) {
-            auto group = Group{ rst_group, this->groups.size(), udq_undefined, this->m_static.m_unit_system };
-            this->addGroup(group, report_step);
-
+            this->addGroup(rst_group.name, report_step);
+            const auto& group = this->snapshots.back().groups.get( rst_group.name );
             if (group.isProductionGroup()) {
                 // Was originally at report_step + 1
                 this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE );
