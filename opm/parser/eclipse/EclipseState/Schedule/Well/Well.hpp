@@ -543,7 +543,7 @@ public:
     bool updateRefDepth(const std::optional<double>& ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
-    bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, bool runtime, bool force = false);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t, bool runtime, bool force);
     bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum);
     bool updateStatus(Status status);
     bool updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime);

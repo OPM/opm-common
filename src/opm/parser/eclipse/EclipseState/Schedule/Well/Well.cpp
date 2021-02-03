@@ -645,7 +645,7 @@ bool Well::updateConnectionStatus(Status well_state, std::size_t report_step, bo
         c.setState(connection_state);
         new_connections->add(c);
     }
-    this->updateConnections(std::move(new_connections), report_step, runtime);
+    this->updateConnections(std::move(new_connections), report_step, runtime, false);
     return true;
 }
 
@@ -689,7 +689,7 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 }
 
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t report_step, bool runtime, bool force) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t, bool runtime, bool force) {
     connections_arg->order(  );
     if (force || *this->connections != *connections_arg) {
         this->connections = connections_arg;
@@ -710,7 +710,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, s
 }
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
-    bool update = this->updateConnections(connections_arg, report_step, false);
+    bool update = this->updateConnections(connections_arg, report_step, false, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
@@ -738,7 +738,7 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
     auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
                                                                      parseContext, errors);
 
-    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), report_step, false );
+    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), report_step, false, false );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
     return true;
 }
@@ -1058,7 +1058,7 @@ bool Well::handleWELOPENConnections(const DeckRecord& record, std::size_t report
 
         new_connections->add(c);
     }
-    return this->updateConnections(std::move(new_connections), report_step, runtime);
+    return this->updateConnections(std::move(new_connections), report_step, runtime, false);
 }
 
 
@@ -1088,7 +1088,7 @@ bool Well::handleCOMPLUMP(const DeckRecord& record, std::size_t report_step) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections), report_step, false);
+    return this->updateConnections(std::move(new_connections), report_step, false, false);
 }
 
 
@@ -1115,7 +1115,7 @@ bool Well::handleWPIMULT(const DeckRecord& record, std::size_t report_step) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections), report_step, false);
+    return this->updateConnections(std::move(new_connections), report_step, false, false);
 }
 
 
