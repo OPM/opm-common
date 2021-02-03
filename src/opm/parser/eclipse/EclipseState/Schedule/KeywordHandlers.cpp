@@ -236,7 +236,7 @@ namespace {
             return;
         }
 
-        if (well_ptr->handleCOMPSEGS(handlerContext.keyword, handlerContext.currentStep, *handlerContext.grid_ptr, parseContext, errors))
+        if (well_ptr->handleCOMPSEGS(handlerContext.keyword, *handlerContext.grid_ptr, parseContext, errors))
             this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
 

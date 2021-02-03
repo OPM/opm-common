@@ -700,7 +700,6 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
-                          std::size_t report_step,
                           const EclipseGrid& grid,
                           const ParseContext& parseContext,
                           ErrorGuard& errors) {
