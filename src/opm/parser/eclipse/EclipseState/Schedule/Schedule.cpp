@@ -684,7 +684,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPENConnections(record, currentStep, connection_status, runtime))
+                    if (well_ptr->handleWELOPENConnections(record, connection_status, runtime))
                         dynamic_state.update(currentStep, std::move(well_ptr));
                 }
 

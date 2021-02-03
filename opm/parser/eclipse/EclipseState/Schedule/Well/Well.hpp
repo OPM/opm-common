@@ -567,7 +567,7 @@ public:
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
-    bool handleWELOPENConnections(const DeckRecord& record, std::size_t report_step, Connection::State status, bool action_mode);
+    bool handleWELOPENConnections(const DeckRecord& record, Connection::State status, bool action_mode);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
 

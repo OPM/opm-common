@@ -1006,7 +1006,7 @@ int Well::fip_region_number() const {
 */
 
 
-bool Well::handleWELOPENConnections(const DeckRecord& record, std::size_t report_step, Connection::State state_arg, bool runtime) {
+bool Well::handleWELOPENConnections(const DeckRecord& record, Connection::State state_arg, bool runtime) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
