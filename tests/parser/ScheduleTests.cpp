@@ -1571,8 +1571,8 @@ WCONHIST
     const auto& schedule = make_schedule(input);
 
     //Start
-    BOOST_CHECK_THROW(schedule.getWell("P1", 0), std::invalid_argument);
-    BOOST_CHECK_THROW(schedule.getWell("P2", 0), std::invalid_argument);
+    BOOST_CHECK_THROW(schedule.getWell("P1", 0), std::exception);
+    BOOST_CHECK_THROW(schedule.getWell("P2", 0), std::exception);
 
     //10  OKT 2008
     BOOST_CHECK(schedule.getWell("P1", 1).getProductionProperties().controlMode == Opm::Well::ProducerCMode::ORAT);
@@ -1670,8 +1670,8 @@ DATES             -- 3
 
     const auto& schedule = make_schedule(input);
     //Start
-    BOOST_CHECK_THROW(schedule.getWell("P1", 0), std::invalid_argument);
-    BOOST_CHECK_THROW(schedule.getWell("P2", 0), std::invalid_argument);
+    BOOST_CHECK_THROW(schedule.getWell("P1", 0), std::exception);
+    BOOST_CHECK_THROW(schedule.getWell("P2", 0), std::exception);
 
     //10  OKT 2008
     BOOST_CHECK(schedule.getWell("P1", 1).getProductionProperties().controlMode == Opm::Well::ProducerCMode::ORAT);
@@ -3230,8 +3230,8 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid1, fp, runspec, python);
 
-    BOOST_CHECK_THROW( schedule.getWell("NO_SUCH_WELL", 0), std::invalid_argument);
-    BOOST_CHECK_THROW( schedule.getWell("W_3", 0), std::invalid_argument);
+    BOOST_CHECK_THROW( schedule.getWell("NO_SUCH_WELL", 0), std::exception);
+    BOOST_CHECK_THROW( schedule.getWell("W_3", 0)         , std::exception);
 
     auto ws = schedule.getWell("W_3", 3);
     {

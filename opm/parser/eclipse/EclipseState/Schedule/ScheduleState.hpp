@@ -43,6 +43,9 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 
 
 namespace {
@@ -197,6 +200,7 @@ namespace Opm {
                 return as_vector;
             }
 
+
             std::vector<std::reference_wrapper<T>> operator()() {
                 std::vector<std::reference_wrapper<T>> as_vector;
                 for (const auto& [_, elm_ptr] : this->m_data) {
@@ -300,6 +304,9 @@ namespace Opm {
         ptr_member<UDQActive> udq_active;
         ptr_member<NameOrder> well_order;
         ptr_member<GroupOrder> group_order;
+        ptr_member<UDQConfig> udq;
+        ptr_member<GasLiftOpt> glo;
+        ptr_member<GuideRateConfig> guide_rate;
 
         template <typename T> struct always_false1 : std::false_type {};
 
@@ -327,6 +334,12 @@ namespace Opm {
                                   return this->well_order;
             else if constexpr ( std::is_same_v<T, GroupOrder> )
                                   return this->group_order;
+            else if constexpr ( std::is_same_v<T, UDQConfig> )
+                                  return this->udq;
+            else if constexpr ( std::is_same_v<T, GasLiftOpt> )
+                                  return this->glo;
+            else if constexpr ( std::is_same_v<T, GuideRateConfig> )
+                                  return this->guide_rate;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
@@ -355,6 +368,12 @@ namespace Opm {
                                   return this->well_order;
             else if constexpr ( std::is_same_v<T, GroupOrder> )
                                   return this->group_order;
+            else if constexpr ( std::is_same_v<T, UDQConfig> )
+                                  return this->udq;
+            else if constexpr ( std::is_same_v<T, GasLiftOpt> )
+                                  return this->glo;
+            else if constexpr ( std::is_same_v<T, GuideRateConfig> )
+                                  return this->guide_rate;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
@@ -369,6 +388,8 @@ namespace Opm {
                              return this->vfpinj;
             else if constexpr ( std::is_same_v<T, Group> )
                              return this->groups;
+            else if constexpr ( std::is_same_v<T, Well> )
+                                  return this->wells;
             else
                 static_assert(always_false2<K,T>::value, "Template type <K,T> not supported in get_map()");
         }
@@ -376,6 +397,7 @@ namespace Opm {
         map_member<int, VFPProdTable> vfpprod;
         map_member<int, VFPInjTable> vfpinj;
         map_member<std::string, Group> groups;
+        map_member<std::string, Well> wells;
 
 
 

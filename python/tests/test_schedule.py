@@ -23,7 +23,7 @@ class TestSchedule(unittest.TestCase):
         self.assertTrue( isinstance( self.sch.get_wells(0), list) )
         self.assertEqual(2, len(self.sch.get_wells(0)))
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(Exception):
             self.sch.get_well('foo', 0)
 
     def testContains(self):

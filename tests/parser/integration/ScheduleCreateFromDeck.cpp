@@ -909,3 +909,4 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     BOOST_CHECK( sched[0].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
     BOOST_CHECK( sched[5].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
 }
+

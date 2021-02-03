@@ -3210,8 +3210,10 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
     const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH"};
     auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
     std::unordered_set<std::string> summary_keys;
-    for (const auto& udq_ptr : sched.udqConfigList())
-        udq_ptr->required_summary(summary_keys);
+    for (const auto& [_, udq] : sched.unique<UDQConfig>()) {
+        (void)_;
+        udq.required_summary(summary_keys);
+    }
 
     for (const auto& action : sched.back().actions.get())
         action.required_summary(summary_keys);
