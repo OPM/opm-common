@@ -55,14 +55,8 @@ namespace Opm {
         size_t numConnections() const;
         const NumericalAquiferCell* getCellPrt(size_t index) const;
 
-        // we remove the connection around the aquifer cells to isolate aquifer cells
-        // from the other part of the reservoir
-        // the removing of the connection is done by make transmissiblities to be zero
-        std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
-
         std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
 
-        void appendNNC(const EclipseGrid& grid, const FieldPropsManager& fp, NNC& nnc) const;
         std::vector<NNCdata> aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
 
         bool operator==(const SingleNumericalAquifer& other) const;

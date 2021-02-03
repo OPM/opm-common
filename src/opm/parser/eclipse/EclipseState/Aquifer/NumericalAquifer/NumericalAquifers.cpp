@@ -147,17 +147,6 @@ namespace Opm {
         return cells;
     }
 
-    std::array<std::set<size_t>, 3> NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
-        std::array<std::set<size_t>, 3> trans;
-        for (const auto& [id, aquifer] : this->m_aquifers) {
-            auto trans_aquifer = aquifer.transToRemove(grid);
-            for (size_t i = 0; i < 3; ++i) {
-                trans[i].merge(trans_aquifer[i]);
-            }
-        }
-        return  trans;
-    }
-
     const std::unordered_map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
         return this->m_aquifers;
     }

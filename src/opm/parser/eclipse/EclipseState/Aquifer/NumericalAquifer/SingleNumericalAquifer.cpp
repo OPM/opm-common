@@ -58,34 +58,6 @@ namespace Opm {
         return this->connections_.size();
     }
 
-    std::array<std::set<size_t>, 3> SingleNumericalAquifer::transToRemove(const EclipseGrid& grid) const {
-        std::array<std::set<size_t>, 3> trans;
-        for (const auto& cell : this->cells_) {
-            const size_t i = cell.I;
-            const size_t j = cell.J;
-            const size_t k = cell.K;
-            if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XPlus)) {
-                trans[0].insert(cell.global_index);
-            }
-            if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XMinus)) {
-                trans[0].insert(grid.getGlobalIndex(i-1, j, k));
-            }
-            if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YPlus)) {
-                trans[1].insert(cell.global_index);
-            }
-            if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YMinus)) {
-                trans[1].insert(grid.getGlobalIndex(i, j-1, k));
-            }
-            if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZPlus)) {
-                trans[2].insert(cell.global_index);
-            }
-            if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZMinus)) {
-                trans[2].insert(grid.getGlobalIndex(i, j, k-1));
-            }
-        }
-        return trans;
-    }
-
     size_t SingleNumericalAquifer::id() const {
         return this->id_;
     }

@@ -362,9 +362,6 @@ public:
     void reset_actnum(const std::vector<int>& actnum);
 
     void apply_numerical_aquifers(const NumericalAquifers& numerical_aquifers);
-    // set the transmissiblities around the numerical aquifer cells to be zero, so we can isolate them
-    // from the other reservoir cells
-    void updateTransWithNumericalAquifer(const NumericalAquifers& numerical_aquifer);
 
     const std::string& default_region() const;
 
