@@ -1033,7 +1033,7 @@ bool Well::handleWELOPENConnections(const DeckRecord& record, std::size_t report
 
 
 
-bool Well::handleCOMPLUMP(const DeckRecord& record, std::size_t report_step) {
+bool Well::handleCOMPLUMP(const DeckRecord& record) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;

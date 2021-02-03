@@ -195,7 +195,7 @@ namespace {
             for (const auto& wname : well_names) {
                 auto& dynamic_state = this->wells_static.at(wname);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
-                if (well_ptr->handleCOMPLUMP(record, handlerContext.currentStep))
+                if (well_ptr->handleCOMPLUMP(record))
                     this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
