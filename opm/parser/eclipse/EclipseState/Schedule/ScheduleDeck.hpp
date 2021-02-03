@@ -97,6 +97,7 @@ namespace Opm {
         ScheduleDeck();
         void add_block(ScheduleTimeType time_type, const std::chrono::system_clock::time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);
+        ScheduleBlock& operator[](const std::size_t index);
         const ScheduleBlock& operator[](const std::size_t index) const;
         std::vector<ScheduleBlock>::const_iterator begin() const;
         std::vector<ScheduleBlock>::const_iterator end() const;
