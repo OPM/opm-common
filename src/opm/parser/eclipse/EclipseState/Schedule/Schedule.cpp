@@ -1452,7 +1452,7 @@ namespace {
                                                  rst_well.ij[0],
                                                  rst_well.ij[1],
                                                  rst_connections);
-                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), report_step, grid, fp.get_int("PVTNUM"));
+                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
             } else {
                 std::unordered_map<int, Opm::Segment> rst_segments;
                 for (const auto& rst_segment : rst_well.segments) {
@@ -1461,7 +1461,7 @@ namespace {
                 }
 
                 auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
-                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), report_step, grid, fp.get_int("PVTNUM"));
+                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
                 well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
             }
 

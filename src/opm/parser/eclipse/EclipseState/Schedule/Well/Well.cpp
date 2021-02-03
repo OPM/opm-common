@@ -678,7 +678,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
     return false;
 }
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
     bool update = this->updateConnections(connections_arg, false, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
