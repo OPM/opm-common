@@ -618,37 +618,6 @@ bool Well::updateStatus(Status well_state) {
 
 
 
-bool Well::updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime) {
-    Connection::State connection_state;
-    if (runtime)
-        throw std::logic_error("runtime and update_connections can not be combined");
-
-    switch (well_state) {
-    case Status::OPEN:
-        connection_state = Connection::State::OPEN;
-        break;
-    case Status::SHUT:
-        connection_state = Connection::State::SHUT;
-        break;
-    case Status::AUTO:
-        connection_state = Connection::State::AUTO;
-        break;
-    case Status::STOP:
-        connection_state = Connection::State::SHUT;
-        break;
-    default:
-        throw std::logic_error("Bug - should not be here");
-    }
-
-    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
-    for (auto c : *this->connections) {
-        c.setState(connection_state);
-        new_connections->add(c);
-    }
-    this->updateConnections(std::move(new_connections), runtime, false);
-    return true;
-}
-
 
 
 bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
