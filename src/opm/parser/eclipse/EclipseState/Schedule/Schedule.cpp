@@ -529,15 +529,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, true, Well::Status::SHUT);
+        this->updateWellStatus(well_name, report_step, Well::Status::SHUT);
     }
 
     void Schedule::open_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, true, Well::Status::OPEN);
+        this->updateWellStatus(well_name, report_step, Well::Status::OPEN);
     }
 
     void Schedule::stop_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, true, Well::Status::STOP);
+        this->updateWellStatus(well_name, report_step, Well::Status::STOP);
     }
 
     void Schedule::updateWell(std::shared_ptr<Well> well, std::size_t reportStep) {
@@ -550,7 +550,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
       Function is quite dangerous - because if this is called while holding a
       Well pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , bool runtime, Well::Status status, std::optional<KeywordLocation> location) {
+    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep, Well::Status status, std::optional<KeywordLocation> location) {
         auto& dynamic_state = this->wells_static.at(well_name);
         auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
         if (well2->getConnections().empty() && status == Well::Status::OPEN) {
@@ -657,7 +657,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 + std::to_string( days ) + " days";
                             OpmLog::note(msg);
                         } else {
-                            this->updateWellStatus( wname, currentStep, runtime, well_status);
+                            this->updateWellStatus( wname, currentStep, well_status);
                             if (well_status == open)
                                 this->rft_config.addWellOpen(wname, currentStep);
                         }
@@ -684,7 +684,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPENConnections(record, currentStep, connection_status, runtime))
+                    if (well_ptr->handleWELOPENConnections(record, connection_status, runtime))
                         dynamic_state.update(currentStep, std::move(well_ptr));
                 }
 
@@ -1184,7 +1184,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(timeStep) / (60*60*24) ) + " days. \n" +
                     "The well is therefore also shut.";
                 OpmLog::note(msg);
-                this->updateWellStatus( well.name(), timeStep, false, Well::Status::SHUT);
+                this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT);
             }
         }
     }
@@ -1452,7 +1452,7 @@ namespace {
                                                  rst_well.ij[0],
                                                  rst_well.ij[1],
                                                  rst_connections);
-                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), report_step, grid, fp.get_int("PVTNUM"));
+                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
             } else {
                 std::unordered_map<int, Opm::Segment> rst_segments;
                 for (const auto& rst_segment : rst_well.segments) {
@@ -1461,7 +1461,7 @@ namespace {
                 }
 
                 auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
-                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), report_step, grid, fp.get_int("PVTNUM"));
+                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
                 well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
             }
 

@@ -543,10 +543,9 @@ public:
     bool updateRefDepth(const std::optional<double>& ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
-    bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, bool runtime, bool force = false);
-    bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, bool runtime, bool force);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, const EclipseGrid& grid, const std::vector<int>& pvtnum);
     bool updateStatus(Status status);
-    bool updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
@@ -567,10 +566,10 @@ public:
     void updateWPaveRefDepth(double ref_depth);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
-    bool handleCOMPSEGS(const DeckKeyword& keyword, std::size_t report_step, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
-    bool handleWELOPENConnections(const DeckRecord& record, std::size_t report_step, Connection::State status, bool action_mode);
-    bool handleCOMPLUMP(const DeckRecord& record, std::size_t report_step);
-    bool handleWPIMULT(const DeckRecord& record, std::size_t report_step);
+    bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
+    bool handleWELOPENConnections(const DeckRecord& record, Connection::State status, bool action_mode);
+    bool handleCOMPLUMP(const DeckRecord& record);
+    bool handleWPIMULT(const DeckRecord& record);
 
     void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;

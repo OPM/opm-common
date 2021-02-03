@@ -618,37 +618,6 @@ bool Well::updateStatus(Status well_state) {
 
 
 
-bool Well::updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime) {
-    Connection::State connection_state;
-    if (runtime)
-        throw std::logic_error("runtime and update_connections can not be combined");
-
-    switch (well_state) {
-    case Status::OPEN:
-        connection_state = Connection::State::OPEN;
-        break;
-    case Status::SHUT:
-        connection_state = Connection::State::SHUT;
-        break;
-    case Status::AUTO:
-        connection_state = Connection::State::AUTO;
-        break;
-    case Status::STOP:
-        connection_state = Connection::State::SHUT;
-        break;
-    default:
-        throw std::logic_error("Bug - should not be here");
-    }
-
-    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
-    for (auto c : *this->connections) {
-        c.setState(connection_state);
-        new_connections->add(c);
-    }
-    this->updateConnections(std::move(new_connections), report_step, runtime);
-    return true;
-}
-
 
 
 bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
@@ -689,7 +658,7 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 }
 
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t report_step, bool runtime, bool force) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool runtime, bool force) {
     connections_arg->order(  );
     if (force || *this->connections != *connections_arg) {
         this->connections = connections_arg;
@@ -709,8 +678,8 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, s
     return false;
 }
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
-    bool update = this->updateConnections(connections_arg, report_step, false);
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
+    bool update = this->updateConnections(connections_arg, false, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
@@ -731,14 +700,13 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
-                          std::size_t report_step,
                           const EclipseGrid& grid,
                           const ParseContext& parseContext,
                           ErrorGuard& errors) {
     auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
                                                                      parseContext, errors);
 
-    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), report_step, false );
+    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), false, false );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
     return true;
 }
@@ -1038,7 +1006,7 @@ int Well::fip_region_number() const {
 */
 
 
-bool Well::handleWELOPENConnections(const DeckRecord& record, std::size_t report_step, Connection::State state_arg, bool runtime) {
+bool Well::handleWELOPENConnections(const DeckRecord& record, Connection::State state_arg, bool runtime) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -1058,14 +1026,14 @@ bool Well::handleWELOPENConnections(const DeckRecord& record, std::size_t report
 
         new_connections->add(c);
     }
-    return this->updateConnections(std::move(new_connections), report_step, runtime);
+    return this->updateConnections(std::move(new_connections), runtime, false);
 }
 
 
 
 
 
-bool Well::handleCOMPLUMP(const DeckRecord& record, std::size_t report_step) {
+bool Well::handleCOMPLUMP(const DeckRecord& record) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -1088,12 +1056,12 @@ bool Well::handleCOMPLUMP(const DeckRecord& record, std::size_t report_step) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections), report_step, false);
+    return this->updateConnections(std::move(new_connections), false, false);
 }
 
 
 
-bool Well::handleWPIMULT(const DeckRecord& record, std::size_t report_step) {
+bool Well::handleWPIMULT(const DeckRecord& record) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_ge(c.complnum(), record, "FIRST")) return false;
@@ -1115,7 +1083,7 @@ bool Well::handleWPIMULT(const DeckRecord& record, std::size_t report_step) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections), report_step, false);
+    return this->updateConnections(std::move(new_connections), false, false);
 }
 
 
