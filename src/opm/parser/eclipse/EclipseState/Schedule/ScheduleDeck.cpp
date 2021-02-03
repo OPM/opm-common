@@ -230,6 +230,10 @@ ScheduleDeck::ScheduleDeck() {
 }
 
 
+ScheduleBlock& ScheduleDeck::operator[](const std::size_t index) {
+    return this->m_blocks.at(index);
+}
+
 const ScheduleBlock& ScheduleDeck::operator[](const std::size_t index) const {
     return this->m_blocks.at(index);
 }
