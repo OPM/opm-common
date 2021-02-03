@@ -1216,17 +1216,18 @@ bool FieldProps::tran_active(const std::string& keyword) const {
 }
 
 void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aquifers) {
-    // TODO: ideally, we should also update the cell_depth, but it is not used for later
-    // in the simulator. So we do not update it here.
-    // Maybe also cell volume? Not sure whether it is used later
     auto& porv_data = this->init_get<double>("PORV").data;
+    auto& poro_data = this->init_get<double>("PORO").data;
     auto& satnum_data = this->int_data["SATNUM"].data;
     auto& pvtnum_data = this->int_data["PVTNUM"].data;
 
     const auto& aqu_cell_props = numerical_aquifers.aquiferCellProps();
     for (const auto& [global_index, cellprop] : aqu_cell_props) {
         const size_t active_index = this->grid_ptr->activeIndex(global_index);
+        this->cell_volume[active_index] = cellprop.volume;
         porv_data[active_index] = cellprop.pore_volume;
+        poro_data[active_index] = cellprop.porosity;
+        this->cell_depth[active_index] = cellprop.depth;
         satnum_data[active_index] = cellprop.satnum;
         pvtnum_data[active_index] = cellprop.pvtnum;
     }
@@ -1255,7 +1256,6 @@ void FieldProps::updateTransWithNumericalAquifer(const NumericalAquifers& numeri
             const std::string msg = trans_string[i] + " TranCalculator could not be found when applying numerical aquifer";
             throw std::logic_error(msg);
         }
-        assert(tran_iter != this->tran.end());
         const std::string unique_name = tran_iter->second.next_name();
         const auto operation = Fieldprops::ScalarOperation::EQUAL;
         tran_iter->second.add_action(operation, unique_name);

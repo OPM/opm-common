@@ -94,7 +94,8 @@ namespace Opm {
         std::unordered_map<size_t, AquiferCellProps> aqucellprops;
         for (const auto& cell : this->cells_) {
             aqucellprops.emplace(std::make_pair(cell.global_index,
-                               AquiferCellProps{cell.poreVolume(), cell.sattable, cell.pvttable}));
+                               AquiferCellProps{cell.cellVolume(), cell.poreVolume(), cell.depth,
+                                                cell.porosity, cell.sattable, cell.pvttable}));
         }
         return aqucellprops;
     }

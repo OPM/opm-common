@@ -32,7 +32,10 @@ namespace Opm {
     class FieldPropsManager;
 
     struct AquiferCellProps {
+        double volume;
         double pore_volume;
+        double depth;
+        double porosity;
         int satnum;
         int pvtnum;
     };
