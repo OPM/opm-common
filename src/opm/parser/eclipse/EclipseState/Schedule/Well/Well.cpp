@@ -1061,7 +1061,7 @@ bool Well::handleCOMPLUMP(const DeckRecord& record) {
 
 
 
-bool Well::handleWPIMULT(const DeckRecord& record, std::size_t report_step) {
+bool Well::handleWPIMULT(const DeckRecord& record) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_ge(c.complnum(), record, "FIRST")) return false;
