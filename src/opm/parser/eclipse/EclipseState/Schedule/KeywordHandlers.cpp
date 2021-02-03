@@ -1158,7 +1158,7 @@ namespace {
                 // Well::updateWellProductivityIndex() implicitly mutates
                 // internal state in the WellConnections class.
                 auto connections = std::make_shared<WellConnections>(well2->getConnections());
-                well2->updateConnections(std::move(connections), event_step, false, true);
+                well2->updateConnections(std::move(connections), false, true);
                 if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), event_step);
 
