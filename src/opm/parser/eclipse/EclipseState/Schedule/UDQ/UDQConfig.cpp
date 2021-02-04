@@ -22,7 +22,7 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
@@ -46,11 +46,6 @@ namespace Opm {
         udqft(this->udq_params)
     {}
 
-
-    UDQConfig::UDQConfig(const Deck& deck) :
-        udq_params(deck),
-        udqft(this->udq_params)
-    {}
 
     UDQConfig UDQConfig::serializeObject()
     {

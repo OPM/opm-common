@@ -113,7 +113,7 @@ namespace {
         m_static( python, deck, runspec ),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
-        udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
+        udq_config(this->m_timeMap, std::make_shared<UDQConfig>(runspec.udqParams())),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
