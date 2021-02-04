@@ -376,18 +376,28 @@ namespace Opm
                 unpack_state<T>(value_list, index_list);
         }
 
-
         template <typename T>
-        void pack_state(std::vector<T>& value_list, std::vector<std::size_t>& index_list) {
+        std::vector<std::pair<std::size_t,  T>> unique() const {
+            std::vector<std::pair<std::size_t, T>> values;
             for (std::size_t index = 0; index < this->snapshots.size(); index++) {
                 const auto& member = this->snapshots[index].get<T>();
                 const auto& value = member.get();
-                if (value_list.empty() || !(value == value_list.back())) {
-                    value_list.push_back( value );
-                    index_list.push_back( index );
-                }
+                if (values.empty() || !(value == values.back().second))
+                    values.push_back( std::make_pair(index, value));
+            }
+            return values;
+        }
+
+
+        template <typename T>
+        void pack_state(std::vector<T>& value_list, std::vector<std::size_t>& index_list) const {
+            auto unique_values = this->unique<T>();
+            for (auto& [index, value] : unique_values) {
+                value_list.push_back( std::move(value) );
+                index_list.push_back( index );
             }
         }
+
 
         template <typename T>
         void unpack_state(const std::vector<T>& value_list, const std::vector<std::size_t>& index_list) {
@@ -480,6 +490,8 @@ namespace Opm
                 }
             }
         }
+
+
 
 
     private:
