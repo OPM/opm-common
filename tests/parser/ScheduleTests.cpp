@@ -598,6 +598,14 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     BOOST_CHECK_EQUAL(1U, wells_t0.size());
     const auto wells_t3 = schedule.getWells(3);
     BOOST_CHECK_EQUAL(3U, wells_t3.size());
+
+    const auto& unique = schedule.unique<NameOrder>();
+    BOOST_CHECK_EQUAL( unique.size(), 2 );
+    BOOST_CHECK_EQUAL( unique[0].first, 0 );
+    BOOST_CHECK_EQUAL( unique[1].first, 3 );
+
+    BOOST_CHECK( unique[0].second == schedule[0].well_order());
+    BOOST_CHECK( unique[1].second == schedule[3].well_order());
 }
 
 
