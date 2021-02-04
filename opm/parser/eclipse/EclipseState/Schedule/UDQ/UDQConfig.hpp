@@ -39,7 +39,6 @@
 namespace Opm {
 
     class DeckRecord;
-    class Deck;
     class SummaryState;
     class UDQState;
     class KeywordLocation;
@@ -48,7 +47,6 @@ namespace Opm {
     class UDQConfig {
     public:
         UDQConfig() = default;
-        explicit UDQConfig(const Deck& deck);
         explicit UDQConfig(const UDQParams& params);
 
         static UDQConfig serializeObject();
