@@ -318,6 +318,34 @@ namespace Opm {
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
 
+        template <typename T>
+        const ptr_member<T>& get() const {
+            if constexpr ( std::is_same_v<T, PAvg> )
+                             return this->pavg;
+            else if constexpr ( std::is_same_v<T, WellTestConfig> )
+                                  return this->wtest_config;
+            else if constexpr ( std::is_same_v<T, GConSale> )
+                                  return this->gconsale;
+            else if constexpr ( std::is_same_v<T, GConSump> )
+                                  return this->gconsump;
+            else if constexpr ( std::is_same_v<T, WListManager> )
+                                  return this->wlist_manager;
+            else if constexpr ( std::is_same_v<T, Network::ExtNetwork> )
+                                  return this->network;
+            else if constexpr ( std::is_same_v<T, RPTConfig> )
+                                  return this->rpt_config;
+            else if constexpr ( std::is_same_v<T, Action::Actions> )
+                                  return this->actions;
+            else if constexpr ( std::is_same_v<T, UDQActive> )
+                                  return this->udq_active;
+            else if constexpr ( std::is_same_v<T, NameOrder> )
+                                  return this->well_order;
+            else if constexpr ( std::is_same_v<T, GroupOrder> )
+                                  return this->group_order;
+            else
+                static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
+        }
+
 
         template <typename K, typename T> struct always_false2 : std::false_type {};
         template <typename K, typename T>
