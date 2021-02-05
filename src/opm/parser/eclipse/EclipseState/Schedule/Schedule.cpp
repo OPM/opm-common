@@ -1240,7 +1240,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result) {
+void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result) {
         ParseContext parseContext;
         ErrorGuard errors;
 
