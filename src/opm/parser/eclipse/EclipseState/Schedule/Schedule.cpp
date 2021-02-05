@@ -1296,7 +1296,7 @@ void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clo
 
 
 
-    void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor) {
+    void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double newWellPI) {
         auto wstat = this->wells_static.find(well_name);
         if (wstat == this->wells_static.end())
             return;
@@ -1319,6 +1319,7 @@ void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clo
         // which means unique_well_instances is a vector<pair<report_step, shared_ptr<>>>
         std::vector<bool> scalingApplicable;
         auto wellPtr = start->second;
+        auto scalingFactor = wellPtr->getWellPIScalingFactor(newWellPI);
         wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
 
         for (; start != end; ++start)
