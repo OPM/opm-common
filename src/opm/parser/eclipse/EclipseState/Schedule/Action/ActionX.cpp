@@ -25,6 +25,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include "ActionParser.hpp"
 
@@ -197,6 +199,27 @@ bool ActionX::operator==(const ActionX& data) const {
 
 void ActionX::required_summary(std::unordered_set<std::string>& required_summary) const {
     this->condition.required_summary(required_summary);
+}
+
+std::vector<std::string> ActionX::wellpi_wells(const WellMatcher& well_matcher, const std::vector<std::string>& matching_wells) const {
+    std::unordered_set<std::string> wells;
+    for (const auto& kw : this->keywords) {
+        if (kw.name() == "WELPI") {
+            for (const auto& record : kw) {
+                std::vector<std::string> record_wells;
+                const auto& wname_arg = record.getItem<ParserKeywords::WELPI::WELL_NAME>().get<std::string>(0);
+
+                if (wname_arg == "?")
+                    record_wells = matching_wells;
+                else
+                    record_wells = well_matcher.wells( wname_arg );
+
+                for (const auto& well : record_wells)
+                    wells.insert( well );
+            }
+        }
+    }
+    return std::vector<std::string>{ std::move_iterator(wells.begin()), std::move_iterator(wells.end()) };
 }
 
 }
