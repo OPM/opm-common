@@ -160,7 +160,7 @@ namespace {
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                 connections->loadCOMPDAT(record, *handlerContext.grid_ptr, *handlerContext.fp_ptr, name, handlerContext.keyword.location());
                 if (well2->updateConnections(connections, *handlerContext.grid_ptr, handlerContext.fp_ptr->get_int("PVTNUM"))) {
-                    this->updateWell(std::move(well2), handlerContext.currentStep);
+                    this->updateWell(well2, handlerContext.currentStep);
                     wells.insert( name );
                 }
 
