@@ -585,19 +585,22 @@ TOPS
    360*100./
 
 PORO
-   360*0.25/
+   0. 0.25 0. 357*0.25/
 PERMX
     360*1000./
 PERMY
     360*1000./
 PERMZ
     360*10./
+-- setting the three cells for numerical aquifer to be inactive
+ACTNUM
+0 1 0 0 356*1 /
 
 AQUNUM
 --AQnr.  I  J  K     Area      Length PHI      K     Depth  Initial.Pr	PVTNUM   SATNUM
-   1     1  1  1   1000000.0   10000   0.25   400    2585.00   285.00	 1   1  /
-   1     3  1  1   1500000.0   20000   0.24   600    2585.00   285.00	 1   1  /
-   1     4  1  1   2000000.0   30000   0.23   700    2585.00   285.00	 1   1  /
+   1     1  1  1   1000000.0   10000   0.25   400    2585.00   285.00	 2   2  /
+   1     3  1  1   1500000.0   20000   0.24   600    2585.00   285.00	 3   *  /
+   1     4  1  1   2000000.0   30000   *   700    2585.00   285.00	 *   3  /
 /
 AQUCON
 --  Connect numerical aquifer to the reservoir
@@ -627,4 +630,46 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest){
     const auto& aquifer = num_aqu.getAquifer(1);
     BOOST_CHECK(aquifer.numCells() == 3);
     BOOST_CHECK(aquifer.numConnections() == 8 );
+
+    BOOST_CHECK(grid.getNumActive() == 360);
+    // the three aquifer cells are active
+    BOOST_CHECK(grid.cellActive(0, 0, 0));
+    BOOST_CHECK(grid.cellActive(2, 0, 0));
+    BOOST_CHECK(grid.cellActive(3, 0, 0));
+
+    // checking the pore volume of the aquifer cells
+    const auto& porv_data = ecl_state.fieldProps().porv(true);
+    BOOST_CHECK_CLOSE(porv_data[0], 2500000000, 1.e-10);
+    BOOST_CHECK_CLOSE(porv_data[2], 7200000000, 1.e-10);
+    BOOST_CHECK_CLOSE(porv_data[3], 15000000000, 1.e-10);
+
+    const auto& pvtnum = ecl_state.fieldProps().get_int("PVTNUM");
+    BOOST_CHECK_EQUAL(pvtnum[0], 2);
+    BOOST_CHECK_EQUAL(pvtnum[1], 1); // none aquifer cell
+    BOOST_CHECK_EQUAL(pvtnum[2], 3);
+    BOOST_CHECK_EQUAL(pvtnum[3], 1);
+
+    const auto& satnum = ecl_state.fieldProps().get_int("SATNUM");
+    BOOST_CHECK_EQUAL(satnum[0], 2);
+    BOOST_CHECK_EQUAL(satnum[1], 1); // none aquifer cell
+    BOOST_CHECK_EQUAL(satnum[2], 1);
+    BOOST_CHECK_EQUAL(satnum[3], 3);
+
+
+    const auto& permx = ecl_state.fieldProps().get_double("PERMX");
+    BOOST_CHECK_SMALL(permx[0], 1.e-20);
+    BOOST_CHECK_SMALL(permx[2], 1.e-20);
+    BOOST_CHECK_SMALL(permx[3], 1.e-20);
+    const auto& permy = ecl_state.fieldProps().get_double("PERMY");
+    BOOST_CHECK_SMALL(permy[0], 1.e-20);
+    BOOST_CHECK_SMALL(permy[2], 1.e-20);
+    BOOST_CHECK_SMALL(permy[3], 1.e-20);
+    const auto& permz = ecl_state.fieldProps().get_double("PERMZ");
+    BOOST_CHECK_SMALL(permz[0], 1.e-20);
+    BOOST_CHECK_SMALL(permz[2], 1.e-20);
+    BOOST_CHECK_SMALL(permz[3], 1.e-20);
+    const auto& poro = ecl_state.fieldProps().get_double("PORO");
+    BOOST_CHECK_CLOSE(poro[0], 0.25, 1.e-10);
+    BOOST_CHECK_CLOSE(poro[2], 0.24, 1.e-10);
+    BOOST_CHECK_CLOSE(poro[3], 0.25, 1.e-10);
 }
