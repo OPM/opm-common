@@ -4053,9 +4053,9 @@ END
         return sched.getWell("P", report_step).getWellPIScalingFactor(wellPI);
     };
 
-    auto applyWellPIScaling = [&sched](const std::size_t report_step, const double scalingFactor)
+    auto applyWellPIScaling = [&sched](const std::size_t report_step, const double newWellPI)
     {
-        sched.applyWellProdIndexScaling("P", report_step, scalingFactor);
+        sched.applyWellProdIndexScaling("P", report_step, newWellPI);
     };
 
     auto getConnections = [&sched](const std::size_t report_step)
@@ -4132,11 +4132,9 @@ END
     // Apply WELPI scaling after first WELPI specification
     {
         const auto report_step   = std::size_t{1};
-        const auto scalingFactor = getScalingFactor(report_step, 100.0*liquid_PI_unit());
+        const auto newWellPI     = 100.0*liquid_PI_unit();
 
-        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
-
-        applyWellPIScaling(report_step, scalingFactor);
+        applyWellPIScaling(report_step, newWellPI);
 
         {
             const auto expectCF = 100.0*cp_rm3_per_db();
@@ -4200,11 +4198,9 @@ END
     // Apply WELPI scaling after second WELPI specification
     {
         const auto report_step   = std::size_t{3};
-        const auto scalingFactor = getScalingFactor(report_step, 200.0*liquid_PI_unit());
+        double newWellPI = 200*liquid_PI_unit();
 
-        BOOST_CHECK_CLOSE(scalingFactor, 0.25, 1.0e-10);
-
-        applyWellPIScaling(report_step, scalingFactor);
+        applyWellPIScaling(report_step, newWellPI);
 
         {
             const auto expectCF = 100.0*cp_rm3_per_db();
