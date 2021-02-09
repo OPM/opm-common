@@ -23,6 +23,7 @@
 
 #include <ctime>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -35,6 +36,7 @@
 
 namespace Opm {
 class DeckKeyword;
+class WellMatcher;
 
 namespace Action {
 class State;
@@ -76,6 +78,7 @@ public:
     bool ready(const State& state, std::time_t sim_time) const;
     Action::Result eval(const Action::Context& context) const;
 
+    std::vector<std::string> wellpi_wells(const WellMatcher& well_matcher, const std::vector<std::string>& matching_wells) const;
     void required_summary(std::unordered_set<std::string>& required_summary) const;
     std::string name() const { return this->m_name; }
     size_t max_run() const { return this->m_max_run; }

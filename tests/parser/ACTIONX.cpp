@@ -986,6 +986,7 @@ TSTEP
         BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 1000), 1e-5 );
     }
 
+
     Action::Result action_result(true);
     auto sim_time = std::chrono::system_clock::now();
     sched.applyAction(0, sim_time, action1, action_result);
@@ -998,8 +999,54 @@ TSTEP
         const auto& inj = group.injectionControls(Phase::WATER, st);
         BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 5000), 1e-5 );
     }
+
+
+    auto wellpi = action1.wellpi_wells(WellMatcher(sched[0].well_order()), {});
+    BOOST_CHECK( wellpi.empty() );
 }
 
+
+bool has_well(const std::vector<std::string>& wells, const std::string& well) {
+    auto find_well = std::find(wells.begin(), wells.end(), well);
+    return (find_well != wells.end());
+}
+
+
+BOOST_AUTO_TEST_CASE(WELPI_TEST1) {
+    std::string deck_string = R"(
+WELPI
+   'W1'  10 /
+   'W2'  20 /
+/
+
+WELPI
+    'P*' 10 /
+/
+
+)";
+    Parser parser;
+    auto deck = parser.parseString(deck_string);
+    Action::ActionX action("NAME", 1, 1, 0);
+    NameOrder well_order({"W1", "W2", "P1", "P2", "P3"});
+    WellMatcher well_matcher( well_order );
+    action.addKeyword(deck.getKeyword("WELPI", 0));
+    {
+        auto wells = action.wellpi_wells(well_matcher, {});
+        BOOST_CHECK_EQUAL( wells.size(), 2 );
+        has_well(wells, "W1");
+        has_well(wells, "W2");
+    }
+    action.addKeyword(deck.getKeyword("WELPI", 1));
+    {
+        auto wells = action.wellpi_wells(well_matcher, {});
+        BOOST_CHECK_EQUAL( wells.size(), 5 );
+        has_well(wells, "W1");
+        has_well(wells, "W2");
+        has_well(wells, "P1");
+        has_well(wells, "P2");
+        has_well(wells, "P3");
+    }
+}
 
 BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
     const auto input = R"(-- Turns on gas lift optimization
