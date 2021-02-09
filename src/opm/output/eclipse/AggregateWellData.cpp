@@ -729,9 +729,7 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                const auto key = vector + ':' + well;
-
-                return smry.has(key) ? smry.get(key) : 0.0;
+                return smry.get_well_var(well, vector, 0);
             };
 
             xWell[Ix::OilPrRate] = get("WOPR");
@@ -793,9 +791,7 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                const auto key = vector + ':' + well;
-
-                return smry.has(key) ? smry.get(key) : 0.0;
+                return smry.get_well_var(well, vector, 0);
             };
 
             assignCommonInjector(get, xWell);
@@ -821,9 +817,7 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                const auto key = vector + ':' + well;
-
-                return smry.has(key) ? smry.get(key) : 0.0;
+                return smry.get_well_var(well, vector, 0);
             };
 
             assignCommonInjector(get, xWell);
@@ -857,9 +851,7 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                const auto key = vector + ':' + well;
-
-                return smry.has(key) ? smry.get(key) : 0.0;
+                return smry.get_well_var(well, vector, 0);
             };
 
             xWell[Ix::TubHeadPr] = get("WTHP");
