@@ -52,7 +52,7 @@ AquiferConfig AquiferConfig::serializeObject()
 bool AquiferConfig::active() const {
     return this->aquiferct.size() > 0 ||
            this->aquifetp.size() > 0 ||
-           this->numerical_aquifers.numAquifer() > 0;
+            this->numerical_aquifers.size() > 0;
 }
 
 bool AquiferConfig::operator==(const AquiferConfig& other) {
@@ -78,6 +78,14 @@ bool AquiferConfig::hasAquifer(const int aquID) const {
     return aquifetp.hasAquifer(aquID) ||
            aquiferct.hasAquifer(aquID) ||
            numerical_aquifers.hasAquifer(aquID);
+}
+
+bool AquiferConfig::hasNumericalAquifer() const {
+    return this->numerical_aquifers.size() > 0;
+}
+
+const NumericalAquifers& AquiferConfig::numericalAquifers() const {
+    return this->numerical_aquifers;
 }
 
 }

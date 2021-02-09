@@ -21,11 +21,24 @@
 #define OPM_SINGLENUMERICALAQUIFER_HPP
 
 #include <vector>
+#include <set>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 
 namespace Opm {
+    class NNC;
+    class NNCdata;
+    class FieldPropsManager;
+
+    struct AquiferCellProps {
+        double volume;
+        double pore_volume;
+        double depth;
+        double porosity;
+        int satnum;
+        int pvtnum;
+    };
 
     class SingleNumericalAquifer {
     public:
@@ -38,8 +51,13 @@ namespace Opm {
         // TODO: the following two can be made one function. Let us see
         // how we use them at the end
         size_t numCells() const;
+        size_t id() const;
         size_t numConnections() const;
         const NumericalAquiferCell* getCellPrt(size_t index) const;
+
+        std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
+
+        std::vector<NNCdata> aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
 
         bool operator==(const SingleNumericalAquifer& other) const;
 
@@ -58,6 +76,9 @@ namespace Opm {
             size_t id_;
             std::vector<NumericalAquiferCell> cells_;
             std::vector<NumericalAquiferConnection> connections_;
+
+            std::vector<NNCdata> aquiferCellNNCs() const;
+            std::vector<NNCdata> aquiferConnectionNNCs(const EclipseGrid &grid, const FieldPropsManager &fp) const;
         };
 }
 

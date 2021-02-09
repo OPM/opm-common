@@ -122,11 +122,11 @@ namespace Opm {
             m_deckUnitSystem.serializeOp(serializer);
             m_inputNnc.serializeOp(serializer);
             m_gridDims.serializeOp(serializer);
+            aquifer_config.serializeOp(serializer);
             m_simulationConfig.serializeOp(serializer);
             m_transMult.serializeOp(serializer);
             m_faults.serializeOp(serializer);
             serializer(m_title);
-            aquifer_config.serializeOp(serializer);
             tracer_config.serializeOp(serializer);
         }
 
@@ -149,12 +149,12 @@ namespace Opm {
         NNC m_inputNnc;
         GridDims m_gridDims;
         FieldPropsManager field_props;
+        AquiferConfig aquifer_config;
         SimulationConfig m_simulationConfig;
         TransMult m_transMult;
 
         FaultCollection m_faults;
         std::string m_title;
-        AquiferConfig aquifer_config;
         TracerConfig tracer_config;
     };
 }

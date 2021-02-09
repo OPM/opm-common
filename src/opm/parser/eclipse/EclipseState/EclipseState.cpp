@@ -61,15 +61,27 @@ namespace Opm {
           m_inputNnc(          m_inputGrid, deck),
           m_gridDims(          deck ),
           field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
+          aquifer_config(this->m_tables, this->m_inputGrid, deck, this->field_props),
           m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
           m_transMult(         GridDims(deck), deck, field_props),
           tracer_config(       m_deckUnitSystem, deck)
     {
+        if (this->aquifer().hasNumericalAquifer()) {
+            const auto& numerical_aquifer = this->aquifer().numericalAquifers();
+            // update field_props for numerical aquifer cells, and set the transmissiblity related to aquifer cells to
+            // be zero
+            this->field_props.apply_numerical_aquifers(numerical_aquifer);
+
+            // add NNCs between aquifer cells and first aquifer cell and aquifer connections
+            const auto& aquifer_nncs = numerical_aquifer.aquiferNNCs(this->m_inputGrid, this->field_props);
+            for (const auto& nnc_data : aquifer_nncs) {
+                this->m_inputNnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
+            }
+        }
+
         m_inputGrid.resetACTNUM(this->field_props.actnum());
         if( this->runspec().phases().size() < 3 )
             OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
-
-        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck, this->field_props);
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );

@@ -41,6 +41,7 @@ namespace Opm {
 class Deck;
 class EclipseGrid;
 class TableManager;
+class NumericalAquifers;
 
 namespace Fieldprops
 {
@@ -359,6 +360,8 @@ public:
 
     FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
     void reset_actnum(const std::vector<int>& actnum);
+
+    void apply_numerical_aquifers(const NumericalAquifers& numerical_aquifers);
 
     const std::string& default_region() const;
 

@@ -18,6 +18,9 @@
 #include <functional>
 #include <algorithm>
 #include <unordered_map>
+#include <array>
+#include <vector>
+#include <set>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -39,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/common/utility/Serializer.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 #include "FieldProps.hpp"
 #include "Operate.hpp"
@@ -1211,6 +1215,32 @@ bool FieldProps::tran_active(const std::string& keyword) const {
     return calculator != this->tran.end() && calculator->second.size() > 0;
 }
 
+void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aquifers) {
+    auto& porv_data = this->init_get<double>("PORV").data;
+    auto& poro_data = this->init_get<double>("PORO").data;
+    auto& satnum_data = this->init_get<int>("SATNUM").data;
+    auto& pvtnum_data = this->init_get<int>("PVTNUM").data;
+
+    auto& permx_data = this->init_get<double>("PERMX").data;
+    auto& permy_data = this->init_get<double>("PERMY").data;
+    auto& permz_data = this->init_get<double>("PERMZ").data;
+
+    const auto& aqu_cell_props = numerical_aquifers.aquiferCellProps();
+    for (const auto& [global_index, cellprop] : aqu_cell_props) {
+        const size_t active_index = this->grid_ptr->activeIndex(global_index);
+        this->cell_volume[active_index] = cellprop.volume;
+        porv_data[active_index] = cellprop.pore_volume;
+        poro_data[active_index] = cellprop.porosity;
+        this->cell_depth[active_index] = cellprop.depth;
+        satnum_data[active_index] = cellprop.satnum;
+        pvtnum_data[active_index] = cellprop.pvtnum;
+
+        // isolate the numerical aquifer cells by setting permeability to be zero
+        permx_data[active_index] = 0.;
+        permy_data[active_index] = 0.;
+        permz_data[active_index] = 0.;
+    }
+}
 
 
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);

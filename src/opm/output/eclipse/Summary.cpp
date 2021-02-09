@@ -1783,6 +1783,9 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> aquifer_
     {"AAQT", Opm::UnitSystem::measure::liquid_surface_volume},
     {"AAQR", Opm::UnitSystem::measure::liquid_surface_rate},
     {"AAQP", Opm::UnitSystem::measure::pressure},
+    {"ANQP", Opm::UnitSystem::measure::pressure},
+    {"ANQT", Opm::UnitSystem::measure::liquid_surface_volume},
+    {"ANQR", Opm::UnitSystem::measure::liquid_surface_rate},
 };
 
 inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,

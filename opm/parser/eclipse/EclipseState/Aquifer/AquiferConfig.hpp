@@ -48,6 +48,9 @@ public:
     bool operator==(const AquiferConfig& other);
     bool hasAquifer(const int aquID) const;
 
+    bool hasNumericalAquifer() const;
+    const NumericalAquifers& numericalAquifers() const;
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {

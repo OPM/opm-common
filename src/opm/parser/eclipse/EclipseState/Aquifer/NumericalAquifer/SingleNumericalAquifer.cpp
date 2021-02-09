@@ -17,9 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
+#include "../AquiferHelpers.hpp"
 
 namespace Opm {
     SingleNumericalAquifer::SingleNumericalAquifer(const size_t aqu_id)
@@ -51,5 +56,86 @@ namespace Opm {
 
     size_t SingleNumericalAquifer::numConnections() const {
         return this->connections_.size();
+    }
+
+    size_t SingleNumericalAquifer::id() const {
+        return this->id_;
+    }
+
+    std::unordered_map<size_t, AquiferCellProps> SingleNumericalAquifer::aquiferCellProps() const {
+        std::unordered_map<size_t, AquiferCellProps> aqucellprops;
+        for (const auto& cell : this->cells_) {
+            aqucellprops.emplace(std::make_pair(cell.global_index,
+                               AquiferCellProps{cell.cellVolume(), cell.poreVolume(), cell.depth,
+                                                cell.porosity, cell.sattable, cell.pvttable}));
+        }
+        return aqucellprops;
+    }
+
+    std::vector<NNCdata>
+    SingleNumericalAquifer::aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
+        auto nncs = this->aquiferCellNNCs();
+        auto con_nncs = this->aquiferConnectionNNCs(grid, fp);
+        nncs.insert(nncs.end(), con_nncs.begin(), con_nncs.end());
+        return nncs;
+    }
+
+    std::vector<NNCdata> SingleNumericalAquifer::aquiferCellNNCs() const {
+        std::vector<NNCdata> nncs;
+        // aquifer cells are connected to each other through NNCs to form the aquifer
+        for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
+            const double trans1 = this->cells_[i].transmissiblity();
+            const double trans2 = this->cells_[i + 1].transmissiblity();
+            const double tran = 1. / (1. / trans1 + 1. / trans2);
+            const size_t gc1 = this->cells_[i].global_index;
+            const size_t gc2 = this->cells_[i + 1].global_index;
+            nncs.emplace_back(gc1, gc2, tran);
+        }
+        return nncs;
+    }
+
+    std::vector<NNCdata>
+    SingleNumericalAquifer::aquiferConnectionNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
+       std::vector<NNCdata> nncs;
+        // aquifer connections are connected to aquifer cells through NNCs
+        const std::vector<double>& ntg = fp.get_double("NTG");
+        const auto& cell1 = this->cells_[0];
+        // all the connections connect to the first numerical aquifer cell
+        const size_t gc1 = cell1.global_index;
+        for (const auto& con : this->connections_) {
+            const size_t gc2 = con.global_index;
+            // TODO: the following is based on Cartesian grids, it turns out working for more general grids.
+            //  We should keep in mind this can be something causing problems for specific grids
+            const auto& cell_dims = grid.getCellDims(gc2);
+            double face_area = 0;
+            std::string perm_string;
+            double d = 0.;
+            if (con.face_dir == FaceDir::XPlus || con.face_dir == FaceDir::XMinus) {
+                face_area = cell_dims[1] * cell_dims[2];
+                perm_string = "PERMX";
+                d = cell_dims[0];
+            }
+            if (con.face_dir == FaceDir::YMinus || con.face_dir == FaceDir::YPlus) {
+                face_area = cell_dims[0] * cell_dims[2];
+                perm_string = "PERMY";
+                d = cell_dims[1];
+            }
+
+            if (con.face_dir == FaceDir::ZMinus || con.face_dir == FaceDir::ZPlus) {
+                face_area = cell_dims[0] * cell_dims[1];
+                perm_string = "PERMZ";
+                d = cell_dims[2];
+            }
+
+            const double trans_cell = (con.trans_option == 0) ?
+                                      cell1.transmissiblity() : (2 * cell1.permeability * face_area / cell1.length);
+
+            const double cell_perm = (fp.get_double(perm_string))[grid.activeIndex(gc2)];
+            const double trans_con = 2 * cell_perm * face_area * ntg[grid.activeIndex(con.global_index)] / d;
+
+            const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
+            nncs.emplace_back(gc1, gc2, tran);
+        }
+        return nncs;
     }
 }

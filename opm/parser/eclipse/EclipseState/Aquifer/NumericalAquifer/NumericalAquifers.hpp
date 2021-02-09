@@ -35,12 +35,17 @@ namespace Opm {
         NumericalAquifers() = default;
         NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
-        size_t numAquifer() const;
+        size_t size() const;
         bool hasAquifer(size_t aquifer_id) const;
         const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
+        const std::unordered_map <size_t, SingleNumericalAquifer>& aquifers() const;
         bool operator==(const NumericalAquifers& other) const;
 
         std::unordered_map<size_t, const NumericalAquiferCell*> allAquiferCells() const;
+
+        std::vector<NNCdata> aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
+
+        std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
 
         static NumericalAquifers serializeObject();
         template <class Serializer>
@@ -53,7 +58,6 @@ namespace Opm {
         std::unordered_map <size_t, SingleNumericalAquifer> m_aquifers;
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
-
         void addAquiferConnections(const Deck &deck, const EclipseGrid &grid);
     };
 }
