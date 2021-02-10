@@ -989,7 +989,7 @@ TSTEP
 
     Action::Result action_result(true);
     auto sim_time = std::chrono::system_clock::now();
-    sched.applyAction(0, sim_time, action1, action_result);
+    sched.applyAction(0, sim_time, action1, action_result, {});
 
     {
         const auto& group = sched.getGroup("G1", 1);
@@ -1100,7 +1100,7 @@ TSTEP
 
 
     Action::Result action_result(true);
-    sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result);
+    sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {});
 
     {
         const auto& glo = sched.glo(0);
@@ -1154,7 +1154,7 @@ TSTEP
     BOOST_CHECK_EQUAL( required_summary.count("WWCT"), 1);
 
     Action::Result action_result(true);
-    sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result);
+    sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {});
     {
         auto unit_system =  UnitSystem::newMETRIC();
         const auto& well = sched.getWell("PROD1", 1);

@@ -1192,7 +1192,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result) {
+    void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& ) {
         ParseContext parseContext;
         ErrorGuard errors;
         std::vector<std::pair< const DeckKeyword* , std::size_t> > ignored_rftProperties;
