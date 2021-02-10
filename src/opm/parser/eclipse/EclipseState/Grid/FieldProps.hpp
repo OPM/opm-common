@@ -343,8 +343,9 @@ public:
             return this->data_ptr->data;
         }
 
-        const Data& field_data() const {
-            this->verify_status();
+        const Data& field_data(bool allow_unsupported = false) const {
+            if (!allow_unsupported)
+                this->verify_status();
             return *this->data_ptr;
         }
 
@@ -371,7 +372,7 @@ public:
     bool has(const std::string& keyword) const;
 
     template <typename T>
-    std::vector<std::string> keys() const;
+    std::vector<std::string> keys(bool allow_unsupported = false) const;
 
 
     template <typename T>
@@ -385,7 +386,7 @@ public:
 
         field_data = std::addressof(this->init_get<T>(keyword,
                                                       std::is_same<T,double>::value && allow_unsupported));
-        if (field_data->valid())
+        if (allow_unsupported || field_data->valid())
             return FieldDataManager<T>(keyword, GetStatus::OK, field_data);
 
         if (!has0) {

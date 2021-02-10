@@ -66,9 +66,9 @@ FieldPropsManager::get_double_field_data(const std::string& keyword,
                                          bool allow_unsupported) const
 {
     const auto& data = this->fp->try_get<double>(keyword, allow_unsupported);
-    if (!data.valid())
+    if (!allow_unsupported && !data.valid())
         throw std::out_of_range("Invalid field data requested.");
-    return data.field_data();
+    return data.field_data(allow_unsupported);
 }
 
 template <typename T>
@@ -105,8 +105,8 @@ const std::string& FieldPropsManager::default_region() const {
 }
 
 template <typename T>
-std::vector<std::string> FieldPropsManager::keys() const {
-    return this->fp->keys<T>();
+std::vector<std::string> FieldPropsManager::keys(bool allow_unsupported) const {
+    return this->fp->keys<T>(allow_unsupported);
 }
 
 std::vector<int> FieldPropsManager::actnum() const {
@@ -223,8 +223,8 @@ template bool FieldPropsManager::has<double>(const std::string&) const;
 template std::vector<bool> FieldPropsManager::defaulted<int>(const std::string&) const;
 template std::vector<bool> FieldPropsManager::defaulted<double>(const std::string&) const;
 
-template std::vector<std::string> FieldPropsManager::keys<int>() const;
-template std::vector<std::string> FieldPropsManager::keys<double>() const;
+template std::vector<std::string> FieldPropsManager::keys<int>(bool allow_unsupported) const;
+template std::vector<std::string> FieldPropsManager::keys<double>(bool allow_unsupported) const;
 
 template std::vector<int> FieldPropsManager::get_global(const std::string& keyword) const;
 template std::vector<double> FieldPropsManager::get_global(const std::string& keyword) const;

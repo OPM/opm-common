@@ -152,9 +152,11 @@ public:
       special cases the PORV and ACTNUM keywords, since these are present with
       special functions porv(bool) and actnum() the "PORV" and "ACTNUM" string
       literals are excluded from the keys() list.
+      \param allow_unsupported If true we deactivate some checks on the
+            keyword and thus allow getting keys used by the TranCalculator.
     */
     template <typename T>
-    std::vector<std::string> keys() const;
+    std::vector<std::string> keys(bool allow_unsupported = false) const;
 
     const Fieldprops::FieldData<int>&
     get_int_field_data(const std::string& keyword) const;

@@ -591,20 +591,20 @@ bool FieldProps::has<int>(const std::string& keyword) const {
 */
 
 template <>
-std::vector<std::string> FieldProps::keys<double>() const {
+std::vector<std::string> FieldProps::keys<double>(bool allow_unsupported) const {
     std::vector<std::string> klist;
     for (const auto& data_pair : this->double_data) {
-        if (data_pair.second.valid() && data_pair.first != "PORV")
+        if ((allow_unsupported || data_pair.second.valid()) && data_pair.first != "PORV")
             klist.push_back(data_pair.first);
     }
     return klist;
 }
 
 template <>
-std::vector<std::string> FieldProps::keys<int>() const {
+std::vector<std::string> FieldProps::keys<int>(bool allow_unsupported) const {
     std::vector<std::string> klist;
     for (const auto& data_pair : this->int_data) {
-        if (data_pair.second.valid() && data_pair.first != "ACTNUM")
+        if ((allow_unsupported || data_pair.second.valid()) && data_pair.first != "ACTNUM")
             klist.push_back(data_pair.first);
     }
     return klist;
