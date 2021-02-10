@@ -70,6 +70,10 @@ bool NameOrder::operator==(const NameOrder& other) const {
            this->m_name_list == other.m_name_list;
 }
 
+std::size_t NameOrder::size() const {
+    return this->m_name_list.size();
+}
+
 
 /********************************************************************************/
 
