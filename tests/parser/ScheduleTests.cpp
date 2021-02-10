@@ -1630,6 +1630,15 @@ WCONHIST
         BOOST_CHECK( !props1.hasProductionControl(Opm::Well::ProducerCMode::RESV) );
         BOOST_CHECK( !props2.hasProductionControl(Opm::Well::ProducerCMode::RESV) );
     }
+
+    BOOST_CHECK_THROW(schedule.getWell(10,0), std::exception);
+    std::vector<std::string> well_names = {"P1", "P2", "I"};
+    BOOST_CHECK_EQUAL( well_names.size(), schedule[1].well_order().size());
+
+    for (std::size_t well_index = 0; well_index < well_names.size(); well_index++) {
+        const auto& well = schedule.getWell(well_index, 1);
+        BOOST_CHECK_EQUAL( well.name(), well_names[well_index]);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
