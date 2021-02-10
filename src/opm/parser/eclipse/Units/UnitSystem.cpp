@@ -197,7 +197,7 @@ namespace {
         "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
-        "SM3/SM3",
+        "",
         "RM3/SM3", /* gas formation volume factor */
         "RM3/SM3", /* oil formation volume factor */
         "RM3/SM3", /* water formation volume factor */
@@ -381,7 +381,7 @@ namespace {
         "LB/DAY",
         "MSCF/STB",
         "STB/MSCF",
-        "STB/STB",
+        "",
         "RB/MSCF", /* gas formation volume factor */
         "RB/STB", /* oil formation volume factor */
         "RB/STB", /* water formation volume factor */
@@ -565,7 +565,7 @@ namespace {
         "G/HR",
         "SCC/SCC",
         "SCC/SCC",
-        "SCC/SCC",
+        "",
         "RCC/SCC", /* gas formation volume factor */
         "RCC/SCC", /* oil formation volume factor */
         "RCC/SCC", /* water formation volume factor */
@@ -749,7 +749,7 @@ namespace {
         "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
-        "SM3/SM3",
+        "",
         "RM3/SM3", /* gas formation volume factor */
         "RM3/SM3", /* oil formation volume factor */
         "RM3/SM3", /* water formation volume factor */
@@ -933,7 +933,7 @@ namespace {
         "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
-        "SM3/SM3",
+        "",
         "RM3/SM3", /* gas formation volume factor */
         "RM3/SM3", /* oil formation volume factor */
         "RM3/SM3", /* water formation volume factor */
