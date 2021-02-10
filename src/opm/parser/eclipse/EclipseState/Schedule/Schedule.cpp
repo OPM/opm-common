@@ -790,7 +790,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                       wellConnectionOrder);
     }
 
-    void Schedule::addWell(Well well, std::size_t report_step) {
+    void Schedule::addWell(Well well) {
         const std::string wname = well.name();
         auto& sched_state = this->snapshots.back();
 
@@ -837,7 +837,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                   pvt_table,
                   gas_inflow);
 
-        this->addWell( std::move(well), timeStep );
+        this->addWell( std::move(well) );
 
         const auto& ts = this->operator[](timeStep);
         this->updateWPAVE( wellName, timeStep, ts.pavg.get() );
@@ -1385,7 +1385,7 @@ namespace {
                 well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
             }
 
-            this->addWell(well, report_step);
+            this->addWell(well);
             this->addWellToGroup(well.groupName(), well.name(), report_step);
         }
         this->snapshots[report_step + 1].update_tuning(rst_state.tuning);

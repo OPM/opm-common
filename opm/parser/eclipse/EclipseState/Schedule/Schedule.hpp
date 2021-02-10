@@ -453,7 +453,7 @@ namespace Opm
         void load_rst(const RestartIO::RstState& rst,
                       const EclipseGrid& grid,
                       const FieldPropsManager& fp);
-        void addWell(Well well, std::size_t report_step);
+        void addWell(Well well);
         void addWell(const std::string& wellName,
                      const std::string& group,
                      int headI,
@@ -553,7 +553,7 @@ namespace Opm
         void handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWELPI   (const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, bool actionx_mode = false, const std::vector<std::string>& matching_wells = {});
+        void handleWELPI   (const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells = {});
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
         void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
