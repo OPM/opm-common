@@ -51,6 +51,7 @@ public:
 
     static NameOrder serializeObject();
 
+    const std::string& operator[](std::size_t index) const;
     bool operator==(const NameOrder& other) const;
     std::vector<std::string>::const_iterator begin() const;
     std::vector<std::string>::const_iterator end() const;

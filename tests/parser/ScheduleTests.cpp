@@ -3351,6 +3351,8 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     wo.add("W2");
     wo.add("W1");
     BOOST_CHECK_EQUAL( wo.size(), 6 );
+    BOOST_CHECK_THROW( wo[6], std::exception );
+    BOOST_CHECK_EQUAL( wo[2], "P1" );
 
     WellMatcher wm1( wo, WListManager{});
     const std::vector<std::string> pwells = {"P3", "P2", "P1"};
