@@ -1158,6 +1158,7 @@ namespace {
                     this->snapshots.back().wells.update( std::move(well2) );
 
                 this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
+                this->snapshots.back().target_wellpi[well_name] = rawProdIndex;
             }
         }
 

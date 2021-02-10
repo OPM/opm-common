@@ -3962,6 +3962,16 @@ END
         BOOST_CHECK_MESSAGE(!    scalingApplicable[1] , "Connection[1] must NOT be eligible for WELPI scaling");
         BOOST_CHECK_MESSAGE(bool(scalingApplicable[0]), "Connection[2] must be eligible for WELPI scaling");
     }
+
+    {
+        const auto& target_wellpi = sched[1].target_wellpi;
+        BOOST_CHECK_EQUAL( target_wellpi.size(), 1);
+        BOOST_CHECK_EQUAL( target_wellpi.count("P"), 1);
+    }
+    {
+        const auto& target_wellpi = sched[2].target_wellpi;
+        BOOST_CHECK_EQUAL( target_wellpi.size(), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Schedule_ApplyWellProdIndexScaling) {
