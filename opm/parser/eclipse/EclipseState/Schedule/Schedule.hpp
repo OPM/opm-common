@@ -28,8 +28,6 @@
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
@@ -51,46 +49,6 @@
 #include <opm/io/eclipse/rst/state.hpp>
 
 
-/*
-  The DynamicState<std::shared_ptr<T>> pattern: The quantities in the Schedule
-  section like e.g. wellrates and completion properties are typically
-  characterized by the following behaviour:
-
-    1. They can be updated repeatedly at arbitrary points in the Schedule
-       section.
-
-    2. The value set at one timestep will apply until is explicitly set again at
-       a later timestep.
-
-  These properties are typically stored in a DynamicState<T> container; the
-  DynamicState<T> class is a container which implements this semantics:
-
-    1. It is legitimate to ask for an out-of-range value, you will then get the
-       last value which has been set.
-
-    2. When assigning an out-of-bounds value the container will append the
-       currently set value until correct length has been reached, and then the
-       new value will be assigned.
-
-    3. The DynamicState<T> has an awareness of the total length of the time
-       axis, trying to access values beyound that is illegal.
-
-  For many of the non-trival objects like eg Well and Group the DynamicState<>
-  contains a shared pointer to an underlying object, that way the fill operation
-  when the vector is resized is quite fast. The following pattern is quite
-  common for the Schedule implementation:
-
-
-       // Create a new well object.
-       std::shared_ptr<Well> new_well = this->getWell( well_name, time_step );
-
-       // Update the new well object with new settings from the deck, the
-       // updateXXXX() method will return true if the well object was actually
-       // updated:
-       if (new_well->updateRate( new_rate ))
-           this->dynamic_state.update( time_step, new_well);
-
-*/
 
 namespace Opm
 {
@@ -162,11 +120,6 @@ namespace Opm
 
     class Schedule {
     public:
-        template<class T1, class T2> using Map = std::map<T1,T2>;
-        using GroupMap = Map<std::string, DynamicState<std::shared_ptr<Group>>>;
-        template<class T1, class T2> using UnorderedMap = std::unordered_map<T1,T2>;
-        using WellMap = UnorderedMap<std::string, DynamicState<std::shared_ptr<Well>>>;
-
         Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
         Schedule(const Deck& deck,
@@ -263,7 +216,6 @@ namespace Opm
         */
         std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
-        void updateWell(std::shared_ptr<Well> well, std::size_t reportStep);
         std::vector<std::string> changed_wells(std::size_t reportStep) const;
         const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
@@ -278,7 +230,6 @@ namespace Opm
         Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
-        std::vector<const UDQConfig*> udqConfigList() const;
         void evalAction(const SummaryState& summary_state, std::size_t timeStep);
 
         GTNode groupTree(std::size_t report_step) const;
@@ -330,17 +281,8 @@ namespace Opm
         {
             m_sched_deck.serializeOp(serializer);
             m_timeMap.serializeOp(serializer);
-            auto splitWells = splitDynMap<UnorderedMap>(wells_static);
-            serializer.vector(splitWells.first);
-            serializer(splitWells.second);
-            udq_config.serializeOp(serializer);
-            guide_rate_config.serializeOp(serializer);
-            m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
-            if (!serializer.isSerializing()) {
-                reconstructDynMap<UnorderedMap>(splitWells.first, splitWells.second, wells_static);
-            }
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
 
@@ -353,12 +295,16 @@ namespace Opm
             pack_unpack<RPTConfig, Serializer>(serializer);
             pack_unpack<Action::Actions, Serializer>(serializer);
             pack_unpack<UDQActive, Serializer>(serializer);
+            pack_unpack<UDQConfig, Serializer>(serializer);
             pack_unpack<NameOrder, Serializer>(serializer);
             pack_unpack<GroupOrder, Serializer>(serializer);
+            pack_unpack<GuideRateConfig, Serializer>(serializer);
+            pack_unpack<GasLiftOpt, Serializer>(serializer);
 
             pack_unpack_map<int, VFPProdTable, Serializer>(serializer);
             pack_unpack_map<int, VFPInjTable, Serializer>(serializer);
             pack_unpack_map<std::string, Group, Serializer>(serializer);
+            pack_unpack_map<std::string, Well, Serializer>(serializer);
         }
 
         template <typename T, class Serializer>
@@ -495,14 +441,9 @@ namespace Opm
 
 
     private:
-        template<class Key, class Value> using Map2 = std::map<Key,Value>;
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
-        WellMap wells_static;
-        DynamicState<std::shared_ptr<UDQConfig>> udq_config;
-        DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
-        DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
         RestartConfig restart_config;
         std::optional<int> exit_status;
@@ -538,6 +479,7 @@ namespace Opm
                                     std::size_t load_end,
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
+                                    bool runtime,
                                     const EclipseGrid* grid,
                                     const FieldPropsManager* fp);
         void addACTIONX(const Action::ActionX& action);
@@ -545,41 +487,15 @@ namespace Opm
         void addGroup(const std::string& groupName , std::size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
-        void updateUDQ(const DeckKeyword& keyword, std::size_t current_step);
         void handleKeyword(std::size_t currentStep,
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid* grid,
                            const FieldPropsManager* fp,
+                           const std::vector<std::string>& matching_wells,
+                           bool runtime,
                            std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties);
-
-        template<template<class, class> class Map, class Type, class Key>
-        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<std::size_t>>>>
-        splitDynMap(const Map<Key, Opm::DynamicState<Type>>& map)
-        {
-            // we have to pack the unique ptrs separately, and use an index map
-            // to allow reconstructing the appropriate structures.
-            std::vector<std::pair<Key, std::vector<std::size_t>>> asMap;
-            std::vector<Type> unique;
-            for (const auto& it : map) {
-                auto indices = it.second.split(unique);
-                asMap.push_back(std::make_pair(it.first, indices));
-            }
-
-            return std::make_pair(unique, asMap);
-        }
-
-        template<template<class, class> class Map, class Type, class Key>
-        void reconstructDynMap(const std::vector<Type>& unique,
-                               const std::vector<std::pair<Key, std::vector<std::size_t>>>& asMap,
-                               Map<Key, Opm::DynamicState<Type>>& result)
-        {
-            for (const auto& it : asMap) {
-                result[it.first].reconstruct(unique, it.second);
-            }
-        }
-
 
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
@@ -593,15 +509,21 @@ namespace Opm
             const ScheduleBlock& block;
             const DeckKeyword& keyword;
             const std::size_t currentStep;
+            const std::vector<std::string>& matching_wells;
+            const bool runtime;
             const EclipseGrid* grid_ptr;
             const FieldPropsManager* fp_ptr;
 
             HandlerContext(const ScheduleBlock& block_,
                            const DeckKeyword& keyword_,
-                           const std::size_t currentStep_):
+                           const std::size_t currentStep_,
+                           const std::vector<std::string>& matching_wells_,
+                           bool runtime_) :
                 block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
+                matching_wells(matching_wells_),
+                runtime(runtime_),
                 grid_ptr(nullptr),
                 fp_ptr(nullptr)
             {}
@@ -643,6 +565,7 @@ namespace Opm
         void handleDRSDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRVDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRVDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleEXIT     (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleGCONINJE (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleGCONPROD (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleGCONSALE (const HandlerContext&, const ParseContext&, ErrorGuard&);

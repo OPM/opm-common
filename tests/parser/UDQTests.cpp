@@ -2281,17 +2281,16 @@ TSTEP
         BOOST_CHECK_EQUAL(fu_var1, 0);
     }
 
-    /*
-      const auto& unique = schedule.unique<UDQConfig>();
-      BOOST_CHECK_EQUAL( unique.size(), 3 );
-      BOOST_CHECK_EQUAL( unique[0].first, 0 );
-      BOOST_CHECK_EQUAL( unique[1].first, 5 );
-      BOOST_CHECK_EQUAL( unique[2].first, 10 );
 
-      BOOST_CHECK( unique[0].second, schedule.getUDQConfig(0));
-      BOOST_CHECK( unique[1].second, schedule.getUDQConfig(5));
-      BOOST_CHECK( unique[2].second, schedule.getUDQConfig(10));
-    */
+    const auto& unique = schedule.unique<UDQConfig>();
+    BOOST_CHECK_EQUAL( unique.size(), 3 );
+    BOOST_CHECK_EQUAL( unique[0].first, 0 );
+    BOOST_CHECK_EQUAL( unique[1].first, 5 );
+    BOOST_CHECK_EQUAL( unique[2].first, 10 );
+
+    BOOST_CHECK( unique[0].second == schedule.getUDQConfig(0));
+    BOOST_CHECK( unique[1].second == schedule.getUDQConfig(5));
+    BOOST_CHECK( unique[2].second == schedule.getUDQConfig(10));
 }
 
 
