@@ -41,6 +41,7 @@ public:
     std::vector<std::string> sort(std::vector<std::string> names) const;
     const std::vector<std::string>& names() const;
     bool has(const std::string& wname) const;
+    std::size_t size() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
@@ -50,6 +51,7 @@ public:
 
     static NameOrder serializeObject();
 
+    const std::string& operator[](std::size_t index) const;
     bool operator==(const NameOrder& other) const;
     std::vector<std::string>::const_iterator begin() const;
     std::vector<std::string>::const_iterator end() const;

@@ -150,6 +150,15 @@ namespace Opm {
             }
 
 
+            const T* find(const std::function<bool(const std::pair<K,std::shared_ptr<T>>&)>& predicate) const {
+                auto iter = std::find_if( this->m_data.begin(), this->m_data.end(), predicate);
+                if (iter == this->m_data.end())
+                    return nullptr;
+
+                return iter->second.get();
+            }
+
+
             const std::shared_ptr<T> get_ptr(const K& key) const {
                 auto iter = this->m_data.find(key);
                 if (iter != this->m_data.end())

@@ -944,6 +944,19 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->snapshots[timeStep].wells.get(wellName);
     }
 
+    const Well& Schedule::getWell(std::size_t well_index, std::size_t timeStep) const {
+        const auto find_pred = [well_index] (const auto& well_pair) -> bool
+        {
+            return well_pair.second->seqIndex() == well_index;
+        };
+
+        auto well_ptr = this->snapshots[timeStep].wells.find( find_pred );
+        if (well_ptr == nullptr)
+            throw std::invalid_argument(fmt::format("There is no well with well_index:{} at report_step:{}", well_index, timeStep));
+
+        return *well_ptr;
+    }
+
     const Group& Schedule::getGroup(const std::string& groupName, std::size_t timeStep) const {
         return this->snapshots[timeStep].groups.get(groupName);
     }

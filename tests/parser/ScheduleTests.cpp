@@ -1630,6 +1630,15 @@ WCONHIST
         BOOST_CHECK( !props1.hasProductionControl(Opm::Well::ProducerCMode::RESV) );
         BOOST_CHECK( !props2.hasProductionControl(Opm::Well::ProducerCMode::RESV) );
     }
+
+    BOOST_CHECK_THROW(schedule.getWell(10,0), std::exception);
+    std::vector<std::string> well_names = {"P1", "P2", "I"};
+    BOOST_CHECK_EQUAL( well_names.size(), schedule[1].well_order().size());
+
+    for (std::size_t well_index = 0; well_index < well_names.size(); well_index++) {
+        const auto& well = schedule.getWell(well_index, 1);
+        BOOST_CHECK_EQUAL( well.name(), well_names[well_index]);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
@@ -3341,6 +3350,9 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     wo.add("W3");
     wo.add("W2");
     wo.add("W1");
+    BOOST_CHECK_EQUAL( wo.size(), 6 );
+    BOOST_CHECK_THROW( wo[6], std::exception );
+    BOOST_CHECK_EQUAL( wo[2], "P1" );
 
     WellMatcher wm1( wo, WListManager{});
     const std::vector<std::string> pwells = {"P3", "P2", "P1"};

@@ -217,6 +217,7 @@ namespace Opm
         std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
         std::vector<std::string> changed_wells(std::size_t reportStep) const;
+        const Well& getWell(std::size_t well_index, std::size_t timeStep) const;
         const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
         std::vector<Well> getWells(std::size_t timeStep) const;
