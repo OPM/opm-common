@@ -250,7 +250,7 @@ namespace Opm
         const RestartConfig& restart() const;
         RestartConfig& restart();
 
-        void applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point& sim_time, const Action::ActionX& action, const Action::Result& result);
+        void applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
 
