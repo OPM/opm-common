@@ -377,7 +377,6 @@ Well Well::serializeObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
-    result.productivity_index = 10.0;
     result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
@@ -504,14 +503,8 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return update;
 }
 
-bool Well::updateWellProductivityIndex(const double prodIndex) {
-    const auto update = this->productivity_index != prodIndex;
-    if (update)
-        this->productivity_index = prodIndex;
-
-    // Note order here: We must always run prepareWellPIScaling(), but that operation
-    // *may* not lead to requiring updating the well state, so return 'update' if not.
-    return this->connections->prepareWellPIScaling() || update;
+bool Well::updateWellProductivityIndex() {
+    return this->connections->prepareWellPIScaling();
 }
 
 bool Well::updateHasProduced() {
@@ -838,60 +831,31 @@ void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
 }
 
-namespace {
-    double convertWellPIToSI(const double rawWellPI,
-                             const Phase preferred_phase,
-                             const UnitSystem& unit_system)
-    {
-        using M = UnitSystem::measure;
 
-        // XXX: Should really have LIQUID here too, but the 'Phase' type does
-        //      not provide that enumerator.
-        switch (preferred_phase) {
-        case Phase::GAS:
-            return unit_system.to_si(M::gas_productivity_index, rawWellPI);
+double Well::convertDeckPI(double deckPI) const {
+    using M = UnitSystem::measure;
 
-        case Phase::OIL:
-        case Phase::WATER:
-            return unit_system.to_si(M::liquid_productivity_index, rawWellPI);
+    // XXX: Should really have LIQUID here too, but the 'Phase' type does
+    //      not provide that enumerator.
+    switch (this->getPreferredPhase()) {
+    case Phase::GAS:
+        return this->unit_system.to_si(M::gas_productivity_index, deckPI);
 
-        default:
-            throw std::invalid_argument {
-                "Preferred phase " + std::to_string(static_cast<int>(preferred_phase)) +
+    case Phase::OIL:
+    case Phase::WATER:
+        return this->unit_system.to_si(M::liquid_productivity_index, deckPI);
+
+    default:
+        throw std::invalid_argument {
+            "Preferred phase " + std::to_string(static_cast<int>(this->getPreferredPhase())) +
                 " is not supported. Must be one of 'OIL', 'GAS', or 'WATER'"
-            };
-        }
+                };
     }
 }
 
-double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
-    if (this->connections->empty())
-        // No connections for this well.  Unexpected.
-        return 1.0;
 
-    if (!this->productivity_index)
-        // WELPI not activated.  Nothing to do.
-        return 1.0;
-
-    const double requestedWellPI_SI =
-        convertWellPIToSI(*this->productivity_index, this->getPreferredPhase(), this->unit_system);
-
-    return requestedWellPI_SI / currentEffectivePI;
-}
 
 void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {
-    if (this->connections->empty())
-        // No connections for this well.  Unexpected.
-        return;
-
-    if (!this->productivity_index)
-        // WELPI not activated.  Nothing to do.
-        return;
-
-    if (scalingFactor == 1.0)
-        // No change in scaling.
-        return;
-
     this->connections->applyWellPIScaling(scalingFactor, scalingApplicable);
 }
 
@@ -1619,7 +1583,6 @@ bool Well::operator==(const Well& data) const {
            this->hasProduced() == data.hasProduced() &&
            this->hasInjected() == data.hasInjected() &&
            this->predictionMode() == data.predictionMode() &&
-           this->productivity_index == data.productivity_index &&
            this->getTracerProperties() == data.getTracerProperties() &&
            this->getProductionProperties() == data.getProductionProperties() &&
            this->m_pavg == data.m_pavg &&

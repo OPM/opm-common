@@ -1282,8 +1282,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         std::vector<bool> scalingApplicable;
+        const auto targetPI = this->snapshots[reportStep].target_wellpi.at(well_name);
         auto prev_well = unique_wells[0];
-        auto scalingFactor = prev_well->getWellPIScalingFactor(newWellPI);
+        auto scalingFactor = prev_well->convertDeckPI(targetPI) / newWellPI;
         prev_well->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
 
         for (std::size_t well_index = 1; well_index < unique_wells.size(); well_index++) {

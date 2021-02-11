@@ -3929,7 +3929,7 @@ END
         const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
         auto wellP = sched.getWell("P", 1);
 
-        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.convertDeckPI(200) / (100.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -3948,7 +3948,7 @@ END
         const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
         auto wellP = sched.getWell("P", 2);
 
-        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.convertDeckPI(200) / (100.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -4070,9 +4070,9 @@ END
     BOOST_REQUIRE_MESSAGE(sched[3].events().hasEvent(ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX),
                           "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 3");
 
-    auto getScalingFactor = [&sched](const std::size_t report_step, const double wellPI) -> double
+    auto getScalingFactor = [&sched](const std::size_t report_step, double targetPI, const double wellPI) -> double
     {
-        return sched.getWell("P", report_step).getWellPIScalingFactor(wellPI);
+        return sched.getWell("P", report_step).convertDeckPI(targetPI) / wellPI;
     };
 
     auto applyWellPIScaling = [&sched](const std::size_t report_step, const double newWellPI)
@@ -4088,7 +4088,7 @@ END
     // Apply WELPI scaling after end of time series => no change to CTFs
     {
         const auto report_step   = std::size_t{1};
-        const auto scalingFactor = getScalingFactor(report_step, 100.0*liquid_PI_unit());
+        const auto scalingFactor = getScalingFactor(report_step, sched[report_step].target_wellpi.at("P"), 100.0*liquid_PI_unit());
 
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 

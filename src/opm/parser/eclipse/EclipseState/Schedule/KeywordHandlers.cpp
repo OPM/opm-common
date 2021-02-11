@@ -1154,7 +1154,7 @@ namespace {
                 // internal state in the WellConnections class.
                 auto connections = std::make_shared<WellConnections>(well2.getConnections());
                 well2.updateConnections(std::move(connections), false, true);
-                if (well2.updateWellProductivityIndex(rawProdIndex))
+                if (well2.updateWellProductivityIndex())
                     this->snapshots.back().wells.update( std::move(well2) );
 
                 this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
