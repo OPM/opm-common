@@ -75,10 +75,21 @@ macro (config_hook)
     endif()
 
     # For this project
-    add_definitions(-DFMT_HEADER_ONLY)
-    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
+    find_package(fmt 7.1.3)
+    if(NOT TARGET fmt::fmt-header-only)
+      add_library(fmt::fmt-header-only INTERFACE IMPORTED)
+      set_target_properties(fmt::fmt-header-only PROPERTIES
+	INTERFACE_COMPILE_DEFINITIONS "FMT_HEADER_ONLY=1"
+	INTERFACE_COMPILE_FEATURES "cxx_variadic_templates"
+	INTERFACE_INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
+    endif()
+    # Use generator expression to hide lib in export,
+    # see https://gitlab.kitware.com/cmake/cmake/-/issues/15415#note_634114
+    # ${project}_PRIVATE_LIBRARIES will be used with keyword PRIVATE in command
+    # target_link_libraries()
+    set(opm-common_PRIVATE_LIBRARIES "$<BUILD_INTERFACE:fmt::fmt-header-only>")
+
     include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
-    list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
 
     # For downstreams
     list(APPEND EXTRA_INCLUDES ${PROJECT_BINARY_DIR}/include)
@@ -166,7 +177,7 @@ include (OpmLibMain)
 if (ENABLE_MOCKSIM)
   add_library(mocksim
               msim/src/msim.cpp)
-  target_link_libraries(mocksim opmcommon)
+  target_link_libraries(mocksim PUBLIC opmcommon PRIVATE ${opm-common_PRIVATE_LIBRARIES})
   target_include_directories(mocksim PUBLIC msim/include)
   add_executable(msim examples/msim.cpp)
   target_link_libraries(msim mocksim)
@@ -209,7 +220,7 @@ if(ENABLE_ECL_INPUT)
     )
 
   foreach(target compareECL convertECL summary rewriteEclFile)
-    target_link_libraries(${target} opmcommon)
+    target_link_libraries(${target} PUBLIC opmcommon PRIVATE ${opm-common_PRIVATE_LIBRARIES})
     install(TARGETS ${target} DESTINATION bin)
   endforeach()
 
@@ -383,7 +394,7 @@ if (OPM_ENABLE_PYTHON)
   add_subdirectory(python/pybind11)
   target_include_directories(opmcommon SYSTEM PRIVATE "python/pybind11/include;${PYTHON_INCLUDE_DIRS}")
   if (OPM_ENABLE_EMBEDDED_PYTHON)
-    target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY})
+    target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY PRIVATE ${opm-common_PRIVATE_LIBRARIES})
     add_definitions(-DEMBEDDED_PYTHON)
   endif()
 endif()

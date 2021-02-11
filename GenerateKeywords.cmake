@@ -32,7 +32,8 @@ if(NOT cjson_FOUND)
 endif()
 add_executable(genkw ${genkw_SOURCES})
 
-target_link_libraries(genkw ${opm-common_LIBRARIES})
+# opm-common_PRIVATE_LIBRARIES not defined at this point.
+target_link_libraries(genkw PUBLIC ${opm-common_LIBRARIES} PRIVATE $<BUILD_INTERFACE:fmt::fmt-header-only>)
 
 # Generate keyword list
 include(src/opm/parser/eclipse/share/keywords/keyword_list.cmake)

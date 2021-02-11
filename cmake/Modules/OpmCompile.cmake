@@ -52,8 +52,8 @@ macro (opm_compile opm)
           set(_public_libs ${${opm}_LIBRARIES})
           unset(_interface)
         endif()
-        target_link_libraries (${${opm}_TARGET} PUBLIC ${_public_libs}
-          INTERFACE ${_interface_libs})
+        target_link_libraries (${${opm}_TARGET}  PUBLIC ${_public_libs}
+          INTERFACE ${_interface_libs} PRIVATE "${${opm}_PRIVATE_LIBRARIES}")
 
         if (STRIP_DEBUGGING_SYMBOLS)
 	  # queue this executable to be stripped

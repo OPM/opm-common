@@ -77,7 +77,7 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
       set (_test_lib "")
       add_static_analysis_tests(_sat_FILE ${opm}_INCLUDE_DIRS)
     endif (NOT "${test_regexp}" STREQUAL "")
-    target_link_libraries (${_sat_NAME} ${${opm}_TARGET} ${${opm}_LIBRARIES} ${_test_lib})
+    target_link_libraries (${_sat_NAME} ${${opm}_TARGET} ${${opm}_LIBRARIES} ${_test_lib} ${${project}_PRIVATE_LIBRARIES})
     if (STRIP_DEBUGGING_SYMBOLS)
       strip_debug_symbols (${_sat_NAME} _sat_DEBUG)
       list (APPEND ${satellite}_DEBUG ${_sat_DEBUG})
@@ -283,6 +283,9 @@ macro(opm_add_test TestName)
   # the libraries to link against
   if (NOT CURTEST_LIBRARIES)
     SET(CURTEST_LIBRARIES "${${project}_LIBRARIES}")
+    if(${project}_PRIVATE_LIBRARIES})
+      list(APPEND CURTEST_LIBRARIES ${${project}_PRIVATE_LIBRARIES})
+      endif()
   endif()
 
   # determine if the test should be completely ignored, i.e., the

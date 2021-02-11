@@ -21,6 +21,11 @@
 #   - CMP0074 to indicate that <PackageName>_ROOT can be used to find package
 #             config files
 macro(OpmSetPolicies)
+  if (POLICY CMP0022)
+    # Needed to not export the imported (and sometimes embedded) header only libraries
+    # See https://gitlab.kitware.com/cmake/cmake/-/issues/15415#note_634114
+    cmake_policy(SET CMP0022 NEW)
+  endif()
   if (POLICY CMP0026)
     # Needed as we query LOCATION in OpmCompile.cmake and OpmSatellites.cmake
     cmake_policy(SET CMP0026 OLD)
