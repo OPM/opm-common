@@ -473,7 +473,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/PYACTION.DATA
           tests/0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA
           tests/2_WLIFT_MODEL5_NOINC.DATA
-          tests/4_NETWORK_MODEL5_MSW_ALL.DATA
+          tests/TEST_NETWORK_ALL.DATA
           tests/act1.py
           tests/MSW.DATA
           tests/EXIT_TEST.DATA

@@ -54,10 +54,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     namespace RBran {
     enum index : std::vector<double>::size_type {
         OilProdRate = 0,
-        WaterProdRate = 0,
-        GasProdRate = 0,
-        OilDensity = 0,
-        GasDensity = 0
+        WaterProdRate = 1,
+        GasProdRate = 2,
+        OilDensity = 8,
+        GasDensity = 9
     };
     }
 

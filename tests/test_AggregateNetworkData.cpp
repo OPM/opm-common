@@ -59,30 +59,28 @@ namespace {
     {
         auto state = Opm::SummaryState{std::chrono::system_clock::now()};
 
-        state.update("WOPR:B-1H",   335.);
-        state.update("WWPR:B-1H",   43.);
-        state.update("WGPR:B-1H",   224578.);
-        state.update("WGLIR:B-1H",  65987.);
+        state.update("WOPR:P1",   3342.673828);
+        state.update("WWPR:P1",   0.000005);
+        state.update("WGPR:P1",   334267.375);
+        state.update("WGLIR:P1",  111000.);
 
-        state.update("WOPR:B-2H",   235.);
-        state.update("WWPR:B-2H",   33.);
-        state.update("WGPR:B-2H",   124578.);
-        state.update("WGLIR:B-2H",  55987.);
+        state.update("WOPR:P2",   3882.443848);
+        state.update("WWPR:P2",   0.000002);
+        state.update("WGPR:P2",   672736.9375);
+        state.update("WGLIR:P2",  99666.);
 
-        state.update("WOPR:B-3H",   135.);
-        state.update("WWPR:B-3H",   23.);
-        state.update("WGPR:B-3H",   24578.);
-        state.update("WGLIR:B-3H",  45987.);
+        state.update("WOPR:P3",   3000.000000);
+        state.update("WWPR:P3",   0.000002);
+        state.update("WGPR:P3",   529658.8125);
+        state.update("WGLIR:P3",  55000.);
 
-        state.update("WOPR:C-1H",   435.);
-        state.update("WWPR:C-1H",   53.);
-        state.update("WGPR:C-1H",   324578.);
-        state.update("WGLIR:C-1H",  75987.);
 
-        state.update("WOPR:C-2H",   535.);
-        state.update("WWPR:C-2H",   63.);
-        state.update("WGPR:C-2H",   424578.);
-        state.update("WGLIR:C-2H",  75987.);
+        state.update("GPR:B1",  81.6848);
+        state.update("GPR:N1",  72.);
+        state.update("GPR:N2",  69.);
+        state.update("GPR:PLAT-A",  67.);
+        state.update("GPR:B2",  79.0666);
+        state.update("GPR:M1",  72.);
 
         return state;
     }
@@ -113,27 +111,19 @@ BOOST_AUTO_TEST_SUITE(Aggregate_Network)
 BOOST_AUTO_TEST_CASE (Constructor)
 {
     namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
-    const auto simCase = SimulationCase{first_sim("4_NETWORK_MODEL5_MSW_ALL.DATA")};
+    const auto simCase = SimulationCase{first_sim("TEST_NETWORK_ALL.DATA")};
 
     Opm::EclipseState es = simCase.es;
     Opm::Runspec rspec   = es.runspec();
     Opm::SummaryState st = sum_state();
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
-    const auto& ioConfig = es.getIOConfig();
+    //const auto& ioConfig = es.getIOConfig();
     const auto& units    = es.getUnits();
 
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
-    std::string outputDir = "./";
-    std::string baseName = "4_NETWORK_MODEL5_MSW_ALL";
-    Opm::EclIO::OutputStream::Restart rstFile {
-        Opm::EclIO::OutputStream::ResultSet { outputDir, baseName },
-        rptStep,
-        Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
-        Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
-    };
 
     double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
@@ -149,146 +139,179 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getZNode().size()), ih[VI::NZNODE] * ih[VI::NODMAX]);
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getRNode().size()), ih[VI::NRNODE] * ih[VI::NODMAX]);
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getRBran().size()), ih[VI::NRBRAN] * ih[VI::NODMAX]);
+
+    //INode-parameters
+    const auto& iNode = networkData.getINode();
+    auto start = 0*ih[VI::NINODE];
+    BOOST_CHECK_EQUAL(iNode[start + 0], 1);
+    BOOST_CHECK_EQUAL(iNode[start + 1], 1);
+    BOOST_CHECK_EQUAL(iNode[start + 2], 4);
+    BOOST_CHECK_EQUAL(iNode[start + 3], 0);
+    BOOST_CHECK_EQUAL(iNode[start + 4], 1);
+
+    start = 1*ih[VI::NINODE];
+    BOOST_CHECK_EQUAL(iNode[start + 0], 2);
+    BOOST_CHECK_EQUAL(iNode[start + 1], 2);
+    BOOST_CHECK_EQUAL(iNode[start + 2], 3);
+    BOOST_CHECK_EQUAL(iNode[start + 3], 0);
+    BOOST_CHECK_EQUAL(iNode[start + 4], 1);
+
+    start = 2*ih[VI::NINODE];
+    BOOST_CHECK_EQUAL(iNode[start + 0], 3);
+    BOOST_CHECK_EQUAL(iNode[start + 1], 4);
+    BOOST_CHECK_EQUAL(iNode[start + 2], 1);
+    BOOST_CHECK_EQUAL(iNode[start + 3], 0);
+    BOOST_CHECK_EQUAL(iNode[start + 4], 1);
+
+    start = 3*ih[VI::NINODE];
+    BOOST_CHECK_EQUAL(iNode[start + 0], 1);
+    BOOST_CHECK_EQUAL(iNode[start + 1], 7);
+    BOOST_CHECK_EQUAL(iNode[start + 2], 2);
+    BOOST_CHECK_EQUAL(iNode[start + 3], 1);
+    BOOST_CHECK_EQUAL(iNode[start + 4], 1);
+
+    start = 4*ih[VI::NINODE];
+    BOOST_CHECK_EQUAL(iNode[start + 0], 1);
+    BOOST_CHECK_EQUAL(iNode[start + 1], 8);
+    BOOST_CHECK_EQUAL(iNode[start + 2], 6);
+    BOOST_CHECK_EQUAL(iNode[start + 3], 0);
+    BOOST_CHECK_EQUAL(iNode[start + 4], 1);
+
+    start = 5*ih[VI::NINODE];
+    BOOST_CHECK_EQUAL(iNode[start + 0], 2);
+    BOOST_CHECK_EQUAL(iNode[start + 1], 9);
+    BOOST_CHECK_EQUAL(iNode[start + 2], 5);
+    BOOST_CHECK_EQUAL(iNode[start + 3], 0);
+    BOOST_CHECK_EQUAL(iNode[start + 4], 1);
+
+    //IBran-parameters
+    const auto& iBran = networkData.getIBran();
+    start = 0*ih[VI::NIBRAN];
+    BOOST_CHECK_EQUAL(iBran[start + 0], 1);
+    BOOST_CHECK_EQUAL(iBran[start + 1], 2);
+    BOOST_CHECK_EQUAL(iBran[start + 2], 3);
+
+    start = 1*ih[VI::NIBRAN];
+    BOOST_CHECK_EQUAL(iBran[start + 0], 2);
+    BOOST_CHECK_EQUAL(iBran[start + 1], 3);
+    BOOST_CHECK_EQUAL(iBran[start + 2], 8);
+
+    start = 2*ih[VI::NIBRAN];
+    BOOST_CHECK_EQUAL(iBran[start + 0], 3);
+    BOOST_CHECK_EQUAL(iBran[start + 1], 4);
+    BOOST_CHECK_EQUAL(iBran[start + 2], 7);
+
+    start = 3*ih[VI::NIBRAN];
+    BOOST_CHECK_EQUAL(iBran[start + 0], 5);
+    BOOST_CHECK_EQUAL(iBran[start + 1], 6);
+    BOOST_CHECK_EQUAL(iBran[start + 2], 3);
+
+    start = 4*ih[VI::NIBRAN];
+    BOOST_CHECK_EQUAL(iBran[start + 0], 6);
+    BOOST_CHECK_EQUAL(iBran[start + 1], 3);
+    BOOST_CHECK_EQUAL(iBran[start + 2], 8);
+
+    //ZNode-parameters
+    const auto& zNode = networkData.getZNode();
+    start = 0*ih[VI::NZNODE];
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "B1      ");
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+
+    start = 1*ih[VI::NZNODE];
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "N1      ");
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+
+    start = 2*ih[VI::NZNODE];
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "N2      ");
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+
+    start = 3*ih[VI::NZNODE];
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "PLAT-A  ");
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+
+    start = 4*ih[VI::NZNODE];
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "B2      ");
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+
+    start = 5*ih[VI::NZNODE];
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "M1      ");
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+
+    //INobr-parameters
+    const auto& iNobr = networkData.getINobr();
+    start = 0;
+    BOOST_CHECK_EQUAL(iNobr[start + 0], -1);
+    BOOST_CHECK_EQUAL(iNobr[start + 1],  1);
+    BOOST_CHECK_EQUAL(iNobr[start + 2], -2);
+    BOOST_CHECK_EQUAL(iNobr[start + 3],  2);
+    BOOST_CHECK_EQUAL(iNobr[start + 4], -3);
+    BOOST_CHECK_EQUAL(iNobr[start + 5],  5);
+    BOOST_CHECK_EQUAL(iNobr[start + 6],  3);
+    BOOST_CHECK_EQUAL(iNobr[start + 7], -4);
+    BOOST_CHECK_EQUAL(iNobr[start + 8],  4);
+    BOOST_CHECK_EQUAL(iNobr[start + 9], -5);
+
+    //RNode-parameters
+    const auto& rNode = networkData.getRNode();
+    start = 0*ih[VI::NRNODE];
+    BOOST_CHECK_CLOSE(rNode[start + 0], 81.6848, 1.0e-10);
+    //BOOST_CHECK_CLOSE(rNode[start + 1], 1., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 2], 50., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 15], 1., 1.0e-10);
+
+    start = 1*ih[VI::NRNODE];
+    BOOST_CHECK_CLOSE(rNode[start + 0], 72., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 1], 1., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 2], 67., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 15], 1., 1.0e-10);
+
+    start = 2*ih[VI::NRNODE];
+    BOOST_CHECK_CLOSE(rNode[start + 0], 69., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 1], 1., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 2], 67., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 15], 1., 1.0e-10);
+
+    start = 3*ih[VI::NRNODE];
+    BOOST_CHECK_CLOSE(rNode[start + 0], 67., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 1], 0., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 2], 67., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 15], 1., 1.0e-10);
+
+    start = 4*ih[VI::NRNODE];
+    BOOST_CHECK_CLOSE(rNode[start + 0], 79.0666, 1.0e-10);
+    //BOOST_CHECK_CLOSE(rNode[start + 1], 1., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 2], 52., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 15], 1., 1.0e-10);
+
+    start = 5*ih[VI::NRNODE];
+    BOOST_CHECK_CLOSE(rNode[start + 0], 72., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 1], 1., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 2], 67., 1.0e-10);
+    BOOST_CHECK_CLOSE(rNode[start + 15], 1., 1.0e-10);
+
+
+    //RNode-parameters
+    const auto& rBran = networkData.getRBran();
+    start = 0*ih[VI::NRBRAN];
+    BOOST_CHECK_CLOSE(rBran[start + 0], 6342.673828, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 1], 7.0e-06, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 2], 1029926.1875, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 8], 841.77298664275565, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 9], 0.91567670595811512, 1.0e-10);
+
+    start = 2*ih[VI::NRBRAN];
+    BOOST_CHECK_CLOSE(rBran[start + 0], 10225.117676, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 1], 9.0e-06, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 2], 1802329.125, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 8], 841.97309189645352, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 9], 0.91752948909927878, 1.0e-10);
+
+    start = 3*ih[VI::NRBRAN];
+    BOOST_CHECK_CLOSE(rBran[start + 0], 3882.4438479999999, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 1], 1.9999999999999999e-06, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 2], 772402.9375, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 8], 842.3, 1.0e-10);
+    BOOST_CHECK_CLOSE(rBran[start + 9], 0.92, 1.0e-10);
 }
-
-#if 0
-BOOST_AUTO_TEST_CASE (Declared_Group_Data)
-{
-    const auto simCase = SimulationCase{first_sim()};
-
-    // Report Step 1: 2115-01-01 --> 2015-01-05
-    const auto rptStep = std::size_t{1};
-
-    const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
-    };
-
-    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{4});
-
-    const auto smry = sim_state();
-    const auto& units    = simCase.es.getUnits();
-    auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData{ih.value};
-    agrpd.captureDeclaredGroupData(simCase.sched, units, rptStep, smry,
-            ih.value);
-
-    // IGRP (PROD)
-    {
-        auto start = 0*ih.nigrpz;
-
-        const auto& iGrp = agrpd.getIGroup();
-        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  2); // Group GRP1 - Child group number one - equal to group WGRP1 (no 2)
-        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  3); // Group GRP1 - Child group number two - equal to group WGRP2 (no 3)
-        BOOST_CHECK_EQUAL(iGrp[start + 4] ,  2); // Group GRP1 - No of child groups
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  1); // Group GRP1 - Group type (well group = 0, node group = 1)
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  1); // Group GRP1 - Group level (FIELD level is 0)
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  5); // Group GRP1 - index of parent group (= 0 for FIELD)
-
-        start = 1*ih.nigrpz;
-        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group WGRP1 - Child well number one - equal to well PROD1 (no 1)
-        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  3); // Group WGRP1 - Child well number two - equal to well WINJ1 (no 3)
-        BOOST_CHECK_EQUAL(iGrp[start + 4] ,  2); // Group WGRP1 - No of child wells
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  0); // Group WGRP1 - Group type (well group = 0, node group = 1)
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  2); // Group WGRP1 - Group level (FIELD level is 0)
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  1); // Group GRP1 - index of parent group (= 0 for FIELD)
-
-        start = (ih.ngmaxz-1)*ih.nigrpz;
-        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group FIELD - Child group number one - equal to group GRP1
-        BOOST_CHECK_EQUAL(iGrp[start + 4] ,  1); // Group FIELD - No of child groups
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  1); // Group FIELD - Group type (well group = 0, node group = 1)
-        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  0); // Group FIELD - Group level (FIELD level is 0)
-    }
-
-
-    // XGRP (PROD)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
-        auto start = 0*ih.nxgrpz;
-
-        const auto& xGrp = agrpd.getXGroup();
-        BOOST_CHECK_EQUAL(xGrp[start + 0] ,  235.); // Group GRP1 - GOPR
-        BOOST_CHECK_EQUAL(xGrp[start + 1] ,  239.); // Group GRP1 - GWPR
-        BOOST_CHECK_EQUAL(xGrp[start + 2] ,  100237.); // Group GRP1 - GGPR
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::OilPrGuideRate], 345.6, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::OilPrGuideRate],
-                          xGrp[start + Ix::OilPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::WatPrGuideRate], 456.7, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::WatPrGuideRate],
-                          xGrp[start + Ix::WatPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::GasPrGuideRate], 567.8, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::GasPrGuideRate],
-                          xGrp[start + Ix::GasPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::VoidPrGuideRate], 678.9, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::VoidPrGuideRate],
-                          xGrp[start + Ix::VoidPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::OilInjGuideRate], 0.123, 1.0e-10);
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::WatInjGuideRate], 1234.5, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::WatInjGuideRate],
-                          xGrp[start + Ix::WatInjGuideRate_2]);
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::GasInjGuideRate], 2345.6, 1.0e-10);
-
-        start = 1*ih.nxgrpz;
-        BOOST_CHECK_EQUAL(xGrp[start + 0] ,  23.); // Group WGRP1 - GOPR
-        BOOST_CHECK_EQUAL(xGrp[start + 1] ,  29.); // Group WGRP1 - GWPR
-        BOOST_CHECK_EQUAL(xGrp[start + 2] ,  50237.); // Group WGRP1 - GGPR
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::OilPrGuideRate], 456.7, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::OilPrGuideRate],
-                          xGrp[start + Ix::OilPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::WatPrGuideRate], 567.8, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::WatPrGuideRate],
-                          xGrp[start + Ix::WatPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::GasPrGuideRate], 678.9, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::GasPrGuideRate],
-                          xGrp[start + Ix::GasPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::VoidPrGuideRate], 789.1, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::VoidPrGuideRate],
-                          xGrp[start + Ix::VoidPrGuideRate_2]);
-
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::OilInjGuideRate], 1.23, 1.0e-10);
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::WatInjGuideRate], 2345.6, 1.0e-10);
-        BOOST_CHECK_EQUAL(xGrp[start + Ix::WatInjGuideRate],
-                          xGrp[start + Ix::WatInjGuideRate_2]);
-        BOOST_CHECK_CLOSE(xGrp[start + Ix::GasInjGuideRate], 3456.7, 1.0e-10);
-
-        start = 2*ih.nxgrpz;
-        BOOST_CHECK_EQUAL(xGrp[start + 0] ,  43.); // Group WGRP2 - GOPR
-        BOOST_CHECK_EQUAL(xGrp[start + 1] ,  59.); // Group WGRP2 - GWPR
-        BOOST_CHECK_EQUAL(xGrp[start + 2] ,  70237.); // Group WGRP2 - GGPR
-
-
-        start = (ih.ngmaxz-1)*ih.nxgrpz;
-        BOOST_CHECK_EQUAL(xGrp[start + 0] ,  3456.); // Group FIELD - FOPR
-        BOOST_CHECK_EQUAL(xGrp[start + 1] ,  5678.); // Group FIELD - FWPR
-        BOOST_CHECK_EQUAL(xGrp[start + 2] ,  2003456.); // Group FIELD - FGPR
-    }
-
-        // ZGRP (PROD)
-    {
-        auto start = 0*ih.nzgrpz;
-
-        const auto& zGrp = agrpd.getZGroup();
-        BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "GRP1    "); // Group GRP1 - GOPR
-
-        start = 1*ih.nzgrpz;
-        BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "WGRP1   "); // Group WGRP1 - GOPR
-
-        start = 2*ih.nzgrpz;
-        BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "WGRP2   "); // Group WGRP2 - GOPR
-
-        start = (ih.ngmaxz-1)*ih.nzgrpz;
-        BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "FIELD   "); // Group FIELD - FOPR
-    }
-
-#endif
-//}
-
 
 BOOST_AUTO_TEST_SUITE_END()
