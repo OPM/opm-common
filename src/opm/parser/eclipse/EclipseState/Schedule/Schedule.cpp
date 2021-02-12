@@ -118,11 +118,11 @@ namespace {
     {
         if (rst) {
             auto restart_step = rst->header.restart_info().second;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, &grid, &fp);
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, nullptr, &grid, &fp);
             this->load_rst(*rst, grid, fp);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, &grid, &fp);
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
         } else
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, &grid, &fp);
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
 
         /*
           The code in the #ifdef SCHEDULE_DEBUG is an enforced integration test
@@ -274,6 +274,7 @@ namespace {
                                  const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
                                  bool runtime,
+                                 const std::unordered_map<std::string, double> * target_wellpi,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
         static const std::unordered_set<std::string> require_grid = {
@@ -282,7 +283,7 @@ namespace {
         };
 
 
-        HandlerContext handlerContext { block, keyword, currentStep, matching_wells, runtime };
+        HandlerContext handlerContext { block, keyword, currentStep, matching_wells, runtime , target_wellpi};
 
         /*
           The grid and fieldProps members create problems for reiterating the
@@ -353,6 +354,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                       const ParseContext& parseContext ,
                                       ErrorGuard& errors,
                                       bool runtime,
+                                      const std::unordered_map<std::string, double> * target_wellpi,
                                       const EclipseGrid* grid,
                                       const FieldPropsManager* fp) {
 
@@ -472,6 +474,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     fp,
                                     {},
                                     runtime,
+                                    target_wellpi,
                                     rftProperties);
                 keyword_index++;
             }
@@ -1192,7 +1195,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& ) {
+    void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         ParseContext parseContext;
         ErrorGuard errors;
         std::vector<std::pair< const DeckKeyword* , std::size_t> > ignored_rftProperties;
@@ -1211,10 +1214,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 nullptr,
                                 result.wells(),
                                 true,
+                                &target_wellpi,
                                 ignored_rftProperties);
         }
         if (reportStep < this->m_sched_deck.size() - 1)
-            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, true, nullptr, nullptr);
+            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, true, &target_wellpi, nullptr, nullptr);
 
         //this->m_sched_deck[reportStep].push
 

@@ -1117,7 +1117,38 @@ namespace {
     }
 
     void Schedule::handleWELPI(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        this->handleWELPI(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
+        if (handlerContext.runtime)
+            this->handleWELPIRuntime(handlerContext);
+        else
+            this->handleWELPI(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
+    }
+
+    void Schedule::handleWELPIRuntime(const HandlerContext& handlerContext) {
+        using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
+        using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
+
+        auto report_step = handlerContext.currentStep;
+        for (const auto& record : handlerContext.keyword) {
+            const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
+                                                    report_step,
+                                                    handlerContext.matching_wells);
+            const auto targetPI = record.getItem<PI>().get<double>(0);
+
+            std::vector<bool> scalingApplicable;
+            const auto& current_wellpi = *handlerContext.target_wellpi;
+            for (const auto& well_name : well_names) {
+                auto wellpi_iter = current_wellpi.find(well_name);
+                if (wellpi_iter == current_wellpi.end())
+                    throw std::logic_error(fmt::format("Missing current PI for well {}", well_name));
+
+                auto new_well = this->getWell(well_name, report_step);
+                auto scalingFactor = new_well.convertDeckPI(targetPI) / wellpi_iter->second;
+                new_well.updateWellProductivityIndex();
+                new_well.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+                this->snapshots.back().wells.update( std::move(new_well) );
+                this->snapshots.back().target_wellpi[well_name] = targetPI;
+            }
+        }
     }
 
     void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {

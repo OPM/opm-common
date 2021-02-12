@@ -481,6 +481,7 @@ namespace Opm
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
                                     bool runtime,
+                                    const std::unordered_map<std::string, double> * target_wellpi,
                                     const EclipseGrid* grid,
                                     const FieldPropsManager* fp);
         void addACTIONX(const Action::ActionX& action);
@@ -496,6 +497,7 @@ namespace Opm
                            const FieldPropsManager* fp,
                            const std::vector<std::string>& matching_wells,
                            bool runtime,
+                           const std::unordered_map<std::string, double> * target_wellpi,
                            std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties);
 
         static std::string formatDate(std::time_t t);
@@ -512,6 +514,7 @@ namespace Opm
             const std::size_t currentStep;
             const std::vector<std::string>& matching_wells;
             const bool runtime;
+            const std::unordered_map<std::string, double> * target_wellpi;
             const EclipseGrid* grid_ptr;
             const FieldPropsManager* fp_ptr;
 
@@ -519,12 +522,14 @@ namespace Opm
                            const DeckKeyword& keyword_,
                            const std::size_t currentStep_,
                            const std::vector<std::string>& matching_wells_,
-                           bool runtime_) :
+                           bool runtime_,
+                           const std::unordered_map<std::string, double> * target_wellpi_):
                 block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
                 matching_wells(matching_wells_),
                 runtime(runtime_),
+                target_wellpi(target_wellpi_),
                 grid_ptr(nullptr),
                 fp_ptr(nullptr)
             {}
@@ -555,6 +560,7 @@ namespace Opm
         void handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWELPI   (const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells = {});
+        void handleWELPIRuntime(const HandlerContext&);
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
         void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
