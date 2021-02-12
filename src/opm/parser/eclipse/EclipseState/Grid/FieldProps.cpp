@@ -592,17 +592,28 @@ bool FieldProps::has<int>(const std::string& keyword) const {
   postprocessing, and should be access through the special ::porv() and
   ::actnum() methods instead of the general ::get<T>( ) method. These two
   keywords are also hidden from the keys<T>() vectors.
+
+  If there are TRAN? fields in the container they are transferred even if they
+  are not completely defined. This is because that TRAN? fields will ultimately
+  be combined with the TRAN? values calculated from the simulator, it does
+  therefor not make sense to require that these fields are fully defined.
 */
 
 template <>
 std::vector<std::string> FieldProps::keys<double>() const {
     std::vector<std::string> klist;
-    for (const auto& data_pair : this->double_data) {
-        if (data_pair.second.valid() && data_pair.first != "PORV")
-            klist.push_back(data_pair.first);
+    for (const auto& [key, field] : this->double_data) {
+        if (key.rfind("TRAN", 0) == 0) {
+            klist.push_back(key);
+            continue;
+        }
+
+        if (field.valid() && key != "PORV")
+            klist.push_back(key);
     }
     return klist;
 }
+
 
 template <>
 std::vector<std::string> FieldProps::keys<int>() const {

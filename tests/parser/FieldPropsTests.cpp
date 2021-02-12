@@ -2092,6 +2092,29 @@ MINVALUE
     BOOST_CHECK(fpm.tran_active("TRANZ"));
 }
 
+BOOST_AUTO_TEST_CASE(TRAN_KEYS) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   300*0.10 /
+
+EDIT
+
+EQUALS
+  TRANX 0 1 1 1 1 1 1 /
+/
+
+)";
+    EclipseGrid grid(10,10,3);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+
+    const auto& keys = fpm.keys<double>();
+    BOOST_CHECK_EQUAL(keys.size(), 2);
+}
+
+
 
 
 BOOST_AUTO_TEST_CASE(TRAN2) {
