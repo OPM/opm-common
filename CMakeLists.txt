@@ -248,7 +248,7 @@ if(ENABLE_ECL_INPUT)
       test_util/EclFilesComparator.cpp
       test_util/EclRegressionTest.cpp
     LIBRARIES
-      ${_libs}
+      ${_libs} ${${project}_PRIVATE_LIBRARIES}
     WORKING_DIRECTORY
       ${PROJECT_BINARY_DIR}/tests
     )
