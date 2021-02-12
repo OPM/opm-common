@@ -517,10 +517,10 @@ Opm::RestartIO::Helpers::WindowedArray<int>
 allocate(const std::vector<int>& inteHead)
 {
     using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
-
+    int nitPrWin = std::max(static_cast<int>(entriesPerInobr(inteHead)), 1);
     return WV {
         WV::NumWindows{ 1 },
-        WV::WindowSize{ entriesPerInobr(inteHead) }
+        WV::WindowSize{ static_cast<std::size_t>(nitPrWin)  }
     };
 }
 

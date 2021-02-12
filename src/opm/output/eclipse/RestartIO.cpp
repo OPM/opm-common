@@ -438,8 +438,10 @@ namespace {
     {
         writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
 
-        //write network data
-        writeNetwork(es, sim_step, units, schedule, sumState, inteHD, rstFile);
+        //write network data if the network option is used
+        if (es.runspec().networkDimensions().maxNONodes() >= 1) {
+            writeNetwork(es, sim_step, units, schedule, sumState, inteHD, rstFile);
+        }
 
         // Write well and MSW data only when applicable (i.e., when present)
         const auto& wells = schedule.wellNames(sim_step);
