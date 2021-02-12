@@ -64,6 +64,7 @@ ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system
     this->m_events.reset();
     this->m_wellgroup_events.reset();
     this->m_geo_keywords.clear();
+    this->target_wellpi.clear();
 }
 
 ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time) :
@@ -137,6 +138,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
 
     return this->m_start_time == other.m_start_time &&
            this->m_oilvap == other.m_oilvap &&
+           this->target_wellpi == other.target_wellpi &&
            this->m_tuning == other.m_tuning &&
            this->m_end_time == other.m_end_time &&
            this->m_events == other.m_events &&
@@ -176,6 +178,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.update_oilvap( Opm::OilVaporizationProperties::serializeObject() );
     ts.m_message_limits = MessageLimits::serializeObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
+    ts.target_wellpi = {{"WELL1", 1000}, {"WELL2", 2000}};
 
     ts.pavg.update( PAvg::serializeObject() );
     ts.wtest_config.update( WellTestConfig::serializeObject() );

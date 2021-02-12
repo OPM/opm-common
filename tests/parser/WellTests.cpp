@@ -1234,14 +1234,14 @@ END
     //   /
     //
     // (ignoring units of measure)
-    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(2.0),
+    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(),
                         "First call to updateWellProductivityIndex() must be a state change");
-    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(2.0),
+    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(),
                         "Second call to updateWellProductivityIndex() must NOT be a state change");
 
     // Want PI=2, but actual/effective PI=1 => scale CF by 2.0/1.0.
     {
-        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.convertDeckPI(2.0) /  liquid_PI_unit();
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -1257,7 +1257,7 @@ END
 
     // Repeated application of WELPI multiplies scaling factors.
     {
-        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.convertDeckPI(2.0) /  liquid_PI_unit();
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -1272,14 +1272,14 @@ END
     }
 
     // New WELPI record does not reset the scaling factors
-    wellP.updateWellProductivityIndex(3.0);
+    wellP.updateWellProductivityIndex();
     for (const auto& conn : wellP.getConnections()) {
         BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
     }
 
     // Effective PI=desired PI => no scaling change
     {
-        const auto scalingFactor = wellP.getWellPIScalingFactor(3.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.convertDeckPI(3.0) /  (3.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 1.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;

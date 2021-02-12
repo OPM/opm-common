@@ -408,9 +408,10 @@ namespace Opm {
         map_member<int, VFPInjTable> vfpinj;
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
+        std::map<std::string, double> target_wellpi;
 
 
-
+        using WellPIMapType = std::map<std::string, double>;
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -423,6 +424,7 @@ namespace Opm {
             serializer.vector(m_geo_keywords);
             m_message_limits.serializeOp(serializer);
             serializer(m_whistctl_mode);
+            serializer.template map<WellPIMapType, false>(target_wellpi);
         }
 
 

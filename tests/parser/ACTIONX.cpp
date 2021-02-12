@@ -1146,8 +1146,8 @@ TSTEP
     Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched[0].actions.get().get("A");
     {
-        const auto& well = sched.getWell("PROD1", 0);
-        BOOST_CHECK_EQUAL( well.getWellPIScalingFactor(1.0), 1.0);
+        const auto& target_wellpi = sched[0].target_wellpi;
+        BOOST_CHECK_EQUAL( target_wellpi.count("PROD1"), 0);
     }
     std::unordered_set<std::string> required_summary;
     action1.required_summary(required_summary);
@@ -1156,11 +1156,8 @@ TSTEP
     Action::Result action_result(true);
     sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {});
     {
-        auto unit_system =  UnitSystem::newMETRIC();
-        const auto& well = sched.getWell("PROD1", 1);
-        const auto PI = unit_system.to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
-        const auto scaling = well.getWellPIScalingFactor(PI);
-        BOOST_CHECK_CLOSE(scaling, 1000.0, 1.0e-10);
+        const auto& target_wellpi = sched[0].target_wellpi;
+        BOOST_CHECK_EQUAL( target_wellpi.at("PROD1"), 1000);
     }
 }
 

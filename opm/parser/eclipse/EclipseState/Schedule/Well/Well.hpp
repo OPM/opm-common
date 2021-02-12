@@ -558,7 +558,7 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
-    bool updateWellProductivityIndex(const double prodIndex);
+    bool updateWellProductivityIndex();
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
@@ -589,7 +589,7 @@ public:
     bool operator==(const Well& data) const;
     bool hasSameConnectionsPointers(const Well& other) const;
     void setInsertIndex(std::size_t index);
-    double getWellPIScalingFactor(const double currentEffectivePI) const;
+    double convertDeckPI(double deckPI) const;
     void applyWellProdIndexScaling(const double       scalingFactor,
                                    std::vector<bool>& scalingApplicable);
     const PAvg& pavg() const;
@@ -621,7 +621,6 @@ public:
         serializer(has_produced);
         serializer(has_injected);
         serializer(prediction_mode);
-        serializer(productivity_index);
         serializer(econ_limits);
         serializer(foam_properties);
         serializer(polymer_properties);
@@ -660,7 +659,6 @@ private:
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
-    std::optional<double> productivity_index{ std::nullopt };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;
