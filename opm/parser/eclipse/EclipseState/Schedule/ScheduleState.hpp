@@ -23,6 +23,7 @@
 #include <chrono>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -408,10 +409,10 @@ namespace Opm {
         map_member<int, VFPInjTable> vfpinj;
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
-        std::map<std::string, double> target_wellpi;
+        std::unordered_map<std::string, double> target_wellpi;
 
 
-        using WellPIMapType = std::map<std::string, double>;
+        using WellPIMapType = std::unordered_map<std::string, double>;
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);

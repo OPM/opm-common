@@ -1145,19 +1145,35 @@ TSTEP
     const auto st = SummaryState{ std::chrono::system_clock::now() };
     Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched[0].actions.get().get("A");
+    double CF0;
     {
         const auto& target_wellpi = sched[0].target_wellpi;
         BOOST_CHECK_EQUAL( target_wellpi.count("PROD1"), 0);
+
+        const auto& well = sched.getWell("PROD1", 0);
+        CF0 = well.getConnections()[0].CF();
     }
-    std::unordered_set<std::string> required_summary;
-    action1.required_summary(required_summary);
-    BOOST_CHECK_EQUAL( required_summary.count("WWCT"), 1);
+
 
     Action::Result action_result(true);
-    sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {});
+    BOOST_CHECK_THROW( sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {}), std::exception);
+    {
+        const auto& well = sched.getWell("PROD1", 0);
+        sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
+    }
     {
         const auto& target_wellpi = sched[0].target_wellpi;
         BOOST_CHECK_EQUAL( target_wellpi.at("PROD1"), 1000);
+
+        const auto& well = sched.getWell("PROD1", 0);
+        auto CF1 = well.getConnections()[0].CF();
+        BOOST_CHECK_CLOSE(CF1 / CF0, 2.0, 1e-4 );
+    }
+
+    {
+        std::unordered_set<std::string> required_summary;
+        action1.required_summary(required_summary);
+        BOOST_CHECK_EQUAL( required_summary.count("WWCT"), 1);
     }
 }
 
