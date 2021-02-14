@@ -44,11 +44,11 @@ namespace Opm {
         struct AquancCell {
             int aquiferID;
             std::size_t global_index;
-            std::pair<bool, double> influx_coeff;
+            double influx_coeff;
             double influx_mult;
             FaceDir::DirEnum face_dir;
 
-            AquancCell(int aquiferID_arg, std::size_t gi, const std::pair<bool, double>& ic, double im, FaceDir::DirEnum fd) :
+            AquancCell(int aquiferID_arg, std::size_t gi, double ic, double im, FaceDir::DirEnum fd) :
                 aquiferID(aquiferID_arg),
                 global_index(gi),
                 influx_coeff(ic),
