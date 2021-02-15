@@ -35,7 +35,7 @@ namespace Opm
     {
         static double handleBracketingFailure(const double x0, const double x1, const double f0, const double f1)
         {
-            OPM_THROW(std::runtime_error, "Error in parameters, zero not bracketed: [a, b] = ["
+            OPM_THROW_NOLOG(std::runtime_error, "Error in parameters, zero not bracketed: [a, b] = ["
                   << x0 << ", " << x1 << "]    f(a) = " << f0 << "   f(b) = " << f1);
             return -1e100; // Never reached.
         }
