@@ -3031,17 +3031,17 @@ VFPINJ
     const Opm::VFPInjTable& vfpinjTable2 = schedule[2].vfpinj(5);
     BOOST_CHECK_EQUAL(vfpinjTable2.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpinjTable2.getDatumDepth(), 100);
-    BOOST_CHECK_EQUAL(vfpinjTable2.getFloType(), Opm::VFPInjTable::FLO_GAS);
+    BOOST_CHECK(vfpinjTable2.getFloType() == Opm::VFPInjTable::FLO_TYPE::FLO_GAS);
 
     const Opm::VFPInjTable& vfpinjTable3 = schedule[2].vfpinj(10);
     BOOST_CHECK_EQUAL(vfpinjTable3.getTableNum(), 10);
     BOOST_CHECK_EQUAL(vfpinjTable3.getDatumDepth(), 200);
-    BOOST_CHECK_EQUAL(vfpinjTable3.getFloType(), Opm::VFPInjTable::FLO_WAT);
+    BOOST_CHECK(vfpinjTable3.getFloType() == Opm::VFPInjTable::FLO_TYPE::FLO_WAT);
 
     const Opm::VFPInjTable& vfpinjTable = schedule[0].vfpinj(5);
     BOOST_CHECK_EQUAL(vfpinjTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpinjTable.getDatumDepth(), 32.9);
-    BOOST_CHECK_EQUAL(vfpinjTable.getFloType(), Opm::VFPInjTable::FLO_WAT);
+    BOOST_CHECK(vfpinjTable.getFloType() == Opm::VFPInjTable::FLO_TYPE::FLO_WAT);
 
     //Flo axis
     {
@@ -3068,7 +3068,6 @@ VFPINJ
 
     //The data itself
     {
-        typedef Opm::VFPInjTable::array_type::size_type size_type;
         const auto size = vfpinjTable.shape();
 
         BOOST_CHECK_EQUAL(size[0], 2U);
@@ -3078,8 +3077,8 @@ VFPINJ
         double conversion_factor = 100000.0;
 
         double index = 0.5;
-        for (size_type t = 0; t < size[0]; ++t) {
-            for (size_type f = 0; f < size[1]; ++f) {
+        for (std::size_t t = 0; t < size[0]; ++t) {
+            for (std::size_t f = 0; f < size[1]; ++f) {
                 index += 1.0;
                 BOOST_CHECK_EQUAL(vfpinjTable(t,f), index*conversion_factor);
             }

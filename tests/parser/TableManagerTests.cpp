@@ -703,10 +703,10 @@ VFPPROD \n\
 
     BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpprodTable.getDatumDepth(), 32.9);
-    BOOST_CHECK_EQUAL(vfpprodTable.getFloType(), Opm::VFPProdTable::FLO_LIQ);
-    BOOST_CHECK_EQUAL(vfpprodTable.getWFRType(), Opm::VFPProdTable::WFR_WCT);
-    BOOST_CHECK_EQUAL(vfpprodTable.getGFRType(), Opm::VFPProdTable::GFR_GOR);
-    BOOST_CHECK_EQUAL(vfpprodTable.getALQType(), Opm::VFPProdTable::ALQ_UNDEF);
+    BOOST_CHECK(vfpprodTable.getFloType() == Opm::VFPProdTable::FLO_TYPE::FLO_LIQ);
+    BOOST_CHECK(vfpprodTable.getWFRType() == Opm::VFPProdTable::WFR_TYPE::WFR_WCT);
+    BOOST_CHECK(vfpprodTable.getGFRType() == Opm::VFPProdTable::GFR_TYPE::GFR_GOR);
+    BOOST_CHECK(vfpprodTable.getALQType() == Opm::VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
 
     //Flo axis
     {
@@ -763,7 +763,6 @@ VFPPROD \n\
 
     //The data itself
     {
-        typedef Opm::VFPProdTable::array_type::size_type size_type;
         const auto size = vfpprodTable.shape();
 
         BOOST_CHECK_EQUAL(size[0], 2U);
@@ -776,11 +775,11 @@ VFPPROD \n\
         double conversion_factor = 100000.0;
 
         double index = 0.5;
-        for (size_type a = 0; a < size[3]; ++a) {
-            for (size_type g = 0;  g < size[2]; ++g) {
-                for (size_type w = 0; w < size[1]; ++w) {
-                    for (size_type t = 0; t < size[0]; ++t) {
-                        for (size_type f = 0; f < size[4]; ++f) {
+        for (std::size_t a = 0; a < size[3]; ++a) {
+            for (std::size_t g = 0;  g < size[2]; ++g) {
+                for (std::size_t w = 0; w < size[1]; ++w) {
+                    for (std::size_t t = 0; t < size[0]; ++t) {
+                        for (std::size_t f = 0; f < size[4]; ++f) {
                             index += 1.0;
                             BOOST_CHECK_EQUAL(const_cast<const VFPProdTable&>(vfpprodTable)(t,w,g,a,f), index*conversion_factor);
                         }
@@ -827,10 +826,10 @@ VFPPROD \n\
 
     BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpprodTable.getDatumDepth(), 32.9);
-    BOOST_CHECK_EQUAL(vfpprodTable.getFloType(), Opm::VFPProdTable::FLO_LIQ);
-    BOOST_CHECK_EQUAL(vfpprodTable.getWFRType(), Opm::VFPProdTable::WFR_WCT);
-    BOOST_CHECK_EQUAL(vfpprodTable.getGFRType(), Opm::VFPProdTable::GFR_GOR);
-    BOOST_CHECK_EQUAL(vfpprodTable.getALQType(), Opm::VFPProdTable::ALQ_UNDEF);
+    BOOST_CHECK(vfpprodTable.getFloType() == Opm::VFPProdTable::FLO_TYPE::FLO_LIQ);
+    BOOST_CHECK(vfpprodTable.getWFRType() == Opm::VFPProdTable::WFR_TYPE::WFR_WCT);
+    BOOST_CHECK(vfpprodTable.getGFRType() == Opm::VFPProdTable::GFR_TYPE::GFR_GOR);
+    BOOST_CHECK(vfpprodTable.getALQType() == Opm::VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
 
     //Flo axis
     {
@@ -1136,7 +1135,7 @@ VFPINJ \n\
 
     BOOST_CHECK_EQUAL(vfpinjTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpinjTable.getDatumDepth(), 32.9);
-    BOOST_CHECK_EQUAL(vfpinjTable.getFloType(), Opm::VFPInjTable::FLO_WAT);
+    BOOST_CHECK(vfpinjTable.getFloType() == Opm::VFPInjTable::FLO_TYPE::FLO_WAT);
 
     //Flo axis
     {
@@ -1163,7 +1162,6 @@ VFPINJ \n\
 
     //The data itself
     {
-        typedef Opm::VFPInjTable::array_type::size_type size_type;
         const auto size = vfpinjTable.shape();
 
         BOOST_CHECK_EQUAL(size[0], 2U);
@@ -1173,8 +1171,8 @@ VFPINJ \n\
         double conversion_factor = 100000.0;
 
         double index = 0.5;
-        for (size_type t = 0; t < size[0]; ++t) {
-            for (size_type f = 0; f < size[1]; ++f) {
+        for (std::size_t t = 0; t < size[0]; ++t) {
+            for (std::size_t f = 0; f < size[1]; ++f) {
                 index += 1.0;
                 BOOST_CHECK_EQUAL(const_cast<const VFPInjTable&>(vfpinjTable)(t,f), index*conversion_factor);
             }

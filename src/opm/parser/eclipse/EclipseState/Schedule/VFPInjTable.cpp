@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -56,11 +57,13 @@ VFPInjTable::VFPInjTable()
 {
     m_table_num = -1;
     m_datum_depth = 0.0;
-    m_flo_type = FLO_INVALID;
+    m_flo_type = FLO_TYPE::FLO_OIL;
 }
 
 
-VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) :
+    m_location(table.location())
+{
     using ParserKeywords::VFPINJ;
 
     //Check that the table has enough records
@@ -180,10 +183,11 @@ VFPInjTable VFPInjTable::serializeObject()
     VFPInjTable result;
     result.m_table_num = 1;
     result.m_datum_depth = 2.0;
-    result.m_flo_type = FLO_WAT;
+    result.m_flo_type = FLO_TYPE::FLO_WAT;
     result.m_flo_data = {3.0, 4.0};
     result.m_thp_data = {5.0, 6.0};
     result.m_data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+    result.m_location = KeywordLocation::serializeObject();
 
     return result;
 }
@@ -191,34 +195,46 @@ VFPInjTable VFPInjTable::serializeObject()
 
 
 
+namespace {
+
+void check_axis(const std::vector<double>& axis) {
+    if (axis.size() == 0)
+        throw std::invalid_argument("Empty axis");
+
+    if (!std::is_sorted(axis.begin(), axis.end()))
+        throw std::invalid_argument("Axis is not sorted");
+}
+
+}
+
+
 
 
 void VFPInjTable::check() {
-    //Table number
-    assert(m_table_num > 0);
-
-    //Misc types
-    assert(m_flo_type >= FLO_OIL && m_flo_type < FLO_INVALID);
+    if (this->m_table_num <= 0)
+        throw std::invalid_argument(fmt::format("Invalid table number: {}", this->m_table_num));
 
     //Data axis size
-    assert(m_flo_data.size() > 0);
-    assert(m_thp_data.size() > 0);
-
-    //Data axis sorted?
-    assert(is_sorted(m_flo_data.begin(), m_flo_data.end()));
-    assert(is_sorted(m_thp_data.begin(), m_thp_data.end()));
+    check_axis(this->m_flo_data);
+    check_axis(this->m_thp_data);
 
     //Check data size matches axes
-    assert(m_data.size() == m_thp_data.size() * m_flo_data.size());
+    if (this->m_data.size() != this->m_thp_data.size() * this->m_flo_data.size())
+        throw std::invalid_argument("Wrong data size");
 
     //Finally, check that all data is within reasonable ranges, defined to be up-to 1.0e10...
-    typedef array_type::size_type size_type;
-    for (size_type t = 0; t < m_thp_data.size(); ++t) {
-        for (size_type f = 0; f < m_flo_data.size(); ++f) {
+    for (std::size_t t = 0; t < m_thp_data.size(); ++t) {
+        for (std::size_t f = 0; f < m_flo_data.size(); ++f) {
             if (std::isnan((*this)(t,f))) {
-                //TODO: Replace with proper log message
-                std::cerr << "VFPINJ element [" << t << "," << f << "] not set!" << std::endl;
-                throw std::invalid_argument("Missing VFPINJ value");
+                const auto& location = this->m_location;
+                auto msg = fmt::format("VFPINJ table {}\n"
+                                       "In {} line {}\n"
+                                       "Element THP={}  FLO={} not initialized",
+                                       this->m_table_num,
+                                       location.filename, location.lineno,
+                                       t,f);
+
+                throw std::invalid_argument(msg);
             }
         }
     }
@@ -233,19 +249,16 @@ void VFPInjTable::check() {
 
 
 VFPInjTable::FLO_TYPE VFPInjTable::getFloType(std::string flo_string) {
-    if (flo_string == "OIL") {
-        return FLO_OIL;
-    }
-    else if (flo_string == "WAT") {
-        return FLO_WAT;
-    }
-    else if (flo_string == "GAS") {
-        return FLO_GAS;
-    }
-    else {
-        throw std::invalid_argument("Invalid RATE_TYPE string");
-    }
-    return FLO_INVALID;
+    if (flo_string == "OIL")
+        return FLO_TYPE::FLO_OIL;
+
+    if (flo_string == "WAT")
+        return FLO_TYPE::FLO_WAT;
+
+    if (flo_string == "GAS")
+        return FLO_TYPE::FLO_GAS;
+
+    throw std::invalid_argument("Invalid RATE_TYPE string");
 }
 
 
@@ -278,15 +291,15 @@ void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
                                   const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
-        case FLO_OIL:
-        case FLO_WAT:
-            scaling_factor = unit_system.parse("LiquidSurfaceVolume/Time").getSIScaling();
-            break;
-        case FLO_GAS:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/Time").getSIScaling();
-            break;
-        default:
-            throw std::logic_error("Invalid FLO type");
+    case FLO_TYPE::FLO_OIL:
+    case FLO_TYPE::FLO_WAT:
+        scaling_factor = unit_system.getDimension(UnitSystem::measure::liquid_surface_rate).getSIScaling();
+        break;
+    case FLO_TYPE::FLO_GAS:
+        scaling_factor = unit_system.getDimension(UnitSystem::measure::gas_surface_rate).getSIScaling();
+        break;
+    default:
+        throw std::logic_error("Invalid FLO type");
     }
     scaleValues(values, scaling_factor);
 }
@@ -310,7 +323,8 @@ bool VFPInjTable::operator==(const VFPInjTable& data) const {
            this->getFloType() == data.getFloType() &&
            this->getFloAxis() == data.getFloAxis() &&
            this->getTHPAxis() == data.getTHPAxis() &&
-           this->getTable() == data.getTable();
+           this->getTable() == data.getTable() &&
+           this->location() == data.location();
 }
 
 

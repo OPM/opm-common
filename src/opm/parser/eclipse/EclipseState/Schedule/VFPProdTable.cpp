@@ -42,87 +42,74 @@ namespace {
 
 VFPProdTable::FLO_TYPE getFloType( const DeckItem& item) {
     const std::string& flo_string = item.getTrimmedString(0);
-    if (flo_string == "OIL") {
-        return VFPProdTable::FLO_OIL;
-    }
-    else if (flo_string == "LIQ") {
-        return VFPProdTable::FLO_LIQ;
-    }
-    else if (flo_string == "GAS") {
-        return VFPProdTable::FLO_GAS;
-    }
-    else {
-        throw std::invalid_argument("Invalid RATE_TYPE string: " + flo_string);
-    }
-    return VFPProdTable::FLO_INVALID;
+    if (flo_string == "OIL")
+        return VFPProdTable::FLO_TYPE::FLO_OIL;
+
+    if (flo_string == "LIQ")
+        return VFPProdTable::FLO_TYPE::FLO_LIQ;
+
+    if (flo_string == "GAS")
+        return VFPProdTable::FLO_TYPE::FLO_GAS;
+
+    throw std::invalid_argument("Invalid RATE_TYPE string: " + flo_string);
 }
 
 VFPProdTable::WFR_TYPE getWFRType( const DeckItem& item) {
     const std::string& wfr_string = item.getTrimmedString(0);
-    if (wfr_string == "WOR") {
-        return VFPProdTable::WFR_WOR;
-    }
-    else if (wfr_string == "WCT") {
-        return VFPProdTable::WFR_WCT;
-    }
-    else if (wfr_string == "WGR") {
-        return VFPProdTable::WFR_WGR;
-    }
-    else {
-        throw std::invalid_argument("Invalid WFR string");
-    }
-    return VFPProdTable::WFR_INVALID;
+    if (wfr_string == "WOR")
+        return VFPProdTable::WFR_TYPE::WFR_WOR;
+
+    if (wfr_string == "WCT")
+        return VFPProdTable::WFR_TYPE::WFR_WCT;
+
+    if (wfr_string == "WGR")
+        return VFPProdTable::WFR_TYPE::WFR_WGR;
+
+    throw std::invalid_argument("Invalid WFR string");
 }
 
 VFPProdTable::GFR_TYPE getGFRType( const DeckItem& item) {;
     const std::string& gfr_string = item.getTrimmedString(0);
-    if (gfr_string == "GOR") {
-        return VFPProdTable::GFR_GOR;
-    }
-    else if (gfr_string == "GLR") {
-        return VFPProdTable::GFR_GLR;
-    }
-    else if (gfr_string == "OGR") {
-        return VFPProdTable::GFR_OGR;
-    }
-    else {
-        throw std::invalid_argument("Invalid GFR string");
-    }
-    return VFPProdTable::GFR_INVALID;
+    if (gfr_string == "GOR")
+        return VFPProdTable::GFR_TYPE::GFR_GOR;
+
+    if (gfr_string == "GLR")
+        return VFPProdTable::GFR_TYPE::GFR_GLR;
+
+    if (gfr_string == "OGR")
+        return VFPProdTable::GFR_TYPE::GFR_OGR;
+
+    throw std::invalid_argument("Invalid GFR string");
 }
 
 VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
-    if (item.defaultApplied(0)) {
-        return VFPProdTable::ALQ_UNDEF;
-    } else {
+    if (item.defaultApplied(0))
+        return VFPProdTable::ALQ_TYPE::ALQ_UNDEF;
+    else {
         const std::string& alq_string = item.getTrimmedString(0);
 
-        if (alq_string == "GRAT") {
-            return VFPProdTable::ALQ_GRAT;
-        }
-        else if (alq_string == "IGLR") {
-            return VFPProdTable::ALQ_IGLR;
-        }
-        else if (alq_string == "TGLR") {
-            return VFPProdTable::ALQ_TGLR;
-        }
-        else if (alq_string == "PUMP") {
-            return VFPProdTable::ALQ_PUMP;
-        }
-        else if (alq_string == "COMP") {
-            return VFPProdTable::ALQ_COMP;
-        }
-        else if (alq_string == "BEAN") {
-            return VFPProdTable::ALQ_BEAN;
-        }
-        else if (alq_string == "") {
-            return VFPProdTable::ALQ_UNDEF;
-        }
-        else {
-            throw std::invalid_argument("Invalid ALQ_DEF string: " + alq_string);
-        }
+        if (alq_string == "GRAT")
+            return VFPProdTable::ALQ_TYPE::ALQ_GRAT;
 
-        return VFPProdTable::ALQ_INVALID;
+        if (alq_string == "IGLR")
+            return VFPProdTable::ALQ_TYPE::ALQ_IGLR;
+
+        if (alq_string == "TGLR")
+            return VFPProdTable::ALQ_TYPE::ALQ_TGLR;
+
+        if (alq_string == "PUMP")
+            return VFPProdTable::ALQ_TYPE::ALQ_PUMP;
+
+        if (alq_string == "COMP")
+            return VFPProdTable::ALQ_TYPE::ALQ_COMP;
+
+        if (alq_string == "BEAN")
+            return VFPProdTable::ALQ_TYPE::ALQ_BEAN;
+
+        if (alq_string == "")
+            return VFPProdTable::ALQ_TYPE::ALQ_UNDEF;
+
+        throw std::invalid_argument("Invalid ALQ_DEF string: " + alq_string);
     }
 }
 
@@ -131,13 +118,6 @@ VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
 
 VFPProdTable::VFPProdTable()
 {
-    m_table_num = -1;
-    m_datum_depth = 0.0;
-    m_flo_type = FLO_INVALID;
-    m_wfr_type = WFR_INVALID;
-    m_gfr_type = GFR_INVALID;
-    m_alq_type = ALQ_INVALID;
-
 }
 
 
@@ -152,7 +132,7 @@ VFPProdTable::VFPProdTable(int table_num,
                            const std::vector<double>& wfr_data,
                            const std::vector<double>& gfr_data,
                            const std::vector<double>& alq_data,
-                           const array_type& data) {
+                           const std::vector<double>& data) {
 
     m_table_num = table_num;
     m_datum_depth = datum_depth;
@@ -167,7 +147,9 @@ VFPProdTable::VFPProdTable(int table_num,
     m_alq_data = alq_data;
     m_data = data;
 
-    //check();
+    if (data.size() != flo_data.size() * thp_data.size() * wfr_data.size() * gfr_data.size() * alq_data.size())
+        throw std::invalid_argument("Wrong data size");
+    this->check();
 }
 
 
@@ -176,22 +158,25 @@ VFPProdTable VFPProdTable::serializeObject()
     VFPProdTable result;
     result.m_table_num = 1;
     result.m_datum_depth = 2;
-    result.m_flo_type = FLO_OIL;
-    result.m_wfr_type = WFR_WOR;
-    result.m_gfr_type = GFR_GLR;
-    result.m_alq_type = ALQ_TGLR;
+    result.m_flo_type = FLO_TYPE::FLO_OIL;
+    result.m_wfr_type = WFR_TYPE::WFR_WOR;
+    result.m_gfr_type = GFR_TYPE::GFR_GLR;
+    result.m_alq_type = ALQ_TYPE::ALQ_TGLR;
     result.m_flo_data = {1.0, 2.0, 3.0, 4.0, 5.0};
     result.m_thp_data = {6.0};
     result.m_wfr_data = {7.0};
     result.m_gfr_data = {8.0};
     result.m_alq_data = {9.0, 10.0, 11.0};
     result.m_data = {12.0, 13.0, 14.0, 15.0, 16.0};
+    result.m_location = KeywordLocation::serializeObject();
 
     return result;
 }
 
 
-VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) :
+    m_location(table.location())
+{
     using ParserKeywords::VFPPROD;
 
     //Check that the table has enough records
@@ -303,7 +288,7 @@ VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_uni
     }
 
     //FIXME: Unit for TEMP=Tubing head temperature is not Pressure, see BODY_DEF
-    const double table_scaling_factor = deck_unit_system.parse("Pressure").getSIScaling();
+    const double table_scaling_factor = deck_unit_system.getDimension(UnitSystem::measure::pressure).getSIScaling();
     for (size_t i=6; i<table.size(); ++i) {
         const auto& record = table.getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
@@ -323,85 +308,79 @@ VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_uni
             //Check that all data is within reasonable ranges, defined to be up-to 1.0e10...
             if (bhp_tht[f] > 1.0e10) {
                 //TODO: Replace with proper log message
-                std::cerr << "VFPPROD element ["
-                        << t << "," << w << "," << g << "," << a << "," << f
-                        << "]=" << bhp_tht[f] << " too large" << std::endl;
+                auto msg = fmt::format("Problem with VFPPROD table {}\n"
+                                       "In {} line {}\n"
+                                       "Element(thp={}, wfr={}, GRF={}, ALQ={}) = {} is too large",
+                                       this->m_table_num,
+                                       this->m_location.filename, this->m_location.lineno,
+                                       t,w,g,a,bhp_tht[f]);
+
+                OpmLog::warning(msg);
             }
             (*this)(t,w,g,a,f) = table_scaling_factor*bhp_tht[f];
         }
     }
 
-    check(table, table_scaling_factor);
+    check();
 }
 
 
 
 
+namespace {
+
+void check_axis(const std::vector<double>& axis) {
+    if (axis.size() == 0)
+        throw std::invalid_argument("Empty axis");
+
+    if (!std::is_sorted(axis.begin(), axis.end()))
+        throw std::invalid_argument("Axis is not sorted");
+}
+
+}
 
 
+void VFPProdTable::check() {
+    if (this->m_table_num <= 0)
+        throw std::invalid_argument(fmt::format("Invalid table number: {}", this->m_table_num));
 
+    check_axis(this->m_flo_data);
+    check_axis(this->m_thp_data);
+    check_axis(this->m_wfr_data);
+    check_axis(this->m_gfr_data);
+    check_axis(this->m_alq_data);
 
-
-
-void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_factor) {
-    //Table number
-    assert(m_table_num > 0);
-
-    //Misc types
-    assert(m_flo_type >= FLO_OIL && m_flo_type < FLO_INVALID);
-    assert(m_wfr_type >= WFR_WOR && m_wfr_type < WFR_INVALID);
-    assert(m_gfr_type >= GFR_GOR && m_gfr_type < GFR_INVALID);
-    assert(m_alq_type >= ALQ_GRAT && m_alq_type < ALQ_INVALID);
-
-    //Data axis size
-    assert(m_flo_data.size() > 0);
-    assert(m_thp_data.size() > 0);
-    assert(m_wfr_data.size() > 0);
-    assert(m_gfr_data.size() > 0);
-    assert(m_alq_data.size() > 0);
-
-    //Data axis sorted?
-    assert(std::is_sorted(m_flo_data.begin(), m_flo_data.end()));
-    assert(std::is_sorted(m_thp_data.begin(), m_thp_data.end()));
-    assert(std::is_sorted(m_wfr_data.begin(), m_wfr_data.end()));
-    assert(std::is_sorted(m_gfr_data.begin(), m_gfr_data.end()));
-    assert(std::is_sorted(m_alq_data.begin(), m_alq_data.end()));
-
-    size_t nt = m_thp_data.size();
-    size_t nw = m_wfr_data.size();
-    size_t ng = m_gfr_data.size();
-    size_t na = m_alq_data.size();
-    size_t nf = m_flo_data.size();
-
-    //Check data size matches axes
-    assert(m_data.size() == nt*nw*ng*na*nf);
+    size_t nt = this->m_thp_data.size();
+    size_t nw = this->m_wfr_data.size();
+    size_t ng = this->m_gfr_data.size();
+    size_t na = this->m_alq_data.size();
+    size_t nf = this->m_flo_data.size();
 
     //Check that bhp(thp) is a monotonic increasing function.
     //If this is not the case, we might not be able to determine
     //the thp from the bhp easily
-    typedef array_type::size_type size_type;
-    std::string points;
-    for (size_type w = 0; w < nw; ++w) {
-        for (size_type g = 0; g < ng; ++g) {
-            for (size_type a = 0; a < na; ++a) {
-                for (size_type f = 0; f < nf; ++f) {
+    std::size_t error_count = 0;
+    for (std::size_t w = 0; w < nw; ++w) {
+        for (std::size_t g = 0; g < ng; ++g) {
+            for (std::size_t a = 0; a < na; ++a) {
+                for (std::size_t f = 0; f < nf; ++f) {
                     double bhp_last = (*this)(0,w,g,a,f);
-                    for (size_type t = 0; t < nt; ++t) {
+                    for (std::size_t t = 0; t < nt; ++t) {
                         //Check that all elements have been set
                         if (std::isnan((*this)(t,w,g,a,f))) {
-                            //TODO: Replace with proper log message
-                            std::cerr << "VFPPROD element ["
-                                    << t << "," << w << "," << g << "," << a << "," << f
-                                    << "] not set!" << std::endl;
-                            throw std::invalid_argument("Missing VFPPROD value");
+                            const auto& location = this->m_location;
+                            auto msg = fmt::format("VFPPROD table {}\n"
+                                                   "In {} line {}\n"
+                                                   "Element THP={}  WFR={} GFR={} ALQ={} FLO={} not initialized",
+                                                   this->m_table_num,
+                                                   location.filename, location.lineno,
+                                                   t,w,g,a,f);
+
+                            throw std::invalid_argument(msg);
                         }
-                        if ((*this)(t,w,g,a,f) < bhp_last) {
-                            points += "At point (FLOW, THP, WFR, GFR, ALQ) = "
-                                    + std::to_string(f) + " " + std::to_string(t) + " "
-                                    + std::to_string(w) + " " + std::to_string(g) + " "
-                                    + std::to_string(a) + " at BHP = "
-                                    + std::to_string((*this)(t,w,g,a,f) / table_scaling_factor) + "\n";
-                        }
+                        if ((*this)(t,w,g,a,f) < bhp_last)
+                            error_count += 1;
+
                         bhp_last = (*this)(t,w,g,a,f);
                     }
                 }
@@ -409,15 +388,15 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
         }
     }
 
-    if (!points.empty()) {
-        const auto& location = keyword.location();
-        OpmLog::warning(fmt::format("VFP table {0} has BHP versus THP not increasing in keyword VFPPROD.\n"
-                                    "In {1} line {2}\n"
+    if (error_count > 0) {
+        const auto& location = this->m_location;
+        OpmLog::warning(fmt::format("VFPPROD table {0} has {1} nonmonotonic points of BHP(THP)\n"
+                                    "In {2} line {3}\n"
                                     "This may cause convergence issues due to switching between BHP and THP control.\n",
+                                    error_count,
                                     m_table_num,
                                     location.filename,
                                     location.lineno));
-        OpmLog::note(points);
     }
 }
 
@@ -455,15 +434,15 @@ void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
     const auto time                  = unit_system.getDimension(UnitSystem::measure::time).getSIScaling();
 
     switch (type) {
-        case FLO_OIL:
-        case FLO_LIQ:
-            scaling_factor = liquid_surface_volume / time;
-            break;
-        case FLO_GAS:
-            scaling_factor = gas_surface_volume / time;
-            break;
-        default:
-            throw std::logic_error("Invalid FLO type");
+    case FLO_TYPE::FLO_OIL:
+    case FLO_TYPE::FLO_LIQ:
+        scaling_factor = liquid_surface_volume / time;
+        break;
+    case FLO_TYPE::FLO_GAS:
+        scaling_factor = gas_surface_volume / time;
+        break;
+    default:
+        throw std::logic_error("Invalid FLO type");
     }
     scaleValues(values, scaling_factor);
 }
@@ -493,14 +472,14 @@ void VFPProdTable::convertWFRToSI(const WFR_TYPE& type,
     const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
     const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
     switch (type) {
-        case WFR_WOR:
-        case WFR_WCT:
-            break;
-        case WFR_WGR:
-            scaling_factor = liquid_surface_volume / gas_surface_volume;
-            break;
-        default:
-            throw std::logic_error("Invalid FLO type");
+    case WFR_TYPE::WFR_WOR:
+    case WFR_TYPE::WFR_WCT:
+        break;
+    case WFR_TYPE::WFR_WGR:
+        scaling_factor = liquid_surface_volume / gas_surface_volume;
+        break;
+    default:
+        throw std::logic_error("Invalid WFR type");
     }
     scaleValues(values, scaling_factor);
 }
@@ -518,15 +497,15 @@ void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
     const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
     const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
     switch (type) {
-        case GFR_GOR:
-        case GFR_GLR:
-            scaling_factor = gas_surface_volume / liquid_surface_volume;
-            break;
-        case GFR_OGR:
-            scaling_factor = liquid_surface_volume / gas_surface_volume;
-            break;
-        default:
-            throw std::logic_error("Invalid FLO type");
+    case GFR_TYPE::GFR_GOR:
+    case GFR_TYPE::GFR_GLR:
+        scaling_factor = gas_surface_volume / liquid_surface_volume;
+        break;
+    case GFR_TYPE::GFR_OGR:
+        scaling_factor = liquid_surface_volume / gas_surface_volume;
+        break;
+    default:
+        throw std::logic_error("Invalid GFR type");
     }
     scaleValues(values, scaling_factor);
 }
@@ -539,21 +518,20 @@ Dimension VFPProdTable::ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem&
     const auto time                  = unit_system.getDimension(UnitSystem::measure::time).getSIScaling();
 
     switch (alq_type) {
-    case ALQ_IGLR:
+    case ALQ_TYPE::ALQ_IGLR:
         scaling_factor = gas_surface_volume / (liquid_surface_volume * time);
         break;
-    case ALQ_TGLR:
+    case ALQ_TYPE::ALQ_TGLR:
         scaling_factor = gas_surface_volume / liquid_surface_volume;
         break;
-    case ALQ_GRAT:
+    case ALQ_TYPE::ALQ_GRAT:
         scaling_factor = gas_surface_volume / time;
         break;
-    case ALQ_UNDEF:
+    case ALQ_TYPE::ALQ_UNDEF:
         break;
-    case ALQ_PUMP:
-    case ALQ_COMP:
-    case ALQ_INVALID:
-    case ALQ_BEAN:
+    case ALQ_TYPE::ALQ_PUMP:
+    case ALQ_TYPE::ALQ_COMP:
+    case ALQ_TYPE::ALQ_BEAN:
         std::logic_error("scaling of the given ALQ type, not implemented ");
         break;
     default:
@@ -584,7 +562,8 @@ bool VFPProdTable::operator==(const VFPProdTable& data) const {
            this->getWFRAxis() == data.getWFRAxis() &&
            this->getGFRAxis() == data.getGFRAxis() &&
            this->getALQAxis() == data.getALQAxis() &&
-           this->getTable() == data.getTable();
+           this->getTable() == data.getTable() &&
+           this->location() == data.location();
 }
 
 
