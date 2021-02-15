@@ -40,21 +40,32 @@ namespace Opm {
             else {
                 auto& prev_cell = cell_iter->second;
                 if (prev_cell.aquiferID == cell.aquiferID) {
-                    if (prev_cell.influx_coeff.first != cell.influx_coeff.first)
-                        throw std::invalid_argument("Can not combine defaulted and not defaulted influx coefficient");
-
-                    if (prev_cell.influx_coeff.first) {
-                        if (cell.influx_coeff.second == 0)
-                            prev_cell.influx_coeff.second = 0;
-                        else
-                            prev_cell.influx_coeff.second += cell.influx_coeff.second;
-                    }
+                    prev_cell.influx_coeff += cell.influx_coeff;
                 } else {
                     std::string msg = "Cell with global index: " + std::to_string(cell.global_index) + " is already connected to Aquifer: " + std::to_string(prev_cell.aquiferID);
                     throw std::invalid_argument( msg );
                 }
             }
         }
+
+
+        double face_area(FaceDir::DirEnum face_dir, std::size_t global_index, const EclipseGrid& grid) {
+            const auto& dims = grid.getCellDims(global_index);
+            switch (face_dir) {
+            case FaceDir::XPlus:
+            case FaceDir::XMinus:
+                return dims[1] * dims[2];
+            case FaceDir::YPlus:
+            case FaceDir::YMinus:
+                return dims[0] * dims[2];
+            case FaceDir::ZPlus:
+            case FaceDir::ZMinus:
+                return dims[0] * dims[1];
+            default:
+                throw std::logic_error("What the f...");
+            }
+        }
+
     }
 
 
@@ -87,11 +98,12 @@ namespace Opm {
                             if (grid.cellActive(i, j, k)) { // the cell itself needs to be active
                                 if (allow_aquifer_inside_reservoir
                                     || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir)) {
-                                    std::pair<bool, double> influx_coeff = std::make_pair(false, 0);
+                                    double influx_coeff;
                                     auto global_index = grid.getGlobalIndex(i, j, k);
                                     if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
-                                        influx_coeff = std::make_pair(
-                                            true, aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0));
+                                        influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
+                                    else
+                                        influx_coeff = face_area(faceDir, global_index, grid);
 
                                     AquancCell cell(aquiferID, global_index, influx_coeff, influx_mult, faceDir);
                                     add_cell(work, cell);
@@ -114,7 +126,7 @@ namespace Opm {
     Aquancon Aquancon::serializeObject()
     {
         Aquancon result;
-        result.cells = {{1, {{2, 3, {true, 4.0}, 5.0, FaceDir::XPlus}}}};
+        result.cells = {{1, {{2, 3, 4.0, 5.0, FaceDir::XPlus}}}};
 
         return result;
     }

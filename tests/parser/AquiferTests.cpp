@@ -315,7 +315,6 @@ BOOST_AUTO_TEST_CASE(AquanconTest_DEFAULT_INFLUX) {
     BOOST_CHECK(aqcon.active());
 
     auto deck2 = createAQUANCONDeck_DEFAULT_INFLUX2();
-    BOOST_CHECK_THROW(Aquancon( grid, deck2), std::invalid_argument);
 
     // The cell (2,1,1) is attached to both aquifer 1 and aquifer 2 - that is illegal.
     auto deck3 = createAQUANCONDeck_DEFAULT_ILLEGAL();
