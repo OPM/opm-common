@@ -1891,6 +1891,9 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
     else if (node.category == Opm::EclIO::SummaryNode::Category::Group)
         st.update_group_var(node.wgname, node.keyword, value);
 
+    else if (node.category == Opm::EclIO::SummaryNode::Category::Node)
+        st.update_group_var(node.wgname, node.keyword, value);
+
     else
         st.update(node.unique_key(), value);
 }
