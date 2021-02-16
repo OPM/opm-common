@@ -672,3 +672,120 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest){
     BOOST_CHECK_CLOSE(poro[2], 0.24, 1.e-10);
     BOOST_CHECK_CLOSE(poro[3], 0.25, 1.e-10);
 }
+
+
+std::pair<Opm::Aquancon, Opm::EclipseGrid> load_aquifer(const std::string& aqucon) {
+    const std::string data1 = R"(
+DIMENS
+ 8 15 3 /
+AQUDIMS
+    3      2      1*       1*     1*       50      1*      1*  /
+GRID
+
+DX
+  360*10./
+DY
+   360*10./
+DZ
+   360*1./
+TOPS
+   360*100./
+
+PORO
+   0. 0.25 0. 357*0.25/
+PERMX
+    360*1000./
+PERMY
+    360*1000./
+PERMZ
+    360*10./
+-- setting the three cells for numerical aquifer to be inactive
+ACTNUM
+0 1 0 0 356*1 /
+
+AQUNUM
+--AQnr.  I  J  K     Area      Length PHI      K     Depth  Initial.Pr	PVTNUM   SATNUM
+   1     1  1  1   1000000.0   10000   0.25   400    2585.00   285.00	 2   2  /
+   1     3  1  1   1500000.0   20000   0.24   600    2585.00   285.00	 3   *  /
+   1     4  1  1   2000000.0   30000   *   700    2585.00   285.00	 *   3  /
+/
+)";
+    Opm::Parser parser;
+    auto deck = parser.parseString( data1 + aqucon );
+    auto grid = Opm::EclipseGrid( deck );
+
+    return { Opm::Aquancon(grid, deck), grid };
+}
+
+
+
+BOOST_AUTO_TEST_CASE(AQUCONN_FUNKYNESS ) {
+   {
+       const std::string aq = R"(
+AQUANCON
+     1     1	8      15    15	  3   3   'J+'      1.00      2  /
+/
+)";
+       const auto& [aquconn, _] = load_aquifer(aq);
+       (void)_;
+       auto cell1 = aquconn[1][0];
+       BOOST_CHECK_EQUAL(cell1.influx_coeff, 2.0);
+       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
+   }
+
+
+   {
+       const std::string aq = R"(
+AQUANCON
+     1     1	8      15    15	  3   3   'J+'      *      2  /
+/
+)";
+       const auto& [aquconn, grid] = load_aquifer(aq);
+       const auto& dims = grid.getCellDims(0,14,2);
+       auto cell1 = aquconn[1][0];
+       BOOST_CHECK_EQUAL(cell1.influx_coeff, 2.0 * dims[0]*dims[2]);
+       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
+   }
+
+   {
+       const std::string aq = R"(
+AQUANCON
+     1     1	8      15    15	  3   3   'I+'      *      3  /
+/
+)";
+       const auto& [aquconn, grid] = load_aquifer(aq);
+       const auto& dims = grid.getCellDims(0,14,2);
+       auto cell1 = aquconn[1][0];
+       BOOST_CHECK_EQUAL(cell1.influx_coeff, 3.0 * dims[1]*dims[2]);
+       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
+   }
+
+   {
+       const std::string aq = R"(
+AQUANCON
+     1     1	8      15    15	  3   3   'I+'      *        3  /
+     1     1	8      15    15	  3   3   'I+'      100      4  /
+/
+)";
+       const auto& [aquconn, grid] = load_aquifer(aq);
+       const auto& dims = grid.getCellDims(0,14,2);
+       auto cell1 = aquconn[1][0];
+       BOOST_CHECK_EQUAL(cell1.influx_coeff, 4 * ( 100 + 3.0 * dims[1]*dims[2]));
+       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
+   }
+
+   {
+       const std::string aq = R"(
+AQUANCON
+     1     1	8      15    15	  3   3   'I+'      100      4  /
+     1     1	8      15    15	  3   3   'I+'      *        3  /
+     1     1	8      15    15	  3   3   'I+'      77       2  /
+/
+)";
+       const auto& [aquconn, grid] = load_aquifer(aq);
+       auto cell1 = aquconn[1][0];
+       BOOST_CHECK_EQUAL(cell1.influx_coeff, 2*(77 + 3*(0 + 4*100)));
+       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
+   }
+
+}

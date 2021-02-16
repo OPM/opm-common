@@ -33,22 +33,6 @@ namespace Opm {
 
     namespace{
 
-        void add_cell(std::unordered_map<std::size_t, Aquancon::AquancCell>& work, Aquancon::AquancCell cell) {
-            auto cell_iter = work.find(cell.global_index);
-            if (cell_iter == work.end())
-                work.insert( std::make_pair(cell.global_index, std::move(cell)));
-            else {
-                auto& prev_cell = cell_iter->second;
-                if (prev_cell.aquiferID == cell.aquiferID) {
-                    prev_cell.influx_coeff += cell.influx_coeff;
-                } else {
-                    std::string msg = "Cell with global index: " + std::to_string(cell.global_index) + " is already connected to Aquifer: " + std::to_string(prev_cell.aquiferID);
-                    throw std::invalid_argument( msg );
-                }
-            }
-        }
-
-
         double face_area(FaceDir::DirEnum face_dir, std::size_t global_index, const EclipseGrid& grid) {
             const auto& dims = grid.getCellDims(global_index);
             switch (face_dir) {
@@ -63,6 +47,31 @@ namespace Opm {
                 return dims[0] * dims[1];
             default:
                 throw std::logic_error("What the f...");
+            }
+        }
+
+        void add_cell(std::unordered_map<std::size_t, Aquancon::AquancCell>& work,
+                      const EclipseGrid& grid,
+                      int aquiferID,
+                      std::size_t global_index,
+                      std::optional<double> influx_coeff,
+                      double influx_mult,
+                      FaceDir::DirEnum face_dir) {
+            auto cell_iter = work.find(global_index);
+            if (cell_iter == work.end()) {
+                if (!influx_coeff.has_value())
+                    influx_coeff = face_area(face_dir, global_index, grid);
+                work.insert( std::make_pair(global_index, Aquancon::AquancCell(aquiferID, global_index, influx_coeff.value() * influx_mult, 1.0, face_dir)) );
+            }
+            else {
+                auto& prev_cell = cell_iter->second;
+                if (prev_cell.aquiferID == aquiferID) {
+                    prev_cell.influx_coeff += influx_coeff.value_or(0.0);
+                    prev_cell.influx_coeff *= influx_mult;
+                } else {
+                    std::string msg = "Cell with global index: " + std::to_string(global_index) + " is already connected to Aquifer: " + std::to_string(prev_cell.aquiferID);
+                    throw std::invalid_argument( msg );
+                }
             }
         }
 
@@ -98,15 +107,12 @@ namespace Opm {
                             if (grid.cellActive(i, j, k)) { // the cell itself needs to be active
                                 if (allow_aquifer_inside_reservoir
                                     || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir)) {
-                                    double influx_coeff;
+                                    std::optional<double> influx_coeff;
                                     auto global_index = grid.getGlobalIndex(i, j, k);
                                     if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
                                         influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
-                                    else
-                                        influx_coeff = face_area(faceDir, global_index, grid);
 
-                                    AquancCell cell(aquiferID, global_index, influx_coeff, influx_mult, faceDir);
-                                    add_cell(work, cell);
+                                    add_cell(work, grid, aquiferID, global_index, influx_coeff, influx_mult, faceDir);
                                 }
                             }
                         }
