@@ -28,14 +28,12 @@ namespace Opm {
 RFTConfig::RFTConfig()
     : tm{}
     , first_rft_event(tm.size())
-    , well_open_rft_time{false, 0}
 {
 }
 
 RFTConfig::RFTConfig(const TimeMap& time_map) :
     tm(time_map),
-    first_rft_event(tm.size()),
-    well_open_rft_time{false, 0}
+    first_rft_event(tm.size())
 {
 }
 
@@ -44,7 +42,7 @@ RFTConfig RFTConfig::serializeObject()
     RFTConfig result;
     result.tm = TimeMap::serializeObject();
     result.first_rft_event = 1;
-    result.well_open_rft_time = {true, 2};
+    result.well_open_rft_time = 2;
     result.well_open_rft_name = {{"test1", 3}};
     result.well_open = {{"test2", 4}};
     result.rft_config = {{"test3", {{{RFT::TIMESTEP, 5}}, 6}}};
@@ -157,16 +155,15 @@ bool RFTConfig::getWellOpenRFT(const std::string& well_name, std::size_t report_
     if (this->well_open_rft_name.count(well_name) > 0)
         return true;
 
-    return (this->well_open_rft_time.first && this->well_open_rft_time.second <= report_step);
+    return (this->well_open_rft_time.has_value() && this->well_open_rft_time.value() <= report_step);
 }
 
 
 void RFTConfig::setWellOpenRFT(std::size_t report_step) {
-    this->well_open_rft_time.second = this->well_open_rft_time.first
-        ? std::min(this->well_open_rft_time.second, report_step)
-        : report_step;
-
-    this->well_open_rft_time.first = true;
+    if (this->well_open_rft_time.has_value())
+        this->well_open_rft_time = std::min(this->well_open_rft_time.value(), report_step);
+    else
+        this->well_open_rft_time = report_step;
 
     this->updateFirst(this->firstWellopenStepNotBefore(report_step));
 }
@@ -283,7 +280,7 @@ bool RFTConfig::outputRftAtWellopen(WellOpenTimeMap::const_iterator well_iter, c
     if (report_step < this->first_rft_event)
         return false;
 
-    if (this->well_open_rft_time.first && this->well_open_rft_time.second <= report_step) {
+    if (this->well_open_rft_time.has_value() && this->well_open_rft_time.value() <= report_step) {
         // A general "Output RFT when the well is opened" has been
         // configured with WRFT.  Output RFT data if the well opens
         // at this report step.
