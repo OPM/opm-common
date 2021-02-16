@@ -24,6 +24,7 @@
 #include <array>
 #include <vector>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
 
@@ -36,38 +37,33 @@ namespace Opm {
  */
 class VFPProdTable {
 public:
-    typedef std::vector<double> array_type;
 
-    enum FLO_TYPE {
+    enum class FLO_TYPE {
         FLO_OIL=1,
         FLO_LIQ,
-        FLO_GAS,
-        FLO_INVALID
+        FLO_GAS
     };
 
-    enum WFR_TYPE {
+    enum class WFR_TYPE {
         WFR_WOR=11,
         WFR_WCT,
-        WFR_WGR,
-        WFR_INVALID
+        WFR_WGR
     };
 
-    enum GFR_TYPE {
+    enum class GFR_TYPE {
         GFR_GOR=21,
         GFR_GLR,
-        GFR_OGR,
-        GFR_INVALID
+        GFR_OGR
     };
 
-    enum ALQ_TYPE {
+    enum class ALQ_TYPE {
         ALQ_GRAT=31,
         ALQ_IGLR,
         ALQ_TGLR,
         ALQ_PUMP,
         ALQ_COMP,
         ALQ_BEAN,
-        ALQ_UNDEF,
-        ALQ_INVALID
+        ALQ_UNDEF
     };
 
     VFPProdTable();
@@ -83,13 +79,17 @@ public:
                  const std::vector<double>& wfr_data,
                  const std::vector<double>& gfr_data,
                  const std::vector<double>& alq_data,
-                 const array_type& data);
+                 const std::vector<double>& data);
     static Dimension ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem& unit_system);
 
     static VFPProdTable serializeObject();
 
     inline int getTableNum() const {
         return m_table_num;
+    }
+
+    inline const KeywordLocation& location() const {
+        return this->m_location;
     }
 
     // The name() method is added to simplify serialization.
@@ -151,7 +151,7 @@ public:
      * thp_coord = thp_axis(thp_idx);
      * ...
      */
-    inline const array_type& getTable() const {
+    inline const std::vector<double>& getTable() const {
         return m_data;
     }
 
@@ -176,6 +176,7 @@ public:
         serializer(m_gfr_data);
         serializer(m_alq_data);
         serializer(m_data);
+        m_location.serializeOp(serializer);
     }
 
 private:
@@ -192,9 +193,10 @@ private:
     std::vector<double> m_gfr_data;
     std::vector<double> m_alq_data;
 
-    array_type m_data;
+    std::vector<double> m_data;
+    KeywordLocation m_location;
 
-    void check(const DeckKeyword& table, const double factor);
+    void check();
 
     double& operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx);
 

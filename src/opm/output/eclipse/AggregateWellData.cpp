@@ -592,10 +592,10 @@ namespace {
                 
                 if (pc.alq_value != 0.0) {
                     auto vfpTable = sched[sim_step].vfpprod(pc.vfp_table_number);
-                    if (vfpTable.getALQType() == Opm::VFPProdTable::ALQ_GRAT) {
+                    if (vfpTable.getALQType() == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
                         sWell[Ix::Alq_value] = static_cast<float>(units.from_si(M::gas_surface_rate, pc.alq_value));
                     }
-                    else if ((vfpTable.getALQType() == Opm::VFPProdTable::ALQ_IGLR) || (vfpTable.getALQType() == Opm::VFPProdTable::ALQ_TGLR)) {
+                    else if ((vfpTable.getALQType() == Opm::VFPProdTable::ALQ_TYPE::ALQ_IGLR) || (vfpTable.getALQType() == Opm::VFPProdTable::ALQ_TYPE::ALQ_TGLR)) {
                         sWell[Ix::Alq_value] = static_cast<float>(units.from_si(M::gas_oil_ratio, pc.alq_value));
                     }
                     else {

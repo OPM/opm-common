@@ -664,7 +664,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 {
     Opm::SummaryState st(std::chrono::system_clock::now());
     const Opm::Well::WellProductionProperties& p =
-        WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table(), VFPProdTable::ALQ_UNDEF);
+        WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table(), VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
 
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::WRAT));
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
 BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 {
     const Opm::Well::WellProductionProperties& p =
-        WCONPROD::properties(WCONPROD::thp_CMODE(), VFPProdTable::ALQ_UNDEF);
+        WCONPROD::properties(WCONPROD::thp_CMODE(), VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
 
     BOOST_CHECK( p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
     BOOST_CHECK( p.hasProductionControl(Opm::Well::ProducerCMode::WRAT));
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
 {
     const Opm::Well::WellProductionProperties& p =
-        WCONPROD::properties(WCONPROD::bhp_CMODE(), VFPProdTable::ALQ_UNDEF);
+        WCONPROD::properties(WCONPROD::bhp_CMODE(), VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
 
     BOOST_CHECK( p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
     BOOST_CHECK( p.hasProductionControl(Opm::Well::ProducerCMode::WRAT));

@@ -26,6 +26,8 @@
 #include <vector>
 #include <string>
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+
 namespace Opm {
 
 class DeckKeyword;
@@ -33,13 +35,11 @@ class UnitSystem;
 
 class VFPInjTable {
 public:
-    typedef std::vector<double> array_type;
 
-    enum FLO_TYPE {
+    enum class FLO_TYPE {
         FLO_OIL=1,
         FLO_WAT,
         FLO_GAS,
-        FLO_INVALID
     };
 
 
@@ -47,6 +47,10 @@ public:
     VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
     static VFPInjTable serializeObject();
+
+    inline const KeywordLocation& location() const {
+        return this->m_location;
+    }
 
     inline int getTableNum() const {
         return m_table_num;
@@ -85,7 +89,7 @@ public:
      * flo_coord = flo_axis(flo_idx);
      * thp_coord = thp_axis(thp_idx);
      */
-    inline const array_type& getTable() const {
+    inline const std::vector<double>& getTable() const {
         return m_data;
     }
 
@@ -104,6 +108,7 @@ public:
         serializer(m_flo_data);
         serializer(m_thp_data);
         serializer(m_data);
+        m_location.serializeOp(serializer);
     }
 
 private:
@@ -115,7 +120,9 @@ private:
     std::vector<double> m_thp_data;
 
 
-    array_type m_data;
+    std::vector<double> m_data;
+    KeywordLocation m_location;
+
     void check();
 
     double& operator()(size_t thp_idx, size_t flo_idx);
