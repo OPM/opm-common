@@ -20,7 +20,9 @@
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
+#include <fmt/format.h>
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
@@ -50,7 +52,8 @@ namespace Opm {
             }
         }
 
-        void add_cell(std::unordered_map<std::size_t, Aquancon::AquancCell>& work,
+        void add_cell(const KeywordLocation& location,
+                      std::unordered_map<std::size_t, Aquancon::AquancCell>& work,
                       const EclipseGrid& grid,
                       int aquiferID,
                       std::size_t global_index,
@@ -69,7 +72,10 @@ namespace Opm {
                     prev_cell.influx_coeff += influx_coeff.value_or(0.0);
                     prev_cell.influx_coeff *= influx_mult;
                 } else {
-                    std::string msg = "Cell with global index: " + std::to_string(global_index) + " is already connected to Aquifer: " + std::to_string(prev_cell.aquiferID);
+                    auto [i,j,k] = grid.getIJK(global_index);
+                    auto msg = fmt::format("Problem with AQUANCON keyword\n"
+                                           "In {} line {}\n"
+                                           "Cell ({}, {}, {}) is already connected to aquifer: {}", location.filename, location.lineno, i + 1, j + 1, k + 1, prev_cell.aquiferID);
                     throw std::invalid_argument( msg );
                 }
             }
@@ -108,11 +114,11 @@ namespace Opm {
                                 if (allow_aquifer_inside_reservoir
                                     || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir)) {
                                     std::optional<double> influx_coeff;
-                                    auto global_index = grid.getGlobalIndex(i, j, k);
                                     if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
                                         influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
 
-                                    add_cell(work, grid, aquiferID, global_index, influx_coeff, influx_mult, faceDir);
+                                    auto global_index = grid.getGlobalIndex(i,j,k);
+                                    add_cell(aquanconKeyword.location(), work, grid, aquiferID, global_index, influx_coeff, influx_mult, faceDir);
                                 }
                             }
                         }
