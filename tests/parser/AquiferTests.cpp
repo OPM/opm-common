@@ -730,7 +730,6 @@ AQUANCON
        (void)_;
        auto cell1 = aquconn[1][0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 2.0);
-       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
    }
 
 
@@ -744,7 +743,6 @@ AQUANCON
        const auto& dims = grid.getCellDims(0,14,2);
        auto cell1 = aquconn[1][0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 2.0 * dims[0]*dims[2]);
-       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
    }
 
    {
@@ -757,7 +755,6 @@ AQUANCON
        const auto& dims = grid.getCellDims(0,14,2);
        auto cell1 = aquconn[1][0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 3.0 * dims[1]*dims[2]);
-       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
    }
 
    {
@@ -771,7 +768,6 @@ AQUANCON
        const auto& dims = grid.getCellDims(0,14,2);
        auto cell1 = aquconn[1][0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 4 * ( 100 + 3.0 * dims[1]*dims[2]));
-       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
    }
 
    {
@@ -785,7 +781,6 @@ AQUANCON
        const auto& [aquconn, grid] = load_aquifer(aq);
        auto cell1 = aquconn[1][0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 2*(77 + 3*(0 + 4*100)));
-       BOOST_CHECK_EQUAL(cell1.influx_mult , 1.0);
    }
 
 }
