@@ -388,7 +388,7 @@ public:
 
         field_data = std::addressof(this->init_get<T>(keyword,
                                                       std::is_same<T,double>::value && allow_unsupported));
-        if (field_data->valid())
+        if (field_data->valid() || allow_unsupported)
             return FieldDataManager<T>(keyword, GetStatus::OK, field_data);
 
         if (!has0) {
