@@ -61,7 +61,7 @@ namespace Opm {
             if (cell_iter == work.end()) {
                 if (!influx_coeff.has_value())
                     influx_coeff = face_area(face_dir, global_index, grid);
-                work.insert( std::make_pair(global_index, Aquancon::AquancCell(aquiferID, global_index, influx_coeff.value() * influx_mult, 1.0, face_dir)) );
+                work.insert( std::make_pair(global_index, Aquancon::AquancCell(aquiferID, global_index, influx_coeff.value() * influx_mult, face_dir)) );
             }
             else {
                 auto& prev_cell = cell_iter->second;
@@ -132,7 +132,7 @@ namespace Opm {
     Aquancon Aquancon::serializeObject()
     {
         Aquancon result;
-        result.cells = {{1, {{2, 3, 4.0, 5.0, FaceDir::XPlus}}}};
+        result.cells = {{1, {{2, 3, 4.0, FaceDir::XPlus}}}};
 
         return result;
     }

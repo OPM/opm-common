@@ -45,14 +45,12 @@ namespace Opm {
             int aquiferID;
             std::size_t global_index;
             double influx_coeff;
-            double influx_mult;
             FaceDir::DirEnum face_dir;
 
-            AquancCell(int aquiferID_arg, std::size_t gi, double ic, double im, FaceDir::DirEnum fd) :
+            AquancCell(int aquiferID_arg, std::size_t gi, double ic, FaceDir::DirEnum fd) :
                 aquiferID(aquiferID_arg),
                 global_index(gi),
                 influx_coeff(ic),
-                influx_mult(im),
                 face_dir(fd)
             {}
 
@@ -62,7 +60,6 @@ namespace Opm {
                 return this->aquiferID == other.aquiferID &&
                        this->global_index == other.global_index &&
                        this->influx_coeff == other.influx_coeff &&
-                       this->influx_mult == other.influx_mult &&
                        this->face_dir == other.face_dir;
             }
 
@@ -72,7 +69,6 @@ namespace Opm {
                 serializer(aquiferID);
                 serializer(global_index);
                 serializer(influx_coeff);
-                serializer(influx_mult);
                 serializer(face_dir);
             }
         };
