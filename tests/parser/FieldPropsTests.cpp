@@ -2112,6 +2112,9 @@ EQUALS
 
     const auto& keys = fpm.keys<double>();
     BOOST_CHECK_EQUAL(keys.size(), 2);
+
+    BOOST_CHECK_THROW( fpm.get_double_field_data("TRANX0"), std::exception );
+    BOOST_CHECK_NO_THROW( fpm.get_double_field_data("TRANX0", true));
 }
 
 

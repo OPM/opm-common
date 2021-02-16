@@ -67,9 +67,10 @@ FieldPropsManager::get_double_field_data(const std::string& keyword,
                                          bool allow_unsupported) const
 {
     const auto& data = this->fp->try_get<double>(keyword, allow_unsupported);
-    if (!data.valid())
-        throw std::out_of_range("Invalid field data requested.");
-    return data.field_data();
+    if (allow_unsupported || data.valid())
+        return data.field_data();
+
+    throw std::out_of_range("Invalid field data requested.");
 }
 
 template <typename T>
