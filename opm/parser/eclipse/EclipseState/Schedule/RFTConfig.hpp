@@ -20,6 +20,7 @@
 #define RFT_CONFIG_HPP
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -94,7 +95,7 @@ public:
 private:
     TimeMap tm;
     std::size_t first_rft_event;
-    std::pair<bool, std::size_t> well_open_rft_time;
+    std::optional<std::size_t> well_open_rft_time;
     WellOpenTimeMap well_open_rft_name;
     WellOpenTimeMap well_open;
     ConfigMap<RFT> rft_config;
