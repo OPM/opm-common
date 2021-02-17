@@ -144,6 +144,11 @@ COMPDAT
   P2 2* 1 10 OPEN 1* 1* 0.5 /
   I1 2* 1 10 OPEN 1* 1* 0.5 /
 /
+
+WCONINJE
+  'I1' 'GAS'  'OPEN'  'RATE'  200  1*  450.0 /
+/
+
 )"  };
 
         const auto guiderat = std::string { R"(
@@ -519,6 +524,11 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
         const auto expect = (wrat / orat) * (0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
+
+    const auto& sched = cse.sched;
+    auto wi = sched.getWell("I1", 0);
+    wi.updateWellGuideRate(true, 1.0, Opm::Well::GuideRateTarget::RAT, 1.0);
+    BOOST_CHECK( wi.getGuideRatePhase() == Opm::Well::GuideRateTarget::GAS );
 }
 
 BOOST_AUTO_TEST_SUITE_END() // GuideRate_Calculations
