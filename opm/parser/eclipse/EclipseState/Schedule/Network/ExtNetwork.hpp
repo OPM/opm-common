@@ -38,9 +38,7 @@ public:
     ExtNetwork() = default;
     bool active() const;
     bool has_node(const std::string& name) const;
-    bool has_indexed_node_name(std::string name) const;
     void add_node(Node node);
-    void add_indexed_node_name(std::string name);
     void add_branch(Branch branch);
     void drop_branch(const std::string& uptree_node, const std::string& downtree_node);
     const Node& node(const std::string& name) const;
@@ -49,7 +47,6 @@ public:
     std::vector<const Branch*> branches() const;
     std::optional<Branch> uptree_branch(const std::string& node) const;
     std::vector<std::string> node_names() const;
-    std::vector<std::string> insert_index_nd_names() const;
     int NoOfBranches() const;
 
     bool operator==(const ExtNetwork& other) const;
@@ -67,6 +64,8 @@ private:
     std::vector<Branch> m_branches;
     std::vector<std::string> insert_indexed_node_names;
     std::map<std::string, Node> m_nodes;
+    bool has_indexed_node_name(const std::string name) const;
+    void add_indexed_node_name(std::string name);
 };
 
 }

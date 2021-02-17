@@ -45,6 +45,8 @@
 #include <exception>
 #include <string>
 #include <stdexcept>
+#include <optional>
+#include <fmt/format.h>
 
 #define ENABLE_GCNTL_DEBUG_OUTPUT 0
 
@@ -109,45 +111,33 @@ void branchLoop(const std::vector<const Opm::Network::Branch*>& branches,
     }
 }
 
-template < typename T>
-std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const T  & element)
+template <typename T>
+std::optional<int> findInVector(const std::vector<T>  & vecOfElements, const T  & element)
 {
-    std::pair<bool, int > result;
-
     // Find given element in vector
     auto it = std::find(vecOfElements.begin(), vecOfElements.end(), element);
 
-    if (it != vecOfElements.end())
-    {
-        result.second = std::distance(vecOfElements.begin(), it);
-        result.first = true;
-    }
-    else
-    {
-        result.first = false;
-        result.second = -1;
-    }
-    return result;
+    return (it != vecOfElements.end()) ? std::optional<int>{std::distance(vecOfElements.begin(), it)} : std::nullopt;
 }
 
-int next_branch(int node_no, std::vector<int> inlets, std::vector<int> outlets)
+int next_branch(int node_no, std::vector<int>& inlets, std::vector<int>& outlets)
 {
     int nxt_br = 0;
     auto res_inlets = findInVector<int>(inlets, node_no);
     auto res_outlets = findInVector<int>(outlets, node_no);
 
-    if ((!res_inlets.first) && (!res_outlets.first)) {
+    if ((!res_inlets) && (!res_outlets)) {
         return 0;
     }
 
-    if (res_outlets.first) {
-        nxt_br = res_outlets.second + 1;
+    if (res_outlets) {
+        nxt_br = res_outlets.value() + 1;
     }
-    if (res_inlets.first) {
+    if (res_inlets) {
         if (nxt_br > 0) {
-            nxt_br = (nxt_br > res_inlets.second + 1) ? (res_inlets.second + 1) * (-1) : nxt_br;
+            nxt_br = (nxt_br > res_inlets.value() + 1) ? (res_inlets.value() + 1) * (-1) : nxt_br;
         } else {
-            nxt_br = (res_inlets.second + 1) * (-1);
+            nxt_br = (res_inlets.value() + 1) * (-1);
         }
     }
     return nxt_br;
@@ -158,7 +148,7 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
                             const std::size_t       lookup_step
                  )
 {
-    const auto& ntwNdNm = sched[lookup_step].network().insert_index_nd_names();
+    const auto& ntwNdNm = sched[lookup_step].network().node_names();
     const auto& branchPtrs = sched[lookup_step].network().branches();
 
     std::vector<int> newInobr;
@@ -169,10 +159,10 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
 
     for (const auto& branch : branchPtrs) {
         auto dwntr_nd_res = findInVector<std::string>(ntwNdNm, branch->downtree_node());
-        ind = (dwntr_nd_res.first) ? dwntr_nd_res.second + 1 : 0 ;
+        ind = (dwntr_nd_res) ? dwntr_nd_res.value() + 1 : 0 ;
         inlets.push_back(ind);
         auto uptr_nd_res = findInVector<std::string>(ntwNdNm, branch->uptree_node());
-        ind = (dwntr_nd_res.first) ? uptr_nd_res.second + 1 : 0 ;
+        ind = (dwntr_nd_res) ? uptr_nd_res.value() + 1 : 0 ;
         outlets.push_back(ind);
     }
 
@@ -254,9 +244,8 @@ double nodePressure(const Opm::Schedule&               sched,
                     if (network.uptree_branch(node_name).has_value()) {
                         upt_br = network.uptree_branch(node_name).value();
                     } else {
-                        std::stringstream str;
-                        str << "Node: " << nodeName << " has no uptree node with fixed pressure condition, uppermost node:  " << node_name;
-                        throw std::invalid_argument(str.str());
+                        auto msg = fmt::format("Node: {} has no uptree node with fixed pressure condition,  uppermost node is: {} ", nodeName, node_name);
+                        throw std::logic_error(msg);
                     }
                 }
             }
@@ -282,13 +271,6 @@ nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
                                const size_t                              lookup_step
                               )
 {
-    auto get = [&smry](const std::string& well_name, const std::string& vector)
-    {
-        const auto key = vector + ':' + well_name;
-
-        return smry.has(key) ? smry.get(key) : 0.0;
-    };
-
     const auto& stdDensityTable = es.getTableManager().getDensityTable();
 
     double deno = 0.;
@@ -307,13 +289,14 @@ nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
         const auto& well = sched.getWell(well_name, lookup_step);
         if (well.isProducer()) {
             const auto& pvtNum = well.pvt_table_number();
-            t_opr = get(well.name(),"WOPR");
+            t_opr = smry.get_well_var(well.name(), "WOPR", 0.0);
             deno += t_opr * stdDensityTable[pvtNum-1].oil;
             opr  += t_opr;
-            t_wpr = get(well.name(),"WWPR");
+            t_wpr = smry.get_well_var(well.name(), "WWPR", 0.0);
             denw += t_wpr * stdDensityTable[pvtNum-1].water;
             wpr  += t_wpr;
-            t_gpr = (get(well.name(),"WGPR") + get(well.name(),"WGLIR"))*well.getEfficiencyFactor();
+            t_gpr = (smry.get_well_var(well.name(), "WGPR", 0.0) + smry.get_well_var(well.name(), "WGLIR", 0.0))*
+            well.getEfficiencyFactor();
             deng += t_gpr * stdDensityTable[pvtNum-1].gas;
             gpr  += t_gpr;
         }
@@ -372,9 +355,8 @@ nodeProps nodeRateDensity(const Opm::EclipseState&                  es,
                 nd_prop_vec.push_back(nd_prop);
             }
         } else {
-            std::stringstream str;
-            str << "Node: " << node_nm << " should be a group but is not:  " << node_nm;
-            throw std::invalid_argument(str.str());
+            auto msg = fmt::format("Node: {} should be a group but is not", node_nm );
+            throw std::logic_error(msg);
         }
     }
 
@@ -426,9 +408,8 @@ int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& no
         noBranches = (network.uptree_branch(nodeName).has_value()) ? noBranches+1 : noBranches;
         return noBranches;
     } else {
-        std::stringstream str;
-        str << "actual node: " << nodeName << " has not been defined at report time: " << lookup_step+1;
-        throw std::invalid_argument(str.str());
+        auto msg = fmt::format("Actual node: {} has not been defined at report time: {} ", nodeName, lookup_step+1);
+        throw std::logic_error(msg);
     }
 }
 
@@ -437,21 +418,20 @@ int cumNumberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string&
     auto& network = sched[lookup_step].network();
     std::size_t ind_name = 0;
     int cumNoBranches = 1;
-    auto result = findInVector<std::string>(network.insert_index_nd_names(), nodeName);
-    if (result.first) {
-        ind_name = result.second;
+    auto result = findInVector<std::string>(network.node_names(), nodeName);
+    if (result) {
+        ind_name = result.value();
         if (ind_name == 0) {
             return cumNoBranches;
         } else {
             for (std::size_t n_ind = 0; n_ind < ind_name; n_ind++) {
-                cumNoBranches += numberOfBranchesConnToNode(sched,  network.insert_index_nd_names()[n_ind], lookup_step);
+                cumNoBranches += numberOfBranchesConnToNode(sched,  network.node_names()[n_ind], lookup_step);
             }
             return cumNoBranches;
         }
     } else {
-        std::stringstream str;
-        str << "actual node: " << nodeName << " has not been defined at report time: " << lookup_step+1;
-        throw std::invalid_argument(str.str());
+        auto msg = fmt::format("Actual node: {} has not been defined at report time: {} ", nodeName, lookup_step+1);
+        throw std::logic_error(msg);
     }
 }
 
@@ -469,6 +449,7 @@ void staticContrib(const Opm::Schedule&     sched,
         iNode[Ix::Group] = sched.getGroup(nodeName, lookup_step).insert_index();
     }
     iNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 1 : 0;
+    // the meaning of the value of item [4] is currently not known, the constant value used cover all cases so far
     iNode[4] = 1;
 }
 
@@ -498,13 +479,13 @@ void staticContrib(const Opm::Schedule&         sched,
                    IBranArray&                  iBran)
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::IBran::index;
-    const auto& nodeNames = sched[lookup_step].network().insert_index_nd_names();
+    const auto& nodeNames = sched[lookup_step].network().node_names();
 
     auto dwntr_nd_res = findInVector<std::string>(nodeNames, branch.downtree_node());
-    iBran[Ix::DownTreeNode] = (dwntr_nd_res.first) ? dwntr_nd_res.second + 1 : 0 ;
+    iBran[Ix::DownTreeNode] = (dwntr_nd_res) ? dwntr_nd_res.value() + 1 : 0 ;
 
     auto uptr_nd_res = findInVector<std::string>(nodeNames, branch.uptree_node());
-    iBran[Ix::UpTreeNode] = (uptr_nd_res.first) ? uptr_nd_res.second + 1 : 0 ;
+    iBran[Ix::UpTreeNode] = (uptr_nd_res) ? uptr_nd_res.value() + 1 : 0 ;
 
     iBran[Ix::VfpTableNo] = (branch.vfp_table().has_value()) ? branch.vfp_table().value() : 0;
 }
@@ -591,8 +572,7 @@ void dynamicContrib(const Opm::Schedule&      sched,
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::RNode::index;
     // node dynamic pressure
-    std::string compKey = "GPR:" + nodeName;
-    rNode[Ix::NodePres] = (sumState.has(compKey)) ? sumState.get(compKey) : 0.;
+    rNode[Ix::NodePres] = sumState.get_group_var(nodeName, "GPR", 0.);
 
     // equal to 0. for fixed pressure nodes, 1. otherwise
     rNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 0. : 1.;
@@ -600,7 +580,7 @@ void dynamicContrib(const Opm::Schedule&      sched,
     // equal to i) highest well p_thp if wellgroup and ii) pressure of uptree node with fixed pressure
     rNode[Ix::PressureLimit] = nodePressure(sched, sumState, nodeName, units, lookup_step);
 
-    // fixed value
+    //the meaning of item [15] is not known at the moment, so far a constant value covers all cases studied
     rNode[15] = 1.;
 
 }
@@ -679,7 +659,7 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
                            const std::vector<int>&              inteHead)
 {
 
-    auto ntwNdNm = sched[lookup_step].network().insert_index_nd_names();
+    auto ntwNdNm = sched[lookup_step].network().node_names();
     std::size_t wdmax = ntwNdNm.size();
     std::vector<const std::string*> ndNmPt(wdmax + 1 , nullptr );
     std::size_t ind_nm = 0;
@@ -714,9 +694,8 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
 
     // Define Static Contributions to INobr Array
     if (inobr.size() != entriesPerInobr(inteHead)) {
-        std::stringstream str;
-        str << "Actual size of inobr:  " << inobr.size() << " different from required size: " << entriesPerInobr(inteHead);
-        throw std::invalid_argument(str.str());
+        auto msg = fmt::format("Actual size of inobr: {} is different from required size: {} ", inobr.size(), entriesPerInobr(inteHead));
+        throw std::logic_error(msg);
     }
     auto i_nobr = this->iNobr_[0];
     INobr::staticContrib(inobr, i_nobr);

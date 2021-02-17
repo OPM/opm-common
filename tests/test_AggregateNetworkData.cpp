@@ -59,30 +59,33 @@ namespace {
     {
         auto state = Opm::SummaryState{std::chrono::system_clock::now()};
 
-        state.update("WOPR:P1",   3342.673828);
-        state.update("WWPR:P1",   0.000005);
-        state.update("WGPR:P1",   334267.375);
-        state.update("WGLIR:P1",  111000.);
+        state.update_well_var("P1", "WOPR", 3342.673828);
+        state.update_well_var("P1", "WWPR", 0.000005);
+        state.update_well_var("P1", "WGPR", 334267.375);
+        state.update_well_var("P1", "WGLIR", 111000.);
 
-        state.update("WOPR:P2",   3882.443848);
-        state.update("WWPR:P2",   0.000002);
-        state.update("WGPR:P2",   672736.9375);
-        state.update("WGLIR:P2",  99666.);
+        state.update_well_var("P2", "WOPR", 3882.443848);
+        state.update_well_var("P2", "WWPR", 0.000002);
+        state.update_well_var("P2", "WGPR", 672736.9375);
+        state.update_well_var("P2", "WGLIR", 99666.);
 
-        state.update("WOPR:P3",   3000.000000);
-        state.update("WWPR:P3",   0.000002);
-        state.update("WGPR:P3",   529658.8125);
-        state.update("WGLIR:P3",  55000.);
+        state.update_well_var("P3", "WOPR", 3000.000000);
+        state.update_well_var("P3", "WWPR", 0.000002);
+        state.update_well_var("P3", "WGPR", 529658.8125);
+        state.update_well_var("P3", "WGLIR", 55000.);
 
-
-        state.update("GPR:B1",  81.6848);
-        state.update("GPR:N1",  72.);
-        state.update("GPR:N2",  69.);
-        state.update("GPR:PLAT-A",  67.);
-        state.update("GPR:B2",  79.0666);
-        state.update("GPR:M1",  72.);
+        state.update_group_var("B1", "GPR", 81.6848);
+        state.update_group_var("N1", "GPR", 72.);
+        state.update_group_var("N2", "GPR", 69.);
+        state.update_group_var("PLAT-A", "GPR", 67.);
+        state.update_group_var("B2", "GPR", 79.0666);
+        state.update_group_var("M1", "GPR", 72.);
 
         return state;
+    }
+
+    std::string pad8(const std::string& s) {
+        return s + std::string( 8 - s.size(), ' ');
     }
 }
 
@@ -212,30 +215,32 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_EQUAL(iBran[start + 2], 8);
 
     //ZNode-parameters
+    const std::string blank8 = "        ";
+
     const auto& zNode = networkData.getZNode();
     start = 0*ih[VI::NZNODE];
-    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "B1      ");
-    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), pad8("B1"));
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), blank8);
 
     start = 1*ih[VI::NZNODE];
-    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "N1      ");
-    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), pad8("N1"));
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), blank8);
 
     start = 2*ih[VI::NZNODE];
-    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "N2      ");
-    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), pad8("N2"));
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), blank8);
 
     start = 3*ih[VI::NZNODE];
-    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "PLAT-A  ");
-    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), pad8("PLAT-A"));
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), blank8);
 
     start = 4*ih[VI::NZNODE];
-    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "B2      ");
-    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), pad8("B2"));
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), blank8);
 
     start = 5*ih[VI::NZNODE];
-    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), "M1      ");
-    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), "        ");
+    BOOST_CHECK_EQUAL(zNode[start + 0].c_str(), pad8("M1"));
+    BOOST_CHECK_EQUAL(zNode[start + 1].c_str(), blank8);
 
     //INobr-parameters
     const auto& iNobr = networkData.getINobr();
