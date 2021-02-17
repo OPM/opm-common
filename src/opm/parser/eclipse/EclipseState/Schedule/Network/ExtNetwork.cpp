@@ -30,7 +30,6 @@ ExtNetwork ExtNetwork::serializeObject() {
     return object;
 }
 
-
 bool ExtNetwork::active() const {
     return !this->m_branches.empty() && !this->m_nodes.empty();
 }
@@ -71,6 +70,12 @@ const Node& ExtNetwork::root() const {
 
 void ExtNetwork::add_branch(Branch branch)
 {
+    if (!this->has_indexed_node_name(branch.downtree_node())) {
+        this->add_indexed_node_name(branch.downtree_node());
+    }
+    if (!this->has_indexed_node_name(branch.uptree_node())) {
+        this->add_indexed_node_name(branch.uptree_node());
+    }
     this->m_branches.push_back( std::move(branch) );
 }
 
@@ -114,6 +119,18 @@ std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const
     return branches;
 }
 
+std::vector<const Branch*> ExtNetwork::branches() const {
+    std::vector<const Branch*> branch_pointer;
+    for (const auto& br : this->m_branches) {
+        branch_pointer.emplace_back(&br);
+    }
+    return branch_pointer;
+}
+
+int ExtNetwork::NoOfBranches() const {
+    return this->m_branches.size();
+}
+
 /*
   The validation of the network structure is very weak. The current validation
   goes as follows:
@@ -147,18 +164,22 @@ void ExtNetwork::add_node(Node node)
     this->m_nodes.insert({ name, std::move(node) });
 }
 
+void ExtNetwork::add_indexed_node_name(std::string name)
+{
+    this->insert_indexed_node_names.emplace_back(name);
+}
+
+bool ExtNetwork::has_indexed_node_name(const std::string name) const
+{
+    // Find given element in vector
+    auto it = std::find(this->insert_indexed_node_names.begin(), this->insert_indexed_node_names.end(), name);
+
+    return (it != this->insert_indexed_node_names.end());
+}
+
 std::vector<std::string> ExtNetwork::node_names() const
 {
-    auto nodes = std::vector<std::string>{};
-    nodes.reserve(this->m_nodes.size());
-
-    std::transform(this->m_nodes.begin(), this->m_nodes.end(), std::back_inserter(nodes),
-        [](const auto& node_pair)
-    {
-        return node_pair.first;
-    });
-
-    return nodes;
+    return this->insert_indexed_node_names;
 }
 }
 }

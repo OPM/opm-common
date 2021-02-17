@@ -162,6 +162,7 @@ namespace {
             { "WGIGR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WWIGR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WMCTL", Opm::EclIO::SummaryNode::Type::Mode     },
+            { "WGLIR", Opm::EclIO::SummaryNode::Type::Rate     },
         };
         const auto extra_group_vectors = std::vector<ParamCTorArgs> {
             { "GOPGR", Opm::EclIO::SummaryNode::Type::Rate },
@@ -174,7 +175,9 @@ namespace {
             { "GMCTW", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMWPR", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMWIN", Opm::EclIO::SummaryNode::Type::Mode },
+            { "GPR",   Opm::EclIO::SummaryNode::Type::Pressure },
         };
+
         const auto extra_field_vectors = std::vector<ParamCTorArgs> {
             { "FMCTG", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTP", Opm::EclIO::SummaryNode::Type::Mode },

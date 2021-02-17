@@ -112,6 +112,20 @@ namespace RestartIO {
      struct GuideRateNominatedPhase {
       int   nominated_phase;
      };
+
+     struct NetworkDims {
+            int noactnod;
+            int noactbr;
+            int nodmax;
+            int nbrmax;
+            int nibran;
+            int nrbran;
+            int ninode;
+            int nrnode;
+            int nznode;
+            int ninobr;
+        };
+
      
         InteHEAD();
         ~InteHEAD() = default;
@@ -139,6 +153,7 @@ namespace RestartIO {
         InteHEAD& tuningParam(const TuningPar& tunpar);
         InteHEAD& variousParam(const int version, const int iprog);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
+        InteHEAD& networkDimensions(const NetworkDims& nwdim);
         InteHEAD& regionDimensions(const RegDims& rdim);
         InteHEAD& ngroups(const Group& gr);
         InteHEAD& udqParam_1(const UdqParam& udqpar);

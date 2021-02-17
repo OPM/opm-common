@@ -44,8 +44,10 @@ public:
     const Node& node(const std::string& name) const;
     const Node& root() const;
     std::vector<Branch> downtree_branches(const std::string& node) const;
+    std::vector<const Branch*> branches() const;
     std::optional<Branch> uptree_branch(const std::string& node) const;
     std::vector<std::string> node_names() const;
+    int NoOfBranches() const;
 
     bool operator==(const ExtNetwork& other) const;
     static ExtNetwork serializeObject();
@@ -54,12 +56,16 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer.vector(m_branches);
+        serializer(insert_indexed_node_names);
         serializer.map(m_nodes);
     }
 
 private:
     std::vector<Branch> m_branches;
+    std::vector<std::string> insert_indexed_node_names;
     std::map<std::string, Node> m_nodes;
+    bool has_indexed_node_name(const std::string name) const;
+    void add_indexed_node_name(std::string name);
 };
 
 }

@@ -180,6 +180,45 @@ private:
     int nLatBranchMax;
 };
 
+class NetworkDims {
+public:
+    NetworkDims();
+    explicit NetworkDims(const Deck& deck);
+
+    static NetworkDims serializeObject();
+
+    int maxNONodes() const
+    {
+        return this->nMaxNoNodes;
+    }
+
+    int maxNoBranches() const
+    {
+        return this->nMaxNoBranches;
+    }
+
+    int maxNoBranchesConToNode() const
+    {
+        return this->nMaxNoBranchesConToNode;
+    }
+
+    bool operator==(const NetworkDims& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(nMaxNoNodes);
+        serializer(nMaxNoBranches);
+        serializer(nMaxNoBranchesConToNode);
+    }
+
+private:
+    int nMaxNoNodes;
+    int nMaxNoBranches;
+    int nMaxNoBranchesConToNode;
+};
+
+
 class EclHysterConfig
 {
 public:
@@ -299,6 +338,7 @@ public:
     const EndpointScaling& endpointScaling() const noexcept;
     const Welldims& wellDimensions() const noexcept;
     const WellSegmentDims& wellSegmentDimensions() const noexcept;
+    const NetworkDims& networkDimensions() const noexcept;
     int eclPhaseMask( ) const noexcept;
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
@@ -316,6 +356,7 @@ public:
         endscale.serializeOp(serializer);
         welldims.serializeOp(serializer);
         wsegdims.serializeOp(serializer);
+        netwrkdims.serializeOp(serializer);
         udq_params.serializeOp(serializer);
         hystpar.serializeOp(serializer);
         m_actdims.serializeOp(serializer);
@@ -330,6 +371,7 @@ private:
     EndpointScaling endscale;
     Welldims welldims;
     WellSegmentDims wsegdims;
+    NetworkDims netwrkdims;
     UDQParams udq_params;
     EclHysterConfig hystpar;
     Actdims m_actdims;

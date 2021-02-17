@@ -149,16 +149,16 @@ enum index : std::vector<int>::size_type {
   ih_126       =      126       ,              //       0       0
   ih_127       =      127       ,              //       0       0
   ih_128       =      128       ,              //       0       0
-  ih_129       =      129       ,              //       0       0
-  ih_130       =      130       ,              //       0       0
-  NODMAX       =      131       ,              //       0       0              NODMAX = maximum number of nodes in extended network option
-  NBRMAX       =      132       ,              //       0       0              NBRMAX = maximum number of branches in extended network option
-  NIBRAN       =      133       ,              //       0       0              NIBRAN = number of entries per branch in the IBRAN array
-  NRBRAN       =      134       ,              //       0       0              NRBRAN = number of tries per branch in the RBRAN array
-  NINODE       =      135       ,              //       0       0              NINODE = number of entries per node in the INODE array
-  NRNODE       =      136       ,              //       0       0              NRNODE = number of entries per node in the RNODE array
-  NZNODE       =      137       ,              //       0       0              NZNODE = number of entries per node in the ZNODE array
-  NINOBR       =      138       ,              //       0       0              NINOBR = size of the INOBR array
+  NOACTNOD     =      VI::intehead::NOACTNOD,  //       0       0              NOACTNOD = Number of active/defined nodes in the network
+  NOACTBR      =      VI::intehead::NOACTBR,   //       0       0              NOACTBR = Number of active/defined branches in the network
+  NODMAX       =      VI::intehead::NODMAX,    //       0       0              NODMAX = maximum number of nodes in extended network option
+  NBRMAX       =      VI::intehead::NBRMAX,    //       0       0              NBRMAX = maximum number of branches in extended network option
+  NIBRAN       =      VI::intehead::NIBRAN,    //       0       0              NIBRAN = number of entries per branch in the IBRAN array
+  NRBRAN       =      VI::intehead::NRBRAN,    //       0       0              NRBRAN = number of tries per branch in the RBRAN array
+  NINODE       =      VI::intehead::NINODE,    //       0       0              NINODE = number of entries per node in the INODE array
+  NRNODE       =      VI::intehead::NRNODE,    //       0       0              NRNODE = number of entries per node in the RNODE array
+  NZNODE       =      VI::intehead::NZNODE,    //       0       0              NZNODE = number of entries per node in the ZNODE array
+  NINOBR       =      VI::intehead::NINOBR,    //       0       0              NINOBR = size of the INOBR array
   ih_139       =      139       ,              //       0       0
   ih_140       =      140       ,              //       0       0
   ih_141       =      141       ,              //       0       0
@@ -746,6 +746,26 @@ liftOptParam(int in_enc)
 
     return *this;
 }
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::networkDimensions(const NetworkDims& nwdim)
+{
+    this->data_[NOACTNOD] = nwdim.noactnod;
+    this->data_[NOACTBR]  = nwdim.noactbr;
+    this->data_[NODMAX]   = nwdim.nodmax;
+    this->data_[NBRMAX]   = nwdim.nbrmax;
+    this->data_[NIBRAN]   = nwdim.nibran;
+    this->data_[NRBRAN]   = nwdim.nrbran;
+    this->data_[NINODE]   = nwdim.ninode;
+    this->data_[NRNODE]   = nwdim.nrnode;
+    this->data_[NZNODE]   = nwdim.nznode;
+    this->data_[NINOBR]   = nwdim.ninobr;
+
+
+    return *this;
+}
+
+
 
 // =====================================================================
 // Free functions (calendar/time utilities)

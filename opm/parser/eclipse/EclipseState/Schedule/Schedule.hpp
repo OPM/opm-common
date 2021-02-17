@@ -201,6 +201,7 @@ namespace Opm
         std::vector<std::string> wellNames(std::size_t timeStep) const;
         std::vector<std::string> wellNames() const;
 
+        bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
         std::vector<std::string> groupNames(const std::string& pattern, std::size_t timeStep) const;
         std::vector<std::string> groupNames(std::size_t timeStep) const;
         std::vector<std::string> groupNames(const std::string& pattern) const;
