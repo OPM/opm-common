@@ -195,7 +195,6 @@ namespace Opm {
 
     class Deck;
     class DeckKeyword;
-    class GRIDSection;
     class RUNSPECSection;
     class SCHEDULESection;
     class SOLUTIONSection;
