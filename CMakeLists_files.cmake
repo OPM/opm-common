@@ -341,7 +341,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/DeckValueTests.cpp
     tests/parser/DeckTests.cpp
     tests/parser/DynamicStateTests.cpp
-    tests/parser/DynamicVectorTests.cpp
     tests/parser/EclipseGridTests.cpp
     tests/parser/EmbeddedPython.cpp
     tests/parser/EqualRegTests.cpp
@@ -753,7 +752,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp
-       opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp
        opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp
        opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp
