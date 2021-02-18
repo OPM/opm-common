@@ -155,14 +155,6 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK( Well::Status::SHUT == sched.getWell("W_2", 3).getStatus());
 
     {
-        const auto& rft_config = sched.rftConfig();
-        BOOST_CHECK( !rft_config.rft("W_2", 2));
-        BOOST_CHECK( rft_config.rft("W_2", 3));
-        BOOST_CHECK( rft_config.rft("W_2", 4));
-        BOOST_CHECK( !rft_config.rft("W_2", 5));
-        BOOST_CHECK( rft_config.rft("W_1", 3));
-    }
-    {
         const auto & prop3 = sched.getWell("W_2", 3).getProductionProperties();
         BOOST_CHECK( Well::ProducerCMode::ORAT == prop3.controlMode);
         BOOST_CHECK(  prop3.hasProductionControl(Well::ProducerCMode::ORAT));

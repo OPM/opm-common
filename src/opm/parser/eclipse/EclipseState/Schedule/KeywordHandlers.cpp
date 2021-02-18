@@ -1824,6 +1824,48 @@ namespace {
         }
     }
 
+    void Schedule::handleWRFT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        auto new_rft = this->snapshots.back().rft_config();
+        for (const auto& record : handlerContext.keyword) {
+            const auto& item = record.getItem<ParserKeywords::WRFT::WELL>();
+            if (item.hasValue(0)) {
+                const std::string& wellNamePattern = record.getItem<ParserKeywords::WRFT::WELL>().getTrimmedString(0);
+                const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+
+                if (well_names.empty())
+                    invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+                for (const auto& well_name : well_names)
+                    new_rft.update(well_name, RFTConfig::RFT::YES);
+            }
+        }
+        new_rft.first_open(true);
+        this->snapshots.back().rft_config.update( std::move(new_rft) );
+    }
+
+
+    void Schedule::handleWRFTPLT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        auto new_rft = this->snapshots.back().rft_config();
+
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem<ParserKeywords::WRFTPLT::WELL>().getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            auto RFTKey = RFTConfig::RFTFromString(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_RFT>().getTrimmedString(0));
+            auto PLTKey = RFTConfig::PLTFromString(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_PLT>().getTrimmedString(0));
+
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            for (const auto& well_name : well_names) {
+                new_rft.update(well_name, RFTKey);
+                new_rft.update(well_name, PLTKey);
+            }
+        }
+
+        this->snapshots.back().rft_config.update( std::move(new_rft) );
+    }
+
+
     bool Schedule::handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         using handler_function = void (Schedule::*)(const HandlerContext&, const ParseContext&, ErrorGuard&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
@@ -1896,6 +1938,8 @@ namespace {
             { "WPIMULT" , &Schedule::handleWPIMULT  },
             { "WPMITAB" , &Schedule::handleWPMITAB  },
             { "WPOLYMER", &Schedule::handleWPOLYMER },
+            { "WRFT"    , &Schedule::handleWRFT     },
+            { "WRFTPLT" , &Schedule::handleWRFTPLT  },
             { "WSALT"   , &Schedule::handleWSALT    },
             { "WSEGITER", &Schedule::handleWSEGITER },
             { "WSEGSICD", &Schedule::handleWSEGSICD },

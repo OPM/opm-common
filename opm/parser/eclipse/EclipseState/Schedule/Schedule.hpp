@@ -34,7 +34,6 @@
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
@@ -241,7 +240,7 @@ namespace Opm
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
         const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
 
-        const RFTConfig& rftConfig() const;
+        std::optional<std::size_t> first_RFT() const;
         /*
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
@@ -283,7 +282,6 @@ namespace Opm
         {
             m_sched_deck.serializeOp(serializer);
             m_timeMap.serializeOp(serializer);
-            rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
@@ -302,6 +300,7 @@ namespace Opm
             pack_unpack<GroupOrder, Serializer>(serializer);
             pack_unpack<GuideRateConfig, Serializer>(serializer);
             pack_unpack<GasLiftOpt, Serializer>(serializer);
+            pack_unpack<RFTConfig, Serializer>(serializer);
 
             pack_unpack_map<int, VFPProdTable, Serializer>(serializer);
             pack_unpack_map<int, VFPInjTable, Serializer>(serializer);
@@ -446,7 +445,6 @@ namespace Opm
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
-        RFTConfig rft_config;
         RestartConfig restart_config;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
@@ -498,16 +496,13 @@ namespace Opm
                            const FieldPropsManager* fp,
                            const std::vector<std::string>& matching_wells,
                            bool runtime,
-                           const std::unordered_map<std::string, double> * target_wellpi,
-                           std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties);
+                           const std::unordered_map<std::string, double> * target_wellpi);
 
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
-        void applyWRFT(const DeckKeyword&, std::size_t currentStep);
-        void applyWRFTPLT(const DeckKeyword&, std::size_t currentStep);
 
         struct HandlerContext {
             const ScheduleBlock& block;
@@ -620,6 +615,8 @@ namespace Opm
         void handleWPIMULT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPMITAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPOLYMER (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWRFT     (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWRFTPLT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSALT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGITER (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGSICD (const HandlerContext&, const ParseContext&, ErrorGuard&);

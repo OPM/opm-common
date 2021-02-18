@@ -47,6 +47,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 
 
 namespace {
@@ -318,6 +319,7 @@ namespace Opm {
         ptr_member<UDQConfig> udq;
         ptr_member<GasLiftOpt> glo;
         ptr_member<GuideRateConfig> guide_rate;
+        ptr_member<RFTConfig> rft_config;
 
         template <typename T> struct always_false1 : std::false_type {};
 
@@ -351,6 +353,8 @@ namespace Opm {
                                   return this->glo;
             else if constexpr ( std::is_same_v<T, GuideRateConfig> )
                                   return this->guide_rate;
+            else if constexpr ( std::is_same_v<T, RFTConfig> )
+                                  return this->rft_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
@@ -385,6 +389,8 @@ namespace Opm {
                                   return this->glo;
             else if constexpr ( std::is_same_v<T, GuideRateConfig> )
                                   return this->guide_rate;
+            else if constexpr ( std::is_same_v<T, RFTConfig> )
+                                  return this->rft_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }

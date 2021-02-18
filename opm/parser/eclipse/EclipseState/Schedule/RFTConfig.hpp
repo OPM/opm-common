@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef RFT_CONFIG_HPP
-#define RFT_CONFIG_HPP
+#ifndef RFT_CONFIG2_HPP
+#define RFT_CONFIG2_HPP
 
 #include <cstddef>
 #include <optional>
@@ -47,72 +47,41 @@ public:
         YES      = 1,
         REPT     = 2,
         TIMESTEP = 3,
-        NO       = 4
+        NO       = 5
     };
     static std::string PLT2String(PLT enumValue);
     static PLT PLTFromString( const std::string& stringValue);
 
-    template <typename Value>
-    using ConfigMap = std::unordered_map<
-        std::string, DynamicState<std::pair<Value, std::size_t>>
-    >;
 
-    using WellOpenTimeMap = std::unordered_map<std::string, std::size_t>;
-
-    RFTConfig();
-    explicit RFTConfig(const TimeMap& time_map);
+    void first_open(bool on);
+    void update(const std::string& wname, PLT mode);
+    void update(const std::string& wname, RFT mode);
+    bool active() const;
+    bool rft() const;
+    bool rft(const std::string& wname) const;
+    bool plt() const;
+    bool plt(const std::string& wname) const;
+    std::optional<RFTConfig> next() const;
+    std::optional<RFTConfig> well_open(const std::string& wname) const;
 
     static RFTConfig serializeObject();
-
-    bool rft(const std::string& well, std::size_t report_step) const;
-    bool plt(const std::string& well, std::size_t report_step) const;
-    bool getWellOpenRFT(const std::string& well_name, std::size_t report_step) const;
-    void setWellOpenRFT(std::size_t report_step);
-    void setWellOpenRFT(const std::string& well_name);
-
-    bool active(std::size_t report_step) const;
-    std::size_t firstRFTOutput() const { return this->first_rft_event; }
-    void updateRFT(const std::string& well, std::size_t report_step, RFT value);
-    void updatePLT(const std::string& well, std::size_t report_step, PLT value);
-    void addWellOpen(const std::string& well, std::size_t report_step);
-
-    const TimeMap& timeMap() const;
-
     bool operator==(const RFTConfig& data) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        tm.serializeOp(serializer);
-        serializer(first_rft_event);
-        serializer(well_open_rft_time);
-        serializer(well_open_rft_name);
-        serializer(well_open);
-        serializer.template map<ConfigMap<RFT>,false>(rft_config);
-        serializer.template map<ConfigMap<PLT>,false>(plt_config);
+        serializer(first_open_rft);
+        serializer.template map<std::unordered_map<std::string, RFT>,false>(rft_state);
+        serializer.template map<std::unordered_map<std::string, PLT>,false>(plt_state);
+        serializer.template map<std::unordered_map<std::string, bool>,false>(open_wells);
     }
 
+
 private:
-    TimeMap tm;
-    std::size_t first_rft_event;
-    std::optional<std::size_t> well_open_rft_time;
-    WellOpenTimeMap well_open_rft_name;
-    WellOpenTimeMap well_open;
-    ConfigMap<RFT> rft_config;
-    ConfigMap<PLT> plt_config;
-
-    bool outputRftAtWellopen(WellOpenTimeMap::const_iterator well, const std::size_t report_step) const;
-    std::size_t firstWellopenStepNotBefore(const std::size_t report_step) const;
-    void updateFirstIfNotShut(const std::string& well_name, const std::size_t report_step);
-    void updateFirst(const std::size_t report_step);
-
-    void setWellOpenRFT(const std::string& well_name, const std::size_t report_step);
-
-    template <typename Value>
-    void updateConfig(const std::string& well_name,
-                      const std::size_t  report_step,
-                      const Value        value,
-                      ConfigMap<Value>&  cfgmap);
+    bool first_open_rft = false;
+    std::unordered_map<std::string, RFT> rft_state;
+    std::unordered_map<std::string, PLT> plt_state;
+    std::unordered_map<std::string, bool> open_wells;
 };
 
 }
