@@ -345,7 +345,6 @@ namespace Opm {
         void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
-        RestartSchedule getNode( size_t timestep ) const;
         static std::string getRestartFileName(const std::string& restart_base, int report_step, bool unified, bool fmt_file);
 
         bool operator==(const RestartConfig& data) const;
@@ -368,6 +367,7 @@ namespace Opm {
         /// at the first output step we must reset the files to size
         /// zero, for subsequent output steps we should append.
         void initFirstOutput( );
+        RestartSchedule getNode( size_t timestep ) const;
 
         bool getWriteRestartFileFrequency(size_t timestep,
                                           size_t start_timestep,
