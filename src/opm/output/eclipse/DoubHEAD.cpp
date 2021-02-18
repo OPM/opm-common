@@ -18,9 +18,6 @@
 */
 
 #include <opm/output/eclipse/DoubHEAD.hpp>
-
-// Note: DynamicState.hpp and <map> are prerequisites of Tuning.hpp
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
