@@ -746,6 +746,22 @@ double Well::getGuideRate() const {
 }
 
 Well::GuideRateTarget Well::getGuideRatePhase() const {
+    if (this->wtype.producer())
+        return this->guide_rate.guide_phase;
+
+    if (this->guide_rate.guide_phase == GuideRateTarget::RAT) {
+        switch (this->getPreferredPhase()) {
+        case Phase::OIL:
+            return GuideRateTarget::OIL;
+        case Phase::GAS:
+            return GuideRateTarget::GAS;
+        case Phase::WATER:
+            return GuideRateTarget::WAT;
+        default:
+            throw std::logic_error("Can not convert well preferred phase to GuideRate target phase");
+        }
+    }
+
     return this->guide_rate.guide_phase;
 }
 
