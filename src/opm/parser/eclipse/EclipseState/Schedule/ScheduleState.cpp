@@ -65,6 +65,10 @@ ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system
     this->m_wellgroup_events.reset();
     this->m_geo_keywords.clear();
     this->target_wellpi.clear();
+
+    auto next_rft = this->rft_config().next();
+    if (next_rft.has_value())
+        this->rft_config.update( std::move(*next_rft) );
 }
 
 ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time) :
@@ -157,6 +161,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->udq_active.get() == other.udq_active.get() &&
            this->glo.get() == other.glo.get() &&
            this->guide_rate.get() == other.guide_rate.get() &&
+           this->rft_config.get() == other.rft_config.get() &&
            this->udq.get() == other.udq.get() &&
            this->wells == other.wells &&
            this->groups == other.groups &&
@@ -194,6 +199,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.udq.update( UDQConfig::serializeObject() );
     ts.guide_rate.update( GuideRateConfig::serializeObject() );
     ts.glo.update( GasLiftOpt::serializeObject() );
+    ts.rft_config.update( RFTConfig::serializeObject() );
 
     return ts;
 }

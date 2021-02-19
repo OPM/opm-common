@@ -36,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -341,48 +340,7 @@ COMPDAT // with defaulted I and J
     return input;
 }
 
-static std::string createDeckRFTConfig() {
-    return R"(RUNSPEC
-START             -- 0
-  1 NOV 1979 /
 
-SCHEDULE
-DATES             -- 1  (sim step = 0)
- 1 DES 1979/
-/
-WELSPECS
-    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
- 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
- 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
- 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
- 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
- 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
- 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
-/
-WELOPEN
- 'OP_2' 'OPEN' /
-/
-DATES             -- 2  (sim step = 1)
- 10  JUL 2007 /
-/
-WRFTPLT
-  'OP_2'       'YES'        'NO'        'NO' /
-/
-DATES             -- 3  (sim step = 2)
- 10  AUG 2007 /
-/
-COMPDAT
--- with defaulted I and J
- 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-END
-)";
-}
 
 bool has_name(const std::vector<std::string>& names, const std::string& name) {
     auto find_iter = std::find(names.begin(), names.end(), name);
@@ -837,108 +795,8 @@ DATES             -- 6
   BOOST_CHECK(Well::Status::SHUT == well_5.getStatus());
 }
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
-    Opm::Parser parser;
-    std::string input = R"(
-START             -- 0
-1 NOV 1979 /
-SCHEDULE
-DATES             -- 1
- 1 DES 1979/
-/
-WELSPECS
-    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
- 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
- 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-DATES             -- 2
- 10  OKT 2008 /
-/
-WRFT
-/
-WELOPEN
- 'OP_1' OPEN /
-/
-DATES             -- 3
- 10  NOV 2008 /
-/
-WELOPEN
- 'OP_2' OPEN /
-/
-DATES             -- 4
- 30  NOV 2008 /
-/
-)";
-
-    const auto& schedule = make_schedule(input);
-    const auto& rft_config = schedule.rftConfig();
-
-    BOOST_CHECK_EQUAL(2U, rft_config.firstRFTOutput());
-    BOOST_CHECK_EQUAL(true, rft_config.rft("OP_1", 2));
-    BOOST_CHECK_EQUAL(true, rft_config.rft("OP_2", 3));
-}
 
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
-    Opm::Parser parser;
-    std::string input = R"(
-START             -- 0
-1 NOV 1979 /
-SCHEDULE
-DATES             -- 1
- 1 DES 1979/
-/
-WELSPECS
-    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
- 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
- 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-WELOPEN
- 'OP_1' SHUT /
-/
-DATES             -- 2
- 10  OKT 2006 /
-/
-WELOPEN
- 'OP_1' SHUT /
-/
-WRFTPLT
- 'OP_1' FOPN /
-/
-DATES             -- 3
- 10  OKT 2007 /
-/
-WELOPEN
- 'OP_1' OPEN 0 0 0 0 0 /
-/
-DATES             -- 4
- 10  OKT 2008 /
-/
-WELOPEN
- 'OP_1' OPEN /
-/
-DATES             -- 5
- 10  NOV 2008 /
-/
-)";
-
-    const auto& schedule = make_schedule(input);
-    const auto& well = schedule.getWell("OP_1", 4);
-    BOOST_CHECK(Well::Status::OPEN == well.getStatus());
-
-    const auto& rft_config = schedule.rftConfig();
-    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", 3),false);
-    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", 4),true);
-    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", 5),false);
-}
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     std::string input = R"(
@@ -3420,60 +3278,6 @@ BOOST_AUTO_TEST_CASE(GroupOrderTest) {
 }
 
 
-BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
-    std::vector<std::time_t> tp = { asTimeT( TimeStampUTC(2010, 1, 1)),
-                                    asTimeT( TimeStampUTC(2010, 1, 2)),
-                                    asTimeT( TimeStampUTC(2010, 1, 3)),
-                                    asTimeT( TimeStampUTC(2010, 1, 4)),
-                                    asTimeT( TimeStampUTC(2010, 1, 5)),
-                                    asTimeT( TimeStampUTC(2010, 1, 6))};
-
-
-
-    TimeMap tm(tp);
-    RFTConfig conf(tm);
-    BOOST_CHECK_THROW( conf.rft("W1", 100), std::invalid_argument);
-    BOOST_CHECK_THROW( conf.plt("W1", 100), std::invalid_argument);
-
-    BOOST_CHECK(!conf.rft("W1", 2));
-    BOOST_CHECK(!conf.plt("W1", 2));
-
-
-    conf.setWellOpenRFT(2);
-    BOOST_CHECK(!conf.getWellOpenRFT("W1", 0));
-
-
-    conf.updateRFT("W1", 2, RFTConfig::RFT::YES);
-    BOOST_CHECK(conf.rft("W1", 2));
-    BOOST_CHECK(!conf.rft("W1", 1));
-    BOOST_CHECK(!conf.rft("W1", 3));
-
-    conf.updateRFT("W2", 2, RFTConfig::RFT::REPT);
-    conf.updateRFT("W2", 4, RFTConfig::RFT::NO);
-    BOOST_CHECK(!conf.rft("W2", 1));
-    BOOST_CHECK( conf.rft("W2", 2));
-    BOOST_CHECK( conf.rft("W2", 3));
-    BOOST_CHECK(!conf.rft("W2", 4));
-
-
-    conf.setWellOpenRFT("W3");
-    BOOST_CHECK(conf.getWellOpenRFT("W3", 2));
-
-    conf.updateRFT("W4", 2, RFTConfig::RFT::FOPN);
-    BOOST_CHECK(conf.getWellOpenRFT("W4", 2));
-
-
-    conf.addWellOpen("W10", 2);
-    conf.addWellOpen("W100", 3);
-}
-
-
-BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
-    const auto& schedule = make_schedule(createDeckRFTConfig());
-    const auto& rft_config = schedule.rftConfig();
-
-    BOOST_CHECK_EQUAL(2U, rft_config.firstRFTOutput());
-}
 
 
 BOOST_AUTO_TEST_CASE(nupcol) {

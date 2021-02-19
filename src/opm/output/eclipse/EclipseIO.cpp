@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
@@ -160,7 +159,7 @@ bool EclipseIO::Impl::wantRFTOutput( const int  report_step,
 {
     return !isSubstep
         && (static_cast<std::size_t>(report_step)
-            >= this->schedule.rftConfig().firstRFTOutput());
+            >= this->schedule.first_RFT());
 }
 
 /*
@@ -247,7 +246,7 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
         // Open existing RFT file if report step is after first RFT event.
         const auto openExisting = EclIO::OutputStream::RFT::OpenExisting {
             static_cast<std::size_t>(report_step)
-            > schedule.rftConfig().firstRFTOutput()
+            > schedule.first_RFT()
         };
 
         EclIO::OutputStream::RFT rftFile {

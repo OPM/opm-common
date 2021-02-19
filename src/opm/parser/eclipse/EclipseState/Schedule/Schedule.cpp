@@ -112,7 +112,6 @@ namespace {
         m_static( python, deck, runspec ),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
-        rft_config(this->m_timeMap),
         restart_config(m_timeMap, deck, parseContext, errors)
     {
         if (rst) {
@@ -244,7 +243,6 @@ namespace {
 
         result.m_static = ScheduleStatic::serializeObject();
         result.m_timeMap = TimeMap::serializeObject();
-        result.rft_config = RFTConfig::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
         result.snapshots = { ScheduleState::serializeObject() };
 
@@ -273,8 +271,7 @@ namespace {
                                  const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
                                  bool runtime,
-                                 const std::unordered_map<std::string, double> * target_wellpi,
-                                 std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
+                                 const std::unordered_map<std::string, double> * target_wellpi) {
 
         static const std::unordered_set<std::string> require_grid = {
             "COMPDAT",
@@ -283,7 +280,6 @@ namespace {
 
 
         HandlerContext handlerContext { block, keyword, currentStep, matching_wells, runtime , target_wellpi};
-
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -295,13 +291,7 @@ namespace {
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
 
-        else if (keyword.name() == "WRFT")
-            rftProperties.push_back( std::make_pair( &keyword , currentStep ));
-
-        else if (keyword.name() == "WRFTPLT")
-            rftProperties.push_back( std::make_pair( &keyword , currentStep ));
-
-        else if (keyword.name() == "PYACTION")
+        if (keyword.name() == "PYACTION")
             handlePYACTION(keyword);
     }
 
@@ -473,23 +463,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     fp,
                                     {},
                                     runtime,
-                                    target_wellpi,
-                                    rftProperties);
+                                    target_wellpi);
                 keyword_index++;
             }
 
             checkIfAllConnectionsIsShut(report_step);
-        }
-
-
-        for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
-            const DeckKeyword& keyword = *rftPair->first;
-            std::size_t timeStep = rftPair->second;
-            if (keyword.name() == "WRFT")
-                applyWRFT(keyword,  timeStep);
-
-            if (keyword.name() == "WRFTPLT")
-                applyWRFTPLT(keyword, timeStep);
         }
     }
 
@@ -560,8 +538,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         auto old_status = well2.getStatus();
         bool update = false;
         if (well2.updateStatus(status)) {
-            if (status == Well::Status::OPEN)
-                this->rft_config.addWellOpen(well_name, reportStep);
+            if (status == Well::Status::OPEN) {
+                auto new_rft = this->snapshots.back().rft_config().well_open(well_name);
+                if (new_rft.has_value())
+                    this->snapshots.back().rft_config.update( std::move(*new_rft) );
+            }
 
             /*
               The Well::updateStatus() will always return true because a new
@@ -628,11 +609,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 + " This well is prevented from opening at "
                                 + std::to_string( days ) + " days";
                             OpmLog::note(msg);
-                        } else {
+                        } else
                             this->updateWellStatus( wname, currentStep, well_status);
-                            if (well_status == open)
-                                this->rft_config.addWellOpen(wname, currentStep);
-                        }
                     }
                 }
 
@@ -663,39 +641,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
     }
 
-    void Schedule::applyWRFT(const DeckKeyword& keyword, std::size_t currentStep) {
-        /* Rule for handling RFT: Request current RFT data output for specified wells, plus output when
-         * any well is subsequently opened
-         */
 
-        for (const auto& record : keyword) {
-
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, currentStep);
-            for (const auto& well_name : well_names)
-                this->rft_config.updateRFT(well_name, currentStep, RFTConfig::RFT::YES);
-
+    std::optional<std::size_t> Schedule::first_RFT() const {
+        for (std::size_t report_step = 0; report_step < this->snapshots.size(); report_step++) {
+            if (this->snapshots[report_step].rft_config().active())
+                return report_step;
         }
-
-        this->rft_config.setWellOpenRFT(currentStep);
-    }
-
-    void Schedule::applyWRFTPLT(const DeckKeyword& keyword, std::size_t currentStep) {
-        for (const auto& record : keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-
-            RFTConfig::RFT RFTKey = RFTConfig::RFTFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
-            RFTConfig::PLT PLTKey = RFTConfig::PLTFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
-            const auto well_names = wellNames(wellNamePattern, currentStep);
-            for (const auto& well_name : well_names) {
-                this->rft_config.updateRFT(well_name, currentStep, RFTKey);
-                this->rft_config.updatePLT(well_name, currentStep, PLTKey);
-            }
-        }
-    }
-
-    const RFTConfig& Schedule::rftConfig() const {
-        return this->rft_config;
+        return {};
     }
 
 
@@ -1201,7 +1153,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         ParseContext parseContext;
         ErrorGuard errors;
-        std::vector<std::pair< const DeckKeyword* , std::size_t> > ignored_rftProperties;
 
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
@@ -1217,8 +1168,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 nullptr,
                                 result.wells(),
                                 true,
-                                &target_wellpi,
-                                ignored_rftProperties);
+                                &target_wellpi);
         }
         if (reportStep < this->m_sched_deck.size() - 1)
             iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, true, &target_wellpi, nullptr, nullptr);
@@ -1267,7 +1217,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         return this->m_timeMap == data.m_timeMap &&
                this->m_static == data.m_static &&
-               this->rft_config  == data.rft_config &&
                this->restart_config == data.restart_config &&
                this->snapshots == data.snapshots;
      }
@@ -1682,6 +1631,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.udq.update( UDQConfig( this->m_static.m_runspec.udqParams() ));
     sched_state.glo.update( GasLiftOpt() );
     sched_state.guide_rate.update( GuideRateConfig() );
+    sched_state.rft_config.update( RFTConfig() );
     this->addGroup("FIELD", 0);
 }
 
