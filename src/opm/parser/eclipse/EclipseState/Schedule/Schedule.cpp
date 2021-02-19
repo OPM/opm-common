@@ -112,7 +112,7 @@ namespace {
         m_static( python, deck, runspec ),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
-        restart_config(m_timeMap, deck, parseContext, errors)
+        restart_config(deck, restart_info(rst), parseContext, errors)
     {
         if (rst) {
             auto restart_step = rst->header.restart_info().second;
@@ -222,6 +222,7 @@ namespace {
 
     time_t Schedule::posixStartTime() const {
         return m_timeMap.getStartTime( 0 );
+        //return std::chrono::system_clock::to_time_t(this->snapshots[0].start_time());
     }
 
     time_t Schedule::posixEndTime() const {

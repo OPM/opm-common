@@ -46,6 +46,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace Opm;
 
+constexpr std::pair<std::time_t, std::size_t> restart_info = std::make_pair(std::time_t{0}, std::size_t{0});
+
 inline std::string prepath() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
@@ -498,7 +500,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
 
     Parser parser{};
     auto deck = parser.parseString(deckData) ;
-    RestartConfig rstConfig(TimeMap(deck), deck);
+    RestartConfig rstConfig(deck, restart_info);
 
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(1));
@@ -549,7 +551,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
 
     Parser parser;
     auto deck = parser.parseString(deckData) ;
-    RestartConfig rstConfig(TimeMap(deck), deck);
+    RestartConfig rstConfig(deck, restart_info);
 
     BOOST_CHECK_EQUAL(true  ,  rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false ,  rstConfig.getWriteRestartFile(1));
@@ -641,14 +643,14 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
 
     {   //mnemnonics
         auto deck = parser.parseString(deckData) ;
-        RestartConfig rstConfig(TimeMap(deck), deck);
+        RestartConfig rstConfig(deck, restart_info);
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
 
     {   //old fashion integer mnemonics
         auto deck = parser.parseString(deckData2) ;
-        RestartConfig rstConfig(TimeMap(deck), deck);
+        RestartConfig rstConfig(deck, restart_info);
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }

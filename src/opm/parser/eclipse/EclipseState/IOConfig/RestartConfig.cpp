@@ -526,17 +526,17 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
     }
 
     template<typename T>
-    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck, const ParseContext& parseContext, T&& errors ) :
-        RestartConfig(time_map, deck, parseContext, errors)
+    RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, T&& errors ) :
+        RestartConfig( deck, restart, parseContext, errors)
     {}
 
-    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck) :
-        RestartConfig(time_map, deck, ParseContext(), ErrorGuard())
+    RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) :
+        RestartConfig( deck, restart, ParseContext(), ErrorGuard())
     {}
 
 
-    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors ) :
-        m_timemap( time_map ),
+RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, ErrorGuard& errors ) :
+    m_timemap( TimeMap(deck, restart) ),
         m_first_restart_step( -1 ),
         restart_schedule( m_timemap, {0,0,1}),
         restart_keywords( m_timemap, {} ),
