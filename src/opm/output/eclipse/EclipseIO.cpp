@@ -157,9 +157,14 @@ void EclipseIO::Impl::writeEGRIDFile( const std::vector<NNCdata>& nnc ) {
 bool EclipseIO::Impl::wantRFTOutput( const int  report_step,
                                      const bool isSubstep ) const
 {
-    return !isSubstep
-        && (static_cast<std::size_t>(report_step)
-            >= this->schedule.first_RFT());
+    if (isSubstep)
+        return false;
+
+    auto first_rft = this->schedule.first_RFT();
+    if (!first_rft.has_value())
+        return false;
+
+    return (static_cast<std::size_t>(report_step) >= first_rft.value());
 }
 
 /*
@@ -246,7 +251,7 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
         // Open existing RFT file if report step is after first RFT event.
         const auto openExisting = EclIO::OutputStream::RFT::OpenExisting {
             static_cast<std::size_t>(report_step)
-            > schedule.first_RFT()
+            > schedule.first_RFT().value()
         };
 
         EclIO::OutputStream::RFT rftFile {
