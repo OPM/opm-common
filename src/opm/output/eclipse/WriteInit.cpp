@@ -559,43 +559,60 @@ namespace {
         initFile.write("TRANNNC", singlePrecision(tran));
     }
 
-    void writeAquiferConnections(const Opm::AquiferConfig&          aquifer,
-                                 const ::Opm::EclipseGrid&          grid,
-                                 ::Opm::EclIO::OutputStream::Init&  initFile)
+    // output aquifer cell and aquifer connection information for numerical aquifers
+    void writeNumericalAquifers(const Opm::NumericalAquifers& num_aquifers,
+                                const ::Opm::EclipseGrid&          grid,
+                                ::Opm::EclIO::OutputStream::Init&  initFile)
+    {
+        std::vector<int> aquifern(grid.getNumActive(), 0);
+        // aquifer cells
+        const auto& aquifer_cells = num_aquifers.allAquiferCells();
+        for ([[maybe_unused]] const auto& [cell_idx, cell] : aquifer_cells) {
+            const size_t active_index = grid.activeIndex(cell->global_index);
+            aquifern[active_index] -= std::exp2(cell->aquifer_id - 1);
+        }
+
+        // aquifer connections
+        for (const auto& [id, aqu] : num_aquifers.aquifers()) {
+            const auto& connections = aqu.connections();
+            const int exp2_id_1 = std::exp2(id - 1);
+            for (const auto& con : connections) {
+                const size_t active_index = grid.activeIndex(con.global_index);
+                aquifern[active_index] += exp2_id_1;
+            }
+        }
+
+        initFile.write("AQUIFERN", aquifern);
+    }
+
+    void writeAnalyticalAquiferConnections(const Opm::AquiferConfig&          aquifer,
+                                           const ::Opm::EclipseGrid&          grid,
+                                           ::Opm::EclIO::OutputStream::Init&  initFile)
+    {
+        std::vector<int> aquifera(grid.getNumActive(), 0);
+
+        const auto& cons_data = aquifer.connections().data();
+        for (const auto& [id, cons] : cons_data) {
+            const int exp2_id_1 = std::exp2(id - 1);
+            for (const auto& con : cons) {
+                const size_t active_index = grid.activeIndex(con.global_index);
+                aquifera[active_index] += exp2_id_1;
+            }
+        }
+
+        initFile.write("AQUIFERA", aquifera);
+    }
+
+    void writeAquifers(const Opm::AquiferConfig&          aquifer,
+                       const ::Opm::EclipseGrid&          grid,
+                       ::Opm::EclIO::OutputStream::Init&  initFile)
     {
         if (aquifer.hasNumericalAquifer()) {
-            const auto& num_aquifers = aquifer.numericalAquifers();
-            std::vector<int> aquifern(grid.getNumActive(), 0);
-            const auto& aquifer_cells = num_aquifers.allAquiferCells();
-            for ([[maybe_unused]] const auto& [cell_idx, cell] : aquifer_cells) {
-                const size_t active_index = grid.activeIndex(cell->global_index);
-                aquifern[active_index] -= std::exp2(cell->aquifer_id - 1);
-            }
-            for (const auto& [id, aqu] : num_aquifers.aquifers()) {
-                const auto& connections = aqu.connections();
-                const int exp2_id_1 = std::exp2(id - 1);
-                for (const auto& con : connections) {
-                    const size_t active_index = grid.activeIndex(con.global_index);
-                    aquifern[active_index] += exp2_id_1;
-                }
-            }
-
-            initFile.write("AQUIFERN", aquifern);
+            writeNumericalAquifers(aquifer.numericalAquifers(), grid, initFile);
         }
 
         if (aquifer.hasAnalyticalAquifer()) {
-            std::vector<int> aquifera(grid.getNumActive(), 0);
-
-            const auto& cons_data = aquifer.connections().data();
-            for (const auto& [id, cons] : cons_data) {
-                const int exp2_id_1 = std::exp2(id - 1);
-                for (const auto& con : cons) {
-                    const size_t active_index = grid.activeIndex(con.global_index);
-                    aquifera[active_index] += exp2_id_1;
-                }
-            }
-
-            initFile.write("AQUIFERA", aquifera);
+            writeAnalyticalAquiferConnections(aquifer, grid, initFile);
         }
     }
 } // Anonymous namespace
@@ -630,6 +647,6 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
         writeNonNeighbourConnections(nnc, units, initFile);
     }
     if (es.aquifer().active()) {
-        writeAquiferConnections(es.aquifer(), grid, initFile);
+        writeAquifers(es.aquifer(), grid, initFile);
     }
 }
