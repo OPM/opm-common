@@ -100,7 +100,7 @@ class EclipseIO::Impl {
     Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
         void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const std::vector<NNCdata>& nnc) const;
         void writeEGRIDFile( const std::vector<NNCdata>& nnc );
-        bool wantRFTOutput( const int report_step, const bool isSubstep ) const;
+        std::pair<bool, bool> wantRFTOutput( const int report_step, const bool isSubstep ) const;
 
         const EclipseState& es;
         EclipseGrid grid;
@@ -154,17 +154,21 @@ void EclipseIO::Impl::writeEGRIDFile( const std::vector<NNCdata>& nnc ) {
     this->grid.save( egridFile, formatted, nnc, this->es.getDeckUnitSystem());
 }
 
-bool EclipseIO::Impl::wantRFTOutput( const int  report_step,
-                                     const bool isSubstep ) const
+std::pair<bool, bool>
+EclipseIO::Impl::wantRFTOutput( const int  report_step,
+                                const bool isSubstep ) const
 {
     if (isSubstep)
-        return false;
+        return std::make_pair(false, false);
 
-    auto first_rft = this->schedule.first_RFT();
+    const auto first_rft = this->schedule.first_RFT();
     if (!first_rft.has_value())
-        return false;
+        return std::make_pair(false, false);
 
-    return (static_cast<std::size_t>(report_step) >= first_rft.value());
+    const auto first_rft_out = first_rft.value();
+    const auto step = static_cast<std::size_t>(report_step);
+
+    return std::make_pair(step >= first_rft_out, step > first_rft_out);
 }
 
 /*
@@ -247,11 +251,13 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
     }
 
     // RFT file written only if requested and never for substeps.
-    if (this->impl->wantRFTOutput(report_step, isSubstep)) {
+    if (const auto& [wantRFT, haveExistingRFT] =
+        this->impl->wantRFTOutput(report_step, isSubstep);
+        wantRFT)
+    {
         // Open existing RFT file if report step is after first RFT event.
         const auto openExisting = EclIO::OutputStream::RFT::OpenExisting {
-            static_cast<std::size_t>(report_step)
-            > schedule.first_RFT().value()
+            haveExistingRFT
         };
 
         EclIO::OutputStream::RFT rftFile {
