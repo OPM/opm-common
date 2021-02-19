@@ -48,10 +48,10 @@ namespace {
     {
         auto elapsed = std::vector<double>{};
 
-        elapsed.reserve(tmap.numTimesteps() + 1);
+        elapsed.reserve(tmap.size());
         elapsed.push_back(0.0);
 
-        for (auto nstep = tmap.numTimesteps(),
+        for (auto nstep = tmap.size() - 1,
                   step  = 0*nstep; step < nstep; ++step)
         {
             elapsed.push_back(tmap.getTimeStepLength(step));

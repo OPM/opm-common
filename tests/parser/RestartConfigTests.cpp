@@ -82,7 +82,6 @@ END
     const auto rstcfg = RestartConfig { deck, restart_info };
 
     BOOST_REQUIRE_EQUAL(tm.size(), std::size_t{19});
-    BOOST_REQUIRE_EQUAL(tm.last(), std::size_t{18});
 
     for (const std::size_t stepID : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 18 }) {
         BOOST_CHECK_MESSAGE(! rstcfg.getWriteRestartFile(stepID),

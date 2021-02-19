@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     Opm::SummaryConfig summary_config( deck, schedule, es.getTableManager( ), es.aquifer());
     const auto num_cells = grid.getCartesianSize();
     Opm::EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
-    int countTimeStep = schedule.getTimeMap().numTimesteps();
+    int countTimeStep = schedule.size() - 1;
     Opm::SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
     Opm::Action::State action_state;
     Opm::UDQState udq_state(123);

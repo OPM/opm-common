@@ -402,12 +402,10 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         UDQState udq_state(10);
 
         const auto  start_time = schedule.posixStartTime();
-        const auto& time_map   = schedule.getTimeMap( );
-
         for (int counter = 0; counter < 2; counter++) {
             EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
-            for (size_t step = 0; step < time_map.size(); step++) {
-                const auto step_time = time_map[step];
+            for (size_t step = 0; step < schedule.size(); step++) {
+                const auto step_time = schedule.simTime(step);
 
                 data::Rates r1, r2;
                 r1.set( data::Rates::opt::wat, 4.11 );

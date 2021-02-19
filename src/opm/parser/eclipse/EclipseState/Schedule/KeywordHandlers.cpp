@@ -927,7 +927,7 @@ namespace {
                     if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
                         std::string msg =
                             "Well " + well2.name() + " is a history matched well with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string(m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24)) + " days";
+                            "This well will be closed at " + std::to_string(this->seconds(handlerContext.currentStep) / (60*60*24)) + " days";
                         OpmLog::note(msg);
                         this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
                     }
@@ -1028,7 +1028,7 @@ namespace {
                 if ( ! well2.getAllowCrossFlow() ) {
                     std::string msg =
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                        "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
+                        "This well will be closed at " + std::to_string ( this->seconds(handlerContext.currentStep) / (60*60*24) ) + " days";
 
                     if (injection->surfaceInjectionRate.is<double>()) {
                         if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
@@ -1086,7 +1086,7 @@ namespace {
                 if ( ! well2.getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
                     std::string msg =
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                        "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
+                        "This well will be closed at " + std::to_string ( this->seconds(handlerContext.currentStep) / (60*60*24) ) + " days";
                     OpmLog::note(msg);
                     this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
                 }

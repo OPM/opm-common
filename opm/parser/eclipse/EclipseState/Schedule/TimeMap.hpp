@@ -48,8 +48,6 @@ namespace Opm {
         static TimeMap serializeObject();
 
         size_t size() const;
-        size_t last() const;
-        size_t numTimesteps() const;
         double getTotalTime() const;
         double seconds(size_t timeStep) const;
 

@@ -127,7 +127,7 @@ namespace {
                             const Opm::ParseContext& ctxt,
                             Opm::ErrorGuard&         guard)
         {
-            const auto numSteps = sched.getTimeMap().numTimesteps();
+            const auto numSteps = sched.size() - 1;
 
             auto size = std::size_t{0};
             for (auto step = 0*numSteps; step < numSteps; ++step) {

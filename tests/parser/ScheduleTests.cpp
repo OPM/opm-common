@@ -3881,9 +3881,9 @@ END
     const auto es    = EclipseState{ deck };
     auto       sched = Schedule{ deck, es };
 
-    BOOST_REQUIRE_EQUAL(sched.getTimeMap().size(),         std::size_t{6});
-    BOOST_REQUIRE_EQUAL(sched.getTimeMap().numTimesteps(), std::size_t{5});
-    BOOST_REQUIRE_EQUAL(sched.getTimeMap().last(),         std::size_t{5});
+    BOOST_REQUIRE_EQUAL(sched.size(),         std::size_t{6});
+    //BOOST_REQUIRE_EQUAL(sched.getTimeMap().numTimesteps(), std::size_t{5});
+    //BOOST_REQUIRE_EQUAL(sched.getTimeMap().last(),         std::size_t{5});
 
     BOOST_REQUIRE_MESSAGE(sched[1].wellgroup_events().hasEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX),
                           R"(Schedule must have WELL_PRODUCTIVITY_INDEX Event for well "P" at report step 1)");

@@ -45,7 +45,7 @@ inline void createDot(const Opm::Schedule& schedule, const std::string& casename
     os << "// Convert output to PDF with 'dot -Tpdf " << casename << ".gv > " << casename << ".pdf'\n";
     os << "strict digraph \"" << casename << "\"\n{\n";
     const auto groupnames = schedule.groupNames();
-    const std::size_t last = schedule.getTimeMap().last();
+    const std::size_t last = schedule.size() - 1;
     // Group -> Group relations.
     for (const auto& gn : groupnames) {
         const auto& g = schedule.getGroup(gn, last);

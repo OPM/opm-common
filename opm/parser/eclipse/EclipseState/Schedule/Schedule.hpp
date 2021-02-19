@@ -60,7 +60,6 @@ namespace Opm
     class Runspec;
     class SCHEDULESection;
     class SummaryState;
-    class TimeMap;
     class ErrorGuard;
     class UDQConfig;
 
@@ -187,8 +186,6 @@ namespace Opm
         std::optional<int> exitStatus() const;
         const UnitSystem& getUnits() const { return this->m_static.m_unit_system; }
 
-        const TimeMap& getTimeMap() const;
-
         std::size_t numWells() const;
         std::size_t numWells(std::size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
@@ -281,7 +278,6 @@ namespace Opm
         void serializeOp(Serializer& serializer)
         {
             m_sched_deck.serializeOp(serializer);
-            m_timeMap.serializeOp(serializer);
             restart_config.serializeOp(serializer);
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
@@ -446,7 +442,6 @@ namespace Opm
         ScheduleStatic m_static;
         std::pair<std::time_t, std::size_t> m_restart_info;
         ScheduleDeck m_sched_deck;
-        TimeMap m_timeMap;
         RestartConfig restart_config;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
