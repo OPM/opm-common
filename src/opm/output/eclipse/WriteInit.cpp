@@ -32,7 +32,6 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
@@ -42,7 +41,6 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <cstddef>
-#include <exception>
 #include <initializer_list>
 #include <stdexcept>
 #include <utility>
