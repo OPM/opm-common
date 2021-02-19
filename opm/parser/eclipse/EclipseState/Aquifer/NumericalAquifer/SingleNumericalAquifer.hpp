@@ -58,6 +58,7 @@ namespace Opm {
         std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
 
         std::vector<NNCdata> aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
+        const std::vector<NumericalAquiferConnection>& connections() const;
 
         bool operator==(const SingleNumericalAquifer& other) const;
 

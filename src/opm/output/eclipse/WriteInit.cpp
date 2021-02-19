@@ -46,6 +46,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <utility>
+#include <cmath>
 
 namespace {
 
@@ -559,6 +560,46 @@ namespace {
 
         initFile.write("TRANNNC", singlePrecision(tran));
     }
+
+    void writeAquiferConnections(const Opm::AquiferConfig&          aquifer,
+                                 const ::Opm::EclipseGrid&          grid,
+                                 ::Opm::EclIO::OutputStream::Init&  initFile)
+    {
+        if (aquifer.hasNumericalAquifer()) {
+            const auto& num_aquifers = aquifer.numericalAquifers();
+            std::vector<int> aquifern(grid.getNumActive(), 0);
+            const auto& aquifer_cells = num_aquifers.allAquiferCells();
+            for ([[maybe_unused]] const auto& [cell_idx, cell] : aquifer_cells) {
+                const size_t active_index = grid.activeIndex(cell->global_index);
+                aquifern[active_index] -= std::exp2(cell->aquifer_id - 1);
+            }
+            for (const auto& [id, aqu] : num_aquifers.aquifers()) {
+                const auto& connections = aqu.connections();
+                const int exp2_id_1 = std::exp2(id - 1);
+                for (const auto& con : connections) {
+                    const size_t active_index = grid.activeIndex(con.global_index);
+                    aquifern[active_index] += exp2_id_1;
+                }
+            }
+
+            initFile.write("AQUIFERN", aquifern);
+        }
+
+        if (aquifer.hasAnalyticalAquifer()) {
+            std::vector<int> aquifera(grid.getNumActive(), 0);
+
+            const auto& cons_data = aquifer.connections().data();
+            for (const auto& [id, cons] : cons_data) {
+                const int exp2_id_1 = std::exp2(id - 1);
+                for (const auto& con : cons) {
+                    const size_t active_index = grid.activeIndex(con.global_index);
+                    aquifera[active_index] += exp2_id_1;
+                }
+            }
+
+            initFile.write("AQUIFERA", aquifera);
+        }
+    }
 } // Anonymous namespace
 
 void Opm::InitIO::write(const ::Opm::EclipseState&              es,
@@ -589,5 +630,8 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
 
     if (!nnc.empty()) {
         writeNonNeighbourConnections(nnc, units, initFile);
+    }
+    if (es.aquifer().active()) {
+        writeAquiferConnections(es.aquifer(), grid, initFile);
     }
 }
