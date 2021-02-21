@@ -52,8 +52,6 @@ namespace Opm {
         size_t numTimesteps() const;
         double getTotalTime() const;
         double seconds(size_t timeStep) const;
-        std::size_t restart_offset() const;
-        std::time_t restart_time() const;
 
         std::time_t operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.

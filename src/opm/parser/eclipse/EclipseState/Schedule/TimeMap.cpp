@@ -439,14 +439,6 @@ struct TimeMapContext {
         return t + seconds + minutes * 60 + hours * 3600;
     }
 
-    std::size_t TimeMap::restart_offset() const {
-        return this->m_restart_offset;
-    }
-
-    std::time_t TimeMap::restart_time() const {
-        return this->m_restart_time;
-    }
-
 
 std::ostream& operator<<(std::ostream& stream, const TimeMap& tm) {
     std::stringstream ss;

@@ -285,6 +285,7 @@ namespace Opm
             restart_config.serializeOp(serializer);
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
+            serializer(m_restart_info);
 
             pack_unpack<PAvg, Serializer>(serializer);
             pack_unpack<WellTestConfig, Serializer>(serializer);
@@ -443,12 +444,12 @@ namespace Opm
 
     private:
         ScheduleStatic m_static;
+        std::pair<std::time_t, std::size_t> m_restart_info;
         ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
         RestartConfig restart_config;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
-
 
         void load_rst(const RestartIO::RstState& rst,
                       const EclipseGrid& grid,

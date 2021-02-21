@@ -110,12 +110,13 @@ namespace {
                         const RestartIO::RstState * rst)
     try :
         m_static( python, deck, runspec ),
-        m_sched_deck(deck, restart_info(rst) ),
-        m_timeMap( deck , restart_info( rst )),
-        restart_config(deck, restart_info(rst), parseContext, errors)
+        m_restart_info( restart_info(rst)),
+        m_sched_deck(deck, m_restart_info ),
+        m_timeMap( deck , m_restart_info),
+        restart_config(deck, m_restart_info, parseContext, errors)
     {
         if (rst) {
-            auto restart_step = rst->header.restart_info().second;
+            auto restart_step = this->m_restart_info.second;
             this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, nullptr, &grid, &fp);
             this->load_rst(*rst, grid, fp);
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
@@ -343,15 +344,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                these keywords will be assigned to report step 0.
         */
 
-        auto restart_skip = load_start < this->m_timeMap.restart_offset();
+        auto restart_skip = load_start < this->m_restart_info.second;
         ScheduleLogger logger(restart_skip);
         {
             const auto& location = this->m_sched_deck.location();
             current_file = location.filename;
             logger.info(fmt::format("\nProcessing dynamic information from\n{} line {}", current_file, location.lineno));
-            if (restart_skip)
-                logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", time_map.restart_offset(), Schedule::formatDate(time_map.restart_time())));
-
+            if (restart_skip) {
+                auto [restart_time, restart_offset] = this->m_restart_info;
+                logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", restart_offset, Schedule::formatDate(restart_time)));
+            }
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
                                load_start + 1,
                                this->size(),
@@ -1184,6 +1186,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     bool Schedule::operator==(const Schedule& data) const {
 
         return this->m_timeMap == data.m_timeMap &&
+               this->m_restart_info == data.m_restart_info &&
                this->m_static == data.m_static &&
                this->restart_config == data.restart_config &&
                this->snapshots == data.snapshots;
