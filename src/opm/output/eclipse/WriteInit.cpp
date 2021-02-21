@@ -32,6 +32,7 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
@@ -44,7 +45,6 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <utility>
-#include <cmath>
 
 namespace {
 
@@ -569,13 +569,13 @@ namespace {
         const auto& aquifer_cells = num_aquifers.allAquiferCells();
         for ([[maybe_unused]] const auto& [cell_idx, cell] : aquifer_cells) {
             const size_t active_index = grid.activeIndex(cell->global_index);
-            aquifern[active_index] -= std::exp2(cell->aquifer_id - 1);
+            aquifern[active_index] = -(1 << (cell->aquifer_id - 1));
         }
 
         // aquifer connections
         for (const auto& [id, aqu] : num_aquifers.aquifers()) {
             const auto& connections = aqu.connections();
-            const int exp2_id_1 = std::exp2(id - 1);
+            const int exp2_id_1 = 1 << (id - 1);
             for (const auto& con : connections) {
                 const size_t active_index = grid.activeIndex(con.global_index);
                 aquifern[active_index] += exp2_id_1;
@@ -593,7 +593,7 @@ namespace {
 
         const auto& cons_data = aquifer.connections().data();
         for (const auto& [id, cons] : cons_data) {
-            const int exp2_id_1 = std::exp2(id - 1);
+            const int exp2_id_1 = 1 << (id - 1);
             for (const auto& con : cons) {
                 const size_t active_index = grid.activeIndex(con.global_index);
                 aquifera[active_index] += exp2_id_1;
