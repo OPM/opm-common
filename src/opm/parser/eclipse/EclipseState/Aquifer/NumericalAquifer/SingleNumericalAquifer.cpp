@@ -138,4 +138,8 @@ namespace Opm {
         }
         return nncs;
     }
+
+    const std::vector<NumericalAquiferConnection>& SingleNumericalAquifer::connections() const {
+        return this->connections_;
+    }
 }

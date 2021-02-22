@@ -49,6 +49,7 @@ public:
     bool hasAquifer(const int aquID) const;
 
     bool hasNumericalAquifer() const;
+    bool hasAnalyticalAquifer() const;
     const NumericalAquifers& numericalAquifers() const;
 
     template<class Serializer>
