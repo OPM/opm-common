@@ -22,7 +22,9 @@
 #define OPM_ROOTFINDERS_HEADER
 
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
+#include <string>
 #include <algorithm>
 #include <limits>
 #include <cmath>
@@ -35,8 +37,11 @@ namespace Opm
     {
         static double handleBracketingFailure(const double x0, const double x1, const double f0, const double f1)
         {
-            OPM_THROW_NOLOG(std::runtime_error, "Error in parameters, zero not bracketed: [a, b] = ["
-                  << x0 << ", " << x1 << "]    f(a) = " << f0 << "   f(b) = " << f1);
+            std::ostringstream sstr;
+	    sstr << "Error in parameters, zero not bracketed: [a, b] = ["
+                 << x0 << ", " << x1 << "]    f(a) = " << f0 << "   f(b) = " << f1);
+            OpmLog::debug(sstr.str());
+            OPM_THROW_NOLOG(std::runtime_error, sstr.str());
             return -1e100; // Never reached.
         }
         static double handleTooManyIterations(const double x0, const double x1, const int maxiter)
