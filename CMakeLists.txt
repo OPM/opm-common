@@ -11,7 +11,6 @@ option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
 option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
-option(ENABLE_SCHEDULE_DEBUG "Enable runtime integration testing of Schedule construction" OFF)
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
