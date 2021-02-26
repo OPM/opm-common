@@ -367,7 +367,9 @@ class KeywordLocation;
           errormodes are invoked from the simulator.
         */
         const static std::string SIMULATOR_KEYWORD_NOT_SUPPORTED;
+        const static std::string SIMULATOR_KEYWORD_NOT_SUPPORTED_CRITICAL;
         const static std::string SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED;
+        const static std::string SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED_CRITICAL;
 
     private:
         void initDefault();
