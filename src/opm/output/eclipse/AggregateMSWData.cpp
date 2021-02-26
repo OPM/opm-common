@@ -638,10 +638,11 @@ namespace {
             const auto& aicd = segment.autoICD();
 
             rSeg[baseIndex + Ix::DeviceBaseStrength] =
-                usys.from_si(M::icd_strength, aicd.strength());
+                usys.from_si(M::aicd_strength, aicd.strength());
 
-            rSeg[baseIndex + Ix::AbsValICDLength] =
-                usys.from_si(M::length, std::abs(aicd.length()));
+            rSeg[baseIndex + Ix::ScalingFactor] = ((aicd.methodFlowScaling() == 1) ||
+             ((aicd.methodFlowScaling() < 0) && (aicd.length() < 0))) ?
+                usys.from_si(M::length, aicd.scalingFactor()) : aicd.scalingFactor();
 
             rSeg[baseIndex + Ix::CalibrFluidDensity] =
                 usys.from_si(M::density, aicd.densityCalibration());

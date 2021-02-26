@@ -66,7 +66,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             DeviceBaseStrength = 86,
 
-            AbsValICDLength = 87,
+            ScalingFactor = 87,
 
             CalibrFluidDensity   = 88,
             CalibrFluidViscosity = 89,
