@@ -26,6 +26,23 @@
 namespace Opm {
 namespace TimeService {
 
+const time_t system_clock_epoch = std::chrono::system_clock::to_time_t({});
+
+time_point from_time_t(std::time_t t) {
+    auto diff = std::difftime(t, system_clock_epoch);
+    return time_point(std::chrono::seconds(static_cast<std::chrono::seconds::rep>(diff)));
+}
+
+std::time_t to_time_t(const time_point& tp) {
+    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count() + system_clock_epoch;
+}
+
+
+time_point now() {
+    time_point epoch;
+    auto default_now = std::chrono::system_clock::now();
+    return epoch + std::chrono::duration_cast<Opm::time_point::duration>(default_now.time_since_epoch());
+}
 
 std::time_t advance(const std::time_t tp, const double sec)
 {
