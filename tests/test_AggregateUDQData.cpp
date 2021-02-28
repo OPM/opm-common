@@ -29,6 +29,7 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 
@@ -118,7 +119,7 @@ Opm::UDQSet make_udq_set(const std::string& name, Opm::UDQVarType var_type, cons
 
     Opm::SummaryState sum_state()
     {
-        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now()};
         state.update_well_var("PROD1", "WUOPRL", 210.);
         state.update_well_var("PROD2", "WUOPRL", 211.);
         state.update_well_var("WINJ1", "WUOPRL", 212.);

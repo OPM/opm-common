@@ -818,3 +818,30 @@ TSTEP
     BOOST_CHECK(Opm::TimeMap::valid_month("MAR"));
     BOOST_CHECK(!Opm::TimeMap::valid_month("Tulleogtøys"));
 }
+
+
+
+BOOST_AUTO_TEST_CASE(Overflow) {
+    auto year = 226300;
+    auto month = 1;
+    auto day = 2;
+    auto ts0 = Opm::TimeStampUTC(year, month, day);
+    auto t0 = Opm::asTimeT(ts0);
+
+    {
+        auto ts = Opm::TimeStampUTC(t0);
+        BOOST_CHECK_EQUAL(ts.year(), year);
+        BOOST_CHECK_EQUAL(ts.month(), month);
+        BOOST_CHECK_EQUAL(ts.day(), day);
+    }
+
+    {
+        auto tc = Opm::TimeService::from_time_t(t0);
+        auto ts = Opm::TimeStampUTC( Opm::TimeService::to_time_t(tc) );
+        BOOST_CHECK_EQUAL(ts.year(), year);
+        BOOST_CHECK_EQUAL(ts.month(), month);
+        BOOST_CHECK_EQUAL(ts.day(), day);
+    }
+}
+
+

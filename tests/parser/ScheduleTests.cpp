@@ -837,7 +837,7 @@ WELTARG
     double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
     double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
     double siFactorP = unitSystem.parse("Pressure").getSIScaling();
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     const auto& well_1 = schedule.getWell("OP_1", 1);
     const auto wpp_1 = well_1.getProductionProperties();
@@ -900,7 +900,7 @@ WELTARG
 )";
 
     const auto& schedule = make_schedule(input);
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
 
@@ -1110,7 +1110,7 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         )";
 
         const auto& schedule = make_schedule(input);
-        Opm::SummaryState st(std::chrono::system_clock::now());
+        Opm::SummaryState st(TimeService::now());
 
         Opm::UnitSystem unitSystem = UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC);
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
@@ -1360,7 +1360,7 @@ WCONINJH
 )";
 
     const auto& sched = make_schedule(input);
-    const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+    const auto st = ::Opm::SummaryState{ TimeService::now() };
     UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
 
     // The BHP limit should not be effected by WCONHIST
@@ -3516,7 +3516,7 @@ END
 )";
 
     const auto sched = make_schedule(input);
-    const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+    const auto st = ::Opm::SummaryState{ TimeService::now() };
 
     BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W1", 10), st), -1);
     BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W2", 10), st), 3);
@@ -3560,7 +3560,7 @@ END
 )";
 
     const auto sched = make_schedule(input);
-    const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+    const auto st = ::Opm::SummaryState{ TimeService::now() };
 
     BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W1", 10), st), -1);
     BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W2", 10), st), 1);
@@ -4361,15 +4361,15 @@ END
     //}
 }
 
-bool compare_dates(const std::chrono::system_clock::time_point& t, int year, int month, int day) {
-    return t == std::chrono::system_clock::from_time_t( asTimeT( TimeStampUTC(year, month, day)));
+bool compare_dates(const time_point& t, int year, int month, int day) {
+    return t == TimeService::from_time_t( asTimeT( TimeStampUTC(year, month, day)));
 }
 
-bool compare_dates(const std::chrono::system_clock::time_point& t, std::array<int, 3>& ymd) {
+bool compare_dates(const time_point& t, std::array<int, 3>& ymd) {
     return compare_dates(t, ymd[0], ymd[1], ymd[2]);
 }
 
-std::string dates_msg(const std::chrono::system_clock::time_point& t, std::array<int,3>& ymd) {
+std::string dates_msg(const time_point& t, std::array<int,3>& ymd) {
     auto ts = TimeStampUTC( std::chrono::system_clock::to_time_t(t) );
     return fmt::format("Different dates: {}-{}-{} != {}-{}-{}", ts.year(), ts.month(), ts.day(), ymd[0], ymd[1], ymd[2]);
 }
@@ -4399,7 +4399,7 @@ BOOST_AUTO_TEST_CASE(ScheduleStateDatesTest) {
 
 
 BOOST_AUTO_TEST_CASE(ScheduleStateTest) {
-    auto t1 = std::chrono::system_clock::from_time_t( std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() ) );
+    auto t1 = TimeService::from_time_t( std::chrono::system_clock::to_time_t( TimeService::now() ) );
     auto t2 = t1 + std::chrono::hours(48);
 
     ScheduleState ts1(t1);

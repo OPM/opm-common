@@ -152,7 +152,7 @@ TSTEP
 
 
 BOOST_AUTO_TEST_CASE(TestActions) {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     Opm::WListManager wlm;
     Opm::Action::Context context(st, wlm);
     Opm::Action::Actions config;
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
 
 
 BOOST_AUTO_TEST_CASE(TestContext) {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     st.update_well_var("OP1", "WOPR", 100);
     Opm::WListManager wlm;
     Opm::Action::Context context(st, wlm);
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
     Action::AST ast1({"WWCT", "OPX", ">", "0.75"});
     Action::AST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
     Action::AST ast3({"WWCT", "OPY", ">", "0.75"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
     std::vector<std::string> matching_wells;
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND) {
     Action::AST ast_or({"WWCT", "OPX", ">", "0.75", "OR", "WWCT", "OPY", ">", "0.75"});
     Action::AST ast_and({"WWCT", "OPX", ">", "0.75", "AND", "WWCT", "OPY", ">", "0.75"});
     Action::AST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND) {
 
 BOOST_AUTO_TEST_CASE(DATE) {
     Action::AST ast(std::vector<std::string>{"MNTH", ">=", "JUN"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(DATE) {
 
 BOOST_AUTO_TEST_CASE(MANUAL1) {
     Action::AST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(MANUAL1) {
 
 BOOST_AUTO_TEST_CASE(MANUAL2) {
     Action::AST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(MANUAL2) {
 
 BOOST_AUTO_TEST_CASE(MANUAL3) {
     Action::AST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(MANUAL3) {
 
 BOOST_AUTO_TEST_CASE(MANUAL4) {
     Action::AST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(MANUAL4) {
 
 BOOST_AUTO_TEST_CASE(MANUAL5) {
     Action::AST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
 
 BOOST_AUTO_TEST_CASE(LGR) {
     Action::AST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(LGR) {
 
 
 BOOST_AUTO_TEST_CASE(Action_ContextTest) {
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     st.update("WWCT:OP1", 100);
     WListManager wlm;
     Action::Context context(st, wlm);
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(Action_ContextTest) {
 //Groupnames w/ astirisks wil eventually work with ACTIONX
 BOOST_AUTO_TEST_CASE(TestGroupList) {
     Action::AST ast({"GWPR", "*", ">", "1.0"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
     BOOST_CHECK_THROW( ast.eval(context), std::logic_error );
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(TestGroupList) {
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells) {
     Action::AST ast({"WOPR", "*", ">", "1.0"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells) {
 BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
   Action::AST ast1({"WOPR", "P*", ">", "1.0"});
   Action::AST ast2({"WOPR", "*", ">", "1.0"});
-  SummaryState st(std::chrono::system_clock::now());
+  SummaryState st(TimeService::now());
 
   st.update_well_var("PX", "WOPR", 0);
   st.update_well_var("PY", "WOPR", 0.50);
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
     Action::AST ast({"WOPR", "*", ">", "1.0", "AND", "WWCT", "*", "<", "0.50"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
     Action::AST ast({"WOPR", "*", ">", "1.0", "OR", "WWCT", "*", "<", "0.50"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -620,7 +620,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
 BOOST_AUTO_TEST_CASE(TestWLIST) {
     WListManager wlm;
     Action::AST ast({"WOPR", "*LIST1", ">", "1.0"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     st.update_well_var("W1", "WOPR", 2.0);
     st.update_well_var("W2", "WOPR", 2.50);
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(TestWLIST) {
 
 BOOST_AUTO_TEST_CASE(TestFieldAND) {
     Action::AST ast({"FMWPR", ">=", "4", "AND", "WUPR3", "OP*", "=", "1"});
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     WListManager wlm;
     Action::Context context(st, wlm);
 
@@ -974,7 +974,7 @@ TSTEP
         )"};
 
     auto unit_system =  UnitSystem::newMETRIC();
-    const auto st = SummaryState{ std::chrono::system_clock::now() };
+    const auto st = SummaryState{ TimeService::now() };
     Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched[0].actions.get().get("A");
     {
@@ -988,7 +988,7 @@ TSTEP
 
 
     Action::Result action_result(true);
-    auto sim_time = std::chrono::system_clock::now();
+    auto sim_time = TimeService::now();
     sched.applyAction(0, sim_time, action1, action_result, {});
 
     {
@@ -1100,7 +1100,7 @@ TSTEP
 
 
     Action::Result action_result(true);
-    sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {});
+    sched.applyAction(0, TimeService::now(), action1, action_result, {});
 
     {
         const auto& glo = sched.glo(0);
@@ -1142,7 +1142,7 @@ TSTEP
 
         )"};
 
-    const auto st = SummaryState{ std::chrono::system_clock::now() };
+    const auto st = SummaryState{ TimeService::now() };
     Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched[0].actions.get().get("A");
     double CF0;
@@ -1156,10 +1156,10 @@ TSTEP
 
 
     Action::Result action_result(true);
-    BOOST_CHECK_THROW( sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {}), std::exception);
+    BOOST_CHECK_THROW( sched.applyAction(0, TimeService::now(), action1, action_result, {}), std::exception);
     {
         const auto& well = sched.getWell("PROD1", 0);
-        sched.applyAction(0, std::chrono::system_clock::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
+        sched.applyAction(0, TimeService::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
     }
     {
         const auto& target_wellpi = sched[0].target_wellpi;
@@ -1194,7 +1194,7 @@ ENDACTIO
 
         )"};
 
-    auto st = SummaryState{ std::chrono::system_clock::now() };
+    auto st = SummaryState{ TimeService::now() };
     Schedule sched = make_schedule(deck_string);
     Opm::WListManager wlm;
     Opm::Action::Context context(st, wlm);

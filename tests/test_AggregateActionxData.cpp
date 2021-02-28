@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 
@@ -46,7 +47,7 @@ namespace {
 
 Opm::SummaryState sum_state_TEST1()
     {
-        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now()};
         state.update_well_var("OPU01", "WWPR", 21.);
         state.update_well_var("OPU02", "WWPR", 22.);
         state.update_well_var("OPL01", "WWPR", 23.);

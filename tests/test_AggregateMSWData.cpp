@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <exception>
 #include <stdexcept>
@@ -501,7 +502,7 @@ END
 
         Opm::SummaryState sim_state()
     {
-        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now()};
 
 	state.update("SPR:PROD:1",   235.);
 	state.update("SPR:PROD:2",   237.);

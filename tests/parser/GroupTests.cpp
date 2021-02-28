@@ -42,6 +42,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 using namespace Opm;
 
@@ -251,7 +252,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
         /)";
 
     auto schedule = create_schedule(input);
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     const auto& group1 = schedule.getGroup("G1", 0);
     const auto& group2 = schedule.getGroup("G2", 0);
@@ -417,7 +418,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         )";
 
     auto schedule = create_schedule(input);
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     // Step 0
     {
         const auto& g1 = schedule.getGroup("G1", 0);

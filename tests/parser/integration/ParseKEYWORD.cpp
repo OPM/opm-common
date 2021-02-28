@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -1428,7 +1429,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule sched( deck, grid, fp, runspec, python);
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("PROD1"));

@@ -36,26 +36,26 @@ namespace {
   that the serialization code in
   opm-simulators:opm/simulators/utils/ParallelRestart.cpp goes via std::time_t.
 */
-std::chrono::system_clock::time_point clamp_time(std::chrono::system_clock::time_point t) {
-    return std::chrono::system_clock::from_time_t( std::chrono::system_clock::to_time_t( t ) );
+time_point clamp_time(time_point t) {
+    return TimeService::from_time_t( TimeService::to_time_t( t ) );
 }
 
 }
 
 
 
-ScheduleState::ScheduleState(const std::chrono::system_clock::time_point& t1):
+ScheduleState::ScheduleState(const time_point& t1):
     m_start_time(clamp_time(t1))
 {
 }
 
-ScheduleState::ScheduleState(const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time) :
+ScheduleState::ScheduleState(const time_point& start_time, const time_point& end_time) :
     ScheduleState(start_time)
 {
     this->m_end_time = clamp_time(end_time);
 }
 
-ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time) :
+ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time) :
     ScheduleState(src)
 {
     this->m_start_time = clamp_time(start_time);
@@ -71,18 +71,18 @@ ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system
         this->rft_config.update( std::move(*next_rft) );
 }
 
-ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time) :
+ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time, const time_point& end_time) :
     ScheduleState(src, start_time)
 {
     this->m_end_time = end_time;
 }
 
 
-std::chrono::system_clock::time_point ScheduleState::start_time() const {
+time_point ScheduleState::start_time() const {
     return this->m_start_time;
 }
 
-std::chrono::system_clock::time_point ScheduleState::end_time() const {
+time_point ScheduleState::end_time() const {
     return this->m_end_time.value();
 }
 
@@ -172,7 +172,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
 
 
 ScheduleState ScheduleState::serializeObject() {
-    auto t1 = std::chrono::system_clock::now();
+    auto t1 = TimeService::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
     ts.vfpprod = map_member<int, VFPProdTable>::serializeObject();

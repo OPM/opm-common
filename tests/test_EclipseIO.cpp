@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto python = std::make_shared<Python>();
         Schedule schedule(deck, es, python);
         SummaryConfig summary_config( deck, schedule, es.getTableManager( ), es.aquifer());
-        SummaryState st(std::chrono::system_clock::now());
+        SummaryState st(TimeService::now());
         es.getIOConfig().setBaseName( "FOO" );
 
         EclipseIO eclWriter( es, eclGrid , schedule, summary_config);

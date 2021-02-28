@@ -23,6 +23,7 @@
 
 #include <vector>
 
+#include <opm/common/utility/TimeService.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
@@ -209,7 +210,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
     // Report Step 2: 2011-01-20 --> 2013-06-15
     const auto rptStep = std::size_t{2};
     const auto sim_step = rptStep - 1;
-    Opm::SummaryState sumState(std::chrono::system_clock::now());
+    Opm::SummaryState sumState(Opm::TimeService::now());
 
     const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
                                                             simCase.grid,
@@ -261,7 +262,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
     // Report Step 2: 2011-01-20 --> 2013-06-15
     const auto rptStep = std::size_t{4};
     const auto sim_step = rptStep - 1;
-    Opm::SummaryState sumState(std::chrono::system_clock::now());
+    Opm::SummaryState sumState(Opm::TimeService::now());
     Opm::Action::State action_state;
 
     const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,

@@ -47,7 +47,7 @@ msim::msim(const EclipseState& state_arg) :
 void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     const double week = 7 * 86400;
     data::Solution sol;
-    SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
+    SummaryState st(TimeService::from_time_t(schedule.getStartTime()));
     UDQState udq_state(schedule.getUDQConfig(0).params().undefinedValue());
     Action::State action_state;
     Python python;
@@ -62,7 +62,7 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
             double time_step = std::min(week, 0.5*schedule.stepLength(report_step - 1));
             run_step(schedule, action_state, st, udq_state, sol, well_data, group_nwrk_data, report_step, time_step, io);
         }
-        auto sim_time = std::chrono::system_clock::from_time_t( schedule.simTime(report_step) );
+        auto sim_time = TimeService::from_time_t( schedule.simTime(report_step) );
         post_step(schedule, action_state, st, sol, well_data, group_nwrk_data, report_step, sim_time);
         const auto& exit_status = schedule.exitStatus();
         if (exit_status.has_value())
@@ -75,7 +75,7 @@ UDAValue msim::uda_val() {
 }
 
 
-void msim::post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, data::GroupAndNetworkValues& /* grp_nwrk_data */, size_t report_step, const std::chrono::system_clock::time_point& sim_time) {
+void msim::post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, data::GroupAndNetworkValues& /* grp_nwrk_data */, size_t report_step, const time_point& sim_time) {
     const auto& actions = schedule[report_step].actions.get();
     if (actions.empty())
         return;

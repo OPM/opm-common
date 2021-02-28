@@ -291,12 +291,12 @@ npArray get_rft_vector_Index(Opm::EclIO::ERft * file_ptr,const std::string& name
      the pybind11 conversion.
 */
 
-std::chrono::system_clock::time_point esmry_start_date(const Opm::EclIO::ESmry * esmry) {
+time_point esmry_start_date(const Opm::EclIO::ESmry * esmry) {
     auto utc_chrono   = esmry->startdate();
     auto utc_time_t   = std::chrono::system_clock::to_time_t( utc_chrono );
     auto utc_ts       = Opm::TimeStampUTC( utc_time_t );
     auto local_time_t = Opm::asLocalTimeT( utc_ts );
-    return std::chrono::system_clock::from_time_t( local_time_t );
+    return TimeService::from_time_t( local_time_t );
 }
 
 

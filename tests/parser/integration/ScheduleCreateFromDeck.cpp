@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -238,7 +239,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
         BOOST_CHECK( sched.getWell("W_1", 9).isInjector());
         {
-            SummaryState st(std::chrono::system_clock::now());
+            SummaryState st(TimeService::now());
             const auto controls = sched.getWell("W_1", 9).injectionControls(st);
             BOOST_CHECK_CLOSE(20000/Metric::Time ,  controls.surface_rate  , 0.001);
             BOOST_CHECK_CLOSE(200000/Metric::Time , controls.reservoir_rate, 0.001);
@@ -257,7 +258,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK( Well::Status::SHUT == sched.getWell("W_1", 13).getStatus( ));
         BOOST_CHECK( Well::Status::OPEN == sched.getWell("W_1", 14).getStatus( ));
         {
-            SummaryState st(std::chrono::system_clock::now());
+            SummaryState st(TimeService::now());
             const auto controls = sched.getWell("W_1", 12).injectionControls(st);
             BOOST_CHECK(  controls.hasControl(Well::InjectorCMode::RATE ));
             BOOST_CHECK( !controls.hasControl(Well::InjectorCMode::RESV));
@@ -375,7 +376,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     Runspec runspec (deck);
     auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     BOOST_CHECK_EQUAL( 3U , sched.back().groups.size() );
     BOOST_CHECK( sched.back().groups.has( "INJ" ));

@@ -26,6 +26,7 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 
 namespace Opm {
@@ -36,6 +37,7 @@ namespace Opm {
         TSTEP = 2,
         RESTART = 3
     };
+
 
     class Deck;
     struct ScheduleDeckContext;
@@ -49,13 +51,13 @@ namespace Opm {
     class ScheduleBlock {
     public:
         ScheduleBlock() = default;
-        ScheduleBlock(const KeywordLocation& location, ScheduleTimeType time_type, const std::chrono::system_clock::time_point& start_time);
+        ScheduleBlock(const KeywordLocation& location, ScheduleTimeType time_type, const time_point& start_time);
         std::size_t size() const;
         void push_back(const DeckKeyword& keyword);
         std::optional<DeckKeyword> get(const std::string& kw) const;
-        const std::chrono::system_clock::time_point& start_time() const;
-        const std::optional<std::chrono::system_clock::time_point>& end_time() const;
-        void end_time(const std::chrono::system_clock::time_point& t);
+        const time_point& start_time() const;
+        const std::optional<time_point>& end_time() const;
+        void end_time(const time_point& t);
         ScheduleTimeType time_type() const;
         const KeywordLocation& location() const;
         const DeckKeyword& operator[](const std::size_t index) const;
@@ -74,8 +76,8 @@ namespace Opm {
         }
     private:
         ScheduleTimeType m_time_type;
-        std::chrono::system_clock::time_point m_start_time;
-        std::optional<std::chrono::system_clock::time_point> m_end_time;
+        time_point m_start_time;
+        std::optional<time_point> m_end_time;
         KeywordLocation m_location;
         std::vector<DeckKeyword> m_keywords;
     };
@@ -95,7 +97,7 @@ namespace Opm {
     public:
         explicit ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart);
         ScheduleDeck();
-        void add_block(ScheduleTimeType time_type, const std::chrono::system_clock::time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
+        void add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);
         ScheduleBlock& operator[](const std::size_t index);
         const ScheduleBlock& operator[](const std::size_t index) const;
@@ -117,7 +119,7 @@ namespace Opm {
         }
 
     private:
-        std::chrono::system_clock::time_point m_restart_time;
+        time_point m_restart_time;
         std::size_t m_restart_offset;
         KeywordLocation m_location;
         std::vector<ScheduleBlock> m_blocks;

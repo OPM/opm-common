@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -207,7 +208,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     const auto num_cells = grid.getCartesianSize();
     Opm::EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
     int countTimeStep = schedule.size() - 1;
-    Opm::SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
+    Opm::SummaryState st(Opm::TimeService::from_time_t(schedule.getStartTime()));
     Opm::Action::State action_state;
     Opm::UDQState udq_state(123);
 

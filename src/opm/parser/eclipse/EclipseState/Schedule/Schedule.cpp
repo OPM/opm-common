@@ -367,7 +367,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
                 const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
                 const auto& days = deck_time(this->stepLength(report_step - 1));
-                const auto& days_total = deck_time(this->seconds(report_step));
+                const auto& days_total = deck_time(this->seconds(report_step - 1));
                 logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
                                                  report_step,
                                                  days,
@@ -1106,6 +1106,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         if (this->snapshots.empty())
             return 0;
 
+        if (timeStep >= this->snapshots.size())
+            throw std::logic_error(fmt::format("seconds({}) - invalid timeStep. Valid range [0,{}>", timeStep, this->snapshots.size()));
+
         auto elapsed = this->snapshots[timeStep].start_time() - this->snapshots[0].start_time();
         return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
@@ -1120,7 +1123,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
+    void Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         ParseContext parseContext;
         ErrorGuard errors;
 
@@ -1582,7 +1585,7 @@ std::vector<ScheduleState>::const_iterator Schedule::end() const {
     return this->snapshots.end();
 }
 
-void Schedule::create_first(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {
+void Schedule::create_first(const time_point& start_time, const std::optional<time_point>& end_time) {
     if (end_time.has_value())
         this->snapshots.emplace_back( start_time, end_time.value() );
     else
@@ -1610,7 +1613,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     this->addGroup("FIELD", 0);
 }
 
-void Schedule::create_next(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {
+void Schedule::create_next(const time_point& start_time, const std::optional<time_point>& end_time) {
     if (this->snapshots.empty())
         this->create_first(start_time, end_time);
     else {

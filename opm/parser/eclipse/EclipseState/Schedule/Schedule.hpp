@@ -43,6 +43,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
@@ -247,7 +248,7 @@ namespace Opm
         const RestartConfig& restart() const;
         RestartConfig& restart();
 
-        void applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
+        void applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
 
@@ -261,9 +262,9 @@ namespace Opm
         const ScheduleState& operator[](std::size_t index) const;
         std::vector<ScheduleState>::const_iterator begin() const;
         std::vector<ScheduleState>::const_iterator end() const;
-        void create_next(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time);
+        void create_next(const time_point& start_time, const std::optional<time_point>& end_time);
         void create_next(const ScheduleBlock& block);
-        void create_first(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time);
+        void create_first(const time_point& start_time, const std::optional<time_point>& end_time);
 
 
         /*

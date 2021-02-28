@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <exception>
 #include <iostream>
@@ -44,7 +45,7 @@ first_sim(std::string fname)
 Opm::SummaryState
 sum_state()
 {
-    auto state = Opm::SummaryState {std::chrono::system_clock::now()};
+    auto state = Opm::SummaryState {Opm::TimeService::now()};
     state.update("FULPR", 460.);
 
     return state;

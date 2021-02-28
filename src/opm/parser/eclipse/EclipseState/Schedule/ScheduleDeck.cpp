@@ -30,7 +30,7 @@
 
 namespace Opm {
 
-ScheduleBlock::ScheduleBlock(const KeywordLocation& location, ScheduleTimeType time_type, const std::chrono::system_clock::time_point& start_time) :
+ScheduleBlock::ScheduleBlock(const KeywordLocation& location, ScheduleTimeType time_type, const time_point& start_time) :
     m_time_type(time_type),
     m_start_time(start_time),
     m_location(location)
@@ -57,11 +57,11 @@ const DeckKeyword& ScheduleBlock::operator[](const std::size_t index) const {
     return this->m_keywords.at(index);
 }
 
-const std::chrono::system_clock::time_point& ScheduleBlock::start_time() const {
+const time_point& ScheduleBlock::start_time() const {
     return this->m_start_time;
 }
 
-const std::optional<std::chrono::system_clock::time_point>& ScheduleBlock::end_time() const {
+const std::optional<time_point>& ScheduleBlock::end_time() const {
     return this->m_end_time;
 }
 
@@ -69,7 +69,7 @@ ScheduleTimeType ScheduleBlock::time_type() const {
     return this->m_time_type;
 }
 
-void ScheduleBlock::end_time(const std::chrono::system_clock::time_point& t) {
+void ScheduleBlock::end_time(const time_point& t) {
     this->m_end_time = t;
 }
 
@@ -89,8 +89,8 @@ const KeywordLocation& ScheduleBlock::location() const {
 
 ScheduleBlock ScheduleBlock::serializeObject() {
     ScheduleBlock block;
-    block.m_start_time = std::chrono::system_clock::from_time_t( asTimeT( TimeStampUTC( 2003, 10, 10 )));
-    block.m_end_time = std::chrono::system_clock::from_time_t( asTimeT( TimeStampUTC( 1993, 07, 06 )));
+    block.m_start_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2003, 10, 10 )));
+    block.m_end_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 1993, 07, 06 )));
     block.m_location = KeywordLocation{ "Dummy", "File", 123 };
     return block;
 }
@@ -107,9 +107,9 @@ std::optional<DeckKeyword> ScheduleBlock::get(const std::string& kw) const {
 
 struct ScheduleDeckContext {
     bool rst_skip;
-    std::chrono::system_clock::time_point last_time;
+    time_point last_time;
 
-    ScheduleDeckContext(bool skip, std::chrono::system_clock::time_point t) :
+    ScheduleDeckContext(bool skip, time_point t) :
         rst_skip(skip),
         last_time(t)
     {}
@@ -128,22 +128,22 @@ std::size_t ScheduleDeck::restart_offset() const {
 
 ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) {
     const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
-    std::chrono::system_clock::time_point start_time;
+    time_point start_time;
     if (deck.hasKeyword("START")) {
         // Use the 'START' keyword to find out the start date (if the
         // keyword was specified)
         const auto& keyword = deck.getKeyword("START");
-        start_time = std::chrono::system_clock::from_time_t( TimeMap::timeFromEclipse(keyword.getRecord(0)) );
+        start_time = TimeService::from_time_t( TimeMap::timeFromEclipse(keyword.getRecord(0)) );
     } else {
         // The default start date is not specified in the Eclipse
         // reference manual. We hence just assume it is same as for
         // the START keyword for Eclipse E100, i.e., January 1st,
         // 1983...
-        start_time = std::chrono::system_clock::from_time_t( TimeMap::mkdate(1983, 1, 1) );
+        start_time = TimeService::from_time_t( TimeMap::mkdate(1983, 1, 1) );
     }
 
     const auto& [restart_time, restart_offset] = restart;
-    this->m_restart_time = std::chrono::system_clock::from_time_t(restart_time);
+    this->m_restart_time = TimeService::from_time_t(restart_time);
     this->m_restart_offset = restart_offset;
     if (restart_offset > 0) {
         for (std::size_t it = 0; it < this->m_restart_offset; it++) {
@@ -170,7 +170,7 @@ ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::s
                     std::throw_with_nested(opm_error);
                 }
 
-                this->add_block(ScheduleTimeType::DATES, std::chrono::system_clock::from_time_t( nextTime ), context, keyword.location());
+                this->add_block(ScheduleTimeType::DATES, TimeService::from_time_t( nextTime ), context, keyword.location());
             }
             continue;
         }
@@ -193,7 +193,7 @@ ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::s
 }
 
 
-void ScheduleDeck::add_block(ScheduleTimeType time_type, const std::chrono::system_clock::time_point& t, ScheduleDeckContext& context, const KeywordLocation& location) {
+void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location) {
     context.last_time = t;
     if (context.rst_skip) {
         if (t < this->m_restart_time)
@@ -203,7 +203,7 @@ void ScheduleDeck::add_block(ScheduleTimeType time_type, const std::chrono::syst
             context.rst_skip = false;
 
         if (t > this->m_restart_time) {
-            TimeStampUTC ts(std::chrono::system_clock::to_time_t(this->m_restart_time));
+            TimeStampUTC ts(TimeService::to_time_t(this->m_restart_time));
             auto reason = fmt::format("Have scanned past restart data: {:4d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
             throw OpmInputError(reason, location);
         }
@@ -216,8 +216,7 @@ void ScheduleDeck::add_block(ScheduleTimeType time_type, const std::chrono::syst
 void ScheduleDeck::add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context) {
     const auto &item = TSTEPKeyword.getRecord(0).getItem(0);
     for (size_t itemIndex = 0; itemIndex < item.data_size(); itemIndex++) {
-        const int64_t seconds = static_cast<int64_t>(item.getSIDouble(itemIndex));
-        auto next_time = std::chrono::system_clock::from_time_t( TimeMap::forward(std::chrono::system_clock::to_time_t(context.last_time), seconds) );
+        auto next_time = context.last_time + std::chrono::duration_cast<time_point::duration>(std::chrono::duration<double>(item.getSIDouble(itemIndex)));
         this->add_block(ScheduleTimeType::TSTEP, next_time, context, TSTEPKeyword.location());
     }
 }
@@ -236,7 +235,7 @@ double ScheduleDeck::seconds(std::size_t timeStep) const {
 
 
 ScheduleDeck::ScheduleDeck() {
-    std::chrono::system_clock::time_point start_time;
+    time_point start_time;
     this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
 }
 
@@ -270,7 +269,7 @@ bool ScheduleDeck::operator==(const ScheduleDeck& other) const {
 
 ScheduleDeck ScheduleDeck::serializeObject() {
     ScheduleDeck deck;
-    deck.m_restart_time = std::chrono::system_clock::from_time_t( asTimeT( TimeStampUTC( 2013, 12, 12 )));
+    deck.m_restart_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2013, 12, 12 )));
     deck.m_restart_offset = 123;
     deck.m_location = KeywordLocation{ "Deck", "DeckFile", 321 };
     deck.m_blocks = { ScheduleBlock::serializeObject(), ScheduleBlock::serializeObject() };

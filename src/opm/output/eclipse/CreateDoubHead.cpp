@@ -28,6 +28,7 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <chrono>
 #include <cstddef>
@@ -39,7 +40,7 @@ namespace {
                      const double           elapsed)
     {
         return {
-            std::chrono::system_clock::from_time_t(sched.getStartTime()),
+            Opm::TimeService::from_time_t(sched.getStartTime()),
             std::chrono::duration<
                 double, std::chrono::seconds::period>{ elapsed },
         };

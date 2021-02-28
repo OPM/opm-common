@@ -46,6 +46,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -569,7 +570,7 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     const Opm::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_specified());
 
@@ -589,7 +590,7 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
 {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     const Opm::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::orat_defaulted());
 
@@ -607,7 +608,7 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
 {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     const Opm::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::owrat_defaulted());
 
@@ -625,7 +626,7 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
 {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     const Opm::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted());
 
@@ -643,7 +644,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
 {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     const Opm::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp());
 
@@ -662,7 +663,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     const Opm::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table(), VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
 
@@ -683,7 +684,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 {
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(TimeService::now());
     const Opm::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::bhp_defaulted());
 
@@ -791,7 +792,7 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     auto unit_system = UnitSystem::newMETRIC();
     Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, unit_system, 0, 1.0, false, false, 0, Opm::Well::GasInflowEquation::STD);
     Opm::Well::WellProductionProperties prod(unit_system, "OP1");
-    Opm::SummaryState st(std::chrono::system_clock::now());
+    Opm::SummaryState st(Opm::TimeService::now());
     well.productionControls(st);
 
     // Use a scalar FIELD variable - that should work; although it is a bit weird.
