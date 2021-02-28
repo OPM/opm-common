@@ -2,6 +2,7 @@
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -767,47 +768,11 @@ Opm::RestartIO::InteHEAD::networkDimensions(const NetworkDims& nwdim)
 
 
 
-// =====================================================================
-// Free functions (calendar/time utilities)
-// =====================================================================
-
-namespace {
-    std::time_t advance(const std::time_t tp, const double sec)
-    {
-        using namespace std::chrono;
-
-        using TP      = time_point<system_clock>;
-        using DoubSec = duration<double, seconds::period>;
-
-        const auto t = system_clock::from_time_t(tp) +
-            duration_cast<TP::duration>(DoubSec(sec));
-
-        return system_clock::to_time_t(t);
-    }
-}
-
-std::time_t
-Opm::RestartIO::makeUTCTime(const std::tm& timePoint)
-{
-    auto       tp    =  timePoint; // Mutable copy.
-    const auto ltime =  std::mktime(&tp);
-    auto       tmval = *std::gmtime(&ltime); // Mutable.
-
-    // offset =  ltime - tmval
-    //        == #seconds by which 'ltime' is AHEAD of tmval.
-    const auto offset =
-        std::difftime(ltime, std::mktime(&tmval));
-
-    // Advance 'ltime' by 'offset' so that std::gmtime(return value) will
-    // have the same broken-down elements as 'tp'.
-    return advance(ltime, offset);
-}
-
 Opm::RestartIO::InteHEAD::TimePoint
 Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
                                        const double      elapsed)
 {
-    const auto now = advance(start, elapsed);
+    const auto now = TimeService::advance(start, elapsed);
     const auto tp  = *std::gmtime(&now);
 
     auto sec  = 0.0;            // Not really used here.

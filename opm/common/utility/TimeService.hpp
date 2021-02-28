@@ -25,6 +25,11 @@
 
 namespace Opm {
 
+    namespace TimeService {
+    std::time_t advance(const std::time_t tp, const double sec);
+    std::time_t makeUTCTime(std::tm timePoint);
+    }
+
     class TimeStampUTC
     {
     public:

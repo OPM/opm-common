@@ -358,7 +358,7 @@ namespace {
         tm1.tm_sec   = 0;
         tm1.tm_isdst = 0;
 
-        const auto t1 = ::Opm::RestartIO::makeUTCTime(tm1);
+        const auto t1 = Opm::TimeService::makeUTCTime(tm1);
 
         if (t1 != static_cast<std::time_t>(-1)) {
             tm1 = *std::gmtime(&t1); // Get new tm_yday.
