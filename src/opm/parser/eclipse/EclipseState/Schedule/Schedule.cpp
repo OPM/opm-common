@@ -353,9 +353,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             }
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
                                load_start + 1,
-                               this->size(),
+                               this->m_sched_deck.size() - 1,
                                Schedule::formatDate(this->getStartTime()),
-                               deck_time(this->seconds(load_start)),
+                               deck_time(this->m_sched_deck.seconds(load_start)),
                                time_unit,
                                location.lineno));
         }
@@ -377,7 +377,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
                 logger(fmt::format("Initializing report step {}/{} at {} ({} {}) - line {}",
                                    report_step + 1,
-                                   this->size(),
+                                   this->m_sched_deck.size() - 1,
                                    start_date,
                                    days_total,
                                    time_unit,

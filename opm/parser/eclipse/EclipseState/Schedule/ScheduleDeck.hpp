@@ -104,6 +104,7 @@ namespace Opm {
         std::size_t size() const;
         std::size_t restart_offset() const;
         const KeywordLocation& location() const;
+        double seconds(std::size_t timeStep) const;
 
         bool operator==(const ScheduleDeck& other) const;
         static ScheduleDeck serializeObject();

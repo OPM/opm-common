@@ -223,6 +223,17 @@ void ScheduleDeck::add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContex
 }
 
 
+double ScheduleDeck::seconds(std::size_t timeStep) const {
+    if (this->m_blocks.empty())
+        return 0;
+
+    if (timeStep >= this->m_blocks.size())
+        throw std::logic_error(fmt::format("seconds({}) - invalid timeStep. Valid range [0,{}>", timeStep, this->m_blocks.size()));
+
+    std::chrono::duration<double> elapsed = this->m_blocks[timeStep].start_time() - this->m_blocks[0].start_time();
+    return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+}
+
 
 ScheduleDeck::ScheduleDeck() {
     std::chrono::system_clock::time_point start_time;
