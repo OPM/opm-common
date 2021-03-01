@@ -470,13 +470,15 @@ measure rate_unit<Opm::data::GuideRateValue::Item::Gas>() { return measure::gas_
 template <> constexpr
 measure rate_unit<Opm::data::GuideRateValue::Item::ResV>() { return measure::rate; }
 
-double efac( const std::vector<std::pair<std::string,double>>& eff_factors, const std::string& name ) {
-    auto it = std::find_if( eff_factors.begin(), eff_factors.end(),
-                            [&] ( const std::pair< std::string, double > elem )
-                            { return elem.first == name; }
-                          );
+double efac( const std::vector<std::pair<std::string,double>>& eff_factors, const std::string& name)
+{
+    auto it = std::find_if(eff_factors.begin(), eff_factors.end(),
+        [&name](const std::pair<std::string, double>& elem)
+    {
+        return elem.first == name;
+    });
 
-    return (it != eff_factors.end()) ? it->second : 1;
+    return (it != eff_factors.end()) ? it->second : 1.0;
 }
 
 /*
@@ -488,56 +490,72 @@ inline quantity glir( const fn_args& args ) {
     double alq_rate = 0;
 
     for (const auto& well : args.schedule_wells) {
-        if (well.isInjector())
+        if (well.isInjector()) {
             continue;
+        }
 
         auto xwPos = args.wells.find(well.name());
-        if (xwPos == args.wells.end())
+        if ((xwPos == args.wells.end()) ||
+            (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        {
             continue;
+        }
 
-        double eff_fac = efac( args.eff_factors, well.name() );
+        const double eff_fac = efac(args.eff_factors, well.name());
         const auto& production = well.productionControls(args.st);
-        alq_rate += eff_fac*xwPos->second.rates.get(rt::alq, production.alq_value);
+        alq_rate += eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
     }
+
     return { alq_rate, measure::gas_surface_rate };
 }
 
-
 inline quantity wwirt( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< Opm::Phase::WATER >() };
-    const auto& well = args.schedule_wells.front();
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto& well  = args.schedule_wells.front();
     const auto& wtype = well.wellType();
-
-    if (wtype.producer())
+    if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::WATER)) {
         return zero;
-
-    if (wtype.injector_type() != Opm::InjectorType::WATER)
-        return zero;
+    }
 
     const auto& injection = well.injectionControls(args.st);
-    return { injection.surface_rate, rate_unit< Opm::Phase::WATER >() };
+    return { injection.surface_rate, rate_unit<Opm::Phase::WATER>() };
 }
-
 
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
-    for( const auto& sched_well : args.schedule_wells ) {
+    for (const auto& sched_well : args.schedule_wells) {
         const auto& name = sched_well.name();
-        if( args.wells.count( name ) == 0 ) continue;
 
-        double eff_fac = efac( args.eff_factors, name );
+        auto xwPos = args.wells.find(name);
+        if ((xwPos == args.wells.end()) ||
+            (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        {
+            continue;
+        }
 
-        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac;
+        const double eff_fac = efac(args.eff_factors, name);
+        const auto v = xwPos->second.rates.get(phase, 0.0) * eff_fac;
 
-        if( ( v > 0 ) == injection )
+        if ((v > 0.0) == injection) {
             sum += v;
+        }
     }
 
-    if( !injection ) sum *= -1;
+    if (! injection) {
+        sum *= -1.0;
+    }
 
-    if (phase == rt::polymer || phase == rt::brine) return { sum, measure::mass_rate };
+    if (phase == rt::polymer || phase == rt::brine) {
+        return { sum, measure::mass_rate };
+    }
+
     return { sum, rate_unit< phase >() };
 }
 
@@ -553,27 +571,38 @@ inline quantity ratel( const fn_args& args ) {
 
     const auto& well = args.schedule_wells.front();
     const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
-    const auto& well_data = args.wells.at( name );
-    if (well_data.current_control.isProducer == injection) return zero;
+
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
+        (xwPos->second.current_control.isProducer == injection))
+    {
+        return zero;
+    }
+
+    const double eff_fac = efac(args.eff_factors, name);
+    const auto& well_data = xwPos->second;
 
     double sum = 0;
     const auto& connections = well.getConnections( args.num );
-    for (const auto& conn_ptr : connections) {
+    for (const auto* conn_ptr : connections) {
         const size_t global_index = conn_ptr->global_index();
-        const auto& conn_data = std::find_if(well_data.connections.begin(),
-                                             well_data.connections.end(),
-                                             [global_index] (const Opm::data::Connection cdata)
-                                             {
-                                                 return cdata.index == global_index;
-                                             });
+        const auto& conn_data =
+            std::find_if(well_data.connections.begin(),
+                         well_data.connections.end(),
+                [global_index](const Opm::data::Connection& cdata)
+            {
+                return cdata.index == global_index;
+            });
 
         if (conn_data != well_data.connections.end()) {
-            double eff_fac = efac( args.eff_factors, name );
-            sum += conn_data->rates.get( phase, 0.0 ) * eff_fac;
+            sum += conn_data->rates.get(phase, 0.0) * eff_fac;
         }
     }
-    if( !injection ) sum *= -1;
+
+    if (! injection) {
+        sum *= -1;
+    }
 
     return { sum, unit };
 }
@@ -590,44 +619,57 @@ inline quantity cratel( const fn_args& args ) {
 
     const auto& well = args.schedule_wells.front();
     const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
-    const auto& well_data = args.wells.at( name );
-    if (well_data.current_control.isProducer == injection) return zero;
+
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
+        (xwPos->second.current_control.isProducer == injection))
+    {
+        return zero;
+    }
 
     const auto complnum = getCompletionNumberFromGlobalConnectionIndex(well.getConnections(), args.num - 1);
     if (!complnum.has_value())
         // Connection might not yet have come online.
         return zero;
 
+    const auto& well_data = xwPos->second;
+    const double eff_fac = efac(args.eff_factors, name);
+
     double sum = 0;
     const auto& connections = well.getConnections(*complnum);
     for (const auto& conn_ptr : connections) {
         const size_t global_index = conn_ptr->global_index();
-        const auto& conn_data = std::find_if(well_data.connections.begin(),
-                                             well_data.connections.end(),
-                                             [global_index] (const Opm::data::Connection cdata)
-                                             {
-                                                 return cdata.index == global_index;
-                                             });
+        const auto& conn_data =
+            std::find_if(well_data.connections.begin(),
+                         well_data.connections.end(),
+                [global_index] (const Opm::data::Connection& cdata)
+            {
+                return cdata.index == global_index;
+            });
+
         if (conn_data != well_data.connections.end()) {
-            double eff_fac = efac( args.eff_factors, name );
             sum += conn_data->rates.get( phase, 0.0 ) * eff_fac;
         }
     }
-    if( !injection ) sum *= -1;
+
+    if (! injection) {
+        sum *= -1;
+    }
 
     return { sum, unit };
 }
 
-
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
-    auto pred = [&wells]( const Opm::Well& w ) {
-        const auto& name = w.name();
-        return w.isInjector( ) == injection
-            && wells.count( name ) > 0
-            && wells.at( name ).flowing();
+    auto pred = [&wells]( const Opm::Well& w ) -> bool
+    {
+        auto xwPos = wells.find(w.name());
+        return (xwPos != wells.end())
+            && (w.isInjector( ) == injection)
+            && (xwPos->second.dynamicStatus == Opm::Well::Status::OPEN)
+            && xwPos->second.flowing();
     };
 
     return { double( std::count_if( args.schedule_wells.begin(),
@@ -644,27 +686,38 @@ inline quantity crate( const fn_args& args ) {
     // are offset 1 - whereas we need to use this index here to look
     // up a completion with offset 0.
     const size_t global_index = args.num - 1;
-    if( args.schedule_wells.empty() ) return zero;
+    if (args.schedule_wells.empty())
+        return zero;
 
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
+    const auto& name = args.schedule_wells.front().name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
+        (xwPos->second.current_control.isProducer == injection))
+    {
+        return zero;
+    }
 
-    const auto& well_data = args.wells.at( name );
-    const auto& completion = std::find_if( well_data.connections.begin(),
-                                           well_data.connections.end(),
-                                           [=]( const Opm::data::Connection& c ) {
-                                                return c.index == global_index;
-                                           } );
-    if (well_data.current_control.isProducer == injection) return zero;
-    if( completion == well_data.connections.end() ) return zero;
+    const auto& well_data = xwPos->second;
+    const auto& completion =
+        std::find_if(well_data.connections.begin(),
+                     well_data.connections.end(),
+            [global_index](const Opm::data::Connection& c)
+        {
+            return c.index == global_index;
+        });
 
-    double eff_fac = efac( args.eff_factors, name );
+    if (completion == well_data.connections.end())
+        return zero;
+
+    const double eff_fac = efac( args.eff_factors, name );
     auto v = completion->rates.get( phase, 0.0 ) * eff_fac;
-    if (!injection)
+    if (! injection)
         v *= -1;
 
-    if( phase == rt::polymer || phase == rt::brine ) return { v, measure::mass_rate };
+    if (phase == rt::polymer || phase == rt::brine)
+        return { v, measure::mass_rate };
+
     return { v, rate_unit< phase >() };
 }
 
@@ -675,25 +728,35 @@ inline quantity srate( const fn_args& args ) {
     // NUMS array in the eclispe SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
     // up a completion with offset 0.
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto& name = args.schedule_wells.front().name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        return zero;
+    }
+
+    const auto& well_data = xwPos->second;
+
     const size_t segNumber = args.num;
-    if( args.schedule_wells.empty() ) return zero;
-
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
-
-    const auto& well_data = args.wells.at( name );
-
     const auto& segment = well_data.segments.find(segNumber);
 
-    if( segment == well_data.segments.end() ) return zero;
+    if (segment == well_data.segments.end())
+        return zero;
 
-    double eff_fac = efac( args.eff_factors, name );
+    const double eff_fac = efac(args.eff_factors, name);
     auto v = segment->second.rates.get( phase, 0.0 ) * eff_fac;
+
     //switch sign of rate - opposite convention in flow vs eclipse
     v *= -1;
 
-    if( phase == rt::polymer || phase == rt::brine ) return { v, measure::mass_rate };
+    if (phase == rt::polymer || phase == rt::brine)
+        return { v, measure::mass_rate };
+
     return { v, rate_unit< phase >() };
 }
 
@@ -752,15 +815,18 @@ inline quantity segpress ( const fn_args& args ) {
 
 inline quantity bhp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
-    if( args.schedule_wells.empty() ) return zero;
+    if (args.schedule_wells.empty())
+        return zero;
 
-    const auto p = args.wells.find( args.schedule_wells.front().name() );
-    if( p == args.wells.end() ) return zero;
+    const auto p = args.wells.find(args.schedule_wells.front().name());
+    if ((p == args.wells.end()) ||
+        (p->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        return zero;
+    }
 
     return { p->second.bhp, measure::pressure };
 }
-
-
 
 /*
   This function is slightly ugly - the evaluation of ROEW uses the already
@@ -785,24 +851,32 @@ quantity roew(const fn_args& args) {
     return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
 }
 
-
-
 inline quantity temperature( const fn_args& args ) {
     const quantity zero = { 0, measure::temperature };
-    if( args.schedule_wells.empty() ) return zero;
+    if (args.schedule_wells.empty())
+        return zero;
 
-    const auto p = args.wells.find( args.schedule_wells.front().name() );
-    if( p == args.wells.end() ) return zero;
+    const auto p = args.wells.find(args.schedule_wells.front().name());
+    if ((p == args.wells.end()) ||
+        (p->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        return zero;
+    }
 
     return { p->second.temperature, measure::temperature };
 }
 
 inline quantity thp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
-    if( args.schedule_wells.empty() ) return zero;
+    if (args.schedule_wells.empty())
+        return zero;
 
     const auto p = args.wells.find( args.schedule_wells.front().name() );
-    if( p == args.wells.end() ) return zero;
+    if ((p == args.wells.end()) ||
+        (p->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        return zero;
+    }
 
     return { p->second.thp, measure::pressure };
 }
@@ -903,7 +977,6 @@ inline quantity abondoned_well( const fn_args& args ) {
     return { 1.0 * count, measure::identity };
 }
 
-
 inline quantity res_vol_production_target( const fn_args& args ) {
 
     double sum = 0.0;
@@ -952,21 +1025,26 @@ quantity rhpv(const fn_args& args) {
         return {0, measure::volume};
 }
 
-
 template < rt phase, bool outputProducer = true, bool outputInjector = true>
 inline quantity potential_rate( const fn_args& args ) {
     double sum = 0.0;
 
     for( const auto& sched_well : args.schedule_wells ) {
         const auto& name = sched_well.name();
-        if( args.wells.count( name ) == 0 ) continue;
+
+        auto xwPos = args.wells.find(name);
+        if ((xwPos == args.wells.end()) ||
+            (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        {
+            continue;
+        }
 
         if (sched_well.isInjector() && outputInjector) {
-	    const auto v = args.wells.at(name).rates.get(phase, 0.0);
+	    const auto v = xwPos->second.rates.get(phase, 0.0);
 	    sum += v * efac(args.eff_factors, name);
 	}
 	else if (sched_well.isProducer() && outputProducer) {
-	    const auto v = args.wells.at(name).rates.get(phase, 0.0);
+	    const auto v = xwPos->second.rates.get(phase, 0.0);
 	    sum += v * efac(args.eff_factors, name);
 	}
     }
@@ -976,7 +1054,7 @@ inline quantity potential_rate( const fn_args& args ) {
 
 inline quantity preferred_phase_productivty_index(const fn_args& args) {
     if (args.schedule_wells.empty())
-        return {0, rate_unit<rt::productivity_index_oil>()};
+        return {0.0, rate_unit<rt::productivity_index_oil>()};
 
     const auto& well = args.schedule_wells.front();
     auto preferred_phase = well.getPreferredPhase();
@@ -999,13 +1077,13 @@ inline quantity preferred_phase_productivty_index(const fn_args& args) {
 
         switch (preferred_phase) {
         case Opm::Phase::OIL:
-            return {0, rate_unit<rt::productivity_index_oil>()};
+            return {0.0, rate_unit<rt::productivity_index_oil>()};
 
         case Opm::Phase::GAS:
-            return {0, rate_unit<rt::productivity_index_gas>()};
+            return {0.0, rate_unit<rt::productivity_index_gas>()};
 
         case Opm::Phase::WATER:
-            return {0, rate_unit<rt::productivity_index_water>()};
+            return {0.0, rate_unit<rt::productivity_index_water>()};
 
         default:
             break;
@@ -1015,10 +1093,9 @@ inline quantity preferred_phase_productivty_index(const fn_args& args) {
 
     throw std::invalid_argument {
         "Unsupported \"preferred\" phase: " +
-            std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
-            };
+        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+    };
 }
-
 
 inline quantity connection_productivity_index(const fn_args& args) {
     const quantity zero = { 0.0, rate_unit<rt::productivity_index_oil>() };
@@ -1027,8 +1104,11 @@ inline quantity connection_productivity_index(const fn_args& args) {
         return zero;
 
     auto xwPos = args.wells.find(args.schedule_wells.front().name());
-    if (xwPos == args.wells.end())
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
         return zero;
+    }
 
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclipse SMSPEC file; the values in this array
@@ -1157,7 +1237,8 @@ inline quantity well_control_mode( const fn_args& args ) {
 
     const auto& well = args.schedule_wells.front();
     auto xwPos = args.wells.find(well.name());
-    if (xwPos == args.wells.end()) {
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT)) {
         // No dynamic results for 'well'.  Treat as shut/stopped.
         return { 0.0, unit };
     }
@@ -1212,7 +1293,9 @@ quantity well_guiderate(const fn_args& args)
     }
 
     auto xwPos = args.wells.find(well.name());
-    if (xwPos == args.wells.end()) {
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
         return { 0.0, rate_unit<i>() };
     }
 
@@ -1718,7 +1801,6 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROEW", roew },
 };
 
-
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_values_units = {
   {"TCPU"     , Opm::UnitSystem::measure::runtime },
   {"ELAPSED"  , Opm::UnitSystem::measure::identity },
@@ -1887,20 +1969,24 @@ bool need_wells(const Opm::EclIO::SummaryNode& node)
     throw std::runtime_error("Unhandled summary node category in need_wells");
 }
 
-
 void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::SummaryState& st)
 {
-    if (node.category == Opm::EclIO::SummaryNode::Category::Well)
+    using Cat = Opm::EclIO::SummaryNode::Category;
+
+    switch (node.category) {
+    case Cat::Well:
         st.update_well_var(node.wgname, node.keyword, value);
+        break;
 
-    else if (node.category == Opm::EclIO::SummaryNode::Category::Group)
+    case Cat::Group:
+    case Cat::Node:
         st.update_group_var(node.wgname, node.keyword, value);
+        break;
 
-    else if (node.category == Opm::EclIO::SummaryNode::Category::Node)
-        st.update_group_var(node.wgname, node.keyword, value);
-
-    else
+    default:
         st.update(node.unique_key(), value);
+        break;
+    }
 }
 
 /*
@@ -2942,7 +3028,9 @@ internal_store(const SummaryState& st, const int report_step)
     }
 }
 
-Opm::PAvgCalculatorCollection Opm::out::Summary::SummaryImplementation::wbp_calculators(std::size_t report_step) const {
+Opm::PAvgCalculatorCollection
+Opm::out::Summary::SummaryImplementation::wbp_calculators(std::size_t report_step) const
+{
     if (this->wbp_wells.empty())
         return {};
 
@@ -2955,9 +3043,9 @@ Opm::PAvgCalculatorCollection Opm::out::Summary::SummaryImplementation::wbp_calc
                 calculators.add(well.pavg_calculator(this->grid_, porv));
         }
     }
+
     return calculators;
 }
-
 
 void
 Opm::out::Summary::SummaryImplementation::
@@ -3055,7 +3143,7 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
 
     // TIME
     {
-        const auto& kw = std::string("TIME");
+        const auto kw = std::string("TIME");
         makeKey(kw);
 
         const std::string& unit_string = es.getUnits().name(UnitSystem::measure::time);
@@ -3066,7 +3154,7 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
     }
 
     if (sumcfg.hasKeyword("DAY")) {
-        const auto& kw = std::string("DAY");
+        const auto kw = std::string("DAY");
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Day>(this->valueKeys_.back());
@@ -3075,7 +3163,7 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
     }
 
     if (sumcfg.hasKeyword("MONTH")) {
-        const auto& kw = std::string("MONTH");
+        const auto kw = std::string("MONTH");
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Month>(this->valueKeys_.back());
@@ -3084,7 +3172,7 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
     }
 
     if (sumcfg.hasKeyword("YEAR")) {
-        const auto& kw = std::string("YEAR");
+        const auto kw = std::string("YEAR");
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Year>(this->valueKeys_.back());
@@ -3094,7 +3182,7 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
 
     // YEARS
     {
-        const auto& kw = std::string("YEARS");
+        const auto kw = std::string("YEARS");
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Years>(this->valueKeys_.back());
@@ -3145,7 +3233,6 @@ configureSummaryInput(const EclipseState&  es,
         reportUnsupportedKeywords(std::move(unsuppkw));
 }
 
-
 /*
    These nodes are added to the summary evaluation list because they are
    requested by the UDQ system. In the case of well and group variables the code
@@ -3153,13 +3240,17 @@ configureSummaryInput(const EclipseState&  es,
    requested in the UDQ code.
 */
 
-std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keyword, const Opm::Schedule& sched) {
-    auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
-    auto category = Opm::parseKeywordCategory(keyword);
-    auto type = Opm::parseKeywordType(keyword);
+namespace {
+    std::vector<Opm::EclIO::SummaryNode>
+    make_default_nodes(const std::string& keyword,
+                       const Opm::Schedule& sched)
+    {
+        auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
+        auto category = Opm::parseKeywordCategory(keyword);
+        auto type = Opm::parseKeywordType(keyword);
 
-    switch (category) {
-    case Opm::EclIO::SummaryNode::Category::Field:
+        switch (category) {
+        case Opm::EclIO::SummaryNode::Category::Field:
         {
             Opm::EclIO::SummaryNode node;
             node.keyword = keyword;
@@ -3169,7 +3260,8 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
             nodes.push_back(node);
         }
         break;
-    case Opm::EclIO::SummaryNode::Category::Miscellaneous:
+
+        case Opm::EclIO::SummaryNode::Category::Miscellaneous:
         {
             Opm::EclIO::SummaryNode node;
             node.keyword = keyword;
@@ -3179,7 +3271,8 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
             nodes.push_back(node);
         }
         break;
-    case Opm::EclIO::SummaryNode::Category::Well:
+
+        case Opm::EclIO::SummaryNode::Category::Well:
         {
             for (const auto& well : sched.wellNames()) {
                 Opm::EclIO::SummaryNode node;
@@ -3192,7 +3285,8 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
             }
         }
         break;
-    case Opm::EclIO::SummaryNode::Category::Group:
+
+        case Opm::EclIO::SummaryNode::Category::Group:
         {
             for (const auto& group : sched.groupNames()) {
                 Opm::EclIO::SummaryNode node;
@@ -3205,16 +3299,20 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
             }
         }
         break;
-    default:
-        throw std::logic_error(fmt::format("make_default_nodes does not yet support: {}", keyword));
-    }
 
-    return nodes;
+        default:
+            throw std::logic_error {
+                fmt::format("make_default_nodes does not yet support: {}", keyword)
+            };
+        }
+
+        return nodes;
+    }
 }
 
-
-
-void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
+void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config,
+                                                            const Schedule& sched)
+{
     const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH"};
     auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
     std::unordered_set<std::string> summary_keys;
@@ -3233,27 +3331,30 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
     }
 
     for (const auto& node: nodes) {
-        // Handler already configured/requested through the normal SummaryConfig path.
+        // Handler already configured/requested through the normal
+        // SummaryConfig path.
         if (summary_config.hasSummaryKey(node.unique_key()))
             continue;
 
-        // Time related vectors are special cased in the valueKeys_ vector and must be checked explicitly.
+        // Time related vectors are special cased in the valueKeys_ vector
+        // and must be checked explicitly.
         if (time_vectors.count(node.keyword) > 0)
             continue;
 
-        // Handler already registered in the summary evaluator, in some other way.
-        if ( std::find(this->valueKeys_.begin(), this->valueKeys_.end(), node.unique_key()) != this->valueKeys_.end())
+        // Handler already registered in the summary evaluator, in some
+        // other way.
+        if (std::find(this->valueKeys_.begin(), this->valueKeys_.end(), node.unique_key()) != this->valueKeys_.end())
             continue;
 
         auto fun_pos = funs.find(node.keyword);
         if (fun_pos != funs.end()) {
-            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
+            this->extra_parameters.emplace(node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second));
             continue;
         }
 
         auto unit = single_values_units.find(node.keyword);
         if (unit != single_values_units.end()) {
-            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+            this->extra_parameters.emplace(node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
             continue;
         }
 
@@ -3263,7 +3364,9 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
         if (TimeService::valid_month(node.keyword))
             continue;
 
-        throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
+        throw std::logic_error {
+            fmt::format("Evaluation function for: {} not found ", node.keyword)
+        };
     }
 }
 
@@ -3280,7 +3383,9 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
 
         auto fcnPos = funs.find(node.keyword);
         if (fcnPos == funs.end())
-            throw std::logic_error(fmt::format("Evaluation function for:{} not found", node.keyword));
+            throw std::logic_error {
+                fmt::format("Evaluation function for:{} not found", node.keyword)
+            };
 
         auto eval = std::make_unique<
             Evaluator::FunctionRelation>(node, fcnPos->second);
@@ -3358,8 +3463,6 @@ createSmryStreamIfNecessary(const int report_step)
     }
 }
 
-
-
 namespace Opm { namespace out {
 
 Summary::Summary(const EclipseState&  es,
@@ -3383,16 +3486,15 @@ void Summary::eval(SummaryState&                      st,
                    const BlockValues&                 block_values,
                    const Opm::data::Aquifers&         aquifer_values) const
 {
-
-    /* Report_step is the one-based sequence number of the containing report.
-     * Report_step = 0 for the initial condition, before simulation starts.
-     * We typically don't get reports_step = 0 here.  When outputting
-     * separate summary files 'report_step' is the number that gets
-     * incorporated into the filename extension.
-     *
-     * Sim_step is the timestep which has been effective in the simulator,
-     * and as such is the value necessary to use when looking up active
-     * wells, groups, connections &c in the Schedule object. */
+    // Report_step is the one-based sequence number of the containing report.
+    // Report_step = 0 for the initial condition, before simulation starts.
+    // We typically don't get reports_step = 0 here.  When outputting
+    // separate summary files 'report_step' is the number that gets
+    // incorporated into the filename extension.
+    //
+    // Sim_step is the timestep which has been effective in the simulator,
+    // and as such is the value necessary to use when looking up active
+    // wells, groups, connections &c in the Schedule object.
     const auto sim_step = std::max( 0, report_step - 1 );
 
     this->pImpl_->eval(sim_step, secs_elapsed,
@@ -3401,10 +3503,11 @@ void Summary::eval(SummaryState&                      st,
                        region_values, block_values, aquifer_values, st);
 }
 
-PAvgCalculatorCollection Summary::wbp_calculators(std::size_t report_step) const {
+PAvgCalculatorCollection
+Summary::wbp_calculators(std::size_t report_step) const
+{
     return this->pImpl_->wbp_calculators(report_step);
 }
-
 
 void Summary::add_timestep(const SummaryState& st, const int report_step)
 {

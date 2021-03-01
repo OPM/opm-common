@@ -255,6 +255,9 @@ namespace Opm {
         double thp;
         double temperature;
         int control;
+
+        ::Opm::Well::Status dynamicStatus { Opm::Well::Status::OPEN };
+
         std::vector< Connection > connections;
         std::unordered_map<std::size_t, Segment> segments;
         CurrentControl current_control;
@@ -538,6 +541,12 @@ namespace Opm {
         buffer.write(this->thp);
         buffer.write(this->temperature);
         buffer.write(this->control);
+
+        {
+            const auto status = ::Opm::Well::Status2String(this->dynamicStatus);
+            buffer.write(status);
+        }
+
         unsigned int size = this->connections.size();
         buffer.write(size);
         for (const Connection& comp : this->connections)
@@ -620,6 +629,12 @@ namespace Opm {
         buffer.read(this->thp);
         buffer.read(this->temperature);
         buffer.read(this->control);
+
+        {
+            auto status = std::string{};
+            buffer.read(status);
+            this->dynamicStatus = ::Opm::Well::StatusFromString(status);
+        }
 
         // Connection information
         unsigned int size = 0.0; //this->connections.size();
