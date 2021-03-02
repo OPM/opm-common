@@ -84,6 +84,22 @@ FIPNUM
          self.assertEqual(112, es.grid().ny)
          self.assertEqual(22, es.grid().nz)
 
+    def test_parse_ignore_keyword(self):
+        deck_string = """
+FIPNUM
+  100*1 100*2 /
+
+KEYWORD
+  1 2 3 /
+        """
+
+        parse_context = ParseContext( )
+        parser = Parser()
+        parse_context.ignore_keyword("KEYWORD")
+        deck = parser.parse_string( deck_string, parse_context )
+        self.assertEqual(len(deck), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
 

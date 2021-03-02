@@ -16,6 +16,7 @@ void python::common::export_ParseContext(py::module& module) {
     py::class_< ParseContext >(module, "ParseContext" )
         .def(py::init<>())
         .def(py::init<const std::vector<std::pair<std::string, InputError::Action>>>())
+        .def( "ignore_keyword", &ParseContext::ignoreKeyword )
         .def( "update", ctx_update );
 
     py::enum_< InputError::Action >( module, "action" )
