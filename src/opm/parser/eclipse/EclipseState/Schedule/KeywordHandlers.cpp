@@ -45,6 +45,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
@@ -238,62 +239,70 @@ namespace {
 
     void Schedule::handleDRSDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> max(numPvtRegions);
+        std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
-            std::fill(max.begin(), max.end(), record.getItem("DRSDT_MAX").getSIDouble(0));
-            std::fill(options.begin(), options.end(), record.getItem("Option").get< std::string >(0));
+            const auto& max = record.getItem<ParserKeywords::DRSDT::DRSDT_MAX>().getSIDouble(0);
+            const auto& option = record.getItem<ParserKeywords::DRSDT::OPTION>().get< std::string >(0);
+            std::fill(maximums.begin(), maximums.end(), max);
+            std::fill(options.begin(), options.end(), option);
             auto& ovp = this->snapshots.back().oilvap();
-            OilVaporizationProperties::updateDRSDT(ovp, max, options);
+            OilVaporizationProperties::updateDRSDT(ovp, maximums, options);
         }
     }
 
     void Schedule::handleDRSDTCON(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> max(numPvtRegions);
+        std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
-            std::fill(max.begin(), max.end(), record.getItem("DRSDT_MAX").getSIDouble(0));
-            std::fill(options.begin(), options.end(), record.getItem("Option").get< std::string >(0));
+            const auto& max = record.getItem<ParserKeywords::DRSDTCON::DRSDT_MAX>().getSIDouble(0);
+            const auto& option = record.getItem<ParserKeywords::DRSDTCON::OPTION>().get< std::string >(0);
+            std::fill(maximums.begin(), maximums.end(), max);
+            std::fill(options.begin(), options.end(), option);
             auto& ovp = this->snapshots.back().oilvap();
-            OilVaporizationProperties::updateDRSDTCON(ovp, max, options);
+            OilVaporizationProperties::updateDRSDTCON(ovp, maximums, options);
         }
     }
 
     void Schedule::handleDRSDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> max(numPvtRegions);
+        std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         std::size_t pvtRegionIdx = 0;
         for (const auto& record : handlerContext.keyword) {
-            max[pvtRegionIdx] = record.getItem("DRSDT_MAX").getSIDouble(0);
-            options[pvtRegionIdx] = record.getItem("Option").get< std::string >(0);
+            const auto& max = record.getItem<ParserKeywords::DRSDTR::DRSDT_MAX>().getSIDouble(0);
+            const auto& option = record.getItem<ParserKeywords::DRSDTR::OPTION>().get< std::string >(0);
+            maximums[pvtRegionIdx] = max;
+            options[pvtRegionIdx] = option;
             pvtRegionIdx++;
         }
         auto& ovp = this->snapshots.back().oilvap();
-        OilVaporizationProperties::updateDRSDT(ovp, max, options);
+        OilVaporizationProperties::updateDRSDT(ovp, maximums, options);
     }
 
     void Schedule::handleDRVDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> max(numPvtRegions);
+        std::vector<double> maximums(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
-            std::fill(max.begin(), max.end(), record.getItem("DRVDT_MAX").getSIDouble(0));
+            const auto& max = record.getItem<ParserKeywords::DRVDTR::DRVDT_MAX>().getSIDouble(0);
+            std::fill(maximums.begin(), maximums.end(), max);
             auto& ovp = this->snapshots.back().oilvap();
-            OilVaporizationProperties::updateDRVDT(ovp, max);
+            OilVaporizationProperties::updateDRVDT(ovp, maximums);
         }
     }
 
     void Schedule::handleDRVDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::size_t pvtRegionIdx = 0;
-        std::vector<double> max(numPvtRegions);
+        std::vector<double> maximums(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
-            max[pvtRegionIdx] = record.getItem("DRVDT_MAX").getSIDouble(0);
+            const auto& max = record.getItem<ParserKeywords::DRVDTR::DRVDT_MAX>().getSIDouble(0);
+            maximums[pvtRegionIdx] = max;
             pvtRegionIdx++;
         }
         auto& ovp = this->snapshots.back().oilvap();
-        OilVaporizationProperties::updateDRVDT(ovp, max);
+        OilVaporizationProperties::updateDRVDT(ovp, maximums);
     }
 
     void Schedule::handleEXIT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
