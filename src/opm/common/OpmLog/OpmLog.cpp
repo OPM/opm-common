@@ -69,10 +69,19 @@ namespace Opm {
             m_logger->addMessage( messageFlag , message );
     }
 
+    void OpmLog::addMessage(int64_t messageFlag , const std::vector<std::string>& message_list) {
+        if (m_logger)
+            m_logger->addMessage( messageFlag , message_list );
+    }
 
     void OpmLog::addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::string& message) {
         if (m_logger)
             m_logger->addTaggedMessage( messageFlag, tag, message );
+    }
+
+    void OpmLog::addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::vector<std::string>& message_list) {
+        if (m_logger)
+            m_logger->addTaggedMessage( messageFlag, tag, message_list );
     }
 
 
@@ -105,7 +114,7 @@ namespace Opm {
         addMessage(Log::MessageType::Bug, message);
     }
 
-    
+
     void OpmLog::debug(const std::string& message)
     {
         addMessage(Log::MessageType::Debug, message);
@@ -117,6 +126,46 @@ namespace Opm {
         addMessage(Log::MessageType::Note, message);
     }
 
+    void OpmLog::info(const std::vector<std::string>& message_list)
+    {
+        addMessage(Log::MessageType::Info, message_list);
+    }
+
+
+    void OpmLog::warning(const std::vector<std::string>& message_list)
+    {
+        addMessage(Log::MessageType::Warning, message_list);
+    }
+
+
+    void OpmLog::problem(const std::vector<std::string>& message_list)
+    {
+        addMessage(Log::MessageType::Problem, message_list);
+    }
+
+
+    void OpmLog::error(const std::vector<std::string>& message_list)
+    {
+        addMessage(Log::MessageType::Error, message_list);
+    }
+
+
+    void OpmLog::bug(const std::vector<std::string>& message_list)
+    {
+        addMessage(Log::MessageType::Bug, message_list);
+    }
+
+
+    void OpmLog::debug(const std::vector<std::string>& message_list)
+    {
+        addMessage(Log::MessageType::Debug, message_list);
+    }
+
+
+    void OpmLog::note(const std::vector<std::string>& message_list)
+    {
+        addMessage(Log::MessageType::Note, message_list);
+    }
 
 
     void OpmLog::info(const std::string& tag, const std::string& message)
@@ -162,6 +211,47 @@ namespace Opm {
     }
 
 
+    void OpmLog::info(const std::string& tag, const std::vector<std::string>& message_list)
+    {
+        addTaggedMessage(Log::MessageType::Info, tag, message_list);
+    }
+
+
+    void OpmLog::warning(const std::string& tag, const std::vector<std::string>& message_list)
+    {
+        addTaggedMessage(Log::MessageType::Warning, tag, message_list);
+    }
+
+
+    void OpmLog::problem(const std::string& tag, const std::vector<std::string>& message_list)
+    {
+        addTaggedMessage(Log::MessageType::Problem, tag, message_list);
+    }
+
+
+    void OpmLog::error(const std::string& tag, const std::vector<std::string>& message_list)
+    {
+        addTaggedMessage(Log::MessageType::Error, tag, message_list);
+    }
+
+
+    void OpmLog::bug(const std::string& tag, const std::vector<std::string>& message_list)
+    {
+        addTaggedMessage(Log::MessageType::Bug, tag, message_list);
+    }
+
+
+    void OpmLog::debug(const std::string& tag, const std::vector<std::string>& message_list)
+    {
+        addTaggedMessage(Log::MessageType::Debug, tag, message_list);
+    }
+
+
+
+    void OpmLog::note(const std::string& tag, const std::vector<std::string>& message_list)
+    {
+        addTaggedMessage(Log::MessageType::Note, tag, message_list);
+    }
 
 
     bool OpmLog::enabledMessageType( int64_t messageType ) {

@@ -20,8 +20,9 @@
 #ifndef OPMLOG_HPP
 #define OPMLOG_HPP
 
-#include <memory>
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 #include <opm/common/OpmLog/Logger.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
@@ -40,7 +41,9 @@ class OpmLog {
 
 public:
     static void addMessage(int64_t messageFlag , const std::string& message);
+    static void addMessage(int64_t messageFlag , const std::vector<std::string>& message_list);
     static void addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::string& message);
+    static void addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::vector<std::string>& message_list);
 
     static void info(const std::string& message);
     static void warning(const std::string& message);
@@ -50,6 +53,14 @@ public:
     static void debug(const std::string& message);
     static void note(const std::string& message);
 
+    static void info(const std::vector<std::string>& message_list);
+    static void warning(const std::vector<std::string>& message_list);
+    static void error(const std::vector<std::string>& message_list);
+    static void problem(const std::vector<std::string>& message_list);
+    static void bug(const std::vector<std::string>& message_list);
+    static void debug(const std::vector<std::string>& message_list);
+    static void note(const std::vector<std::string>& message_list);
+
     static void info(const std::string& tag, const std::string& message);
     static void warning(const std::string& tag, const std::string& message);
     static void error(const std::string& tag, const std::string& message);
@@ -57,6 +68,14 @@ public:
     static void bug(const std::string& tag, const std::string& message);
     static void debug(const std::string& tag, const std::string& message);
     static void note(const std::string& tag, const std::string& message);
+
+    static void info(const std::string& tag, const std::vector<std::string>& message_list);
+    static void warning(const std::string& tag, const std::vector<std::string>& message_list);
+    static void error(const std::string& tag, const std::vector<std::string>& message_list);
+    static void problem(const std::string& tag, const std::vector<std::string>& message_list);
+    static void bug(const std::string& tag, const std::vector<std::string>& message_list);
+    static void debug(const std::string& tag, const std::vector<std::string>& message_list);
+    static void note(const std::string& tag, const std::vector<std::string>& message_list);
 
     static bool hasBackend( const std::string& backendName );
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);

@@ -59,6 +59,17 @@ void StreamLog::addMessageUnconditionally(int64_t messageType, const std::string
     }
 }
 
+void StreamLog::addMessageUnconditionally(int64_t messageType, std::vector<std::string> message_list)
+{
+    this->formatMessage(messageType, message_list);
+    for (const auto& msg : message_list)
+        (*m_ostream) << msg << std::endl;
+
+    if (m_ofstream.is_open()) {
+        m_ofstream.flush();
+    }
+}
+
 
 StreamLog::~StreamLog() {
     close();

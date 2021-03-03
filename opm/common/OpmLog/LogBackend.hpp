@@ -55,6 +55,15 @@ namespace Opm
                               const std::string& messageTag,
                               const std::string& message);
 
+        /// Add a multiline message to the backend if accepted by the message limiter.
+        void addMessage(int64_t messageFlag, const std::vector<std::string>& message_list);
+
+        /// Add a tagged multiline message to the backend if accepted by the message limiter.
+        void addTaggedMessage(int64_t messageFlag,
+                              const std::string& messageTag,
+                              const std::vector<std::string>& message_list);
+
+        /// The message mask types are specified in the
         /// The message mask types are specified in the
         /// Opm::Log::MessageType namespace, in file LogUtils.hpp.
         int64_t getMask() const;
@@ -67,13 +76,18 @@ namespace Opm
         virtual void addMessageUnconditionally(int64_t messageFlag,
                                                const std::string& message) = 0;
 
+        virtual void addMessageUnconditionally(int64_t messageFlag,
+                                               std::vector<std::string> message_list) = 0;
+
         /// Return decorated version of message depending on configureDecoration() arguments.
         std::string formatMessage(int64_t messageFlag, const std::string& message);
+        void formatMessage(int64_t messageFlag, std::vector<std::string>& message_list) const;
 
     private:
         /// Return true if all bits of messageFlag are also set in our mask,
         /// and the message limiter returns a PrintMessage response.
         bool includeMessage(int64_t messageFlag, const std::string& messageTag);
+        bool includeMessage(int64_t messageFlag) const;
 
         int64_t m_mask;
         std::shared_ptr<MessageFormatterInterface> m_formatter;

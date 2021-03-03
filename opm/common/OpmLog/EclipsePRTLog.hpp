@@ -55,6 +55,7 @@ public:
 
 protected:
     void addMessageUnconditionally(int64_t messageType, const std::string& message) override;
+    void addMessageUnconditionally(int64_t messageType, std::vector<std::string> message_list) override;
 
 private:
     std::map<int64_t, size_t> m_count;

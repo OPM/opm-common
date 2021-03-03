@@ -50,9 +50,9 @@ BOOST_AUTO_TEST_CASE(DoLogging) {
 BOOST_AUTO_TEST_CASE(Test_Format) {
     BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage(KeywordLocation("Keyword", "/path/to/file" , 100) , "There is an error here?"));
 
-    BOOST_CHECK_EQUAL( "\nError: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
+    BOOST_CHECK_EQUAL( "\nError  : This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
     BOOST_CHECK_EQUAL( "\nWarning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
-    BOOST_CHECK_EQUAL( "Info: This is the info" ,       Log::prefixMessage(Log::MessageType::Info , "This is the info"));
+    BOOST_CHECK_EQUAL( "Info   : This is the info" ,       Log::prefixMessage(Log::MessageType::Info , "This is the info"));
 }
 
 
@@ -128,6 +128,8 @@ public:
         else
             m_specialMessages += 1;
     }
+
+    void addMessageUnconditionally(int64_t , const std::vector<std::string> /* message_list */) override {}
 
     int m_defaultMessages;
     int m_specialMessages;
@@ -253,12 +255,12 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
 
     // fileMessage
     BOOST_CHECK_EQUAL(fileMessage(KeywordLocation("Keyword", "foo/bar", 1), "message"), "message\nIn file foo/bar, line 1\n");
-    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, KeywordLocation("Keyword", "foo/bar", 1), "message"), "\nError: message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, KeywordLocation("Keyword", "foo/bar", 1), "message"), "\nError  : message\nIn file foo/bar, line 1\n");
 
     // prefixMessage
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "\nError: message");
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "Info: message");
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "Note: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "\nError  : message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "Info   : message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "Note   : message");
 
     // colorCode Message
     BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Info, "message"), "message");
@@ -412,7 +414,7 @@ BOOST_AUTO_TEST_CASE(TestFormat)
 
     const std::string expected2 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Info, "Info: Info") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Info, "Info   : Info") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n";
 
     const std::string expected3 = Log::prefixMessage(Log::MessageType::Warning, "Warning") + "\n"

@@ -20,9 +20,10 @@
 #ifndef STREAMLOG_H
 #define STREAMLOG_H
 
+#include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <cstdint>
+#include <vector>
 
 #include <opm/common/OpmLog/LogBackend.hpp>
 
@@ -37,6 +38,7 @@ public:
 
 protected:
     virtual void addMessageUnconditionally(int64_t messageType, const std::string& message) override;
+    virtual void addMessageUnconditionally(int64_t messageType, std::vector<std::string> message_list) override;
 
 private:
     void close();

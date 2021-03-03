@@ -41,10 +41,10 @@ namespace Opm {
         m_limiter = limiter;
     }
 
-    void LogBackend::addMessage(int64_t messageFlag, const std::string& message)
+    void LogBackend::addMessage(int64_t messageType, const std::string& message)
     {
-        // Forward the call to the tagged version.
-        addTaggedMessage(messageFlag, "", message);
+        if (includeMessage(messageType))
+            addMessageUnconditionally(messageType, message);
     }
 
     void LogBackend::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message) {
@@ -53,18 +53,31 @@ namespace Opm {
         }
     }
 
+    void LogBackend::addMessage(int64_t messageType, const std::vector<std::string>& message_list)
+    {
+        if (includeMessage( messageType))
+            addMessageUnconditionally(messageType, message_list);
+    }
+
+    void LogBackend::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::vector<std::string>& message_list) {
+        if (includeMessage( messageType, messageTag )) {
+            addMessageUnconditionally(messageType, message_list);
+        }
+    }
+
     int64_t LogBackend::getMask() const
     {
         return m_mask;
     }
 
+    bool LogBackend::includeMessage(int64_t messageFlag) const {
+        return ((messageFlag & this->m_mask) == messageFlag) && (messageFlag > 0);
+    }
+
     bool LogBackend::includeMessage(int64_t messageFlag, const std::string& messageTag)
     {
-        // Check mask.
-        const bool included = ((messageFlag & m_mask) == messageFlag) && (messageFlag > 0);
-        if (!included) {
+        if (!this->includeMessage(messageFlag))
             return false;
-        }
 
         // Use the message limiter (if any).
         MessageLimiter::Response res = m_limiter
@@ -94,5 +107,9 @@ namespace Opm {
         }
     }
 
+    void LogBackend::formatMessage(int64_t messageFlag, std::vector<std::string>& message_list) const {
+        if (m_formatter)
+            return m_formatter->format(messageFlag, message_list);
+    }
 
 }
