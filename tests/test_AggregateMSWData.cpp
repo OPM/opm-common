@@ -362,33 +362,33 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         const auto& iLBr = amswd.getILBr();
         //PROD
         BOOST_CHECK_EQUAL(iLBr[start + 0] ,  0); // PROD-branch   1, outlet segment
-        BOOST_CHECK_EQUAL(iLBr[start + 1] , 12); // PROD-branch   1, No of segments in branch
+        BOOST_CHECK_EQUAL(iLBr[start + 1] ,  2); // PROD-branch   1, No of segments in branch
         BOOST_CHECK_EQUAL(iLBr[start + 2] ,  1); // PROD-branch   1, first segment
-        BOOST_CHECK_EQUAL(iLBr[start + 3] , 12); // PROD-branch   1, last segment
+        BOOST_CHECK_EQUAL(iLBr[start + 3] ,  2); // PROD-branch   1, last segment
         BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // PROD-branch   1, branch no - 1
         //PROD
         start =  1*ih[VI::intehead::NILBRZ];
-        BOOST_CHECK_EQUAL(iLBr[start + 0] ,  3); // PROD-branch   2, outlet segment
+        BOOST_CHECK_EQUAL(iLBr[start + 0] ,  2); // PROD-branch   2, outlet segment
         BOOST_CHECK_EQUAL(iLBr[start + 1] ,  5); // PROD-branch   2, No of segments in branch
-        BOOST_CHECK_EQUAL(iLBr[start + 2] , 13); // PROD-branch   2, first segment
-        BOOST_CHECK_EQUAL(iLBr[start + 3] , 17); // PROD-branch   2, last segment
+        BOOST_CHECK_EQUAL(iLBr[start + 2] ,  3); // PROD-branch   2, first segment
+        BOOST_CHECK_EQUAL(iLBr[start + 3] ,  7); // PROD-branch   2, last segment
         BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // PROD-branch   2, branch no - 1
 
 
         start = ih[VI::intehead::NILBRZ]*ih[VI::intehead::NLBRMX] + 0*ih[VI::intehead::NILBRZ];
         //WINJ
         BOOST_CHECK_EQUAL(iLBr[start + 0] ,  0); // WINJ-branch   1, outlet segment
-        BOOST_CHECK_EQUAL(iLBr[start + 1] , 14); // WINJ-branch   1, No of segments in branch
+        BOOST_CHECK_EQUAL(iLBr[start + 1] , 13); // WINJ-branch   1, No of segments in branch
         BOOST_CHECK_EQUAL(iLBr[start + 2] ,  1); // WINJ-branch   1, first segment
-        BOOST_CHECK_EQUAL(iLBr[start + 3] , 14); // WINJ-branch   1, last segment
+        BOOST_CHECK_EQUAL(iLBr[start + 3] , 13); // WINJ-branch   1, last segment
         BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // WINJ-branch   1, branch no - 1
 
         start = ih[VI::intehead::NILBRZ]*ih[VI::intehead::NLBRMX] + 1*ih[VI::intehead::NILBRZ];
         //WINJ
-        BOOST_CHECK_EQUAL(iLBr[start + 0] , 14); // WINJ-branch   2, outlet segment
+        BOOST_CHECK_EQUAL(iLBr[start + 0] , 13); // WINJ-branch   2, outlet segment
         BOOST_CHECK_EQUAL(iLBr[start + 1] ,  5); // WINJ-branch   2, No of segments in branch
-        BOOST_CHECK_EQUAL(iLBr[start + 2] , 15); // WINJ-branch   2, first segment
-        BOOST_CHECK_EQUAL(iLBr[start + 3] , 19); // WINJ-branch   2, last segment
+        BOOST_CHECK_EQUAL(iLBr[start + 2] , 14); // WINJ-branch   2, first segment
+        BOOST_CHECK_EQUAL(iLBr[start + 3] , 18); // WINJ-branch   2, last segment
         BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // WINJ-branch   2, branch no - 1
 
 
@@ -400,11 +400,11 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 
         const auto& iLBs = amswd.getILBs();
         //PROD
-        BOOST_CHECK_EQUAL(iLBs[start + 0] ,  13); // PROD-branch   2, first segment in branch
+        BOOST_CHECK_EQUAL(iLBs[start + 0] ,   3); // PROD-branch   2, first segment in branch
 
         start = ih[VI::intehead::NLBRMX] + 0*ih[VI::intehead::NLBRMX];
         //WINJ
-        BOOST_CHECK_EQUAL(iLBs[start + 0] ,  15); // WINJ-branch   2, first segment in branch
+        BOOST_CHECK_EQUAL(iLBs[start + 0] ,  14); // WINJ-branch   2, first segment in branch
 
     }
 }
@@ -444,20 +444,20 @@ BOOST_AUTO_TEST_CASE(MSW_AICD) {
 // ISEG (PROD)
     {
         const auto& iSeg = amswd.getISeg();
-        auto start = 17*ih[VI::intehead::NISEGZ];
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 18,
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   1); // PROD-segment 18,
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 18,
+        auto start = 7*ih[VI::intehead::NISEGZ];
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 8,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   1); // PROD-segment 8,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 8,
 
-        start = 18*ih[VI::intehead::NISEGZ];
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 19,
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   1); // PROD-segment 19,
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  1); // PROD-segment 19,
+        start = 8*ih[VI::intehead::NISEGZ];
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 9,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   1); // PROD-segment 9,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 9,
 
-        start = 19*ih[VI::intehead::NISEGZ];
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 20,
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   0); // PROD-segment 20,
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 20,
+        start = 9*ih[VI::intehead::NISEGZ];
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 10,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   0); // PROD-segment 10,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 10,
 
 
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(MSW_AICD) {
         // well no 1 - PROD
         const auto& rseg = amswd.getRSeg();
 
-        int segNo = 18;
+        int segNo = 8;
         auto  i0 = (segNo-1)*ih[VI::intehead::NRSEGZ];
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::DeviceBaseStrength], 3.260E-05  , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::ScalingFactor], 0.06391  , 1.0e-10);
@@ -488,10 +488,10 @@ BOOST_AUTO_TEST_CASE(MSW_AICD) {
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionWaterViscosityExponent], 1. , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionGasViscosityExponent], 1.  , 1.0e-10);
 
-        segNo = 20;
+        segNo = 10;
         i0 = (segNo-1)*ih[VI::intehead::NRSEGZ];
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::DeviceBaseStrength], 3.260E-05  , 1.0e-10);
-        BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::ScalingFactor], 0.007538 , 1.0e-10);
+        BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::ScalingFactor], 0.000876 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::CalibrFluidDensity], 63.678 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::CalibrFluidViscosity], 0.48 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::CriticalWaterFraction], 0.53 , 1.0e-10);
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(MSW_AICD) {
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::FlowRateExponent], 2.1 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::ViscFuncExponent], 1.2  , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::MaxValidFlowRate], 9.876e+06  , 1.0e-10);
-        BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::ICDLength], 0.15076 , 1.0e-10);
+        BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::ICDLength], 0.0876 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionOilDensityExponent],  0.92 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionWaterDensityExponent], 0.89  , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionGasDensityExponent], 0.91 , 1.0e-10);
