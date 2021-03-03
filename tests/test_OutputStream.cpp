@@ -27,6 +27,7 @@
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 
@@ -1777,8 +1778,6 @@ namespace {
     start(const int year, const int month, const int day,
           const int hour, const int minute, const int second)
     {
-        using std::chrono::system_clock;
-
         auto timepoint = std::tm {};
 
         timepoint.tm_sec  = second;
@@ -1788,7 +1787,7 @@ namespace {
         timepoint.tm_mon  = month - 1;
         timepoint.tm_year = year - 1900;
 
-        return system_clock::from_time_t(makeUTCTime(timepoint));
+        return Opm::TimeService::from_time_t(makeUTCTime(timepoint));
     }
 
     Opm::EclIO::OutputStream::SummarySpecification::RestartSpecification

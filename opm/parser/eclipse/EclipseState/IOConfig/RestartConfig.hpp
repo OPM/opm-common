@@ -328,9 +328,9 @@ namespace Opm {
         RestartConfig() = default;
 
         template<typename T>
-        RestartConfig( const TimeMap& time_map, const Deck&, const ParseContext& parseContext, T&& errors );
-        RestartConfig( const TimeMap& time_map, const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
-        RestartConfig( const TimeMap& time_map, const Deck& );
+        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, T&& errors );
+        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, ErrorGuard& errors );
+        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart);
 
         static RestartConfig serializeObject();
 

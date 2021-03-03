@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
 
     auto deck = Parser().parseString( data);
     IOConfig ioConfig( deck );
-    RestartConfig rstConfig( TimeMap(deck), deck);
+    RestartConfig rstConfig( deck, std::make_pair(std::time_t{0}, std::size_t{0}));
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );

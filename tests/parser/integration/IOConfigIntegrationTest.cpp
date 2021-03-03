@@ -40,8 +40,8 @@ inline std::string path_prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
 
-inline void verifyRestartConfig( const TimeMap& tm, const RestartConfig& rst, std::vector<std::tuple<int , bool, boost::gregorian::date>>& rptConfig) {
-
+inline void verifyRestartConfig( const Schedule& sched, std::vector<std::tuple<int , bool, boost::gregorian::date>>& rptConfig) {
+    const auto& rst = sched.restart();
     for (auto rptrst : rptConfig) {
         int report_step                    = std::get<0>(rptrst);
         bool save                          = std::get<1>(rptrst);
@@ -49,7 +49,7 @@ inline void verifyRestartConfig( const TimeMap& tm, const RestartConfig& rst, st
 
         BOOST_CHECK_EQUAL( save, rst.getWriteRestartFile( report_step ) );
         if (save) {
-            std::time_t t = tm[report_step];
+            std::time_t t = sched.simTime(report_step);
             boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
             boost::posix_time::ptime report_date_ptime(report_date);
             boost::posix_time::time_duration::sec_type duration = (report_date_ptime - epoch).total_seconds();
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     EclipseState state(deck);
     Schedule schedule(deck, state, python);
 
-    verifyRestartConfig(schedule.getTimeMap(), schedule.restart(), rptConfig);
+    verifyRestartConfig(schedule, rptConfig);
 }
 
 
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     EclipseState state( deck);
     Schedule schedule(deck, state, python);
     const auto& rstConfig = schedule.restart();
-    verifyRestartConfig(schedule.getTimeMap(), rstConfig, rptConfig);
+    verifyRestartConfig(schedule, rptConfig);
 
     BOOST_CHECK_EQUAL( rstConfig.getFirstRestartStep() , 0 );
 }

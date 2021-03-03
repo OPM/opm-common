@@ -351,7 +351,7 @@ namespace {
         auto node_names = std::vector<std::string>{};
         auto names = std::unordered_set<std::string>{};
 
-        const auto nstep = sched.getTimeMap().numTimesteps();
+        const auto nstep = sched.size() - 1;
         for (auto step = 0*nstep; step < nstep; ++step) {
             const auto& nodes = sched[step].network.get().node_names();
             names.insert(nodes.begin(), nodes.end());
@@ -1012,7 +1012,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             return;
         }
 
-        const auto last_timestep = schedule.getTimeMap().last();
+        const auto last_timestep = schedule.size() - 1;
 
         if (keyword.size() > 0) {
             // Keyword with explicit records.

@@ -9,7 +9,7 @@ class TestSummaryState(unittest.TestCase):
         pass
 
     def test_create(self):
-        st = opm.io.sim.SummaryState(datetime.datetime.now())
+        st = opm.io.sim.SummaryState(int(datetime.datetime.now().timestamp()))
         st.update("FOPT", 100)
         self.assertEqual(st["FOPT"], 100)
         self.assertTrue("FOPT" in st)

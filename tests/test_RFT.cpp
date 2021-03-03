@@ -60,6 +60,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 using namespace Opm;
 
@@ -240,7 +241,7 @@ namespace {
         tp.tm_mon  = std::get<1>(date) -    1; // 0..11
         tp.tm_mday = std::get<2>(date);        // 1..31
 
-        return ::Opm::RestartIO::makeUTCTime(tp);
+        return Opm::TimeService::makeUTCTime(tp);
     }
 } // Anonymous namespace
 
@@ -276,7 +277,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto start_time = schedule.posixStartTime();
         const auto step_time  = timeStamp(::Opm::EclIO::ERft::RftDate{ 2008, 10, 10 });
 
-        SummaryState st(std::chrono::system_clock::now());
+        SummaryState st(TimeService::now());
         Action::State action_state;
         UDQState udq_state(1234);
 
@@ -397,17 +398,15 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
         Schedule schedule(deck, eclipseState, python);
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), eclipseState.aquifer() );
-        SummaryState st(std::chrono::system_clock::now());
+        SummaryState st(Opm::TimeService::now());
         Action::State action_state;
         UDQState udq_state(10);
 
         const auto  start_time = schedule.posixStartTime();
-        const auto& time_map   = schedule.getTimeMap( );
-
         for (int counter = 0; counter < 2; counter++) {
             EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
-            for (size_t step = 0; step < time_map.size(); step++) {
-                const auto step_time = time_map[step];
+            for (size_t step = 0; step < schedule.size(); step++) {
+                const auto step_time = schedule.simTime(step);
 
                 data::Rates r1, r2;
                 r1.set( data::Rates::opt::wat, 4.11 );

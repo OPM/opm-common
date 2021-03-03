@@ -30,6 +30,7 @@
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
@@ -392,7 +393,7 @@ TSTEP            -- 9
 
    Opm::SummaryState sim_state()
     {
-        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now()};
 
         state.update_well_var("OP_1", "WOPR" ,    1.0);
         state.update_well_var("OP_1", "WWPR" ,    2.0);
@@ -1173,7 +1174,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     // Report Step 2: 2011-01-20 --> 2013-06-15
     const auto rptStep = std::size_t{2};
     const auto sim_step = rptStep - 1;
-    Opm::SummaryState sumState(std::chrono::system_clock::now());
+    Opm::SummaryState sumState(Opm::TimeService::now());
     const auto xw   = well_rates_1();
     Opm::Action::State action_state;
 

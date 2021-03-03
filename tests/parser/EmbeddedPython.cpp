@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 using namespace Opm;
 
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
     auto ecl_state = EclipseState(deck);
     auto schedule = Schedule(deck, ecl_state, python);
 
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     const auto& pyaction_kw = deck.getKeyword<ParserKeywords::PYACTION>(0);
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
     Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));

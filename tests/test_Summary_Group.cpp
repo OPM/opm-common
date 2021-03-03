@@ -49,6 +49,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
@@ -256,7 +257,7 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     cfg.ta.makeSubDir( "PATH" );
     cfg.name = "PATH/CASE";
 
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
     writer.eval(st, 0, 0*day, cfg.wells, cfg.grp_nwrk, {}, {}, {}, {});

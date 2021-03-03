@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
@@ -260,15 +261,15 @@ namespace Opm {
 
 
         ScheduleState() = default;
-        explicit ScheduleState(const std::chrono::system_clock::time_point& start_time);
-        ScheduleState(const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time);
-        ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time);
-        ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time);
+        explicit ScheduleState(const time_point& start_time);
+        ScheduleState(const time_point& start_time, const time_point& end_time);
+        ScheduleState(const ScheduleState& src, const time_point& start_time);
+        ScheduleState(const ScheduleState& src, const time_point& start_time, const time_point& end_time);
 
 
-        std::chrono::system_clock::time_point start_time() const;
-        std::chrono::system_clock::time_point end_time() const;
-        ScheduleState next(const std::chrono::system_clock::time_point& next_start);
+        time_point start_time() const;
+        time_point end_time() const;
+        ScheduleState next(const time_point& next_start);
 
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializeObject();
@@ -436,8 +437,8 @@ namespace Opm {
 
 
     private:
-        std::chrono::system_clock::time_point m_start_time;
-        std::optional<std::chrono::system_clock::time_point> m_end_time;
+        time_point m_start_time;
+        std::optional<time_point> m_end_time;
 
         Tuning m_tuning;
         int m_nupcol;

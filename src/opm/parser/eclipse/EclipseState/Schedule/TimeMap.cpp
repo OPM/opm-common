@@ -165,10 +165,6 @@ struct TimeMapContext {
     }
 
 
-    size_t TimeMap::numTimesteps() const {
-        return m_timeList.size() - 1;
-    }
-
 
     std::time_t TimeMap::getStartTime(size_t tStepIdx) const {
         return this->operator[](tStepIdx);
@@ -235,10 +231,6 @@ struct TimeMapContext {
         return m_timeList.size();
     }
 
-    size_t TimeMap::last() const {
-        return this->numTimesteps();
-    }
-
     const std::map<std::string , int>& TimeMap::eclipseMonthIndices() {
         return month_indices;
     }
@@ -291,7 +283,7 @@ struct TimeMapContext {
 
     double TimeMap::getTimeStepLength(size_t tStepIdx) const
     {
-        assert(tStepIdx < numTimesteps());
+        assert(tStepIdx < (this->size() - 1));
 
         return std::difftime(this->m_timeList[tStepIdx + 1],
                              this->m_timeList[tStepIdx + 0]);
@@ -437,14 +429,6 @@ struct TimeMapContext {
 
     std::time_t TimeMap::forward(std::time_t t, int64_t hours, int64_t minutes, int64_t seconds) {
         return t + seconds + minutes * 60 + hours * 3600;
-    }
-
-    std::size_t TimeMap::restart_offset() const {
-        return this->m_restart_offset;
-    }
-
-    std::time_t TimeMap::restart_time() const {
-        return this->m_restart_time;
     }
 
 

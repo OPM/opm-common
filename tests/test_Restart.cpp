@@ -223,7 +223,7 @@ data::Solution mkSolution( int numCells ) {
 
 Opm::SummaryState sim_state()
 {
-    auto state = Opm::SummaryState{std::chrono::system_clock::now()};
+    auto state = Opm::SummaryState{TimeService::now()};
     state.update_well_var("OP_1", "WOPR", 1.0);
     state.update_well_var("OP_1", "WWPR", 2.0);
     state.update_well_var("OP_1", "WGPR", 3.0);
@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     test_area.copyIn("RESTART_SIM.DATA");
 
     Setup base_setup("BASE_SIM.DATA");
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     Action::State action_state;
     UDQState udq_state(19);
     auto state1 = first_sim( base_setup , action_state, st, udq_state, false );
@@ -589,7 +589,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     test_area.copyIn("RESTART_SIM.DATA");
     test_area.copyIn("BASE_SIM.DATA");
     Setup base_setup("BASE_SIM.DATA");
-    SummaryState st(std::chrono::system_clock::now());
+    SummaryState st(TimeService::now());
     Action::State action_state;
     UDQState udq_state(1);
 
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto groups = mkGroups();
-        Opm::SummaryState sumState(std::chrono::system_clock::now());
+        Opm::SummaryState sumState(TimeService::now());
         Opm::Action::State action_state;
         Opm::UDQState udq_state(19);
 
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         const auto& units = setup.es.getUnits();
         {
             RestartValue restart_value(cells, wells, groups);
-            SummaryState st(std::chrono::system_clock::now());
+            SummaryState st(TimeService::now());
             const auto sumState = sim_state();
 
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
@@ -878,7 +878,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     }
 
     Action::State action_state;
-    SummaryState rstSumState(std::chrono::system_clock::now());
+    SummaryState rstSumState(TimeService::now());
     RestartIO::load(OS::outputFileName(rset, "UNRST"), seqnum, action_state, rstSumState,
                     /* solution_keys = */ {
                                            RestartKey("SWAT", UnitSystem::measure::identity),
@@ -1011,8 +1011,8 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     test_area.copyIn("UDQ_RESTART.DATA");
 
     Setup base_setup("UDQ_BASE.DATA");
-    SummaryState st1(std::chrono::system_clock::now());
-    SummaryState st2(std::chrono::system_clock::now());
+    SummaryState st1(TimeService::now());
+    SummaryState st2(TimeService::now());
     Action::State action_state;
     UDQState udq_state(1);
     auto state1 = first_sim( base_setup , action_state, st1, udq_state, false );

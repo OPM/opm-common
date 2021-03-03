@@ -28,6 +28,8 @@
 #include <set>
 #include <vector>
 
+#include <opm/common/utility/TimeService.hpp>
+
 namespace Opm{
 
 
@@ -68,7 +70,10 @@ class UDQSet;
 class SummaryState {
 public:
     typedef std::unordered_map<std::string, double>::const_iterator const_iterator;
-    explicit SummaryState(std::chrono::system_clock::time_point sim_start_arg);
+    explicit SummaryState(time_point sim_start_arg);
+
+    // The std::time_t constructor is only for export to Python
+    explicit SummaryState(std::time_t sim_start_arg);
 
     /*
       The set() function has to be retained temporarily to support updating of
@@ -112,7 +117,7 @@ public:
     std::size_t size() const;
     bool operator==(const SummaryState& other) const;
 private:
-    std::chrono::system_clock::time_point sim_start;
+    time_point sim_start;
     double elapsed = 0;
     std::unordered_map<std::string,double> values;
 

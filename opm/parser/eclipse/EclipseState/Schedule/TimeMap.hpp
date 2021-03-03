@@ -48,12 +48,8 @@ namespace Opm {
         static TimeMap serializeObject();
 
         size_t size() const;
-        size_t last() const;
-        size_t numTimesteps() const;
         double getTotalTime() const;
         double seconds(size_t timeStep) const;
-        std::size_t restart_offset() const;
-        std::time_t restart_time() const;
 
         std::time_t operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.

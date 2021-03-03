@@ -28,6 +28,7 @@
 #include <stdint.h>
 
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/SummaryNode.hpp>
 
 namespace Opm { namespace EclIO {
@@ -48,18 +49,18 @@ public:
 
     const std::vector<float>& get(const std::string& name) const;
     const std::vector<float>& get(const SummaryNode& node) const;
-    std::vector<std::chrono::system_clock::time_point> dates() const;
+    std::vector<time_point> dates() const;
 
     std::vector<float> get_at_rstep(const std::string& name) const;
     std::vector<float> get_at_rstep(const SummaryNode& node) const;
-    std::vector<std::chrono::system_clock::time_point> dates_at_rstep() const;
+    std::vector<time_point> dates_at_rstep() const;
 
     void LoadData(const std::vector<std::string>& vectList) const;
     void LoadData() const;
 
     bool make_lodsmry_file();
 
-    std::chrono::system_clock::time_point startdate() const { return startdat; }
+    time_point startdate() const { return startdat; }
 
     const std::vector<std::string>& keywordList() const;
     std::vector<std::string> keywordList(const std::string& pattern) const;
@@ -101,7 +102,7 @@ private:
     std::vector<SummaryNode> summaryNodes;
     std::unordered_map<std::string, std::string> kwunits;
 
-    std::chrono::system_clock::time_point startdat;
+    time_point startdat;
 
     std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
 

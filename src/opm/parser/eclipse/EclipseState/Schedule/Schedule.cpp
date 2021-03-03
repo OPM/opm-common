@@ -63,7 +63,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/Node.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
@@ -110,12 +109,12 @@ namespace {
                         const RestartIO::RstState * rst)
     try :
         m_static( python, deck, runspec ),
-        m_sched_deck(deck, restart_info(rst) ),
-        m_timeMap( deck , restart_info( rst )),
-        restart_config(m_timeMap, deck, parseContext, errors)
+        m_restart_info( restart_info(rst)),
+        m_sched_deck(deck, m_restart_info ),
+        restart_config(deck, m_restart_info, parseContext, errors)
     {
         if (rst) {
-            auto restart_step = rst->header.restart_info().second;
+            auto restart_step = this->m_restart_info.second;
             this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, nullptr, &grid, &fp);
             this->load_rst(*rst, grid, fp);
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
@@ -209,7 +208,6 @@ namespace {
         Schedule result;
 
         result.m_static = ScheduleStatic::serializeObject();
-        result.m_timeMap = TimeMap::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
         result.snapshots = { ScheduleState::serializeObject() };
 
@@ -221,11 +219,13 @@ namespace {
     }
 
     time_t Schedule::posixStartTime() const {
-        return m_timeMap.getStartTime( 0 );
+        return std::chrono::system_clock::to_time_t(this->m_sched_deck[0].start_time());
     }
 
     time_t Schedule::posixEndTime() const {
-        return this->m_timeMap.getEndTime();
+        // This should indeed access the start_time() property of the last
+        // snapshot.
+        return std::chrono::system_clock::to_time_t(this->snapshots.back().start_time());
     }
 
 
@@ -318,7 +318,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         std::string time_unit = this->m_static.m_unit_system.name(UnitSystem::measure::time);
         auto deck_time = [this](double seconds) { return this->m_static.m_unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::string current_file;
-        const auto& time_map = this->m_timeMap;
         /*
           The keywords in the skiprest_whitelist set are loaded from the
           SCHEDULE section even though the SKIPREST keyword is in action. The
@@ -336,26 +335,27 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
           [1]: opm/flow can restart in a mode where all the keywords from the
                historical part of the Schedule section is internalized, and only
                the solution fields are read from the restart file. In this case
-               we will have TimeMap::restart_offset() == 0.
+               we will have Schedule::restart_offset() == 0.
 
           [2]: With the exception of the keywords in the skiprest_whitelist;
                these keywords will be assigned to report step 0.
         */
 
-        auto restart_skip = load_start < this->m_timeMap.restart_offset();
+        auto restart_skip = load_start < this->m_restart_info.second;
         ScheduleLogger logger(restart_skip);
         {
             const auto& location = this->m_sched_deck.location();
             current_file = location.filename;
             logger.info(fmt::format("\nProcessing dynamic information from\n{} line {}", current_file, location.lineno));
-            if (restart_skip)
-                logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", time_map.restart_offset(), Schedule::formatDate(time_map.restart_time())));
-
+            if (restart_skip) {
+                auto [restart_time, restart_offset] = this->m_restart_info;
+                logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", restart_offset, Schedule::formatDate(restart_time)));
+            }
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
                                load_start + 1,
-                               this->size(),
+                               this->m_sched_deck.size() - 1,
                                Schedule::formatDate(this->getStartTime()),
-                               deck_time(time_map.getTimePassedUntil(load_start)),
+                               deck_time(this->m_sched_deck.seconds(load_start)),
                                time_unit,
                                location.lineno));
         }
@@ -367,7 +367,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
                 const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
                 const auto& days = deck_time(this->stepLength(report_step - 1));
-                const auto& days_total = deck_time(time_map.getTimePassedUntil(report_step));
+                const auto& days_total = deck_time(this->seconds(report_step - 1));
                 logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
                                                  report_step,
                                                  days,
@@ -377,7 +377,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
                 logger(fmt::format("Initializing report step {}/{} at {} ({} {}) - line {}",
                                    report_step + 1,
-                                   this->size(),
+                                   this->m_sched_deck.size() - 1,
                                    start_date,
                                    days_total,
                                    time_unit,
@@ -397,7 +397,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 }
 
                 if (keyword.name() == "ACTIONX") {
-                    Action::ActionX action(keyword, this->m_timeMap.getStartTime(report_step));
+                    Action::ActionX action(keyword, std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
                     while (true) {
                         keyword_index++;
                         if (keyword_index == block.size())
@@ -570,7 +570,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     {
                         const auto& well = this->getWell(wname, currentStep);
                         if( well_status == open && !well.canOpen() ) {
-                            auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
+                            auto elapsed = this->snapshots[currentStep].start_time() - this->snapshots[0].start_time();
+                            auto days = std::chrono::duration_cast<std::chrono::hours>(elapsed).count() / 24;
                             std::string msg = "Well " + wname
                                 + " where crossflow is banned has zero total rate."
                                 + " This well is prevented from opening at "
@@ -621,10 +622,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
         std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
         parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, keyword.location(), errors );
-    }
-
-    const TimeMap& Schedule::getTimeMap() const {
-        return this->m_timeMap;
     }
 
     GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
@@ -847,7 +844,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     std::vector<Well> Schedule::getWells(std::size_t timeStep) const {
         std::vector<Well> wells;
-        if (timeStep >= this->m_timeMap.size())
+        if (timeStep >= this->snapshots.size())
             throw std::invalid_argument("timeStep argument beyond the length of the simulation");
 
         const auto& well_order = this->snapshots[timeStep].well_order();
@@ -1068,9 +1065,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             const auto& well = this->getWell(wname, timeStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut() && well.getStatus() != Well::Status::SHUT) {
-                std::string msg =
-                    "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(timeStep) / (60*60*24) ) + " days. \n" +
-                    "The well is therefore also shut.";
+                auto elapsed = this->snapshots[timeStep].start_time() - this->snapshots[0].start_time();
+                auto days = std::chrono::duration_cast<std::chrono::hours>(elapsed).count() / 24.0;
+                auto msg = fmt::format("All completions in well {} is shut at {} days\n"
+                                       "The well is therefore also shut", well.name(), days);
                 OpmLog::note(msg);
                 this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT);
             }
@@ -1100,24 +1098,32 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     std::size_t Schedule::size() const {
-        return this->m_timeMap.size();
+        return this->snapshots.size();
     }
 
 
-    double  Schedule::seconds(std::size_t timeStep) const {
-        return this->m_timeMap.seconds(timeStep);
+    double Schedule::seconds(std::size_t timeStep) const {
+        if (this->snapshots.empty())
+            return 0;
+
+        if (timeStep >= this->snapshots.size())
+            throw std::logic_error(fmt::format("seconds({}) - invalid timeStep. Valid range [0,{}>", timeStep, this->snapshots.size()));
+
+        auto elapsed = this->snapshots[timeStep].start_time() - this->snapshots[0].start_time();
+        return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
 
     time_t Schedule::simTime(std::size_t timeStep) const {
-        return this->m_timeMap[timeStep];
+        return std::chrono::system_clock::to_time_t( this->snapshots[timeStep].start_time() );
     }
 
     double Schedule::stepLength(std::size_t timeStep) const {
-        return this->m_timeMap.getTimeStepLength(timeStep);
+        auto elapsed = this->snapshots[timeStep].end_time() - this->snapshots[timeStep].start_time();
+        return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
 
 
-    void Schedule::applyAction(std::size_t reportStep, const std::chrono::system_clock::time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
+    void Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         ParseContext parseContext;
         ErrorGuard errors;
 
@@ -1182,7 +1188,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     bool Schedule::operator==(const Schedule& data) const {
 
-        return this->m_timeMap == data.m_timeMap &&
+        return this->m_restart_info == data.m_restart_info &&
                this->m_static == data.m_static &&
                this->restart_config == data.restart_config &&
                this->snapshots == data.snapshots;
@@ -1402,18 +1408,23 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
     int count = not_equal(sched1.wellNames(report_step), sched2.wellNames(report_step), "Wellnames");
     if (count != 0)
         return false;
-
     {
-        const auto& tm1 = sched1.getTimeMap();
-        const auto& tm2 = sched2.getTimeMap();
-        if (not_equal(tm1.size(), tm2.size(), "TimeMap: size()"))
-            count += 1;
+        //if (sched1.size() != sched2.size())
+        //    return false;
 
-        for (auto& step_index = report_step; step_index < std::min(tm1.size(), tm2.size()) - 1; step_index++) {
-            if (not_equal(tm1[step_index], tm2[step_index], "TimePoint[" + std::to_string(step_index) + "]"))
-                count += 1;
-        }
+        //for (std::size_t step=0; step < sched1.size(); step++) {
+        //    auto start1 = sched1[step].start_time();
+        //    auto start2 = sched2[step].start_time();
+        //    if (start1 != start2)
+        //        return false;
 
+        //    if (step < sched1.size() - 1) {
+        //        auto end1 = sched1[step].end_time();
+        //        auto end2 = sched2[step].end_time();
+        //        if (end1 != end2)
+        //            return false;
+        //    }
+        //}
     }
 
     for (const auto& wname : sched1.wellNames(report_step)) {
@@ -1574,7 +1585,7 @@ std::vector<ScheduleState>::const_iterator Schedule::end() const {
     return this->snapshots.end();
 }
 
-void Schedule::create_first(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {
+void Schedule::create_first(const time_point& start_time, const std::optional<time_point>& end_time) {
     if (end_time.has_value())
         this->snapshots.emplace_back( start_time, end_time.value() );
     else
@@ -1602,7 +1613,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     this->addGroup("FIELD", 0);
 }
 
-void Schedule::create_next(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {
+void Schedule::create_next(const time_point& start_time, const std::optional<time_point>& end_time) {
     if (this->snapshots.empty())
         this->create_first(start_time, end_time);
     else {

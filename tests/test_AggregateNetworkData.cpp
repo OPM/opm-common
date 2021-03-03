@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <exception>
 #include <stdexcept>
@@ -57,7 +58,7 @@ namespace {
 
     Opm::SummaryState sum_state()
     {
-        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now()};
 
         state.update_well_var("P1", "WOPR", 3342.673828);
         state.update_well_var("P1", "WWPR", 0.000005);

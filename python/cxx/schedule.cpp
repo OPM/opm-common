@@ -63,12 +63,10 @@ namespace {
     }
 
     std::vector<system_clock::time_point> get_timesteps( const Schedule& s ) {
-        const auto& tm = s.getTimeMap();
         std::vector< system_clock::time_point > v;
-        v.reserve( tm.size() );
 
-        for( size_t i = 0; i < tm.size(); ++i )
-            v.push_back( datetime( tm[ i ] ));
+        for( size_t i = 0; i < s.size(); ++i )
+            v.push_back( datetime( std::chrono::system_clock::to_time_t(s[i].start_time() )));
 
         return v;
     }

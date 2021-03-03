@@ -97,11 +97,15 @@ namespace {
 }
 
 
-    SummaryState::SummaryState(std::chrono::system_clock::time_point sim_start_arg):
+    SummaryState::SummaryState(time_point sim_start_arg):
         sim_start(sim_start_arg)
     {
         this->update_elapsed(0);
     }
+
+    SummaryState::SummaryState(std::time_t sim_start_arg):
+        SummaryState(TimeService::from_time_t(sim_start_arg))
+    {}
 
 
     void SummaryState::update_elapsed(double delta) {
@@ -340,7 +344,7 @@ namespace {
 
     void  SummaryState::deserialize(const std::vector<char>& buffer) {
         Serializer ser(buffer);
-        this->sim_start = ser.get<std::chrono::system_clock::time_point>();
+        this->sim_start = ser.get<time_point>();
         this->elapsed = ser.get<double>();
         this->values = ser.get_map<std::string, double>();
 

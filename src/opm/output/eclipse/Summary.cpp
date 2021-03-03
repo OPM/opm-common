@@ -23,6 +23,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/output/eclipse/Inplace.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -2729,7 +2730,7 @@ SMSpecStreamDeferredCreation(const Opm::InitConfig&          initcfg,
                              const Opm::UnitSystem::UnitType utype)
     : utype_   (utype)
     , cartDims_(grid.getNXYZ())
-    , start_   (std::chrono::system_clock::from_time_t(start))
+    , start_   (Opm::TimeService::from_time_t(start))
 {
     if (initcfg.restartRequested()) {
         this->restart_.root = initcfg.getRestartRootName();
@@ -3110,7 +3111,7 @@ configureSummaryInput(const EclipseState&  es,
                       const Schedule&      sched)
 {
     const auto st = SummaryState {
-        std::chrono::system_clock::from_time_t(sched.getStartTime())
+        TimeService::from_time_t(sched.getStartTime())
     };
 
     Evaluator::Factory fact {

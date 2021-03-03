@@ -19,6 +19,7 @@
 #include <chrono>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <pybind11/stl.h>
 #include <pybind11/chrono.h>
@@ -42,7 +43,7 @@ std::vector<std::string> wells(const SummaryState * st) {
 void python::common::export_SummaryState(py::module& module) {
 
     py::class_<SummaryState>(module, "SummaryState")
-        .def(py::init<std::chrono::system_clock::time_point>())
+        .def(py::init<std::time_t>())
         .def("update", &SummaryState::update)
         .def("update_well_var", &SummaryState::update_well_var)
         .def("update_group_var", &SummaryState::update_group_var)

@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
@@ -82,8 +83,7 @@ namespace {
         timePoint.tm_mon  =   4 - 1; // April
         timePoint.tm_mday =   9;     // 9th
 
-        return std::chrono::system_clock::from_time_t(
-            ::Opm::RestartIO::makeUTCTime(timePoint));
+        return Opm::TimeService::from_time_t( Opm::TimeService::makeUTCTime(timePoint) );
     }
 
     std::chrono::duration<double, std::chrono::seconds::period> tstep_123()

@@ -735,7 +735,7 @@ void save(EclIO::OutputStream::Restart& rstFile,
         writeExtraData(value.extra, rstFile);
     }
 
-    logRestartOutput(report_step, schedule.getTimeMap().numTimesteps(), inteHD);
+    logRestartOutput(report_step, schedule.size() - 1, inteHD);
 }
 
 }} // Opm::RestartIO
