@@ -1164,6 +1164,30 @@ DRSDT
     BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithDRSDTCON) {
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "DRSDTCON\n"
+            "0.01\n"
+            "/\n";
+
+    const auto& schedule = make_schedule(input);
+    size_t currentStep = 1;
+    const auto& ovap = schedule[currentStep].oilvap();
+
+    BOOST_CHECK_EQUAL(true,   ovap.getOption(0));
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRSDTCON);
+
+    BOOST_CHECK_EQUAL(true,   ovap.drsdtActive());
+    BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
+    BOOST_CHECK_EQUAL(true,   ovap.drsdtConvective());
+}
+
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
     std::string input = R"(
 START             -- 0

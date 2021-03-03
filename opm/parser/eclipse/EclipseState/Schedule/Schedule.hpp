@@ -565,6 +565,7 @@ namespace Opm
         void handleCOMPORD  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPSEGS (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRSDTCON (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRVDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRVDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);

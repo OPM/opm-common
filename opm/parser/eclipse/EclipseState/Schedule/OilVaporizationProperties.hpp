@@ -27,8 +27,9 @@ namespace Opm
 {
      /*
      * The OilVaporizationProperties class
-     * This classe is used to store the values from {VAPPARS, DRSDT, DRVDT}
+     * This classe is used to store the values from {VAPPARS, DRSDT, DRVDT, DRSDTCON}
      * The VAPPARS and {DRSDT, DRVDT} are mutal exclusive and will cancel previous settings of the other keywords.
+     * The DRSDTCON implements a dissolution rate based on convective mixing.
      * Ask for type first and the ask for the correct values for this type, asking for values not valid for the current type will throw a logic exception.
      */
     class OilVaporizationProperties {
@@ -36,7 +37,8 @@ namespace Opm
         enum class OilVaporization {
             UNDEF = 0,
             VAPPARS = 1,
-            DRDT = 2 // DRSDT or DRVDT
+            DRDT = 2, // DRSDT or DRVDT
+            DRSDTCON = 3 // DRSDTCON
         };
 
 
@@ -46,6 +48,7 @@ namespace Opm
         static OilVaporizationProperties serializeObject();
 
         static void updateDRSDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
+        static void updateDRSDTCON(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
         static void updateDRVDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRVDT);
         static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, double vap1, double vap2);
 
@@ -55,6 +58,7 @@ namespace Opm
         bool getOption(const size_t pvtRegionIdx) const;
         bool drsdtActive() const;
         bool drvdtActive() const;
+        bool drsdtConvective() const;
         bool defined() const;
         size_t numPvtRegions() const {return m_maxDRSDT.size();}
 
