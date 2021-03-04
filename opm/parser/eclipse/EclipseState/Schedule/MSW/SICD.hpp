@@ -22,6 +22,7 @@
 #define SPIRALICD_HPP_HEADER_INCLUDED
 
 #include <map>
+#include <optional>
 #include <utility>
 #include <vector>
 #include <string>
@@ -45,7 +46,7 @@ namespace Opm {
              double widthTransitionRegion,
              double maxViscosityRatio,
              int methodFlowScaling,
-             double maxAbsoluteRate,
+             const std::optional<double>& maxAbsoluteRate,
              ICDStatus status,
              double scalingFactor);
 
@@ -58,7 +59,7 @@ namespace Opm {
         static std::map<std::string, std::vector<std::pair<int, SICD> > >
         fromWSEGSICD(const DeckKeyword& wsegsicd);
 
-        double maxAbsoluteRate() const;
+        const std::optional<double>& maxAbsoluteRate() const;
         ICDStatus status() const;
         double strength() const;
         double length() const;
@@ -126,11 +127,11 @@ namespace Opm {
         double m_width_transition_region;
         double m_max_viscosity_ratio;
         int m_method_flow_scaling;
-        double m_max_absolute_rate;
+        std::optional<double> m_max_absolute_rate;
         ICDStatus m_status;
         // scaling factor is the only one can not be gotten from deck directly, needs to be
         // updated afterwards
-        double m_scaling_factor;
+        std::optional<double> m_scaling_factor;
 };
 
 }

@@ -603,8 +603,8 @@ namespace {
             rSeg[baseIndex + Ix::MaxEmulsionRatio] =
                 sicd.maxViscosityRatio();
 
-            rSeg[baseIndex + Ix::MaxValidFlowRate] =
-                usys.from_si(M::geometric_volume_rate, sicd.maxAbsoluteRate());
+            const auto& max_rate = sicd.maxAbsoluteRate();
+            rSeg[baseIndex + Ix::MaxValidFlowRate] = max_rate.has_value() ? usys.from_si(M::geometric_volume_rate, max_rate.value()) : -1;
 
             rSeg[baseIndex + Ix::ICDLength] =
                 usys.from_si(M::length, sicd.length());
