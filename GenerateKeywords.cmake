@@ -41,6 +41,15 @@ configure_file(src/opm/parser/eclipse/keyword_list.argv.in keyword_list.argv)
 
 # Generate keyword source
 
+set( genkw_argv keyword_list.argv
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/include/
+  opm/parser/eclipse/Parser/ParserKeywords
+  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
+
+
 add_custom_command( OUTPUT
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/B.cpp
@@ -68,14 +77,10 @@ add_custom_command( OUTPUT
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/X.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Y.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Z.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp
-  COMMAND genkw keyword_list.argv
-                  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords
-                  ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
-                  ${PROJECT_BINARY_DIR}/tmp_gen/include/
-                  opm/parser/eclipse/Parser/ParserKeywords
-                  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp
-    DEPENDS genkw ${keyword_files} src/opm/parser/eclipse/share/keywords/keyword_list.cmake
+  COMMAND genkw ${genkw_argv}
+  DEPENDS genkw ${keyword_files} src/opm/parser/eclipse/share/keywords/keyword_list.cmake
 )
 
 # To avoid some rebuilds
@@ -108,6 +113,7 @@ add_custom_command(OUTPUT
   ${PROJECT_BINARY_DIR}/ParserKeywords/Z.cpp
   ${PROJECT_BINARY_DIR}/TestKeywords.cpp
   ${PROJECT_BINARY_DIR}/ParserInit.cpp
+  ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp
                    DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
                    COMMAND ${CMAKE_COMMAND} -DBASE_DIR=${PROJECT_BINARY_DIR}
                                             -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake)

@@ -4,6 +4,7 @@ import sys
 
 import numpy as np
 
+from opm.io.parser import Builtin
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
 from opm.io.deck import DeckKeyword
@@ -43,6 +44,33 @@ FIPNUM
     def setUp(self):
         self.spe3fn = test_path('spe3/SPE3CASE1.DATA')
         self.norne_fname = test_path('../examples/data/norne/NORNE_ATW2013.DATA')
+
+    def test_dynamic_parser(self):
+        parser = Parser(add_default = False)
+        builtin = Builtin()
+        parser.add_keyword( builtin.START )
+        parser.add_keyword( builtin.RUNSPEC )
+        parser.add_keyword( builtin.FIELD )
+        parser.add_keyword( builtin.DIMENS )
+        parser.add_keyword( builtin.GRID )
+        parser.add_keyword( builtin.DX )
+        parser.add_keyword( builtin.DY )
+        parser.add_keyword( builtin.DZ )
+        parser.add_keyword( builtin.TOPS )
+        parser.add_keyword( builtin.REGIONS )
+        parser.add_keyword( builtin.OPERNUM )
+        parser.add_keyword( builtin.FIPNUM )
+
+        deck = parser.parse_string(self.REGIONDATA)
+
+    def test_dynamic_parser2(self):
+        parser = Parser(add_default = False)
+        builtin = Builtin()
+        kw_list = ["START", "RUNSPEC", "FIELD", "REGIONS", "DIMENS", "GRID", "DX", "DY", "DZ", "TOPS", "OPERNUM", "FIPNUM"]
+        for kw in kw_list:
+            parser.add_keyword( builtin[kw] )
+
+        deck = parser.parse_string(self.REGIONDATA)
 
     def test_create(self):
         parser = Parser()

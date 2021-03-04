@@ -34,7 +34,7 @@ int main(int , char ** argv) {
     const char * header_file_base_path = argv[4];
     const char * header_file_path = argv[5];
     const char * test_file_name = argv[6];
-
+    const char * builtin_pybind11_name = argv[7];
 
     std::vector<std::string> keyword_list;
     {
@@ -63,4 +63,5 @@ int main(int , char ** argv) {
     generator.updateHeader(loader, header_file_base_path, header_file_path );
     generator.updateBuiltInHeader(loader, header_file_base_path, header_file_path );
     generator.updateTest( loader , test_file_name );
+    generator.updatePybindSource(loader , builtin_pybind11_name);
 }

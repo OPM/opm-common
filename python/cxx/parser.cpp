@@ -4,6 +4,7 @@
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -51,11 +52,12 @@ void python::common::export_Parser(py::module& module) {
 
 
     py::class_<Parser>(module, "Parser")
-        .def(py::init<>())
+        .def(py::init<bool>(), py::arg("add_default") = true)
         .def("parse", py::overload_cast<const std::string&>(&Parser::parseFile, py::const_))
         .def("parse"       , py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseFile, py::const_))
         .def("parse_string", py::overload_cast<const std::string&>(&Parser::parseString, py::const_))
         .def("parse_string", py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseString, py::const_))
+        .def("add_keyword",  py::overload_cast<ParserKeyword>(&Parser::addParserKeyword))
         .def("add_keyword", add_keyword)
         .def("__getitem__", &Parser::getKeyword, ref_internal);
 

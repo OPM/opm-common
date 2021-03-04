@@ -179,6 +179,42 @@ void Parser::addDefaultKeywords() {
         write_file( newSource, sourceFile, m_verbose, "init" );
     }
 
+
+    void KeywordGenerator::updatePybindSource(const KeywordLoader& loader , const std::string& sourceFile) const {
+        std::stringstream newSource;
+        newSource << R"(#include <string>
+#include <exception>
+
+#include <opm/json/JsonObject.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <pybind11/stl.h>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+
+#include "export.hpp"
+
+void python::common::export_ParserKeywords(py::module& module) {
+
+    py::class_<ParserKeywords::Builtin>(module, "Builtin")
+        .def(py::init<>())
+)";
+
+        for(const auto& kw_pair : loader) {
+            const auto& keywords = kw_pair.second;
+            for (const auto& kw: keywords)
+                newSource << fmt::format("        .def_property_readonly(\"{0}\", &ParserKeywords::Builtin::get_{0})\n", kw.className());
+        }
+        newSource << R"(        .def("__getitem__", &ParserKeywords::Builtin::operator[], ref_internal);
+}
+)";
+
+        fmt::print("Writing file: {}\n", sourceFile);
+        write_file( newSource, sourceFile, m_verbose, "source");
+    }
+
+
     void KeywordGenerator::updateKeywordSource(const KeywordLoader& loader , const std::string& sourcePath ) const {
 
         for(const auto& kw_pair : loader) {

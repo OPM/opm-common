@@ -41,6 +41,7 @@ namespace Opm {
         void updateBuiltInHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const;
         void updateInitSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
         void updateKeywordSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
+        void updatePybindSource(const KeywordLoader& loader , const std::string& sourceFile ) const;
         void updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const;
         void updateTest(const KeywordLoader& loader , const std::string& testFile) const;
     private:
