@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
 #include "src/opm/parser/eclipse/Parser/raw/RawKeyword.hpp"
@@ -2343,4 +2344,34 @@ GUIDERATE
    parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputError::IGNORE);
    auto deck = parser.parseString(deck_string, parseContext, errors);
    BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
+}
+
+BOOST_AUTO_TEST_CASE(DynamicParser1) {
+    Parser parser(false);
+    ParserKeywords::Builtin builtin;
+    const auto deck_string = R"(
+GUIDERAT
+/
+)";
+
+    BOOST_CHECK_EQUAL( parser.size(), 0 );
+    parser.addParserKeyword( builtin.GUIDERAT );
+    BOOST_CHECK_EQUAL( parser.size(), 1 );
+    auto deck = parser.parseString(deck_string);
+    BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
+}
+
+BOOST_AUTO_TEST_CASE(DynamicParser2) {
+    Parser parser(false);
+    ParserKeywords::Builtin builtin;
+    const auto deck_string = R"(
+GUIDERAT
+/
+)";
+
+    BOOST_CHECK_EQUAL( parser.size(), 0 );
+    parser.addParserKeyword( builtin["GUIDERAT"] );
+    BOOST_CHECK_EQUAL( parser.size(), 1 );
+    auto deck = parser.parseString(deck_string);
+    BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
 }

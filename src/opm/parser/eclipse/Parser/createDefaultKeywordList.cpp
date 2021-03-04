@@ -61,5 +61,6 @@ int main(int , char ** argv) {
     generator.updateKeywordSource(loader , source_file_path );
     generator.updateInitSource(loader , init_file_name );
     generator.updateHeader(loader, header_file_base_path, header_file_path );
+    generator.updateBuiltInHeader(loader, header_file_base_path, header_file_path );
     generator.updateTest( loader , test_file_name );
 }
