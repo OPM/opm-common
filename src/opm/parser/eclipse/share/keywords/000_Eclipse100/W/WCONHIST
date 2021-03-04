@@ -43,7 +43,7 @@
     },
     {
       "name": "ALQ",
-      "value_type": "DOUBLE",
+      "value_type": "UDA",
       "default": 0,
       "comment": "The default is a state variable"
     },

@@ -168,7 +168,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         p->LiquidRate.update(rst_well.lrat_target) ;
         p->ResVRate.update(rst_well.resv_target);
         p->VFPTableNumber = rst_well.vfp_table;
-        p->ALQValue = rst_well.alq_value;
+        p->ALQValue.update(rst_well.alq_value); // Uncertain of whether the dimension comes through correct here.
         p->predictionMode = this->prediction_mode;
 
         if (rst_well.orat_target != 0)
@@ -1307,10 +1307,10 @@ Well::InjectionControls Well::injectionControls(const SummaryState& st) const {
 
 
 /*
-  These three accessor functions are at the "wrong" level of abstraction;
-  the same properties are part of the InjectionControls and
-  ProductionControls structs. They are made available here to avoid passing
-  a SummaryState instance in situations where it is not really needed.
+  These accessor functions are at the "wrong" level of abstraction; the same
+  properties are part of the InjectionControls and ProductionControls structs.
+  They are made available here to avoid passing a SummaryState instance in
+  situations where it is not really needed.
 */
 
 
@@ -1321,9 +1321,12 @@ int Well::vfp_table_number() const {
         return this->injection->VFPTableNumber;
 }
 
+/*
+  This short circuits the UDA and assumes the UDA contains a double.
+*/
 double Well::alq_value() const {
     if (this->wtype.producer())
-        return this->production->ALQValue;
+        return this->production->ALQValue.getSI();
 
     throw std::runtime_error("Can not ask for ALQ value in an injector");
 }
