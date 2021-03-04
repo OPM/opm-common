@@ -447,6 +447,7 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& aicd = segment.autoICD();
+            // Segments of AICD type has the segmentType equal to -8
             iSeg[baseIndex + Ix::SegmentType] = -8;
             iSeg[baseIndex + Ix::ICDScalingMode] = aicd.methodFlowScaling();
             iSeg[baseIndex + Ix::ICDOpenShutFlag] = aicd.ecl_status();
@@ -640,6 +641,12 @@ namespace {
             rSeg[baseIndex + Ix::DeviceBaseStrength] =
                 usys.from_si(M::aicd_strength, aicd.strength());
 
+            // The value of the scalingFactor depends on the option used:
+            // if 1. item 11 on the WSEGAICD keyword is 1, or
+            // 2. item 11 is negative plus the value of the scalingFactor is negative then
+            // the scalingFactor is an absolute length and need unit conversion
+            // In other cases the scalingFactor is a relative length - and is unitless and do not need unit conversion
+            //
             rSeg[baseIndex + Ix::ScalingFactor] = ((aicd.methodFlowScaling() == 1) ||
              ((aicd.methodFlowScaling() < 0) && (aicd.length() < 0))) ?
                 usys.from_si(M::length, aicd.scalingFactor()) : aicd.scalingFactor();
