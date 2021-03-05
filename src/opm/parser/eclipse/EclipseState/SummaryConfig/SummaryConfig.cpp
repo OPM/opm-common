@@ -1412,7 +1412,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         throw;
     }
     catch (const std::exception& std_error) {
-        OpmLog::error(fmt::format("An error occured while configuring the summary properties\n",
+        OpmLog::error(fmt::format("An error occured while configuring the summary properties\n"
                                   "Internal error: {}", std_error.what()));
         throw;
     }
