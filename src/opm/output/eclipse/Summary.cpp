@@ -39,7 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -3260,7 +3260,7 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
         if (node.is_user_defined())
             continue;
 
-        if (TimeMap::valid_month(node.keyword))
+        if (TimeService::valid_month(node.keyword))
             continue;
 
         throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));

@@ -26,6 +26,27 @@
 namespace Opm {
 namespace TimeService {
 
+namespace {
+    const std::unordered_map<std::string, int> month_indices = {
+        {"JAN", 1},
+        {"FEB", 2},
+        {"MAR", 3},
+        {"APR", 4},
+        {"MAI", 5},
+        {"MAY", 5},
+        {"JUN", 6},
+        {"JUL", 7},
+        {"JLY", 7},
+        {"AUG", 8},
+        {"SEP", 9},
+        {"OCT", 10},
+        {"OKT", 10},
+        {"NOV", 11},
+        {"DEC", 12},
+        {"DES", 12}};
+}
+
+
 const time_t system_clock_epoch = std::chrono::system_clock::to_time_t({});
 
 time_point from_time_t(std::time_t t) {
@@ -64,6 +85,15 @@ std::time_t makeUTCTime(std::tm timePoint)
     // have the same broken-down elements as 'tp'.
     return advance(ltime, offset);
 }
+
+const std::unordered_map<std::string , int>& eclipseMonthIndices() {
+    return month_indices;
+}
+
+bool valid_month(const std::string& month_name) {
+    return (month_indices.count(month_name) != 0);
+}
+
 
 }
 }

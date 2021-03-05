@@ -18,7 +18,7 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 namespace Opm {
 namespace Action {
@@ -31,7 +31,7 @@ namespace Action {
         summary_state(summary_state_arg),
         wlm(wlm_)
     {
-        for (const auto& pair : TimeMap::eclipseMonthIndices())
+        for (const auto& pair : TimeService::eclipseMonthIndices())
             this->add(pair.first, pair.second);
     }
 
