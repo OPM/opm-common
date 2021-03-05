@@ -797,8 +797,6 @@ inline void keywordR( SummaryConfig::keyword_list& list,
     for( const int region : regions ) {
         if (region >= 1 && region <= static_cast<int>(numfip))
             list.push_back( param.number( region ) );
-        else
-            throw std::invalid_argument("Illegal region value: " + std::to_string( region ));
     }
 }
 

@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
 
     {
         const auto input = "RPR\n 10 /\n";
-        BOOST_CHECK_THROW( createSummary( input ) , std::invalid_argument );
+        BOOST_CHECK_NO_THROW( createSummary( input ) );
     }
 
 
