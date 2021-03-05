@@ -343,8 +343,6 @@ namespace Opm {
         void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
-        static std::string getRestartFileName(const std::string& restart_base, int report_step, bool unified, bool fmt_file);
-
         bool operator==(const RestartConfig& data) const;
 
         template<class Serializer>

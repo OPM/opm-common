@@ -712,33 +712,6 @@ RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std
     }
 
 
-
-    std::string RestartConfig::getRestartFileName(const std::string& restart_base, int report_step, bool unified , bool fmt_file) {
-
-        auto ext = std::string{};
-        if (unified) {
-            ext = fmt_file ? "FUNRST" : "UNRST";
-        }
-        else {
-            std::ostringstream os;
-
-            const char* fmt_prefix   = "FGH";
-            const char* unfmt_prefix = "XYZ";
-
-            const int cycle = 10 * 1000;
-            const int p_ix  = report_step / cycle;
-            const int n     = report_step % cycle;
-
-            os << (fmt_file ? fmt_prefix[p_ix] : unfmt_prefix[p_ix])
-               << std::setw(4) << std::setfill('0') << n;
-
-            ext = os.str();
-        }
-
-        return restart_base + '.' + ext;
-    }
-
-
     int RestartConfig::getFirstRestartStep() const {
         return m_first_restart_step;
     }
