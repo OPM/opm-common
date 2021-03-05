@@ -57,7 +57,6 @@ namespace Opm {
 
 template< class T >
 class DynamicState {
-    friend class Schedule;
     public:
         typedef typename std::vector< T >::iterator iterator;
 
@@ -81,46 +80,8 @@ class DynamicState {
             return m_data.back();
         }
 
-        const T& at( size_t index ) const {
-            return this->m_data.at( index );
-        }
-
-        const T& operator[](size_t index) const {
-            return this->at( index );
-        }
-
         const T& get(size_t index) const {
-            return this->at( index );
-        }
-
-        void updateInitial( T initial ) {
-            std::fill_n( this->m_data.begin(), this->initial_range, initial );
-        }
-
-
-        std::vector<std::pair<std::size_t, T>> unique() const {
-            if (this->m_data.empty())
-                return {};
-
-            const auto * current_value = std::addressof(this->m_data[0]);
-            std::size_t current_index = 0;
-            std::vector<std::pair<std::size_t, T>> result{{current_index, *current_value}};
-            while (true) {
-                if (this->m_data[current_index] != *current_value) {
-                    current_value = std::addressof(this->m_data[current_index]);
-                    result.emplace_back(current_index, *current_value);
-                }
-
-                current_index++;
-                if (current_index == this->m_data.size())
-                    break;
-            }
-
-            return result;
-        }
-
-        bool is_new_data(size_t index) const {
-            return index == 0 || (at(index) != at(index - 1));
+            return this->m_data.at( index );
         }
 
         /**
@@ -142,95 +103,9 @@ class DynamicState {
             return true;
         }
 
-        void update_elm( size_t index, const T& value ) {
-            if (this->m_data.size() <= index)
-                throw std::out_of_range("Invalid index for update_elm()");
-
-            this->m_data[index] = value;
-        }
-
-
-    /*
-      Will assign all currently equal values starting at index with the new
-      value. Purpose of the method is to support manipulations of an existing
-      Schedule object, if e.g. a well is initially closed in the interval
-      [T1,T2] and then opened at time T1 < Tx < T2 then the open should be
-      applied for all times in the range [Tx,T2].
-
-      The return value is the index of the first element different from value,
-      or an empty optional if there is no such element.
-    */
-    std::optional<std::size_t> update_equal(size_t index, const T& value) {
-        if (this->m_data.size() <= index)
-            throw std::out_of_range("Invalid index for update_equal()");
-
-        const T prev_value = this->m_data[index];
-        auto update_end = std::find_if(this->m_data.begin() + index, this->m_data.end(), [&prev_value](const T& v) { return v != prev_value; });
-        std::fill(this->m_data.begin() + index, update_end, value);
-        if (update_end == this->m_data.end())
-            return {};
-
-        return std::distance(this->m_data.begin(), update_end);
-    }
-
-
-    void update_range(std::size_t start_index, std::size_t end_index, const T& value) {
-        if (end_index < start_index)
-            throw std::invalid_argument("Must have growing index");
-
-        if (end_index > this->m_data.size())
-            throw std::invalid_argument("Invalid range");
-
-        std::fill(this->m_data.begin() + start_index, this->m_data.begin() + end_index, value);
-    }
 
 
 
-    /// Will return the index of the first occurence of @value
-    std::optional<std::size_t> find(const T& value) const {
-        auto iter = std::find( m_data.begin() , m_data.end() , value);
-        if( iter == this->m_data.end() ) return {};
-
-        return std::distance( m_data.begin() , iter );
-    }
-
-    template<typename P>
-    std::optional<std::size_t> find_if(P&& pred) const {
-        auto iter = std::find_if(m_data.begin(), m_data.end(), std::forward<P>(pred));
-        if( iter == this->m_data.end() ) return {};
-
-        return std::distance( m_data.begin() , iter );
-    }
-
-    /// Will return the index of the first value which is != @value
-    std::optional<std::size_t> find_not(const T& value) const {
-        auto iter = std::find_if_not( m_data.begin() , m_data.end() , [&value] (const T& elm) { return value == elm; });
-        if( iter == this->m_data.end() ) return {};
-
-        return std::distance( m_data.begin() , iter );
-    }
-
-    iterator begin() {
-        return this->m_data.begin();
-    }
-
-
-    iterator end() {
-        return this->m_data.end();
-    }
-
-
-    std::size_t size() const {
-        return this->m_data.size();
-    }
-
-    const std::vector<T>& data() const {
-        return m_data;
-    }
-
-    size_t initialRange() const {
-        return initial_range;
-    }
 
     bool operator==(const DynamicState<T>& data) const {
         return m_data == data.m_data &&

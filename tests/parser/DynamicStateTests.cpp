@@ -98,83 +98,23 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
     BOOST_CHECK_EQUAL( 60 , state.back());
 }
 
-BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
-    Opm::TimeMap timeMap = make_timemap(11);
-    Opm::DynamicState<int> state(timeMap , 0);
-
-    state.update( 10 , 77 );
-    {
-        const int& v1 = state.at(10);
-        int v2 = state.get(10);
-        BOOST_CHECK_EQUAL( v1 , 77 );
-        BOOST_CHECK_EQUAL( v1 , v2 );
-        BOOST_CHECK( &v1 != &v2 );
-    }
-}
-
-BOOST_AUTO_TEST_CASE(DynamicStateOperatorSubscript) {
-    Opm::TimeMap timeMap = make_timemap(11);
-    Opm::DynamicState<int> state(timeMap , 137);
-
-    state.update( 10 , 200 );
-    BOOST_CHECK_EQUAL( state[9] , 137 );
-    BOOST_CHECK_EQUAL( state[0] , 137 );
-
-}
-
-
-BOOST_AUTO_TEST_CASE(DynamicStateInitial) {
-    Opm::TimeMap timeMap = make_timemap(11);
-    Opm::DynamicState<int> state(timeMap , 137);
-    Opm::DynamicState<int> state2(timeMap , 137);
-
-    state.update( 10 , 200 );
-    BOOST_CHECK_EQUAL( state[9] , 137 );
-    BOOST_CHECK_EQUAL( state[0] , 137 );
-    BOOST_CHECK_EQUAL( state[10] , 200 );
-
-    state.updateInitial( 63 );
-    BOOST_CHECK_EQUAL( state[9] , 63 );
-    BOOST_CHECK_EQUAL( state[0] , 63 );
-    BOOST_CHECK_EQUAL( state[10] , 200 );
-
-    state.updateInitial( 73 );
-    BOOST_CHECK_EQUAL( state[9] , 73 );
-    BOOST_CHECK_EQUAL( state[0] , 73 );
-    BOOST_CHECK_EQUAL( state[10] , 200 );
-
-
-    state2.update( 10 , 200 );
-    BOOST_CHECK_EQUAL( state2[9] , 137 );
-    BOOST_CHECK_EQUAL( state2[0] , 137 );
-    BOOST_CHECK_EQUAL( state2[10] , 200 );
-    state.updateInitial( 73 );
-    BOOST_CHECK_EQUAL( state2[9] , 137 );
-    BOOST_CHECK_EQUAL( state2[0] , 137 );
-    BOOST_CHECK_EQUAL( state2[10] , 200 );
-}
 
 BOOST_AUTO_TEST_CASE( ResetGlobal ) {
     Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 137);
 
     state.update(5 , 100);
-    BOOST_CHECK_EQUAL( state[0] , 137 );
-    BOOST_CHECK_EQUAL( state[4] , 137 );
-    BOOST_CHECK_EQUAL( state[5] , 100 );
-    BOOST_CHECK_EQUAL( state[9] , 100 );
+    BOOST_CHECK_EQUAL( state.get(0) , 137 );
+    BOOST_CHECK_EQUAL( state.get(4) , 137 );
+    BOOST_CHECK_EQUAL( state.get(5) , 100 );
+    BOOST_CHECK_EQUAL( state.get(9) , 100 );
 
-    state.updateInitial( 22 );
-    BOOST_CHECK_EQUAL( state[0] , 22 );
-    BOOST_CHECK_EQUAL( state[4] , 22 );
-    BOOST_CHECK_EQUAL( state[5] , 100 );
-    BOOST_CHECK_EQUAL( state[9] , 100 );
 
     state.globalReset( 88 );
-    BOOST_CHECK_EQUAL( state[0] , 88 );
-    BOOST_CHECK_EQUAL( state[4] , 88 );
-    BOOST_CHECK_EQUAL( state[5] , 88 );
-    BOOST_CHECK_EQUAL( state[9] , 88 );
+    BOOST_CHECK_EQUAL( state.get(0) , 88 );
+    BOOST_CHECK_EQUAL( state.get(4) , 88 );
+    BOOST_CHECK_EQUAL( state.get(5) , 88 );
+    BOOST_CHECK_EQUAL( state.get(9) , 88 );
 }
 
 
@@ -188,129 +128,5 @@ BOOST_AUTO_TEST_CASE( CheckReturn ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( UpdateEmptyInitial ) {
-    Opm::TimeMap timeMap = make_timemap(11);
-    Opm::DynamicState<int> state(timeMap , 137);
 
-    BOOST_CHECK_EQUAL( state[5] , 137 );
-    state.updateInitial( 99 );
-    BOOST_CHECK_EQUAL( state[5] , 99 );
-}
-
-
-BOOST_AUTO_TEST_CASE( find ) {
-    Opm::TimeMap timeMap = make_timemap(6);
-    Opm::DynamicState<int> state(timeMap , 137);
-
-    BOOST_CHECK_EQUAL( state.find( 137 ).value() , 0U );
-    BOOST_CHECK_EQUAL( state.find_not(200).value(), 0U);
-    BOOST_CHECK( !state.find( 200 ));
-    BOOST_CHECK( !state.find_not(137));
-
-    state.update( 0 , 200 );
-    BOOST_CHECK( !state.find( 137 ) );
-    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0U );
-
-    state.update( 2 , 300 );
-    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0U );
-    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2U );
-    BOOST_CHECK_EQUAL( state.find_not( 200 ).value() ,  2U );
-
-    state.update( 4 , 400 );
-    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0U );
-    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2U );
-    BOOST_CHECK_EQUAL( state.find( 400 ).value() ,  4U );
-    BOOST_CHECK( !state.find( 500 ));
-
-
-    auto pred = [] (const int& elm) { return elm == 400 ;};
-    BOOST_CHECK_EQUAL( state.find_if(pred).value(), 4U);
-}
-
-
-BOOST_AUTO_TEST_CASE( update_elm ) {
-    Opm::TimeMap timeMap = make_timemap(6);
-    Opm::DynamicState<int> state(timeMap , 137);
-    state.update( 5, 88 );
-    BOOST_CHECK_THROW( state.update_elm(10,88) , std::out_of_range );
-    BOOST_CHECK_EQUAL( state[2],137 );
-    BOOST_CHECK_EQUAL( state[3],137 );
-    BOOST_CHECK_EQUAL( state[4],137 );
-
-    state.update_elm(3,88);
-    BOOST_CHECK_EQUAL( state[2],137 );
-    BOOST_CHECK_EQUAL( state[3],88 );
-    BOOST_CHECK_EQUAL( state[4],137 );
-
-    for (auto& v : state)
-        v += 2;
-
-    BOOST_CHECK_EQUAL( state[2],139 );
-    BOOST_CHECK_EQUAL( state[3],90  );
-    BOOST_CHECK_EQUAL( state[4],139 );
-}
-
-BOOST_AUTO_TEST_CASE( update_equal ) {
-    Opm::TimeMap timeMap = make_timemap(11);
-    Opm::DynamicState<int> state(timeMap , 0);
-    state.update( 5, 100 );
-    BOOST_REQUIRE_THROW(state.update_equal(100, 100), std::out_of_range);
-
-    BOOST_CHECK_EQUAL(state[0], 0);
-    BOOST_CHECK_EQUAL(state[4], 0);
-    BOOST_CHECK_EQUAL(state[5], 100);
-
-    state.update_equal(3,50);
-    BOOST_CHECK_EQUAL(state[2], 0);
-    BOOST_CHECK_EQUAL(state[3], 50);
-    BOOST_CHECK_EQUAL(state[4], 50);
-    BOOST_CHECK_EQUAL(state[5], 100);
-
-    {
-        auto next_index = state.update_equal(4,50);
-        BOOST_CHECK_EQUAL(state[4], 50);
-        BOOST_CHECK_EQUAL(state[5], 100);
-        BOOST_CHECK_EQUAL(next_index.value() , 5U);
-    }
-
-
-    {
-        auto next_index = state.update_equal(9,200);
-        BOOST_CHECK_EQUAL(state[8] , 100);
-        BOOST_CHECK_EQUAL(state[9] , 200);
-        BOOST_CHECK_EQUAL(state[10], 200);
-        BOOST_CHECK(!next_index);
-    }
-}
-
-
-BOOST_AUTO_TEST_CASE( update_range) {
-    Opm::TimeMap timeMap = make_timemap(11);
-    Opm::DynamicState<int> state(timeMap , 0);
-
-    BOOST_CHECK_THROW( state.update_range(5,1,99), std::exception);
-    BOOST_CHECK_THROW( state.update_range(10,200,99), std::exception);
-    state.update_range(3,5,99);
-    BOOST_CHECK_EQUAL( state[3], 99);
-    BOOST_CHECK_EQUAL( state[4], 99);
-    BOOST_CHECK_EQUAL( state[5], 0);
-}
-
-
-
-BOOST_AUTO_TEST_CASE( UNIQUE ) {
-    Opm::TimeMap timeMap = make_timemap(11);
-    Opm::DynamicState<int> state(timeMap , 13);
-    auto unique0 = state.unique();
-    BOOST_CHECK_EQUAL(unique0.size(), 1U);
-    BOOST_CHECK(unique0[0] == std::make_pair(std::size_t{0}, 13));
-
-    state.update(3,300);
-    state.update(6,600);
-    auto unique1 = state.unique();
-    BOOST_CHECK_EQUAL(unique1.size(), 3U);
-    BOOST_CHECK(unique1[0] == std::make_pair(std::size_t{0}, 13));
-    BOOST_CHECK(unique1[1] == std::make_pair(std::size_t{3}, 300));
-    BOOST_CHECK(unique1[2] == std::make_pair(std::size_t{6}, 600));
-}
 
