@@ -677,7 +677,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
-    BOOST_CHECK_EQUAL(p.ALQValue, 10.);
+    BOOST_CHECK_EQUAL(p.ALQValue.get<double>(), 10.);
     const auto& controls = p.controls(st, 0);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
@@ -717,7 +717,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 0);
-    BOOST_CHECK_EQUAL(p.ALQValue, 0.);
+    BOOST_CHECK_EQUAL(p.ALQValue.get<double>(), 0.);
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
@@ -737,7 +737,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
-    BOOST_CHECK_EQUAL(p.ALQValue, 13.);
+    BOOST_CHECK_EQUAL(p.ALQValue.get<double>(), 13.);
     BOOST_CHECK_EQUAL(p.THPTarget.getSI(), 1000000.); // 10 barsa
     BOOST_CHECK_EQUAL(p.BHPTarget.getSI(), 101325.); // 1 atm.
 }
@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
-    BOOST_CHECK_EQUAL(p.ALQValue, 13.);
+    BOOST_CHECK_EQUAL(p.ALQValue.get<double>(), 13.);
     BOOST_CHECK_EQUAL(p.THPTarget.get<double>(), 10.); // 10 barsa
     BOOST_CHECK_EQUAL(p.BHPTarget.get<double>(), 20.); // 20 barsa
     BOOST_CHECK_EQUAL(p.THPTarget.getSI(), 1000000.); // 10 barsa
@@ -822,7 +822,6 @@ BOOST_AUTO_TEST_CASE(ExtraAccessors) {
     prod_props->VFPTableNumber = 200;
     prod.updateProduction(prod_props);
 
-    BOOST_CHECK_THROW(inj.alq_value(), std::runtime_error);
     BOOST_CHECK_THROW(prod.temperature(), std::runtime_error);
     BOOST_CHECK_EQUAL(inj.vfp_table_number(), 100);
     BOOST_CHECK_EQUAL(prod.vfp_table_number(), 200);

@@ -4454,3 +4454,86 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
     }
 }
 
+
+
+BOOST_AUTO_TEST_CASE(WCONPROD_UDA) {
+    const std::string deck_string = R"(
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PORO
+  300*0.3 /
+
+SCHEDULE
+
+VFPPROD
+-- table_num, datum_depth, flo, wfr, gfr, pressure, alq, unit, table_vals
+42 7.0E+03 LIQ WCT GOR THP ' ' METRIC BHP /
+1.0 / flo axis
+0.0 1.0 / THP axis
+0.0 / WFR axis
+0.0 / GFR axis
+0.0 / ALQ axis
+-- Table itself: thp_idx wfr_idx gfr_idx alq_idx <vals>
+1 1 1 1 0.0 /
+2 1 1 1 1.0 /
+
+VFPPROD
+-- table_num, datum_depth, flo, wfr, gfr, pressure, alq, unit, table_vals
+43 7.0E+03 LIQ WCT GOR THP 'GRAT' METRIC BHP /
+1.0 / flo axis
+0.0 1.0 / THP axis
+0.0 / WFR axis
+0.0 / GFR axis
+0.0 / ALQ axis
+-- Table itself: thp_idx wfr_idx gfr_idx alq_idx <vals>
+1 1 1 1 0.0 /
+2 1 1 1 1.0 /
+
+WELSPECS -- 0
+  'P1' 'G' 10 10 2005 'LIQ' /
+  'P2' 'G' 10 10 2005 'LIQ' /
+/
+
+COMPDAT
+  'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+  'P2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONPROD
+  'P1' 'OPEN' 'ORAT'  123.4  0.0  0.0  0.0  0.0 100 100 42 'UDA' /
+  'P2' 'OPEN' 'ORAT'  123.4  0.0  0.0  0.0  0.0 100 100 43 'UDA' /
+/
+
+)";
+    const auto deck = Parser{}.parseString(deck_string);
+    const auto es    = EclipseState{ deck };
+    auto       sched = Schedule{ deck, es };
+    const auto& well1 = sched.getWell("P1", 0);
+    const auto& well2 = sched.getWell("P2", 0);
+    SummaryState st(TimeService::now());
+
+    st.update("UDA", 123);
+    const auto& controls1 = well1.productionControls(st);
+    BOOST_CHECK_EQUAL(controls1.alq_value, 123);
+
+    auto dim = sched.getUnits().getDimension(UnitSystem::measure::gas_surface_rate);
+    const auto& controls2 = well2.productionControls(st);
+    BOOST_CHECK_EQUAL(controls2.alq_value, dim.convertRawToSi(123));
+}
+
+

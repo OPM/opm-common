@@ -47,10 +47,10 @@ namespace Opm {
         ResVRate(units.getDimension(UnitSystem::measure::rate)),
         BHPTarget(units.getDimension(UnitSystem::measure::pressure)),
         THPTarget(units.getDimension(UnitSystem::measure::pressure)),
+        ALQValue(units.getDimension(UnitSystem::measure::identity)),
         BHPH(0.0),
         THPH(0.0),
         VFPTableNumber(0),
-        ALQValue(0.0),
         predictionMode(true),
         controlMode(ProducerCMode::CMODE_UNDEFINED),
         whistctl_cmode(ProducerCMode::CMODE_UNDEFINED),
@@ -69,12 +69,12 @@ namespace Opm {
         result.ResVRate = UDAValue(4.0);
         result.BHPTarget = UDAValue(5.0);
         result.THPTarget = UDAValue(6.0);
+        result.ALQValue = UDAValue(12.0);
         result.bhp_hist_limit = 7.0;
         result.thp_hist_limit = 8.0;
         result.BHPH = 9.0;
         result.THPH = 10.0;
         result.VFPTableNumber = 11;
-        result.ALQValue = 12.0;
         result.predictionMode = true;
         result.controlMode = ProducerCMode::CRAT;
         result.whistctl_cmode = ProducerCMode::BHP;
@@ -94,9 +94,12 @@ namespace Opm {
         if (alq_type) {
             if (!record.getItem("VFP_TABLE").defaultApplied(0))
                 this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
-            double alq_input = record.getItem("ALQ").get<double>(0);
             const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system_arg);
-            this->ALQValue = alq_dim.convertRawToSi(alq_input);
+            const auto& alq_input = record.getItem("ALQ").get<UDAValue>(0);
+            if (alq_input.is<double>())
+                this->ALQValue = UDAValue(alq_input.get<double>(), alq_dim);
+            else
+                this->ALQValue = UDAValue(alq_input.get<std::string>(), alq_dim);
         } else {
             const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             if (table_nr != 0)
@@ -339,6 +342,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         controls.gas_rate = UDA::eval_well_uda(this->GasRate, this->name, st, udq_undef);
         controls.liquid_rate = UDA::eval_well_uda(this->LiquidRate, this->name, st, udq_undef);
         controls.resv_rate = UDA::eval_well_uda(this->ResVRate, this->name, st, udq_undef);
+        controls.alq_value = UDA::eval_well_uda(this->ALQValue, this->name, st, udq_undef);
 
         if (this->predictionMode) {
             controls.bhp_limit = UDA::eval_well_uda(this->BHPTarget, this->name, st, udq_undef);
@@ -351,7 +355,6 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         controls.bhp_history = this->BHPH;
         controls.thp_history = this->THPH;
         controls.vfp_table_number = this->VFPTableNumber;
-        controls.alq_value = this->ALQValue;
         controls.cmode = this->controlMode;
 
         return controls;

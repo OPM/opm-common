@@ -351,6 +351,7 @@ public:
         UDAValue  ResVRate;
         UDAValue  BHPTarget;
         UDAValue  THPTarget;
+        UDAValue  ALQValue;
 
         // BHP and THP limit
         double  bhp_hist_limit = 0.0;
@@ -360,7 +361,6 @@ public:
         double  BHPH        = 0.0;
         double  THPH        = 0.0;
         int     VFPTableNumber = 0;
-        double  ALQValue    = 0.0;
         bool    predictionMode = false;
         ProducerCMode controlMode = ProducerCMode::CMODE_UNDEFINED;
         ProducerCMode whistctl_cmode = ProducerCMode::CMODE_UNDEFINED;
@@ -411,12 +411,12 @@ public:
             ResVRate.serializeOp(serializer);
             BHPTarget.serializeOp(serializer);
             THPTarget.serializeOp(serializer);
+            ALQValue.serializeOp(serializer);
             serializer(bhp_hist_limit);
             serializer(thp_hist_limit);
             serializer(BHPH);
             serializer(THPH);
             serializer(VFPTableNumber);
-            serializer(ALQValue);
             serializer(predictionMode);
             serializer(controlMode);
             serializer(whistctl_cmode);
