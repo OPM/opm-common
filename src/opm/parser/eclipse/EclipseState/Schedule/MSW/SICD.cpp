@@ -32,32 +32,32 @@
 namespace Opm {
 
     SICD::SICD()
-        : SICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, ICDStatus::SHUT, 1.0)
+        : SICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, {}, ICDStatus::SHUT, 1.0)
     {
     }
 
     SICD::SICD(double strength,
-                         double length,
-                         double densityCalibration,
-                         double viscosityCalibration,
-                         double criticalValue,
-                         double widthTransitionRegion,
-                         double maxViscosityRatio,
-                         int flowScaling,
-                         double maxAbsoluteRate,
-                         ICDStatus status,
-                         double scalingFactor)
-            : m_strength(strength),
-              m_length(length),
-              m_density_calibration(densityCalibration),
-              m_viscosity_calibration(viscosityCalibration),
-              m_critical_value(criticalValue),
-              m_width_transition_region(widthTransitionRegion),
-              m_max_viscosity_ratio(maxViscosityRatio),
-              m_method_flow_scaling(flowScaling),
-              m_max_absolute_rate(maxAbsoluteRate),
-              m_status(status),
-              m_scaling_factor(scalingFactor)
+               double length,
+               double densityCalibration,
+               double viscosityCalibration,
+               double criticalValue,
+               double widthTransitionRegion,
+               double maxViscosityRatio,
+               int flowScaling,
+               const std::optional<double>& maxAbsoluteRate,
+               ICDStatus status,
+               double scalingFactor)
+        : m_strength(strength),
+          m_length(length),
+          m_density_calibration(densityCalibration),
+          m_viscosity_calibration(viscosityCalibration),
+          m_critical_value(criticalValue),
+          m_width_transition_region(widthTransitionRegion),
+          m_max_viscosity_ratio(maxViscosityRatio),
+          m_method_flow_scaling(flowScaling),
+          m_max_absolute_rate(maxAbsoluteRate),
+          m_status(status),
+          m_scaling_factor(scalingFactor)
     {
     }
 
@@ -70,11 +70,11 @@ namespace Opm {
               m_critical_value(record.getItem("CRITICAL_VALUE").getSIDouble(0)),
               m_width_transition_region(record.getItem("WIDTH_TRANS").get<double>(0)),
               m_max_viscosity_ratio(record.getItem("MAX_VISC_RATIO").get<double>(0)),
-              m_method_flow_scaling(record.getItem("METHOD_SCALING_FACTOR").get<int>(0)),
-              m_max_absolute_rate(record.getItem("MAX_ABS_RATE").hasValue(0)
-                                  ? record.getItem("MAX_ABS_RATE").getSIDouble(0)
-                                  : std::numeric_limits<double>::max()), m_scaling_factor(std::numeric_limits<double>::lowest())
+              m_method_flow_scaling(record.getItem("METHOD_SCALING_FACTOR").get<int>(0))
     {
+        if (record.getItem("MAX_ABS_RATE").hasValue(0))
+            this->m_max_absolute_rate = record.getItem("MAX_ABS_RATE").getSIDouble(0);
+
         if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
             m_status = ICDStatus::OPEN;
         } else {
@@ -110,7 +110,7 @@ namespace Opm {
         return SICD::fromWSEG<SICD>(wsegsicd);
     }
 
-    double SICD::maxAbsoluteRate() const {
+    const std::optional<double>& SICD::maxAbsoluteRate() const {
         return m_max_absolute_rate;
     }
 
@@ -156,10 +156,10 @@ namespace Opm {
 
     double SICD::scalingFactor() const
     {
-        if (m_scaling_factor <= 0.)
-            throw std::runtime_error("the scaling factor has invalid value " + std::to_string(m_scaling_factor));
+        if (!this->m_scaling_factor.has_value())
+            throw std::runtime_error("The scaling factor has not been updated with updateScalingFactor()");
 
-        return m_scaling_factor;
+        return m_scaling_factor.value();
     }
 
     void SICD::updateScalingFactor(const double outlet_segment_length, const double completion_length)

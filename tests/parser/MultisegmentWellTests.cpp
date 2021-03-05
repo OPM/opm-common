@@ -129,7 +129,7 @@ WSEGAICD
     BOOST_CHECK(Opm::Segment::SegmentType::AICD == segment.segmentType());
 
     auto aicd = segment.autoICD();
-    BOOST_CHECK_GT(aicd.maxAbsoluteRate(), 1.e99);
+    BOOST_CHECK(!aicd.maxAbsoluteRate().has_value());
     BOOST_CHECK(aicd.status()==Opm::ICDStatus::SHUT);
     // 0.002 bars*day*day/Volume^2
     BOOST_CHECK_EQUAL(aicd.strength(), 0.002*1.e5*86400.*86400.);
@@ -282,7 +282,7 @@ WSEGSICD
     BOOST_CHECK(Opm::Segment::SegmentType::SICD==segment.segmentType());
 
     auto sicd = segment.spiralICD();
-    BOOST_CHECK_GT(sicd.maxAbsoluteRate(), 1.e99);
+    BOOST_CHECK(!sicd.maxAbsoluteRate().has_value());
     BOOST_CHECK(sicd.status()==Opm::ICDStatus::SHUT);
     // 0.002 bars*day*day/Volume^2
     BOOST_CHECK_EQUAL(sicd.strength(), 0.002*1.e5*86400.*86400.);
