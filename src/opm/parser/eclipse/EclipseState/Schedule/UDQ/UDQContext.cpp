@@ -18,10 +18,10 @@
 */
 #include <fmt/format.h>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 
 namespace Opm {
@@ -47,7 +47,7 @@ bool is_udq(const std::string& key) {
         summary_state(summary_state_arg),
         udq_state(udq_state_arg)
     {
-        for (const auto& pair : TimeMap::eclipseMonthIndices())
+        for (const auto& pair : TimeService::eclipseMonthIndices())
             this->add(pair.first, pair.second);
 
         /*

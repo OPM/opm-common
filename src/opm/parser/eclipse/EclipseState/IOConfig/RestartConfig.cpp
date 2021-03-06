@@ -39,7 +39,6 @@
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 
@@ -585,7 +584,7 @@ RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std
 
 
     const std::map< std::string, int >& RestartConfig::getRestartKeywords( size_t timestep ) const {
-        return restart_keywords.at( timestep );
+        return restart_keywords.get( timestep );
     }
 
     int RestartConfig::getKeyword( const std::string& keyword, size_t timeStep) const {

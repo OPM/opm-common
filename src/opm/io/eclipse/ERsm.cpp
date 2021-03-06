@@ -29,7 +29,6 @@
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 namespace Opm {
@@ -100,7 +99,7 @@ int make_num(const std::string& nums_string) {
 }
 
 TimeStampUTC make_timestamp(const std::string& date_string) {
-    const auto& month_index = TimeMap::eclipseMonthIndices();
+    const auto& month_index = TimeService ::eclipseMonthIndices();
     auto dash_pos1 = date_string.find('-');
     auto dash_pos2 = date_string.rfind('-');
     auto day = std::stoi( date_string.substr(0, dash_pos1 ) );
