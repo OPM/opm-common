@@ -41,13 +41,12 @@ inline std::string path_prefix() {
 }
 
 inline void verifyRestartConfig( const Schedule& sched, std::vector<std::tuple<int , bool, boost::gregorian::date>>& rptConfig) {
-    const auto& rst = sched.restart();
     for (auto rptrst : rptConfig) {
         int report_step                    = std::get<0>(rptrst);
         bool save                          = std::get<1>(rptrst);
         boost::gregorian::date report_date = std::get<2>(rptrst);
 
-        BOOST_CHECK_EQUAL( save, rst.getWriteRestartFile( report_step ) );
+        BOOST_CHECK_EQUAL( save, sched.write_rst_file( report_step ) );
         if (save) {
             std::time_t t = sched.simTime(report_step);
             boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
@@ -356,10 +355,9 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     auto deck = parser.parseFile(path_prefix() + "IOConfig/RPT_TEST2.DATA");
     EclipseState state( deck);
     Schedule schedule(deck, state, python);
-    const auto& rstConfig = schedule.restart();
     verifyRestartConfig(schedule, rptConfig);
 
-    BOOST_CHECK_EQUAL( rstConfig.getFirstRestartStep() , 0 );
+    BOOST_CHECK_EQUAL( schedule.first_rst_step() , 0 );
 }
 
 

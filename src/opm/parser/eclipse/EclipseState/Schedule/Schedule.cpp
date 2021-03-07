@@ -1185,6 +1185,26 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->restart_config;
     }
 
+bool Schedule::write_rst_file(std::size_t report_step, bool log) const {
+    return this->restart_config.getWriteRestartFile(report_step, log);
+    }
+
+    int  Schedule::first_rst_step() const {
+        return this->restart_config.getFirstRestartStep();
+    }
+
+    const std::map< std::string, int >& Schedule::rst_keywords( size_t timestep ) const {
+        return this->restart_config.getRestartKeywords(timestep);
+    }
+
+    bool Schedule::rst_keyword(std::size_t timeStep, const std::string& keyword) const {
+        return this->restart_config.getKeyword(keyword, timeStep);
+    }
+
+    void Schedule::rst_override_interval(std::size_t output_interval) {
+        this->restart_config.overrideRestartWriteInterval(output_interval);
+    }
+
     bool Schedule::operator==(const Schedule& data) const {
 
         return this->m_restart_info == data.m_restart_info &&
