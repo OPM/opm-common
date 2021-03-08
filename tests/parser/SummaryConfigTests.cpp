@@ -1364,3 +1364,25 @@ WBP9
     BOOST_CHECK(summary_config.hasKeyword("WBP5"));
     BOOST_CHECK(summary_config.hasKeyword("WBP9"));
 }
+
+BOOST_AUTO_TEST_CASE( SUMMARY_INVALID_FIPNUM ) {
+    const std::string input = R"(
+RPR__ABC
+1 2 3 /
+
+RWIP_REG
+1 2 3 /
+)";
+
+    ParseContext parse_context;
+    {
+        parse_context.update(ParseContext::SUMMARY_INVALID_FIPNUM, InputError::IGNORE);
+        const auto& summary_config = createSummary(input, parse_context);
+        BOOST_CHECK(summary_config.hasKeyword("RWIP_REG"));
+        BOOST_CHECK(!summary_config.hasKeyword("RPR__ABC"));
+    }
+    {
+        parse_context.update(ParseContext::SUMMARY_INVALID_FIPNUM, InputError::THROW_EXCEPTION);
+        BOOST_CHECK_THROW(createSummary(input, parse_context), std::exception);
+    }
+}

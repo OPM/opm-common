@@ -748,6 +748,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 inline void keywordR( SummaryConfig::keyword_list& list,
                       const DeckKeyword& deck_keyword,
                       const Schedule& schedule,
+                      const FieldPropsManager& field_props,
                       const TableManager& tables,
                       const ParseContext& parseContext,
                       ErrorGuard& errors ) {
@@ -758,8 +759,16 @@ inline void keywordR( SummaryConfig::keyword_list& list,
         return;
     }
     std::string region_name = "FIPNUM";
-    if (keyword.size() > 5)
+    if (keyword.size() > 5) {
         region_name = "FIP" + keyword.substr(5,3);
+        if (!field_props.has_int(region_name)) {
+            std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
+                                              "In {{file}} line {{line}}\n"
+                                              "FIP region {} not defined in REGIONS section - {keyword} ignored", region_name);
+            parseContext.handleError(ParseContext::SUMMARY_INVALID_FIPNUM, msg_fmt, deck_keyword.location(), errors);
+            return;
+        }
+    }
 
     const size_t numfip = tables.numFIPRegions( );
     const auto& item = deck_keyword.getDataRecord().getDataItem();
@@ -1075,6 +1084,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const std::vector<std::string>& node_names,
                         const DeckKeyword& keyword,
                         const Schedule& schedule,
+                        const FieldPropsManager& field_props,
                         const TableManager& tables,
                         const AquiferConfig& aquiferConfig,
                         const ParseContext& parseContext,
@@ -1091,7 +1101,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Group: return keywordG( list, parseContext, errors, keyword, schedule );
         case Cat::Field: return keywordF( list, keyword );
         case Cat::Block: return keywordB( list, keyword, dims );
-        case Cat::Region: return keywordR( list, keyword, schedule, tables, parseContext, errors );
+        case Cat::Region: return keywordR( list, keyword, schedule, field_props, tables, parseContext, errors );
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
         case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );
@@ -1110,6 +1120,7 @@ inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       const KeywordLocation& location,
                       const Schedule& schedule,
+                      const FieldPropsManager& field_props,
                       const AquiferConfig& aquiferConfig,
                       const ParseContext& /* parseContext */,
                       ErrorGuard& /* errors */) {
@@ -1383,7 +1394,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
             if (is_processing_instruction(kw.name())) {
                 handleProcessingInstruction(kw.name());
             } else {
-                handleKW(this->m_keywords, node_names, kw, schedule, tables, aquiferConfig, parseContext, errors, dims);
+                handleKW(this->m_keywords, node_names, kw, schedule, field_props, tables, aquiferConfig, parseContext, errors, dims);
             }
         }
 
@@ -1395,7 +1406,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                         KeywordLocation location = deck_keyword.location();
                         location.keyword = fmt::format("{}/{}", meta_pair.first, kw);
 
-                        handleKW(this->m_keywords, kw, location, schedule, aquiferConfig, parseContext, errors);
+                        handleKW(this->m_keywords, kw, location, schedule, field_props, aquiferConfig, parseContext, errors);
                     }
                 }
             }

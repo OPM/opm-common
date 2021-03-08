@@ -104,7 +104,7 @@ namespace Opm {
         addKey(SUMMARY_UNHANDLED_KEYWORD, InputError::WARN);
         addKey(SUMMARY_UNDEFINED_UDQ, InputError::WARN);
         addKey(SUMMARY_UDQ_MISSING_UNIT, InputError::WARN);
-        addKey(SCHEDULE_INVALID_NAME, InputError::THROW_EXCEPTION);
+        this->addKey(SUMMARY_INVALID_FIPNUM, InputError::WARN);
 
         addKey(ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION);
 
@@ -122,6 +122,7 @@ namespace Opm {
         this->addKey(SCHEDULE_IGNORED_GUIDE_RATE, InputError::WARN);
         this->addKey(SCHEDULE_COMPSEGS_INVALID, InputError::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputError::THROW_EXCEPTION);
+        addKey(SCHEDULE_INVALID_NAME, InputError::THROW_EXCEPTION);
     }
 
     void ParseContext::initEnv() {
@@ -350,6 +351,7 @@ namespace Opm {
     const std::string ParseContext::SUMMARY_UNHANDLED_KEYWORD = "SUMMARY_UNHANDLED_KEYWORD";
     const std::string ParseContext::SUMMARY_UNDEFINED_UDQ = "SUMMARY_UNDEFINED_UDQ";
     const std::string ParseContext::SUMMARY_UDQ_MISSING_UNIT = "SUMMARY_UDQ_MISSING_UNIT";
+    const std::string ParseContext::SUMMARY_INVALID_FIPNUM = "SUMMARY_INVALID_FIPNUM";
 
     const std::string ParseContext::RPT_MIXED_STYLE = "RPT_MIXED_STYLE";
     const std::string ParseContext::RPT_UNKNOWN_MNEMONIC = "RPT_UNKNOWN_MNEMONIC";
