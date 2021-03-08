@@ -68,7 +68,7 @@ namespace Opm {
         EclipseGrid(size_t nx, size_t ny, size_t nz,
                     double dx = 1.0, double dy = 1.0, double dz = 1.0);
 
-        EclipseGrid(std::array<int, 3>& dims ,
+        EclipseGrid(const std::array<int, 3>& dims ,
                     const std::vector<double>& coord ,
                     const std::vector<double>& zcorn ,
                     const int * actnum = nullptr,
