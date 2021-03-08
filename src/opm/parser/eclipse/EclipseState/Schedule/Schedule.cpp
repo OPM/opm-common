@@ -105,6 +105,7 @@ namespace {
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         [[maybe_unused]] std::shared_ptr<const Python> python,
+                        const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst)
     try :
         m_static( python, deck, runspec ),
@@ -120,6 +121,8 @@ namespace {
         } else
             this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
 
+        if (output_interval.has_value())
+            this->rst_override_interval(output_interval.value());
     }
     catch (const OpmInputError& opm_error) {
         throw;
@@ -141,8 +144,9 @@ namespace {
                         const ParseContext& parseContext,
                         T&& errors,
                         std::shared_ptr<const Python> python,
+                        const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors, python, rst)
+        Schedule(deck, grid, fp, runspec, parseContext, errors, python, output_interval, rst)
     {}
 
 
@@ -151,12 +155,13 @@ namespace {
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
+                        const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, rst)
+        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, output_interval, rst)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -164,12 +169,13 @@ namespace {
                  parse_context,
                  errors,
                  python,
+                 output_interval,
                  rst)
     {}
 
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -177,17 +183,18 @@ namespace {
                  parse_context,
                  errors,
                  python,
+                 output_interval,
                  rst)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
-        Schedule(deck, es, ParseContext(), ErrorGuard(), python, rst)
-    {}
+Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule(deck, es, ParseContext(), ErrorGuard(), python, output_interval, rst)
+{}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const RestartIO::RstState * rst) :
-        Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), rst)
+Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), output_interval, rst)
     {}
 
     Schedule::Schedule(std::shared_ptr<const Python> python_handle) :
