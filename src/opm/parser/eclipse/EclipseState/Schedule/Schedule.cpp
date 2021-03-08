@@ -111,7 +111,7 @@ namespace {
         m_static( python, deck, runspec ),
         m_restart_info( restart_info(rst)),
         m_sched_deck(deck, m_restart_info ),
-        restart_config(deck, m_restart_info, parseContext, errors)
+        restart_config(deck, m_restart_info, output_interval, parseContext, errors)
     {
         if (rst) {
             auto restart_step = this->m_restart_info.second;
@@ -120,9 +120,6 @@ namespace {
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
         } else
             this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
-
-        if (output_interval.has_value())
-            this->rst_override_interval(output_interval.value());
     }
     catch (const OpmInputError& opm_error) {
         throw;
@@ -1206,10 +1203,6 @@ bool Schedule::write_rst_file(std::size_t report_step, bool log) const {
 
     bool Schedule::rst_keyword(std::size_t timeStep, const std::string& keyword) const {
         return this->restart_config.getKeyword(keyword, timeStep);
-    }
-
-    void Schedule::rst_override_interval(std::size_t output_interval) {
-        this->restart_config.overrideRestartWriteInterval(output_interval);
     }
 
     bool Schedule::operator==(const Schedule& data) const {

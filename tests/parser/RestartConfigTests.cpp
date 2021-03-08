@@ -79,7 +79,7 @@ END
 
     const auto deck   = Parser{}.parseString(input);
     const auto tm     = TimeMap { deck };
-    const auto rstcfg = RestartConfig { deck, restart_info };
+    const auto rstcfg = RestartConfig { deck, restart_info, {} };
 
     BOOST_REQUIRE_EQUAL(tm.size(), std::size_t{19});
 
@@ -175,7 +175,7 @@ END
 
     const auto deck   = Parser{}.parseString(input);
     const auto tm     = TimeMap { deck };
-    const auto rstcfg = RestartConfig { deck, restart_info };
+    const auto rstcfg = RestartConfig { deck, restart_info, {} };
 
     for (std::size_t step = 0; step < tm.size(); step++) {
         if (step == 0 || step == 38 || step == 51)
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
     Parser parser;
 
     auto deck1 = parser.parseString( deckData1);
-    RestartConfig rstConfig1( deck1, restart_info);
+    RestartConfig rstConfig1( deck1, restart_info, {});
 
     BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
     ErrorGuard errors;
     auto deck = Parser().parseString( data, parseContext, errors );
     parseContext.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( RestartConfig( deck, restart_info, parseContext, errors ), OpmInputError);
+    BOOST_CHECK_THROW( RestartConfig( deck, restart_info, {}, parseContext, errors ), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST) {
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     Opm::Parser parser;
 
     auto deck1 = parser.parseString( deckData1);
-    RestartConfig rstConfig1( deck1, restart_info );
+    RestartConfig rstConfig1( deck1, restart_info, {} );
 
     // Observe that this is true due to some undocumented guessing that
     // the initial restart file should be written if a RPTRST keyword is
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 2 ) , 0);
 
     auto deck2 = parser.parseString( deckData2 );
-    RestartConfig rstConfig2( deck2, restart_info );
+    RestartConfig rstConfig2( deck2, restart_info, {} );
 
     const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
     const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     BOOST_CHECK( !rstConfig2.getWriteRestartFile( 3 ) );
 
     auto deck3 = parser.parseString( deckData3 );
-    RestartConfig rstConfig3( deck3, restart_info );
+    RestartConfig rstConfig3( deck3, restart_info, {} );
 
     BOOST_CHECK( !rstConfig3.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
@@ -614,15 +614,15 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
     auto deck1 = parser.parseString( deckData1, ctx, errors );
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(deck1, restart_info, ctx, errors), OpmInputError);
+    BOOST_CHECK_THROW(RestartConfig(deck1, restart_info, {}, ctx, errors), OpmInputError);
 
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::IGNORE);
-    RestartConfig rstConfig1( deck1, restart_info, ctx, errors );
+    RestartConfig rstConfig1( deck1, restart_info, {}, ctx, errors );
 
 
     // The case "BASIC 1" - i.e. without '=' can not be salvaged; this should
     // give an exception whatever is the value of ParseContext::RPT_MIXED_STYLE:
-    BOOST_CHECK_THROW(RestartConfig(deck0, restart_info, ctx, errors), OpmInputError);
+    BOOST_CHECK_THROW(RestartConfig(deck0, restart_info, {}, ctx, errors), OpmInputError);
 
 
     // Observe that this is true due to some undocumented guessing that
@@ -645,10 +645,10 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
     auto deck2 = parser.parseString( deckData2, ctx, errors );
 
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(deck2, restart_info, ctx, errors), OpmInputError);
+    BOOST_CHECK_THROW(RestartConfig(deck2, restart_info, {}, ctx, errors), OpmInputError);
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
 
-    RestartConfig rstConfig2( deck2, restart_info, ctx, errors );
+    RestartConfig rstConfig2( deck2, restart_info, {}, ctx, errors );
 
     const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
     const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
     BOOST_CHECK( !rstConfig2.getWriteRestartFile( 3 ) );
 
     auto deck3 = parser.parseString( deckData3, ctx, errors );
-    RestartConfig rstConfig3( deck3, restart_info, ctx, errors );
+    RestartConfig rstConfig3( deck3, restart_info, {}, ctx, errors );
 
     BOOST_CHECK( !rstConfig3.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
     Parser parser;
 
     auto deck1 = parser.parseString( deckData1 );
-    RestartConfig rstConfig1( deck1, restart_info );
+    RestartConfig rstConfig1( deck1, restart_info , {});
 
     BOOST_CHECK( !rstConfig1.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
@@ -764,7 +764,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
 
     auto deck2 = parser.parseString( deckData2 );
-    RestartConfig rstConfig2( deck2, restart_info );
+    RestartConfig rstConfig2( deck2, restart_info, {} );
 
     BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
 
     auto deck3 = parser.parseString( deckData3 );
-    RestartConfig rstConfig3( deck3, restart_info );
+    RestartConfig rstConfig3( deck3, restart_info , {});
     //Older ECLIPSE 100 data set may use integer controls instead of mnemonics
     BOOST_CHECK(  rstConfig3.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
@@ -820,7 +820,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_and_RPTRST) {
     Opm::Parser parser;
 
     auto deck = parser.parseString( deckData );
-    RestartConfig rstConfig( deck, restart_info );
+    RestartConfig rstConfig( deck, restart_info, {} );
 
     BOOST_CHECK( !rstConfig.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig.getWriteRestartFile( 1 ) );
@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(NO_BASIC) {
                        "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info, {});
 
     for( size_t ts = 0; ts < 4; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
@@ -881,7 +881,7 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_1) {
                        "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info, {});
 
     for( size_t ts = 0; ts < 3; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_3) {
                         "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig(  deck, restart_info);
+    RestartConfig ioConfig(  deck, restart_info, {});
 
     const size_t freq = 3;
 
@@ -953,7 +953,7 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_4) {
                         "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info, {});
 
     /* BASIC=4, restart file is written at the first report step of each year.
      */
@@ -991,7 +991,7 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_4_FREQ_2) {
                         "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info, {});
 
     /* BASIC=4, restart file is written at the first report step of each year.
      * Optionally, if the mnemonic FREQ is set >1 the restart is written only
@@ -1033,7 +1033,7 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
                         "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info,{});
 
     /* BASIC=5, restart file is written at the first report step of each month.
      */
@@ -1071,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_0) {
                         "/\n";
 
     auto deck = Parser().parseString( data ) ;
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info, {});
 
     /* RESTART=0, no restart file is written
      */
@@ -1107,7 +1107,7 @@ BOOST_AUTO_TEST_CASE(RESTART_EQ_0) {
                         "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info, {});
 
     /* RESTART=0, no restart file is written
      */
@@ -1147,7 +1147,7 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_GT_2) {
                        "/\n";
 
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info);
+    RestartConfig ioConfig( deck, restart_info, {});
 
     for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11  } )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
@@ -1188,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_LEQ_2) {
                        "/\n";
 
     auto deck = Parser().parseString( data );
-    RestartConfig ioConfig( deck, restart_info );
+    RestartConfig ioConfig( deck, restart_info , {});
 
     BOOST_CHECK( ioConfig.getWriteRestartFile( 1 ) );
     for( size_t ts = 2; ts < 11; ++ts )
@@ -1223,7 +1223,7 @@ BOOST_AUTO_TEST_CASE(RESTART_SAVE) {
                         "TSTEP \n"
                         " 1 /\n";
     auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info );
+    RestartConfig ioConfig( deck, restart_info, {} );
 
     for( size_t ts = 1; ts < 11; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );

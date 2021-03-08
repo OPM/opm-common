@@ -20,8 +20,9 @@
 #ifndef OPM_RESTART_CONFIG_HPP
 #define OPM_RESTART_CONFIG_HPP
 
-#include <vector>
+#include <optional>
 #include <set>
+#include <vector>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
@@ -328,9 +329,9 @@ namespace Opm {
         RestartConfig() = default;
 
         template<typename T>
-        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, T&& errors );
-        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, ErrorGuard& errors );
-        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart);
+        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart, const std::optional<int>& output_interval, const ParseContext& parseContext, T&& errors );
+        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart, const std::optional<int>& output_interval, const ParseContext& parseContext, ErrorGuard& errors );
+        RestartConfig( const Deck&, const std::pair<std::time_t, std::size_t>& restart, const std::optional<int>& output_interval);
 
         static RestartConfig serializeObject();
 
@@ -339,7 +340,6 @@ namespace Opm {
         const std::map< std::string, int >& getRestartKeywords( size_t timestep ) const;
         int getKeyword( const std::string& keyword, size_t timeStep) const;
 
-        void overrideRestartWriteInterval(size_t interval);
         void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
@@ -364,6 +364,7 @@ namespace Opm {
         /// zero, for subsequent output steps we should append.
         void initFirstOutput( );
         RestartSchedule getNode( size_t timestep ) const;
+         void overrideRestartWriteInterval(size_t interval);
 
         bool getWriteRestartFileFrequency(size_t timestep,
                                           size_t start_timestep,

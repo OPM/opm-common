@@ -525,16 +525,16 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
     }
 
     template<typename T>
-    RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, T&& errors ) :
-        RestartConfig( deck, restart, parseContext, errors)
+    RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart, const std::optional<int>& output_interval, const ParseContext& parseContext, T&& errors ) :
+        RestartConfig( deck, restart, output_interval, parseContext, errors)
     {}
 
-    RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) :
-        RestartConfig( deck, restart, ParseContext(), ErrorGuard())
+    RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart, const std::optional<int>& output_interval) :
+        RestartConfig( deck, restart, output_interval, ParseContext(), ErrorGuard())
     {}
 
 
-RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart, const ParseContext& parseContext, ErrorGuard& errors ) :
+    RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart, const std::optional<int>& output_interval, const ParseContext& parseContext, ErrorGuard& errors ) :
     m_timemap( TimeMap(deck, restart) ),
         m_first_restart_step( -1 ),
         restart_schedule( m_timemap, {0,0,1}),
@@ -544,6 +544,9 @@ RestartConfig::RestartConfig( const Deck& deck, const std::pair<std::time_t, std
         handleSolutionSection( SOLUTIONSection(deck), parseContext, errors );
         handleScheduleSection( SCHEDULESection(deck), parseContext, errors );
         initFirstOutput( );
+
+        if (output_interval.has_value())
+            this->overrideRestartWriteInterval(output_interval.value());
     }
 
     RestartConfig RestartConfig::serializeObject()
