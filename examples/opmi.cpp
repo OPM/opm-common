@@ -71,7 +71,7 @@ inline void loadDeck( const char * deck_file) {
     std::cout << "creating SummaryConfig .... ";  std::cout.flush();
 
     start = Opm::TimeService::now();
-    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), state.aquifer(),
+    Opm::SummaryConfig summary( deck, schedule, state.fieldProps(), state.getTableManager( ), state.aquifer(),
                                 parseContext, errors );
     auto summary_time = Opm::TimeService::now() - start;
 

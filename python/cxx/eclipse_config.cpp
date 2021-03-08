@@ -18,7 +18,7 @@ void python::common::export_EclipseConfig(py::module& module)
 
     py::class_< SummaryConfig >( module, "SummaryConfig")
         .def(py::init([](const Deck& deck, const EclipseState& state, const Schedule& schedule) {
-           return SummaryConfig( deck, schedule, state.getTableManager(), state.aquifer() );
+            return SummaryConfig( deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer() );
          }  )  )
 
         .def( "__contains__",    &SummaryConfig::hasKeyword );

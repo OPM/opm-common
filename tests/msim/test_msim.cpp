@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
     Deck deck = parser.parseFile("SPE1CASE1.DATA");
     EclipseState state(deck);
     Schedule schedule(deck, state, python);
-    SummaryConfig summary_config(deck, schedule, state.getTableManager(), state.aquifer());
+    SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer());
     msim msim(state);
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
