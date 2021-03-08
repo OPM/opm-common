@@ -88,10 +88,6 @@ namespace {
     }
 
 
-    const RestartConfig& restart(const Schedule& sch) {
-        return sch.restart();
-    }
-
     const ScheduleState& getitem(const Schedule& sch, std::size_t index) {
         return sch[index];
     }
@@ -117,7 +113,6 @@ void python::common::export_Schedule(py::module& module) {
     .def_property_readonly( "start",  &get_start_time )
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
-    .def_property_readonly("restart", &restart)
     .def("__len__", &Schedule::size)
     .def("__getitem__", &getitem)
     .def( "shut_well", &Schedule::shut_well)
@@ -127,10 +122,5 @@ void python::common::export_Schedule(py::module& module) {
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
     .def( "__contains__", &has_well );
-
-    py::class_< RestartConfig >( module, "RestartConfig")
-        .def( "getKeyword",          &RestartConfig::getKeyword )
-        .def( "getFirstRestartStep", &RestartConfig::getFirstRestartStep )
-        .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile, py::arg("reportStep"), py::arg("log") = true);
 
 }

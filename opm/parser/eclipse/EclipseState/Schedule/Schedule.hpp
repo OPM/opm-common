@@ -245,8 +245,12 @@ namespace Opm
         */
         void filterConnections(const ActiveGridCells& grid);
         std::size_t size() const;
-        const RestartConfig& restart() const;
-        RestartConfig& restart();
+
+        bool write_rst_file(std::size_t report_step, bool log=true) const;
+        int  first_rst_step() const;
+        const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
+        bool rst_keyword(std::size_t timestep, const std::string& keyword) const;
+        void rst_override_interval(std::size_t output_interval);
 
         void applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
@@ -446,6 +450,9 @@ namespace Opm
         RestartConfig restart_config;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
+
+        RestartConfig& restart();
+        const RestartConfig& restart() const;
 
         void load_rst(const RestartIO::RstState& rst,
                       const EclipseGrid& grid,
