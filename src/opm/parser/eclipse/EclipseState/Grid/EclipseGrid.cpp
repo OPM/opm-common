@@ -61,7 +61,7 @@
 namespace Opm {
 
 
-EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
+EclipseGrid::EclipseGrid(const std::array<int, 3>& dims ,
                          const std::vector<double>& coord ,
                          const std::vector<double>& zcorn ,
                          const int * actnum,
