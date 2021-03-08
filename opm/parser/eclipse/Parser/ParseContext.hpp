@@ -304,6 +304,8 @@ class KeywordLocation;
         const static std::string SUMMARY_UNDEFINED_UDQ;
         const static std::string SUMMARY_UDQ_MISSING_UNIT;
         const static std::string SUMMARY_INVALID_FIPNUM;
+        const static std::string SUMMARY_EMPTY_REGION;
+        const static std::string SUMMARY_REGION_TOO_LARGE;
         /*
           A well must be specified (e.g. WELSPECS) and have completions
           (e.g. COMPDAT) to be able to set control mode (e.g. WCONPROD).

@@ -246,6 +246,10 @@ PVTO
 -- so it is possible to use the assumption described above. 
 -- An equivalent approximation for the viscosity has been used.
 /
+REGIONS
+
+FIPNUM
+  300*1 / 
 
 SOLUTION
 -- -------------------------------------------------------------------------

@@ -456,7 +456,7 @@ struct setup {
         grid( es.getInputGrid() ),
         python( std::make_shared<Python>() ),
         schedule( deck, es, python),
-        config( deck, schedule, es.fieldProps(), es.getTableManager(), es.aquifer()),
+        config( deck, schedule, es.fieldProps(), es.aquifer()),
         wells( result_wells(w3_injector) ),
         grp_nwrk( result_group_nwrk() ),
         name( toupper(std::move(fname)) ),
@@ -1365,7 +1365,7 @@ BOOST_AUTO_TEST_CASE(region_vars) {
 
     BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
     BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:10"));
-    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:11"));
+    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:21"));
     UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
 
     for (size_t r=1; r <= 10; r++) {

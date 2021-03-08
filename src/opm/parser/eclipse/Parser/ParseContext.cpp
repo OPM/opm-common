@@ -105,6 +105,8 @@ namespace Opm {
         addKey(SUMMARY_UNDEFINED_UDQ, InputError::WARN);
         addKey(SUMMARY_UDQ_MISSING_UNIT, InputError::WARN);
         this->addKey(SUMMARY_INVALID_FIPNUM, InputError::WARN);
+        this->addKey(SUMMARY_EMPTY_REGION, InputError::WARN);
+        this->addKey(SUMMARY_REGION_TOO_LARGE, InputError::WARN);
 
         addKey(ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION);
 
@@ -352,6 +354,8 @@ namespace Opm {
     const std::string ParseContext::SUMMARY_UNDEFINED_UDQ = "SUMMARY_UNDEFINED_UDQ";
     const std::string ParseContext::SUMMARY_UDQ_MISSING_UNIT = "SUMMARY_UDQ_MISSING_UNIT";
     const std::string ParseContext::SUMMARY_INVALID_FIPNUM = "SUMMARY_INVALID_FIPNUM";
+    const std::string ParseContext::SUMMARY_EMPTY_REGION = "SUMMARY_EMPTY_REGION";
+    const std::string ParseContext::SUMMARY_REGION_TOO_LARGE = "SUMMARY_REGION_TOO_LARGE";
 
     const std::string ParseContext::RPT_MIXED_STYLE = "RPT_MIXED_STYLE";
     const std::string ParseContext::RPT_UNKNOWN_MNEMONIC = "RPT_UNKNOWN_MNEMONIC";
