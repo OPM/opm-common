@@ -1066,8 +1066,11 @@ std::vector<std::string> ESmry::checkForMultipleResultFiles(const Opm::filesyste
     {
         const std::string file = itr->path().filename().string();
 
-        if ((file.find(fileFilter) != std::string::npos) && (file.find("SMSPEC") == std::string::npos)) {
-            fileList.push_back(pathRootN + "/" + file);
+        if (file.find(fileFilter) != std::string::npos) {
+            std::string num_string = itr->path().extension().string().substr(2);
+
+            if (Opm::EclIO::is_number(num_string))
+                fileList.push_back(pathRootN + "/" + file);
         }
     }
 
@@ -1287,6 +1290,4 @@ std::vector<time_point> ESmry::dates_at_rstep() const {
     const auto& full_vector = this->dates();
     return this->rstep_vector(full_vector);
 }
-
-
 }} // namespace Opm::ecl
