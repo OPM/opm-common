@@ -1368,7 +1368,6 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
-                              const FieldPropsManager& field_props,
                               const TableManager& tables,
                               const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
@@ -1420,33 +1419,30 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
-                              const FieldPropsManager& field_props,
                               const TableManager& tables,
                               const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               ErrorGuard& errors) :
-    SummaryConfig( deck , schedule, field_props, tables, aquiferConfig, parseContext, errors, GridDims( deck ))
+    SummaryConfig( deck , schedule, tables, aquiferConfig, parseContext, errors, GridDims( deck ))
 { }
 
 
 template <typename T>
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
-                              const FieldPropsManager& field_props,
                               const TableManager& tables,
                               const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               T&& errors) :
-    SummaryConfig(deck, schedule, field_props, tables, aquiferConfig, parseContext, errors)
+    SummaryConfig(deck, schedule, tables, aquiferConfig, parseContext, errors)
 {}
 
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
-                              const FieldPropsManager& field_props,
                               const TableManager& tables,
                               const AquiferConfig& aquiferConfig) :
-    SummaryConfig(deck, schedule, field_props, tables, aquiferConfig, ParseContext(), ErrorGuard())
+    SummaryConfig(deck, schedule, tables, aquiferConfig, ParseContext(), ErrorGuard())
 {}
 
 

@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto numCells = grid.getCartesianSize( );
 
         const Schedule schedule(deck, eclipseState, python);
-        const SummaryConfig summary_config( deck, schedule, eclipseState.fieldProps(), eclipseState.getTableManager( ), eclipseState.aquifer() );
+        const SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), eclipseState.aquifer() );
 
         EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
 
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         const auto numCells = grid.getCartesianSize( );
 
         Schedule schedule(deck, eclipseState, python);
-        SummaryConfig summary_config( deck, schedule, eclipseState.fieldProps(), eclipseState.getTableManager( ), eclipseState.aquifer() );
+        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), eclipseState.aquifer() );
         SummaryState st(Opm::TimeService::now());
         Action::State action_state;
         UDQState udq_state(10);

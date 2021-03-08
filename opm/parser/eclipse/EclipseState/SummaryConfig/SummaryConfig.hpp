@@ -139,7 +139,6 @@ namespace Opm {
             SummaryConfig() = default;
             SummaryConfig( const Deck&,
                            const Schedule&,
-                           const FieldPropsManager&,
                            const TableManager&,
                            const AquiferConfig&,
                            const ParseContext&,
@@ -148,7 +147,6 @@ namespace Opm {
             template <typename T>
             SummaryConfig( const Deck&,
                            const Schedule&,
-                           const FieldPropsManager&,
                            const TableManager&,
                            const AquiferConfig&,
                            const ParseContext&,
@@ -156,7 +154,6 @@ namespace Opm {
 
             SummaryConfig( const Deck&,
                            const Schedule&,
-                           const FieldPropsManager&,
                            const TableManager&,
                            const AquiferConfig&);
 
@@ -224,7 +221,6 @@ namespace Opm {
         private:
             SummaryConfig( const Deck& deck,
                            const Schedule& schedule,
-                           const FieldPropsManager& field_props,
                            const TableManager& tables,
                            const AquiferConfig& aquiferConfig,
                            const ParseContext& parseContext,

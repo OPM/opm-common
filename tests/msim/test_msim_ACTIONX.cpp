@@ -63,7 +63,7 @@ struct test_data {
         state( this->deck ),
         python( std::make_shared<Python>() ),
         schedule( this->deck, this->state, this->python),
-        summary_config( this->deck, this->schedule, this->state.fieldProps(), this->state.getTableManager(), this->state.aquifer() )
+        summary_config( this->deck, this->schedule, this->state.getTableManager(), this->state.aquifer() )
     {
         auto& ioconfig = this->state.getIOConfig();
         ioconfig.setBaseName("MSIM");

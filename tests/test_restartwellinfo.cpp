@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     Opm::EclipseState es(deck);
     const Opm::EclipseGrid& grid = es.getInputGrid();
     Opm::Schedule schedule( deck, es, python);
-    Opm::SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.getTableManager( ), es.aquifer());
+    Opm::SummaryConfig summary_config( deck, schedule, es.getTableManager( ), es.aquifer());
     const auto num_cells = grid.getCartesianSize();
     Opm::EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
     int countTimeStep = schedule.size() - 1;

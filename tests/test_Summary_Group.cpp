@@ -233,7 +233,7 @@ struct setup {
         grid( es.getInputGrid() ),
         python( std::make_shared<Python>() ),
         schedule( deck, es, python),
-        config( deck, schedule, es.fieldProps(), es.getTableManager(), es.aquifer() ),
+        config( deck, schedule, es.getTableManager(), es.aquifer() ),
         wells( result_wells() ),
         grp_nwrk( result_group_network() ),
         name( toupper(std::move(fname)) ),

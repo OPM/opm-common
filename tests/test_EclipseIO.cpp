@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto& eclGrid = es.getInputGrid();
         auto python = std::make_shared<Python>();
         Schedule schedule(deck, es, python);
-        SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.getTableManager( ), es.aquifer());
+        SummaryConfig summary_config( deck, schedule, es.getTableManager( ), es.aquifer());
         SummaryState st(TimeService::now());
         es.getIOConfig().setBaseName( "FOO" );
 
