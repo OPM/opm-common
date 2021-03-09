@@ -111,6 +111,11 @@ namespace Opm
              * Well/group efficiency factor has changed
              */
             WELLGROUP_EFFICIENCY_UPDATE = (1 << 17),
+
+            /*
+             * Injection type changed
+             */
+            INJECTION_TYPE_CHANGED = (1 << 18),
         };
     }
 

@@ -985,8 +985,8 @@ namespace {
                 auto well2 = this->snapshots.back().wells.get( well_name );
 
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
+                auto previousInjectorType = injection->injectorType;
                 injection->handleWCONINJE(record, well2.isAvailableForGroupControl(), well_name);
-
                 if (well2.updateInjection(injection))
                     update_well = true;
 
@@ -999,6 +999,8 @@ namespace {
                 if (update_well) {
                     this->snapshots.back().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
                     this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
+                    if(previousInjectorType != injection->injectorType)
+                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
                     this->snapshots.back().wells.update( std::move(well2) );
                 }
 
@@ -1045,6 +1047,7 @@ namespace {
                 bool update_well = false;
                 auto well2 = this->snapshots.back().wells.get( well_name );
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
+                auto previousInjectorType = injection->injectorType;
                 injection->handleWCONINJH(record, well2.isProducer(), well_name);
 
                 if (well2.updateInjection(injection))
@@ -1059,6 +1062,8 @@ namespace {
                 if (update_well) {
                     this->snapshots.back().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
                     this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
+                    if(previousInjectorType != injection->injectorType)
+                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
                     this->snapshots.back().wells.update( std::move(well2) );
                 }
 
