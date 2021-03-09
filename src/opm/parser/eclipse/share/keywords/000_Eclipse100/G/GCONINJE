@@ -46,13 +46,13 @@
       "default": "YES"
     },
     {
-      "name": "GUIDE_FRACTION",
+      "name": "GUIDE_RATE",
       "value_type": "DOUBLE",
       "default": 0,
       "dimension": "1"
     },
     {
-      "name": "GUIDE_DEF",
+      "name": "GUIDE_RATE_DEF",
       "value_type": "STRING"
     },
     {
