@@ -128,6 +128,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
+                 const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         template<typename T>
@@ -138,6 +139,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  T&& errors,
                  std::shared_ptr<const Python> python,
+                 const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
@@ -145,6 +147,7 @@ namespace Opm
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
+                 const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
@@ -152,6 +155,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
+                 const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         template <typename T>
@@ -160,16 +164,19 @@ namespace Opm
                  const ParseContext& parseContext,
                  T&& errors,
                  std::shared_ptr<const Python> python,
+                 const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  std::shared_ptr<const Python> python,
+                 const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         // The constructor *without* the Python arg should really only be used from Python itself
         Schedule(const Deck& deck,
                  const EclipseState& es,
+                 const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         static Schedule serializeObject();
@@ -250,7 +257,6 @@ namespace Opm
         int  first_rst_step() const;
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
         bool rst_keyword(std::size_t timestep, const std::string& keyword) const;
-        void rst_override_interval(std::size_t output_interval);
 
         void applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
@@ -474,7 +480,6 @@ namespace Opm
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
 
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
-
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         bool updateWellStatus( const std::string& well, std::size_t reportStep, Well::Status status, std::optional<KeywordLocation> = {});

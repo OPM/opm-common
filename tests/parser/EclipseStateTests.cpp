@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
 
     Parser parser{};
     auto deck = parser.parseString(deckData) ;
-    RestartConfig rstConfig(deck, restart_info);
+    RestartConfig rstConfig(deck, restart_info, {});
 
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(1));
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
 
     Parser parser;
     auto deck = parser.parseString(deckData) ;
-    RestartConfig rstConfig(deck, restart_info);
+    RestartConfig rstConfig(deck, restart_info, {});
 
     BOOST_CHECK_EQUAL(true  ,  rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false ,  rstConfig.getWriteRestartFile(1));
@@ -643,14 +643,14 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
 
     {   //mnemnonics
         auto deck = parser.parseString(deckData) ;
-        RestartConfig rstConfig(deck, restart_info);
+        RestartConfig rstConfig(deck, restart_info, {});
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
 
     {   //old fashion integer mnemonics
         auto deck = parser.parseString(deckData2) ;
-        RestartConfig rstConfig(deck, restart_info);
+        RestartConfig rstConfig(deck, restart_info, {});
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }

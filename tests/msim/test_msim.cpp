@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
 
             const int report_step = 50;
             const auto& rst_state = Opm::RestartIO::RstState::load(rst, report_step);
-            Schedule sched_rst(deck, state, python, &rst_state);
+            Schedule sched_rst(deck, state, python, {}, &rst_state);
             const auto& rfti_well = sched_rst.getWell("RFTI", report_step);
             const auto& rftp_well = sched_rst.getWell("RFTP", report_step);
             BOOST_CHECK(rftp_well.getStatus() == Well::Status::SHUT);

@@ -105,12 +105,13 @@ namespace {
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         [[maybe_unused]] std::shared_ptr<const Python> python,
+                        const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst)
     try :
         m_static( python, deck, runspec ),
         m_restart_info( restart_info(rst)),
         m_sched_deck(deck, m_restart_info ),
-        restart_config(deck, m_restart_info, parseContext, errors)
+        restart_config(deck, m_restart_info, output_interval, parseContext, errors)
     {
         if (rst) {
             auto restart_step = this->m_restart_info.second;
@@ -119,7 +120,6 @@ namespace {
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
         } else
             this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp);
-
     }
     catch (const OpmInputError& opm_error) {
         throw;
@@ -141,8 +141,9 @@ namespace {
                         const ParseContext& parseContext,
                         T&& errors,
                         std::shared_ptr<const Python> python,
+                        const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors, python, rst)
+        Schedule(deck, grid, fp, runspec, parseContext, errors, python, output_interval, rst)
     {}
 
 
@@ -151,12 +152,13 @@ namespace {
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
+                        const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, rst)
+        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, output_interval, rst)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -164,12 +166,13 @@ namespace {
                  parse_context,
                  errors,
                  python,
+                 output_interval,
                  rst)
     {}
 
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -177,17 +180,18 @@ namespace {
                  parse_context,
                  errors,
                  python,
+                 output_interval,
                  rst)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
-        Schedule(deck, es, ParseContext(), ErrorGuard(), python, rst)
-    {}
+Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule(deck, es, ParseContext(), ErrorGuard(), python, output_interval, rst)
+{}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const RestartIO::RstState * rst) :
-        Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), rst)
+Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), output_interval, rst)
     {}
 
     Schedule::Schedule(std::shared_ptr<const Python> python_handle) :
@@ -1199,10 +1203,6 @@ bool Schedule::write_rst_file(std::size_t report_step, bool log) const {
 
     bool Schedule::rst_keyword(std::size_t timeStep, const std::string& keyword) const {
         return this->restart_config.getKeyword(keyword, timeStep);
-    }
-
-    void Schedule::rst_override_interval(std::size_t output_interval) {
-        this->restart_config.overrideRestartWriteInterval(output_interval);
     }
 
     bool Schedule::operator==(const Schedule& data) const {

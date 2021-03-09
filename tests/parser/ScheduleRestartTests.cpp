@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(LoadRestartSim) {
     EclIO::ERst rst_file("SPE1CASE2.X0060");
     auto rst_state = RestartIO::RstState::load(rst_file, 60);
     EclipseState ecl_state_restart(restart_deck);
-    Schedule restart_sched(restart_deck, ecl_state_restart, python, &rst_state);
+    Schedule restart_sched(restart_deck, ecl_state_restart, python, {}, &rst_state);
 
     // Verify that sched and restart_sched are identical from report_step 60 and onwords.
 }

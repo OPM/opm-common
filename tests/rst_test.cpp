@@ -78,7 +78,7 @@ Opm::Schedule load_schedule(std::shared_ptr<const Opm::Python> python, const std
         Opm::EclIO::ERst rst_file(rst_filename);
 
         const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
-        return Opm::Schedule(deck, state, python, &rst);
+        return Opm::Schedule(deck, state, python, {}, &rst);
     } else
         return Opm::Schedule(deck, state, python);
 }
