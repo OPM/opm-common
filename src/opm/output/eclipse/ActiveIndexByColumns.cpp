@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <functional>
@@ -58,32 +59,20 @@ buildMappingTables(const std::size_t                                           n
                    const std::array<int, 3>&                                   cartDims,
                    const std::function<std::array<int, 3>(const std::size_t)>& getIJK)
 {
-    // Algorithm:
-    //
-    //   1. Mark active cells as such, using column-based active index in global array.
-    //   2. Accumulate number of active cells in global array.
-    //   3. Extract column-based active index from global array, push back
-    //      into natural2columnar_ according to natural numbering of active cells.
+    auto activeCells = std::vector<std::size_t>(numActive, std::size_t{0});
+    std::iota(activeCells.begin(), activeCells.end(), std::size_t{0});
 
-    auto cartesianActive = std::vector<int>(cartDims[0] * cartDims[1] * cartDims[2], 0);
-    auto colActIx = [&cartDims, &getIJK, &cartesianActive](const std::size_t activeCell) -> int&
+    std::sort(activeCells.begin(), activeCells.end(),
+        [&cartDims, &getIJK](const std::size_t cell1, const std::size_t cell2) -> bool
     {
-        return cartesianActive[columnarGlobalIdx(cartDims, getIJK(activeCell))];
-    };
+        return columnarGlobalIdx(cartDims, getIJK(cell1))
+            <  columnarGlobalIdx(cartDims, getIJK(cell2));
+    });
 
-    for (auto activeCell = 0*numActive; activeCell < numActive; ++activeCell) {
-        colActIx(activeCell) = 1;
-    }
-
-    // Counts number of active cells (by columns) up to and including current.
-    std::partial_sum(cartesianActive.begin(), cartesianActive.end(), cartesianActive.begin());
-
-    this->natural2columnar_.clear();
-    this->natural2columnar_.reserve(numActive);
-    for (auto activeCell = 0*numActive; activeCell < numActive; ++activeCell) {
-        // Subtract 1 to discount current active cell.  We only need number
-        // of active cells PRIOR to current.
-        this->natural2columnar_.push_back(colActIx(activeCell) - 1);
+    this->natural2columnar_.resize(numActive, 0);
+    auto columnarActiveID = 0;
+    for (const auto& naturalActiveID : activeCells) {
+        this->natural2columnar_[naturalActiveID] = columnarActiveID++;
     }
 }
 
