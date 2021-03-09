@@ -47,6 +47,23 @@ DIMENS
   10 10 10 /
 START
   6 JLY 2020 /
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTH
+  121*1 /
+
+PORO
+  1000*0.25 /
+
 SOLUTION
 RPTSOL
   'RESTART=2' 'FIP=3' 'FIPRESV' 'THPRES' /
@@ -102,6 +119,22 @@ DIMENS
   10 10 10 /
 START
   6 JLY 2019 /
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTH
+  121*1 /
+
+PORO
+  1000*0.25 /
 SOLUTION
 -- basic = 5, every month
 RPTRST
@@ -188,34 +221,50 @@ END
 
 BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
 
-    const char* deckData1 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SOLUTION\n"
-                          "RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS\n"
-                          "  6*0 1 0 1 9*0 1 7*0 1 0 3*1 /\n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "RESTART=1\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "RPTRST  -- RK,VELOCITY,COMPRESS\n"
-                          "  18*0 0 8*0 /\n"
-                          "DATES             -- 3\n"
-                          " 20  FEB 2010 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "RESTART=0\n"
-                          "/\n";
+    const std::string deckData1 = R"(
+RUNSPEC
+START             -- 0
+19 JUN 2007 /
+DIMENS
+ 10 10 10 /
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTH
+  121*1 /
+
+PORO
+  1000*0.25 /
+SOLUTION
+RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS
+  6*0 1 0 1 9*0 1 7*0 1 0 3*1 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTSCHED
+RESTART=1
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+RPTRST  -- RK,VELOCITY,COMPRESS
+  18*0 0 8*0 /
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+RESTART=0
+/
+)";
 
     Parser parser;
 
@@ -254,153 +303,190 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
 }
 
 
-const std::string& deckStr =  "RUNSPEC\n"
-                              "\n"
-                              "DIMENS\n"
-                              " 10 10 10 /\n"
-                              "GRID\n"
-                              "GRIDFILE\n"
-                              " 0 1 /\n"
-                              "\n"
-                              "START\n"
-                              " 21 MAY 1981 /\n"
-                              "\n"
-                              "SCHEDULE\n"
-                              "DATES\n"
-                              " 22 MAY 1981 /\n"              // timestep 1
-                              " 23 MAY 1981 /\n"              // timestep 2
-                              " 24 MAY 1981 /\n"              // timestep 3
-                              " 25 MAY 1981 /\n"              // timestep 4
-                              " 26 MAY 1981 /\n"              // timestep 5
-                              " 1 JAN 1982 /\n"               // timestep 6
-                              " 1 JAN 1982 13:55:44 /\n"      // timestep 7
-                              " 3 JAN 1982 14:56:45.123 /\n"  // timestep 8
-                              " 4 JAN 1982 14:56:45.123 /\n"  // timestep 9
-                              " 5 JAN 1982 14:56:45.123 /\n"  // timestep 10
-                              " 6 JAN 1982 14:56:45.123 /\n"  // timestep 11
-                              " 7 JAN 1982 14:56:45.123 /\n"  // timestep 12
-                              " 8 JAN 1982 14:56:45.123 /\n"  // timestep 13
-                              " 9 JAN 1982 14:56:45.123 /\n"  // timestep 14
-                              " 10 JAN 1982 14:56:45.123 /\n" // timestep 15
-                              " 11 JAN 1982 14:56:45.123 /\n" // timestep 16
-                              " 1 JAN 1983 /\n"               // timestep 17
-                              " 2 JAN 1983 /\n"               // timestep 18
-                              " 3 JAN 1983 /\n"               // timestep 19
-                              " 1 JAN 1984 /\n"               // timestep 20
-                              " 2 JAN 1984 /\n"               // timestep 21
-                              " 1 JAN 1985 /\n"               // timestep 22
-                              " 3 JAN 1986 14:56:45.123 /\n"  // timestep 23
-                              " 4 JAN 1986 14:56:45.123 /\n"  // timestep 24
-                              " 5 JAN 1986 14:56:45.123 /\n"  // timestep 25
-                              " 1 JAN 1987 /\n"               // timestep 26
-                              " 1 JAN 1988 /\n"               // timestep 27
-                              " 2 JAN 1988 /\n"               // timestep 28
-                              " 3 JAN 1988 /\n"               // timestep 29
-                              " 1 JAN 1989 /\n"               // timestep 30
-                              " 2 JAN 1989 /\n"               // timestep 31
-                              " 2 JAN 1990 /\n"               // timestep 32
-                              " 2 JAN 1991 /\n"               // timestep 33
-                              " 3 JAN 1991 /\n"               // timestep 34
-                              " 4 JAN 1991 /\n"               // timestep 35
-                              " 1 JAN 1992 /\n"               // timestep 36
-                              " 1 FEB 1992 /\n"               // timestep 37
-                              " 1 MAR 1992 /\n"               // timestep 38
-                              " 2 MAR 1992 /\n"               // timestep 39
-                              " 3 MAR 1992 /\n"               // timestep 40
-                              " 4 MAR 1992 /\n"               // timestep 41
-                              " 1 APR 1992 /\n"               // timestep 42
-                              " 2 APR 1992 /\n"               // timestep 43
-                              " 1 MAY 1992 /\n"               // timestep 44
-                              " 2 MAY 1992 /\n"               // timestep 45
-                              " 3 MAY 1992 /\n"               // timestep 46
-                              " 3 JUN 1992 /\n"               // timestep 47
-                              " 3 JUL 1992 /\n"               // timestep 48
-                              " 3 AUG 1992 /\n"               // timestep 49
-                              " 4 AUG 1992 /\n"               // timestep 50
-                              " 5 AUG 1992 /\n"               // timestep 51
-                              " 6 AUG 1992 /\n"               // timestep 52
-                              " 7 AUG 1992 /\n"               // timestep 53
-                              " 8 AUG 1992 /\n"               // timestep 54
-                              " 9 AUG 1992 /\n"               // timestep 55
-                              " 10 AUG 1992 /\n"              // timestep 56
-                              " 11 AUG 1992 /\n"              // timestep 57
-                              " 12 AUG 1992 /\n"              // timestep 58
-                              " 13 AUG 1992 /\n"              // timestep 59
-                              " 14 AUG 1992 /\n"              // timestep 60
-                              " 15 AUG 1992 /\n"              // timestep 61
-                                                        "/\n"
-                                                        "\n";
+const std::string& deckStr =  R"(
+RUNSPEC
 
-const std::string deckStr_RFT = "RUNSPEC\n"
-                                "OIL\n"
-                                "GAS\n"
-                                "WATER\n"
-                                "DIMENS\n"
-                                " 10 10 10 /\n"
-                                "GRID\n"
-                                "DXV\n"
-                                "10*0.25 /\n"
-                                "DYV\n"
-                                "10*0.25 /\n"
-                                "DZV\n"
-                                "10*0.25 /\n"
-                                "TOPS\n"
-                                "100*0.25 /\n"
-                                "\n"
-                                 "START             -- 0 \n"
-                                "1 NOV 1979 / \n"
-                                "SCHEDULE\n"
-                                "DATES             -- 1\n"
-                                " 1 DES 1979/ \n"
-                                "/\n"
-                                "WELSPECS\n"
-                                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                                "    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                                "/\n"
-                                "COMPDAT\n"
-                                " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                                " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                                " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                                " 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                                "/\n"
-                                "DATES             -- 2\n"
-                                " 10  OKT 2008 / \n"
-                                "/\n"
-                                "WRFT \n"
-                                "/ \n"
-                                "WELOPEN\n"
-                                " 'OP_1' OPEN / \n"
-                                " 'OP_2' OPEN / \n"
-                                "/\n"
-                                "DATES             -- 3\n"
-                                " 10  NOV 2008 / \n"
-                                "/\n";
+DIMENS
+ 10 10 10 /
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTH
+  121*1 /
+
+PORO
+  1000*0.25 /
+
+GRIDFILE
+ 0 1 /
+
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+DATES
+ 22 MAY 1981 /              -- timestep 1
+ 23 MAY 1981 /              -- timestep 2
+ 24 MAY 1981 /              -- timestep 3
+ 25 MAY 1981 /              -- timestep 4
+ 26 MAY 1981 /              -- timestep 5
+ 1 JAN 1982 /               -- timestep 6
+ 1 JAN 1982 13:55:44 /      -- timestep 7
+ 3 JAN 1982 14:56:45.123 /  -- timestep 8
+ 4 JAN 1982 14:56:45.123 /  -- timestep 9
+ 5 JAN 1982 14:56:45.123 /  -- timestep 10
+ 6 JAN 1982 14:56:45.123 /  -- timestep 11
+ 7 JAN 1982 14:56:45.123 /  -- timestep 12
+ 8 JAN 1982 14:56:45.123 /  -- timestep 13
+ 9 JAN 1982 14:56:45.123 /  -- timestep 14
+ 10 JAN 1982 14:56:45.123 / -- timestep 15
+ 11 JAN 1982 14:56:45.123 / -- timestep 16
+ 1 JAN 1983 /               -- timestep 17
+ 2 JAN 1983 /               -- timestep 18
+ 3 JAN 1983 /               -- timestep 19
+ 1 JAN 1984 /               -- timestep 20
+ 2 JAN 1984 /               -- timestep 21
+ 1 JAN 1985 /               -- timestep 22
+ 3 JAN 1986 14:56:45.123 /  -- timestep 23
+ 4 JAN 1986 14:56:45.123 /  -- timestep 24
+ 5 JAN 1986 14:56:45.123 /  -- timestep 25
+ 1 JAN 1987 /               -- timestep 26
+ 1 JAN 1988 /               -- timestep 27
+ 2 JAN 1988 /               -- timestep 28
+ 3 JAN 1988 /               -- timestep 29
+ 1 JAN 1989 /               -- timestep 30
+ 2 JAN 1989 /               -- timestep 31
+ 2 JAN 1990 /               -- timestep 32
+ 2 JAN 1991 /               -- timestep 33
+ 3 JAN 1991 /               -- timestep 34
+ 4 JAN 1991 /               -- timestep 35
+ 1 JAN 1992 /               -- timestep 36
+ 1 FEB 1992 /               -- timestep 37
+ 1 MAR 1992 /               -- timestep 38
+ 2 MAR 1992 /               -- timestep 39
+ 3 MAR 1992 /               -- timestep 40
+ 4 MAR 1992 /               -- timestep 41
+ 1 APR 1992 /               -- timestep 42
+ 2 APR 1992 /               -- timestep 43
+ 1 MAY 1992 /               -- timestep 44
+ 2 MAY 1992 /               -- timestep 45
+ 3 MAY 1992 /               -- timestep 46
+ 3 JUN 1992 /               -- timestep 47
+ 3 JUL 1992 /               -- timestep 48
+ 3 AUG 1992 /               -- timestep 49
+ 4 AUG 1992 /               -- timestep 50
+ 5 AUG 1992 /               -- timestep 51
+ 6 AUG 1992 /               -- timestep 52
+ 7 AUG 1992 /               -- timestep 53
+ 8 AUG 1992 /               -- timestep 54
+ 9 AUG 1992 /               -- timestep 55
+ 10 AUG 1992 /              -- timestep 56
+ 11 AUG 1992 /              -- timestep 57
+ 12 AUG 1992 /              -- timestep 58
+ 13 AUG 1992 /              -- timestep 59
+ 14 AUG 1992 /              -- timestep 60
+ 15 AUG 1992 /              -- timestep 61
+/
+)";
+
+const std::string deckStr_RFT = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+DIMENS
+ 10 10 10 /
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+TOPS
+100*0.25 /
+
+"START             -- 0
+1 NOV 1979 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+DATES             -- 2
+ 10  OKT 2008 /
+/
+WRFT
+/
+WELOPEN
+ 'OP_1' OPEN /
+ 'OP_2' OPEN /
+/
+DATES             -- 3
+ 10  NOV 2008 /
+/
+)";
 
 
 
 BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
-    const char* data = "RUNSPEC\n"
-                       "DIMENS\n"
-                       " 10 10 10 /\n"
-                       "GRID\n"
-                       "START             -- 0 \n"
-                       "19 JUN 2007 / \n"
-                       "SCHEDULE\n"
-                       "DATES             -- 1\n"
-                       " 10  OKT 2008 / \n"
-                       "/\n"
-                       "RPTRST\n"
-                       "BASIC=3 0 1 2\n"
-                       "/\n"
-                       "DATES             -- 2\n"
-                       " 20  JAN 2010 / \n"
-                       "/\n"
-                       "DATES             -- 3\n"
-                       " 20  FEB 2010 / \n"
-                       "/\n"
-                       "RPTSCHED\n"
-                       "BASIC=1\n"
-                       "/\n";
+    const char* data = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTH
+  121*1 /
+
+PORO
+  1000*0.25 /
+
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 0 1 2
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+BASIC=1
+/
+)";
 
     ParseContext parseContext;
     ErrorGuard errors;
@@ -411,68 +497,71 @@ BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
 
 BOOST_AUTO_TEST_CASE(RPTRST) {
 
-    const char* deckData1 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SOLUTION\n"
-                          "RPTRST\n"
-                          " ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/\n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTRST\n"
-                          "BASIC=1\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n";
+    const std::string deckData1 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SOLUTION
+RPTRST
+ ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=1
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+)";
 
-    const char* deckData2 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTRST\n"
-                          "BASIC=3 FREQ=2 FLOWS RUBBISH=5\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "DATES             -- 3\n"
-                          " 20  JAN 2011 / \n"
-                          "/\n";
+    const std::string deckData2 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 FREQ=2 FLOWS RUBBISH=5
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  JAN 2011 /
+/
+)";
 
-    const char* deckData3 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTRST\n"
-                          "3 0 0 0 0 2\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "DATES             -- 3\n"
-                          " 20  JAN 2011 / \n"
-                          "/\n";
+    const char* deckData3 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+3 0 0 0 0 2
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  JAN 2011 /
+/
+)";
 
     Opm::Parser parser;
 
@@ -522,89 +611,93 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
 
 BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
 
-  const char* deckData0 =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    " 10 10 10 /\n"
-    "GRID\n"
-    "START             -- 0 \n"
-    "19 JUN 2007 / \n"
-    "SOLUTION\n"
-    "RPTRST\n"
-    " ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/\n"
-    "SCHEDULE\n"
-    "DATES             -- 1\n"
-    " 10  OKT 2008 / \n"
-    "/\n"
-    "RPTRST\n"
-    "BASIC 1\n"
-    "/\n"
-    "DATES             -- 2\n"
-    " 20  JAN 2010 / \n"
-    "/\n";
+    const std::string deckData0 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SOLUTION
+RPTRST
+ ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC 1
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+)";
 
-    const char* deckData1 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SOLUTION\n"
-                          "RPTRST\n"
-                          " ACIP KRG KRO KRW NORST SFREQ = 10 ALLPROPS/\n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTRST\n"
-                          "BASIC = 1\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n";
+    const std::string deckData1 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SOLUTION
+RPTRST
+ ACIP KRG KRO KRW NORST SFREQ = 10 ALLPROPS/
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC = 1
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+)";
 
-    const char* deckData2 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTRST\n"
-                          "BASIC = 3 FREQ = 2 FLOWS RUBBISH = 5\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "DATES             -- 3\n"
-                          " 20  JAN 2011 / \n"
-                          "/\n";
+    const std::string deckData2 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC = 3 FREQ = 2 FLOWS RUBBISH = 5
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  JAN 2011 /
+/
+)";
 
-    const char* deckData3 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTRST\n"
-                          "3 0 0 0 0 2\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "DATES             -- 3\n"
-                          " 20  JAN 2011 / \n"
-                          "/\n";
+    const std::string deckData3 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+3 0 0 0 0 2
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  JAN 2011 /
+/
+)";
 
     Opm::Parser parser;
     ParseContext ctx;
@@ -673,84 +766,87 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
 
 BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
-    const char* deckData1 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "RESTART=1\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "DATES             -- 3\n"
-                          " 20  FEB 2010 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "RESTART=0\n"
-                          "/\n";
+    const std::string deckData1 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTSCHED
+RESTART=1
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+RESTART=0
+/
+)";
 
 
-    const char* deckData2 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "RESTART=3 FIP\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "RESTART=4\n"
-                          "/\n"
-                          "DATES             -- 3\n"
-                          " 20  FEB 2010 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "NOTHING RUBBISH\n"
-                          "/\n";
+    const std::string deckData2 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTSCHED
+RESTART=3 FIP
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+RPTSCHED
+RESTART=4
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+NOTHING RUBBISH
+/
+)";
 
-    const char* deckData3 =
-                          "RUNSPEC\n"
-                          "DIMENS\n"
-                          " 10 10 10 /\n"
-                          "GRID\n"
-                          "START             -- 0 \n"
-                          "19 JUN 2007 / \n"
-                          "SOLUTION\n"
-                          "RPTSOL\n"
-                          "  RESTART=4 /\n"
-                          "SCHEDULE\n"
-                          "DATES             -- 1\n"
-                          " 10  OKT 2008 / \n"
-                          "/\n"
-                          "RPTRST\n"
-                          "BASIC=3 FREQ=1 RUBBISH=5\n"
-                          "/\n"
-                          "DATES             -- 2\n"
-                          " 20  JAN 2010 / \n"
-                          "/\n"
-                          "DATES             -- 3\n"
-                          " 20  FEB 2010 / \n"
-                          "/\n"
-                          "RPTSCHED\n"
-                          "0 0 0 0 0 0 0 0\n"
-                          "/\n";
+    const std::string deckData3 = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SOLUTION
+RPTSOL
+  RESTART=4 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 FREQ=1 RUBBISH=5
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+0 0 0 0 0 0 0 0
+/
+)";
 
     Parser parser;
 
@@ -792,29 +888,30 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
 
 BOOST_AUTO_TEST_CASE(RPTSCHED_and_RPTRST) {
-  const char* deckData =
-                        "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START             -- 0 \n"
-                        "19 JUN 2007 / \n"
-                        "SCHEDULE\n"
-                        "DATES             -- 1\n"
-                        " 10  OKT 2008 / \n"
-                        "/\n"
-                        "RPTRST\n"
-                        "BASIC=3 FREQ=3 BG BO\n"
-                        "/\n"
-                        "DATES             -- 2\n"
-                        " 20  JAN 2010 / \n"
-                        "/\n"
-                        "DATES             -- 3\n"
-                        " 20  FEB 2010 / \n"
-                        "/\n"
-                        "RPTSCHED\n"
-                        "RESTART=1\n"
-                        "/\n";
+    const std::string deckData = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 FREQ=3 BG BO
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+RESTART=1
+/
+)";
 
 
     Opm::Parser parser;
@@ -830,24 +927,26 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_and_RPTRST) {
 
 
 BOOST_AUTO_TEST_CASE(NO_BASIC) {
-    const char* data = "RUNSPEC\n"
-                       "DIMENS\n"
-                       " 10 10 10 /\n"
-                       "GRID\n"
-                       "START             -- 0 \n"
-                       "19 JUN 2007 / \n"
-                       "SCHEDULE\n"
-                       "DATES             -- 1\n"
-                       " 10  OKT 2008 / \n"
-                       "/\n"
-                       "DATES             -- 2\n"
-                       " 20  JAN 2010 / \n"
-                       "/\n"
-                       "DATES             -- 3\n"
-                       " 20  FEB 2010 / \n"
-                       "/\n"
-                       "RPTSCHED\n"
-                       "/\n";
+    const std::string data = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info, {});
@@ -857,28 +956,30 @@ BOOST_AUTO_TEST_CASE(NO_BASIC) {
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_1) {
-    const char* data = "RUNSPEC\n"
-                       "DIMENS\n"
-                       " 10 10 10 /\n"
-                       "GRID\n"
-                       "START             -- 0 \n"
-                       "19 JUN 2007 / \n"
-                       "SCHEDULE\n"
-                       "DATES             -- 1\n"
-                       " 10  OKT 2008 / \n"
-                       "/\n"
-                       "RPTRST\n"
-                       "BASIC=3 FREQ=3\n"
-                       "/\n"
-                       "DATES             -- 2\n"
-                       " 20  JAN 2010 / \n"
-                       "/\n"
-                       "DATES             -- 3\n"
-                       " 20  FEB 2010 / \n"
-                       "/\n"
-                       "RPTSCHED\n"
-                       "BASIC=1\n"
-                       "/\n";
+    const std::string data = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 FREQ=3
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+BASIC=1
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info, {});
@@ -890,30 +991,32 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_1) {
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_3) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTRST\n"
-                        "BASIC=3 FREQ=3\n"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"              // timestep 1
-                        " 23 MAY 1981 /\n"              // timestep 2
-                        " 24 MAY 1981 /\n"              // timestep 3
-                        " 25 MAY 1981 /\n"              // timestep 4
-                        " 26 MAY 1981 /\n"              // timestep 5
-                        " 1 JAN 1982 /\n"               // timestep 6
-                        " 1 JAN 1982 13:55:44 /\n"      // timestep 7
-                        " 3 JAN 1982 14:56:45.123 /\n"  // timestep 8
-                        " 4 JAN 1982 14:56:45.123 /\n"  // timestep 9
-                        " 5 JAN 1982 14:56:45.123 /\n"  // timestep 10
-                        " 6 JAN 1982 14:56:45.123 /\n"  // timestep 11
-                        "/\n";
+    const std::string data =  R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTRST
+BASIC=3 FREQ=3
+/
+DATES
+ 22 MAY 1981 /              -- timestep 1
+ 23 MAY 1981 /              -- timestep 2
+ 24 MAY 1981 /              -- timestep 3
+ 25 MAY 1981 /              -- timestep 4
+ 26 MAY 1981 /              -- timestep 5
+ 1 JAN 1982 /               -- timestep 6
+ 1 JAN 1982 13:55:44 /      -- timestep 7
+ 3 JAN 1982 14:56:45.123 /  -- timestep 8
+ 4 JAN 1982 14:56:45.123 /  -- timestep 9
+ 5 JAN 1982 14:56:45.123 /  -- timestep 10
+ 6 JAN 1982 14:56:45.123 /  -- timestep 11
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig(  deck, restart_info, {});
@@ -926,31 +1029,33 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_3) {
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_4) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTRST\n"
-                        "BASIC=4\n"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"              // timestep 1
-                        " 23 MAY 1981 /\n"              // timestep 2
-                        " 24 MAY 1981 /\n"              // timestep 3
-                        " 25 MAY 1981 /\n"              // timestep 4
-                        " 26 MAY 1981 /\n"              // timestep 5
-                        " 1 JAN 1982 /\n"               // timestep 6
-                        " 1 JAN 1982 13:55:44 /\n"      // timestep 7
-                        " 3 JAN 1982 14:56:45.123 /\n"  // timestep 8
-                        " 4 JAN 1982 14:56:45.123 /\n"  // timestep 9
-                        " 5 JAN 1982 14:56:45.123 /\n"  // timestep 10
-                        " 6 JAN 1982 14:56:45.123 /\n"  // timestep 11
-                        " 6 JAN 1983 14:56:45.123 /\n"  // timestep 12
-                        "/\n";
+    const std::string data = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTRST
+BASIC=4
+/
+DATES
+ 22 MAY 1981 /              -- timestep 1
+ 23 MAY 1981 /              -- timestep 2
+ 24 MAY 1981 /              -- timestep 3
+ 25 MAY 1981 /              -- timestep 4
+ 26 MAY 1981 /              -- timestep 5
+ 1 JAN 1982 /               -- timestep 6
+ 1 JAN 1982 13:55:44 /      -- timestep 7
+ 3 JAN 1982 14:56:45.123 /  -- timestep 8
+ 4 JAN 1982 14:56:45.123 /  -- timestep 9
+ 5 JAN 1982 14:56:45.123 /  -- timestep 10
+ 6 JAN 1982 14:56:45.123 /  -- timestep 11
+ 6 JAN 1983 14:56:45.123 /  -- timestep 12
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info, {});
@@ -965,30 +1070,32 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_4) {
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_4_FREQ_2) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTRST\n"
-                        "BASIC=4 FREQ=2\n"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"
-                        " 23 MAY 1981 /\n"
-                        " 24 MAY 1981 /\n"
-                        " 23 MAY 1982 /\n"
-                        " 24 MAY 1982 /\n"
-                        " 24 MAY 1983 /\n" // write
-                        " 25 MAY 1984 /\n"
-                        " 26 MAY 1984 /\n"
-                        " 26 MAY 1985 /\n" // write
-                        " 27 MAY 1985 /\n"
-                        " 1 JAN 1986 /\n"
-                        "/\n";
+    const std::string data = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTRST
+BASIC=4 FREQ=2
+/
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+ 24 MAY 1981 /
+ 23 MAY 1982 /
+ 24 MAY 1982 /
+ 24 MAY 1983 / -- write
+ 25 MAY 1984 /
+ 26 MAY 1984 /
+ 26 MAY 1985 / -- write
+ 27 MAY 1985 /
+ 1 JAN 1986 /
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info, {});
@@ -1007,30 +1114,32 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_4_FREQ_2) {
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTRST\n"
-                        "BASIC=5 FREQ=2\n"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"
-                        " 23 MAY 1981 /\n"
-                        " 24 MAY 1981 /\n"
-                        "  1 JUN 1981 /\n"
-                        "  1 JUL 1981 /\n" // write
-                        "  1 JAN 1982 /\n" // write
-                        "  2 JAN 1982 /\n"
-                        "  1 FEB 1982 /\n"
-                        "  1 MAR 1982 /\n" // write
-                        "  1 APR 1983 /\n" // write
-                        "  2 JUN 1983 /\n" // write
-                        "/\n";
+    const std::string data =  R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTRST
+BASIC=5 FREQ=2
+/
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+ 24 MAY 1981 /
+  1 JUN 1981 /
+  1 JUL 1981 / -- write
+  1 JAN 1982 / -- write
+  2 JAN 1982 /
+  1 FEB 1982 /
+  1 MAR 1982 / -- write
+  1 APR 1983 / -- write
+  2 JUN 1983 / -- write
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info,{});
@@ -1045,30 +1154,32 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_0) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTRST\n"
-                        "BASIC=0 FREQ=2\n"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"
-                        " 23 MAY 1981 /\n"
-                        " 24 MAY 1981 /\n"
-                        "  1 JUN 1981 /\n"
-                        "  1 JUL 1981 /\n"
-                        "  1 JAN 1982 /\n"
-                        "  2 JAN 1982 /\n"
-                        "  1 FEB 1982 /\n"
-                        "  1 MAR 1982 /\n"
-                        "  1 APR 1983 /\n"
-                        "  2 JUN 1983 /\n"
-                        "/\n";
+    const std::string data =  R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTRST
+BASIC=0 FREQ=2
+/
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+ 24 MAY 1981 /
+  1 JUN 1981 /
+  1 JUL 1981 /
+  1 JAN 1982 /
+  2 JAN 1982 /
+  1 FEB 1982 /
+  1 MAR 1982 /
+  1 APR 1983 /
+  2 JUN 1983 /
+/
+)";
 
     auto deck = Parser().parseString( data ) ;
     RestartConfig ioConfig( deck, restart_info, {});
@@ -1081,30 +1192,32 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_0) {
 
 
 BOOST_AUTO_TEST_CASE(RESTART_EQ_0) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTSCHED\n"
-                        "RESTART=0\n"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"
-                        " 23 MAY 1981 /\n"
-                        " 24 MAY 1981 /\n"
-                        "  1 JUN 1981 /\n"
-                        "  1 JUL 1981 /\n"
-                        "  1 JAN 1982 /\n"
-                        "  2 JAN 1982 /\n"
-                        "  1 FEB 1982 /\n"
-                        "  1 MAR 1982 /\n"
-                        "  1 APR 1983 /\n"
-                        "  2 JUN 1983 /\n"
-                        "/\n";
+    const char* data =  R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTSCHED
+RESTART=0
+/
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+ 24 MAY 1981 /
+  1 JUN 1981 /
+  1 JUL 1981 /
+  1 JAN 1982 /
+  2 JAN 1982 /
+  1 FEB 1982 /
+  1 MAR 1982 /
+  1 APR 1983 /
+  2 JUN 1983 /
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info, {});
@@ -1116,35 +1229,37 @@ BOOST_AUTO_TEST_CASE(RESTART_EQ_0) {
 }
 
 BOOST_AUTO_TEST_CASE(RESTART_BASIC_GT_2) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTRST\n"
-                        "BASIC=4 FREQ=2\n"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"
-                        "/\n"
-                        "RPTSCHED\n" // BASIC >2, ignore RPTSCHED RESTART
-                        "RESTART=3, FREQ=1\n"
-                        "/\n"
-                        "DATES\n"
-                        " 23 MAY 1981 /\n"
-                        " 24 MAY 1981 /\n"
-                        " 23 MAY 1982 /\n"
-                        " 24 MAY 1982 /\n"
-                        " 24 MAY 1983 /\n" // write
-                        " 25 MAY 1984 /\n"
-                        " 26 MAY 1984 /\n"
-                        " 26 MAY 1985 /\n" // write
-                        " 27 MAY 1985 /\n"
-                        " 1 JAN 1986 /\n"
-                       "/\n";
+    const std::string data =  R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTRST
+BASIC=4 FREQ=2
+/
+DATES
+ 22 MAY 1981 /
+/
+RPTSCHED // BASIC >2, ignore RPTSCHED RESTART
+RESTART=3, FREQ=1
+/
+DATES
+ 23 MAY 1981 /
+ 24 MAY 1981 /
+ 23 MAY 1982 /
+ 24 MAY 1982 /
+ 24 MAY 1983 / -- write
+ 25 MAY 1984 /
+ 26 MAY 1984 /
+ 26 MAY 1985 / -- write
+ 27 MAY 1985 /
+ 1 JAN 1986 /
+/
+)";
 
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info, {});
@@ -1157,35 +1272,37 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_GT_2) {
 }
 
 BOOST_AUTO_TEST_CASE(RESTART_BASIC_LEQ_2) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "RPTRST\n"
-                        "BASIC=1"
-                        "/\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"
-                        "/\n"
-                        "RPTSCHED\n"
-                        "RESTART=0\n"
-                        "/\n"
-                        "DATES\n"
-                        " 23 MAY 1981 /\n"
-                        " 24 MAY 1981 /\n"
-                        " 23 MAY 1982 /\n"
-                        " 24 MAY 1982 /\n"
-                        " 24 MAY 1983 /\n"
-                        " 25 MAY 1984 /\n"
-                        " 26 MAY 1984 /\n"
-                        " 26 MAY 1985 /\n"
-                        " 27 MAY 1985 /\n"
-                        " 1 JAN 1986 /\n"
-                       "/\n";
+    const std::string data = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+RPTRST
+BASIC=1"
+/
+DATES
+ 22 MAY 1981 /
+/
+RPTSCHED
+RESTART=0
+/
+DATES
+ 23 MAY 1981 /
+ 24 MAY 1981 /
+ 23 MAY 1982 /
+ 24 MAY 1982 /
+ 24 MAY 1983 /
+ 25 MAY 1984 /
+ 26 MAY 1984 /
+ 26 MAY 1985 /
+ 27 MAY 1985 /
+ 1 JAN 1986 /
+/
+)";
 
     auto deck = Parser().parseString( data );
     RestartConfig ioConfig( deck, restart_info , {});
@@ -1196,32 +1313,35 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_LEQ_2) {
 }
 
 BOOST_AUTO_TEST_CASE(RESTART_SAVE) {
-    const char* data =  "RUNSPEC\n"
-                        "DIMENS\n"
-                        " 10 10 10 /\n"
-                        "GRID\n"
-                        "START\n"
-                        " 21 MAY 1981 /\n"
-                        "\n"
-                        "SCHEDULE\n"
-                        "DATES\n"
-                        " 22 MAY 1981 /\n"
-                        "/\n"
-                        "DATES\n"
-                        " 23 MAY 1981 /\n"
-                        " 24 MAY 1981 /\n"
-                        " 23 MAY 1982 /\n"
-                        " 24 MAY 1982 /\n"
-                        " 24 MAY 1983 /\n"
-                        " 25 MAY 1984 /\n"
-                        " 26 MAY 1984 /\n"
-                        " 26 MAY 1985 /\n"
-                        " 27 MAY 1985 /\n"
-                        " 1 JAN 1986 /\n"
-                        "/\n"
-                        "SAVE \n"
-                        "TSTEP \n"
-                        " 1 /\n";
+    const std::string data = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+START
+ 21 MAY 1981 /
+
+SCHEDULE
+DATES
+ 22 MAY 1981 /
+/
+DATES
+ 23 MAY 1981 /
+ 24 MAY 1981 /
+ 23 MAY 1982 /
+ 24 MAY 1982 /
+ 24 MAY 1983 /
+ 25 MAY 1984 /
+ 26 MAY 1984 /
+ 26 MAY 1985 /
+ 27 MAY 1985 /
+ 1 JAN 1986 /
+/
+SAVE
+TSTEP
+ 1 /
+)";
+
     auto deck = Parser().parseString( data);
     RestartConfig ioConfig( deck, restart_info, {} );
 
