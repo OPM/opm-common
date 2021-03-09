@@ -97,7 +97,7 @@ static const std::string ProductionCMode2String( ProductionCMode enumValue );
 static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
 static ProductionCMode ProductionCModeFromInt(int ecl_int);
 
-enum class GuideRateTarget {
+enum class GuideRateProdTarget {
     OIL = 0,
     WAT = 1,
     GAS = 2,
@@ -111,8 +111,8 @@ enum class GuideRateTarget {
     FORM = 10,
     NO_GUIDE_RATE = 11
 };
-static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
-static GuideRateTarget GuideRateTargetFromInt(int ecl_id);
+static GuideRateProdTarget GuideRateProdTargetFromString( const std::string& stringValue );
+static GuideRateProdTarget GuideRateProdTargetFromInt(int ecl_id);
 
 
 struct GroupInjectionProperties {
@@ -177,7 +177,7 @@ struct GroupProductionProperties {
     UDAValue gas_target;
     UDAValue liquid_target;
     double guide_rate = 0;
-    GuideRateTarget guide_rate_def = GuideRateTarget::NO_GUIDE_RATE;
+    GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     bool available_group_control = true;
     static GroupProductionProperties serializeObject();
@@ -215,7 +215,7 @@ struct ProductionControls {
     double gas_target;
     double liquid_target;
     double guide_rate;
-    GuideRateTarget guide_rate_def = GuideRateTarget::NO_GUIDE_RATE;
+    GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     int production_controls = 0;
     bool has_control(ProductionCMode control) const;

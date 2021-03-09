@@ -415,15 +415,15 @@ namespace {
                 const bool is_field { group_name == "FIELD" } ;
                 const bool availableForGroupControl { respond_to_parent && !is_field } ;
 
-                auto guide_rate_def = Group::GuideRateTarget::NO_GUIDE_RATE;
+                auto guide_rate_def = Group::GuideRateProdTarget::NO_GUIDE_RATE;
                 double guide_rate = 0;
                 if (!is_field) {
                     if (guide_rate_str) {
-                        guide_rate_def = Group::GuideRateTargetFromString(guide_rate_str.value());
+                        guide_rate_def = Group::GuideRateProdTargetFromString(guide_rate_str.value());
 
-                        if ((guide_rate_def == Group::GuideRateTarget::INJV ||
-                             guide_rate_def == Group::GuideRateTarget::POTN ||
-                             guide_rate_def == Group::GuideRateTarget::FORM)) {
+                        if ((guide_rate_def == Group::GuideRateProdTarget::INJV ||
+                             guide_rate_def == Group::GuideRateProdTarget::POTN ||
+                             guide_rate_def == Group::GuideRateProdTarget::FORM)) {
                             std::string msg_fmt = "Problem with {keyword}\n"
                                 "In {file} line {line}\n"
                                 "The supplied guide rate will be ignored";
@@ -431,7 +431,7 @@ namespace {
                         } else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
-                                guide_rate_def = Group::GuideRateTarget::POTN;
+                                guide_rate_def = Group::GuideRateProdTarget::POTN;
                         }
                     }
                 }

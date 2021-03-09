@@ -28,7 +28,7 @@ GuideRateConfig GuideRateConfig::serializeObject()
     GuideRateConfig result;
     result.m_model = std::make_shared<GuideRateModel>(GuideRateModel::serializeObject());
     result.wells = {{"test1", WellTarget{1.0, Well::GuideRateTarget::COMB, 2.0}}};
-    result.groups = {{"test2", GroupTarget{1.0, Group::GuideRateTarget::COMB}}};
+    result.groups = {{"test2", GroupTarget{1.0, Group::GuideRateProdTarget::COMB}}};
 
     return result;
 }
@@ -77,7 +77,7 @@ void GuideRateConfig::update_group(const Group& group) {
 
     const auto& properties = group.productionProperties();
     auto guide_target = properties.guide_rate_def;
-    if (guide_target == Group::GuideRateTarget::NO_GUIDE_RATE) {
+    if (guide_target == Group::GuideRateProdTarget::NO_GUIDE_RATE) {
         this->groups.erase(group.name());
         return;
     }

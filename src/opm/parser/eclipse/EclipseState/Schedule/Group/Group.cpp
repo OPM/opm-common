@@ -65,7 +65,7 @@ Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg,
         production.liquid_target.update(rst_group.liquid_rate_limit);
         production.active_cmode = Group::ProductionCModeFromInt(rst_group.prod_active_cmode);
         production.gconprod_cmode = Group::ProductionCModeFromInt(rst_group.gconprod_cmode);
-        production.guide_rate_def = Group::GuideRateTargetFromInt(rst_group.guide_rate_def);
+        production.guide_rate_def = Group::GuideRateProdTargetFromInt(rst_group.guide_rate_def);
         if ((production.active_cmode == Group::ProductionCMode::ORAT) ||
             (production.active_cmode == Group::ProductionCMode::WRAT) ||
             (production.active_cmode == Group::ProductionCMode::GRAT) ||
@@ -295,7 +295,7 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serializeObje
     result.gas_target = UDAValue(3.0);
     result.liquid_target = UDAValue(4.0);
     result.guide_rate = 5.0;
-    result.guide_rate_def = GuideRateTarget::COMB;
+    result.guide_rate_def = GuideRateProdTarget::COMB;
     result.resv_target = 6.0;
     result.production_controls = 7;
 
@@ -756,55 +756,55 @@ Group::InjectionCMode Group::InjectionCModeFromInt(int ecl_int) {
     }
 }
 
-Group::GuideRateTarget Group::GuideRateTargetFromString( const std::string& stringValue ) {
+Group::GuideRateProdTarget Group::GuideRateProdTargetFromString( const std::string& stringValue ) {
     if (stringValue == "OIL")
-        return GuideRateTarget::OIL;
+        return GuideRateProdTarget::OIL;
     else if (stringValue == "WAT")
-        return GuideRateTarget::WAT;
+        return GuideRateProdTarget::WAT;
     else if (stringValue == "GAS")
-        return GuideRateTarget::GAS;
+        return GuideRateProdTarget::GAS;
     else if (stringValue == "LIQ")
-        return GuideRateTarget::LIQ;
+        return GuideRateProdTarget::LIQ;
     else if (stringValue == "COMB")
-        return GuideRateTarget::COMB;
+        return GuideRateProdTarget::COMB;
     else if (stringValue == "WGA")
-        return GuideRateTarget::WGA;
+        return GuideRateProdTarget::WGA;
     else if (stringValue == "CVAL")
-        return GuideRateTarget::CVAL;
+        return GuideRateProdTarget::CVAL;
     else if (stringValue == "INJV")
-        return GuideRateTarget::INJV;
+        return GuideRateProdTarget::INJV;
     else if (stringValue == "POTN")
-        return GuideRateTarget::POTN;
+        return GuideRateProdTarget::POTN;
     else if (stringValue == "FORM")
-        return GuideRateTarget::FORM;
+        return GuideRateProdTarget::FORM;
     else if (stringValue == " ")
-        return GuideRateTarget::NO_GUIDE_RATE;
+        return GuideRateProdTarget::NO_GUIDE_RATE;
     else
-        return GuideRateTarget::NO_GUIDE_RATE;
+        return GuideRateProdTarget::NO_GUIDE_RATE;
 }
 
 
 // Integer values defined vectoritems/group.hpp
-Group::GuideRateTarget Group::GuideRateTargetFromInt(int ecl_id) {
+Group::GuideRateProdTarget Group::GuideRateProdTargetFromInt(int ecl_id) {
     switch(ecl_id) {
     case 0:
-        return GuideRateTarget::NO_GUIDE_RATE;
+        return GuideRateProdTarget::NO_GUIDE_RATE;
     case 1:
-        return GuideRateTarget::OIL;
+        return GuideRateProdTarget::OIL;
     case 2:
-        return GuideRateTarget::WAT;
+        return GuideRateProdTarget::WAT;
     case 3:
-        return GuideRateTarget::GAS;
+        return GuideRateProdTarget::GAS;
     case 4:
-        return GuideRateTarget::LIQ;
+        return GuideRateProdTarget::LIQ;
     case 7:
-        return GuideRateTarget::POTN;
+        return GuideRateProdTarget::POTN;
     case 8:
-        return GuideRateTarget::FORM;
+        return GuideRateProdTarget::FORM;
     case 9:
-        return GuideRateTarget::COMB;
+        return GuideRateProdTarget::COMB;
     default:
-        throw std::logic_error(fmt::format("Integer GuideRateTarget: {} not recognized", ecl_id));
+        throw std::logic_error(fmt::format("Integer GuideRateProdTarget: {} not recognized", ecl_id));
     }
 }
 

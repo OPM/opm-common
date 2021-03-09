@@ -1126,7 +1126,7 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
             auto g = schedule.getGroup("G1", 2);
             BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 2000 * siFactorL);
             BOOST_CHECK_EQUAL(g.productionControls(st).guide_rate, 148);
-            BOOST_CHECK_EQUAL(true, g.productionControls(st).guide_rate_def == Group::GuideRateTarget::OIL);
+            BOOST_CHECK_EQUAL(true, g.productionControls(st).guide_rate_def == Group::GuideRateProdTarget::OIL);
         }
 
         auto g2 = schedule.getGroup("G2", 2);

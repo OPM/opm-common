@@ -49,8 +49,8 @@ struct RateVector {
     {}
 
 
-    double eval(Group::GuideRateTarget target) const;
     double eval(Well::GuideRateTarget target) const;
+    double eval(Group::GuideRateProdTarget target) const;
     double eval(GuideRateModel::Target target) const;
 
 
@@ -93,7 +93,7 @@ public:
     GuideRate(const Schedule& schedule);
     void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
-    double get(const std::string& group, Group::GuideRateTarget target, const RateVector& rates) const;
+    double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
     double get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
     bool has(const std::string& name) const;
 

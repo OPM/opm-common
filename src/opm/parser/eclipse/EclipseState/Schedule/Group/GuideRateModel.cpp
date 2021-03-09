@@ -312,17 +312,17 @@ GuideRateModel::Target GuideRateModel::convert_target(Well::GuideRateTarget well
     throw std::logic_error("Can not convert this .... ");
 }
 
-GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateTarget group_target) {
-    if (group_target == Group::GuideRateTarget::OIL)
+GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateProdTarget group_target) {
+    if (group_target == Group::GuideRateProdTarget::OIL)
         return Target::OIL;
 
-    if (group_target == Group::GuideRateTarget::GAS)
+    if (group_target == Group::GuideRateProdTarget::GAS)
         return Target::GAS;
 
-    if (group_target == Group::GuideRateTarget::LIQ)
+    if (group_target == Group::GuideRateProdTarget::LIQ)
         return Target::LIQ;
 
-    if (group_target == Group::GuideRateTarget::WAT)
+    if (group_target == Group::GuideRateProdTarget::WAT)
         return Target::WAT;
 
     throw std::logic_error("Can not convert this .... ");

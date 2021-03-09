@@ -430,7 +430,7 @@ void productionGroup(const Opm::Schedule&     sched,
 
         if (cgroup) {
             iGrp[nwgmax + 5] = 1;
-            if (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) {
+            if (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE) {
                 if (deck_cmode == Opm::Group::ProductionCMode::FLD)
                     iGrp[nwgmax + 5] = cgroup->insert_index();
 
@@ -476,7 +476,7 @@ void productionGroup(const Opm::Schedule&     sched,
     if (cgroup && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
         auto cgroup_control = static_cast<int>(sumState.get_group_var(cgroup->name(), "GMCTP", 0));
         iGrp[nwgmax + IGroup::ProdActiveCMode]
-            = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
+            = (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
     } else {
         switch (active_cmode) {
         case Opm::Group::ProductionCMode::NONE:
@@ -529,7 +529,7 @@ void productionGroup(const Opm::Schedule&     sched,
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
         break;
     case Opm::Group::ProductionCMode::FLD:
-        if (cgroup && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+        if (cgroup && (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE)) {
             iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::Form;
         }
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
