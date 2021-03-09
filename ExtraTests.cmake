@@ -1,5 +1,5 @@
 # Libs to link tests against
-set(TEST_LIBS opmcommon Boost::unit_test_framework)
+set(TEST_LIBS opmcommon Boost::unit_test_framework ${opm-common_PRIVATE_LIBRARIES})
 set(EXTRA_TESTS)
 
 if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
