@@ -16,18 +16,31 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
-#include <fmt/format.h>
-#include <unordered_map>
-#include <utility>
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
 #include <algorithm>
 #include <iterator>
-#include <iostream>
+#include <optional>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
+
+#include <fmt/format.h>
 
 #include "AquiferHelpers.hpp"
 
@@ -128,9 +141,10 @@ namespace Opm {
         }
 
         for (const auto& gi_cell : work) {
-            const auto& cell = gi_cell.second;
+            auto cell = gi_cell.second;
+            const auto aquiferID = cell.aquiferID;
 
-            this->cells[cell.aquiferID].emplace_back(std::move(cell));
+            this->cells[aquiferID].emplace_back(std::move(cell));
         }
     }
 
@@ -144,7 +158,7 @@ namespace Opm {
     }
 
 
-    const std::vector<Aquancon::AquancCell> Aquancon::operator[](int aquiferID) const {
+    const std::vector<Aquancon::AquancCell>& Aquancon::operator[](int aquiferID) const {
         return this->cells.at( aquiferID );
     }
 

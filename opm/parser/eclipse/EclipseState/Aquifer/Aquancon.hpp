@@ -26,15 +26,16 @@
   implement the analytical aquifer models in OPM Flow.
 */
 
-#include <unordered_map>
-
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
+#include <cstddef>
+#include <unordered_map>
+#include <vector>
+
+namespace Opm {
+    class EclipseGrid;
+    class Deck;
+}
 
 namespace Opm {
 
@@ -84,7 +85,7 @@ namespace Opm {
             bool operator==(const Aquancon& other) const;
             bool active() const;
 
-            const std::vector<Aquancon::AquancCell> operator[](int aquiferID) const;
+            const std::vector<Aquancon::AquancCell>& operator[](int aquiferID) const;
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
