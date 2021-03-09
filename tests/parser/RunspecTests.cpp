@@ -527,6 +527,79 @@ WSEGDIMS
     BOOST_CHECK_EQUAL(wsd.maxLateralBranchesPerWell(), 33); // WSEGDIMS(3)
 }
 
+BOOST_AUTO_TEST_CASE(AQUDIMS_FullSpec)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+AQUDIMS
+-- 1 2 3 4 5 6 7  8
+   3 4 5 6 7 8 9 10 /
+)" };
+
+    const auto ad = AquiferDimensions {
+        Parser{}.parseString(input)
+    };
+
+    BOOST_CHECK_EQUAL(ad.maxAnalyticAquifers(), 7);           // AQUDIMS(5)
+    BOOST_CHECK_EQUAL(ad.maxAnalyticAquiferConnections(), 8); // AQUDIMS(6)
+}
+
+BOOST_AUTO_TEST_CASE(AQUDIMS_AllDefaulted)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+AQUDIMS
+/
+)" };
+
+    const auto ad = AquiferDimensions {
+        Parser{}.parseString(input)
+    };
+
+    BOOST_CHECK_EQUAL(ad.maxAnalyticAquifers(), 1);           // AQUDIMS(5): Default = 1
+    BOOST_CHECK_EQUAL(ad.maxAnalyticAquiferConnections(), 1); // AQUDIMS(6): Default = 1
+}
+
+BOOST_AUTO_TEST_CASE(AQUDIMS_MaxAnalyticAquifers)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+AQUDIMS
+-- 1 2 3 4 5
+   4*      1729 /
+)" };
+
+    const auto ad = AquiferDimensions {
+        Parser{}.parseString(input)
+    };
+
+    BOOST_CHECK_EQUAL(ad.maxAnalyticAquifers(), 1729); // AQUDIMS(5)
+}
+
+BOOST_AUTO_TEST_CASE(AQUDIMS_MaxAnalyticAquiferConnections)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+AQUDIMS
+-- 1 2 3 4 5 6
+   5*        42 /
+)" };
+
+    const auto ad = AquiferDimensions {
+        Parser{}.parseString(input)
+    };
+
+    BOOST_CHECK_EQUAL(ad.maxAnalyticAquiferConnections(), 42); // AQUDIMS(6)
+}
+
 BOOST_AUTO_TEST_CASE( SWATINIT ) {
     const std::string input = R"(
     SWATINIT

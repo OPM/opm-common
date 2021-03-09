@@ -218,6 +218,36 @@ private:
     int nMaxNoBranchesConToNode;
 };
 
+class AquiferDimensions {
+public:
+    AquiferDimensions();
+    explicit AquiferDimensions(const Deck& deck);
+
+    static AquiferDimensions serializeObject();
+
+    int maxAnalyticAquifers() const
+    {
+        return this->maxNumAnalyticAquifers;
+    }
+
+    int maxAnalyticAquiferConnections() const
+    {
+        return this->maxNumAnalyticAquiferConn;
+    }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->maxNumAnalyticAquifers);
+        serializer(this->maxNumAnalyticAquiferConn);
+    }
+
+private:
+    int maxNumAnalyticAquifers;
+    int maxNumAnalyticAquiferConn;
+};
+
+bool operator==(const AquiferDimensions& lhs, const AquiferDimensions& rhs);
 
 class EclHysterConfig
 {
@@ -339,6 +369,7 @@ public:
     const Welldims& wellDimensions() const noexcept;
     const WellSegmentDims& wellSegmentDimensions() const noexcept;
     const NetworkDims& networkDimensions() const noexcept;
+    const AquiferDimensions& aquiferDimensions() const noexcept;
     int eclPhaseMask( ) const noexcept;
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
@@ -357,6 +388,7 @@ public:
         welldims.serializeOp(serializer);
         wsegdims.serializeOp(serializer);
         netwrkdims.serializeOp(serializer);
+        aquiferdims.serializeOp(serializer);
         udq_params.serializeOp(serializer);
         hystpar.serializeOp(serializer);
         m_actdims.serializeOp(serializer);
@@ -372,6 +404,7 @@ private:
     Welldims welldims;
     WellSegmentDims wsegdims;
     NetworkDims netwrkdims;
+    AquiferDimensions aquiferdims;
     UDQParams udq_params;
     EclHysterConfig hystpar;
     Actdims m_actdims;
