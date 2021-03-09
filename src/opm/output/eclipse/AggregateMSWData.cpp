@@ -434,6 +434,7 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
+            iSeg[baseIndex + Ix::SegmentType] = segment.ecl_type_id();
             iSeg[baseIndex + Ix::ICDScalingMode] = sicd.methodFlowScaling();
             iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd.ecl_status();
         }
@@ -447,8 +448,7 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& aicd = segment.autoICD();
-            // Segments of AICD type has the segmentType equal to -8
-            iSeg[baseIndex + Ix::SegmentType] = -8;
+            iSeg[baseIndex + Ix::SegmentType] = segment.ecl_type_id();
             iSeg[baseIndex + Ix::ICDScalingMode] = aicd.methodFlowScaling();
             iSeg[baseIndex + Ix::ICDOpenShutFlag] = aicd.ecl_status();
         }

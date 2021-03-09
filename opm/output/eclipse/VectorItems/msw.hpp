@@ -25,6 +25,7 @@
 namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
 
     namespace ISeg {
+
         enum index : std::vector<int>::size_type {
             SegNo          = 0, // Segment number (one-based)
             OutSeg         = 1, // Outlet segment (one-based)
