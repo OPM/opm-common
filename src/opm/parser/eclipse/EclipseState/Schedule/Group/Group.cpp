@@ -246,6 +246,8 @@ Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject
     result.reinj_group = "test1";
     result.voidage_group = "test2";
     result.injection_controls = 5;
+    result.guide_rate = 12345;
+    result.guide_rate_def = Group::GuideRateInjTarget::NETV;
 
     return result;
 }
@@ -261,6 +263,8 @@ bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties&
         this->injection_controls      == other.injection_controls &&
         this->target_void_fraction    == other.target_void_fraction &&
         this->reinj_group             == other.reinj_group &&
+        this->guide_rate              == other.guide_rate &&
+        this->guide_rate_def          == other.guide_rate_def &&
         this->available_group_control == other.available_group_control &&
         this->voidage_group           == other.voidage_group;
 }
@@ -539,6 +543,8 @@ Group::InjectionControls Group::injectionControls(Phase phase, const SummaryStat
     ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st, this->udq_undefined);
     ic.reinj_group = inj.reinj_group.value_or(this->m_name);
     ic.voidage_group = inj.voidage_group.value_or(this->m_name);
+    ic.guide_rate = inj.guide_rate;
+    ic.guide_rate_def = inj.guide_rate_def;
 
     return ic;
 }
@@ -754,6 +760,19 @@ Group::InjectionCMode Group::InjectionCModeFromInt(int ecl_int) {
     default:
         throw std::logic_error(fmt::format("Not recognized value: {} for INJECTION CMODE", ecl_int));
     }
+}
+
+Group::GuideRateInjTarget Group::GuideRateInjTargetFromString( const std::string& stringValue ) {
+    if (stringValue == "RATE")
+        return GuideRateInjTarget::RATE;
+    else if (stringValue == "RESV")
+        return GuideRateInjTarget::RESV;
+    else if (stringValue == "VOID")
+        return GuideRateInjTarget::VOID;
+    else if (stringValue == "NETV")
+        return GuideRateInjTarget::NETV;
+    else
+        return GuideRateInjTarget::NO_GUIDE_RATE;
 }
 
 Group::GuideRateProdTarget Group::GuideRateProdTargetFromString( const std::string& stringValue ) {

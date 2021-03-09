@@ -115,6 +115,18 @@ static GuideRateProdTarget GuideRateProdTargetFromString( const std::string& str
 static GuideRateProdTarget GuideRateProdTargetFromInt(int ecl_id);
 
 
+enum class GuideRateInjTarget {
+    RATE = 1,
+    VOID = 2,
+    NETV = 3,
+    RESV = 4,
+    POTN = 5,
+    NO_GUIDE_RATE = 6
+};
+static GuideRateInjTarget GuideRateInjTargetFromString( const std::string& stringValue );
+static GuideRateInjTarget GuideRateInjTargetFromInt(int ecl_id);
+
+
 struct GroupInjectionProperties {
     GroupInjectionProperties();
     GroupInjectionProperties(Phase phase, const UnitSystem& unit_system);
@@ -128,6 +140,8 @@ struct GroupInjectionProperties {
     std::optional<std::string> reinj_group;
     std::optional<std::string> voidage_group;
     bool available_group_control = true;
+    double guide_rate = 0;
+    GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
 
     static GroupInjectionProperties serializeObject();
 
@@ -148,6 +162,8 @@ struct GroupInjectionProperties {
         serializer(voidage_group);
         serializer(injection_controls);
         serializer(available_group_control);
+        serializer(guide_rate);
+        serializer(guide_rate_def);
     }
 };
 
@@ -161,6 +177,8 @@ struct InjectionControls {
     int injection_controls = 0;
     std::string reinj_group;
     std::string voidage_group;
+    double guide_rate;
+    GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
     bool has_control(InjectionCMode control) const;
 };
 
