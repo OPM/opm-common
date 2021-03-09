@@ -6,6 +6,16 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${BASE_DIR}/tmp_gen/TestKeywords.cpp
                         ${BASE_DIR}/TestKeywords.cpp)
 
+if (EXISTS ${BASE_DIR}/python/cxx)
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                          ${BASE_DIR}/tmp_gen/builtin_pybind11.cpp
+                          ${BASE_DIR}/python/cxx/builtin_pybind11.cpp)
+endif()
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${BASE_DIR}/tmp_gen/include/opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp
+                        ${BASE_DIR}/include/opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp)
+
 
 file(GLOB HDRS ${BASE_DIR}/tmp_gen/include/opm/parser/eclipse/Parser/ParserKeywords/*.hpp)
 

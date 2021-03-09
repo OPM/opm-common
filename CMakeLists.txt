@@ -119,6 +119,9 @@ macro (sources_hook)
     foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
         list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp)
     endforeach()
+    if (OPM_ENABLE_PYTHON)
+      list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+    endif()
   endif()
   set_source_files_properties(src/opm/parser/eclipse/Python/Python.cpp
                               PROPERTIES COMPILE_FLAGS -Wno-shadow)
@@ -377,11 +380,10 @@ if (OPM_ENABLE_PYTHON)
 
   # -------------------------------------------------------------------------
   # 2: Embed the Python interpreter for keywords like PYACTION and PYINPUT
+  add_subdirectory(python/pybind11)
+  target_include_directories(opmcommon SYSTEM PRIVATE "python/pybind11/include;${PYTHON_INCLUDE_DIRS}")
   if (OPM_ENABLE_EMBEDDED_PYTHON)
-    add_subdirectory(python/pybind11)
-    target_include_directories(opmcommon SYSTEM PRIVATE "python/pybind11/include;${PYTHON_INCLUDE_DIRS}")
     target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY})
-
     add_definitions(-DEMBEDDED_PYTHON)
   endif()
 endif()

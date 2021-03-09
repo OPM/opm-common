@@ -22,6 +22,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <cctype>
+#include <fmt/format.h>
 
 #include <opm/common/utility/FileSystem.hpp>
 
@@ -33,12 +34,14 @@
 
 namespace {
 
+const std::string sourceHeader = R"(
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
-const std::string sourceHeader =
-    "#include <opm/parser/eclipse/Deck/UDAValue.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserItem.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/Parser.hpp>\n\n\n";
+
+)";
 }
 
 namespace Opm {
@@ -49,12 +52,11 @@ namespace Opm {
     }
 
     std::string KeywordGenerator::headerHeader(const std::string& suffix) {
-        std::string header = "#ifndef PARSER_KEYWORDS_" + suffix + "_HPP\n"
-            "#define PARSER_KEYWORDS_" + suffix + "_HPP\n"
-            "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
-            "namespace Opm {\n"
-            "namespace ParserKeywords {\n\n";
-
+        std::string header = fmt::format("#ifndef PARSER_KEYWORDS_{0}_HPP\n"
+                                         "#define PARSER_KEYWORDS_{0}_HPP\n"
+                                         "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
+                                         "namespace Opm {{\n"
+                                         "namespace ParserKeywords {{\n\n", suffix);
         return header;
     }
 
@@ -73,35 +75,145 @@ namespace Opm {
     static void write_file( const std::stringstream& stream, const std::string& file, bool verbose, std::string desc = "source" ) {
         KeywordGenerator::updateFile( stream, file );
         if( verbose )
-            std::cout << "Updated " << desc << " file written to: " << file << std::endl;
+            fmt::print("Updated {} file written to {}\n", desc, file);
     }
 
-    void KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
+    void KeywordGenerator::updateBuiltInHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const {
         std::stringstream newSource;
-        newSource << "#include <opm/parser/eclipse/Parser/Parser.hpp>" << std::endl;
+        newSource << R"(#ifndef PARSER_KEYWORDS_BUILTIN_HPP
+#define PARSER_KEYWORDS_BUILTIN_HPP
+#include <unordered_map>
+#include <fmt/format.h>
+)";
+
         for(const auto& kw_pair : loader) {
             const auto& first_char = kw_pair.first;
-            newSource << "#include <opm/parser/eclipse/Parser/ParserKeywords/" << first_char << ".hpp>" << std::endl;
+            newSource << fmt::format("#include <opm/parser/eclipse/Parser/ParserKeywords/{}.hpp>\n", first_char);
         }
-        newSource << "namespace Opm {" << std::endl;
-        newSource << "namespace ParserKeywords {" << std::endl;
-        newSource << "void addDefaultKeywords(Parser& p);"  << std::endl
-                  << "void addDefaultKeywords(Parser& p) {" << std::endl;
+
+        newSource << R"(
+namespace Opm {
+namespace ParserKeywords {
+struct Builtin {
+)";
+        for(const auto& kw_pair : loader) {
+            const auto& keywords = kw_pair.second;
+            for (const auto& kw: keywords)
+                newSource << fmt::format("    const ::Opm::ParserKeywords::{0} {0};\n", kw.className());
+        }
 
         for(const auto& kw_pair : loader) {
             const auto& keywords = kw_pair.second;
             for (const auto& kw: keywords)
-                newSource << "   p.addKeyword< ParserKeywords::"
-                          << kw.className()
-                          << " >();" << std::endl;
+                newSource << fmt::format("    const ::Opm::ParserKeyword& get_{0}() {{ return this->{0}; }};\n",kw.className());
         }
-        newSource << "}" << std::endl;
-        newSource << "}" << std::endl;
 
-        newSource << "void Parser::addDefaultKeywords() {\n    ParserKeywords::addDefaultKeywords(*this);\n}" << std::endl;
-        newSource << "}" << std::endl;
+        newSource << R"(
+     const ::Opm::ParserKeyword& operator[](const std::string& keyword) const {
+     if (this->keywords.empty()) {
+)";
+
+        for(const auto& kw_pair : loader) {
+            const auto& keywords = kw_pair.second;
+            for (const auto& kw: keywords)
+                newSource << fmt::format("            this->keywords.emplace(\"{0}\", this->{0});\n", kw.className());
+        }
+
+     newSource << R"(     }
+     const auto kw_iter = this->keywords.find(keyword);
+     if (kw_iter == this->keywords.end())
+         throw std::invalid_argument(fmt::format("No builtin keyword: {}", keyword));
+     return kw_iter->second;
+}
+
+     const ::Opm::ParserKeyword& getKeyword(const std::string& keyword) const { return this->operator[](keyword); }
+)";
+
+        newSource << R"(
+private:
+      mutable std::unordered_map<std::string, ::Opm::ParserKeyword> keywords;
+};
+}
+}
+#endif
+)";
+
+        const auto final_path = headerBuildPath + headerPath+ "/Builtin.hpp";
+        write_file( newSource, final_path, m_verbose, "header" );
+    }
+
+    void KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
+        std::stringstream newSource;
+        newSource << R"(
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp>
+)";
+
+        for(const auto& kw_pair : loader) {
+            const auto& first_char = kw_pair.first;
+            newSource << fmt::format("#include <opm/parser/eclipse/Parser/ParserKeywords/{}.hpp>\n", first_char);
+        }
+
+        newSource << R"(
+namespace Opm {
+namespace ParserKeywords {
+void addDefaultKeywords(Parser& p);
+void addDefaultKeywords(Parser& p) {
+     Builtin keywords;
+)";
+
+        for(const auto& kw_pair : loader) {
+            const auto& keywords = kw_pair.second;
+            for (const auto& kw: keywords)
+                newSource << "     p.addParserKeyword( keywords." << kw.className() << " );" << std::endl;
+        }
+
+        newSource << R"(
+}
+}
+void Parser::addDefaultKeywords() {
+     ParserKeywords::addDefaultKeywords(*this);
+}
+}
+)";
         write_file( newSource, sourceFile, m_verbose, "init" );
     }
+
+
+    void KeywordGenerator::updatePybindSource(const KeywordLoader& loader , const std::string& sourceFile) const {
+        std::stringstream newSource;
+        newSource << R"(#include <string>
+#include <exception>
+
+#include <opm/json/JsonObject.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <pybind11/stl.h>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+
+#include "export.hpp"
+
+void python::common::export_ParserKeywords(py::module& module) {
+
+    py::class_<ParserKeywords::Builtin>(module, "Builtin")
+        .def(py::init<>())
+)";
+
+        for(const auto& kw_pair : loader) {
+            const auto& keywords = kw_pair.second;
+            for (const auto& kw: keywords)
+                newSource << fmt::format("        .def_property_readonly(\"{0}\", &ParserKeywords::Builtin::get_{0})\n", kw.className());
+        }
+        newSource << R"(        .def("__getitem__", &ParserKeywords::Builtin::operator[], ref_internal);
+}
+)";
+
+        fmt::print("Writing file: {}\n", sourceFile);
+        write_file( newSource, sourceFile, m_verbose, "source");
+    }
+
 
     void KeywordGenerator::updateKeywordSource(const KeywordLoader& loader , const std::string& sourcePath ) const {
 

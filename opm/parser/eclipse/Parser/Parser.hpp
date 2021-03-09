@@ -76,7 +76,7 @@ namespace Opm {
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(const Json::JsonObject& jsonKeyword);
-        void addParserKeyword(ParserKeyword&& parserKeyword);
+        void addParserKeyword(ParserKeyword parserKeyword);
 
         /*!
          * \brief Returns whether the parser knows about a keyword
