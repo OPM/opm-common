@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -38,7 +38,44 @@ inline std::string fst( const std::pair< std::string, int >& p ) {
 
 constexpr std::pair<std::time_t, std::size_t> restart_info = std::make_pair(std::time_t{0}, std::size_t{0});
 
+const std::string grid = R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+START
+ 21 MAY 1981 /
+
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTHZ
+  121*1 /
+
+PORO
+  1000*0.25 /
+)";
+
 using namespace Opm;
+
+Schedule make_schedule(std::string sched_input, bool add_grid = true) {
+    if (add_grid)
+        sched_input = grid + sched_input;
+
+    Parser parser;
+    auto deck = parser.parseString( sched_input );
+    EclipseState es(deck);
+    return Schedule(deck, es);
+}
+
+
 
 BOOST_AUTO_TEST_CASE(RPTRST_AND_RPTSOL_SOLUTION)
 {
@@ -58,7 +95,7 @@ DYV
 DZV
   10*1 /
 
-DEPTH
+DEPTHZ
   121*1 /
 
 PORO
@@ -94,19 +131,15 @@ DATES
 END
 )" };
 
-    const auto deck   = Parser{}.parseString(input);
-    const auto tm     = TimeMap { deck };
-    const auto rstcfg = RestartConfig { deck, restart_info, {} };
-
-    BOOST_REQUIRE_EQUAL(tm.size(), std::size_t{19});
+    auto sched = make_schedule(input, false);
 
     for (const std::size_t stepID : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 18 }) {
-        BOOST_CHECK_MESSAGE(! rstcfg.getWriteRestartFile(stepID),
+        BOOST_CHECK_MESSAGE(! sched.write_rst_file(stepID),
                             "Must not write restart information for excluded step " << stepID);
     }
 
     for (const std::size_t stepID : { 0, 11, 14, 17 }) {
-        BOOST_CHECK_MESSAGE(rstcfg.getWriteRestartFile(stepID),
+        BOOST_CHECK_MESSAGE(sched.write_rst_file(stepID),
                             "Must write restart information for included step " << stepID);
     }
 }
@@ -130,11 +163,12 @@ DYV
 DZV
   10*1 /
 
-DEPTH
+DEPTHZ
   121*1 /
 
 PORO
   1000*0.25 /
+
 SOLUTION
 -- basic = 5, every month
 RPTRST
@@ -206,15 +240,13 @@ DATES
 END
 )" };
 
-    const auto deck   = Parser{}.parseString(input);
-    const auto tm     = TimeMap { deck };
-    const auto rstcfg = RestartConfig { deck, restart_info, {} };
+    auto sched = make_schedule(input, false);
 
-    for (std::size_t step = 0; step < tm.size(); step++) {
+    for (std::size_t step = 0; step < sched.size(); step++) {
         if (step == 0 || step == 38 || step == 51)
-            BOOST_CHECK_MESSAGE( rstcfg.getWriteRestartFile(step), "Restart file expected for step: " << step );
+            BOOST_CHECK_MESSAGE( sched.write_rst_file(step), "Restart file expected for step: " << step );
         else
-            BOOST_CHECK_MESSAGE( !rstcfg.getWriteRestartFile(step), "Should *not* have restart file for step: " << step );
+            BOOST_CHECK_MESSAGE( !sched.write_rst_file(step), "Should *not* have restart file for step: " << step );
     }
 }
 
@@ -238,7 +270,7 @@ DYV
 DZV
   10*1 /
 
-DEPTH
+DEPTHZ
   121*1 /
 
 PORO
@@ -266,18 +298,15 @@ RESTART=0
 /
 )";
 
-    Parser parser;
+    auto sched = make_schedule(deckData1, false);
 
-    auto deck1 = parser.parseString( deckData1);
-    RestartConfig rstConfig1( deck1, restart_info, {});
-
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  !rstConfig1.getWriteRestartFile( 3 ) );
+    BOOST_CHECK(  sched.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched.write_rst_file( 2 ) );
+    BOOST_CHECK( !sched.write_rst_file( 3 ) );
 
     std::vector< std::string > kw_list1;
-    for( const auto& pair : rstConfig1.getRestartKeywords( 1 ) )
+    for( const auto& pair : sched.rst_keywords( 1 ) )
         if( pair.second != 0 ) kw_list1.push_back( pair.first );
 
     const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
@@ -285,21 +314,21 @@ RESTART=0
                                    kw_list1.begin(), kw_list1.end() );
 
     // ACIP is a valid mneonic - but not in this deck.
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ACIP" , 1) , 0 );
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "COMPRESS" , 1) , 1 );
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "PCOG", 1) , 1 );
-    BOOST_CHECK_THROW( rstConfig1.getKeyword( "UNKNOWN_KW", 1) , std::invalid_argument);
+    BOOST_CHECK_EQUAL( sched.rst_keyword( 1, "ACIP") , 0 );
+    BOOST_CHECK_EQUAL( sched.rst_keyword( 1, "COMPRESS") , 1 );
+    BOOST_CHECK_EQUAL( sched.rst_keyword( 1, "PCOG") , 1 );
+    BOOST_CHECK_THROW( sched.rst_keyword( 1, "UNKNOWN_KW") , std::invalid_argument);
 
     std::vector< std::string > kw_list2;
-    for( const auto& pair : rstConfig1.getRestartKeywords( 3 ) )
+    for( const auto& pair : sched.rst_keywords( 3 ) )
         if( pair.second != 0 ) kw_list2.push_back( pair.first );
 
     const auto expected2 = { "COMPRESS", "RESTART", "RK", "VELOCITY" };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 0 ) , 0);
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 3 ) , 0);
+    BOOST_CHECK_EQUAL( sched.rst_keyword( 0, "ALLPROPS" ) , 0);
+    BOOST_CHECK_EQUAL( sched.rst_keyword( 3, "ALLPROPS" ) , 0);
 }
 
 
@@ -462,7 +491,7 @@ DYV
 DZV
   10*1 /
 
-DEPTH
+DEPTHZ
   121*1 /
 
 PORO
@@ -490,20 +519,36 @@ BASIC=1
 
     ParseContext parseContext;
     ErrorGuard errors;
-    auto deck = Parser().parseString( data, parseContext, errors );
+    auto deck = Parser().parseString( data);
+    EclipseState es(deck);
     parseContext.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( RestartConfig( deck, restart_info, {}, parseContext, errors ), OpmInputError);
+    BOOST_CHECK_THROW( Schedule( deck, es, parseContext, errors, {} ), std::exception );
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST) {
 
     const std::string deckData1 = R"(
 RUNSPEC
+START             -- 0
+19 JUN 2007 /
 DIMENS
  10 10 10 /
 GRID
-START             -- 0
-19 JUN 2007 /
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTHZ
+  121*1 /
+
+PORO
+  1000*0.25 /
 SOLUTION
 RPTRST
  ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/
@@ -520,12 +565,6 @@ DATES             -- 2
 )";
 
     const std::string deckData2 = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START             -- 0
-19 JUN 2007 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -542,12 +581,6 @@ DATES             -- 3
 )";
 
     const char* deckData3 = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START             -- 0
-19 JUN 2007 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -563,48 +596,41 @@ DATES             -- 3
 /
 )";
 
-    Opm::Parser parser;
-
-    auto deck1 = parser.parseString( deckData1);
-    RestartConfig rstConfig1( deck1, restart_info, {} );
+    auto sched1 = make_schedule(deckData1, false);
 
     // Observe that this is true due to some undocumented guessing that
     // the initial restart file should be written if a RPTRST keyword is
     // found in the SOLUTION section, irrespective of the content of that
     // keyword.
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
+    BOOST_CHECK(  sched1.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched1.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched1.write_rst_file( 2 ) );
 
 
     std::vector<std::string> expected = { "ACIP","BASIC", "BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
-    const auto kw_list = fun::map( fst, rstConfig1.getRestartKeywords(2) );
+    const auto kw_list = fun::map( fst, sched1.rst_keywords(2) );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
+    BOOST_CHECK_EQUAL( sched1.rst_keyword( 2, "ALLPROPS") , 0);
 
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 2 ) , 0);
 
-    auto deck2 = parser.parseString( deckData2 );
-    RestartConfig rstConfig2( deck2, restart_info, {} );
-
+    auto sched2 = make_schedule(deckData2);
     const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
-    const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
+    const auto kw_list2 = fun::map( fst, sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 2 ) );
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !sched2.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched2.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched2.write_rst_file( 2 ) );
+    BOOST_CHECK( !sched2.write_rst_file( 3 ) );
 
-    auto deck3 = parser.parseString( deckData3 );
-    RestartConfig rstConfig3( deck3, restart_info, {} );
-
-    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 2 ) );
-    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 3 ) );
+    auto sched3 = make_schedule(deckData3);
+    BOOST_CHECK( !sched3.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched3.write_rst_file( 2 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 3 ) );
 }
 
 
@@ -613,11 +639,25 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
 
     const std::string deckData0 = R"(
 RUNSPEC
+START             -- 0
+19 JUN 2007 /
 DIMENS
  10 10 10 /
 GRID
-START             -- 0
-19 JUN 2007 /
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTHZ
+  121*1 /
+
+PORO
+  1000*0.25 /
 SOLUTION
 RPTRST
  ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/
@@ -635,11 +675,26 @@ DATES             -- 2
 
     const std::string deckData1 = R"(
 RUNSPEC
+START             -- 0
+19 JUN 2007 /
 DIMENS
  10 10 10 /
 GRID
-START             -- 0
-19 JUN 2007 /
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTHZ
+  121*1 /
+
+PORO
+  1000*0.25 /
 SOLUTION
 RPTRST
  ACIP KRG KRO KRW NORST SFREQ = 10 ALLPROPS/
@@ -657,11 +712,26 @@ DATES             -- 2
 
     const std::string deckData2 = R"(
 RUNSPEC
+START             -- 0
+19 JUN 2007 /
 DIMENS
  10 10 10 /
 GRID
-START             -- 0
-19 JUN 2007 /
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTHZ
+  121*1 /
+
+PORO
+  1000*0.25 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -678,12 +748,6 @@ DATES             -- 3
 )";
 
     const std::string deckData3 = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START             -- 0
-19 JUN 2007 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -705,61 +769,65 @@ DATES             -- 3
 
     auto deck0 = parser.parseString( deckData0, ctx, errors );
     auto deck1 = parser.parseString( deckData1, ctx, errors );
+    auto deck2 = parser.parseString( deckData2, ctx, errors );
+    EclipseState es0(deck0);
+    EclipseState es1(deck1);
+    EclipseState es2(deck2);
+
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(deck1, restart_info, {}, ctx, errors), OpmInputError);
+    BOOST_CHECK_THROW( Schedule( deck1, es1, ctx, errors, {} ), std::exception );
+
 
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::IGNORE);
-    RestartConfig rstConfig1( deck1, restart_info, {}, ctx, errors );
+    Schedule sched1(deck1, es1, ctx, errors, {});
 
 
     // The case "BASIC 1" - i.e. without '=' can not be salvaged; this should
     // give an exception whatever is the value of ParseContext::RPT_MIXED_STYLE:
-    BOOST_CHECK_THROW(RestartConfig(deck0, restart_info, {}, ctx, errors), OpmInputError);
+    BOOST_CHECK_THROW( Schedule( deck0, es0, ctx, errors, {} ), std::exception );
 
 
     // Observe that this is true due to some undocumented guessing that
     // the initial restart file should be written if a RPTRST keyword is
     // found in the SOLUTION section, irrespective of the content of that
     // keyword.
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
+    BOOST_CHECK(  sched1.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched1.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched1.write_rst_file( 2 ) );
 
 
     std::vector<std::string> expected = { "ACIP","BASIC", "BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
-    const auto kw_list = fun::map( fst, rstConfig1.getRestartKeywords(2) );
+    const auto kw_list = fun::map( fst, sched1.rst_keywords(2) );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
 
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 2 ) , 0);
-
-    auto deck2 = parser.parseString( deckData2, ctx, errors );
+    BOOST_CHECK_EQUAL( sched1.rst_keyword( 2, "ALLPROPS") , 0);
 
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(deck2, restart_info, {}, ctx, errors), OpmInputError);
+    BOOST_CHECK_THROW( Schedule( deck2, es2, ctx, errors, {} ), std::exception );
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
 
-    RestartConfig rstConfig2( deck2, restart_info, {}, ctx, errors );
+    Schedule sched2(deck2, es2, ctx, errors, {});
+
 
     const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
-    const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
+    const auto kw_list2 = fun::map( fst, sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 2 ) );
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !sched2.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched2.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched2.write_rst_file( 2 ) );
+    BOOST_CHECK( !sched2.write_rst_file( 3 ) );
 
-    auto deck3 = parser.parseString( deckData3, ctx, errors );
-    RestartConfig rstConfig3( deck3, restart_info, {}, ctx, errors );
+    auto sched3 = make_schedule(deckData3);
 
-    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 2 ) );
-    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched3.write_rst_file( 2 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 3 ) );
 }
 
 
@@ -767,12 +835,6 @@ DATES             -- 3
 BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
     const std::string deckData1 = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START             -- 0
-19 JUN 2007 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -848,41 +910,34 @@ RPTSCHED
 /
 )";
 
-    Parser parser;
-
-    auto deck1 = parser.parseString( deckData1 );
-    RestartConfig rstConfig1( deck1, restart_info , {});
-
-    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 3 ) );
+    auto sched1 = make_schedule(deckData1);
+    BOOST_CHECK( !sched1.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched1.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched1.write_rst_file( 2 ) );
+    BOOST_CHECK(  sched1.write_rst_file( 3 ) );
 
 
-    auto deck2 = parser.parseString( deckData2 );
-    RestartConfig rstConfig2( deck2, restart_info, {} );
-
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 3 ) );
+    auto sched2 = make_schedule(deckData2);
+    BOOST_CHECK( !sched2.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched2.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched2.write_rst_file( 2 ) );
+    BOOST_CHECK(  sched2.write_rst_file( 3 ) );
 
     const auto expected2 = { "FIP", "RESTART" };
-    const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
+    const auto kw_list2 = fun::map( fst, sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 
 
-    auto deck3 = parser.parseString( deckData3 );
-    RestartConfig rstConfig3( deck3, restart_info , {});
+    auto sched3 = make_schedule(deckData3);
     //Older ECLIPSE 100 data set may use integer controls instead of mnemonics
-    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 3 ) );
+    BOOST_CHECK(  sched3.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched3.write_rst_file( 2 ) );
+    BOOST_CHECK(  sched3.write_rst_file( 3 ) );
 
     std::vector<std::string> expected3 = { "BASIC", "FREQ" };
-    const auto kw_list3 = fun::map( fst, rstConfig3.getRestartKeywords(2) );
+    const auto kw_list3 = fun::map( fst, sched3.rst_keywords(2) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected3.begin() , expected3.end() , kw_list3.begin() , kw_list3.end() );
 }
 
@@ -914,26 +969,17 @@ RESTART=1
 )";
 
 
-    Opm::Parser parser;
+    auto sched3 = make_schedule(deckData);
 
-    auto deck = parser.parseString( deckData );
-    RestartConfig rstConfig( deck, restart_info, {} );
-
-    BOOST_CHECK( !rstConfig.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !rstConfig.getWriteRestartFile( 1 ) );
-    BOOST_CHECK( !rstConfig.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  rstConfig.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 1 ) );
+    BOOST_CHECK( !sched3.write_rst_file( 2 ) );
+    BOOST_CHECK(  sched3.write_rst_file( 3 ) );
 }
 
 
 BOOST_AUTO_TEST_CASE(NO_BASIC) {
     const std::string data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START             -- 0
-19 JUN 2007 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -948,21 +994,13 @@ RPTSCHED
 /
 )";
 
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info, {});
-
+    auto sched = make_schedule(data);
     for( size_t ts = 0; ts < 4; ++ts )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_1) {
     const std::string data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START             -- 0
-19 JUN 2007 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -981,24 +1019,15 @@ BASIC=1
 /
 )";
 
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info, {});
-
+    auto sched = make_schedule(data);
     for( size_t ts = 0; ts < 3; ++ts )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 
-    BOOST_CHECK( ioConfig.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( sched.write_rst_file( 3 ) );
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_3) {
     const std::string data =  R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
-
 SCHEDULE
 RPTRST
 BASIC=3 FREQ=3
@@ -1018,25 +1047,16 @@ DATES
 /
 )";
 
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig(  deck, restart_info, {});
-
+    auto sched = make_schedule(data);
     const size_t freq = 3;
 
     /* BASIC=3, restart files are created every nth report time, n=3 */
     for( size_t ts = 1; ts < 12; ++ts )
-        BOOST_CHECK_EQUAL( ts % freq == 0, ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK_EQUAL( ts % freq == 0, sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_4) {
     const std::string data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
-
 SCHEDULE
 RPTRST
 BASIC=4
@@ -1057,27 +1077,19 @@ DATES
 /
 )";
 
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info, {});
+    auto sched = make_schedule(data);
 
     /* BASIC=4, restart file is written at the first report step of each year.
      */
     for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 9, 10, 11 } )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 
     for( size_t ts : { 6, 12 } )
-        BOOST_CHECK( ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_4_FREQ_2) {
     const std::string data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
-
 SCHEDULE
 RPTRST
 BASIC=4 FREQ=2
@@ -1096,9 +1108,7 @@ DATES
  1 JAN 1986 /
 /
 )";
-
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info, {});
+    auto sched = make_schedule(data);
 
     /* BASIC=4, restart file is written at the first report step of each year.
      * Optionally, if the mnemonic FREQ is set >1 the restart is written only
@@ -1107,21 +1117,14 @@ DATES
      * FREQ=2
      */
     for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11  } )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 
     for( size_t ts : { 6, 9 } )
-        BOOST_CHECK( ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
     const std::string data =  R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
-
 SCHEDULE
 RPTRST
 BASIC=5 FREQ=2
@@ -1141,27 +1144,18 @@ DATES
 /
 )";
 
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info,{});
-
+    auto sched = make_schedule(data);
     /* BASIC=5, restart file is written at the first report step of each month.
      */
     for( size_t ts : { 1, 2, 3, 4, 7, 8 } )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 
     for( size_t ts : { 5, 6, 9, 10, 11 } )
-        BOOST_CHECK( ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_0) {
     const std::string data =  R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
-
 SCHEDULE
 RPTRST
 BASIC=0 FREQ=2
@@ -1181,24 +1175,38 @@ DATES
 /
 )";
 
-    auto deck = Parser().parseString( data ) ;
-    RestartConfig ioConfig( deck, restart_info, {});
-
+    auto sched = make_schedule(data);
     /* RESTART=0, no restart file is written
      */
     for( size_t ts = 0; ts < 11; ++ts )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
 
 BOOST_AUTO_TEST_CASE(RESTART_EQ_0) {
-    const char* data =  R"(
+    const std::string data =  R"(
 RUNSPEC
 DIMENS
  10 10 10 /
-GRID
 START
  21 MAY 1981 /
+
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTHZ
+  121*1 /
+
+PORO
+  1000*0.25 /
 
 SCHEDULE
 RPTSCHED
@@ -1219,24 +1227,15 @@ DATES
 /
 )";
 
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info, {});
-
     /* RESTART=0, no restart file is written
      */
+    auto sched = make_schedule(data, false);
     for( size_t ts = 0; ts < 11; ++ts )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(RESTART_BASIC_GT_2) {
     const std::string data =  R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
-
 SCHEDULE
 RPTRST
 BASIC=4 FREQ=2
@@ -1261,25 +1260,16 @@ DATES
 /
 )";
 
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info, {});
-
+    auto sched = make_schedule(data);
     for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11  } )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 
     for( size_t ts : { 6, 9 } )
-        BOOST_CHECK( ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(RESTART_BASIC_LEQ_2) {
     const std::string data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
-
 SCHEDULE
 RPTRST
 BASIC=1"
@@ -1304,22 +1294,14 @@ DATES
 /
 )";
 
-    auto deck = Parser().parseString( data );
-    RestartConfig ioConfig( deck, restart_info , {});
-
-    BOOST_CHECK( ioConfig.getWriteRestartFile( 1 ) );
+    auto sched = make_schedule(data);
+    BOOST_CHECK( sched.write_rst_file( 1 ) );
     for( size_t ts = 2; ts < 11; ++ts )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+        BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
 BOOST_AUTO_TEST_CASE(RESTART_SAVE) {
     const std::string data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-START
- 21 MAY 1981 /
 
 SCHEDULE
 DATES
@@ -1341,12 +1323,9 @@ SAVE
 TSTEP
  1 /
 )";
-
-    auto deck = Parser().parseString( data);
-    RestartConfig ioConfig( deck, restart_info, {} );
-
+    auto sched = make_schedule(data);
     for( size_t ts = 1; ts < 11; ++ts )
-        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
-    BOOST_CHECK( ioConfig.getWriteRestartFile( 12 ) );
+        BOOST_CHECK( !sched.write_rst_file(ts));
+    BOOST_CHECK( sched.write_rst_file( 12 ) );
 
 }
