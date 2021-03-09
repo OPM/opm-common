@@ -75,7 +75,7 @@ macro (config_hook)
     endif()
 
     # For this project
-    find_package(fmt 7.0.3)
+    find_package(fmt 4.0.0)
     if(NOT TARGET fmt::fmt-header-only)
       add_library(fmt::fmt-header-only INTERFACE IMPORTED)
       set_target_properties(fmt::fmt-header-only PROPERTIES
