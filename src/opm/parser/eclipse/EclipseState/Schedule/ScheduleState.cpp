@@ -82,6 +82,9 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     auto [year_diff, month_diff] = date_diff(this->m_start_time, src.m_start_time);
     this->m_year_num += year_diff;
     this->m_month_num += month_diff;
+
+    this->m_first_in_month = (this->m_month_num > src.m_month_num);
+    this->m_first_in_year = (this->m_year_num > src.m_year_num);
 }
 
 ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time, const time_point& end_time) :
@@ -109,6 +112,14 @@ std::size_t ScheduleState::month_num() const {
 
 std::size_t ScheduleState::year_num() const {
     return this->m_year_num;
+}
+
+bool ScheduleState::first_in_month() const {
+    return this->m_first_in_month;
+}
+
+bool ScheduleState::first_in_year() const {
+    return this->m_first_in_year;
 }
 
 void ScheduleState::update_nupcol(int nupcol) {
@@ -169,6 +180,8 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_oilvap == other.m_oilvap &&
            this->m_sim_step == other.m_sim_step &&
            this->m_month_num == other.m_month_num &&
+           this->m_first_in_month == other.m_first_in_month &&
+           this->m_first_in_year == other.m_first_in_year &&
            this->m_year_num == other.m_year_num &&
            this->target_wellpi == other.target_wellpi &&
            this->m_tuning == other.m_tuning &&
