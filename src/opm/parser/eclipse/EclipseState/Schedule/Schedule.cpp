@@ -1201,10 +1201,6 @@ bool Schedule::write_rst_file(std::size_t report_step, bool log) const {
         return this->restart_config.getRestartKeywords(timestep);
     }
 
-    bool Schedule::rst_keyword(std::size_t timeStep, const std::string& keyword) const {
-        return this->restart_config.getKeyword(keyword, timeStep);
-    }
-
     bool Schedule::operator==(const Schedule& data) const {
 
         return this->m_restart_info == data.m_restart_info &&

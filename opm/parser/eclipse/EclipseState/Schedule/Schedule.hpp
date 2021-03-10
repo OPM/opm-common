@@ -256,7 +256,6 @@ namespace Opm
         bool write_rst_file(std::size_t report_step, bool log=true) const;
         int  first_rst_step() const;
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
-        bool rst_keyword(std::size_t timestep, const std::string& keyword) const;
 
         void applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
