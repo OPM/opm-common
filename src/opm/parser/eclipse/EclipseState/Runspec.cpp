@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
@@ -275,6 +276,41 @@ bool NetworkDims::operator==(const NetworkDims& data) const
            this->maxNoBranchesConToNode() == data.maxNoBranchesConToNode();
 }
 
+AquiferDimensions::AquiferDimensions()
+    : maxNumAnalyticAquifers   { ParserKeywords::AQUDIMS::NANAQU::defaultValue }
+    , maxNumAnalyticAquiferConn{ ParserKeywords::AQUDIMS::NCAMAX::defaultValue }
+{}
+
+AquiferDimensions::AquiferDimensions(const Deck& deck)
+    : AquiferDimensions{}
+{
+    using AD = ParserKeywords::AQUDIMS;
+
+    if (deck.hasKeyword<AD>()) {
+        const auto& keyword = deck.getKeyword<AD>(0);
+        const auto& ad = keyword.getRecord(0);
+
+        this->maxNumAnalyticAquifers    = ad.getItem<AD::NANAQU>().get<int>(0);
+        this->maxNumAnalyticAquiferConn = ad.getItem<AD::NCAMAX>().get<int>(0);
+    }
+}
+
+AquiferDimensions AquiferDimensions::serializeObject()
+{
+    auto dim = AquiferDimensions{};
+
+    dim.maxNumAnalyticAquifers = 3;
+    dim.maxNumAnalyticAquiferConn = 10;
+
+    return dim;
+}
+
+bool operator==(const AquiferDimensions& lhs, const AquiferDimensions& rhs)
+{
+    return (lhs.maxAnalyticAquifers() == rhs.maxAnalyticAquifers())
+        && (lhs.maxAnalyticAquiferConnections() == rhs.maxAnalyticAquiferConnections());
+}
+
 EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
     {
 
@@ -456,6 +492,7 @@ Runspec Runspec::serializeObject()
     result.endscale = EndpointScaling::serializeObject();
     result.welldims = Welldims::serializeObject();
     result.wsegdims = WellSegmentDims::serializeObject();
+    result.aquiferdims = AquiferDimensions::serializeObject();
     result.udq_params = UDQParams::serializeObject();
     result.hystpar = EclHysterConfig::serializeObject();
     result.m_actdims = Actdims::serializeObject();
@@ -495,6 +532,11 @@ const WellSegmentDims& Runspec::wellSegmentDimensions() const noexcept
 const NetworkDims& Runspec::networkDimensions() const noexcept
 {
     return this->netwrkdims;
+}
+
+const AquiferDimensions& Runspec::aquiferDimensions() const noexcept
+{
+    return this->aquiferdims;
 }
 
 const EclHysterConfig& Runspec::hysterPar() const noexcept
@@ -542,6 +584,7 @@ bool Runspec::operator==(const Runspec& data) const {
            this->endpointScaling() == data.endpointScaling() &&
            this->wellDimensions() == data.wellDimensions() &&
            this->wellSegmentDimensions() == data.wellSegmentDimensions() &&
+          (this->aquiferDimensions() == data.aquiferDimensions()) &&
            this->hysterPar() == data.hysterPar() &&
            this->actdims() == data.actdims() &&
            this->saturationFunctionControls() == data.saturationFunctionControls() &&
