@@ -276,6 +276,10 @@ namespace Opm {
         // N+1.
         std::size_t sim_step() const;
 
+        // The month_num and year_num() functions return the accumulated number
+        // of full months/years to the start of the current block.
+        std::size_t month_num() const;
+        std::size_t year_num() const;
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializeObject();
 
@@ -430,6 +434,8 @@ namespace Opm {
             serializer(m_start_time);
             serializer(m_end_time);
             serializer(m_sim_step);
+            serializer(m_month_num);
+            serializer(m_year_num);
             m_tuning.serializeOp(serializer);
             serializer(m_nupcol);
             m_oilvap.serializeOp(serializer);
@@ -447,6 +453,8 @@ namespace Opm {
         std::optional<time_point> m_end_time;
 
         std::size_t m_sim_step = 0;
+        std::size_t m_month_num = 0;
+        std::size_t m_year_num = 0;
         Tuning m_tuning;
         int m_nupcol;
         OilVaporizationProperties m_oilvap;
