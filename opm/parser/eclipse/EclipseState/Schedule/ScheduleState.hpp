@@ -271,6 +271,11 @@ namespace Opm {
         time_point end_time() const;
         ScheduleState next(const time_point& next_start);
 
+        // The sim_step() is the report step we are currently simulating on. The
+        // results when we have completed sim_step=N are stored in report_step
+        // N+1.
+        std::size_t sim_step() const;
+
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializeObject();
 
@@ -424,6 +429,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
             serializer(m_end_time);
+            serializer(m_sim_step);
             m_tuning.serializeOp(serializer);
             serializer(m_nupcol);
             m_oilvap.serializeOp(serializer);
@@ -440,6 +446,7 @@ namespace Opm {
         time_point m_start_time;
         std::optional<time_point> m_end_time;
 
+        std::size_t m_sim_step = 0;
         Tuning m_tuning;
         int m_nupcol;
         OilVaporizationProperties m_oilvap;

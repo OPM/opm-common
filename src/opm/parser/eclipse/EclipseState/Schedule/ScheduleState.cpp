@@ -60,7 +60,7 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
 {
     this->m_start_time = clamp_time(start_time);
     this->m_end_time = std::nullopt;
-
+    this->m_sim_step = src.sim_step() + 1;
     this->m_events.reset();
     this->m_wellgroup_events.reset();
     this->m_geo_keywords.clear();
@@ -84,6 +84,10 @@ time_point ScheduleState::start_time() const {
 
 time_point ScheduleState::end_time() const {
     return this->m_end_time.value();
+}
+
+std::size_t ScheduleState::sim_step() const {
+    return this->m_sim_step;
 }
 
 void ScheduleState::update_nupcol(int nupcol) {
@@ -142,6 +146,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
 
     return this->m_start_time == other.m_start_time &&
            this->m_oilvap == other.m_oilvap &&
+           this->m_sim_step == other.m_sim_step &&
            this->target_wellpi == other.target_wellpi &&
            this->m_tuning == other.m_tuning &&
            this->m_end_time == other.m_end_time &&
@@ -175,6 +180,7 @@ ScheduleState ScheduleState::serializeObject() {
     auto t1 = TimeService::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
+    ts.m_sim_step = 123;
     ts.vfpprod = map_member<int, VFPProdTable>::serializeObject();
     ts.vfpinj = map_member<int, VFPInjTable>::serializeObject();
     ts.groups = map_member<std::string, Group>::serializeObject();
