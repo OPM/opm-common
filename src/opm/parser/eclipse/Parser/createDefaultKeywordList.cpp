@@ -27,14 +27,13 @@
 #include <opm/parser/eclipse/Generator/KeywordLoader.hpp>
 
 
-int main(int , char ** argv) {
+int main(int argc, char ** argv) {
     const char * keyword_list_file = argv[1];
     const char * source_file_path = argv[2];
     const char * init_file_name = argv[3];
     const char * header_file_base_path = argv[4];
     const char * header_file_path = argv[5];
     const char * test_file_name = argv[6];
-    const char * builtin_pybind11_name = argv[7];
 
     std::vector<std::string> keyword_list;
     {
@@ -63,5 +62,6 @@ int main(int , char ** argv) {
     generator.updateHeader(loader, header_file_base_path, header_file_path );
     generator.updateBuiltInHeader(loader, header_file_base_path, header_file_path );
     generator.updateTest( loader , test_file_name );
-    generator.updatePybindSource(loader , builtin_pybind11_name);
+    if (argc >= 8)
+        generator.updatePybindSource(loader , argv[7]);
 }
