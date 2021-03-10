@@ -58,6 +58,7 @@ namespace Opm {
             serializer(this->porosity);
             serializer(this->permeability);
             serializer(this->depth);
+            serializer(this->init_pressure);
             serializer(this->pvttable);
             serializer(this->sattable);
             serializer(this->global_index);
