@@ -193,7 +193,7 @@ END
     const auto es    = EclipseState{ deck };
     const auto grid  = es.getInputGrid();
     auto       sched = Schedule{ deck, es };
-    auto       summary_config = SummaryConfig{deck, sched, es.fieldProps(), es.getTableManager(), es.aquifer()};
+    auto       summary_config = SummaryConfig{deck, sched, es.fieldProps(), es.aquifer()};
     const auto& w1 = sched.getWell("P1", 0);
     const auto& porv = es.globalFieldProps().porv(true);
     auto calc = w1.pavg_calculator(grid, porv);

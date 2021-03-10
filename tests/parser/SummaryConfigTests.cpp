@@ -181,7 +181,7 @@ static SummaryConfig createSummary( std::string input , const ParseContext& pars
     auto python = std::make_shared<Python>();
     EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors, python);
-    return SummaryConfig(deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer(), parseContext, errors);
+    return SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors);
 }
 
 BOOST_AUTO_TEST_CASE(wells_all) {
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(EMPTY) {
     auto python = std::make_shared<Python>();
     EclipseState state( deck );
     Schedule schedule(deck, state, python);
-    SummaryConfig conf(deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer());
+    SummaryConfig conf(deck, schedule, state.fieldProps(), state.aquifer());
     BOOST_CHECK_EQUAL( conf.size(), 0U );
 }
 
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(wells_missingI) {
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
     EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors, python );
-    BOOST_CHECK_NO_THROW(SummaryConfig(deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer(), parseContext, errors));
+    BOOST_CHECK_NO_THROW(SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors));
 }
 
 
@@ -779,7 +779,7 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
     const auto schedule = Schedule { deck, state, python};
     const auto summary  = SummaryConfig {
-        deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer()
+        deck, schedule, state.fieldProps(), state.aquifer()
     };
 
     // SOFR PROD01 segments 1, 10, 21.
@@ -1123,7 +1123,7 @@ END
     const auto parseContext = ParseContext{};
     const auto state = EclipseState (deck);
     const auto schedule = Schedule (deck, state, parseContext, errors, std::make_shared<const Python>());
-    const auto smry = SummaryConfig(deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer(), parseContext, errors);
+    const auto smry = SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors);
 
     BOOST_CHECK_MESSAGE(deck.hasKeyword("GPR"), R"(Deck must have "GPR" keyword)");
     BOOST_CHECK_MESSAGE(smry.hasKeyword("GPR"), R"(SummaryConfig must have "GPR" keyword)");
@@ -1363,4 +1363,57 @@ WBP9
     BOOST_CHECK(summary_config.hasKeyword("WBP4"));
     BOOST_CHECK(summary_config.hasKeyword("WBP5"));
     BOOST_CHECK(summary_config.hasKeyword("WBP9"));
+}
+
+BOOST_AUTO_TEST_CASE( SUMMARY_INVALID_FIPNUM ) {
+    const std::string input = R"(
+RPR__ABC
+1 2 3 /
+
+RWIP_REG
+1 2 3 /
+)";
+
+    const std::string input_too_large = R"(
+RPR
+1 2 3  99 /
+)";
+
+    const std::string input_empty= R"(
+RPR__REG
+15 /
+)";
+    ParseContext parse_context;
+    {
+        parse_context.update(ParseContext::SUMMARY_INVALID_FIPNUM, InputError::IGNORE);
+        const auto& summary_config = createSummary(input, parse_context);
+        BOOST_CHECK(summary_config.hasKeyword("RWIP_REG"));
+        BOOST_CHECK(!summary_config.hasKeyword("RPR__ABC"));
+    }
+    {
+        parse_context.update(ParseContext::SUMMARY_INVALID_FIPNUM, InputError::THROW_EXCEPTION);
+        BOOST_CHECK_THROW(createSummary(input, parse_context), std::exception);
+    }
+
+    {
+        parse_context.update(ParseContext::SUMMARY_REGION_TOO_LARGE, InputError::THROW_EXCEPTION);
+        BOOST_CHECK_THROW(createSummary(input_too_large, parse_context), std::exception);
+    }
+
+    {
+        parse_context.update(ParseContext::SUMMARY_REGION_TOO_LARGE, InputError::IGNORE);
+        const auto& summary_config = createSummary(input_too_large, parse_context);
+        BOOST_CHECK_EQUAL( summary_config.size(), 3);
+    }
+
+    {
+        parse_context.update(ParseContext::SUMMARY_EMPTY_REGION, InputError::THROW_EXCEPTION);
+        BOOST_CHECK_THROW(createSummary(input_empty, parse_context), std::exception);
+    }
+
+    {
+        parse_context.update(ParseContext::SUMMARY_EMPTY_REGION, InputError::IGNORE);
+        const auto& summary_config = createSummary(input_empty, parse_context);
+        BOOST_CHECK_EQUAL( summary_config.size(), 1);
+    }
 }

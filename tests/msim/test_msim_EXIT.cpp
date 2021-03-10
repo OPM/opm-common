@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST) {
     Opm::Deck deck = parser.parseFile(deck_file);
     Opm::EclipseState state(deck);
     Opm::Schedule schedule(deck, state, python);
-    Opm::SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.getTableManager(), state.aquifer());
+    Opm::SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
 
     {
         WorkArea work_area("test_msim");

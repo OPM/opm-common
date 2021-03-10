@@ -22,8 +22,10 @@
 #include <array>
 #include <iostream>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -40,7 +42,6 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
@@ -57,6 +58,11 @@
 namespace Opm {
 
 namespace {
+
+struct SummaryConfigContext {
+    std::unordered_map<std::string, std::set<int>> regions;
+};
+
 
     const std::vector<std::string> ALL_keywords = {
         "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
@@ -746,9 +752,10 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
 
 inline void keywordR( SummaryConfig::keyword_list& list,
+                      SummaryConfigContext& context,
                       const DeckKeyword& deck_keyword,
                       const Schedule& schedule,
-                      const TableManager& tables,
+                      const FieldPropsManager& field_props,
                       const ParseContext& parseContext,
                       ErrorGuard& errors ) {
 
@@ -758,18 +765,66 @@ inline void keywordR( SummaryConfig::keyword_list& list,
         return;
     }
     std::string region_name = "FIPNUM";
-    if (keyword.size() > 5)
+    if (keyword.size() > 5) {
         region_name = "FIP" + keyword.substr(5,3);
+        if (!field_props.has_int(region_name)) {
+            std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
+                                              "In {{file}} line {{line}}\n"
+                                              "FIP region {} not defined in REGIONS section - {{keyword}} ignored", region_name);
+            parseContext.handleError(ParseContext::SUMMARY_INVALID_FIPNUM, msg_fmt, deck_keyword.location(), errors);
+            return;
+        }
+    }
+    if (context.regions.count(region_name) == 0) {
+        const auto& fipnum = field_props.get_int(region_name);
+        context.regions.emplace( region_name, std::set<int>{ fipnum.begin(), fipnum.end()});
+    }
 
-    const size_t numfip = tables.numFIPRegions( );
     const auto& item = deck_keyword.getDataRecord().getDataItem();
     std::vector<int> regions;
 
-    if (item.data_size() > 0)
-        regions = item.getData< int >();
-    else {
-        for (size_t region=1; region <= numfip; region++)
-            regions.push_back( region );
+
+
+    /*
+      Assume that the FIPNUM array contains the values {1,2,4}; i.e. the maximum
+      value is 4 and the value 3 is missing. Values which are too large, i.e. >
+      4 in this case - and values which are missing in the range are treated
+      differently:
+
+         region_id >= 5: The requested region results are completely ignored.
+
+         region_id == 3: The summary file will contain a vector Rxxx:3 with the
+         value 0.
+
+      These behaviors are closely tied to the implementation in opm-simulators
+      which actually performs the region summation; and that is also the main
+      reason to treat these quite similar error conditions differently.
+    */
+
+    if (item.data_size() > 0) {
+        for (const auto& region_id : item.getData<int>()) {
+            const auto& region_set = context.regions.at(region_name);
+            auto max_iter = region_set.rbegin();
+            if (region_id > *max_iter) {
+                std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "FIP region {} not present in {} - ignored", region_id, region_name);
+                parseContext.handleError(ParseContext::SUMMARY_REGION_TOO_LARGE, msg_fmt, deck_keyword.location(), errors);
+                continue;
+            }
+
+            if (region_set.count(region_id) == 0) {
+                std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "FIP region {} not present in {} - will use 0", region_id, region_name);
+                parseContext.handleError(ParseContext::SUMMARY_EMPTY_REGION, msg_fmt, deck_keyword.location(), errors);
+            }
+
+            regions.push_back( region_id );
+        }
+    } else {
+        for (const auto& region_id : context.regions.at(region_name))
+            regions.push_back( region_id );
     }
 
     // See comment on function roew() in Summary.cpp for this weirdness.
@@ -794,10 +849,8 @@ inline void keywordR( SummaryConfig::keyword_list& list,
     .fip_region( region_name )
     .isUserDefined( is_udq(keyword) );
 
-    for( const int region : regions ) {
-        if (region >= 1 && region <= static_cast<int>(numfip))
-            list.push_back( param.number( region ) );
-    }
+    for( const auto& region : regions )
+        list.push_back( param.number( region ) );
 }
 
 
@@ -1072,10 +1125,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     }
 
   inline void handleKW( SummaryConfig::keyword_list& list,
+                        SummaryConfigContext& context,
                         const std::vector<std::string>& node_names,
                         const DeckKeyword& keyword,
                         const Schedule& schedule,
-                        const TableManager& tables,
+                        const FieldPropsManager& field_props,
                         const AquiferConfig& aquiferConfig,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
@@ -1091,7 +1145,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Group: return keywordG( list, parseContext, errors, keyword, schedule );
         case Cat::Field: return keywordF( list, keyword );
         case Cat::Block: return keywordB( list, keyword, dims );
-        case Cat::Region: return keywordR( list, keyword, schedule, tables, parseContext, errors );
+        case Cat::Region: return keywordR( list, context, keyword, schedule, field_props, parseContext, errors );
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
         case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );
@@ -1369,21 +1423,20 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const FieldPropsManager& field_props,
-                              const TableManager& tables,
                               const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               ErrorGuard& errors,
                               const GridDims& dims) {
     try {
         SUMMARYSection section( deck );
-
+        SummaryConfigContext context;
         const auto node_names = need_node_names(section) ? collect_node_names(schedule) : std::vector<std::string> {};
 
         for (const auto& kw : section) {
             if (is_processing_instruction(kw.name())) {
                 handleProcessingInstruction(kw.name());
             } else {
-                handleKW(this->m_keywords, node_names, kw, schedule, tables, aquiferConfig, parseContext, errors, dims);
+                handleKW(this->m_keywords, context, node_names, kw, schedule, field_props, aquiferConfig, parseContext, errors, dims);
             }
         }
 
@@ -1421,11 +1474,10 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const FieldPropsManager& field_props,
-                              const TableManager& tables,
                               const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               ErrorGuard& errors) :
-    SummaryConfig( deck , schedule, field_props, tables, aquiferConfig, parseContext, errors, GridDims( deck ))
+    SummaryConfig( deck , schedule, field_props, aquiferConfig, parseContext, errors, GridDims( deck ))
 { }
 
 
@@ -1433,20 +1485,18 @@ template <typename T>
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const FieldPropsManager& field_props,
-                              const TableManager& tables,
                               const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               T&& errors) :
-    SummaryConfig(deck, schedule, field_props, tables, aquiferConfig, parseContext, errors)
+    SummaryConfig(deck, schedule, field_props, aquiferConfig, parseContext, errors)
 {}
 
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const FieldPropsManager& field_props,
-                              const TableManager& tables,
                               const AquiferConfig& aquiferConfig) :
-    SummaryConfig(deck, schedule, field_props, tables, aquiferConfig, ParseContext(), ErrorGuard())
+    SummaryConfig(deck, schedule, field_props, aquiferConfig, ParseContext(), ErrorGuard())
 {}
 
 

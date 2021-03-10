@@ -126,7 +126,6 @@ namespace Opm {
     class GridDims;
     class ParseContext;
     class Schedule;
-    class TableManager;
     class AquiferConfig;
     class FieldPropsManager;
 
@@ -140,7 +139,6 @@ namespace Opm {
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const FieldPropsManager&,
-                           const TableManager&,
                            const AquiferConfig&,
                            const ParseContext&,
                            ErrorGuard&);
@@ -149,7 +147,6 @@ namespace Opm {
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const FieldPropsManager&,
-                           const TableManager&,
                            const AquiferConfig&,
                            const ParseContext&,
                            T&&);
@@ -157,7 +154,6 @@ namespace Opm {
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const FieldPropsManager&,
-                           const TableManager&,
                            const AquiferConfig&);
 
             SummaryConfig(const keyword_list& kwds,
@@ -225,7 +221,6 @@ namespace Opm {
             SummaryConfig( const Deck& deck,
                            const Schedule& schedule,
                            const FieldPropsManager& field_props,
-                           const TableManager& tables,
                            const AquiferConfig& aquiferConfig,
                            const ParseContext& parseContext,
                            ErrorGuard& errors,
