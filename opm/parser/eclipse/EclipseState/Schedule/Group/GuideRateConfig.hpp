@@ -56,7 +56,7 @@ public:
 
 struct GroupTarget {
     double guide_rate;
-    Group::GuideRateTarget target;
+    Group::GuideRateProdTarget target;
 
     bool operator==(const GroupTarget& data) const {
         return guide_rate == data.guide_rate &&

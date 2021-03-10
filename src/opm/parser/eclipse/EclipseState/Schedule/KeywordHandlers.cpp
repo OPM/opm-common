@@ -330,41 +330,69 @@ namespace {
             const auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
             const bool is_free = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
 
+            std::optional<std::string> guide_rate_str;
+            {
+                const auto& item = record.getItem("GUIDE_RATE_DEF");
+                if (item.hasValue(0)) {
+                    const auto& string_value = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
+                    if (string_value.size() > 0)
+                        guide_rate_str = string_value;
+                }
+
+            }
+
             for (const auto& group_name : group_names) {
-                const bool availableForGroupControl = is_free && (group_name != "FIELD");
-                auto new_group = this->snapshots.back().groups.get(group_name);
-                Group::GroupInjectionProperties injection;
-                injection.phase = phase;
-                injection.cmode = controlMode;
-                injection.surface_max_rate = surfaceInjectionRate;
-                injection.resv_max_rate = reservoirInjectionRate;
-                injection.target_reinj_fraction = reinj_target;
-                injection.target_void_fraction = voidage_target;
-                injection.injection_controls = 0;
-                injection.available_group_control = availableForGroupControl;
+                const bool is_field { group_name == "FIELD" } ;
 
-                if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
-                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::RATE);
+                auto guide_rate_def = Group::GuideRateInjTarget::NO_GUIDE_RATE;
+                double guide_rate = 0;
+                if (!is_field) {
+                    if (guide_rate_str) {
+                        guide_rate_def = Group::GuideRateInjTargetFromString(guide_rate_str.value());
+                        guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
+                        if (guide_rate == 0)
+                            guide_rate_def = Group::GuideRateInjTarget::POTN;
+                    }
+                }
 
-                if (!record.getItem("RESV_TARGET").defaultApplied(0))
-                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::RESV);
+                {
+                    const bool availableForGroupControl = is_free && !is_field;
+                    auto new_group = this->snapshots.back().groups.get(group_name);
+                    Group::GroupInjectionProperties injection;
+                    injection.phase = phase;
+                    injection.cmode = controlMode;
+                    injection.surface_max_rate = surfaceInjectionRate;
+                    injection.resv_max_rate = reservoirInjectionRate;
+                    injection.target_reinj_fraction = reinj_target;
+                    injection.target_void_fraction = voidage_target;
+                    injection.injection_controls = 0;
+                    injection.guide_rate = guide_rate;
+                    injection.guide_rate_def = guide_rate_def;
+                    injection.available_group_control = availableForGroupControl;
 
-                if (!record.getItem("REINJ_TARGET").defaultApplied(0))
-                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::REIN);
+                    if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
+                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::RATE);
 
-                if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
-                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
+                    if (!record.getItem("RESV_TARGET").defaultApplied(0))
+                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::RESV);
 
-                if (record.getItem("REINJECT_GROUP").hasValue(0))
-                    injection.reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
+                    if (!record.getItem("REINJ_TARGET").defaultApplied(0))
+                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::REIN);
 
-                if (record.getItem("VOIDAGE_GROUP").hasValue(0))
-                    injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
+                    if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
+                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                if (new_group.updateInjection(injection)) {
-                    this->snapshots.back().groups.update( std::move(new_group));
-                    this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
-                    this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
+                    if (record.getItem("REINJECT_GROUP").hasValue(0))
+                        injection.reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
+
+                    if (record.getItem("VOIDAGE_GROUP").hasValue(0))
+                        injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
+
+                    if (new_group.updateInjection(injection)) {
+                        this->snapshots.back().groups.update( std::move(new_group));
+                        this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
+                        this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
+                    }
                 }
             }
         }
@@ -413,17 +441,16 @@ namespace {
 
             for (const auto& group_name : group_names) {
                 const bool is_field { group_name == "FIELD" } ;
-                const bool availableForGroupControl { respond_to_parent && !is_field } ;
 
-                auto guide_rate_def = Group::GuideRateTarget::NO_GUIDE_RATE;
+                auto guide_rate_def = Group::GuideRateProdTarget::NO_GUIDE_RATE;
                 double guide_rate = 0;
                 if (!is_field) {
                     if (guide_rate_str) {
-                        guide_rate_def = Group::GuideRateTargetFromString(guide_rate_str.value());
+                        guide_rate_def = Group::GuideRateProdTargetFromString(guide_rate_str.value());
 
-                        if ((guide_rate_def == Group::GuideRateTarget::INJV ||
-                             guide_rate_def == Group::GuideRateTarget::POTN ||
-                             guide_rate_def == Group::GuideRateTarget::FORM)) {
+                        if ((guide_rate_def == Group::GuideRateProdTarget::INJV ||
+                             guide_rate_def == Group::GuideRateProdTarget::POTN ||
+                             guide_rate_def == Group::GuideRateProdTarget::FORM)) {
                             std::string msg_fmt = "Problem with {keyword}\n"
                                 "In {file} line {line}\n"
                                 "The supplied guide rate will be ignored";
@@ -431,12 +458,13 @@ namespace {
                         } else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
-                                guide_rate_def = Group::GuideRateTarget::POTN;
+                                guide_rate_def = Group::GuideRateProdTarget::POTN;
                         }
                     }
                 }
 
                 {
+                    const bool availableForGroupControl { respond_to_parent && !is_field } ;
                     auto new_group = this->snapshots.back().groups.get(group_name);
                     Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
                     production.gconprod_cmode = controlMode;

@@ -37,7 +37,7 @@ double GuideRate::RateVector::eval(Well::GuideRateTarget target) const
     return this->eval(GuideRateModel::convert_target(target));
 }
 
-double GuideRate::RateVector::eval(Group::GuideRateTarget target) const
+double GuideRate::RateVector::eval(Group::GuideRateProdTarget target) const
 {
     return this->eval(GuideRateModel::convert_target(target));
 }
@@ -71,7 +71,7 @@ double GuideRate::get(const std::string& well, Well::GuideRateTarget target, con
     return this->get(well, GuideRateModel::convert_target(target), rates);
 }
 
-double GuideRate::get(const std::string& group, Group::GuideRateTarget target, const RateVector& rates) const
+double GuideRate::get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const
 {
     return this->get(group, GuideRateModel::convert_target(target), rates);
 }
@@ -148,7 +148,7 @@ void GuideRate::group_compute(const std::string& wgname,
         // If the FORM mode is used we check if the last computation is
         // recent enough; then we just return.
         if (iter != this->values.end()) {
-            if (group.target == Group::GuideRateTarget::FORM) {
+            if (group.target == Group::GuideRateProdTarget::FORM) {
                 if (! config.has_model()) {
                     throw std::logic_error {
                         "When specifying GUIDERATE target FORM you must "
@@ -164,15 +164,15 @@ void GuideRate::group_compute(const std::string& wgname,
             }
         }
 
-        if (group.target == Group::GuideRateTarget::INJV) {
+        if (group.target == Group::GuideRateProdTarget::INJV) {
             throw std::logic_error("Group guide rate mode: INJV not implemented");
         }
 
-        if (group.target == Group::GuideRateTarget::POTN) {
+        if (group.target == Group::GuideRateProdTarget::POTN) {
             throw std::logic_error("Group guide rate mode: POTN not implemented");
         }
 
-        if (group.target == Group::GuideRateTarget::FORM) {
+        if (group.target == Group::GuideRateProdTarget::FORM) {
             if (! config.has_model()) {
                 throw std::logic_error {
                     "When specifying GUIDERATE target FORM you must "
