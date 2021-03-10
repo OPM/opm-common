@@ -35,10 +35,21 @@ BOOST_AUTO_TEST_SUITE(Basic_Mapping)
 
 BOOST_AUTO_TEST_CASE(Constructor)
 {
-    auto map = Opm::ActiveIndexByColumns{};
-    auto map2 = map;
+    const auto cartDims = std::array<int,3>{ { 1, 1, 4 } };
+    const auto actIJK = std::vector<std::array<int,3>> {
+        { 0, 0, 0 },
+        { 0, 0, 1 },
+        { 0, 0, 3 },
+    };
 
-    auto map3 = std::move(map2);
+    const auto map = Opm::ActiveIndexByColumns { actIJK.size(), cartDims,
+        [&actIJK](const std::size_t i)
+    {
+        return actIJK[i];
+    }};
+
+    auto map2 = map;
+    const auto map3 = std::move(map2);
     BOOST_CHECK_MESSAGE(map3 == map, "Copied Map object must equal initial");
 }
 
@@ -51,12 +62,11 @@ BOOST_AUTO_TEST_CASE(Single_Column)
         { 0, 0, 3 },
     };
 
-    auto map = Opm::ActiveIndexByColumns{};
-    map.buildMappingTables(actIJK.size(), cartDims,
+    const auto map = Opm::ActiveIndexByColumns { actIJK.size(), cartDims,
         [&actIJK](const std::size_t i)
     {
         return actIJK[i];
-    });
+    }};
 
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(0), 0);
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(1), 1);
@@ -73,12 +83,11 @@ BOOST_AUTO_TEST_CASE(Two_Columns)
         { 0, 0, 3 },  { 1, 0, 3 },
     };
 
-    auto map = Opm::ActiveIndexByColumns{};
-    map.buildMappingTables(actIJK.size(), cartDims,
+    const auto map = Opm::ActiveIndexByColumns { actIJK.size(), cartDims,
         [&actIJK](const std::size_t i)
     {
         return actIJK[i];
-    });
+    }};
 
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(0), 0);
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(1), 3);
@@ -100,12 +109,11 @@ BOOST_AUTO_TEST_CASE(Four_Columns)
         { 0, 0, 3 },  { 1, 0, 3 },  { 0, 1, 3 },  { 1, 1, 3 },
     };
 
-    auto map = Opm::ActiveIndexByColumns{};
-    map.buildMappingTables(actIJK.size(), cartDims,
+    const auto map = Opm::ActiveIndexByColumns { actIJK.size(), cartDims,
         [&actIJK](const std::size_t i)
     {
         return actIJK[i];
-    });
+    }};
 
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  0);
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  6);
@@ -256,8 +264,7 @@ BOOST_AUTO_TEST_CASE(Cube_3x3x3_Full)
 {
     const auto grid = Opm::EclipseGrid {{3, 3, 3}, coord_3x3x3(), zcorn_3x3x3() };
 
-    auto map = Opm::ActiveIndexByColumns{};
-    buildColumnarActiveIndexMappingTables(grid, map);
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
 
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  0);
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  9);
@@ -321,8 +328,7 @@ BOOST_AUTO_TEST_CASE(Cube_3x3x3_exclude_centre_cell)
     const auto actnum = actnum_3x3x3_exclude_centre_cell();
     const auto grid = Opm::EclipseGrid {{3, 3, 3}, coord_3x3x3(), zcorn_3x3x3(), actnum.data() };
 
-    auto map = Opm::ActiveIndexByColumns{};
-    buildColumnarActiveIndexMappingTables(grid, map);
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
 
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  0);
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  9);
@@ -385,8 +391,7 @@ BOOST_AUTO_TEST_CASE(Cube_3x3x3_exclude_centre_column)
     const auto actnum = actnum_3x3x3_exclude_centre_column();
     const auto grid = Opm::EclipseGrid {{3, 3, 3}, coord_3x3x3(), zcorn_3x3x3(), actnum.data() };
 
-    auto map = Opm::ActiveIndexByColumns{};
-    buildColumnarActiveIndexMappingTables(grid, map);
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
 
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  0);
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  9);
@@ -447,8 +452,7 @@ BOOST_AUTO_TEST_CASE(Cube_3x3x3_exclude_diagonals)
     const auto actnum = actnum_3x3x3_exclude_diagonals();
     const auto grid = Opm::EclipseGrid {{3, 3, 3}, coord_3x3x3(), zcorn_3x3x3(), actnum.data() };
 
-    auto map = Opm::ActiveIndexByColumns{};
-    buildColumnarActiveIndexMappingTables(grid, map);
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
 
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  5);
     BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  1);

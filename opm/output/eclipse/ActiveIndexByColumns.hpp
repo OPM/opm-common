@@ -46,9 +46,9 @@ public:
     /// \param[in] cartDims Model's Cartesian dimensions.
     /// \param[in] getIJK Call-back routine for retrieving the Cartesian
     ///    (I,J,K) tuple of an active cell index.
-    void buildMappingTables(const std::size_t                                           numActive,
-                            const std::array<int, 3>&                                   cartDims,
-                            const std::function<std::array<int, 3>(const std::size_t)>& getIJK);
+    explicit ActiveIndexByColumns(const std::size_t                                           numActive,
+                                  const std::array<int, 3>&                                   cartDims,
+                                  const std::function<std::array<int, 3>(const std::size_t)>& getIJK);
 
     /// Map active index in natural order to active index in columnar order.
     ///
@@ -67,8 +67,7 @@ private:
 };
 
 /// Build natural->columnar active cell index mapping from an EclipseGrid instance.
-void buildColumnarActiveIndexMappingTables(const EclipseGrid&    grid,
-                                           ActiveIndexByColumns& map);
+ActiveIndexByColumns buildColumnarActiveIndexMappingTables(const EclipseGrid& grid);
 
 } // namespace Opm
 

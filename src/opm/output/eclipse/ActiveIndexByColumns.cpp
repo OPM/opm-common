@@ -46,6 +46,31 @@ namespace {
         //
         return ijk[2] + dims[2]*(ijk[1] + dims[1]*ijk[0]);
     }
+
+    std::vector<int>
+    buildMappingTables(const std::size_t                                           numActive,
+                       const std::array<int, 3>&                                   cartDims,
+                       const std::function<std::array<int, 3>(const std::size_t)>& getIJK)
+    {
+        auto natural2columnar = std::vector<int>(numActive, 0);
+
+        auto activeCells = std::vector<std::size_t>(numActive, std::size_t{0});
+        std::iota(activeCells.begin(), activeCells.end(), std::size_t{0});
+
+        std::sort(activeCells.begin(), activeCells.end(),
+            [&cartDims, &getIJK](const std::size_t cell1, const std::size_t cell2) -> bool
+        {
+            return columnarGlobalIdx(cartDims, getIJK(cell1))
+                <  columnarGlobalIdx(cartDims, getIJK(cell2));
+        });
+
+        auto columnarActiveID = 0;
+        for (const auto& naturalActiveID : activeCells) {
+            natural2columnar[naturalActiveID] = columnarActiveID++;
+        }
+
+        return natural2columnar;
+    }
 }
 
 bool Opm::ActiveIndexByColumns::operator==(const ActiveIndexByColumns& rhs) const
@@ -53,35 +78,19 @@ bool Opm::ActiveIndexByColumns::operator==(const ActiveIndexByColumns& rhs) cons
     return this->natural2columnar_ == rhs.natural2columnar_;
 }
 
-void
 Opm::ActiveIndexByColumns::
-buildMappingTables(const std::size_t                                           numActive,
-                   const std::array<int, 3>&                                   cartDims,
-                   const std::function<std::array<int, 3>(const std::size_t)>& getIJK)
+ActiveIndexByColumns(const std::size_t                                           numActive,
+                     const std::array<int, 3>&                                   cartDims,
+                     const std::function<std::array<int, 3>(const std::size_t)>& getIJK)
+    : natural2columnar_{ buildMappingTables(numActive, cartDims, getIJK) }
+{}
+
+Opm::ActiveIndexByColumns
+Opm::buildColumnarActiveIndexMappingTables(const EclipseGrid& grid)
 {
-    auto activeCells = std::vector<std::size_t>(numActive, std::size_t{0});
-    std::iota(activeCells.begin(), activeCells.end(), std::size_t{0});
-
-    std::sort(activeCells.begin(), activeCells.end(),
-        [&cartDims, &getIJK](const std::size_t cell1, const std::size_t cell2) -> bool
-    {
-        return columnarGlobalIdx(cartDims, getIJK(cell1))
-            <  columnarGlobalIdx(cartDims, getIJK(cell2));
-    });
-
-    this->natural2columnar_.resize(numActive, 0);
-    auto columnarActiveID = 0;
-    for (const auto& naturalActiveID : activeCells) {
-        this->natural2columnar_[naturalActiveID] = columnarActiveID++;
-    }
-}
-
-void Opm::buildColumnarActiveIndexMappingTables(const EclipseGrid&    grid,
-                                                ActiveIndexByColumns& map)
-{
-    map.buildMappingTables(grid.getNumActive(), grid.getNXYZ(),
+    return ActiveIndexByColumns { grid.getNumActive(), grid.getNXYZ(),
         [&grid](const std::size_t activeCell)
     {
         return grid.getIJK(grid.getGlobalIndex(activeCell));
-    });
+    }};
 }
