@@ -533,6 +533,38 @@ END
     BOOST_CHECK_THROW(sched[3].groups.get("I"), std::exception);
 }
 
+BOOST_AUTO_TEST_CASE(Change_Injector_Type) {
+    const auto input = std::string { R"(
+SCHEDULE
+WELSPECS
+-- Group 'I' does not exist before now (report step 4, zero-based = 3)
+  'I1' 'I' 5 5 2522.5 'WATER' /
+/
+WCONINJE
+  'I1' 'WATER'  'OPEN'  'RATE'  200  1*  450.0 /
+/
+TSTEP
+  50 50 /
+WCONINJE
+  'I1' 'GAS'  'OPEN'  'RATE'  200  1*  450.0 /
+/
+TSTEP
+  50 50 /
+END
+)"
+    };
+
+    const auto sched = make_schedule(input);
+    BOOST_CHECK(  sched[0].wellgroup_events().hasEvent("I1", ScheduleEvents::Events::INJECTION_UPDATE) );
+    BOOST_CHECK(  !sched[1].wellgroup_events().hasEvent("I1", ScheduleEvents::Events::INJECTION_UPDATE) );
+    BOOST_CHECK(  sched[2].wellgroup_events().hasEvent("I1", ScheduleEvents::Events::INJECTION_UPDATE) );
+    BOOST_CHECK(  !sched[3].wellgroup_events().hasEvent("I1", ScheduleEvents::Events::INJECTION_UPDATE) );
+    BOOST_CHECK(  !sched[0].wellgroup_events().hasEvent("I1", ScheduleEvents::Events::INJECTION_TYPE_CHANGED) );
+    BOOST_CHECK(  !sched[1].wellgroup_events().hasEvent("I1", ScheduleEvents::Events::INJECTION_TYPE_CHANGED) );
+    BOOST_CHECK(  sched[2].wellgroup_events().hasEvent("I1", ScheduleEvents::Events::INJECTION_TYPE_CHANGED) );
+    BOOST_CHECK(  !sched[3].wellgroup_events().hasEvent("I1",ScheduleEvents::Events::INJECTION_TYPE_CHANGED) );
+}
+
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     const auto& schedule = make_schedule( createDeck() );
 
