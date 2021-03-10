@@ -46,8 +46,7 @@ set( genkw_argv keyword_list.argv
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/include/
   opm/parser/eclipse/Parser/ParserKeywords
-  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
+  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp)
 
 
 add_custom_command( OUTPUT
@@ -117,3 +116,8 @@ add_custom_command(OUTPUT
                    DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
                    COMMAND ${CMAKE_COMMAND} -DBASE_DIR=${PROJECT_BINARY_DIR}
                                             -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake)
+if (OPM_ENABLE_PYTHON)
+  list(APPEND genkw_argv ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
+  list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
+  list(APPEND _target_output ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+endif()
