@@ -590,18 +590,6 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         return restart_keywords.get( timestep );
     }
 
-    int RestartConfig::getKeyword( const std::string& keyword, size_t timeStep) const {
-        const std::map< std::string, int >& keywords = this->getRestartKeywords( timeStep );
-        const auto iter  = keywords.find( keyword );
-        if (iter == keywords.end()) {
-            if (is_RPTRST_mnemonic( keyword ))
-                return 0;
-            else
-                throw std::invalid_argument("The mnenomic " + keyword + " is not recognized");
-        } else
-            return iter->second;
-    }
-
     /*
       Will initialize the internal variable holding the first report
       step when restart output is queried.

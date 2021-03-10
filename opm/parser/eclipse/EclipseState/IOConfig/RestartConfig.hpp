@@ -338,7 +338,6 @@ namespace Opm {
         int  getFirstRestartStep() const;
         bool getWriteRestartFile(size_t timestep, bool log=true) const;
         const std::map< std::string, int >& getRestartKeywords( size_t timestep ) const;
-        int getKeyword( const std::string& keyword, size_t timeStep) const;
 
         void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);

@@ -313,12 +313,6 @@ RESTART=0
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
-    // ACIP is a valid mneonic - but not in this deck.
-    BOOST_CHECK_EQUAL( sched.rst_keyword( 1, "ACIP") , 0 );
-    BOOST_CHECK_EQUAL( sched.rst_keyword( 1, "COMPRESS") , 1 );
-    BOOST_CHECK_EQUAL( sched.rst_keyword( 1, "PCOG") , 1 );
-    BOOST_CHECK_THROW( sched.rst_keyword( 1, "UNKNOWN_KW") , std::invalid_argument);
-
     std::vector< std::string > kw_list2;
     for( const auto& pair : sched.rst_keywords( 3 ) )
         if( pair.second != 0 ) kw_list2.push_back( pair.first );
@@ -326,9 +320,6 @@ RESTART=0
     const auto expected2 = { "COMPRESS", "RESTART", "RK", "VELOCITY" };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
-
-    BOOST_CHECK_EQUAL( sched.rst_keyword( 0, "ALLPROPS" ) , 0);
-    BOOST_CHECK_EQUAL( sched.rst_keyword( 3, "ALLPROPS" ) , 0);
 }
 
 
@@ -612,8 +603,6 @@ DATES             -- 3
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
-    BOOST_CHECK_EQUAL( sched1.rst_keyword( 2, "ALLPROPS") , 0);
-
 
     auto sched2 = make_schedule(deckData2);
     const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
@@ -802,8 +791,6 @@ DATES             -- 3
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
-
-    BOOST_CHECK_EQUAL( sched1.rst_keyword( 2, "ALLPROPS") , 0);
 
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::THROW_EXCEPTION);
     BOOST_CHECK_THROW( Schedule( deck2, es2, ctx, errors, {} ), std::exception );
