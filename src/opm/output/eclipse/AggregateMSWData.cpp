@@ -434,8 +434,23 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
+            iSeg[baseIndex + Ix::SegmentType] = segment.ecl_type_id();
             iSeg[baseIndex + Ix::ICDScalingMode] = sicd.methodFlowScaling();
             iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd.ecl_status();
+        }
+
+        template <class ISegArray>
+        void assignAICDCharacteristics(const Opm::Segment& segment,
+                                            const std::size_t   baseIndex,
+                                            ISegArray&          iSeg)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::
+                VectorItems::ISeg::index;
+
+            const auto& aicd = segment.autoICD();
+            iSeg[baseIndex + Ix::SegmentType] = segment.ecl_type_id();
+            iSeg[baseIndex + Ix::ICDScalingMode] = aicd.methodFlowScaling();
+            iSeg[baseIndex + Ix::ICDOpenShutFlag] = aicd.ecl_status();
         }
 
         template <class ISegArray>
@@ -445,6 +460,9 @@ namespace {
         {
             if (segment.isSpiralICD()) {
                 assignSpiralICDCharacteristics(segment, baseIndex, iSeg);
+            }
+            if (segment.isAICD()) {
+                assignAICDCharacteristics(segment, baseIndex, iSeg);
             }
         }
 
@@ -470,7 +488,6 @@ namespace {
                 }
                 for (std::size_t ind = 0; ind < welSegSet.size(); ind++) {
                     const auto& segment = welSegSet[ind];
-
                     auto segNumber = segment.segmentNumber();
                     auto iS = (segNumber-1)*noElmSeg;
                     iSeg[iS + Ix::SegNo]          = welSegSet[orderedSegmentNo[ind]].segmentNumber();
@@ -611,6 +628,81 @@ namespace {
         }
 
         template <class RSegArray>
+        void assignAICDCharacteristics(const ::Opm::Segment&    segment,
+                                            const ::Opm::UnitSystem& usys,
+                                            const int                baseIndex,
+                                            RSegArray&               rSeg)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
+            using M  = ::Opm::UnitSystem::measure;
+            const double infinity = 1.0e+20;
+
+            const auto& aicd = segment.autoICD();
+
+            rSeg[baseIndex + Ix::DeviceBaseStrength] =
+                usys.from_si(M::aicd_strength, aicd.strength());
+
+            // The value of the scalingFactor depends on the option used:
+            // if 1. item 11 on the WSEGAICD keyword is 1, or
+            // 2. item 11 is negative plus the value of the scalingFactor is negative then
+            // the scalingFactor is an absolute length and need unit conversion
+            // In other cases the scalingFactor is a relative length - and is unitless and do not need unit conversion
+            //
+            rSeg[baseIndex + Ix::ScalingFactor] = ((aicd.methodFlowScaling() == 1) ||
+             ((aicd.methodFlowScaling() < 0) && (aicd.length() < 0))) ?
+                usys.from_si(M::length, aicd.scalingFactor()) : aicd.scalingFactor();
+
+            rSeg[baseIndex + Ix::CalibrFluidDensity] =
+                usys.from_si(M::density, aicd.densityCalibration());
+
+            rSeg[baseIndex + Ix::CalibrFluidViscosity] =
+                usys.from_si(M::viscosity, aicd.viscosityCalibration());
+
+            rSeg[baseIndex + Ix::CriticalWaterFraction] = aicd.criticalValue();
+
+            rSeg[baseIndex + Ix::TransitionRegWidth] =
+                aicd.widthTransitionRegion();
+
+            rSeg[baseIndex + Ix::MaxEmulsionRatio] =
+                aicd.maxViscosityRatio();
+
+            rSeg[baseIndex + Ix::FlowRateExponent] =
+                aicd.flowRateExponent();
+
+            rSeg[baseIndex + Ix::ViscFuncExponent] =
+                aicd.viscExponent();
+
+            const auto& max_rate  = aicd.maxAbsoluteRate();
+            if (max_rate.has_value())
+                rSeg[baseIndex + Ix::MaxValidFlowRate] = usys.from_si(M::geometric_volume_rate, max_rate.value());
+            else
+                rSeg[baseIndex + Ix::MaxValidFlowRate] = -2 * infinity;
+
+            rSeg[baseIndex + Ix::ICDLength] =
+                usys.from_si(M::length, aicd.length());
+
+            rSeg[baseIndex + Ix::flowFractionOilDensityExponent] =
+                aicd.oilDensityExponent();
+
+            rSeg[baseIndex + Ix::flowFractionWaterDensityExponent] =
+                aicd.waterDensityExponent();
+
+            rSeg[baseIndex + Ix::flowFractionGasDensityExponent] =
+                aicd.gasDensityExponent();
+
+            rSeg[baseIndex + Ix::flowFractionOilViscosityExponent] =
+                aicd.oilViscExponent();
+
+            rSeg[baseIndex + Ix::flowFractionWaterViscosityExponent] =
+                aicd.waterViscExponent();
+
+            rSeg[baseIndex + Ix::flowFractionGasViscosityExponent] =
+                aicd.gasViscExponent();
+
+        }
+
+
+        template <class RSegArray>
         void assignSegmentTypeCharacteristics(const ::Opm::Segment&    segment,
                                               const ::Opm::UnitSystem& usys,
                                               const int                baseIndex,
@@ -618,6 +710,10 @@ namespace {
         {
             if (segment.isSpiralICD()) {
                 assignSpiralICDCharacteristics(segment, usys, baseIndex, rSeg);
+            }
+
+            if (segment.isAICD()) {
+                assignAICDCharacteristics(segment, usys, baseIndex, rSeg);
             }
 
             if (segment.isValve()) {
@@ -716,12 +812,12 @@ namespace {
                 //  value is 1. based on tests on several data sets
                 rSeg[iS + Ix::item40] = 1.;
 
-                rSeg[iS + Ix::item106] = 1.0;
-                rSeg[iS + Ix::item107] = 1.0;
-                rSeg[iS + Ix::item108] = 1.0;
-                rSeg[iS + Ix::item109] = 1.0;
-                rSeg[iS + Ix::item110] = 1.0;
-                rSeg[iS + Ix::item111] = 1.0;
+                rSeg[iS + Ix::flowFractionOilDensityExponent]       = 1.0;
+                rSeg[iS + Ix::flowFractionWaterDensityExponent]     = 1.0;
+                rSeg[iS + Ix::flowFractionGasDensityExponent]       = 1.0;
+                rSeg[iS + Ix::flowFractionOilViscosityExponent]     = 1.0;
+                rSeg[iS + Ix::flowFractionWaterViscosityExponent]   = 1.0;
+                rSeg[iS + Ix::flowFractionGasViscosityExponent]     = 1.0;
 
                 //Treat subsequent segments
                 for (std::size_t segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
@@ -770,12 +866,12 @@ namespace {
 
                     rSeg[iS +  Ix::item40] = 1.;
 
-                    rSeg[iS + Ix::item106] = 1.0;
-                    rSeg[iS + Ix::item107] = 1.0;
-                    rSeg[iS + Ix::item108] = 1.0;
-                    rSeg[iS + Ix::item109] = 1.0;
-                    rSeg[iS + Ix::item110] = 1.0;
-                    rSeg[iS + Ix::item111] = 1.0;
+                    rSeg[iS + Ix::flowFractionOilDensityExponent]       = 1.0;
+                    rSeg[iS + Ix::flowFractionWaterDensityExponent]     = 1.0;
+                    rSeg[iS + Ix::flowFractionGasDensityExponent]       = 1.0;
+                    rSeg[iS + Ix::flowFractionOilViscosityExponent]     = 1.0;
+                    rSeg[iS + Ix::flowFractionWaterViscosityExponent]   = 1.0;
+                    rSeg[iS + Ix::flowFractionGasViscosityExponent]     = 1.0;
 
                     if (! segment.isRegular()) {
                         assignSegmentTypeCharacteristics(segment, units, iS, rSeg);

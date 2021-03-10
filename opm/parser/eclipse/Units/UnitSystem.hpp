@@ -76,6 +76,7 @@ namespace Opm {
             energy,
             energy_rate,
             icd_strength,
+            aicd_strength,
             polymer_density,
             salinity,
             _count // New entries must be added *before* this

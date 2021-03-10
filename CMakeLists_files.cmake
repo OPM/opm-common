@@ -463,6 +463,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
           tests/UDQ_ACTIONX_TEST1.DATA
           tests/UDQ_ACTIONX_TEST1_U.DATA
+          tests/TEST_AGGREGATE_MSW.DATA
           tests/include_example_pvt.txt
           tests/include_example_summary.txt
           tests/include_sgof.txt
