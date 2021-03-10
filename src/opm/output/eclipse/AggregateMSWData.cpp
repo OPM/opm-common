@@ -635,6 +635,7 @@ namespace {
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
             using M  = ::Opm::UnitSystem::measure;
+            const double infinity = 1.0e+20;
 
             const auto& aicd = segment.autoICD();
 
@@ -671,9 +672,11 @@ namespace {
             rSeg[baseIndex + Ix::ViscFuncExponent] =
                 aicd.viscExponent();
 
-            rSeg[baseIndex + Ix::MaxValidFlowRate] =
-            (aicd.maxAbsoluteRate() == std::numeric_limits<double>::max()) ?
-               -2.e+20 : usys.from_si(M::geometric_volume_rate, aicd.maxAbsoluteRate()) ;
+            const auto& max_rate  = aicd.maxAbsoluteRate();
+            if (max_rate.has_value())
+                rSeg[baseIndex + Ix::MaxValidFlowRate] = usys.from_si(M::geometric_volume_rate, max_rate.value());
+            else
+                rSeg[baseIndex + Ix::MaxValidFlowRate] = -2 * infinity;
 
             rSeg[baseIndex + Ix::ICDLength] =
                 usys.from_si(M::length, aicd.length());
