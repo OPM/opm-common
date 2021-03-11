@@ -6,10 +6,6 @@
 
 include (FindPackageHandleStandardArgs)
 
-if ((NOT CJSON_ROOT) AND OPM_PARSER_ROOT)
-  set( CJSON_ROOT ${OPM_PARSER_ROOT}) 
-endif()
-
 if (CJSON_ROOT)
   set (_no_default_path "NO_DEFAULT_PATH")
 else (CJSON_ROOT)
@@ -18,10 +14,9 @@ endif (CJSON_ROOT)
 
 
 find_path (CJSON_INCLUDE_DIR
-  NAMES "cjson/cJSON.h"
+  NAMES "cJSON.h"
   HINTS "${CJSON_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}"
-  PATH_SUFFIXES "include" "external"
+  PATH_SUFFIXES "cjson"
   DOC "Path to cjson library header files"
   ${_no_default_path} )
 
@@ -36,11 +31,7 @@ string(REGEX REPLACE "${PROJECT_SOURCE_DIR}/?(.*)" "\\1"  BUILD_DIR_SUFFIX "${PR
 find_library (CJSON_LIBRARY
   NAMES "cjson"
   HINTS "${CJSON_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../opm-parser"
-        "${PROJECT_BINARY_DIR}/../opm-parser${BUILD_DIR_SUFFIX}"
-        "${PROJECT_BINARY_DIR}/../../opm-parser/${BUILD_DIR_SUFFIX}"
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
-                "opm/json"
   DOC "Path to cjson library archive/shared object files"
   ${_no_default_path} )
 
