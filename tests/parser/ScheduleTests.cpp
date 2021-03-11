@@ -3464,8 +3464,8 @@ COMPDAT
         const auto& w2_node = grc.well("W2");
         BOOST_CHECK(w2_node.target == Well::GuideRateTarget::GAS);
 
-        BOOST_CHECK(!grc.has_group("G1"));
-        BOOST_CHECK(grc.has_group("G2"));
+        BOOST_CHECK(!grc.has_production_group("G1"));
+        BOOST_CHECK(grc.has_production_group("G2"));
     }
     {
         const auto& grc = schedule.guideRateConfig(2);
@@ -3477,8 +3477,8 @@ COMPDAT
         BOOST_CHECK(!grc.has_well("W2"));
         BOOST_CHECK_THROW( grc.well("W2"), std::out_of_range);
 
-        BOOST_CHECK(grc.has_group("G1"));
-        BOOST_CHECK(!grc.has_group("G2"));
+        BOOST_CHECK(grc.has_production_group("G1"));
+        BOOST_CHECK(!grc.has_production_group("G2"));
     }
 
     {
@@ -3487,7 +3487,7 @@ COMPDAT
         double gas_pot = 1;
         double wat_pot = 1;
 
-        gr.compute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
+        gr.wellCompute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
     }
     {
         const auto& changed_wells = schedule.changed_wells(0);

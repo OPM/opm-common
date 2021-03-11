@@ -350,8 +350,6 @@ namespace {
                     if (guide_rate_str) {
                         guide_rate_def = Group::GuideRateInjTargetFromString(guide_rate_str.value());
                         guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
-                        if (guide_rate == 0)
-                            guide_rate_def = Group::GuideRateInjTarget::POTN;
                     }
                 }
 
@@ -389,6 +387,10 @@ namespace {
                         injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
 
                     if (new_group.updateInjection(injection)) {
+                        auto new_config = this->snapshots.back().guide_rate();
+                        new_config.update_injection_group(group_name, injection);
+                        this->snapshots.back().guide_rate.update( std::move(new_config));
+
                         this->snapshots.back().groups.update( std::move(new_group));
                         this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
                         this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
@@ -505,7 +507,7 @@ namespace {
 
                     if (new_group.updateProduction(production)) {
                         auto new_config = this->snapshots.back().guide_rate();
-                        new_config.update_group(new_group);
+                        new_config.update_production_group(new_group);
                         this->snapshots.back().guide_rate.update( std::move(new_config));
 
                         this->snapshots.back().groups.update( std::move(new_group));

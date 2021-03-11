@@ -28,8 +28,8 @@ GuideRateConfig GuideRateConfig::serializeObject()
     GuideRateConfig result;
     result.m_model = std::make_shared<GuideRateModel>(GuideRateModel::serializeObject());
     result.wells = {{"test1", WellTarget{1.0, Well::GuideRateTarget::COMB, 2.0}}};
-    result.groups = {{"test2", GroupTarget{1.0, Group::GuideRateProdTarget::COMB}}};
-
+    result.production_groups = {{"test2", GroupProdTarget{1.0, Group::GuideRateProdTarget::COMB}}};
+    result.injection_groups = {{{Phase::OIL, "test3"}, GroupInjTarget{1.0, Group::GuideRateInjTarget::NETV}}};
     return result;
 }
 
@@ -71,32 +71,55 @@ const GuideRateConfig::WellTarget& GuideRateConfig::well(const std::string& well
     return this->wells.at(well);
 }
 
-void GuideRateConfig::update_group(const Group& group) {
+void GuideRateConfig::update_production_group(const Group& group) {
     if (group.name() == "FIELD")
         return;
 
     const auto& properties = group.productionProperties();
     auto guide_target = properties.guide_rate_def;
     if (guide_target == Group::GuideRateProdTarget::NO_GUIDE_RATE) {
-        this->groups.erase(group.name());
+        this->production_groups.erase(group.name());
         return;
     }
 
-    auto& group_node = this->groups[group.name()];
+    auto& group_node = this->production_groups[group.name()];
     group_node.guide_rate = properties.guide_rate;
     group_node.target = guide_target;
 }
 
-const GuideRateConfig::GroupTarget& GuideRateConfig::group(const std::string& group) const {
-    return this->groups.at(group);
+void GuideRateConfig::update_injection_group(const std::string& group_name, Group::GroupInjectionProperties& properties) {
+    if (group_name == "FIELD")
+        return;
+
+    auto guide_target = properties.guide_rate_def;
+    if (guide_target == Group::GuideRateInjTarget::NO_GUIDE_RATE) {
+        this->injection_groups.erase(std::make_pair(properties.phase, group_name));
+        return;
+    }
+
+    auto& group_node = this->injection_groups[std::make_pair(properties.phase, group_name)];
+    group_node.guide_rate = properties.guide_rate;
+    group_node.target = guide_target;
+}
+
+const GuideRateConfig::GroupProdTarget& GuideRateConfig::production_group(const std::string& group) const {
+    return this->production_groups.at(group);
+}
+
+const GuideRateConfig::GroupInjTarget& GuideRateConfig::injection_group(const Phase& phase, const std::string& group) const {
+    return this->injection_groups.at(std::make_pair(phase, group));
 }
 
 bool GuideRateConfig::has_well(const std::string& well) const {
     return (this->wells.count(well) > 0);
 }
 
-bool GuideRateConfig::has_group(const std::string& group) const {
-    return (this->groups.count(group) > 0);
+bool GuideRateConfig::has_injection_group(const Phase& phase, const std::string& name) const {
+    return (this->injection_groups.count(std::make_pair(phase, name)) > 0);
+}
+
+bool GuideRateConfig::has_production_group(const std::string& name) const {
+    return (this->production_groups.count(name) > 0);
 }
 
 bool GuideRateConfig::operator==(const GuideRateConfig& data) const {
@@ -107,7 +130,9 @@ bool GuideRateConfig::operator==(const GuideRateConfig& data) const {
         return false;
 
     return this->wells == data.wells &&
-           this->groups == data.groups;
+            this->production_groups == data.production_groups &&
+            this->injection_groups == data.injection_groups;
+
 }
 
 }
