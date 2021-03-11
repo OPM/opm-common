@@ -3618,6 +3618,11 @@ BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
     const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
     const auto sched = Schedule{ deck, es, python , {}, &rst};
     BOOST_CHECK_NO_THROW( sched[3].vfpprod(5) );
+
+    for (std::size_t index = 0; index < sched.size(); index++) {
+        const auto& state = sched[index];
+        BOOST_CHECK_EQUAL(index, state.sim_step());
+    }
 }
 
 
@@ -4165,6 +4170,11 @@ BOOST_AUTO_TEST_CASE(VFPPROD_SCALING) {
     cmp_vector(wfr, vfp_table.getWFRAxis());
     cmp_vector(gfr, vfp_table.getGFRAxis());
     cmp_vector(alq, vfp_table.getALQAxis());
+
+    for (std::size_t index = 0; index < sched.size(); index++) {
+        const auto& state = sched[index];
+        BOOST_CHECK_EQUAL(index, state.sim_step());
+    }
 }
 
 

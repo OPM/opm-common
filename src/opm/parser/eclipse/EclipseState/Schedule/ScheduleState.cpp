@@ -40,6 +40,15 @@ time_point clamp_time(time_point t) {
     return TimeService::from_time_t( TimeService::to_time_t( t ) );
 }
 
+std::pair<std::size_t, std::size_t> date_diff(time_point t2, time_point t1) {
+    auto ts1 = TimeStampUTC(TimeService::to_time_t(t1));
+    auto ts2 = TimeStampUTC(TimeService::to_time_t(t2));
+    auto year_diff  = ts2.year() - ts1.year();
+    auto month_diff = year_diff*12 + ts2.month() - ts1.month();
+    return { year_diff, month_diff };
+}
+
+
 }
 
 
@@ -60,7 +69,7 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
 {
     this->m_start_time = clamp_time(start_time);
     this->m_end_time = std::nullopt;
-
+    this->m_sim_step = src.sim_step() + 1;
     this->m_events.reset();
     this->m_wellgroup_events.reset();
     this->m_geo_keywords.clear();
@@ -69,6 +78,13 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     auto next_rft = this->rft_config().next();
     if (next_rft.has_value())
         this->rft_config.update( std::move(*next_rft) );
+
+    auto [year_diff, month_diff] = date_diff(this->m_start_time, src.m_start_time);
+    this->m_year_num += year_diff;
+    this->m_month_num += month_diff;
+
+    this->m_first_in_month = (this->m_month_num > src.m_month_num);
+    this->m_first_in_year = (this->m_year_num > src.m_year_num);
 }
 
 ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time, const time_point& end_time) :
@@ -84,6 +100,26 @@ time_point ScheduleState::start_time() const {
 
 time_point ScheduleState::end_time() const {
     return this->m_end_time.value();
+}
+
+std::size_t ScheduleState::sim_step() const {
+    return this->m_sim_step;
+}
+
+std::size_t ScheduleState::month_num() const {
+    return this->m_month_num;
+}
+
+std::size_t ScheduleState::year_num() const {
+    return this->m_year_num;
+}
+
+bool ScheduleState::first_in_month() const {
+    return this->m_first_in_month;
+}
+
+bool ScheduleState::first_in_year() const {
+    return this->m_first_in_year;
 }
 
 void ScheduleState::update_nupcol(int nupcol) {
@@ -142,6 +178,11 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
 
     return this->m_start_time == other.m_start_time &&
            this->m_oilvap == other.m_oilvap &&
+           this->m_sim_step == other.m_sim_step &&
+           this->m_month_num == other.m_month_num &&
+           this->m_first_in_month == other.m_first_in_month &&
+           this->m_first_in_year == other.m_first_in_year &&
+           this->m_year_num == other.m_year_num &&
            this->target_wellpi == other.target_wellpi &&
            this->m_tuning == other.m_tuning &&
            this->m_end_time == other.m_end_time &&
@@ -175,6 +216,9 @@ ScheduleState ScheduleState::serializeObject() {
     auto t1 = TimeService::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
+    ts.m_sim_step = 123;
+    ts.m_month_num = 12;
+    ts.m_year_num = 66;
     ts.vfpprod = map_member<int, VFPProdTable>::serializeObject();
     ts.vfpinj = map_member<int, VFPInjTable>::serializeObject();
     ts.groups = map_member<std::string, Group>::serializeObject();

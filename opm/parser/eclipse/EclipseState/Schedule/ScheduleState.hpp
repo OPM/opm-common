@@ -271,6 +271,18 @@ namespace Opm {
         time_point end_time() const;
         ScheduleState next(const time_point& next_start);
 
+        // The sim_step() is the report step we are currently simulating on. The
+        // results when we have completed sim_step=N are stored in report_step
+        // N+1.
+        std::size_t sim_step() const;
+
+        // The month_num and year_num() functions return the accumulated number
+        // of full months/years to the start of the current block.
+        std::size_t month_num() const;
+        std::size_t year_num() const;
+        bool first_in_month() const;
+        bool first_in_year() const;
+
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializeObject();
 
@@ -424,6 +436,11 @@ namespace Opm {
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
             serializer(m_end_time);
+            serializer(m_sim_step);
+            serializer(m_month_num);
+            serializer(m_year_num);
+            serializer(m_first_in_year);
+            serializer(m_first_in_month);
             m_tuning.serializeOp(serializer);
             serializer(m_nupcol);
             m_oilvap.serializeOp(serializer);
@@ -440,6 +457,11 @@ namespace Opm {
         time_point m_start_time;
         std::optional<time_point> m_end_time;
 
+        std::size_t m_sim_step = 0;
+        std::size_t m_month_num = 0;
+        std::size_t m_year_num = 0;
+        bool m_first_in_month = true;
+        bool m_first_in_year = true;
         Tuning m_tuning;
         int m_nupcol;
         OilVaporizationProperties m_oilvap;

@@ -142,6 +142,19 @@ END
         BOOST_CHECK_MESSAGE(sched.write_rst_file(stepID),
                             "Must write restart information for included step " << stepID);
     }
+
+    std::vector<bool> first_in_month{true, false, false, false, false, true, false, true, true, true, true, true, true, true, true, true, false, true, false};
+    std::vector<std::size_t> month_num{ 0,0,0,0,0, 1, 1, 2, 3, 4, 5, 6, 7, 10, 12, 17, 17, 18, 18 };
+    for (std::size_t index = 0; index < sched.size(); index++) {
+        const auto& state = sched[index];
+        BOOST_CHECK_EQUAL( state.month_num(), month_num[index] );
+        BOOST_CHECK_EQUAL( state.first_in_month(), first_in_month[index] );
+
+        if (index == 0 || index == 11 || index == 17)
+            BOOST_CHECK( state.first_in_year());
+        else
+            BOOST_CHECK(!state.first_in_year());
+    }
 }
 
 
