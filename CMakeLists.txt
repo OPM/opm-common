@@ -165,6 +165,12 @@ if (OPM_ENABLE_PYTHON)
     set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
   else()
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    # Compatibility settings for PythonInterp and PythonLibs
+    # used e.g. in FindCwrap
+    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    set(PYTHON_LIBRARIES Python3::Python)
+    get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
+    set(PYTHON_LIBRARY ${_lib_path})
   endif()
 
   if (OPM_ENABLE_EMBEDDED_PYTHON)
