@@ -21,6 +21,7 @@
 #define OPM_NUMERICALAQUIFERS_HPP
 
 #include <unordered_map>
+#include <map>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 
@@ -38,7 +39,7 @@ namespace Opm {
         size_t size() const;
         bool hasAquifer(size_t aquifer_id) const;
         const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
-        const std::unordered_map <size_t, SingleNumericalAquifer>& aquifers() const;
+        const std::map<size_t, SingleNumericalAquifer>& aquifers() const;
         bool operator==(const NumericalAquifers& other) const;
 
         std::unordered_map<size_t, const NumericalAquiferCell*> allAquiferCells() const;
@@ -55,7 +56,7 @@ namespace Opm {
         }
 
     private:
-        std::unordered_map <size_t, SingleNumericalAquifer> m_aquifers;
+        std::map<size_t, SingleNumericalAquifer> m_aquifers;
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnections(const Deck &deck, const EclipseGrid &grid);

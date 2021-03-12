@@ -147,7 +147,7 @@ namespace Opm {
         return cells;
     }
 
-    const std::unordered_map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
+    const std::map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
         return this->m_aquifers;
     }
 
