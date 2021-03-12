@@ -15,8 +15,12 @@ set (opm-common_DEPS
 list(APPEND opm-common_DEPS
       # various runtime library enhancements
       "Boost 1.44.0 COMPONENTS system unit_test_framework REQUIRED"
-      "Python3 COMPONENTS Interpreter Development"
       "OpenMP QUIET"
 )
-
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
+  list(APPEND opm-common_DEPS
+    # Needed for the imported target Python3::Python
+    "Python3 COMPONENTS Interpreter Development"
+    )
+endif()
 find_package_deps(opm-common)

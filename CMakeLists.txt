@@ -152,8 +152,20 @@ endmacro (install_hook)
 # OpmnLibMain function. Here only the library dependency is implemented, the
 # bulk of the python configuration is further down in the file.
 if (OPM_ENABLE_PYTHON)
-  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-  set(PYTHON_LIBRARIES Python3::Python)
+  # We need to be compatible with older CMake versions
+  # that do not offer FindPython3
+  # e.g. Ubuntu LTS 18.04 uses cmake 3.10
+  if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    find_package(PythonInterp REQUIRED)
+    find_package(PythonLibs REQUIRED)
+    if(PYTHON_VERSION_MAJOR LESS 3)
+      message(SEND_ERROR "OPM requires version 3 of Python but only version ${PYTHON_VERSION_STRING} was found")
+    endif()
+    set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
+    set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
+  else()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+  endif()
 
   if (OPM_ENABLE_EMBEDDED_PYTHON)
     list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARIES})
