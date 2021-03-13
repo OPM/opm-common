@@ -14,7 +14,7 @@ rm -rf opm/libopmcommon_python*
 
 export CC=@CMAKE_CXX_COMPILER@
 
-@PYTHON_EXECUTABLE@ setup.py sdist bdist_wheel build_ext \
+@Python3_EXECUTABLE@ setup.py sdist bdist_wheel build_ext \
 --library-dirs=@_setup_lib_dirs@ \
 @_rpath_arg@ \
 --include-dirs=@_setup_include_dirs@

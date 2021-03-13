@@ -14,4 +14,4 @@ export PYTHONPPATH=@CMAKE_INSTALL_PREFIX@/@PYTHON_PREFIX@
 export LD_LIBRARY_PATH=@PROJECT_BINARY_DIR@/lib:@_setup_lib_dirs@:$LD_LIBRARY_PATH
 
 
-@PYTHON_EXECUTABLE@ setup.py build_ext --dry-run install --prefix=@DEST_PREFIX@@CMAKE_INSTALL_PREFIX@
+@Python3_EXECUTABLE@ setup.py build_ext --dry-run install --prefix=@DEST_PREFIX@@CMAKE_INSTALL_PREFIX@

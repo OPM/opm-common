@@ -152,10 +152,29 @@ endmacro (install_hook)
 # OpmnLibMain function. Here only the library dependency is implemented, the
 # bulk of the python configuration is further down in the file.
 if (OPM_ENABLE_PYTHON)
-  find_package(PythonInterp REQUIRED)
-  if (OPM_ENABLE_EMBEDDED_PYTHON)
+  # We need to be compatible with older CMake versions
+  # that do not offer FindPython3
+  # e.g. Ubuntu LTS 18.04 uses cmake 3.10
+  if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    find_package(PythonInterp REQUIRED)
     find_package(PythonLibs REQUIRED)
-    list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
+    if(PYTHON_VERSION_MAJOR LESS 3)
+      message(SEND_ERROR "OPM requires version 3 of Python but only version ${PYTHON_VERSION_STRING} was found")
+    endif()
+    set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
+    set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
+  else()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    # Compatibility settings for PythonInterp and PythonLibs
+    # used e.g. in FindCwrap
+    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    set(PYTHON_LIBRARIES Python3::Python)
+    get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
+    set(PYTHON_LIBRARY ${_lib_path})
+  endif()
+
+  if (OPM_ENABLE_EMBEDDED_PYTHON)
+    list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARIES})
   endif()
 endif()
 
@@ -305,17 +324,17 @@ if (OPM_ENABLE_PYTHON)
   # Generate versioned setup.py
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
   file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} target_name.py
+  execute_process(COMMAND ${Python3_EXECUTABLE} target_name.py
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
                   OUTPUT_VARIABLE python_lib_target)
 
   add_custom_target(copy_python ALL
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
 
   add_custom_command(OUTPUT python/opm/${python_lib_target}
                      DEPENDS ${PYTHON_CXX_DEPENDS}
                      DEPENDS copy_python
-                     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/setup.py
+                     COMMAND ${Python3_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/setup.py
                                                       build
                                                       build_ext
                                                       --build-lib=${PROJECT_BINARY_DIR}/python
@@ -339,7 +358,7 @@ if (OPM_ENABLE_PYTHON)
   # setup.py install manually - optionally with the generated script
   # setup-install.sh - and completely bypass cmake in the installation phase.
   if (OPM_INSTALL_PYTHON)
-    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+    install( CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
@@ -347,7 +366,7 @@ if (OPM_ENABLE_PYTHON)
   # testing.
   add_test(NAME python_tests
            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
-           COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${PROJECT_BINARY_DIR}/python test
+           COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${Python3_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${PROJECT_BINARY_DIR}/python test
            )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
