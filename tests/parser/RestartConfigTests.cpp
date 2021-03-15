@@ -29,11 +29,22 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
-inline std::string fst( const std::pair< std::string, int >& p ) {
-    return p.first;
+
+
+std::vector<std::string> filter_keywords(const std::map<std::string, int>& keywords) {
+    std::vector<std::string> kwlist;
+    for (const auto& [kw, value] : keywords) {
+        if (kw == "BASIC" || kw == "FREQ" || kw == "RESTART")
+            continue;
+
+        if (value == 0)
+            continue;
+
+        kwlist.push_back(kw);
+    }
+    return kwlist;
 }
 
 const std::string grid = R"(
@@ -316,19 +327,13 @@ RESTART=0
     BOOST_CHECK(  sched.write_rst_file( 2 ) );
     BOOST_CHECK( !sched.write_rst_file( 3 ) );
 
-    std::vector< std::string > kw_list1;
-    for( const auto& pair : sched.rst_keywords( 1 ) )
-        if( pair.second != 0 ) kw_list1.push_back( pair.first );
-
+    const auto& kw_list1 = filter_keywords(sched.rst_keywords(1));
     const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
-    std::vector< std::string > kw_list2;
-    for( const auto& pair : sched.rst_keywords( 3 ) )
-        if( pair.second != 0 ) kw_list2.push_back( pair.first );
-
-    const auto expected2 = { "COMPRESS", "RESTART", "RK", "VELOCITY" };
+    const auto& kw_list2 = filter_keywords( sched.rst_keywords(3));
+    const auto expected2 = { "COMPRESS", "RK", "VELOCITY" };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 }
@@ -609,15 +614,15 @@ DATES             -- 3
     BOOST_CHECK(  sched1.write_rst_file( 2 ) );
 
 
-    std::vector<std::string> expected = { "ACIP","BASIC", "BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
-    const auto kw_list = fun::map( fst, sched1.rst_keywords(2) );
+    std::vector<std::string> expected = { "ACIP","BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
+    const auto kw_list = filter_keywords( sched1.rst_keywords(2) );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
 
     auto sched2 = make_schedule(deckData2);
-    const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
-    const auto kw_list2 = fun::map( fst, sched2.rst_keywords( 2 ) );
+    const auto expected2 = { "FLOWS" };
+    const auto kw_list2 = filter_keywords( sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 
@@ -797,8 +802,8 @@ DATES             -- 3
     BOOST_CHECK(  sched1.write_rst_file( 2 ) );
 
 
-    std::vector<std::string> expected = { "ACIP","BASIC", "BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
-    const auto kw_list = fun::map( fst, sched1.rst_keywords(2) );
+    std::vector<std::string> expected = { "ACIP","BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
+    const auto kw_list = filter_keywords( sched1.rst_keywords(2) );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
@@ -810,8 +815,8 @@ DATES             -- 3
     Schedule sched2(deck2, es2, ctx, errors, {});
 
 
-    const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
-    const auto kw_list2 = fun::map( fst, sched2.rst_keywords( 2 ) );
+    const auto expected2 = { "FLOWS"};
+    const auto kw_list2 = filter_keywords( sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 
@@ -921,8 +926,8 @@ RPTSCHED
     BOOST_CHECK(  sched2.write_rst_file( 2 ) );
     BOOST_CHECK(  sched2.write_rst_file( 3 ) );
 
-    const auto expected2 = { "FIP", "RESTART" };
-    const auto kw_list2 = fun::map( fst, sched2.rst_keywords( 2 ) );
+    const auto expected2 = { "FIP"};
+    const auto kw_list2 = filter_keywords( sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 
@@ -934,8 +939,8 @@ RPTSCHED
     BOOST_CHECK(  sched3.write_rst_file( 2 ) );
     BOOST_CHECK(  sched3.write_rst_file( 3 ) );
 
-    std::vector<std::string> expected3 = { "BASIC", "FREQ" };
-    const auto kw_list3 = fun::map( fst, sched3.rst_keywords(2) );
+    std::vector<std::string> expected3 = {};
+    const auto kw_list3 = filter_keywords( sched3.rst_keywords(2) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected3.begin() , expected3.end() , kw_list3.begin() , kw_list3.end() );
 }
 
