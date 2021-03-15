@@ -20,16 +20,6 @@
 include (AddOptions)
 no_default_options ()
 
-# Languages and global compiler settings
-if(CMAKE_VERSION VERSION_LESS 3.8)
-  message(WARNING "CMake version does not support c++17, guessing -std=c++17")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-else()
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF)
-endif()
-
 # Various compiler extension checks
 include(OpmCompilerChecks)
 
