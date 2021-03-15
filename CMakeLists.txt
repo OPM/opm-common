@@ -413,7 +413,6 @@ if (OPM_ENABLE_PYTHON)
 
   # -------------------------------------------------------------------------
   # 2: Embed the Python interpreter for keywords like PYACTION and PYINPUT
-  add_subdirectory(python/pybind11)
   target_include_directories(opmcommon SYSTEM PRIVATE "python/pybind11/include;${PYTHON_INCLUDE_DIRS}")
   if (OPM_ENABLE_EMBEDDED_PYTHON)
     target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY})
