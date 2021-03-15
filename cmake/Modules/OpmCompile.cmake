@@ -29,7 +29,11 @@ macro (opm_compile opm)
 
   # create this library, if there are any compilation units
   link_directories (${${opm}_LIBRARY_DIRS})
-  add_definitions (${${opm}_DEFINITIONS})
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
+    add_compile_definitions (${${opm}_DEFINITIONS})
+  else()
+    add_definitions(${${opm}_DEFINITIONS})
+  endif()
   set (${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
   if (${opm}_SOURCES)
         add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE} ${${opm}_SOURCES})

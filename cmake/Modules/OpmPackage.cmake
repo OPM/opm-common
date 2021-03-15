@@ -96,8 +96,12 @@ macro (find_opm_package module deps header lib defs prog conf)
   # compile with this option to avoid avalanche of warnings
   set (${module}_DEFINITIONS "${${module}_DEFINITIONS}")
   foreach (_def IN ITEMS ${defs})
-	list (APPEND ${module}_DEFINITIONS "-D${_def}")
+    if(_def MATCHES "^[A-Za-z].*")
+      list (APPEND ${module}_DEFINITIONS "-D${_def}")
+    endif()
   endforeach (_def)
+
+  list (APPEND ${module}_DEFINITIONS ${defs})
 
   # tidy the lists before returning them
   remove_dup_deps (${module})
