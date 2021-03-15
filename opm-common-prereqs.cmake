@@ -17,10 +17,19 @@ list(APPEND opm-common_DEPS
       "Boost 1.44.0 COMPONENTS system unit_test_framework REQUIRED"
       "OpenMP QUIET"
 )
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
-  list(APPEND opm-common_DEPS
-    # Needed for the imported target Python3::Python
-    "Python3 COMPONENTS Interpreter Development"
-    )
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0" AND OPM_ENABLE_PYTHON)
+  # Imported target only used for newer CMake and python support
+  if(OPM_ENABLE_EMBEDDED_PYTHON)
+    list(APPEND opm-common_DEPS
+      # Needed for the imported target Python3::Python
+      "Python3 COMPONENTS Interpreter Development REQUIRED"
+      )
+  else()
+    # Just to be safe. I actually think we only need the libs/Development stuff
+    list(APPEND opm-common_DEPS
+      # Needed for the imported target Python3::Python
+      "Python3 COMPONENTS Interpreter REQUIRED"
+      )
+  endif()
 endif()
 find_package_deps(opm-common)
