@@ -64,6 +64,20 @@ include(Findopm-tests)
 # with the find module
 include (${project}-prereqs)
 
+if(ENABLE_ECL_INPUT)
+  # source_hook runs before config_hook and the former needs fmt, hence this
+  # needs to be here.
+  if(fmt_FOUND)
+    # OpmSatellites will not add the library, do it here.
+    list(APPEND opm-common_LIBRARIES fmt::fmt)
+  else()
+    add_definitions(-DFMT_HEADER_ONLY)
+    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
+    # Not sure why this is needed.
+    list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
+  endif()
+endif()
+
 # read the list of components from this file (in the project directory);
 # it should set various lists with the names of the files to include
 include (CMakeLists_files.cmake)
@@ -75,11 +89,7 @@ macro (config_hook)
     endif()
 
     # For this project
-    add_definitions(-DFMT_HEADER_ONLY)
-    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
     include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
-    list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
-
     # For downstreams
     list(APPEND EXTRA_INCLUDES ${PROJECT_BINARY_DIR}/include)
     set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
