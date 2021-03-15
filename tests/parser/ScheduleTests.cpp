@@ -1326,21 +1326,6 @@ VAPPARS
 
 }
 
-
-BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
-    std::string input = R"(
-START             -- 0
-19 JUN 2007 /
-SCHEDULE
-DATES             -- 1
- 10  OKT 2008 /
-/
-)";
-
-    const auto& schedule = make_schedule(input);
-}
-
-
 BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     std::string input = R"(
 START             -- 0
