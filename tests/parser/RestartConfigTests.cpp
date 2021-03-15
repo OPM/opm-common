@@ -36,8 +36,6 @@ inline std::string fst( const std::pair< std::string, int >& p ) {
     return p.first;
 }
 
-constexpr std::pair<std::time_t, std::size_t> restart_info = std::make_pair(std::time_t{0}, std::size_t{0});
-
 const std::string grid = R"(
 RUNSPEC
 DIMENS

@@ -28,7 +28,7 @@
 
 namespace Opm {
     class NNC;
-    class NNCdata;
+    struct NNCdata;
     class FieldPropsManager;
 
     struct AquiferCellProps {
