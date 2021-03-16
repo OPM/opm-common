@@ -183,12 +183,28 @@ if (OPM_ENABLE_PYTHON)
       get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
       set(PYTHON_LIBRARY ${_lib_path})
       list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARIES})
+      set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
     else()
       find_package(Python3 REQUIRED COMPONENTS Interpreter)
     endif()
     # Compatibility settings for PythonInterp and PythonLibs
-    # used e.g. in FindCwrap
+    # used e.g. in FindCwrap, pybind11
     set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+  endif()
+  # We always need the PYTHON_INCLUDE_DIR. Unfortunately
+  # When we build pypi packages CMake will fail to determine
+  # these via the usual find_package(PythonLibs or
+  # find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+  # Hence we overwrite them here.
+  if(NOT PYTHON_INCLUDE_DIRS)
+    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "from distutils import sysconfig; print(sysconfig.get_python_inc(plat_specific=True));"
+      RESULT_VARIABLE _PYTHON_DIR_SUCCESS
+      OUTPUT_VARIABLE PYTHON_INCLUDE_DIR
+      ERROR_VARIABLE _PYTHON_ERROR_VALUE)
+    if(NOT _PYTHON_DIR_SUCCESS MATCHES 0)
+      message(FATAL_ERROR "Could not determine Python include directory. Error: ${_PYTHON_ERROR_VALUE}.")
+    endif()
+    set(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIR})
   endif()
 endif()
 
