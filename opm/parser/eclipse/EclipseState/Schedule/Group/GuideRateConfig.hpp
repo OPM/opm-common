@@ -95,7 +95,7 @@ struct GroupInjTarget {
     bool has_model() const;
     bool update_model(const GuideRateModel& model);
     void update_well(const Well& well);
-    void update_injection_group(const std::string& group_name, Group::GroupInjectionProperties& properties);
+    void update_injection_group(const std::string& group_name, const Group::GroupInjectionProperties& properties);
     void update_production_group(const Group& group);
     const WellTarget& well(const std::string& well) const;
     const GroupProdTarget& production_group(const std::string& group) const;

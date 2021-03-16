@@ -3487,7 +3487,7 @@ COMPDAT
         double gas_pot = 1;
         double wat_pot = 1;
 
-        gr.wellCompute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
+        gr.compute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
     }
     {
         const auto& changed_wells = schedule.changed_wells(0);

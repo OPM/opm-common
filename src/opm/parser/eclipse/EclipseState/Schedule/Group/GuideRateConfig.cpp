@@ -87,7 +87,7 @@ void GuideRateConfig::update_production_group(const Group& group) {
     group_node.target = guide_target;
 }
 
-void GuideRateConfig::update_injection_group(const std::string& group_name, Group::GroupInjectionProperties& properties) {
+void GuideRateConfig::update_injection_group(const std::string& group_name, const Group::GroupInjectionProperties& properties) {
     if (group_name == "FIELD")
         return;
 

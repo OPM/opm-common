@@ -508,48 +508,48 @@ BOOST_AUTO_TEST_CASE(GCONINJE_GUIDERATE) {
         GuideRate gr = GuideRate(schedule);
         const auto& g1 = schedule.getGroup("G1", 0);
         const auto& g2 = schedule.getGroup("G2", 0);
-        gr.injectionGroupCompute(g1.name(), Phase::WATER, 0, 0.0);
-        gr.injectionGroupCompute(g1.name(), Phase::GAS, 0, 0.0);
-        gr.injectionGroupCompute(g2.name(), Phase::WATER, 0, 0.0);
-        gr.injectionGroupCompute(g2.name(), Phase::GAS, 0, 0.0);
-        BOOST_CHECK( !gr.hasInjectionGroup(Phase::WATER, g1.name()));
-        BOOST_CHECK( !gr.hasInjectionGroup(Phase::GAS, g1.name()));
-        BOOST_CHECK( !gr.hasInjectionGroup(Phase::WATER, g2.name()));
-        BOOST_CHECK( !gr.hasInjectionGroup(Phase::GAS, g2.name()));
+        gr.compute(g1.name(), Phase::WATER, 0, 0.0);
+        gr.compute(g1.name(), Phase::GAS, 0, 0.0);
+        gr.compute(g2.name(), Phase::WATER, 0, 0.0);
+        gr.compute(g2.name(), Phase::GAS, 0, 0.0);
+        BOOST_CHECK( !gr.has(g1.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g1.name(), Phase::GAS));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::GAS));
     }
     // Step 1
     {
         GuideRate gr = GuideRate(schedule);
         const auto& g1 = schedule.getGroup("G1", 1);
         const auto& g2 = schedule.getGroup("G2", 1);
-        gr.injectionGroupCompute(g1.name(), Phase::WATER, 1, 0.0);
-        gr.injectionGroupCompute(g1.name(), Phase::GAS, 1, 0.0);
-        gr.injectionGroupCompute(g2.name(), Phase::WATER, 1, 0.0);
-        gr.injectionGroupCompute(g2.name(), Phase::GAS, 1, 0.0);
+        gr.compute(g1.name(), Phase::WATER, 1, 0.0);
+        gr.compute(g1.name(), Phase::GAS, 1, 0.0);
+        gr.compute(g2.name(), Phase::WATER, 1, 0.0);
+        gr.compute(g2.name(), Phase::GAS, 1, 0.0);
 
-        BOOST_CHECK( gr.hasInjectionGroup(Phase::WATER, g1.name()));
-        BOOST_CHECK( gr.hasInjectionGroup(Phase::GAS, g1.name()));
-        BOOST_CHECK( gr.hasInjectionGroup(Phase::WATER, g2.name()));
-        BOOST_CHECK( !gr.hasInjectionGroup(Phase::GAS, g2.name()));
+        BOOST_CHECK( gr.has(g1.name(), Phase::WATER));
+        BOOST_CHECK( gr.has(g1.name(), Phase::GAS));
+        BOOST_CHECK( gr.has(g2.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::GAS));
 
-        BOOST_CHECK_EQUAL(1.0, gr.getInjectionGroup(Phase::WATER, g1.name()));
-        BOOST_CHECK_EQUAL(1.0, gr.getInjectionGroup(Phase::GAS, g1.name()));
-        BOOST_CHECK_EQUAL(1.0, gr.getInjectionGroup(Phase::WATER, g2.name()));
-        BOOST_CHECK_THROW(gr.getInjectionGroup(Phase::GAS, g2.name()), std::logic_error);
+        BOOST_CHECK_EQUAL(1.0, gr.get(g1.name(), Phase::WATER));
+        BOOST_CHECK_EQUAL(1.0, gr.get(g1.name(), Phase::GAS));
+        BOOST_CHECK_EQUAL(1.0, gr.get(g2.name(), Phase::WATER));
+        BOOST_CHECK_THROW(gr.get(g2.name(), Phase::GAS), std::logic_error);
     }
     // Step 2
     {
         GuideRate gr = GuideRate(schedule);
         const auto& g1 = schedule.getGroup("G1", 2);
         const auto& g2 = schedule.getGroup("G2", 2);
-        gr.injectionGroupCompute(g1.name(), Phase::WATER, 2, 0.0);
-        gr.injectionGroupCompute(g1.name(), Phase::GAS, 2, 0.0);
-        gr.injectionGroupCompute(g2.name(), Phase::WATER, 2, 0.0);
-        gr.injectionGroupCompute(g2.name(), Phase::GAS, 2, 0.0);
-        BOOST_CHECK( !gr.hasInjectionGroup(Phase::WATER, g1.name()));
-        BOOST_CHECK( gr.hasInjectionGroup(Phase::GAS, g1.name()));
-        BOOST_CHECK( gr.hasInjectionGroup(Phase::WATER, g2.name()));
-        BOOST_CHECK( !gr.hasInjectionGroup(Phase::GAS, g2.name()));
+        gr.compute(g1.name(), Phase::WATER, 2, 0.0);
+        gr.compute(g1.name(), Phase::GAS, 2, 0.0);
+        gr.compute(g2.name(), Phase::WATER, 2, 0.0);
+        gr.compute(g2.name(), Phase::GAS, 2, 0.0);
+        BOOST_CHECK( !gr.has(g1.name(), Phase::WATER));
+        BOOST_CHECK( gr.has(g1.name(), Phase::GAS));
+        BOOST_CHECK( gr.has(g2.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::GAS));
     }
 
 }

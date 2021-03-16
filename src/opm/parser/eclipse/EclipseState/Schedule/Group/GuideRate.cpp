@@ -28,7 +28,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-
+#include <fmt/core.h>
 #include <stddef.h>
 
 namespace Opm {
@@ -67,17 +67,17 @@ GuideRate::GuideRate(const Schedule& schedule_arg) :
     schedule(schedule_arg)
 {}
 
-double GuideRate::getWell(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const
+double GuideRate::get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const
 {
-    return this->getProductionGroupOrWell(well, GuideRateModel::convert_target(target), rates);
+    return this->get(well, GuideRateModel::convert_target(target), rates);
 }
 
-double GuideRate::getProductionGroup(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const
+double GuideRate::get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const
 {
-    return this->getProductionGroupOrWell(group, GuideRateModel::convert_target(target), rates);
+    return this->get(group, GuideRateModel::convert_target(target), rates);
 }
 
-double GuideRate::getProductionGroupOrWell(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const
+double GuideRate::get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const
 {
     using namespace unit;
     using prefix::micro;
@@ -104,38 +104,52 @@ double GuideRate::getProductionGroupOrWell(const std::string& name, GuideRateMod
     return grvalue * scale;
 }
 
-double GuideRate::getInjectionGroup(const Phase& phase, const std::string& name) const
+double GuideRate::get(const std::string& name, const Phase& phase) const
 {
     auto iter = this->injection_group_values.find(std::make_pair(phase, name));
     if (iter == this->injection_group_values.end()) {
-        std::string message = "Did not find any guiderate values for injection group " + name + ":" + std::to_string(static_cast<int>(phase));
+        auto message = fmt::format("Did not find any guiderate values for injection group {}:{}", name, std::to_string(static_cast<int>(phase)));
         throw std::logic_error {message};
     }
     return iter->second;
 }
 
-bool GuideRate::hasProductionGroupOrWell(const std::string& name) const
+bool GuideRate::has(const std::string& name) const
 {
     return this->values.count(name) > 0;
 }
 
-bool GuideRate::hasInjectionGroup(const Phase& phase, const std::string& name) const
+bool GuideRate::has(const std::string& name, const Phase& phase) const
 {
     return this->injection_group_values.count(std::pair(phase, name)) > 0;
 }
 
-void GuideRate::productionGroupCompute(const std::string& wgname,
-                                       size_t             report_step,
-                                       double             sim_time,
-                                       double             oil_pot,
-                                       double             gas_pot,
-                                       double             wat_pot)
+void GuideRate::compute(const std::string& wgname,
+                        size_t             report_step,
+                        double             sim_time,
+                        double             oil_pot,
+                        double             gas_pot,
+                        double             wat_pot)
 {
     this->potentials[wgname] = RateVector{oil_pot, gas_pot, wat_pot};
-    const auto& config = this->schedule.guideRateConfig(report_step);
-    if (!config.has_production_group(wgname))
-        return;
 
+    const auto& config = this->schedule.guideRateConfig(report_step);
+    if (config.has_production_group(wgname)) {
+        this->group_compute(wgname, report_step, sim_time, oil_pot, gas_pot, wat_pot);
+    }
+    else {
+        this->well_compute(wgname, report_step, sim_time, oil_pot, gas_pot, wat_pot);
+    }
+}
+
+void GuideRate::group_compute(const std::string& wgname,
+                              size_t             report_step,
+                              double             sim_time,
+                              double             oil_pot,
+                              double             gas_pot,
+                              double             wat_pot)
+{
+    const auto& config = this->schedule.guideRateConfig(report_step);
     const auto& group = config.production_group(wgname);
     if (group.guide_rate > 0.0) {
         auto model_target = GuideRateModel::convert_target(group.target);
@@ -187,10 +201,10 @@ void GuideRate::productionGroupCompute(const std::string& wgname,
     }
 }
 
-void GuideRate::injectionGroupCompute(const std::string& wgname,
-                                        const Phase& phase,
-                                        size_t report_step,
-                                        double guide_rate)
+void GuideRate::compute(const std::string& wgname,
+                        const Phase& phase,
+                        size_t report_step,
+                        double guide_rate)
 {
     const auto& config = this->schedule.guideRateConfig(report_step);
     if (!config.has_injection_group(phase, wgname))
@@ -208,14 +222,13 @@ void GuideRate::injectionGroupCompute(const std::string& wgname,
     this->injection_group_values[std::make_pair(phase, wgname)] = group.guide_rate;
 }
 
-void GuideRate::wellCompute(const std::string& wgname,
+void GuideRate::well_compute(const std::string& wgname,
                              size_t             report_step,
                              double             sim_time,
                              double             oil_pot,
                              double             gas_pot,
                              double             wat_pot)
 {
-    this->potentials[wgname] = RateVector{oil_pot, gas_pot, wat_pot};
     const auto& config = this->schedule.guideRateConfig(report_step);
 
     // guide rates spesified with WGRUPCON

@@ -92,16 +92,18 @@ struct GRValState {
 
 public:
     GuideRate(const Schedule& schedule);
-    double getProductionGroupOrWell(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
-    double getWell(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
-    double getProductionGroup(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
-    double getInjectionGroup(const Phase& phase, const std::string& group) const;
-    bool hasProductionGroupOrWell(const std::string& name) const;
-    bool hasInjectionGroup(const Phase& phase, const std::string& name) const;
-    void injectionGroupCompute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
-    void productionGroupCompute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    void wellCompute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void compute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
+    double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
+    double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
+    double get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
+    double get(const std::string& group, const Phase& phase) const;
+    bool has(const std::string& name) const;
+    bool has(const std::string& name, const Phase& phase) const;
+
 private:
+    void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot) const;
     double eval_group_pot() const;
     double eval_group_resvinj() const;
