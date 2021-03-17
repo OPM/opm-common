@@ -163,7 +163,21 @@ macro (find_and_append_package_to prefix name)
   string (REPLACE "-" "_" NAME "${NAME}")
 
   if (${name}_FOUND OR ${NAME}_FOUND)
-	foreach (var IN LISTS _opm_proj_vars)
+      foreach (var IN LISTS _opm_proj_vars)
+          if("${var}" STREQUAL "DEFINITIONS"
+            AND CMAKE_VERSION VERSION_LESS "3.12")
+            # For old Cmake versions we use add_definitions which
+            # requires -D qualifier add that
+            set(_defs)
+            foreach(_def IN LISTS ${name}_${var})
+              if(_def MATCHES "^[a-zA-Z].*")
+                list(APPEND _defs "-D${_def}")
+              else()
+                list(APPEND _defs "${_def}")
+              endif()
+            endforeach()
+            set(${name}_${var} "${_defs}")
+          endif()
 	  if (DEFINED ${name}_${var})
 		list (APPEND ${prefix}_${var} ${${name}_${var}})
 	  # some packages define an uppercase version of their own name
