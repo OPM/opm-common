@@ -1287,3 +1287,50 @@ ENDACTIO
     }
 
 }
+
+BOOST_AUTO_TEST_CASE(MatchingWellsSpecified1) {
+    Action::AST ast({"WBHP", "P1", "<", "200"});
+    auto st = SummaryState{ TimeService::now() };
+    Opm::WListManager wlm;
+
+    st.update_well_var("P1", "WBHP", 150);
+    Opm::Action::Context context(st, wlm);
+    auto result = ast.eval(context);
+    BOOST_CHECK(result);
+    BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});
+}
+
+
+BOOST_AUTO_TEST_CASE(MatchingWellsSpecified2) {
+
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+WELSPECS
+  'P1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ACTIONX
+INJECTION 10 /
+WBHP P1 < 200.0 /
+/
+
+WELOPEN
+  'WI1' 'OPEN' 5* /
+/
+
+ENDACTIO
+
+        )"};
+
+    auto st = SummaryState{ TimeService::now() };
+    Schedule sched = make_schedule(deck_string);
+    Opm::WListManager wlm;
+
+    st.update_well_var("P1", "WBHP", 150);
+    Opm::Action::Context context(st, wlm);
+    const auto& action = sched[0].actions.get().get("INJECTION");
+    auto result = action.eval(context);
+    BOOST_CHECK(result);
+    BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});
+}

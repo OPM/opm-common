@@ -133,7 +133,13 @@ Action::Value ASTNode::value(const Action::Context& context) const {
             std::string arg_key = this->arg_list[0];
             for (size_t index = 1; index < this->arg_list.size(); index++)
                 arg_key += ":" + this->arg_list[index];
-            return Action::Value(context.get(this->func, arg_key));
+
+            auto scalar_value = context.get(this->func, arg_key);
+
+            if (this->func_type == FuncType::well)
+                return Action::Value(this->arg_list[0], scalar_value);
+            else
+                return Action::Value(scalar_value);
         }
     }
 }
