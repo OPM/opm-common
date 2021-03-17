@@ -42,6 +42,7 @@ namespace Action {
 class Value {
 public:
     explicit Value(double value);
+    Value(const std::string& wname, double value);
     Value() = default;
 
     Result eval_cmp(TokenType op, const Value& rhs) const;
