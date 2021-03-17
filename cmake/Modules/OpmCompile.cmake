@@ -30,7 +30,9 @@ macro (opm_compile opm)
   # create this library, if there are any compilation units
   link_directories (${${opm}_LIBRARY_DIRS})
   if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
-    add_compile_definitions (${${opm}_DEFINITIONS})
+    # Some modules may still export definitions using -D, strip it
+    string(REGEX REPLACE "-D" "" _clean_defs "${${opm}_DEFINITIONS}")
+    add_compile_definitions(${_clean_defs})
   else()
     add_definitions(${${opm}_DEFINITIONS})
   endif()
