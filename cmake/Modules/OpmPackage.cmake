@@ -95,9 +95,14 @@ macro (find_opm_package module deps header lib defs prog conf)
 
   # compile with this option to avoid avalanche of warnings
   set (${module}_DEFINITIONS "${${module}_DEFINITIONS}")
+  # -D to compile definitions for older CMake versions
+  set (_D_PREFIX "")
+  if(CMAKE_VERSION VERSION_LESS "3.12")
+    set(_D_PREFIX "-D")
+  endif()
   foreach (_def IN ITEMS ${defs})
     if(_def MATCHES "^[A-Za-z].*")
-      list (APPEND ${module}_DEFINITIONS "-D${_def}")
+      list (APPEND ${module}_DEFINITIONS "${_D_PREFIX}${_def}")
     endif()
   endforeach (_def)
 
