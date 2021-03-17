@@ -46,31 +46,39 @@ namespace Opm {
             int aquiferID;
             std::size_t global_index;
             double influx_coeff;
+            double effective_facearea; // Needed for restart output only.
             FaceDir::DirEnum face_dir;
 
-            AquancCell(int aquiferID_arg, std::size_t gi, double ic, FaceDir::DirEnum fd) :
-                aquiferID(aquiferID_arg),
-                global_index(gi),
-                influx_coeff(ic),
-                face_dir(fd)
+            AquancCell(const int aquiferID_arg,
+                       const std::size_t gi,
+                       const double ic,
+                       const double eff_faceArea,
+                       const FaceDir::DirEnum fd)
+                : aquiferID(aquiferID_arg)
+                , global_index(gi)
+                , influx_coeff(ic)
+                , effective_facearea(eff_faceArea)
+                , face_dir(fd)
             {}
 
             AquancCell() = default;
 
             bool operator==(const AquancCell& other) const {
-                return this->aquiferID == other.aquiferID &&
-                       this->global_index == other.global_index &&
-                       this->influx_coeff == other.influx_coeff &&
-                       this->face_dir == other.face_dir;
+                return (this->aquiferID == other.aquiferID)
+                    && (this->global_index == other.global_index)
+                    && (this->influx_coeff == other.influx_coeff)
+                    && (this->effective_facearea == other.effective_facearea)
+                    && (this->face_dir == other.face_dir);
             }
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer(aquiferID);
-                serializer(global_index);
-                serializer(influx_coeff);
-                serializer(face_dir);
+                serializer(this->aquiferID);
+                serializer(this->global_index);
+                serializer(this->influx_coeff);
+                serializer(this->effective_facearea);
+                serializer(this->face_dir);
             }
         };
 
@@ -90,7 +98,7 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer.map(cells);
+                serializer.map(this->cells);
             }
 
         private:

@@ -37,6 +37,7 @@
 #include <iterator>
 #include <optional>
 #include <stdexcept>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 
@@ -68,22 +69,30 @@ namespace Opm {
         void add_cell(const KeywordLocation& location,
                       std::unordered_map<std::size_t, Aquancon::AquancCell>& work,
                       const EclipseGrid& grid,
-                      int aquiferID,
-                      std::size_t global_index,
+                      const int aquiferID,
+                      const std::size_t global_index,
                       std::optional<double> influx_coeff,
-                      double influx_mult,
-                      FaceDir::DirEnum face_dir) {
+                      const double influx_mult,
+                      const FaceDir::DirEnum face_dir)
+        {
+            const auto faceArea = face_area(face_dir, global_index, grid);
             auto cell_iter = work.find(global_index);
             if (cell_iter == work.end()) {
                 if (!influx_coeff.has_value())
-                    influx_coeff = face_area(face_dir, global_index, grid);
-                work.insert( std::make_pair(global_index, Aquancon::AquancCell(aquiferID, global_index, influx_coeff.value() * influx_mult, face_dir)) );
+                    influx_coeff = faceArea;
+                work.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(global_index),
+                             std::forward_as_tuple(aquiferID, global_index,
+                                                   influx_coeff.value() * influx_mult,
+                                                   faceArea * influx_mult, face_dir));
             }
             else {
                 auto& prev_cell = cell_iter->second;
                 if (prev_cell.aquiferID == aquiferID) {
                     prev_cell.influx_coeff += influx_coeff.value_or(0.0);
                     prev_cell.influx_coeff *= influx_mult;
+                    prev_cell.effective_facearea += faceArea;
+                    prev_cell.effective_facearea *= influx_mult;
                 } else {
                     auto [i,j,k] = grid.getIJK(global_index);
                     auto msg = fmt::format("Problem with AQUANCON keyword\n"
@@ -152,7 +161,7 @@ namespace Opm {
     Aquancon Aquancon::serializeObject()
     {
         Aquancon result;
-        result.cells = {{1, {{2, 3, 4.0, FaceDir::XPlus}}}};
+        result.cells = {{1, {{2, 3, 4.0, 5.0, FaceDir::XPlus}}}};
 
         return result;
     }
