@@ -171,8 +171,13 @@ if (OPM_ENABLE_PYTHON)
       find_package(PythonLibs REQUIRED)
       list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARIES})
     endif()
-    if(PYTHON_VERSION_MAJOR LESS 3)
-      message(SEND_ERROR "OPM requires version 3 of Python but only version ${PYTHON_VERSION_STRING} was found")
+    # FindPythonInterp in CMake version 3.10.2 (used on Ubuntu LTS 18.04) is so
+    # buggy that it will always report Python version as 1.4 even with python3,
+    # skip the version check in this case
+    if(NOT PYTHON_VERSION_STRING STREQUAL "1.4")
+      if(PYTHON_VERSION_MAJOR LESS 3)
+	message(SEND_ERROR "OPM requires version 3 of Python but only version ${PYTHON_VERSION_STRING} was found")
+      endif()
     endif()
     set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
     set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
