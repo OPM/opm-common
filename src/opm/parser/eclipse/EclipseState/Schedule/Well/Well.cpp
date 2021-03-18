@@ -727,6 +727,17 @@ const WellType& Well::wellType() const {
     return this->wtype;
 }
 
+Well::InjectorCMode Well::injection_cmode() const {
+    if (this->isInjector())
+        return this->injection->controlMode;
+    throw std::logic_error(fmt::format("Queried for INJECTION cmode for producer: {}", this->name()));
+}
+
+Well::ProducerCMode Well::production_cmode() const {
+    if (this->isProducer())
+        return this->production->controlMode;
+    throw std::logic_error(fmt::format("Queried for PRODUCTION cmode for injector : {}", this->name()));
+}
 
 InjectorType Well::injectorType() const {
     if (this->wtype.producer())
