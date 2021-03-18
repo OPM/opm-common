@@ -372,7 +372,22 @@ BOOST_AUTO_TEST_CASE(Various_Parameters)
     BOOST_CHECK_EQUAL(v[VI::intehead::IPROG], 100);    // IPROG
     BOOST_CHECK_EQUAL(v[ 76],   5); // IH_076
     BOOST_CHECK_EQUAL(v[101],   1); // IH_101
-    BOOST_CHECK_EQUAL(v[103],   1); // IH_103
+}
+
+BOOST_AUTO_TEST_CASE(wellDimensions)
+{
+    const auto mxwlstprwel = 3;
+    const auto mxdynwlst = 4;
+
+    const auto ih = Opm::RestartIO::InteHEAD{}
+        .wellDimensions({
+            mxwlstprwel, mxdynwlst
+        });
+
+    const auto& v = ih.data();
+
+    BOOST_CHECK_EQUAL(v[VI::intehead::MXWLSTPRWELL], mxwlstprwel);
+    BOOST_CHECK_EQUAL(v[VI::intehead::MAXDYNWELLST], mxdynwlst);
 }
 
 BOOST_AUTO_TEST_CASE(wellSegDimensions)
@@ -418,6 +433,20 @@ BOOST_AUTO_TEST_CASE(regionDimensions)
 
     BOOST_CHECK_EQUAL(v[VI::intehead::NTFIP], ntfip);
     BOOST_CHECK_EQUAL(v[VI::intehead::NMFIPR], nmfipr);
+}
+
+BOOST_AUTO_TEST_CASE(rockOptions)
+{
+    const auto ttyp  = 5;
+
+    const auto ih = Opm::RestartIO::InteHEAD{}
+        .rockOpts({
+            ttyp
+        });
+
+    const auto& v = ih.data();
+
+    BOOST_CHECK_EQUAL(v[VI::intehead::ROCKOPTS_TABTYP], ttyp);
 }
 
 BOOST_AUTO_TEST_CASE(ngroups)

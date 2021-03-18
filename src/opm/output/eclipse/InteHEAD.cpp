@@ -51,7 +51,7 @@ enum index : std::vector<int>::size_type {
   NZWELZ       =       VI::intehead::NZWELZ,   //       NZWEL       3       3       NZWEL = no of 8-character words per well in ZWEL array (= 3)
   ih_028       =       28       ,              //       0       0
   ih_029       =       29       ,              //       0       0
-  ih_030       =       30       ,              //       0       0
+  MXWLSTPW     =       VI::intehead::MXWLSTPRWELL, //   Maximum number of well lists pr well (default = 1)
   ih_031       =       31       ,              //       0       0
   NICONZ       =       VI::intehead::NICONZ,   //       25       15       25       NICON = no of data elements per completion in ICON array (default 19)
   NSCONZ       =       VI::intehead::NSCONZ,   //       41       0              NSCONZ = number of data elements per completion in SCON array
@@ -124,7 +124,7 @@ enum index : std::vector<int>::size_type {
   ih_100       =      100       ,              //       0       0
   ih_101       =      101       ,              //       0       0       1
   ih_102       =      102       ,              //       0       0
-  ih_103       =      103       ,              //       0       0       1
+  ROCKOPTS_TTYP =      VI::intehead::ROCKOPTS_TABTYP, // 0       0
   ih_104       =      104       ,              //       0       0
   ih_105       =      105       ,              //       0       0
   ih_106       =      106       ,              //       0       0
@@ -323,7 +323,7 @@ enum index : std::vector<int>::size_type {
   ih_299       =      299       ,              //       0
   ih_300       =      300       ,              //       0
   ih_301       =      301       ,              //       0
-  ih_302       =      302       ,              //       0
+  MXDYNWLST    =      VI::intehead::MAXDYNWELLST, //    Maximum number of dynamic well lists (default = 1)
   ih_303       =      303       ,              //       0
   ih_304       =      304       ,              //       0
   ih_305       =      305       ,              //       0
@@ -635,12 +635,17 @@ Opm::RestartIO::InteHEAD::variousParam(const int version,
     // ih_101: Usage unknown, value fixed across reference cases.
     this->data_[ih_101] = 1;
 
-    // ih_103: Usage unknown, value not fixed across reference cases,
-    //         experiments generate warning with 0 but not with 1.
-    this->data_[ih_103] = 1;
-
     // ih_200: Usage unknown, value fixed across reference cases.
     this->data_[ih_200] = 1;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::wellDimensions(const WellDims& wdims)
+{
+    this->data_[MXWLSTPW]  = wdims.mxwlstprwel;
+    this->data_[MXDYNWLST] = wdims.mxdynwlst;
 
     return *this;
 }
@@ -664,6 +669,14 @@ Opm::RestartIO::InteHEAD::regionDimensions(const RegDims& rdim)
 {
     this->data_[NTFIP]  = rdim.ntfip;
     this->data_[NMFIPR] = rdim.nmfipr;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::rockOpts(const RockOpts& rckop)
+{
+    this->data_[ROCKOPTS_TTYP]  = rckop.ttyp;
 
     return *this;
 }

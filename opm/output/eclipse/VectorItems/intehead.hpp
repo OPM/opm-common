@@ -57,6 +57,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NXWELZ = 26, //  Number of delements per well in XWEL array
         NZWELZ = 27, //  Number of 8-character words per well in ZWEL array
 
+        MXWLSTPRWELL = 30, //  Maximum number of well lists pr well
+
         NICONZ = 32, //  Number of data elements per completion
                      //  in ICON array (default 19)
         NSCONZ = 33, //  Number of data elements per completion in SCON array
@@ -104,6 +106,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                     //  (thermal option), negative - Other simulator,
         NMFIPR = 99, // REGDIMS item2
 
+        ROCKOPTS_TABTYP = 103, // ROCKOPTS item3 (PVTNUM=1 - default)
+
         NOACTNOD     =      129       ,              //  NOACTNOD = Number of active/defined nodes in the network
         NOACTBR      =      130       ,              //  NOACTBR = Number of active/defined branches in the network
         NODMAX       =      131       ,              //  NODMAX = maximum number of nodes in extended network option
@@ -145,6 +149,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NO_IUADS = 290, //  No IUADs
         NO_IUAPS = 291, //  No IUAPs
         RSEED = 296,
+
+        MAXDYNWELLST = 302, //  Maximum number of dynamic well lists (default = 1)
+
         ISECND = 410 //  ISECND = current simulation time HH:MM:SS - number of seconds (SS), reported in microseconds
                      //  (0-59,999,999)
     };

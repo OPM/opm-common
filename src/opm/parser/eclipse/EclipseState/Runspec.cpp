@@ -191,7 +191,13 @@ Welldims::Welldims(const Deck& deck)
         //
         // i.e., the maximum of item 1 and item 4 here.
         this->nGMax = wd.getItem<WD::MAXGROUPS>().get<int>(0);
-	      this->nWMax = wd.getItem<WD::MAXWELLS>().get<int>(0);
+	    this->nWMax = wd.getItem<WD::MAXWELLS>().get<int>(0);
+
+        // maximum number of well lists pr well
+        this->nWlistPrWellMax = wd.getItem<WD::MAX_WELLIST_PR_WELL>().get<int>(0);
+        //maximum number of dynamic well lists
+        this->nDynWlistMax = wd.getItem<WD::MAX_DYNAMIC_WELLIST>().get<int>(0);
+
 
         this->m_location = keyword.location();
     }
@@ -204,6 +210,8 @@ Welldims Welldims::serializeObject()
     result.nCWMax = 2;
     result.nWGMax = 3;
     result.nGMax = 4;
+    result.nWlistPrWellMax = 5;
+    result.nDynWlistMax = 6;
     result.m_location = KeywordLocation::serializeObject();
     return result;
 }

@@ -43,6 +43,11 @@ namespace RestartIO {
             int maxWellsInField;
         };
 
+        struct WellDims {
+            int mxwlstprwel;
+            int mxdynwlst;
+        };
+
         struct WellSegDims {
             int nsegwl;
             int nswlmx;
@@ -59,6 +64,10 @@ namespace RestartIO {
             int nrfreg;
             int ntfreg;
             int nplmix;
+        };
+
+        struct RockOpts {
+            int ttyp;
         };
 
         struct TimePoint {
@@ -152,9 +161,11 @@ namespace RestartIO {
         InteHEAD& stepParam(const int tstep, const int report_step);
         InteHEAD& tuningParam(const TuningPar& tunpar);
         InteHEAD& variousParam(const int version, const int iprog);
+        InteHEAD& wellDimensions(const WellDims& wdims);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& networkDimensions(const NetworkDims& nwdim);
         InteHEAD& regionDimensions(const RegDims& rdim);
+        InteHEAD& rockOpts(const RockOpts& rckop);
         InteHEAD& ngroups(const Group& gr);
         InteHEAD& udqParam_1(const UdqParam& udqpar);
         InteHEAD& actionParam(const ActionParam& act_par);

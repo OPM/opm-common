@@ -110,6 +110,16 @@ public:
         return this->nWMax;
     }
 
+    int maxWellListsPrWell() const
+    {
+        return this->nWlistPrWellMax;
+    }
+
+    int maxDynamicWellLists() const
+    {
+        return this->nDynWlistMax;
+    }
+
     const std::optional<KeywordLocation>& location() const {
         return this->m_location;
     }
@@ -120,6 +130,8 @@ public:
                this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
                this->maxGroupsInField() == data.maxGroupsInField() &&
                this->maxWellsInField() == data.maxWellsInField() &&
+               this->maxWellListsPrWell() == data.maxWellListsPrWell() &&
+               this->maxDynamicWellLists() == data.maxDynamicWellLists() &&
                this->location() == data.location();
     }
 
@@ -130,6 +142,8 @@ public:
         serializer(nCWMax);
         serializer(nWGMax);
         serializer(nGMax);
+        serializer(nWlistPrWellMax);
+        serializer(nDynWlistMax);
         serializer(m_location);
     }
 
@@ -138,6 +152,8 @@ private:
     int nCWMax { 0 };
     int nWGMax { 0 };
     int nGMax  { 0 };
+    int nWlistPrWellMax  { 1 };
+    int nDynWlistMax  { 1 };
     std::optional<KeywordLocation> m_location;
 };
 
