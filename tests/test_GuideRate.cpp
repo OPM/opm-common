@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
 
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL, { orat, grat, wrat });
 
         const auto expect = 0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS, { orat, grat, wrat });
 
         const auto expect = (grat / orat) * (0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT, { orat, grat, wrat });
 
         const auto expect = (wrat / orat) * (0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
 
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL, { orat, grat, wrat });
 
         const auto expect = 0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS, { orat, grat, wrat });
 
         const auto expect = (grat / orat) * (0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT, { orat, grat, wrat });
 
         const auto expect = (wrat / orat) * (0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
 
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL, { orat, grat, wrat });
 
         const auto expect = 0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS, { orat, grat, wrat });
 
         const auto expect = (grat / orat) * (0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P", Opm::Well::GuideRateTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT, { orat, grat, wrat });
 
         const auto expect = (wrat / orat) * (0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);

@@ -83,6 +83,7 @@ public:
 
     static Target convert_target(Well::GuideRateTarget well_target);
     static Target convert_target(Group::GuideRateProdTarget group_target);
+    static Target convert_target(Phase injection_phase);
     static double pot(Target target, double oil_pot, double gas_pot, double wat_pot);
 
     template<class Serializer>

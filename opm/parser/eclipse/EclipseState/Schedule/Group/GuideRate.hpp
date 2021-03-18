@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include <stddef.h>
 
@@ -92,10 +93,13 @@ struct GRValState {
 public:
     GuideRate(const Schedule& schedule);
     void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void compute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
     double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
     double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
     double get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
+    double get(const std::string& group, const Phase& phase) const;
     bool has(const std::string& name) const;
+    bool has(const std::string& name, const Phase& phase) const;
 
 private:
     void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
@@ -109,7 +113,19 @@ private:
 
     using GRValPtr = std::unique_ptr<GRValState>;
 
+    typedef std::pair<Phase,std::string> pair;
+
+    struct pair_hash
+    {
+        template <class T1, class T2>
+        std::size_t operator() (const std::pair<T1, T2> &pair) const
+        {
+            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+        }
+    };
+
     std::unordered_map<std::string, GRValPtr> values;
+    std::unordered_map<pair, double, pair_hash> injection_group_values;
     std::unordered_map<std::string, RateVector > potentials;
     const Schedule& schedule;
 };

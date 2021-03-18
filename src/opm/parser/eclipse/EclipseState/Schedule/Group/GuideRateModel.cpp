@@ -328,4 +328,17 @@ GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateProdTarget
     throw std::logic_error("Can not convert this .... ");
 }
 
+GuideRateModel::Target GuideRateModel::convert_target(Phase injection_phase) {
+    if (injection_phase == Phase::OIL)
+        return Target::OIL;
+
+    if (injection_phase == Phase::GAS)
+        return Target::GAS;
+
+    if (injection_phase == Phase::WATER)
+        return Target::WAT;
+
+    throw std::logic_error("Can not convert this .... ");
+}
+
 }

@@ -465,6 +465,95 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(GCONINJE_GUIDERATE) {
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONINJE
+           'G1'   'WATER'   1*  1000 /
+           'G1'   'GAS'     1*  1000 /
+           'G2'   'WATER'   1*  1000 /
+        /
+
+        TSTEP
+           10 /
+
+        GCONINJE
+           'G1'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
+           'G1'   'GAS'     1*  1000 3* 'YES' 1 'RATE'/
+           'G2'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
+        /
+
+        TSTEP
+            10 /
+
+        GCONINJE
+            'G1'   'WATER'   1*  1000 /
+            'G1'   'GAS'     1*  1000 3* 'YES' 1 'RATE'/
+            'G2'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
+        /
+
+        )";
+
+    auto schedule = create_schedule(input);
+    // Step 0
+    {
+        GuideRate gr = GuideRate(schedule);
+        const auto& g1 = schedule.getGroup("G1", 0);
+        const auto& g2 = schedule.getGroup("G2", 0);
+        gr.compute(g1.name(), Phase::WATER, 0, 0.0);
+        gr.compute(g1.name(), Phase::GAS, 0, 0.0);
+        gr.compute(g2.name(), Phase::WATER, 0, 0.0);
+        gr.compute(g2.name(), Phase::GAS, 0, 0.0);
+        BOOST_CHECK( !gr.has(g1.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g1.name(), Phase::GAS));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::GAS));
+    }
+    // Step 1
+    {
+        GuideRate gr = GuideRate(schedule);
+        const auto& g1 = schedule.getGroup("G1", 1);
+        const auto& g2 = schedule.getGroup("G2", 1);
+        gr.compute(g1.name(), Phase::WATER, 1, 0.0);
+        gr.compute(g1.name(), Phase::GAS, 1, 0.0);
+        gr.compute(g2.name(), Phase::WATER, 1, 0.0);
+        gr.compute(g2.name(), Phase::GAS, 1, 0.0);
+
+        BOOST_CHECK( gr.has(g1.name(), Phase::WATER));
+        BOOST_CHECK( gr.has(g1.name(), Phase::GAS));
+        BOOST_CHECK( gr.has(g2.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::GAS));
+
+        BOOST_CHECK_EQUAL(1.0, gr.get(g1.name(), Phase::WATER));
+        BOOST_CHECK_EQUAL(1.0, gr.get(g1.name(), Phase::GAS));
+        BOOST_CHECK_EQUAL(1.0, gr.get(g2.name(), Phase::WATER));
+        BOOST_CHECK_THROW(gr.get(g2.name(), Phase::GAS), std::logic_error);
+    }
+    // Step 2
+    {
+        GuideRate gr = GuideRate(schedule);
+        const auto& g1 = schedule.getGroup("G1", 2);
+        const auto& g2 = schedule.getGroup("G2", 2);
+        gr.compute(g1.name(), Phase::WATER, 2, 0.0);
+        gr.compute(g1.name(), Phase::GAS, 2, 0.0);
+        gr.compute(g2.name(), Phase::WATER, 2, 0.0);
+        gr.compute(g2.name(), Phase::GAS, 2, 0.0);
+        BOOST_CHECK( !gr.has(g1.name(), Phase::WATER));
+        BOOST_CHECK( gr.has(g1.name(), Phase::GAS));
+        BOOST_CHECK( gr.has(g2.name(), Phase::WATER));
+        BOOST_CHECK( !gr.has(g2.name(), Phase::GAS));
+    }
+
+}
+
 BOOST_AUTO_TEST_CASE(GCONINJE_GCONPROD) {
     std::string input = R"(
         START             -- 0

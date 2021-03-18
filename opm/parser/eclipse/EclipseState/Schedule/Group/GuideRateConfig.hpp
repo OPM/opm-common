@@ -23,6 +23,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <utility>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
@@ -54,11 +55,28 @@ public:
     }
 };
 
-struct GroupTarget {
+struct GroupProdTarget {
     double guide_rate;
     Group::GuideRateProdTarget target;
 
-    bool operator==(const GroupTarget& data) const {
+    bool operator==(const GroupProdTarget& data) const {
+        return guide_rate == data.guide_rate &&
+               target == data.target;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(guide_rate);
+        serializer(target);
+    }
+};
+
+struct GroupInjTarget {
+    double guide_rate;
+    Group::GuideRateInjTarget target;
+
+    bool operator==(const GroupInjTarget& data) const {
         return guide_rate == data.guide_rate &&
                target == data.target;
     }
@@ -77,11 +95,15 @@ struct GroupTarget {
     bool has_model() const;
     bool update_model(const GuideRateModel& model);
     void update_well(const Well& well);
-    void update_group(const Group& group);
+    void update_injection_group(const std::string& group_name, const Group::GroupInjectionProperties& properties);
+    void update_production_group(const Group& group);
     const WellTarget& well(const std::string& well) const;
-    const GroupTarget& group(const std::string& group) const;
+    const GroupProdTarget& production_group(const std::string& group) const;
+    const GroupInjTarget& injection_group(const Phase& phase, const std::string& group) const;
+
     bool has_well(const std::string& well) const;
-    bool has_group(const std::string& group) const;
+    bool has_injection_group(const Phase& phase, const std::string& group) const;
+    bool has_production_group(const std::string& group) const;
 
     bool operator==(const GuideRateConfig& data) const;
 
@@ -90,13 +112,28 @@ struct GroupTarget {
     {
         serializer(m_model);
         serializer.map(wells);
-        serializer.map(groups);
+        serializer.map(production_groups);
+        serializer.map(injection_groups);
     }
 
 private:
+
+    typedef std::pair<Phase,std::string> pair;
+
+    struct pair_hash
+    {
+        template <class T1, class T2>
+        std::size_t operator() (const std::pair<T1, T2> &pair) const
+        {
+            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+        }
+    };
+
     std::shared_ptr<GuideRateModel> m_model;
     std::unordered_map<std::string, WellTarget> wells;
-    std::unordered_map<std::string, GroupTarget> groups;
+    std::unordered_map<std::string, GroupProdTarget> production_groups;
+    std::unordered_map<pair, GroupInjTarget, pair_hash> injection_groups;
+
 };
 
 }

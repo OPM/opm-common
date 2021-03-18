@@ -21,13 +21,14 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
-
+#include <fmt/core.h>
 #include <stddef.h>
 
 namespace Opm {
@@ -103,9 +104,24 @@ double GuideRate::get(const std::string& name, GuideRateModel::Target model_targ
     return grvalue * scale;
 }
 
+double GuideRate::get(const std::string& name, const Phase& phase) const
+{
+    auto iter = this->injection_group_values.find(std::make_pair(phase, name));
+    if (iter == this->injection_group_values.end()) {
+        auto message = fmt::format("Did not find any guiderate values for injection group {}:{}", name, std::to_string(static_cast<int>(phase)));
+        throw std::logic_error {message};
+    }
+    return iter->second;
+}
+
 bool GuideRate::has(const std::string& name) const
 {
     return this->values.count(name) > 0;
+}
+
+bool GuideRate::has(const std::string& name, const Phase& phase) const
+{
+    return this->injection_group_values.count(std::pair(phase, name)) > 0;
 }
 
 void GuideRate::compute(const std::string& wgname,
@@ -118,7 +134,7 @@ void GuideRate::compute(const std::string& wgname,
     this->potentials[wgname] = RateVector{oil_pot, gas_pot, wat_pot};
 
     const auto& config = this->schedule.guideRateConfig(report_step);
-    if (config.has_group(wgname)) {
+    if (config.has_production_group(wgname)) {
         this->group_compute(wgname, report_step, sim_time, oil_pot, gas_pot, wat_pot);
     }
     else {
@@ -134,8 +150,7 @@ void GuideRate::group_compute(const std::string& wgname,
                               double             wat_pot)
 {
     const auto& config = this->schedule.guideRateConfig(report_step);
-    const auto& group = config.group(wgname);
-
+    const auto& group = config.production_group(wgname);
     if (group.guide_rate > 0.0) {
         auto model_target = GuideRateModel::convert_target(group.target);
 
@@ -184,6 +199,27 @@ void GuideRate::group_compute(const std::string& wgname,
             this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
         }
     }
+}
+
+void GuideRate::compute(const std::string& wgname,
+                        const Phase& phase,
+                        size_t report_step,
+                        double guide_rate)
+{
+    const auto& config = this->schedule.guideRateConfig(report_step);
+    if (!config.has_injection_group(phase, wgname))
+        return;
+
+    if (guide_rate > 0) {
+        this->injection_group_values[std::make_pair(phase, wgname)] = guide_rate;
+        return;
+    }
+
+    const auto& group = config.injection_group(phase, wgname);
+    if (group.target == Group::GuideRateInjTarget::POTN) {
+        return;
+    }
+    this->injection_group_values[std::make_pair(phase, wgname)] = group.guide_rate;
 }
 
 void GuideRate::well_compute(const std::string& wgname,
