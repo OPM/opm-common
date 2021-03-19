@@ -256,7 +256,9 @@ namespace {
             maxPerf,
             maxWellInGroup,
             maxGroupInField,
-            (report_step > 0) ? std::max(nWMaxz, numWells) : nWMaxz
+            (report_step > 0) ? std::max(nWMaxz, numWells) : nWMaxz,
+            wd.maxWellListsPrWell(),
+            wd.maxDynamicWellLists()
         };
     }
 
@@ -400,6 +402,18 @@ namespace {
         };
     }
 
+    Opm::RestartIO::InteHEAD::RockOpts
+    getRockOpts(const ::Opm::RockConfig& rckCfg)
+    {
+        int nttyp  = 1;   // Default value (PVTNUM)
+        if (rckCfg.rocknum_property() == "SATNUM") nttyp = 2;
+        if (rckCfg.rocknum_property() == "ROCKNUM") nttyp = 5;
+
+        return {
+            nttyp
+        };
+    }
+
     Opm::RestartIO::InteHEAD::GuideRateNominatedPhase
     setGuideRateNominatedPhase(const ::Opm::Schedule& sched,
                                const std::size_t      report_step,
@@ -513,6 +527,7 @@ createInteHead(const EclipseState& es,
     const auto& rspec = es.runspec();
     const auto& tdim  = es.getTableManager();
     const auto& rdim  = tdim.getRegdims();
+    const auto& rckcfg = es.getSimulationConfig().rock_config();
 
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
@@ -546,6 +561,7 @@ createInteHead(const EclipseState& es,
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched, report_step, lookup_step))
         .whistControlMode   (getWhistctlMode(sched, report_step, lookup_step))
         .networkDimensions  (getNetworkDims(sched, lookup_step, rspec))
+        .rockOpts(getRockOpts(rckcfg))
         ;
 
     return ih.data();
