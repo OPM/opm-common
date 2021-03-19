@@ -41,9 +41,6 @@ namespace RestartIO {
             int maxWellInGroup;
             int maxGroupInField;
             int maxWellsInField;
-        };
-
-        struct WellDims {
             int mxwlstprwel;
             int mxdynwlst;
         };
@@ -161,7 +158,6 @@ namespace RestartIO {
         InteHEAD& stepParam(const int tstep, const int report_step);
         InteHEAD& tuningParam(const TuningPar& tunpar);
         InteHEAD& variousParam(const int version, const int iprog);
-        InteHEAD& wellDimensions(const WellDims& wdims);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& networkDimensions(const NetworkDims& nwdim);
         InteHEAD& regionDimensions(const RegDims& rdim);

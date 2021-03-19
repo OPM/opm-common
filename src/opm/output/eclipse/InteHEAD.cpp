@@ -492,6 +492,9 @@ Opm::RestartIO::InteHEAD::wellTableDimensions(const WellTableDim& wtdim)
     
     this->data_[NWMAXZ] = wtdim.maxWellsInField;
 
+    this->data_[MXWLSTPW]  = wtdim.mxwlstprwel;
+    this->data_[MXDYNWLST] = wtdim.mxdynwlst;
+
     return *this;
 }
 
@@ -637,15 +640,6 @@ Opm::RestartIO::InteHEAD::variousParam(const int version,
 
     // ih_200: Usage unknown, value fixed across reference cases.
     this->data_[ih_200] = 1;
-
-    return *this;
-}
-
-Opm::RestartIO::InteHEAD&
-Opm::RestartIO::InteHEAD::wellDimensions(const WellDims& wdims)
-{
-    this->data_[MXWLSTPW]  = wdims.mxwlstprwel;
-    this->data_[MXDYNWLST] = wdims.mxdynwlst;
 
     return *this;
 }

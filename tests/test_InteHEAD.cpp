@@ -161,10 +161,13 @@ BOOST_AUTO_TEST_CASE(WellTableDimensions)
     const auto maxWellsInGroup  =  3;
     const auto maxGroupInField = 14;
     const auto maxWellsInField = 25;
+    const auto mxwlstprwel = 3;
+    const auto mxdynwlst = 4;
 
     const auto ih = Opm::RestartIO::InteHEAD{}
         .wellTableDimensions({
-            numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField
+            numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField,
+            mxwlstprwel, mxdynwlst
         });
 
     const auto& v = ih.data();
@@ -174,7 +177,9 @@ BOOST_AUTO_TEST_CASE(WellTableDimensions)
     BOOST_CHECK_EQUAL(v[VI::intehead::NCWMAX], maxPerf);
     BOOST_CHECK_EQUAL(v[VI::intehead::NWGMAX], nwgmax);
     BOOST_CHECK_EQUAL(v[VI::intehead::NGMAXZ], maxGroupInField + 1);
-    //BOOST_CHECK_EQUAL(v[VI::intehead::NWMAXZ], maxWellsInField);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NWMAXZ], maxWellsInField);
+    BOOST_CHECK_EQUAL(v[VI::intehead::MXWLSTPRWELL], mxwlstprwel);
+    BOOST_CHECK_EQUAL(v[VI::intehead::MAXDYNWELLST], mxdynwlst);
 }
 
 BOOST_AUTO_TEST_CASE(CalendarDate)
@@ -372,22 +377,6 @@ BOOST_AUTO_TEST_CASE(Various_Parameters)
     BOOST_CHECK_EQUAL(v[VI::intehead::IPROG], 100);    // IPROG
     BOOST_CHECK_EQUAL(v[ 76],   5); // IH_076
     BOOST_CHECK_EQUAL(v[101],   1); // IH_101
-}
-
-BOOST_AUTO_TEST_CASE(wellDimensions)
-{
-    const auto mxwlstprwel = 3;
-    const auto mxdynwlst = 4;
-
-    const auto ih = Opm::RestartIO::InteHEAD{}
-        .wellDimensions({
-            mxwlstprwel, mxdynwlst
-        });
-
-    const auto& v = ih.data();
-
-    BOOST_CHECK_EQUAL(v[VI::intehead::MXWLSTPRWELL], mxwlstprwel);
-    BOOST_CHECK_EQUAL(v[VI::intehead::MAXDYNWELLST], mxdynwlst);
 }
 
 BOOST_AUTO_TEST_CASE(wellSegDimensions)

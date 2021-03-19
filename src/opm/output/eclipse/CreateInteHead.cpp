@@ -256,7 +256,9 @@ namespace {
             maxPerf,
             maxWellInGroup,
             maxGroupInField,
-            (report_step > 0) ? std::max(nWMaxz, numWells) : nWMaxz
+            (report_step > 0) ? std::max(nWMaxz, numWells) : nWMaxz,
+            wd.maxWellListsPrWell(),
+            wd.maxDynamicWellLists()
         };
     }
 
@@ -359,17 +361,6 @@ namespace {
             max_lines_pr_action,
             static_cast<int>(max_cond_per_action),
             static_cast<int>(max_characters_per_line)
-        };
-    }
-
-    Opm::RestartIO::InteHEAD::WellDims
-    getWellDims(const ::Opm::Runspec&  rspec)
-    {
-        const auto& wdims = rspec.wellDimensions();
-
-        return {
-            wdims.maxWellListsPrWell(),
-            wdims.maxDynamicWellLists()
         };
     }
 
@@ -559,7 +550,6 @@ createInteHead(const EclipseState& es,
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched[lookup_step].tuning()))
         .liftOptParam       (getLiftOptPar(sched, lookup_step))
-        .wellDimensions     (getWellDims(rspec))
         .wellSegDimensions  (getWellSegDims(rspec, sched, report_step, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
