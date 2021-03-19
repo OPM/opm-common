@@ -475,6 +475,8 @@ public:
     bool canOpen() const;
     bool isProducer() const;
     bool isInjector() const;
+    InjectorCMode injection_cmode() const;
+    ProducerCMode production_cmode() const;
     InjectorType injectorType() const;
     size_t seqIndex() const;
     bool getAutomaticShutIn() const;
