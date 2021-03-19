@@ -201,7 +201,7 @@ if (OPM_ENABLE_PYTHON)
   # find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
   # Hence we overwrite them here.
   if(NOT PYTHON_INCLUDE_DIRS)
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "from distutils import sysconfig; print(sysconfig.get_python_inc(plat_specific=True));"
+    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "from distutils import sysconfig; print(sysconfig.get_python_inc(plat_specific=True), end=\"\");"
       RESULT_VARIABLE _PYTHON_DIR_SUCCESS
       OUTPUT_VARIABLE PYTHON_INCLUDE_DIR
       ERROR_VARIABLE _PYTHON_ERROR_VALUE)
@@ -362,7 +362,7 @@ if (OPM_ENABLE_PYTHON)
 
   # Generate versioned setup.py
   if (pybind11_INCLUDE_DIRS)
-    string(REGEX REPLACE ";" "', '"  _tmp "${pybind11_INCLUDE_DIRS}" )
+    string(REGEX REPLACE ";" "', '"  _tmp "${pybind11_INCLUDE_DIRS}")
     set(SETUP_PY_PYBIND_INCLUDE_DIR "'${_tmp}'")
   endif()
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
