@@ -532,6 +532,7 @@ TSTEP            -- 9
 
         {
             xw["OP_1"].bhp = 150.0;  // Closed
+            xw["OP_1"].dynamicStatus = ::Opm::Well::Status::STOP;
 
             xw["OP_1"].connections.emplace_back();
             auto& c = xw["OP_1"].connections.back();
@@ -557,8 +558,6 @@ TSTEP            -- 9
 
         return xw;
     }
-
-
 } // namespace
 
 struct SimulationCase
@@ -1002,8 +1001,6 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         const auto i0 = 0*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
-
-
 
         BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9] , 0);
         BOOST_CHECK_EQUAL(iwell[i0 + Ix::Status], 0);

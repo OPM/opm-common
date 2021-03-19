@@ -178,6 +178,7 @@ static data::Wells result_wells() {
     */
     data::Well well1 {
         rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+        ::Opm::Well::Status::OPEN,
         { {well1_comp1} },
         { { segment.segNumber, segment } },
         data::CurrentControl{}

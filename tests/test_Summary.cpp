@@ -276,6 +276,9 @@ data::Wells result_wells(const bool w3_injector = true)
     */
     data::Well well1 {
         rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+
+        ::Opm::Well::Status::OPEN,
+
         { {well1_comp1} },
         { { segment.segNumber, segment } },
         data::CurrentControl{},
@@ -290,11 +293,24 @@ data::Wells result_wells(const bool w3_injector = true)
     using Ctrl = data::CurrentControl;
     using GRValue = data::GuideRateValue;
 
-    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} }, SegRes{}, Ctrl{}, GRValue{} };
+    data::Well well2 {
+        rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2,
+
+        ::Opm::Well::Status::OPEN,
+
+        { {well2_comp1 , well2_comp2} }, SegRes{}, Ctrl{}, GRValue{}
+    };
+
     well2.current_control.prod = ::Opm::Well::ProducerCMode::ORAT;
     well2.guide_rates.set(GRValue::Item::Water, 654.321*sm3_pr_day());
 
-    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{}, Ctrl{}, GRValue{} };
+    data::Well well3 {
+        rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3,
+
+        ::Opm::Well::Status::OPEN,
+
+        { {well3_comp1} }, SegRes{}, Ctrl{}, GRValue{}
+    };
     well3.current_control.isProducer = !w3_injector;
     if (! well3.current_control.isProducer) { // W_3 is injector
         well3.current_control.inj = ::Opm::Well::InjectorCMode::BHP;
@@ -305,7 +321,13 @@ data::Wells result_wells(const bool w3_injector = true)
 
     well3.guide_rates.set(GRValue::Item::ResV, 355.113*sm3_pr_day());
 
-    data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{}, Ctrl{}, GRValue{} };
+    data::Well well6 {
+        rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3,
+
+        ::Opm::Well::Status::OPEN,
+
+        { {well6_comp1} }, SegRes{}, Ctrl{}, GRValue{}
+    };
     well6.current_control.isProducer = false;
     well6.current_control.inj = ::Opm::Well::InjectorCMode::GRUP;
     well6.guide_rates.set(GRValue::Item::Gas, 222.333*sm3_pr_day())
@@ -721,6 +743,130 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 1, "W_1", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2.2, ecl_sum_get_well_var( resp, 1, "W_3", "WTHPH" ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close) {
+    setup cfg( "test_summary_well" );
+
+    // Force to run in a directory, to make sure the basename with
+    // leading path works.
+    cfg.ta.makeSubDir( "PATH" );
+    cfg.name = "PATH/CASE";
+
+    SummaryState st(TimeService::now());
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.eval(st, 0, 0*day, cfg.wells, cfg.grp_nwrk, {}, {}, {}, {});
+    writer.add_timestep( st, 0);
+
+    cfg.wells.at("W_2").dynamicStatus = ::Opm::Well::Status::SHUT;
+    writer.eval(st, 1, 1*day, cfg.wells, cfg.grp_nwrk, {}, {}, {}, {});
+    writer.add_timestep( st, 1);
+
+    cfg.wells.at("W_2").dynamicStatus = ::Opm::Well::Status::OPEN;
+    writer.eval(st, 2, 2*day, cfg.wells, cfg.grp_nwrk, {}, {}, {}, {});
+    writer.add_timestep( st, 2);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    /* Production rates */
+    BOOST_CHECK_CLOSE(  0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPR" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WGPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WGVPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WLPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WNPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WVPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRF" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WPIW" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WPIO" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WPIG" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WPI"  ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WPIL" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPGR"), 1.0e-5);
+
+    /* Production totals */
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WNPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WLPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPTS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WVPT" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 2, "W_2", "WWPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 2, "W_2", "WOPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 2, "W_2", "WGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.0 + 20.1, ecl_sum_get_well_var( resp, 2, "W_2", "WLPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.0 + 20.1, ecl_sum_get_well_var( resp, 2, "W_2", "WLPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.3, ecl_sum_get_well_var( resp, 2, "W_2", "WNPT" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 20.4, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.2 - 20.4, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTF" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 20.5, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.1 - 20.5, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (20.6 + 20.7 + 20.8),
+                       ecl_sum_get_well_var( resp, 2, "W_2", "WVPT" ), 1e-5 );
+
+    /* Production rates (history) */
+    BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRH" ), 1e-5 );
+
+    /* Production totals (history) */
+    BOOST_CHECK_CLOSE( 2 * 20.0, ecl_sum_get_well_var( resp, 2, "W_2", "WWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 20.1, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 20.2, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTH" ), 1e-5 );
+
+    /* WWCT - water cut */
+    const double wwcut = 20.0 / ( 20.0 + 20.1 );
+
+    BOOST_CHECK_CLOSE( wwcut, ecl_sum_get_well_var( resp, 0, "W_2", "WWCT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0  , ecl_sum_get_well_var( resp, 1, "W_2", "WWCT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( wwcut, ecl_sum_get_well_var( resp, 2, "W_2", "WWCT" ), 1e-5 );
+
+    /* gas-oil ratio */
+    const double wgor = 20.2 / 20.1;
+
+    BOOST_CHECK_CLOSE( wgor, ecl_sum_get_well_var( resp, 0, "W_2", "WGOR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0 , ecl_sum_get_well_var( resp, 1, "W_2", "WGOR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( wgor, ecl_sum_get_well_var( resp, 2, "W_2", "WGOR" ), 1e-5 );
+
+    /* WGLR - gas-liquid rate */
+    const double wglr = 20.2 / ( 20.0 + 20.1 );
+
+    BOOST_CHECK_CLOSE( wglr, ecl_sum_get_well_var( resp, 0, "W_2", "WGLR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0 , ecl_sum_get_well_var( resp, 1, "W_2", "WGLR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( wglr, ecl_sum_get_well_var( resp, 2, "W_2", "WGLR" ), 1e-5 );
+
+    /* BHP */
+    BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 0, "W_2", "WBHP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WBHP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 2, "W_2", "WBHP" ), 1e-5 );
+
+    /* THP */
+    BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 0, "W_2", "WTHP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WTHP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 2, "W_2", "WTHP" ), 1e-5 );
+
+    /* BHP (history) */
+    BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 0, "W_2", "WBHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 1, "W_2", "WBHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 2, "W_2", "WBHPH" ), 1e-5 );
+
+    /* THP (history) */
+    BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 0, "W_2", "WTHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 2, "W_2", "WTHPH" ), 1e-5 );
 }
 
 BOOST_AUTO_TEST_CASE(udq_keywords) {
@@ -1729,6 +1875,9 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             BOOST_CHECK_MESSAGE(!curr.isProducer, "W_6 must be an injector");
             BOOST_CHECK_MESSAGE(curr.prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED, "W_6 must have an undefined producer control");
             BOOST_CHECK_MESSAGE(curr.inj == ::Opm::Well::InjectorCMode::GRUP, "W_6 must be on GRUP control");
+
+            BOOST_CHECK_MESSAGE(W2.dynamicStatus == ::Opm::Well::Status::OPEN,
+                                "W_2 must be dynamically open (dynamicStatus == OPEN)");
 }
 
 // Well/group tree structure (SUMMARY_EFF_FAC.DATA):
@@ -2872,6 +3021,8 @@ data::Well SegmentResultHelpers::prod01_results()
     res.temperature = 298.15;
     res.control     = 0;
 
+    res.dynamicStatus = ::Opm::Well::Status::OPEN;
+
     res.connections = prod01_conn_results();
     res.segments    = prod01_seg_results();
 
@@ -2888,6 +3039,8 @@ data::Well SegmentResultHelpers::inje01_results()
     res.thp         = 256.821*unit::barsa;
     res.temperature = 298.15;
     res.control     = 0;
+
+    res.dynamicStatus = ::Opm::Well::Status::OPEN;
 
     res.connections = inje01_conn_results();
 
@@ -3500,7 +3653,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // =====================================================================
 
-BOOST_AUTO_TEST_SUITE(Reset_Cumulative_Vectors)
+BOOST_AUTO_TEST_SUITE(Summary_State)
 
 BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     SummaryState st(TimeService::now());
@@ -3563,7 +3716,7 @@ BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     BOOST_CHECK_EQUAL(st.get_elapsed(), 200);
 }
 
-
+namespace {
 void test_serialize(const SummaryState& st) {
     SummaryState st2(TimeService::now());
     auto serial = st.serialize();
@@ -3574,6 +3727,7 @@ void test_serialize(const SummaryState& st) {
     st2.update("FOPT", 200);
     st2.deserialize(serial);
     BOOST_CHECK(st == st2);
+}
 }
 
 BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
@@ -3602,7 +3756,6 @@ BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
     test_serialize(st);
 
 }
-
 
 BOOST_AUTO_TEST_CASE(SummaryState__TIME) {
     struct tm ts;
