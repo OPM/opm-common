@@ -31,8 +31,7 @@ except OSError as e:
 output=subprocess.check_output([cc, "--version"])
 libs=['opmcommon', 'boost_system']
 output=str(output)
-if output.find('Free Software Foundation'):
-    libs.append('stdc++fs')
+@SETUP_PY_STDCPLUSPLUSFS@
 
 if 'build' in sys.argv:
     if not 'build_ext' in sys.argv:
