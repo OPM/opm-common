@@ -90,20 +90,25 @@ public:
     bool has_well_var(const std::string& var) const;
     bool has_group_var(const std::string& group, const std::string& var) const;
     bool has_group_var(const std::string& var) const;
+    bool has_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const;
+
 
     void update(const std::string& key, double value);
     void update_well_var(const std::string& well, const std::string& var, double value);
     void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);
     void update_udq(const UDQSet& udq_set, double undefined_value);
+    void update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value);
 
     double get(const std::string&) const;
     double get(const std::string&, double) const;
     double get_elapsed() const;
     double get_well_var(const std::string& well, const std::string& var) const;
     double get_group_var(const std::string& group, const std::string& var) const;
+    double get_conn_var(const std::string& conn, const std::string& var, std::size_t global_index) const;
     double get_well_var(const std::string& well, const std::string& var, double) const;
     double get_group_var(const std::string& group, const std::string& var, double) const;
+    double get_conn_var(const std::string& conn, const std::string& var, std::size_t global_index, double) const;
 
     const std::vector<std::string>& wells() const;
     std::vector<std::string> wells(const std::string& var) const;
@@ -130,6 +135,10 @@ private:
     std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values;
     std::set<std::string> m_groups;
     mutable std::optional<std::vector<std::string>> group_names;
+
+    // The first key is the variable and the second key is the well and the
+    // third is the global index. NB: The global_index has offset 1!
+    std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> conn_values;
 };
 
 

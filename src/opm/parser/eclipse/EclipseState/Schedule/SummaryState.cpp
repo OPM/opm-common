@@ -53,10 +53,11 @@ namespace {
             return is_total(key.substr(0,sep_pos));
     }
 
+    template <class T>
+    using map2 = std::unordered_map<std::string, std::unordered_map<std::string, T>>;
 
-    using map2 = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
-
-    bool has_var(const map2& values, const std::string& var1, const std::string var2) {
+    template <class T>
+    bool has_var(const map2<T>& values, const std::string& var1, const std::string& var2) {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
             return false;
@@ -68,7 +69,8 @@ namespace {
         return true;
     }
 
-    void erase_var(map2& values, std::set<std::string>& var2_set, const std::string& var1, const std::string var2) {
+    template <class T>
+    void erase_var(map2<T>& values, std::set<std::string>& var2_set, const std::string& var1, const std::string& var2) {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
             return;
@@ -84,7 +86,8 @@ namespace {
         }
     }
 
-    std::vector<std::string> var2_list(const map2& values, const std::string& var1) {
+    template <class T>
+    std::vector<std::string> var2_list(const map2<T>& values, const std::string& var1) {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
             return {};
@@ -164,6 +167,35 @@ namespace {
             this->m_wells.insert(well);
             this->well_names.reset();
         }
+    }
+
+    bool SummaryState::has_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const {
+        if (!has_var(this->conn_values, var, well))
+            return false;
+
+        const auto& index_map = this->conn_values.at(var).at(well);
+        return (index_map.count(global_index) > 0);
+    }
+
+    void SummaryState::update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value) {
+        std::string key = var + ":" + well + ":" + std::to_string(global_index);
+        if (is_total(var)) {
+            this->values[key] += value;
+            this->conn_values[var][well][global_index] += value;
+        } else {
+            this->values[key] = value;
+            this->conn_values[var][well][global_index] = value;
+        }
+    }
+
+    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const {
+        return this->conn_values.at(var).at(well).at(global_index);
+    }
+
+    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double default_value) const {
+        if (this->has_conn_var(well, var, global_index))
+            return this->get_conn_var(well, var, global_index);
+        return default_value;
     }
 
 
@@ -319,6 +351,7 @@ namespace {
 
 
 
+
     std::vector<char> SummaryState::serialize() const {
         Serializer ser;
         ser.put(this->sim_start);
@@ -327,15 +360,25 @@ namespace {
 
 
         ser.put(this->well_values.size());
-        for (const auto& [well, v] : this->well_values) {
-            ser.put(well);
-            ser.put_map(v);
+        for (const auto& [var, well_map] : this->well_values) {
+            ser.put(var);
+            ser.put_map(well_map);
         }
 
         ser.put(this->group_values.size());
-        for (const auto& [group, v] : this->group_values) {
-            ser.put(group);
-            ser.put_map(v);
+        for (const auto& [var, group_map] : this->group_values) {
+            ser.put(var);
+            ser.put_map(group_map);
+        }
+
+        ser.put(this->conn_values.size());
+        for (const auto& [var, well_conn_map] : this->conn_values) {
+            ser.put(var);
+            ser.put(well_conn_map.size());
+            for (const auto& [well, conn_map] : well_conn_map) {
+                ser.put(well);
+                ser.put_map(conn_map);
+            }
         }
 
         return std::move(ser.buffer);
@@ -375,6 +418,19 @@ namespace {
             }
             this->group_names.reset();
         }
+
+        {
+            std::size_t num_conn_var = ser.get<std::size_t>();
+            for (std::size_t var_index = 0; var_index < num_conn_var; var_index++) {
+                std::string var = ser.get<std::string>();
+                std::size_t num_wells = ser.get<std::size_t>();
+                for (std::size_t well_index = 0; well_index < num_wells; well_index++) {
+                    std::string well = ser.get<std::string>();
+                    auto conn_map = ser.get_map<std::size_t, double>();
+                    this->conn_values[var][well] = std::move(conn_map);
+                }
+            }
+        }
     }
 
     std::ostream& operator<<(std::ostream& stream, const SummaryState& st) {
@@ -395,6 +451,7 @@ namespace {
                this->wells() == other.wells() &&
                this->group_values == other.group_values &&
                this->m_groups == other.m_groups &&
-               this->groups() == other.groups();
+               this->groups() == other.groups() &&
+               this->conn_values == other.conn_values;
     }
 }
