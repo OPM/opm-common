@@ -28,7 +28,7 @@ find_opm_package (
   "dunecommon"
 
   # defines to be added to compilations
-  "DUNE_COMMON_FIELDVECTOR_SIZE_IS_METHOD=1"
+  ""
 
   # test program
 "#include <dune/common/fvector.hh>
