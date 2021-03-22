@@ -490,7 +490,8 @@ namespace Opm
                                     bool runtime,
                                     const std::unordered_map<std::string, double> * target_wellpi,
                                     const EclipseGrid* grid,
-                                    const FieldPropsManager* fp);
+                                    const FieldPropsManager* fp,
+                                    const std::string& prefix);
         void addACTIONX(const Action::ActionX& action);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
         void addGroup(const std::string& groupName , std::size_t timeStep);
