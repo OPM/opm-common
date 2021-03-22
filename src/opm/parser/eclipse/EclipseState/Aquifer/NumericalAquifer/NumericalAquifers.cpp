@@ -168,4 +168,13 @@ namespace Opm {
         }
         return nncs;
     }
+
+    std::unordered_map<size_t, double> NumericalAquifers::aquiferCellVolumes() const {
+        std::unordered_map<size_t, double> cell_volumes;
+        const auto aquifer_cells = this->allAquiferCells();
+        for (const auto& [global_index, cell] : aquifer_cells) {
+            cell_volumes.insert(std::make_pair(global_index, cell->cellVolume()));
+        }
+        return cell_volumes;
+    }
 }
