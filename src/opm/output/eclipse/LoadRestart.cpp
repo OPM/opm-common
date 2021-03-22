@@ -1298,7 +1298,7 @@ namespace {
         const auto t2 = iaaq[VI::IAnalyticAquifer::TypeRelated2];
 
         if ((t1 == 1) && (t2 == 1)) {
-            return Opm::data::AquiferType::CarterTracey;
+            return Opm::data::AquiferType::CarterTracy;
         }
 
         if ((t1 == 0) && (t2 == 0)) {
