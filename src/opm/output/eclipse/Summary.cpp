@@ -607,6 +607,37 @@ inline quantity ratel( const fn_args& args ) {
     return { sum, unit };
 }
 
+inline quantity cpr( const fn_args& args ) {
+    const quantity zero = { 0, measure::pressure };
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclipse SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const size_t global_index = args.num - 1;
+    if (args.schedule_wells.empty())
+        return zero;
+
+    const auto& name = args.schedule_wells.front().name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        return zero;
+
+    const auto& well_data = xwPos->second;
+    const auto& connection =
+        std::find_if(well_data.connections.begin(),
+                     well_data.connections.end(),
+            [global_index](const Opm::data::Connection& c)
+        {
+            return c.index == global_index;
+        });
+
+    if (connection == well_data.connections.end())
+        return zero;
+
+    return { connection->pressure, measure::pressure };
+}
+
 template< rt phase, bool injection = true >
 inline quantity cratel( const fn_args& args ) {
     const auto unit = ((phase == rt::polymer) || (phase == rt::brine))
@@ -1595,6 +1626,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "GVPRT", res_vol_production_target },
 
+    { "CPR", cpr  },
     { "CGIRL", cratel< rt::gas, injector> },
     { "CGITL", mul( cratel< rt::gas, injector>, duration) },
     { "CWIRL", cratel< rt::wat, injector> },

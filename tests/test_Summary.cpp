@@ -265,7 +265,7 @@ data::Wells result_wells(const bool w3_injector = true)
       syncronized with the global index in the COMPDAT keyword in the
       input deck.
     */
-    data::Connection well1_comp1 { 0  , crates1, 1.9  , 123.4, 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db() };
+    data::Connection well1_comp1 { 0  , crates1, 1.9 *unit::barsa , 123.4, 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db() };
     data::Connection well2_comp1 { 1  , crates2, 1.10 , 123.4, 212.1 , 0.78 , 0.0 ,  12.34   , 222.333*cp_rm3_per_db() };
     data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6 , 0.001, 0.89, 100.0    , 333.444*cp_rm3_per_db() };
     data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0  , 0.15, 432.1    , 444.555*cp_rm3_per_db() };
@@ -1127,6 +1127,7 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
     BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CWPR", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "COPR", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGPR", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.9,       ecl_sum_get_well_connection_var( resp, 1, "W_1", "CPR",  1, 1, 1), 1e-5);
 
     BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_1", "WOPRL__1"), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPR", 1,1,1), 1e-5);
     BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_2", "WOPRL__2"), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
