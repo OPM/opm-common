@@ -2138,6 +2138,13 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK( !st.has_group_var("G1", "GWCT"));
     BOOST_CHECK( !st.has("GWCT:G1") );
 
+    BOOST_CHECK(!st.has_conn_var("OP2", "COPR", 100));
+    st.update_conn_var("OP2", "COPR", 100, 123);
+    BOOST_CHECK(st.has_conn_var("OP2", "COPR", 100));
+    BOOST_CHECK_EQUAL(st.get_conn_var("OP2", "COPR", 100), 123);
+    BOOST_CHECK_EQUAL(st.get_conn_var("OP2", "COPR", 101, 99), 99);
+
+
     auto buffer = st.serialize();
     Opm::SummaryState st2(TimeService::now());
     st2.deserialize(buffer);
