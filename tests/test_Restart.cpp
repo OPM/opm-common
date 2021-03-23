@@ -22,6 +22,7 @@
 #define BOOST_TEST_MODULE EclipseIO
 #include <boost/test/unit_test.hpp>
 
+#include <opm/output/eclipse/AggregateAquiferData.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
@@ -480,6 +481,8 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto wells = mkWells();
         auto groups = mkGroups();
         auto sumState = sim_state(base_setup.schedule);
+        auto udqState = UDQState{1};
+        auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         Action::State action_state;
         {
             RestartValue restart_value(cells, wells, groups);
@@ -504,6 +507,8 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                                 base_setup.schedule,
                                 action_state,
                                 sumState,
+                                udqState,
+                                aquiferData,
                                 true);
             }
 
@@ -533,6 +538,8 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                                 base_setup.schedule,
                                 action_state,
                                 sumState,
+                                udqState,
+                                aquiferData,
                                 true);
             }
 
@@ -615,6 +622,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         Opm::SummaryState sumState(TimeService::now());
         Opm::Action::State action_state;
         Opm::UDQState udq_state(19);
+        auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
 
         const auto seqnum = 1;
         auto rstFile = OS::Restart {
@@ -630,7 +638,8 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            setup.schedule,
                                            action_state,
                                            sumState,
-                                           udq_state),
+                                           udq_state,
+                                           aquiferData),
                            std::runtime_error);
     }
 }
@@ -671,6 +680,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto groups = mkGroups();
+        auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         const auto& units = setup.es.getUnits();
         {
             RestartValue restart_value(cells, wells, groups);
@@ -696,7 +706,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                                 setup.schedule,
                                 action_state,
                                 sumState,
-                                udq_state);
+                                udq_state,
+                                aquiferData);
             }
 
             const auto rstFile = ::Opm::EclIO::OutputStream::
@@ -751,6 +762,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto groups = mkGroups();
+        auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         const auto outputDir = test_area.currentWorkingDirectory();
         {
             RestartValue restart_value(cells, wells, groups);
@@ -790,7 +802,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                    base_setup.schedule,
                                                    action_state,
                                                    sumState,
-                                                   udq_state),
+                                                   udq_state,
+                                                   aquiferData),
                                    std::runtime_error);
             }
 
@@ -814,7 +827,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                 base_setup.schedule,
                                 action_state,
                                 sumState,
-                                udq_state);
+                                udq_state,
+                                aquiferData);
             }
 
             {
@@ -868,12 +882,14 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     const auto seqnum = 1;
     {
         Action::State action_state;
+        auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         auto rstFile = OS::Restart {
             rset, seqnum, OS::Formatted{ false }, OS::Unified{ true }
         };
 
         RestartIO::save(rstFile, seqnum, 100, restart_value,
-                        setup.es, setup.grid, setup.schedule, action_state, sumState, udq_state);
+                        setup.es, setup.grid, setup.schedule,
+                        action_state, sumState, udq_state, aquiferData);
     }
 
     Action::State action_state;
