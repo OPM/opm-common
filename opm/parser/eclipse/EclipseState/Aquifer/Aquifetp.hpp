@@ -25,13 +25,17 @@
   This includes the logic for parsing as well as the associated tables. It is meant to be used by opm-grid and opm-simulators in order to
   implement the Fetkovich analytical aquifer model in OPM Flow.
 */
+
+#include <cstddef>
+#include <utility>
 #include <vector>
 
+namespace Opm {
+    class Deck;
+    class DeckRecord;
+}
 
 namespace Opm {
-
-class Deck;
-class DeckRecord;
 
 class Aquifetp {
     public:

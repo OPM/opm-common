@@ -18,9 +18,28 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
+
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <cstddef>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
