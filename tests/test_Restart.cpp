@@ -221,9 +221,24 @@ data::Solution mkSolution( int numCells ) {
     return sol;
 }
 
-Opm::SummaryState sim_state()
+Opm::SummaryState sim_state(const Opm::Schedule& sched)
 {
     auto state = Opm::SummaryState{TimeService::now()};
+    for (const auto& well : sched.getWellsatEnd()) {
+        for (const auto& connection : well.getConnections()) {
+            state.update_conn_var(well.name(), "CPR", connection.global_index() + 1, 111);
+            if (well.isInjector()) {
+                state.update_conn_var(well.name(), "COIR", connection.global_index() + 1, 222);
+                state.update_conn_var(well.name(), "CGIR", connection.global_index() + 1, 333);
+                state.update_conn_var(well.name(), "CWIR", connection.global_index() + 1, 444);
+            } else {
+                state.update_conn_var(well.name(), "COPR", connection.global_index() + 1, 555);
+                state.update_conn_var(well.name(), "CGPR", connection.global_index() + 1, 666);
+                state.update_conn_var(well.name(), "CWPR", connection.global_index() + 1, 777);
+            }
+        }
+    }
+
     state.update_well_var("OP_1", "WOPR", 1.0);
     state.update_well_var("OP_1", "WWPR", 2.0);
     state.update_well_var("OP_1", "WGPR", 3.0);
@@ -371,21 +386,6 @@ struct Setup {
 };
 
 
-void init_st(SummaryState& st) {
-    st.update_well_var("PROD1", "WOPR", 100);
-    st.update_well_var("PROD1", "WLPR", 100);
-    st.update_well_var("PROD2", "WOPR", 100);
-    st.update_well_var("PROD2", "WLPR", 100);
-    st.update_well_var("WINJ1", "WOPR", 100);
-    st.update_well_var("WINJ1", "WLPR", 100);
-    st.update_well_var("WINJ2", "WOPR", 100);
-    st.update_well_var("WINJ2", "WLPR", 100);
-
-    st.update_group_var("GRP1", "GOPR", 100);
-    st.update_group_var("WGRP1", "GOPR", 100);
-    st.update_group_var("WGRP2", "GOPR", 100);
-    st.update("FLPR", 100);
-}
 
 RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, UDQState& udq_state, bool write_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
@@ -400,7 +400,6 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
     const auto& udq = setup.schedule.getUDQConfig(report_step);
     RestartValue restart_value(sol, wells, groups);
 
-    init_st(st);
     udq.eval(report_step, setup.schedule.wellMatcher(report_step), st, udq_state);
     eclWriter.writeTimeStep( action_state,
                              st,
@@ -453,7 +452,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     test_area.copyIn("RESTART_SIM.DATA");
 
     Setup base_setup("BASE_SIM.DATA");
-    SummaryState st(TimeService::now());
+    auto st = sim_state(base_setup.schedule);
     Action::State action_state;
     UDQState udq_state(19);
     auto state1 = first_sim( base_setup , action_state, st, udq_state, false );
@@ -480,7 +479,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto groups = mkGroups();
-        auto sumState = sim_state();
+        auto sumState = sim_state(base_setup.schedule);
         Action::State action_state;
         {
             RestartValue restart_value(cells, wells, groups);
@@ -589,7 +588,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     test_area.copyIn("RESTART_SIM.DATA");
     test_area.copyIn("BASE_SIM.DATA");
     Setup base_setup("BASE_SIM.DATA");
-    SummaryState st(TimeService::now());
+    auto st = sim_state(base_setup.schedule);
     Action::State action_state;
     UDQState udq_state(1);
 
@@ -676,7 +675,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         {
             RestartValue restart_value(cells, wells, groups);
             SummaryState st(TimeService::now());
-            const auto sumState = sim_state();
+            const auto sumState = sim_state(setup.schedule);
 
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
 
@@ -771,7 +770,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
             */
 
             restart_value.addExtra("THRESHPR", UnitSystem::measure::pressure, {0,1});
-            const auto sumState = sim_state();
+            const auto sumState = sim_state(base_setup.schedule);
             Action::State action_state;
             UDQState udq_state(99);
 
@@ -861,7 +860,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
         mkWells(),
         mkGroups()
     };
-    const auto sumState = sim_state();
+    const auto sumState = sim_state(setup.schedule);
     UDQState udq_state(98);
     namespace OS = ::Opm::EclIO::OutputStream;
 
@@ -1001,6 +1000,21 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK_CLOSE(rstSumState.get("FGITH"), 90123.45, 1.0e-10);
 }
 
+void init_st(SummaryState& st) {
+    st.update_well_var("PROD1", "WOPR", 100);
+    st.update_well_var("PROD1", "WLPR", 100);
+    st.update_well_var("PROD2", "WOPR", 100);
+    st.update_well_var("PROD2", "WLPR", 100);
+    st.update_well_var("WINJ1", "WOPR", 100);
+    st.update_well_var("WINJ1", "WLPR", 100);
+    st.update_well_var("WINJ2", "WOPR", 100);
+    st.update_well_var("WINJ2", "WLPR", 100);
+
+    st.update_group_var("GRP1", "GOPR", 100);
+    st.update_group_var("WGRP1", "GOPR", 100);
+    st.update_group_var("WGRP2", "GOPR", 100);
+    st.update("FLPR", 100);
+}
 
 BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     std::vector<RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
@@ -1015,22 +1029,12 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     SummaryState st2(TimeService::now());
     Action::State action_state;
     UDQState udq_state(1);
+    init_st(st1);
     auto state1 = first_sim( base_setup , action_state, st1, udq_state, false );
 
     Setup restart_setup("UDQ_RESTART.DATA");
     auto state2 = second_sim( restart_setup , action_state, st2 , keys );
     BOOST_CHECK(st1.wells() == st2.wells());
-    {
-        const auto& g1 = st1.groups();
-        const auto& g2 = st2.groups();
-        for (std::size_t i = 0; i < g1.size(); i++)
-            printf("%s ", g1[i].c_str());
-        printf("\n");
-
-        for (std::size_t i = 0; i < g2.size(); i++)
-            printf("%s ", g2[i].c_str());
-        printf("\n");
-    }
     BOOST_CHECK(st1.groups() == st2.groups());
 
     const auto& udq = base_setup.schedule.getUDQConfig(1);
