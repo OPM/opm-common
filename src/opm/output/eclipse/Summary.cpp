@@ -187,6 +187,16 @@ namespace {
             { "FMWIN", Opm::EclIO::SummaryNode::Type::Mode },
         };
 
+        const auto extra_connection_vectors = std::vector<ParamCTorArgs> {
+            {"COPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CWPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CGPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"COIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CWIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CGIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure}
+        };
+
         using Cat = Opm::EclIO::SummaryNode::Category;
 
         auto makeEntities = [&vectors, &entities]
@@ -211,6 +221,12 @@ namespace {
 
         for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', Cat::Well, extra_well_vectors, well_name);
+
+            const auto& well = sched.getWellatEnd(well_name);
+            for (const auto& conn : well.getConnections()) {
+                for (const auto& conn_vector : extra_connection_vectors)
+                    entities.push_back( {conn_vector.kw, Cat::Connection, conn_vector.type, well.name(), static_cast<int>(conn.global_index() + 1), {}} );
+            }
         }
 
         for (const auto& grp_name : sched.groupNames()) {
