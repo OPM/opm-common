@@ -26,12 +26,15 @@
 #include <memory>
 #include <vector>
 
-
 namespace Opm {
 
+class EclipseGrid;
+class EclipseState;
 class UnitSystem;
 
-namespace RestartIO {
+}
+
+namespace Opm { namespace RestartIO {
 
     class InteHEAD
     {
@@ -185,13 +188,16 @@ namespace RestartIO {
 
         InteHEAD& unitConventions(const UnitSystem& usys);
         InteHEAD& wellTableDimensions(const WellTableDim& wtdim);
+        InteHEAD& aquiferDimensions(const AquiferDims& aqudims);
+
         InteHEAD& calendarDate(const TimePoint& date);
         InteHEAD& activePhases(const Phases& phases);
+
         InteHEAD& params_NWELZ(const int niwelz, const int nswelz, const int nxwelz, const int nzwelz);
         InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);
         InteHEAD& params_GRPZ(const std::array<int, 4>& grpz);
         InteHEAD& params_NGCTRL(const int gct);
-        InteHEAD& params_NAAQZ(const int ncamax, const int niaaqz, const int nsaaqz, const int nxaaqz, const int nicaqz, const int nscaqz, const int nacaqz);
+
         InteHEAD& stepParam(const int tstep, const int report_step);
         InteHEAD& tuningParam(const TuningPar& tunpar);
         InteHEAD& variousParam(const int version, const int iprog);
@@ -216,11 +222,12 @@ namespace RestartIO {
         std::vector<int> data_;
     };
 
-    std::time_t makeUTCTime(const std::tm& timePoint);
-
     InteHEAD::TimePoint
     getSimulationTimePoint(const std::time_t start,
                            const double      elapsed);
+
+    InteHEAD::AquiferDims
+    inferAquiferDimensions(const EclipseState& es);
 }} // Opm::RestartIO
 
 #endif // OPM_INTEHEAD_HEADER_INCLUDED

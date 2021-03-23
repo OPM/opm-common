@@ -69,6 +69,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NXGRPZ = 38, //  Number of data elements per group in XGRP array
         NZGRPZ = 39, //  Number of data elements per group in ZGRP array
 
+        NAQUIF = 40, //  Number of *active* analytic aquifers (i.e., number of unique aquifer IDs) in model
         NCAMAX = 41, //  Maximum number of analytic aquifer connections
 
         NIAAQZ = 42, //  Number of data elements per aquifer in IAAQ array
@@ -123,6 +124,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         MAXNOLINES = 157, //  Maximum number of lines of schedule data for ACTION keyword - including ENDACTIO
         MAXNOSTRPRLINE = 158, //  Maximum number of 8-chars strings pr input line of Action data (rounded up from input)
 
+        MAX_ACT_ANLYTIC_AQUCONN = 162, // Maximum number of *active* connections across all analytic aquifers
         NWMAXZ = 163, //  Maximum number of wells in the model
 
         NSEGWL = 174, //  Number of multisegment wells defined with WELSEG
@@ -140,12 +142,16 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         WSEGITR_IT2 = 208, // NR - maximum no of times that a new iteration cycle with a reduced Wp will be started
 
         MAX_ACT_COND = 245, //  Maximum number of conditions pr action
-        MAX_AN_AQUIFERS = 252, // Maximum number of analytic aquifers
+        MAX_AN_AQUIFER_ID = 252, // Maximum aquifer ID of all analytic aquifers (<= AQUDIMS(5))
 
         NO_FIELD_UDQS = 262, //  No of Field UDQ data (parameters) /
         NO_GROUP_UDQS = 263, //  No of Group UDQ data (parameters) /
         NO_WELL_UDQS = 266, //  No of Well UDQ data (parameters) /
         UDQPAR_1 = 267, //  Integer seed value for the RAND /
+
+        AQU_UNKNOWN_1 = 269,  // Not characterised.  Equal to NAQUIF in all cases seen so far.
+        MAX_ANALYTIC_AQUIFERS = 286, // Declared maximum number of analytic aquifers in model.  AQUDIMS(5).
+
         NO_IUADS = 290, //  No IUADs
         NO_IUAPS = 291, //  No IUAPs
         RSEED = 296,

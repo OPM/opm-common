@@ -1,4 +1,5 @@
 /*
+  Copyright (c) 2021 Equinor ASA
   Copyright (c) 2018 Statoil ASA
 
   This file is part of the Open Porous Media project (OPM).
@@ -21,6 +22,7 @@
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -284,7 +286,6 @@ namespace {
         }};
     }
 
-
     Opm::RestartIO::InteHEAD::Phases
     getActivePhases(const ::Opm::Runspec& rspec)
     {
@@ -542,10 +543,7 @@ createInteHead(const EclipseState& es,
         .params_NWELZ       (155, 122, 130, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
         .params_NCON        (25, 41, 58)       // n{isx}conz: number of data elements per completion in ICON
         .params_GRPZ        (getNGRPZ(nwgmax, ngmax, rspec))
-             // ncamax: max number of analytical aquifer connections
-             // n{isx}aaqz: number of data elements per aquifer in {ISX}AAQ
-             // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
-        .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
+        .aquiferDimensions  (inferAquiferDimensions(es))
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched[lookup_step].tuning()))
         .liftOptParam       (getLiftOptPar(sched, lookup_step))

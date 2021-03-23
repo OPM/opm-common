@@ -649,9 +649,9 @@ namespace {
         return rst_view.hasKeyword<double>("XAAQ");
     }
 
-    std::size_t numAnalyticAquifers(RestartFileView& rst_view)
+    std::size_t maximumAnalyticAquiferID(RestartFileView& rst_view)
     {
-        return rst_view.intehead()[VI::intehead::MAX_AN_AQUIFERS];
+        return rst_view.intehead()[VI::intehead::MAX_AN_AQUIFER_ID];
     }
 
     std::vector<double>
@@ -1340,10 +1340,10 @@ namespace {
         const auto& intehead    = rst_view->intehead();
         const auto  aquiferData = AquiferVectors{ intehead, rst_view };
 
-        const auto  numAq = numAnalyticAquifers(*rst_view);
+        const auto  maxAqID = maximumAnalyticAquiferID(*rst_view);
         const auto& units = es.getUnits();
 
-        for (auto aquiferID = 0*numAq; aquiferID < numAq; ++aquiferID) {
+        for (auto aquiferID = 0*maxAqID; aquiferID < maxAqID; ++aquiferID) {
             const auto& saaq = aquiferData.saaq(aquiferID);
             const auto& xaaq = aquiferData.xaaq(aquiferID);
 
