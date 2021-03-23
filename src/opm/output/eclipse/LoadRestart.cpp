@@ -569,7 +569,6 @@ public:
     Window<double> xaaq(const std::size_t aquiferID) const;
 
 private:
-    std::size_t maxAnalyticAquifer_;
     std::size_t numIntAnalyticAquiferElm_;
     std::size_t numFloatAnalyticAquiferElm_;
     std::size_t numDoubleAnalyticAquiferElm_;
@@ -579,8 +578,7 @@ private:
 
 AquiferVectors::AquiferVectors(const std::vector<int>&          intehead,
                                std::shared_ptr<RestartFileView> rst_view)
-    : maxAnalyticAquifer_         (intehead[VI::intehead::MAX_AN_AQUIFERS])
-    , numIntAnalyticAquiferElm_   (intehead[VI::intehead::NIAAQZ])
+    : numIntAnalyticAquiferElm_   (intehead[VI::intehead::NIAAQZ])
     , numFloatAnalyticAquiferElm_ (intehead[VI::intehead::NSAAQZ])
     , numDoubleAnalyticAquiferElm_(intehead[VI::intehead::NXAAQZ])
     , rstView_                    (std::move(rst_view))
@@ -1295,20 +1293,18 @@ namespace {
     determineAquiferType(const AquiferVectors::Window<int>& iaaq)
     {
         const auto t1 = iaaq[VI::IAnalyticAquifer::TypeRelated1];
-        const auto t2 = iaaq[VI::IAnalyticAquifer::TypeRelated2];
 
-        if ((t1 == 1) && (t2 == 1)) {
+        if (t1 == 1) {
             return Opm::data::AquiferType::CarterTracy;
         }
 
-        if ((t1 == 0) && (t2 == 0)) {
+        if (t1 == 0) {
             return Opm::data::AquiferType::Fetkovich;
         }
 
         throw std::runtime_error {
             "Unknown Aquifer Type:"
-                  " T1 = "  + std::to_string(t1)
-                + ", T2 = " + std::to_string(t2)
+            " T1 = "  + std::to_string(t1)
         };
     }
 

@@ -1,4 +1,5 @@
 /*
+  Copyright 2021 Equinor ASA.
   Copyright 2016, 2017, 2018 Statoil ASA.
 
   This file is part of the Open Porous Media Project (OPM).
@@ -132,6 +133,42 @@ namespace RestartIO {
             int ninobr;
         };
 
+        struct AquiferDims {
+            // Number of active analytic aquifers (# unique aquifer IDs)
+            int numAquifers {0};
+
+            // Declared maximum number of analytic aquifers in model
+            // (AQUDIMS(5))
+            int maxNumAquifers {0};
+
+            // Declared maximum number of connections in any analytic
+            // aquifer (AQUDIMS(6))
+            int maxNumAquiferConn {0};
+
+            // Maximum number of *active* connections in any analytic aquifer
+            int maxNumActiveAquiferConn {0};
+
+            // Maximum aquifer ID across all of the model's analytic aquifers.
+            int maxAquiferID {0};
+
+            // Number of data elements per aquifer in IAAQ array.
+            int numIntAquiferElem {18};
+
+            // Number of data elements per aquifer in SAAQ array.
+            int numRealAquiferElem {24};
+
+            // Number of data elements per aquifer in XAAQ array.
+            int numDoubAquiferElem {10};
+
+            // Number of data elements per coonnection in ICAQ array.
+            int numIntConnElem {7};
+
+            // Number of data elements per connecetion in SCAQ array.
+            int numRealConnElem {2};
+
+            // Number of data elements per connection in ACAQ array.
+            int numDoubConnElem {4};
+        };
      
         InteHEAD();
         ~InteHEAD() = default;
