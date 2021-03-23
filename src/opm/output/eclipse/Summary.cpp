@@ -200,12 +200,12 @@ namespace {
             // Recall: Cannot use emplace_back() for PODs.
             for (const auto& vector : vectors) {
                 entities.push_back({ kwpref + vector.kw, cat,
-                                     vector.type, name, dflt_num, "" });
+                                     vector.type, name, dflt_num, {} });
             }
 
             for (const auto& extra_vector : extra_vectors) {
                 entities.push_back({ extra_vector.kw, cat,
-                                     extra_vector.type, name, dflt_num, "" });
+                                     extra_vector.type, name, dflt_num, {} });
             }
         };
 
