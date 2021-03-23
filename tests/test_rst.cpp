@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
     wellData.captureDynamicWellData(simCase.sched, sim_step, {} , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, {} , sim_step);
+    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, {} , sumState, sim_step);
 
     auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
     groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
