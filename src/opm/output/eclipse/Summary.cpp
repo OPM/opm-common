@@ -1611,6 +1611,7 @@ static const std::unordered_map< std::string, ofun > funs = {
                     sum( cratel< rt::wat, producer >, cratel< rt::oil, producer > ) ) },
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
+    { "COIR", crate< rt::oil, injector > },
     { "CCIR", crate< rt::polymer, injector > },
     { "CSIR", crate< rt::brine, injector > },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
