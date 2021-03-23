@@ -49,6 +49,70 @@
 namespace Opm {
 
 
+namespace {
+
+/*
+  The field_props and grid both have a relationship to the number of active
+  cells, and update eachother through an inelegant dance through the
+  EclispeState construction:
+
+  1. The grid is created is with the explicit ACTNUM keyword found in the deck.
+     This does *not* include ACTNUM data which is entered via e.g. EQUALS or
+     COPY keywords.
+
+  2. A FieldPropsManager is created based on the initial grid. In this manager
+     the grid plays an essential role in mapping active/inactive cells. While
+     assembling the property information the fieldprops manager can encounter
+     ACTNUM modifications and also PORO / PORV. The FieldPropsManager::actnum()
+     function will create a new actnum vector based on:
+
+       1. The ACTNUM from the original grid.
+       2. Direct ACTNUM manipulations.
+       3. Cells with PORV == 0
+
+     The new actnum vector will be returned by value and not used internally in
+     the fieldprops.
+
+  3. We update the grid with the new ACTNUM provided by the field props manager.
+
+  4. We update the fieldprops with the ACTNUM.
+
+  During the EclipseState construction the grid <-> field_props update process
+  is done twice, first after the initial field_props processing and subsequently
+  after the processing of numerical aquifers.
+*/
+
+
+void update_active_cells(EclipseGrid& grid, FieldPropsManager& fp) {
+    grid.resetACTNUM(fp.actnum());
+    fp.reset_actnum(grid.getACTNUM());
+}
+
+AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& input_nnc, EclipseGrid& grid, FieldPropsManager& fp) {
+    auto aquifer_config = AquiferConfig(tables, grid, deck, fp);
+
+    if (aquifer_config.hasNumericalAquifer()) {
+        const auto& numerical_aquifer = aquifer_config.numericalAquifers();
+        // update field_props for numerical aquifer cells, and set the transmissiblity related to aquifer cells to
+        // be zero
+        fp.apply_numerical_aquifers(numerical_aquifer);
+        update_active_cells(grid, fp);
+        aquifer_config.load_connections(deck, grid);
+
+        // add NNCs between aquifer cells and first aquifer cell and aquifer connections
+        const auto& aquifer_nncs = numerical_aquifer.aquiferNNCs(grid, fp);
+        for (const auto& nnc_data : aquifer_nncs) {
+            input_nnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
+        }
+    } else
+        aquifer_config.load_connections(deck, grid);
+
+    return aquifer_config;
+}
+
+
+}
+
 
 
     EclipseState::EclipseState(const Deck& deck)
@@ -61,25 +125,13 @@ namespace Opm {
           m_inputNnc(          m_inputGrid, deck),
           m_gridDims(          deck ),
           field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
-          aquifer_config(this->m_tables, this->m_inputGrid, deck, this->field_props),
           m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
           m_transMult(         GridDims(deck), deck, field_props),
           tracer_config(       m_deckUnitSystem, deck)
     {
-        if (this->aquifer().hasNumericalAquifer()) {
-            const auto& numerical_aquifer = this->aquifer().numericalAquifers();
-            // update field_props for numerical aquifer cells, and set the transmissiblity related to aquifer cells to
-            // be zero
-            this->field_props.apply_numerical_aquifers(numerical_aquifer);
+        update_active_cells(this->m_inputGrid, this->field_props);
+        this->aquifer_config = load_aquifers(deck, this->m_tables, this->m_inputNnc, this->m_inputGrid, this->field_props);
 
-            // add NNCs between aquifer cells and first aquifer cell and aquifer connections
-            const auto& aquifer_nncs = numerical_aquifer.aquiferNNCs(this->m_inputGrid, this->field_props);
-            for (const auto& nnc_data : aquifer_nncs) {
-                this->m_inputNnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
-            }
-        }
-
-        m_inputGrid.resetACTNUM(this->field_props.actnum());
         if( this->runspec().phases().size() < 3 )
             OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
 
@@ -94,7 +146,6 @@ namespace Opm {
 
         this->initTransMult();
         this->initFaults(deck);
-        this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
     }
     catch (const OpmInputError& opm_error) {
         throw;

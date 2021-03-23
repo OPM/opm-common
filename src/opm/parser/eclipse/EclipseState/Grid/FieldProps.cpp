@@ -1240,9 +1240,10 @@ void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aqu
     for (const auto& [global_index, cellprop] : aqu_cell_props) {
         const size_t active_index = this->grid_ptr->activeIndex(global_index);
         this->cell_volume[active_index] = cellprop.volume;
+        this->cell_depth[active_index] = cellprop.depth;
+
         porv_data[active_index] = cellprop.pore_volume;
         poro_data[active_index] = cellprop.porosity;
-        this->cell_depth[active_index] = cellprop.depth;
         satnum_data[active_index] = cellprop.satnum;
         pvtnum_data[active_index] = cellprop.pvtnum;
 

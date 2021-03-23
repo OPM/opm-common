@@ -28,7 +28,6 @@ AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid
                              const Deck& deck, const FieldPropsManager& field_props):
     aquifetp(deck),
     aquiferct(tables, deck),
-    aqconn(grid,deck),
     numerical_aquifers(deck, grid, field_props)
 {}
 
@@ -37,6 +36,10 @@ AquiferConfig::AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aq
     aquiferct(ct),
     aqconn(conn)
 {}
+
+void AquiferConfig::load_connections(const Deck& deck, const EclipseGrid& grid) {
+    this->aqconn = Aquancon(grid,deck);
+}
 
 AquiferConfig AquiferConfig::serializeObject()
 {

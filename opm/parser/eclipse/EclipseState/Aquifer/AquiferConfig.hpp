@@ -38,6 +38,8 @@ public:
     AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
                   const Deck& deck, const FieldPropsManager& field_props);
     AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
+    void load_connections(const Deck& deck, const EclipseGrid& grid);
+
 
     static AquiferConfig serializeObject();
 
@@ -64,8 +66,8 @@ public:
 private:
     Aquifetp aquifetp;
     AquiferCT aquiferct;
-    Aquancon aqconn;
     NumericalAquifers numerical_aquifers;
+    Aquancon aqconn;
 };
 
 }
