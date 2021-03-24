@@ -135,6 +135,18 @@ if (NOT USE_MPI)
   set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
 endif ()
 
+# Compiler standard version needs to be requested here as prereqs is included
+# before OpmLibMain and some tests need/use CXX_STANDARD_VERSION (e.g. pybind11)
+# Languages and global compiler settings
+if(CMAKE_VERSION VERSION_LESS 3.8)
+  message(WARNING "CMake version does not support c++17, guessing -std=c++17")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+else()
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
+
 # quadmath must be explicitly enabled
 # This needs to be in OpmInit as prereqs is called before OpmLibMain is included.
 option (USE_QUADMATH "Use high precision floating point library (slow)" OFF)
