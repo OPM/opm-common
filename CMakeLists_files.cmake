@@ -130,6 +130,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RFTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RPTConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/RSTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleState.cpp
@@ -758,6 +759,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp
        opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp
+       opm/parser/eclipse/EclipseState/Schedule/RSTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp

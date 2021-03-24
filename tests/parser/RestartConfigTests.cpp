@@ -202,14 +202,13 @@ RESTART=1
 }
 
 
-
 BOOST_AUTO_TEST_CASE(RPTRST_AND_RPTSOL_SOLUTION)
 {
     const auto input = std::string { R"(RUNSPEC
 DIMENS
   10 10 10 /
 START
-  6 JLY 2020 /
+  6 JUN 2020 /
 GRID
 
 DXV
@@ -259,27 +258,45 @@ END
 
     auto sched = make_schedule(input, false);
 
-    for (const std::size_t stepID : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 18 }) {
+    for (const std::size_t stepID : { 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 18 }) {
         BOOST_CHECK_MESSAGE(! sched.write_rst_file(stepID),
                             "Must not write restart information for excluded step " << stepID);
     }
 
-    for (const std::size_t stepID : { 0, 11, 14, 17 }) {
+    for (const std::size_t stepID : { 0, 1, 11, 14, 17 }) {
         BOOST_CHECK_MESSAGE(sched.write_rst_file(stepID),
                             "Must write restart information for included step " << stepID);
     }
 
-    std::vector<bool> first_in_month{true, false, false, false, false, true, false, true, true, true, true, true, true, true, true, true, false, true, false};
-    std::vector<std::size_t> month_num{ 0,0,0,0,0, 1, 1, 2, 3, 4, 5, 6, 7, 10, 12, 17, 17, 18, 18 };
+    std::vector<std::tuple<bool, bool, TimeStampUTC>> expected = {{true , true , TimeStampUTC(2020,  6,  6)},    //  0
+                                                                  {true , false, TimeStampUTC(2020,  7,  7)},    //  1
+                                                                  {false, false, TimeStampUTC(2020,  7, 10)},    //  2
+                                                                  {false, false, TimeStampUTC(2020,  7, 20)},    //  3
+                                                                  {false, false, TimeStampUTC(2020,  7, 30)},    //  4
+                                                                  {true , false, TimeStampUTC(2020,  8,  5)},    //  5
+                                                                  {false, false, TimeStampUTC(2020,  8, 20)},    //  6
+                                                                  {true , false, TimeStampUTC(2020,  9,  5)},    //  7
+                                                                  {true , false, TimeStampUTC(2020, 10,  1)},    //  8
+                                                                  {true , false, TimeStampUTC(2020, 11,  1)},    //  9
+                                                                  {true , false, TimeStampUTC(2020, 12,  1)},    // 10
+                                                                  {true , true , TimeStampUTC(2021,  1,  5)},    // 11
+                                                                  {true , false, TimeStampUTC(2021,  2,  1)},    // 12
+                                                                  {true , false, TimeStampUTC(2021,  5, 17)},    // 13
+                                                                  {true , false, TimeStampUTC(2021,  7,  6)},    // 14
+                                                                  {true , false, TimeStampUTC(2021, 12,  1)},    // 15
+                                                                  {false, false, TimeStampUTC(2021, 12, 31)},    // 16
+                                                                  {true,  true , TimeStampUTC(2022,  1, 21)},    // 17
+                                                                  {false, false, TimeStampUTC(2022,  1, 31)}};   // 18
+
     for (std::size_t index = 0; index < sched.size(); index++) {
         const auto& state = sched[index];
-        BOOST_CHECK_EQUAL( state.month_num(), month_num[index] );
-        BOOST_CHECK_EQUAL( state.first_in_month(), first_in_month[index] );
+        const auto& [first_in_month, first_in_year, ts] = expected[index];
 
-        if (index == 0 || index == 11 || index == 17)
-            BOOST_CHECK( state.first_in_year());
-        else
-            BOOST_CHECK(!state.first_in_year());
+        printf("index: %ld \n", index);
+        BOOST_CHECK_EQUAL( state.month_num(), ts.month() - 1);
+        BOOST_CHECK_EQUAL( state.first_in_month(), first_in_month );
+        BOOST_CHECK_EQUAL( state.first_in_year(), first_in_year);
+        BOOST_CHECK( ts == TimeStampUTC( TimeService::to_time_t(state.start_time() )));
     }
 }
 
@@ -416,23 +433,25 @@ PORO
   1000*0.25 /
 SOLUTION
 RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS
-  6*0 1 0 1 9*0 1 7*0 1 0 3*1 /
+  6*0 1 0 1 9*0 1 7*0 1 0 3*1 / -- Static
+
 SCHEDULE
+-- 0
 DATES             -- 1
  10  OKT 2008 /
 /
-RPTSCHED
+RPTSCHED   -- 1
 RESTART=1
 /
 DATES             -- 2
  20  JAN 2010 /
 /
-RPTRST  -- RK,VELOCITY,COMPRESS
+RPTRST  -- RK,VELOCITY,COMPRESS --2
   18*0 0 8*0 /
 DATES             -- 3
  20  FEB 2010 /
 /
-RPTSCHED
+RPTSCHED   -- 3
 RESTART=0
 /
 )";
@@ -1256,28 +1275,28 @@ RPTRST
 BASIC=5 FREQ=2
 /
 DATES
- 22 MAY 1981 /
- 23 MAY 1981 /
- 24 MAY 1981 /
-  1 JUN 1981 /
-  1 JUL 1981 / -- write
-  1 JAN 1982 / -- write
-  2 JAN 1982 /
-  1 FEB 1982 /
-  1 MAR 1982 / -- write
-  1 APR 1983 / -- write
-  2 JUN 1983 / -- write
+ 22 MAY 1981 / -- 1
+ 23 MAY 1981 / -- 2
+ 24 MAY 1981 / -- 3
+  1 JUN 1981 / -- 4
+  1 JUL 1981 / -- 5  Write
+  1 JAN 1982 / -- 6  Write
+  2 JAN 1982 / -- 7
+  1 FEB 1982 / -- 8
+  1 MAR 1982 / -- 9  Write
+  1 APR 1983 / --10
+  2 JUN 1983 / --11
 /
 )";
 
     auto sched = make_schedule(data);
     /* BASIC=5, restart file is written at the first report step of each month.
      */
-    for( size_t ts : { 1, 2, 3, 4, 7, 8 } )
+    for( size_t ts : { 1, 2, 3, 4, 7, 8, 10, 11 } )
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 
-    for( size_t ts : { 5, 6, 9, 10, 11 } )
-        BOOST_CHECK( sched.write_rst_file( ts ) );
+    for( size_t ts : { 5, 6, 9} )
+        BOOST_CHECK_MESSAGE( sched.write_rst_file( ts ) , "Restart file expected for step: " << ts);
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_0) {
@@ -1369,7 +1388,7 @@ BASIC=4 FREQ=2
 DATES
  22 MAY 1981 /
 /
-RPTSCHED // BASIC >2, ignore RPTSCHED RESTART
+RPTSCHED -- BASIC >2, ignore RPTSCHED RESTART
 RESTART=3, FREQ=1
 /
 DATES
@@ -1454,5 +1473,79 @@ TSTEP
         BOOST_CHECK( !sched.write_rst_file(ts));
     BOOST_CHECK( sched.write_rst_file( 12 ) );
 
+}
+
+
+BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER2) {
+
+    const std::string deckData1 = R"(
+RUNSPEC
+START             -- 0
+19 JUN 2007 /
+DIMENS
+ 10 10 10 /
+GRID
+
+DXV
+  10*1 /
+
+DYV
+  10*1 /
+
+DZV
+  10*1 /
+
+DEPTHZ
+  121*1 /
+
+PORO
+  1000*0.25 /
+SOLUTION
+RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS
+  1 5*0 1 0 1 9*0 1 7*0 1 0 3*1 / -- Static
+
+SCHEDULE
+-- 0
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTSCHED
+RESTART=1
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+RPTRST  -- RK,VELOCITY,COMPRESS
+  18*0 0 8*0 /
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+RESTART=0
+/
+
+DATES       -- 4
+1 MAR 2010 /
+/
+)";
+
+    auto sched = make_schedule(deckData1, false);
+
+    BOOST_CHECK_EQUAL( sched.size(), 5);
+    BOOST_CHECK(  sched.write_rst_file( 0 ) );
+    BOOST_CHECK(  sched.write_rst_file( 1 ) );
+    BOOST_CHECK(  sched.write_rst_file( 2 ) );
+    BOOST_CHECK( !sched.write_rst_file( 3 ) );
+
+
+    const auto& kw_list1 = filter_keywords(sched.rst_keywords(1));
+    const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
+                                   kw_list1.begin(), kw_list1.end() );
+
+    const auto& kw_list2 = filter_keywords( sched.rst_keywords(3));
+    const auto expected2 = { "COMPRESS", "RK", "VELOCITY" };
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
+                                   kw_list2.begin(), kw_list2.end() );
 }
 

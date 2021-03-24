@@ -40,7 +40,7 @@ time_point clamp_time(time_point t) {
     return TimeService::from_time_t( TimeService::to_time_t( t ) );
 }
 
-std::pair<std::size_t, std::size_t> date_diff(time_point t2, time_point t1) {
+std::pair<std::size_t, std::size_t> date_diff(const time_point& t2, const time_point& t1) {
     auto ts1 = TimeStampUTC(TimeService::to_time_t(t1));
     auto ts2 = TimeStampUTC(TimeService::to_time_t(t2));
     auto year_diff  = ts2.year() - ts1.year();
@@ -54,8 +54,12 @@ std::pair<std::size_t, std::size_t> date_diff(time_point t2, time_point t1) {
 
 
 ScheduleState::ScheduleState(const time_point& t1):
-    m_start_time(clamp_time(t1))
+    m_start_time(clamp_time(t1)),
+    m_first_in_month(true),
+    m_first_in_year(true)
 {
+    auto ts1 = TimeStampUTC(TimeService::to_time_t(this->m_start_time));
+    this->m_month_num = ts1.month() - 1;
 }
 
 ScheduleState::ScheduleState(const time_point& start_time, const time_point& end_time) :
@@ -63,6 +67,19 @@ ScheduleState::ScheduleState(const time_point& start_time, const time_point& end
 {
     this->m_end_time = clamp_time(end_time);
 }
+
+void ScheduleState::update_date(const time_point& prev_time) {
+    auto [year_diff, month_diff] = date_diff(this->m_start_time, prev_time);
+    this->m_year_num += year_diff;
+    this->m_first_in_month = (month_diff > 0);
+    this->m_first_in_year = (year_diff > 0);
+
+    auto ts1 = TimeStampUTC(TimeService::to_time_t(this->m_start_time));
+    this->m_month_num = ts1.month() - 1;
+}
+
+
+
 
 ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time) :
     ScheduleState(src)
@@ -79,13 +96,14 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     if (next_rft.has_value())
         this->rft_config.update( std::move(*next_rft) );
 
-    auto [year_diff, month_diff] = date_diff(this->m_start_time, src.m_start_time);
-    this->m_year_num += year_diff;
-    this->m_month_num += month_diff;
-
-    this->m_first_in_month = (this->m_month_num > src.m_month_num);
-    this->m_first_in_year = (this->m_year_num > src.m_year_num);
+    this->update_date(src.m_start_time);
+    if (this->rst_config().save) {
+        auto new_rst = this->rst_config();
+        new_rst.save = false;
+        this->rst_config.update( std::move(new_rst) );
+    }
 }
+
 
 ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time, const time_point& end_time) :
     ScheduleState(src, start_time)
@@ -244,6 +262,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.guide_rate.update( GuideRateConfig::serializeObject() );
     ts.glo.update( GasLiftOpt::serializeObject() );
     ts.rft_config.update( RFTConfig::serializeObject() );
+    ts.rst_config.update( RSTConfig::serializeObject() );
 
     return ts;
 }
@@ -284,5 +303,45 @@ WellGroupEvents& ScheduleState::wellgroup_events() {
 const WellGroupEvents& ScheduleState::wellgroup_events() const {
     return this->m_wellgroup_events;
 }
+
+
+/*
+  Observe that the decision to write a restart file will typically be a
+  combination of the RST configuration from the previous report step, and the
+  first_in_year++ attributes of this report step. That is the reason the
+  function takes a RSTConfig argument - instead of using the rst_config member.
+
+*/
+
+bool ScheduleState::rst_file(const RSTConfig& rst) const {
+    if (rst.save)
+        return true;
+
+    if (rst.write_rst_file.has_value())
+        return rst.write_rst_file.value();
+
+    auto freq = rst.freq.value_or(1);
+    auto basic = rst.basic.value();
+
+    if (basic == 3)
+        return (this->sim_step() % freq) == 0;
+
+    if (basic == 4) {
+        if (!this->first_in_year())
+            return false;
+
+        return (this->m_year_num % freq) == 0;
+    }
+
+    if (basic == 5) {
+        if (!this->first_in_month())
+            return false;
+
+        return (this->m_month_num % freq) == 0;
+    }
+
+    throw std::logic_error(fmt::format("Unsupported BASIC={} value", basic));
+}
+
 
 }

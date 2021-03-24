@@ -790,8 +790,27 @@ namespace {
         this->snapshots.back().update_nupcol(nupcol);
     }
 
-    void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         this->snapshots.back().rpt_config.update( RPTConfig(handlerContext.keyword ));
+        auto rst_config = this->snapshots.back().rst_config();
+        rst_config.update(handlerContext.keyword, parseContext, errors);
+        this->snapshots.back().rst_config.update(std::move(rst_config));
+    }
+
+    void Schedule::handleRPTRST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        auto rst_config = this->snapshots.back().rst_config();
+        rst_config.update(handlerContext.keyword, parseContext, errors);
+        this->snapshots.back().rst_config.update(std::move(rst_config));
+    }
+
+    /*
+      We do not really handle the SAVE keyword, we just interpret it as: Write a
+      normal restart file at this report step.
+    */
+    void Schedule::handleSAVE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto rst_config = this->snapshots.back().rst_config();
+        rst_config.save = true;
+        this->snapshots.back().rst_config.update(std::move(rst_config));
     }
 
     void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -1972,7 +1991,9 @@ namespace {
             { "MULTZ-"  , &Schedule::handleMXUNSUPP },
             { "NODEPROP", &Schedule::handleNODEPROP },
             { "NUPCOL"  , &Schedule::handleNUPCOL   },
+            { "RPTRST"  , &Schedule::handleRPTRST   },
             { "RPTSCHED", &Schedule::handleRPTSCHED },
+            { "SAVE"    , &Schedule::handleSAVE     },
             { "TUNING"  , &Schedule::handleTUNING   },
             { "UDQ"     , &Schedule::handleUDQ      },
             { "VAPPARS" , &Schedule::handleVAPPARS  },
