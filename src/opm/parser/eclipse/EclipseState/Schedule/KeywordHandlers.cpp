@@ -1199,6 +1199,9 @@ namespace {
                 new_well.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
                 this->snapshots.back().wells.update( std::move(new_well) );
                 this->snapshots.back().target_wellpi[well_name] = targetPI;
+
+                if (handlerContext.affected_wells)
+                    handlerContext.affected_wells->insert(well_name);
             }
         }
     }
@@ -1298,6 +1301,8 @@ namespace {
                 }
                 this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder);
                 this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
+                if (handlerContext.affected_wells)
+                    handlerContext.affected_wells->insert(wellName);
             } else {
                 const auto headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get<int>(0) - 1;
                 const auto headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get<int>(0) - 1;
@@ -1319,6 +1324,8 @@ namespace {
                         well2.updateRefDepth();
                         this->snapshots.back().wellgroup_events().addEvent( wellName, ScheduleEvents::WELL_WELSPECS_UPDATE);
                         this->snapshots.back().wells.update( std::move(well2) );
+                        if (handlerContext.affected_wells)
+                            handlerContext.affected_wells->insert(wellName);
                     }
                 }
             }
