@@ -23,7 +23,6 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
