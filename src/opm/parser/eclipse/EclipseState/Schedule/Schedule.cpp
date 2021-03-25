@@ -1201,9 +1201,6 @@ bool Schedule::write_rst_file(std::size_t report_step, bool log) const {
     return this->restart_config.getWriteRestartFile(report_step, log);
     }
 
-    int  Schedule::first_rst_step() const {
-        return this->restart_config.getFirstRestartStep();
-    }
 
     const std::map< std::string, int >& Schedule::rst_keywords( size_t timestep ) const {
         return this->restart_config.getRestartKeywords(timestep);
