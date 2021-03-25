@@ -142,6 +142,12 @@ namespace Opm {
                                     auto global_index = grid.getGlobalIndex(i,j,k);
                                     add_cell(aquanconKeyword.location(), work, grid, aquiferID, global_index, influx_coeff, influx_mult, faceDir);
                                 }
+                            } else {
+                                const auto& location = aquanconKeyword.location();
+                                auto msg = fmt::format("Problem with keyword {}\n"
+                                                       "In {} line {} \n"
+                                                       "Connection to inactive cell ({},{},{}) is ignored", location.keyword, location.filename, location.lineno, i+1, j+1, k+1);
+                                OpmLog::warning(msg);
                             }
                         }
                     }
