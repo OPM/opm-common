@@ -177,8 +177,6 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     EclipseState state( deck);
     Schedule schedule(deck, state, python);
     verifyRestartConfig(schedule, rptConfig);
-
-    BOOST_CHECK_EQUAL( schedule.first_rst_step() , 0 );
 }
 
 
