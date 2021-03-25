@@ -145,6 +145,13 @@ TSTEP
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
+    Action::Result action_result(true);
+    auto sim_time = TimeService::now();
+    const auto& action1 = sched[0].actions.get().get("ACTION");
+    auto affected_wells = sched.applyAction(0, sim_time, action1, action_result, {});
+    BOOST_CHECK_EQUAL( affected_wells.size(), 1);
+    BOOST_CHECK_EQUAL( affected_wells.count("W1"), 1);
+
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
     BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
@@ -1056,6 +1063,10 @@ LIFTOPT
 
 SCHEDULE
 
+WELSPECS
+    'OPX' 'G1'  1 1 10 'OIL' /
+/
+
 GRUPTREE
  'PROD'    'FIELD' /
 
@@ -1100,8 +1111,8 @@ TSTEP
 
 
     Action::Result action_result(true);
-    sched.applyAction(0, TimeService::now(), action1, action_result, {});
-
+    const auto& affected_wells = sched.applyAction(0, TimeService::now(), action1, action_result, {});
+    BOOST_CHECK( affected_wells.empty() );
     {
         const auto& glo = sched.glo(0);
         BOOST_CHECK(glo.has_group("PLAT-A"));
@@ -1159,7 +1170,9 @@ TSTEP
     BOOST_CHECK_THROW( sched.applyAction(0, TimeService::now(), action1, action_result, {}), std::exception);
     {
         const auto& well = sched.getWell("PROD1", 0);
-        sched.applyAction(0, TimeService::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
+        const auto& affected_wells = sched.applyAction(0, TimeService::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
+        BOOST_CHECK_EQUAL( affected_wells.count("PROD1"), 1);
+        BOOST_CHECK_EQUAL( affected_wells.size(), 1);
     }
     {
         const auto& target_wellpi = sched[0].target_wellpi;

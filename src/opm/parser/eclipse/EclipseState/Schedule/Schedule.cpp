@@ -241,6 +241,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
                                  bool runtime,
+                                 std::unordered_set<std::string> * affected_wells,
                                  const std::unordered_map<std::string, double> * target_wellpi) {
 
         static const std::unordered_set<std::string> require_grid = {
@@ -249,7 +250,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, currentStep, matching_wells, runtime , target_wellpi};
+        HandlerContext handlerContext { block, keyword, currentStep, matching_wells, runtime , affected_wells, target_wellpi};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -436,6 +437,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     fp,
                                     {},
                                     runtime,
+                                    nullptr,
                                     target_wellpi);
                 keyword_index++;
             }
@@ -548,7 +550,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
 
 
-     void Schedule::applyWELOPEN(const DeckKeyword& keyword, std::size_t currentStep, bool runtime, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
+     void Schedule::applyWELOPEN(const DeckKeyword& keyword,
+                                 std::size_t currentStep,
+                                 bool runtime,
+                                 const ParseContext& parseContext,
+                                 ErrorGuard& errors,
+                                 const std::vector<std::string>& matching_wells,
+                                 std::unordered_set<std::string> * affected_wells) {
 
         auto conn_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -583,8 +591,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 + " This well is prevented from opening at "
                                 + std::to_string( days ) + " days";
                             OpmLog::note(msg);
-                        } else
+                        } else {
                             this->updateWellStatus( wname, currentStep, well_status);
+                            if (affected_wells)
+                                affected_wells->insert(wname);
+                        }
                     }
                 }
 
@@ -610,6 +621,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     this->snapshots[currentStep].wells.update( std::move(well) );
                 }
 
+                if (affected_wells)
+                    affected_wells->insert(wname);
                 this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
             }
         }
@@ -1129,10 +1142,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
+    std::unordered_set<std::string> Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         const std::string prefix = "| ";
         ParseContext parseContext;
         ErrorGuard errors;
+        std::unordered_set<std::string> affected_wells;
 
         OpmLog::info("/----------------------------------------------------------------------");
         OpmLog::info(fmt::format("{0}Action {1} evaluated to true. Will add action keywords and\n{0}rerun Schedule section.\n{0}", prefix, action.name()));
@@ -1151,11 +1165,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 nullptr,
                                 result.wells(),
                                 true,
+                                &affected_wells,
                                 &target_wellpi);
         }
         if (reportStep < this->m_sched_deck.size() - 1)
             iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, true, &target_wellpi, nullptr, nullptr, prefix);
         OpmLog::info("\\----------------------------------------------------------------------");
+
+        return affected_wells;
     }
 
 

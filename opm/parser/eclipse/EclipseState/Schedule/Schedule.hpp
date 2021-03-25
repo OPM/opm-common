@@ -257,7 +257,7 @@ namespace Opm
         int  first_rst_step() const;
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
 
-        void applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
+        std::unordered_set<std::string> applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
 
@@ -505,13 +505,14 @@ namespace Opm
                            const FieldPropsManager* fp,
                            const std::vector<std::string>& matching_wells,
                            bool runtime,
+                           std::unordered_set<std::string> * affected_wells,
                            const std::unordered_map<std::string, double> * target_wellpi);
 
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
-        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
+        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {}, std::unordered_set<std::string> * affected_wells = nullptr);
 
         struct HandlerContext {
             const ScheduleBlock& block;
@@ -519,6 +520,7 @@ namespace Opm
             const std::size_t currentStep;
             const std::vector<std::string>& matching_wells;
             const bool runtime;
+            std::unordered_set<std::string> * affected_wells;
             const std::unordered_map<std::string, double> * target_wellpi;
             const EclipseGrid* grid_ptr;
             const FieldPropsManager* fp_ptr;
@@ -528,12 +530,14 @@ namespace Opm
                            const std::size_t currentStep_,
                            const std::vector<std::string>& matching_wells_,
                            bool runtime_,
+                           std::unordered_set<std::string> * affected_wells_,
                            const std::unordered_map<std::string, double> * target_wellpi_):
                 block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
                 matching_wells(matching_wells_),
                 runtime(runtime_),
+                affected_wells(affected_wells_),
                 target_wellpi(target_wellpi_),
                 grid_ptr(nullptr),
                 fp_ptr(nullptr)
