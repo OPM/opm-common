@@ -1873,6 +1873,10 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> aquifer_
     {"ANQP", Opm::UnitSystem::measure::pressure},
     {"ANQT", Opm::UnitSystem::measure::liquid_surface_volume},
     {"ANQR", Opm::UnitSystem::measure::liquid_surface_rate},
+
+    // Dimensionless time and pressure values for CT aquifers
+    {"AAQTD", Opm::UnitSystem::measure::identity},
+    {"AAQPD", Opm::UnitSystem::measure::identity},
 };
 
 inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
