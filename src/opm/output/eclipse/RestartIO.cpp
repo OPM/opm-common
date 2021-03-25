@@ -416,7 +416,7 @@ namespace {
 
         auto connectionData = Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnData(schedule, grid, units,
-                                               wells, sim_step);
+                                               wells, sumState, sim_step);
 
         rstFile.write("ICON", connectionData.getIConn());
         rstFile.write("SCON", connectionData.getSConn());

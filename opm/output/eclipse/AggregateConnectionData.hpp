@@ -30,6 +30,7 @@ namespace Opm {
     class EclipseGrid;
     class Schedule;
     class UnitSystem;
+    class SummaryState;
 } // Opm
 
 namespace Opm { namespace data {
@@ -47,6 +48,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                      const Opm::EclipseGrid&     grid,
                                      const Opm::UnitSystem&      units,
                                      const Opm::data::WellRates& xw,
+                                     const Opm::SummaryState&    summary_state,
                                      const std::size_t           sim_step);
 
         const std::vector<int>& getIConn() const

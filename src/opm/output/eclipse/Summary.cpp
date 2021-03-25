@@ -187,6 +187,16 @@ namespace {
             { "FMWIN", Opm::EclIO::SummaryNode::Type::Mode },
         };
 
+        const auto extra_connection_vectors = std::vector<ParamCTorArgs> {
+            {"COPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CWPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CGPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"COIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CWIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CGIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure}
+        };
+
         using Cat = Opm::EclIO::SummaryNode::Category;
 
         auto makeEntities = [&vectors, &entities]
@@ -200,17 +210,23 @@ namespace {
             // Recall: Cannot use emplace_back() for PODs.
             for (const auto& vector : vectors) {
                 entities.push_back({ kwpref + vector.kw, cat,
-                                     vector.type, name, dflt_num, "" });
+                                     vector.type, name, dflt_num, {} });
             }
 
             for (const auto& extra_vector : extra_vectors) {
                 entities.push_back({ extra_vector.kw, cat,
-                                     extra_vector.type, name, dflt_num, "" });
+                                     extra_vector.type, name, dflt_num, {} });
             }
         };
 
         for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', Cat::Well, extra_well_vectors, well_name);
+
+            const auto& well = sched.getWellatEnd(well_name);
+            for (const auto& conn : well.getConnections()) {
+                for (const auto& conn_vector : extra_connection_vectors)
+                    entities.push_back( {conn_vector.kw, Cat::Connection, conn_vector.type, well.name(), static_cast<int>(conn.global_index() + 1), {}} );
+            }
         }
 
         for (const auto& grp_name : sched.groupNames()) {
@@ -605,6 +621,37 @@ inline quantity ratel( const fn_args& args ) {
     }
 
     return { sum, unit };
+}
+
+inline quantity cpr( const fn_args& args ) {
+    const quantity zero = { 0, measure::pressure };
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclipse SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const size_t global_index = args.num - 1;
+    if (args.schedule_wells.empty())
+        return zero;
+
+    const auto& name = args.schedule_wells.front().name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        return zero;
+
+    const auto& well_data = xwPos->second;
+    const auto& connection =
+        std::find_if(well_data.connections.begin(),
+                     well_data.connections.end(),
+            [global_index](const Opm::data::Connection& c)
+        {
+            return c.index == global_index;
+        });
+
+    if (connection == well_data.connections.end())
+        return zero;
+
+    return { connection->pressure, measure::pressure };
 }
 
 template< rt phase, bool injection = true >
@@ -1595,6 +1642,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "GVPRT", res_vol_production_target },
 
+    { "CPR", cpr  },
     { "CGIRL", cratel< rt::gas, injector> },
     { "CGITL", mul( cratel< rt::gas, injector>, duration) },
     { "CWIRL", cratel< rt::wat, injector> },
@@ -1611,6 +1659,7 @@ static const std::unordered_map< std::string, ofun > funs = {
                     sum( cratel< rt::wat, producer >, cratel< rt::oil, producer > ) ) },
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
+    { "COIR", crate< rt::oil, injector > },
     { "CCIR", crate< rt::polymer, injector > },
     { "CSIR", crate< rt::brine, injector > },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },

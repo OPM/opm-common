@@ -1188,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     wellData.captureDynamicWellData(simCase.sched, sim_step, xw , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, xw , sim_step);
+    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, xw , sumState, sim_step);
 
     const auto& iwel = wellData.getIWell();
     const auto& swel = wellData.getSWell();
