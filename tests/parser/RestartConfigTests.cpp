@@ -83,6 +83,123 @@ Schedule make_schedule(std::string sched_input, bool add_grid = true) {
     EclipseState es(deck);
     return Schedule(deck, es);
 }
+BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
+    const std::string deckData  = R"(
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 FREQ=2 /
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  JAN 2011 /
+/
+)";
+
+
+    auto sched = make_schedule(deckData);
+
+    BOOST_CHECK_EQUAL(false, sched.write_rst_file(0));
+    BOOST_CHECK_EQUAL(false, sched.write_rst_file(1));
+    BOOST_CHECK_EQUAL(true,  sched.write_rst_file(2));
+    BOOST_CHECK_EQUAL(false, sched.write_rst_file(3));
+}
+
+
+BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
+    const std::string deckData  = R"(
+SOLUTION
+
+RPTRST
+BASIC=1/
+
+RPTRST
+BASIC=3 FREQ=5 /
+
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+RPTRST
+BASIC=3 FREQ=2 /
+DATES             -- 3
+ 20  JAN 2011 /
+/
+)";
+
+    auto sched = make_schedule(deckData);
+
+    BOOST_CHECK_EQUAL(true  ,  sched.write_rst_file(0));
+    BOOST_CHECK_EQUAL(false ,  sched.write_rst_file(1));
+    BOOST_CHECK_EQUAL(false ,  sched.write_rst_file(2));
+    BOOST_CHECK_EQUAL(false ,  sched.write_rst_file(3));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
+    const std::string deckData = R"(
+SOLUTION
+
+RPTSOL
+RESTART=2
+/
+
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 FREQ=3
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+RESTART=1
+/
+)";
+
+    const std::string deckData2 = R"(
+SOLUTION
+
+RPTSOL
+0 0 0 0 0 0 2
+/
+
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+RPTRST
+BASIC=3 FREQ=3
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+DATES             -- 3
+ 20  FEB 2010 /
+/
+RPTSCHED
+RESTART=1
+/
+)";
+
+    auto sched1 = make_schedule(deckData);
+    auto sched2 = make_schedule(deckData2);
+
+    BOOST_CHECK_EQUAL(true, sched1.write_rst_file(0));
+    BOOST_CHECK_EQUAL(true, sched2.write_rst_file(0));
+}
 
 
 
@@ -1338,3 +1455,4 @@ TSTEP
     BOOST_CHECK( sched.write_rst_file( 12 ) );
 
 }
+
