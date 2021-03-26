@@ -100,8 +100,8 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         aquifer_config.load_connections(deck, grid);
 
         // add NNCs between aquifer cells and first aquifer cell and aquifer connections
-        const auto& aquifer_nncs = numerical_aquifer.aquiferNNCs(grid, fp);
-        for (const auto& nnc_data : aquifer_nncs) {
+        const auto& aquifer_cell_nncs = numerical_aquifer.aquiferCellNNCs();
+        for (const auto& nnc_data : aquifer_cell_nncs) {
             input_nnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
         }
     } else
@@ -236,6 +236,12 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
     const NNC& EclipseState::getInputNNC() const {
         return m_inputNnc;
+    }
+
+    void EclipseState::appendInputNNC(const std::vector<NNCdata>& nnc) {
+        for (const auto& nnc_data : nnc ) {
+            this->m_inputNnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
+        }
     }
 
     bool EclipseState::hasInputNNC() const {

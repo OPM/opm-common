@@ -32,7 +32,7 @@
 namespace Opm {
 
     std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
-    NumericalAquiferConnection::generateConnections(const Deck &deck, const EclipseGrid &grid)
+    NumericalAquiferConnection::generateConnections(const Deck &deck, const EclipseGrid &grid, const std::vector<int>& actnum)
     {
         using AQUCON=ParserKeywords::AQUCON;
         if ( !deck.hasKeyword<AQUCON>() ) return {};
@@ -43,7 +43,7 @@ namespace Opm {
         for (const auto& keyword : aqucon_keywords) {
             OpmLog::info(OpmInputError::format("Initializing numerical aquifer connections from {keyword} in {file} line {line}", keyword->location()));
             for (const auto& record : *keyword) {
-                const auto cons_from_record = NumericalAquiferConnection::connectionsFromSingleRecord(grid, record);
+                const auto cons_from_record = NumericalAquiferConnection::connectionsFromSingleRecord(grid, record, actnum);
                 for (auto con : cons_from_record) {
                     const size_t aqu_id = con.aquifer_id;
                     const size_t global_index = con.global_index;
@@ -80,10 +80,10 @@ namespace Opm {
     {
     }
 
-    std::vector<NumericalAquiferConnection> NumericalAquiferConnection::connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record) {
+    std::vector<NumericalAquiferConnection>
+    NumericalAquiferConnection::
+    connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record,const std::vector<int>& actnum) {
         std::vector<NumericalAquiferConnection> cons;
-
-        const auto& actnum = grid.getACTNUM();
 
         const size_t i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
         const size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) - 1;
