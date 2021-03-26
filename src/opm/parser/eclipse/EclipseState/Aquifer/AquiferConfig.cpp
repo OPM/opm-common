@@ -90,6 +90,10 @@ const NumericalAquifers& AquiferConfig::numericalAquifers() const {
     return this->numerical_aquifers;
 }
 
+NumericalAquifers& AquiferConfig::mutableNumericalAquifers() const {
+    return this->numerical_aquifers;
+}
+
 bool AquiferConfig::hasAnalyticalAquifer() const {
     return this->aquiferct.size() > 0 ||
            this->aquifetp.size() > 0;
