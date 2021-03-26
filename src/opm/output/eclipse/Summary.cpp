@@ -243,22 +243,27 @@ namespace {
     std::vector<Opm::EclIO::SummaryNode>
     requiredSegmentVectors(const ::Opm::Schedule& sched)
     {
-        std::vector<Opm::EclIO::SummaryNode> ret {};
+        auto entities = std::vector<Opm::EclIO::SummaryNode> {};
 
-        constexpr Opm::EclIO::SummaryNode::Category category { Opm::EclIO::SummaryNode::Category::Segment };
-        const std::vector<std::pair<std::string,Opm::EclIO::SummaryNode::Type>> requiredVectors {
+        const auto vectors = std::vector<ParamCTorArgs> {
             { "SOFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SGFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SWFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SPR",  Opm::EclIO::SummaryNode::Type::Pressure },
         };
 
-        auto makeVectors =
-            [&](const std::string& well,
-                const int          segNumber) -> void
+        using Cat = Opm::EclIO::SummaryNode::Category;
+
+        auto makeVectors = [&](const Opm::Well& well) -> void
         {
-            for (const auto &requiredVector : requiredVectors) {
-                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber, ""});
+            const auto& wname = well.name();
+            const auto  nSeg  = static_cast<int>(well.getSegments().size());
+
+            for (auto segID = 0*nSeg + 1; segID <= nSeg; ++segID) {
+                for (const auto& vector : vectors) {
+                    entities.push_back({ vector.kw, Cat::Segment,
+                                         vector.type, wname, segID, {} });
+                }
             }
         };
 
@@ -270,16 +275,11 @@ namespace {
                 continue;
             }
 
-            const auto nSeg = well.getSegments().size();
-
-            for (auto segID = 0*nSeg; segID < nSeg; ++segID) {
-                makeVectors(wname, segID + 1); // One-based
-            }
+            makeVectors(well);
         }
 
-        return ret;
+        return entities;
     }
-
 
 Opm::TimeStampUTC make_sim_time(const Opm::Schedule& sched, const Opm::SummaryState& st, double sim_step) {
     auto elapsed = st.get_elapsed() + sim_step;
