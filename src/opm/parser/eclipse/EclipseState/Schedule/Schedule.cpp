@@ -108,7 +108,7 @@ namespace {
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst)
     try :
-        m_static( python, deck, runspec, parseContext, errors ),
+        m_static( python, deck, runspec, output_interval, parseContext, errors ),
         m_restart_info( restart_info(rst)),
         m_sched_deck(deck, m_restart_info )
     {
@@ -1205,6 +1205,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     bool Schedule::write_rst_file(std::size_t report_step, bool ) const {
+        if (this->m_static.output_interval.has_value())
+            return this->m_static.output_interval.value() % report_step;
+
         if (report_step == 0)
             return this->m_static.rst_config.write_rst_file.value();
 

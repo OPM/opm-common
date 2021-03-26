@@ -72,6 +72,7 @@ namespace Opm
         UnitSystem m_unit_system;
         Runspec m_runspec;
         RSTConfig rst_config;
+        std::optional<int> output_interval;
 
         ScheduleStatic() = default;
 
@@ -82,6 +83,7 @@ namespace Opm
         ScheduleStatic(std::shared_ptr<const Python> python_handle,
                        const Deck& deck,
                        const Runspec& runspec,
+                       const std::optional<int>& output_interval_,
                        const ParseContext& parseContext,
                        ErrorGuard& errors):
             m_python_handle(python_handle),
@@ -89,7 +91,8 @@ namespace Opm
             m_deck_message_limits( deck ),
             m_unit_system( deck.getActiveUnitSystem() ),
             m_runspec( runspec ),
-            rst_config( SOLUTIONSection(deck), parseContext, errors )
+            rst_config( SOLUTIONSection(deck), parseContext, errors ),
+            output_interval(output_interval_)
         {
         }
 
@@ -101,6 +104,7 @@ namespace Opm
             m_unit_system.serializeOp(serializer);
             serializer(this->m_input_path);
             rst_config.serializeOp(serializer);
+            serializer(this->output_interval);
         }
 
 
