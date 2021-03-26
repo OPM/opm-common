@@ -3025,13 +3025,12 @@ private:
 
     void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
 
-    void configureSummaryInput(const EclipseState&  es,
-                               const SummaryConfig& sumcfg,
-                               const EclipseGrid&   grid,
-                               const Schedule&      sched);
+    void configureSummaryInput(const SummaryConfig& sumcfg,
+                               Evaluator::Factory&  evaluatorFactory);
 
     void configureRequiredRestartParameters(const SummaryConfig& sumcfg,
-                                            const Schedule&      sched);
+                                            const Schedule&      sched,
+                                            Evaluator::Factory&  evaluatorFactory);
 
     void configureUDQ(const SummaryConfig& summary_config, const Schedule& sched);
 
@@ -3059,9 +3058,18 @@ SummaryImplementation(const EclipseState&  es,
     , fmt_           { es.cfg().io().getFMTOUT() }
     , unif_          { es.cfg().io().getUNIFOUT() }
 {
+    const auto st = SummaryState {
+        TimeService::from_time_t(sched.getStartTime())
+    };
+
+    Evaluator::Factory evaluatorFactory {
+        es, grid, st, sched.getUDQConfig(sched.size() - 1)
+    };
+
     this->configureTimeVectors(es, sumcfg);
-    this->configureSummaryInput(es, sumcfg, grid, sched);
-    this->configureRequiredRestartParameters(sumcfg, sched);
+    this->configureSummaryInput(sumcfg, evaluatorFactory);
+    this->configureRequiredRestartParameters(sumcfg,
+                                             sched, evaluatorFactory);
     this->configureUDQ(sumcfg, sched);
 
     for (const auto& config_node : sumcfg.keywords("WBP*"))
@@ -3251,22 +3259,12 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
 
 void
 Opm::out::Summary::SummaryImplementation::
-configureSummaryInput(const EclipseState&  es,
-                      const SummaryConfig& sumcfg,
-                      const EclipseGrid&   grid,
-                      const Schedule&      sched)
+configureSummaryInput(const SummaryConfig& sumcfg,
+                      Evaluator::Factory&  evaluatorFactory)
 {
-    const auto st = SummaryState {
-        TimeService::from_time_t(sched.getStartTime())
-    };
-
-    Evaluator::Factory fact {
-        es, grid, st, sched.getUDQConfig(sched.size() - 1)
-    };
-
     auto unsuppkw = std::vector<SummaryConfigNode>{};
     for (const auto& node : sumcfg) {
-        auto prmDescr = fact.create(node);
+        auto prmDescr = evaluatorFactory.create(node);
 
         if (! prmDescr.evaluator) {
             // No known evaluation function/type for this keyword
@@ -3430,24 +3428,24 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
 void
 Opm::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
-                                   const Schedule&      sched)
+                                   const Schedule&      sched,
+                                   Evaluator::Factory&  evaluatorFactory)
 {
-    auto makeEvaluator = [&sumcfg, this](const Opm::EclIO::SummaryNode& node) -> void
+    auto makeEvaluator = [&sumcfg, &evaluatorFactory, this]
+        (const Opm::EclIO::SummaryNode& node) -> void
     {
         if (sumcfg.hasSummaryKey(node.unique_key()))
             // Handler already exists.  Don't add second evaluation.
             return;
 
-        auto fcnPos = funs.find(node.keyword);
-        if (fcnPos == funs.end())
+        auto descriptor = evaluatorFactory.create(node);
+        if (descriptor.evaluator == nullptr)
             throw std::logic_error {
                 fmt::format("Evaluation function for:{} not found", node.keyword)
             };
 
-        auto eval = std::make_unique<
-            Evaluator::FunctionRelation>(node, fcnPos->second);
-
-        this->extra_parameters.emplace(node.unique_key(), std::move(eval));
+        this->extra_parameters
+            .emplace(node.unique_key(), std::move(descriptor.evaluator));
     };
 
     for (const auto& node : requiredRestartVectors(sched))
