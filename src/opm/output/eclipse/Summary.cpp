@@ -26,6 +26,9 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/output/eclipse/Inplace.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -276,6 +279,31 @@ namespace {
             }
 
             makeVectors(well);
+        }
+
+        return entities;
+    }
+
+    std::vector<Opm::EclIO::SummaryNode>
+    requiredAquiferVectors(const std::vector<int>& aquiferIDs)
+    {
+        auto entities = std::vector<Opm::EclIO::SummaryNode> {};
+
+        const auto vectors = std::vector<ParamCTorArgs> {
+            { "AAQR" , Opm::EclIO::SummaryNode::Type::Rate      },
+            { "AAQP" , Opm::EclIO::SummaryNode::Type::Pressure  },
+            { "AAQT" , Opm::EclIO::SummaryNode::Type::Total     },
+            { "AAQTD", Opm::EclIO::SummaryNode::Type::Undefined },
+            { "AAQPD", Opm::EclIO::SummaryNode::Type::Undefined },
+        };
+
+        using Cat = Opm::EclIO::SummaryNode::Category;
+
+        for (const auto& aquiferID : aquiferIDs) {
+            for (const auto& vector : vectors) {
+                entities.push_back({ vector.kw, Cat::Aquifer,
+                                     vector.type, "", aquiferID, {} });
+            }
         }
 
         return entities;
@@ -3029,6 +3057,7 @@ private:
                                Evaluator::Factory&  evaluatorFactory);
 
     void configureRequiredRestartParameters(const SummaryConfig& sumcfg,
+                                            const AquiferConfig& aqConfig,
                                             const Schedule&      sched,
                                             Evaluator::Factory&  evaluatorFactory);
 
@@ -3068,7 +3097,7 @@ SummaryImplementation(const EclipseState&  es,
 
     this->configureTimeVectors(es, sumcfg);
     this->configureSummaryInput(sumcfg, evaluatorFactory);
-    this->configureRequiredRestartParameters(sumcfg,
+    this->configureRequiredRestartParameters(sumcfg, es.aquifer(),
                                              sched, evaluatorFactory);
     this->configureUDQ(sumcfg, sched);
 
@@ -3428,6 +3457,7 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
 void
 Opm::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
+                                   const AquiferConfig& aqConfig,
                                    const Schedule&      sched,
                                    Evaluator::Factory&  evaluatorFactory)
 {
@@ -3453,6 +3483,21 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
 
     for (const auto& node : requiredSegmentVectors(sched))
         makeEvaluator(node);
+
+    if (aqConfig.hasAnalyticalAquifer()) {
+        auto aquiferIDs = std::vector<int>{};
+
+        for (const auto& aquifer : aqConfig.ct())
+            aquiferIDs.push_back(aquifer.aquiferID);
+
+        for (const auto& aquifer : aqConfig.fetp())
+            aquiferIDs.push_back(aquifer.aquiferID);
+
+        std::sort(aquiferIDs.begin(), aquiferIDs.end());
+
+        for (const auto& node : requiredAquiferVectors(aquiferIDs))
+            makeEvaluator(node);
+    }
 }
 
 Opm::out::Summary::SummaryImplementation::MiniStep&
