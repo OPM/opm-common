@@ -26,6 +26,9 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/output/eclipse/Inplace.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -243,22 +246,27 @@ namespace {
     std::vector<Opm::EclIO::SummaryNode>
     requiredSegmentVectors(const ::Opm::Schedule& sched)
     {
-        std::vector<Opm::EclIO::SummaryNode> ret {};
+        auto entities = std::vector<Opm::EclIO::SummaryNode> {};
 
-        constexpr Opm::EclIO::SummaryNode::Category category { Opm::EclIO::SummaryNode::Category::Segment };
-        const std::vector<std::pair<std::string,Opm::EclIO::SummaryNode::Type>> requiredVectors {
+        const auto vectors = std::vector<ParamCTorArgs> {
             { "SOFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SGFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SWFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SPR",  Opm::EclIO::SummaryNode::Type::Pressure },
         };
 
-        auto makeVectors =
-            [&](const std::string& well,
-                const int          segNumber) -> void
+        using Cat = Opm::EclIO::SummaryNode::Category;
+
+        auto makeVectors = [&](const Opm::Well& well) -> void
         {
-            for (const auto &requiredVector : requiredVectors) {
-                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber, ""});
+            const auto& wname = well.name();
+            const auto  nSeg  = static_cast<int>(well.getSegments().size());
+
+            for (auto segID = 0*nSeg + 1; segID <= nSeg; ++segID) {
+                for (const auto& vector : vectors) {
+                    entities.push_back({ vector.kw, Cat::Segment,
+                                         vector.type, wname, segID, {} });
+                }
             }
         };
 
@@ -270,16 +278,36 @@ namespace {
                 continue;
             }
 
-            const auto nSeg = well.getSegments().size();
+            makeVectors(well);
+        }
 
-            for (auto segID = 0*nSeg; segID < nSeg; ++segID) {
-                makeVectors(wname, segID + 1); // One-based
+        return entities;
+    }
+
+    std::vector<Opm::EclIO::SummaryNode>
+    requiredAquiferVectors(const std::vector<int>& aquiferIDs)
+    {
+        auto entities = std::vector<Opm::EclIO::SummaryNode> {};
+
+        const auto vectors = std::vector<ParamCTorArgs> {
+            { "AAQR" , Opm::EclIO::SummaryNode::Type::Rate      },
+            { "AAQP" , Opm::EclIO::SummaryNode::Type::Pressure  },
+            { "AAQT" , Opm::EclIO::SummaryNode::Type::Total     },
+            { "AAQTD", Opm::EclIO::SummaryNode::Type::Undefined },
+            { "AAQPD", Opm::EclIO::SummaryNode::Type::Undefined },
+        };
+
+        using Cat = Opm::EclIO::SummaryNode::Category;
+
+        for (const auto& aquiferID : aquiferIDs) {
+            for (const auto& vector : vectors) {
+                entities.push_back({ vector.kw, Cat::Aquifer,
+                                     vector.type, "", aquiferID, {} });
             }
         }
 
-        return ret;
+        return entities;
     }
-
 
 Opm::TimeStampUTC make_sim_time(const Opm::Schedule& sched, const Opm::SummaryState& st, double sim_step) {
     auto elapsed = st.get_elapsed() + sim_step;
@@ -3025,13 +3053,13 @@ private:
 
     void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
 
-    void configureSummaryInput(const EclipseState&  es,
-                               const SummaryConfig& sumcfg,
-                               const EclipseGrid&   grid,
-                               const Schedule&      sched);
+    void configureSummaryInput(const SummaryConfig& sumcfg,
+                               Evaluator::Factory&  evaluatorFactory);
 
     void configureRequiredRestartParameters(const SummaryConfig& sumcfg,
-                                            const Schedule&      sched);
+                                            const AquiferConfig& aqConfig,
+                                            const Schedule&      sched,
+                                            Evaluator::Factory&  evaluatorFactory);
 
     void configureUDQ(const SummaryConfig& summary_config, const Schedule& sched);
 
@@ -3059,9 +3087,18 @@ SummaryImplementation(const EclipseState&  es,
     , fmt_           { es.cfg().io().getFMTOUT() }
     , unif_          { es.cfg().io().getUNIFOUT() }
 {
+    const auto st = SummaryState {
+        TimeService::from_time_t(sched.getStartTime())
+    };
+
+    Evaluator::Factory evaluatorFactory {
+        es, grid, st, sched.getUDQConfig(sched.size() - 1)
+    };
+
     this->configureTimeVectors(es, sumcfg);
-    this->configureSummaryInput(es, sumcfg, grid, sched);
-    this->configureRequiredRestartParameters(sumcfg, sched);
+    this->configureSummaryInput(sumcfg, evaluatorFactory);
+    this->configureRequiredRestartParameters(sumcfg, es.aquifer(),
+                                             sched, evaluatorFactory);
     this->configureUDQ(sumcfg, sched);
 
     for (const auto& config_node : sumcfg.keywords("WBP*"))
@@ -3251,22 +3288,12 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
 
 void
 Opm::out::Summary::SummaryImplementation::
-configureSummaryInput(const EclipseState&  es,
-                      const SummaryConfig& sumcfg,
-                      const EclipseGrid&   grid,
-                      const Schedule&      sched)
+configureSummaryInput(const SummaryConfig& sumcfg,
+                      Evaluator::Factory&  evaluatorFactory)
 {
-    const auto st = SummaryState {
-        TimeService::from_time_t(sched.getStartTime())
-    };
-
-    Evaluator::Factory fact {
-        es, grid, st, sched.getUDQConfig(sched.size() - 1)
-    };
-
     auto unsuppkw = std::vector<SummaryConfigNode>{};
     for (const auto& node : sumcfg) {
-        auto prmDescr = fact.create(node);
+        auto prmDescr = evaluatorFactory.create(node);
 
         if (! prmDescr.evaluator) {
             // No known evaluation function/type for this keyword
@@ -3430,24 +3457,25 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
 void
 Opm::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
-                                   const Schedule&      sched)
+                                   const AquiferConfig& aqConfig,
+                                   const Schedule&      sched,
+                                   Evaluator::Factory&  evaluatorFactory)
 {
-    auto makeEvaluator = [&sumcfg, this](const Opm::EclIO::SummaryNode& node) -> void
+    auto makeEvaluator = [&sumcfg, &evaluatorFactory, this]
+        (const Opm::EclIO::SummaryNode& node) -> void
     {
         if (sumcfg.hasSummaryKey(node.unique_key()))
             // Handler already exists.  Don't add second evaluation.
             return;
 
-        auto fcnPos = funs.find(node.keyword);
-        if (fcnPos == funs.end())
+        auto descriptor = evaluatorFactory.create(node);
+        if (descriptor.evaluator == nullptr)
             throw std::logic_error {
                 fmt::format("Evaluation function for:{} not found", node.keyword)
             };
 
-        auto eval = std::make_unique<
-            Evaluator::FunctionRelation>(node, fcnPos->second);
-
-        this->extra_parameters.emplace(node.unique_key(), std::move(eval));
+        this->extra_parameters
+            .emplace(node.unique_key(), std::move(descriptor.evaluator));
     };
 
     for (const auto& node : requiredRestartVectors(sched))
@@ -3455,6 +3483,21 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
 
     for (const auto& node : requiredSegmentVectors(sched))
         makeEvaluator(node);
+
+    if (aqConfig.hasAnalyticalAquifer()) {
+        auto aquiferIDs = std::vector<int>{};
+
+        for (const auto& aquifer : aqConfig.ct())
+            aquiferIDs.push_back(aquifer.aquiferID);
+
+        for (const auto& aquifer : aqConfig.fetp())
+            aquiferIDs.push_back(aquifer.aquiferID);
+
+        std::sort(aquiferIDs.begin(), aquiferIDs.end());
+
+        for (const auto& node : requiredAquiferVectors(aquiferIDs))
+            makeEvaluator(node);
+    }
 }
 
 Opm::out::Summary::SummaryImplementation::MiniStep&
