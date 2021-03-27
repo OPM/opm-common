@@ -474,6 +474,9 @@ public:
     double getGuideRateScalingFactor() const;
 
     bool hasBeenDefined(size_t timeStep) const;
+    bool hasWlist(const std::string& name) const;
+    void addWlist(const std::string& name);
+    void clearWlist(const std::string& name);
     std::size_t firstTimeStep() const;
     const WellType& wellType() const;
     bool predictionMode() const;
@@ -487,6 +490,7 @@ public:
     bool getAutomaticShutIn() const;
     bool getAllowCrossFlow() const;
     const std::string& name() const;
+    const std::vector<std::string>& wListNames() const;
     int getHeadI() const;
     int getHeadJ() const;
     double getWPaveRefDepth() const;
@@ -609,6 +613,7 @@ public:
         serializer(group_name);
         serializer(init_step);
         serializer(insert_index);
+        serializer(w_list_names);
         serializer(headI);
         serializer(headJ);
         serializer(ref_depth);
@@ -648,6 +653,7 @@ private:
     std::string group_name;
     std::size_t init_step;
     std::size_t insert_index;
+    std::vector<std::string> w_list_names;
     int headI;
     int headJ;
     std::optional<double> ref_depth;

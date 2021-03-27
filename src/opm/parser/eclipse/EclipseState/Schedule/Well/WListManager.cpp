@@ -19,6 +19,8 @@
 #include <fnmatch.h>
 
 #include <unordered_set>
+#include <algorithm>
+#include <iostream>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
@@ -66,17 +68,26 @@ namespace Opm {
     std::vector<std::string> WListManager::wells(const std::string& wlist_pattern) const {
         if (this->hasList(wlist_pattern)) {
             const auto& wlist = this->getList(wlist_pattern);
-            return { wlist.begin(), wlist.end() };
+            return { wlist.wells() };
         } else {
-            std::unordered_set<std::string> well_set;
+            std::vector<std::string> well_set;
             auto pattern = wlist_pattern.substr(1);
             for (const auto& [name, wlist] : this->wlists) {
                 auto wlist_name = name.substr(1);
                 int flags = 0;
-                if (fnmatch(pattern.c_str(), wlist_name.c_str(), flags) == 0)
-                    well_set.insert(wlist.begin(), wlist.end());
+                if (fnmatch(pattern.c_str(), wlist_name.c_str(), flags) == 0) {
+                    std::cout << "WListManager - wells - wlist.name() " << wlist.name() << " wlist.wells(): " << wlist.wells()[0] << std::endl;
+                    const auto& well_names = wlist.wells();
+                    for ( auto it = well_names.begin(); it != well_names.end(); it++ ) {
+                       if (std::count(well_set.begin(), well_set.end(), *it) == 0)
+                           well_set.push_back(*it);
+                    }
+                    for (const auto& wnm : well_set) {
+                        std::cout << "WListManager - wells - well_set " << wnm << std::endl;
+                    }
+                }
             }
-            return { well_set.begin(), well_set.end() };
+            return { well_set };
         }
     }
 

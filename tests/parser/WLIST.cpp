@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(CreateWLIST) {
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "W3") != wells.end());
 
     std::vector<std::string> wells2;
-    for (const auto& well : wlist)
+    for (const auto& well : wlist.wells())
         wells2.push_back(well);
 
     BOOST_CHECK_EQUAL(wells2.size(), 3U);
@@ -101,8 +101,10 @@ BOOST_AUTO_TEST_CASE(WLISTManager) {
 
     // The delWell operation will work across all well lists.
     wlm.delWell("W1");
-    BOOST_CHECK( std::find(wlist1.begin(), wlist1.end(), "W1") == wlist1.end());
-    BOOST_CHECK( std::find(wlist2.begin(), wlist2.end(), "W1") == wlist2.end());
+    auto wells = wlist1.wells();
+    BOOST_CHECK(std::find(wells.begin(), wells.end(), "W1") == wells.end());
+    wells = wlist2.wells();
+    BOOST_CHECK(std::find(wells.begin(), wells.end(), "W1") == wells.end());
 }
 
 

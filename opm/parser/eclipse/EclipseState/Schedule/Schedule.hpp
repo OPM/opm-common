@@ -243,6 +243,7 @@ namespace Opm
         GTNode groupTree(std::size_t report_step) const;
         GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
+        const WListManager& getWListManager(std::size_t timeStep) const;
 
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
         const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;

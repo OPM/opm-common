@@ -296,6 +296,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/AggregateMSWData.cpp
           src/opm/output/eclipse/AggregateUDQData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
+          src/opm/output/eclipse/AggregateWListData.cpp
           src/opm/output/eclipse/CreateActionxDims.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
@@ -873,6 +874,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/AggregateMSWData.hpp
         opm/output/eclipse/AggregateUDQData.hpp
         opm/output/eclipse/AggregateWellData.hpp
+        opm/output/eclipse/AggregateWListData.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
