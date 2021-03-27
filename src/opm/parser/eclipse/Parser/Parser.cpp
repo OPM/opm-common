@@ -34,6 +34,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/parser/eclipse/Deck/ImportContainer.hpp>
 
 #include <opm/json/JsonObject.hpp>
 
@@ -47,6 +48,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -382,13 +384,13 @@ class ParserState {
         InputStack input_stack;
 
         std::map< std::string, std::string > pathMap;
-        Opm::filesystem::path rootPath;
 
     public:
         ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
         std::string lastKeyWord;
 
         Deck deck;
+        Opm::filesystem::path rootPath;
         std::unique_ptr<Python> python;
         const ParseContext& parseContext;
         ErrorGuard& errors;
@@ -543,7 +545,7 @@ void ParserState::openRootFile( const Opm::filesystem::path& inputFile) {
     this->loadFile( inputFile );
     this->deck.setDataFile( inputFile.string() );
     const Opm::filesystem::path& inputFileCanonical = Opm::filesystem::canonical(inputFile);
-    rootPath = inputFileCanonical.parent_path();
+    this->rootPath = inputFileCanonical.parent_path();
 }
 
 Opm::filesystem::path ParserState::getIncludeFilePath( std::string path ) const {
@@ -936,12 +938,26 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                     else
                         throw std::logic_error("Cannot yet embed Python while still running Python.");
                 }
-                else
-                    parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext,
-                                                                      parserState.errors,
-                                                                      *rawKeyword,
-                                                                      parserState.deck.getActiveUnitSystem(),
-                                                                      parserState.deck.getDefaultUnitSystem()));
+                else {
+                    auto deck_keyword = parserKeyword.parse( parserState.parseContext,
+                                                             parserState.errors,
+                                                             *rawKeyword,
+                                                             parserState.deck.getActiveUnitSystem(),
+                                                             parserState.deck.getDefaultUnitSystem());
+
+                    if (deck_keyword.name() == ParserKeywords::IMPORT::keywordName) {
+                        bool formatted = deck_keyword.getRecord(0).getItem(1).get<std::string>(0)[0] == 'F';
+                        auto import_file = Opm::filesystem::path(deck_keyword.getRecord(0).getItem(0).get<std::string>(0));
+
+                        if (import_file.is_relative())
+                            import_file = parserState.rootPath / import_file;
+
+                        ImportContainer import(parser, parserState.deck.getActiveUnitSystem(), import_file.string(), formatted, parserState.deck.size());
+                        for (auto kw : import)
+                            parserState.deck.addKeyword(std::move(kw));
+                    } else
+                        parserState.deck.addKeyword( std::move(deck_keyword) );
+                }
             } catch (const OpmInputError& opm_error) {
                 throw;
             } catch (const std::exception& e) {
