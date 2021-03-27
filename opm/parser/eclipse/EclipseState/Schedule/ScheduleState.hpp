@@ -49,6 +49,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RSTConfig.hpp>
 
 
 namespace {
@@ -316,6 +317,10 @@ namespace Opm {
         Well::ProducerCMode whistctl() const;
         void update_whistctl(Well::ProducerCMode whistctl);
 
+        bool rst_file(const RSTConfig& rst_config) const;
+        void update_date(const time_point& prev_time);
+        void handleSAVE();
+
         /*********************************************************************/
 
         ptr_member<PAvg> pavg;
@@ -333,6 +338,7 @@ namespace Opm {
         ptr_member<GasLiftOpt> glo;
         ptr_member<GuideRateConfig> guide_rate;
         ptr_member<RFTConfig> rft_config;
+        ptr_member<RSTConfig> rst_config;
 
         template <typename T> struct always_false1 : std::false_type {};
 
@@ -368,6 +374,8 @@ namespace Opm {
                                   return this->guide_rate;
             else if constexpr ( std::is_same_v<T, RFTConfig> )
                                   return this->rft_config;
+            else if constexpr ( std::is_same_v<T, RSTConfig> )
+                                  return this->rst_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
@@ -404,6 +412,8 @@ namespace Opm {
                                   return this->guide_rate;
             else if constexpr ( std::is_same_v<T, RFTConfig> )
                                   return this->rft_config;
+            else if constexpr ( std::is_same_v<T, RSTConfig> )
+                                  return this->rst_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
@@ -441,6 +451,7 @@ namespace Opm {
             serializer(m_year_num);
             serializer(m_first_in_year);
             serializer(m_first_in_month);
+            serializer(m_save_step);
             m_tuning.serializeOp(serializer);
             serializer(m_nupcol);
             m_oilvap.serializeOp(serializer);
@@ -460,8 +471,10 @@ namespace Opm {
         std::size_t m_sim_step = 0;
         std::size_t m_month_num = 0;
         std::size_t m_year_num = 0;
-        bool m_first_in_month = true;
-        bool m_first_in_year = true;
+        bool m_first_in_month;
+        bool m_first_in_year;
+        std::optional<int> m_save_step;
+
         Tuning m_tuning;
         int m_nupcol;
         OilVaporizationProperties m_oilvap;

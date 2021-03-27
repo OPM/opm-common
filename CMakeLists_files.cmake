@@ -89,7 +89,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/InitConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
-    src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
     src/opm/parser/eclipse/EclipseState/TracerConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.cpp
@@ -130,6 +129,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RFTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RPTConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/RSTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleState.cpp
@@ -341,7 +341,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/CopyRegTests.cpp
     tests/parser/DeckValueTests.cpp
     tests/parser/DeckTests.cpp
-    tests/parser/DynamicStateTests.cpp
     tests/parser/EclipseGridTests.cpp
     tests/parser/EmbeddedPython.cpp
     tests/parser/EqualRegTests.cpp
@@ -758,6 +757,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp
        opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp
+       opm/parser/eclipse/EclipseState/Schedule/RSTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp
@@ -774,7 +774,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
        opm/parser/eclipse/EclipseState/Schedule/Events.hpp
        opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
-       opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
@@ -786,7 +785,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/SimulationConfig/RockConfig.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp
-       opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp
        opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp
        opm/parser/eclipse/EclipseState/checkDeck.hpp
        opm/parser/eclipse/EclipseState/Runspec.hpp

@@ -19,7 +19,7 @@
 #include <getopt.h>
 
 #include <vector>
-
+#include <iostream>
 #include <fmt/format.h>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>

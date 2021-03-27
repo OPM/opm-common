@@ -108,10 +108,9 @@ namespace {
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst)
     try :
-        m_static( python, deck, runspec ),
+        m_static( python, deck, runspec, output_interval, parseContext, errors ),
         m_restart_info( restart_info(rst)),
-        m_sched_deck(deck, m_restart_info ),
-        restart_config(deck, m_restart_info, output_interval, parseContext, errors)
+        m_sched_deck(deck, m_restart_info )
     {
         if (rst) {
             auto restart_step = this->m_restart_info.second;
@@ -211,7 +210,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         Schedule result;
 
         result.m_static = ScheduleStatic::serializeObject();
-        result.restart_config = RestartConfig::serializeObject();
         result.snapshots = { ScheduleState::serializeObject() };
 
         return result;
@@ -1206,28 +1204,31 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
     }
 
-    RestartConfig& Schedule::restart() {
-        return this->restart_config;
+    bool Schedule::write_rst_file(std::size_t report_step, bool ) const {
+        if (this->m_static.output_interval.has_value())
+            return this->m_static.output_interval.value() % report_step;
+
+        if (report_step == 0)
+            return this->m_static.rst_config.write_rst_file.value();
+
+        const auto& rst_config = this->snapshots[report_step - 1].rst_config();
+        const auto& state = this->snapshots[report_step];
+        return state.rst_file(rst_config);
     }
 
-    const RestartConfig& Schedule::restart() const {
-        return this->restart_config;
-    }
 
-bool Schedule::write_rst_file(std::size_t report_step, bool log) const {
-    return this->restart_config.getWriteRestartFile(report_step, log);
-    }
+    const std::map< std::string, int >& Schedule::rst_keywords( size_t report_step ) const {
+        if (report_step == 0)
+            return this->m_static.rst_config.keywords;
 
-
-    const std::map< std::string, int >& Schedule::rst_keywords( size_t timestep ) const {
-        return this->restart_config.getRestartKeywords(timestep);
+        const auto& keywords = this->snapshots[report_step - 1].rst_config().keywords;
+        return keywords;
     }
 
     bool Schedule::operator==(const Schedule& data) const {
 
         return this->m_restart_info == data.m_restart_info &&
                this->m_static == data.m_static &&
-               this->restart_config == data.restart_config &&
                this->snapshots == data.snapshots;
      }
 
@@ -1647,6 +1648,8 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.glo.update( GasLiftOpt() );
     sched_state.guide_rate.update( GuideRateConfig() );
     sched_state.rft_config.update( RFTConfig() );
+    sched_state.rst_config.update( RSTConfig::first( this->m_static.rst_config ) );
+    //sched_state.update_date( start_time );
     this->addGroup("FIELD", 0);
 }
 

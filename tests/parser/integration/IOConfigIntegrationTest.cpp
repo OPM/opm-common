@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -138,6 +137,7 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
 
 
 
+
 BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     std::map<int, boost::gregorian::date> rptConfig;
 
@@ -145,6 +145,7 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     rptConfig.emplace(8  , boost::gregorian::date(2000,7,1));
     rptConfig.emplace(27 , boost::gregorian::date(2001,1,1));
     rptConfig.emplace(45 , boost::gregorian::date(2001,7,1));
+    rptConfig.emplace(50 , boost::gregorian::date(2001,8,24));
     rptConfig.emplace(61 , boost::gregorian::date(2002,1,1));
     rptConfig.emplace(79 , boost::gregorian::date(2002,7,1));
     rptConfig.emplace(89 , boost::gregorian::date(2003,1,1));
@@ -177,6 +178,55 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     EclipseState state( deck);
     Schedule schedule(deck, state, python);
     verifyRestartConfig(schedule, rptConfig);
+
+    auto keywords0 = schedule.rst_keywords(0);
+    std::map<std::string, int> expected0 = {{"BG", 1},
+                                           {"BO", 1},
+                                           {"BW", 1},
+                                           {"KRG", 1},
+                                           {"KRO", 1},
+                                           {"KRW", 1},
+                                           {"VOIL", 1},
+                                           {"VGAS", 1},
+                                           {"VWAT", 1},
+                                           {"DEN", 1},
+                                           {"RVSAT", 1},
+                                           {"RSSAT", 1},
+                                           {"PBPD", 1},
+                                           {"NORST", 1}};
+    for (const auto& [kw, num] : expected0)
+        BOOST_CHECK_EQUAL( keywords0.at(kw), num );
+
+    auto keywords1 = schedule.rst_keywords(1);
+    std::map<std::string, int> expected1 = {{"BG", 1},
+                                            {"BO", 1},
+                                            {"BW", 1},
+                                            {"KRG", 1},
+                                            {"KRO", 1},
+                                            {"KRW", 1},
+                                            {"VOIL", 1},
+                                            {"VGAS", 1},
+                                            {"VWAT", 1},
+                                            {"DEN", 1},
+                                            {"RVSAT", 1},
+                                            {"RSSAT", 1},
+                                            {"PBPD", 1},
+                                            {"NORST", 1},
+                                            {"FIP", 3},
+                                            {"WELSPECS", 1},
+                                            {"WELLS", 0},
+                                            {"NEWTON", 1},
+                                            {"SUMMARY", 1},
+                                            {"CPU", 1},
+                                            {"CONV", 10}};
+
+    for (const auto& [kw, num] : expected1)
+        BOOST_CHECK_EQUAL( keywords1.at(kw), num );
+
+    BOOST_CHECK_EQUAL(expected1.size(), keywords1.size());
+
+    auto keywords10 = schedule.rst_keywords(10);
+    BOOST_CHECK( keywords10 == keywords1 );
 }
 
 

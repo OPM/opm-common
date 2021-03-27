@@ -24,9 +24,9 @@
 #include <optional>
 #include <unordered_set>
 
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
@@ -71,6 +71,8 @@ namespace Opm
         MessageLimits m_deck_message_limits;
         UnitSystem m_unit_system;
         Runspec m_runspec;
+        RSTConfig rst_config;
+        std::optional<int> output_interval;
 
         ScheduleStatic() = default;
 
@@ -80,13 +82,19 @@ namespace Opm
 
         ScheduleStatic(std::shared_ptr<const Python> python_handle,
                        const Deck& deck,
-                       const Runspec& runspec) :
+                       const Runspec& runspec,
+                       const std::optional<int>& output_interval_,
+                       const ParseContext& parseContext,
+                       ErrorGuard& errors):
             m_python_handle(python_handle),
             m_input_path(deck.getInputPath()),
             m_deck_message_limits( deck ),
             m_unit_system( deck.getActiveUnitSystem() ),
-            m_runspec( runspec )
-        {}
+            m_runspec( runspec ),
+            rst_config( SOLUTIONSection(deck), parseContext, errors ),
+            output_interval(output_interval_)
+        {
+        }
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -95,6 +103,8 @@ namespace Opm
             m_runspec.serializeOp(serializer);
             m_unit_system.serializeOp(serializer);
             serializer(this->m_input_path);
+            rst_config.serializeOp(serializer);
+            serializer(this->output_interval);
         }
 
 
@@ -105,6 +115,7 @@ namespace Opm
             st.m_runspec = Runspec::serializeObject();
             st.m_unit_system = UnitSystem::newFIELD();
             st.m_input_path = "Some/funny/path";
+            st.rst_config = RSTConfig::serializeObject();
             return st;
         }
 
@@ -112,6 +123,7 @@ namespace Opm
             return this->m_input_path == other.m_input_path &&
                    this->m_deck_message_limits == other.m_deck_message_limits &&
                    this->m_unit_system == other.m_unit_system &&
+                   this->rst_config == other.rst_config &&
                    this->m_runspec == other.m_runspec;
         }
     };
@@ -287,7 +299,6 @@ namespace Opm
         void serializeOp(Serializer& serializer)
         {
             m_sched_deck.serializeOp(serializer);
-            restart_config.serializeOp(serializer);
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
             serializer(m_restart_info);
@@ -307,6 +318,7 @@ namespace Opm
             pack_unpack<GuideRateConfig, Serializer>(serializer);
             pack_unpack<GasLiftOpt, Serializer>(serializer);
             pack_unpack<RFTConfig, Serializer>(serializer);
+            pack_unpack<RSTConfig, Serializer>(serializer);
 
             pack_unpack_map<int, VFPProdTable, Serializer>(serializer);
             pack_unpack_map<int, VFPInjTable, Serializer>(serializer);
@@ -451,12 +463,8 @@ namespace Opm
         ScheduleStatic m_static;
         std::pair<std::time_t, std::size_t> m_restart_info;
         ScheduleDeck m_sched_deck;
-        RestartConfig restart_config;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
-
-        RestartConfig& restart();
-        const RestartConfig& restart() const;
 
         void load_rst(const RestartIO::RstState& rst,
                       const EclipseGrid& grid,
@@ -599,8 +607,10 @@ namespace Opm
         void handleMXUNSUPP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNODEPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNUPCOL   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTRST   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleRPTSCHED (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleTUNING   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleSAVE     (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleUDQ      (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleVAPPARS  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleVFPINJ   (const HandlerContext&, const ParseContext&, ErrorGuard&);

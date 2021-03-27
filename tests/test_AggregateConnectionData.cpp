@@ -701,8 +701,6 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
     // XCONN (PROD)  + (WINJ)
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
-        const auto& units = simCase.es.getUnits();
-        using M = ::Opm::UnitSystem::measure;
         const auto& xconn = amconn.getXConn();
 
         // PROD well
