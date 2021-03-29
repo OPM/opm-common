@@ -379,14 +379,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                                          start_date,
                                                          days_total));
 
-                logger(fmt::format("{}Initializing report step {}/{} at {} ({} {}) - line {}",
-                                   prefix,
-                                   report_step + 1,
-                                   this->m_sched_deck.size() - 1,
-                                   start_date,
-                                   days_total,
-                                   time_unit,
-                                   block.location().lineno));
+                if (report_step < (load_end - 1))
+                    logger(fmt::format("{}Initializing report step {}/{} at {} ({} {}) - line {}",
+                                       prefix,
+                                       report_step + 1,
+                                       this->m_sched_deck.size() - 1,
+                                       start_date,
+                                       days_total,
+                                       time_unit,
+                                       block.location().lineno));
             }
             this->create_next(block);
 
