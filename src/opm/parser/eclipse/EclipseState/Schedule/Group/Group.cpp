@@ -57,19 +57,18 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, double udq_u
 Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     Group(rst_group.name, insert_index_arg, udq_undefined_arg, unit_system_arg)
 {
-    if (rst_group.prod_active_cmode != 0) {
+    if (rst_group.prod_cmode != 0) {
         Group::GroupProductionProperties production(unit_system_arg, this->m_name);
         production.oil_target.update(rst_group.oil_rate_limit);
         production.gas_target.update(rst_group.gas_rate_limit);
         production.water_target.update(rst_group.water_rate_limit);
         production.liquid_target.update(rst_group.liquid_rate_limit);
-        production.active_cmode = Group::ProductionCModeFromInt(rst_group.prod_active_cmode);
-        production.gconprod_cmode = Group::ProductionCModeFromInt(rst_group.gconprod_cmode);
+        production.cmode = Group::ProductionCModeFromInt(rst_group.prod_cmode);
         production.guide_rate_def = Group::GuideRateProdTargetFromInt(rst_group.guide_rate_def);
-        if ((production.active_cmode == Group::ProductionCMode::ORAT) ||
-            (production.active_cmode == Group::ProductionCMode::WRAT) ||
-            (production.active_cmode == Group::ProductionCMode::GRAT) ||
-            (production.active_cmode == Group::ProductionCMode::LRAT))
+        if ((production.cmode == Group::ProductionCMode::ORAT) ||
+            (production.cmode == Group::ProductionCMode::WRAT) ||
+            (production.cmode == Group::ProductionCMode::GRAT) ||
+            (production.cmode == Group::ProductionCMode::LRAT))
             production.exceed_action = Group::ExceedAction::RATE;
         this->updateProduction(production);
     }
@@ -291,8 +290,7 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serializeObje
 {
     Group::GroupProductionProperties result(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "Group123");
     result.name = "Group123";
-    result.gconprod_cmode = ProductionCMode::PRBL;
-    result.active_cmode = ProductionCMode::PRBL;
+    result.cmode = ProductionCMode::PRBL;
     result.exceed_action = ExceedAction::WELL;
     result.oil_target = UDAValue(1.0);
     result.water_target = UDAValue(2.0);
@@ -310,8 +308,7 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serializeObje
 bool Group::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
     return
         this->name                    == other.name &&
-        this->active_cmode            == other.active_cmode &&
-        this->gconprod_cmode          == other.gconprod_cmode &&
+        this->cmode                   == other.cmode &&
         this->exceed_action           == other.exceed_action &&
         this->oil_target              == other.oil_target &&
         this->water_target            == other.water_target &&
@@ -514,7 +511,7 @@ bool Group::updateParent(const std::string& parent) {
 Group::ProductionControls Group::productionControls(const SummaryState& st) const {
     Group::ProductionControls pc;
 
-    pc.cmode = this->production_properties.active_cmode;
+    pc.cmode = this->production_properties.cmode;
     pc.exceed_action = this->production_properties.exceed_action;
     pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st, this->udq_undefined);
     pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined);
@@ -556,8 +553,8 @@ bool Group::hasInjectionControl(Phase phase) const {
 
 
 
-Group::ProductionCMode Group::gconprod_cmode() const {
-    return this->production_properties.gconprod_cmode;
+Group::ProductionCMode Group::prod_cmode() const {
+    return this->production_properties.cmode;
 }
 
 bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {

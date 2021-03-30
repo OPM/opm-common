@@ -469,8 +469,7 @@ namespace {
                     const bool availableForGroupControl { respond_to_parent && !is_field } ;
                     auto new_group = this->snapshots.back().groups.get(group_name);
                     Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
-                    production.gconprod_cmode = controlMode;
-                    production.active_cmode = controlMode;
+                    production.cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
                     production.water_target = water_target;
@@ -480,10 +479,10 @@ namespace {
                     production.resv_target = resv_target;
                     production.available_group_control = availableForGroupControl;
 
-                    if ((production.gconprod_cmode == Group::ProductionCMode::ORAT) ||
-                        (production.gconprod_cmode == Group::ProductionCMode::WRAT) ||
-                        (production.gconprod_cmode == Group::ProductionCMode::GRAT) ||
-                        (production.gconprod_cmode == Group::ProductionCMode::LRAT))
+                    if ((production.cmode == Group::ProductionCMode::ORAT) ||
+                        (production.cmode == Group::ProductionCMode::WRAT) ||
+                        (production.cmode == Group::ProductionCMode::GRAT) ||
+                        (production.cmode == Group::ProductionCMode::LRAT))
                         production.exceed_action = Group::ExceedAction::RATE;
                     else
                         production.exceed_action = exceedAction;
@@ -667,7 +666,7 @@ namespace {
             if (!this->snapshots.back().groups.has(parentName))
                 addGroup(parentName, handlerContext.currentStep);
 
-            this->addGroupToGroup(parentName, childName, handlerContext.currentStep);
+            this->addGroupToGroup(parentName, childName);
         }
     }
 
@@ -807,7 +806,7 @@ namespace {
       We do not really handle the SAVE keyword, we just interpret it as: Write a
       normal restart file at this report step.
     */
-    void Schedule::handleSAVE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleSAVE(const HandlerContext&, const ParseContext&, ErrorGuard&) {
         auto rst_config = this->snapshots.back().rst_config();
         rst_config.save = true;
         this->snapshots.back().rst_config.update(std::move(rst_config));
