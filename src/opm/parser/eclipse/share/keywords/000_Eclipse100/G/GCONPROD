@@ -16,26 +16,22 @@
     {
       "name": "OIL_TARGET",
       "value_type": "UDA",
-      "dimension": "LiquidSurfaceVolume/Time",
-      "default": -9.99e+102
+      "dimension": "LiquidSurfaceVolume/Time"
     },
     {
       "name": "WATER_TARGET",
       "value_type": "UDA",
-      "dimension": "LiquidSurfaceVolume/Time",
-      "default": -9.99e+102
+      "dimension": "LiquidSurfaceVolume/Time"
     },
     {
       "name": "GAS_TARGET",
       "value_type": "UDA",
-      "dimension": "GasSurfaceVolume/Time",
-      "default": -9.99e+102
+      "dimension": "GasSurfaceVolume/Time"
     },
     {
       "name": "LIQUID_TARGET",
       "value_type": "UDA",
-      "dimension": "LiquidSurfaceVolume/Time",
-      "default": -9.99e+102
+      "dimension": "LiquidSurfaceVolume/Time"
     },
     {
       "name": "EXCEED_PROC",
@@ -70,8 +66,7 @@
     {
       "name": "RESERVOIR_FLUID_TARGET",
       "value_type": "DOUBLE",
-      "dimension": "ReservoirVolume/Time",
-      "default": -9.99e+102
+      "dimension": "ReservoirVolume/Time"
     },
     {
       "name": "RESERVOIR_VOLUME_BALANCE",
