@@ -257,7 +257,7 @@ bool higherLevelProdCMode_NotNoneFld(const Opm::Schedule& sched,
     auto current = group;
     while (current.name() != "FIELD") {
         current = sched.getGroup(current.parent(), simStep);
-        const auto& prod_cmode = group.gconprod_cmode();
+        const auto& prod_cmode = group.prod_cmode();
 
         if (prod_cmode != Opm::Group::ProductionCMode::FLD)
             return true;
@@ -317,7 +317,7 @@ void gconprodCMode(const Opm::Group& group,
                    IGrpArray& iGrp) {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
 
-    const auto& prod_cmode = group.gconprod_cmode();
+    const auto& prod_cmode = group.prod_cmode();
     switch (prod_cmode) {
     case Opm::Group::ProductionCMode::NONE:
         iGrp[nwgmax + IGroup::GConProdCMode] = 0;
@@ -410,7 +410,7 @@ void productionGroup(const Opm::Schedule&     sched,
     // default value
 
     const auto& cgroup = controlGroup(sched, sumState, group, simStep);
-    const auto& deck_cmode = group.gconprod_cmode();
+    const auto& deck_cmode = group.prod_cmode();
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
 
