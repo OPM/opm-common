@@ -1009,34 +1009,40 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-
-    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
-        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
+    void Schedule::addGroup(Group group) {
+        std::string group_name = group.name();
         auto& sched_state = this->snapshots.back();
-        auto insert_index = sched_state.groups.size();
-        sched_state.groups.update( Group{ groupName, insert_index, udq_undefined, this->m_static.m_unit_system} );
+        sched_state.groups.update(std::move(group) );
         sched_state.events().addEvent( ScheduleEvents::NEW_GROUP );
-        sched_state.wellgroup_events().addGroup(groupName);
+        sched_state.wellgroup_events().addGroup(group_name);
         {
             auto go = sched_state.group_order.get();
-            go.add( groupName );
+            go.add( group_name );
             sched_state.group_order.update( std::move(go) );
         }
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
-        if (groupName != "FIELD")
-            this->addGroupToGroup("FIELD", groupName, timeStep);
+        if (group_name != "FIELD")
+            this->addGroupToGroup("FIELD", group_name);
     }
 
 
-    void Schedule::addGroupToGroup( const std::string& parent_name, const std::string& child_name, std::size_t timeStep) {
+    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
+        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
+        const auto& sched_state = this->snapshots.back();
+        auto insert_index = sched_state.groups.size();
+        this->addGroup( Group(groupName, insert_index, udq_undefined, this->m_static.m_unit_system) );
+    }
+
+
+    void Schedule::addGroupToGroup( const std::string& parent_name, const std::string& child_name) {
         auto parent_group = this->snapshots.back().groups.get(parent_name);
         if (parent_group.addGroup(child_name))
             this->snapshots.back().groups.update( std::move(parent_group) );
 
         // Check and update backreference in child
-        const auto& child_group = this->getGroup(child_name, timeStep);
+        const auto& child_group = this->snapshots.back().groups.get(child_name);
         if (child_group.parent() != parent_name) {
             auto old_parent = this->snapshots.back().groups.get(child_group.parent());
             old_parent.delGroup(child_group.name());
@@ -1291,7 +1297,7 @@ namespace {
                 continue;
 
             const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
-            this->addGroupToGroup(parent_group.name, rst_group.name, report_step);
+            this->addGroupToGroup(parent_group.name, rst_group.name);
         }
 
         for (const auto& rst_well : rst_state.wells) {

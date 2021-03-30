@@ -666,7 +666,7 @@ namespace {
             if (!this->snapshots.back().groups.has(parentName))
                 addGroup(parentName, handlerContext.currentStep);
 
-            this->addGroupToGroup(parentName, childName, handlerContext.currentStep);
+            this->addGroupToGroup(parentName, childName);
         }
     }
 
