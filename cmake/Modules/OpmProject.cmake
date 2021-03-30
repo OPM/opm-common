@@ -30,7 +30,6 @@ function (configure_pc_file name source dest prefix libdir includedir)
   set (minor "${${name}_VERSION_MINOR}")
   set (target "${${name}_LIBRARY}")
   linker_cmdline (STRING INTO target from ${target})
-
   configure_file (${source} ${dest} @ONLY)
 endfunction (configure_pc_file name source dist prefix libdir includedir)
 
