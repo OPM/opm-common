@@ -418,24 +418,24 @@ void productionGroup(const Opm::Schedule&     sched,
         throw std::logic_error("Got cgroup == FIELD - uncertain logic");
 
 
-    iGrp[nwgmax + 5] = -1;
+    iGrp[nwgmax + IGroup::ControlGroup] = -1;
     if (groupProductionControllable(sched, sumState, group, simStep)) {
         // this section applies if group is controllable - i.e. has wells that may be controlled
         if (!group.productionGroupControlAvailable() && (!cgroup)) {
             // group can respond to higher level control
-            iGrp[nwgmax + 5] = 0;
+            iGrp[nwgmax + IGroup::ControlGroup] = 0;
             goto CGROUP_DONE;
         }
 
 
         if (cgroup) {
-            iGrp[nwgmax + 5] = 1;
+            iGrp[nwgmax + IGroup::ControlGroup] = 1;
             if (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE) {
                 if (deck_cmode == Opm::Group::ProductionCMode::FLD)
-                    iGrp[nwgmax + 5] = cgroup->insert_index();
+                    iGrp[nwgmax + IGroup::ControlGroup] = cgroup->insert_index();
 
                 if (deck_cmode == Opm::Group::ProductionCMode::NONE)
-                    iGrp[nwgmax + 5] = cgroup->insert_index();
+                    iGrp[nwgmax + IGroup::ControlGroup] = cgroup->insert_index();
             }
             goto CGROUP_DONE;
         }
@@ -452,7 +452,7 @@ void productionGroup(const Opm::Schedule&     sched,
         }
 
     } else if (deck_cmode == Opm::Group::ProductionCMode::NONE) {
-        iGrp[nwgmax + 5] = 1;
+        iGrp[nwgmax + IGroup::ControlGroup] = 1;
     }
  CGROUP_DONE:
 

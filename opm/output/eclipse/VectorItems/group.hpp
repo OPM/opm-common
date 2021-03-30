@@ -57,6 +57,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     // the the IGRP vector, they should all be used as IGRP[NWGMAX + $index]
     enum index : std::vector<int>::size_type {
         ProdActiveCMode = 1,
+        ControlGroup = 5,
         GuideRateDef = 6,
         WInjCMode = 16,
         GConProdCMode = 10,
