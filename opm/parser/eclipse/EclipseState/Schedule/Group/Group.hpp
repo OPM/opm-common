@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GPMaint.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/deck_rst_pair.hpp>
 
 namespace Opm {
 
@@ -187,8 +188,7 @@ struct GroupProductionProperties {
     GroupProductionProperties(const UnitSystem& unit_system, const std::string& gname);
 
     std::string name;
-    ProductionCMode gconprod_cmode = ProductionCMode::NONE;
-    ProductionCMode active_cmode = ProductionCMode::NONE;
+    deck_rst_pair<ProductionCMode> cmode;
     ExceedAction exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
     UDAValue water_target;
@@ -209,8 +209,7 @@ struct GroupProductionProperties {
     void serializeOp(Serializer& serializer)
     {
         serializer(name);
-        serializer(gconprod_cmode);
-        serializer(active_cmode);
+        serializer(cmode);
         serializer(exceed_action);
         oil_target.serializeOp(serializer);
         water_target.serializeOp(serializer);

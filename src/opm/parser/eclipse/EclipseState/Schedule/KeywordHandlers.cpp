@@ -467,8 +467,7 @@ namespace {
                     const bool availableForGroupControl { respond_to_parent && !is_field } ;
                     auto new_group = this->snapshots.back().groups.get(group_name);
                     Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
-                    production.gconprod_cmode = controlMode;
-                    production.active_cmode = controlMode;
+                    production.cmode = deck_rst_pair<Group::ProductionCMode>::deck(controlMode);
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
                     production.water_target = water_target;
@@ -478,10 +477,10 @@ namespace {
                     production.resv_target = resv_target;
                     production.available_group_control = availableForGroupControl;
 
-                    if ((production.gconprod_cmode == Group::ProductionCMode::ORAT) ||
-                        (production.gconprod_cmode == Group::ProductionCMode::WRAT) ||
-                        (production.gconprod_cmode == Group::ProductionCMode::GRAT) ||
-                        (production.gconprod_cmode == Group::ProductionCMode::LRAT))
+                    if ((controlMode == Group::ProductionCMode::ORAT) ||
+                        (controlMode == Group::ProductionCMode::WRAT) ||
+                        (controlMode == Group::ProductionCMode::GRAT) ||
+                        (controlMode == Group::ProductionCMode::LRAT))
                         production.exceed_action = Group::ExceedAction::RATE;
                     else
                         production.exceed_action = exceedAction;
