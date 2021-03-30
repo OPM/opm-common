@@ -727,6 +727,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
+       opm/parser/eclipse/EclipseState/Schedule/deck_rst_pair.hpp
        opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/Branch.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp

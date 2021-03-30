@@ -59,6 +59,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/deck_rst_pair.hpp>
 
 using namespace Opm;
 
@@ -4578,4 +4579,25 @@ WCONPROD
     BOOST_CHECK_EQUAL(controls2.alq_value, dim.convertRawToSi(123));
 }
 
+
+
+BOOST_AUTO_TEST_CASE(rst_deck_pair) {
+    deck_rst_pair<int> p;
+    BOOST_CHECK_THROW(p.get(), std::exception);
+    BOOST_CHECK(p.empty());
+
+    p = deck_rst_pair<int>::rst(100);
+    BOOST_CHECK_EQUAL(p.get(), 100);
+    BOOST_CHECK_EQUAL(p.get<deck_rst_pair<int>::rst>(), 100);
+    BOOST_CHECK_THROW(p.get<deck_rst_pair<int>::deck>(), std::exception);
+    BOOST_CHECK(p.holds_rst());
+    BOOST_CHECK(!p.holds_deck());
+    BOOST_CHECK(!p.empty());
+
+    p = deck_rst_pair<int>::deck(200);
+    BOOST_CHECK_EQUAL(p.get(), 200);
+    BOOST_CHECK(!p.holds_rst());
+    BOOST_CHECK(p.holds_deck());
+    BOOST_CHECK(!p.empty());
+}
 
