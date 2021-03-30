@@ -511,31 +511,31 @@ void productionGroup(const Opm::Schedule&     sched,
     const auto& p_exceed_act = production_controls.exceed_action;
     switch (deck_cmode) {
     case Opm::Group::ProductionCMode::NONE:
-        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
+        iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
         break;
     case Opm::Group::ProductionCMode::ORAT:
-        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
+        iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
         break;
     case Opm::Group::ProductionCMode::WRAT:
-        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
+        iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
         break;
     case Opm::Group::ProductionCMode::GRAT:
-        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
+        iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
         break;
     case Opm::Group::ProductionCMode::LRAT:
-        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
+        iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
         break;
     case Opm::Group::ProductionCMode::RESV:
-        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
+        iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
         break;
     case Opm::Group::ProductionCMode::FLD:
         if (cgroup && (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE)) {
             iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::Form;
         }
-        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
+        iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
         break;
     default:
-        iGrp[nwgmax + 7] = 0;
+        iGrp[nwgmax + IGroup::ExceedAction] = 0;
     }
 }
 

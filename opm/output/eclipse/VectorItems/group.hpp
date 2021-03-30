@@ -58,6 +58,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     enum index : std::vector<int>::size_type {
         ProdActiveCMode = 1,
         GuideRateDef = 6,
+        ExceedAction = 7,
         WInjCMode = 16,
         GConProdCMode = 10,
         GInjCMode = 21,
