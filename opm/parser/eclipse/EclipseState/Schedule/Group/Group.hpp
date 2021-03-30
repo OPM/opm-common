@@ -187,8 +187,7 @@ struct GroupProductionProperties {
     GroupProductionProperties(const UnitSystem& unit_system, const std::string& gname);
 
     std::string name;
-    ProductionCMode gconprod_cmode = ProductionCMode::NONE;
-    ProductionCMode active_cmode = ProductionCMode::NONE;
+    ProductionCMode cmode = ProductionCMode::NONE;
     ExceedAction exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
     UDAValue water_target;
@@ -209,8 +208,7 @@ struct GroupProductionProperties {
     void serializeOp(Serializer& serializer)
     {
         serializer(name);
-        serializer(gconprod_cmode);
-        serializer(active_cmode);
+        serializer(cmode);
         serializer(exceed_action);
         oil_target.serializeOp(serializer);
         water_target.serializeOp(serializer);
@@ -286,7 +284,7 @@ struct ProductionControls {
     const GroupProductionProperties& productionProperties() const;
     const std::map<Phase , GroupInjectionProperties>& injectionProperties() const;
     const GroupType& getGroupType() const;
-    ProductionCMode gconprod_cmode() const;
+    ProductionCMode prod_cmode() const;
     InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
     bool has_control(ProductionCMode control) const;
