@@ -28,7 +28,7 @@ macro (opm_install opm)
   if(NOT "${${opm}_TARGET}" STREQUAL "")
     export(TARGETS ${${opm}_TARGET} ${${opm}_EXTRA_TARGETS}
             FILE ${opm}-targets.cmake)
-    install(EXPORT ${opm}-targets DESTINATION "share/cmake/${opm}")
+    install(EXPORT ${opm}-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${opm})
   endif()
   # only /usr/lib/debug seems to be searched for debug info; if we have
   # write access to that directory (package installation), then default

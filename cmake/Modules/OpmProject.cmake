@@ -137,16 +137,31 @@ function (opm_cmake_config name)
 	FILE CMAKE "${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake"
 	APPEND "${${name}_CONFIG_VARS}"
 	)
+
+  # put this in the right system location; if we have binaries then it
+  # should go in the arch-specific lib/ directory, otherwise use the
+  # common/noarch lib/ directory (these targets come from UseMultiArch)
+  if (${name}_TARGET)
+    set (_pkg_dir ${CMAKE_INSTALL_LIBDIR})
+  else ()
+    set (_pkg_dir lib)
+  endif ()
+
+  # If there is a library then the cmake package configuration file is architecture
+  # dependent and should move to the corresponding multiarch libdir.
+  # Really no idea what ${name}_VER_DIR is and when it is needed.
+  set (_cmake_config_dir ${CMAKE_INSTALL_PREFIX}/${_pkg_dir}/cmake${${name}_VER_DIR}/${${name}_NAME})
+
   # this file gets copied to the final installation directory
   install (
 	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake
-	DESTINATION share/cmake${${name}_VER_DIR}/${${name}_NAME}
+	DESTINATION ${_cmake_config_dir}
 	RENAME ${${name}_NAME}-config.cmake
 	)
   # assume that there exists a version file already
   install (
 	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-config-version.cmake
-	DESTINATION share/cmake${${name}_VER_DIR}/${${name}_NAME}
+	DESTINATION ${_cmake_config_dir}
 	)
 
   # find-mode .pc file; use this to locate system installation
@@ -159,14 +174,6 @@ function (opm_cmake_config name)
 	${CMAKE_INSTALL_PREFIX}/include${${name}_VER_DIR}
 	)
 
-  # put this in the right system location; if we have binaries then it
-  # should go in the arch-specific lib/ directory, otherwise use the
-  # common/noarch lib/ directory (these targets come from UseMultiArch)
-  if (${name}_TARGET)
-	set (_pkg_dir ${CMAKE_INSTALL_LIBDIR})
-  else ()
-	set (_pkg_dir lib)
-  endif ()
   install (
 	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/${_pkg_dir}/pkgconfig${${name}_VER_DIR}/
