@@ -9,15 +9,14 @@
     "item": "NTPVT"
   },
   "items": [
-    {
-      "name": "WATER_VELOCITY",
+  {
+      "name": "DATA",
       "value_type": "DOUBLE",
-      "dimension": "Length/Time"
-    },
-    {
-      "name": "VRF",
-      "value_type": "DOUBLE",
-      "dimension": "1"
-    }
+      "size_type": "ALL",
+      "dimension": [
+          "Length/Time",
+          "1"
+      ]
+  }
   ]
 }
