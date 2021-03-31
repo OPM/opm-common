@@ -316,19 +316,20 @@ namespace {
     }
 
     void Schedule::handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors) {
+        using GI = ParserKeywords::GCONINJE;
         for (const auto& record : keyword) {
-            const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
+            const std::string& groupNamePattern = record.getItem<GI::GROUP>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, current_step, parseContext, errors, keyword);
 
-            const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
-            const Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
-            const auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get<UDAValue>(0);
-            const auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
-            const auto reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0);
-            const auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
-            const bool is_free = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
+            const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem<GI::CONTROL_MODE>().getTrimmedString(0));
+            const Phase phase = get_phase( record.getItem<GI::PHASE>().getTrimmedString(0));
+            const auto surfaceInjectionRate = record.getItem<GI::SURFACE_TARGET>().get<UDAValue>(0);
+            const auto reservoirInjectionRate = record.getItem<GI::RESV_TARGET>().get<UDAValue>(0);
+            const auto reinj_target = record.getItem<GI::REINJ_TARGET>().get<UDAValue>(0);
+            const auto voidage_target = record.getItem<GI::VOIDAGE_TARGET>().get<UDAValue>(0);
+            const bool is_free = DeckItem::to_bool(record.getItem<GI::RESPOND_TO_PARENT>().getTrimmedString(0));
 
             std::optional<std::string> guide_rate_str;
             {
