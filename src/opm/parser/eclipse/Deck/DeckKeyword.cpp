@@ -85,7 +85,7 @@ namespace Opm {
     }
 
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword,  const std::vector<std::vector<DeckValue>>& record_list, UnitSystem& system_active, UnitSystem& system_default) :
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword,  const std::vector<std::vector<DeckValue>>& record_list, const UnitSystem& system_active, const UnitSystem& system_default) :
         DeckKeyword(parserKeyword)
     {
         if (parserKeyword.hasFixedSize() && (record_list.size() != parserKeyword.getFixedSize()))
@@ -115,8 +115,8 @@ namespace Opm {
                               std::vector<Dimension> active_dimensions;
                               std::vector<Dimension> default_dimensions;
                               if (dim.size() > 0) {
-                                 active_dimensions.push_back( system_active.getNewDimension(dim[0]) );
-                                 default_dimensions.push_back( system_default.getNewDimension(dim[0]) );
+                                 active_dimensions.push_back( system_active.parse(dim[0]) );
+                                 default_dimensions.push_back( system_default.parse(dim[0]) );
                               }
                               DeckItem deck_item(parser_item.name(), double(), active_dimensions, default_dimensions);
                               add_deckvalue<double>(std::move(deck_item), deck_record, parser_item, input_record, j);
@@ -164,7 +164,7 @@ namespace Opm {
     }
 
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, UnitSystem& system_active, UnitSystem& system_default) :
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, const UnitSystem& system_active, const UnitSystem& system_default) :
         DeckKeyword(parserKeyword)
     {
         if (!parserKeyword.isDataKeyword())
@@ -181,8 +181,8 @@ namespace Opm {
         std::vector<Dimension> active_dimensions;
         std::vector<Dimension> default_dimensions;
         if (dim.size() > 0) {
-             active_dimensions.push_back( system_active.getNewDimension(dim[0]) );
-             default_dimensions.push_back( system_default.getNewDimension(dim[0]) );
+             active_dimensions.push_back( system_active.parse(dim[0]) );
+             default_dimensions.push_back( system_default.parse(dim[0]) );
         }
         DeckItem item(parser_item.name(), double(), active_dimensions, default_dimensions);
         for (double val : data)

@@ -52,6 +52,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/DeckRecord.cpp
     src/opm/parser/eclipse/Deck/DeckOutput.cpp
     src/opm/parser/eclipse/Deck/DeckSection.cpp
+    src/opm/parser/eclipse/Deck/ImportContainer.cpp
     src/opm/parser/eclipse/Deck/UDAValue.cpp
     src/opm/parser/eclipse/Python/Python.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.cpp
@@ -352,6 +353,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/FunctionalTests.cpp
     tests/parser/GeomodifierTests.cpp
     tests/parser/GroupTests.cpp
+    tests/parser/ImportTests.cpp
     tests/parser/InitConfigTest.cpp
     tests/parser/IOConfigTests.cpp
     tests/parser/MessageLimitTests.cpp
@@ -809,6 +811,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Deck/DeckValue.hpp
        opm/parser/eclipse/Deck/DeckKeyword.hpp
        opm/parser/eclipse/Deck/DeckRecord.hpp
+       opm/parser/eclipse/Deck/ImportContainer.hpp
        opm/parser/eclipse/Deck/UDAValue.hpp
        opm/parser/eclipse/Deck/value_status.hpp
        opm/parser/eclipse/Python/Python.hpp)

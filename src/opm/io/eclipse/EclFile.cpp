@@ -38,23 +38,17 @@
 
 namespace Opm { namespace EclIO {
 
-EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(filename)
-{
-    if (!fileExists(filename))
-        throw std::runtime_error(fmt::format("Can not open EclFile: {}", filename));
-
+void EclFile::load(bool preload) {
     std::fstream fileH;
 
-    formatted = isFormatted(filename);
-
     if (formatted) {
-        fileH.open(filename, std::ios::in);
+        fileH.open(this->inputFilename, std::ios::in);
     } else {
-        fileH.open(filename, std::ios::in |  std::ios::binary);
+        fileH.open(this->inputFilename, std::ios::in |  std::ios::binary);
     }
 
     if (!fileH)
-        throw std::runtime_error(fmt::format("Can not open EclFile: {}", filename));
+        throw std::runtime_error(fmt::format("Can not open EclFile: {}", this->inputFilename));
 
     int n = 0;
     while (!isEOF(&fileH)) {
@@ -100,6 +94,25 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
 
     if (preload)
         this->loadData();
+}
+
+
+EclFile::EclFile(const std::string& filename, EclFile::Formatted fmt, bool preload) :
+    formatted(fmt.value),
+    inputFilename(filename)
+{
+    this->load(preload);
+}
+
+
+EclFile::EclFile(const std::string& filename, bool preload) :
+    inputFilename(filename)
+{
+    if (!fileExists(filename))
+        throw std::runtime_error(fmt::format("Can not open EclFile: {}", filename));
+
+    formatted = isFormatted(filename);
+    this->load(preload);
 }
 
 
