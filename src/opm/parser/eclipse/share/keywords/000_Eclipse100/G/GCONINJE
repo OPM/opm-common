@@ -41,7 +41,7 @@
       "dimension": "1"
     },
     {
-      "name": "FREE",
+      "name": "RESPOND_TO_PARENT",
       "value_type": "STRING",
       "default": "YES"
     },
