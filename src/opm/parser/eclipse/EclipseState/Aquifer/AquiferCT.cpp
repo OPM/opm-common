@@ -95,8 +95,7 @@ bool AquiferCT::AQUCT_data::operator==(const AquiferCT::AQUCT_data& other) const
            this->c2 == other.c2 &&
            this->p0 == other.p0 &&
            this->td == other.td &&
-           this->pi == other.pi &&
-           this->cell_id == other.cell_id;
+           this->pi == other.pi;
 }
 
 AquiferCT::AQUCT_data::AQUCT_data(int aqID,
@@ -113,8 +112,7 @@ AquiferCT::AQUCT_data::AQUCT_data(int aqID,
                                   double c2_,
                                   const std::pair<bool, double>& p0_,
                                   const std::vector<double>& td_,
-                                  const std::vector<double>& pi_,
-                                  const std::vector<int>& cell_id_) :
+                                  const std::vector<double>& pi_) :
     aquiferID(aqID),
     inftableID(infID),
     pvttableID(pvtID),
@@ -129,8 +127,7 @@ AquiferCT::AQUCT_data::AQUCT_data(int aqID,
     c2(c2_),
     p0(p0_),
     td(td_),
-    pi(pi_),
-    cell_id(cell_id_)
+    pi(pi_)
 {}
 
 AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
@@ -153,7 +150,7 @@ AquiferCT AquiferCT::serializeObject()
 {
     AquiferCT result;
     result.m_aquct = {{1, 2, 3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
-                       11.0, 12.0, {true, 13.0}, {14.0}, {15.0}, {16}}};
+                       11.0, 12.0, {true, 13.0}, {14.0}, {15.0}}};
 
     return result;
 }
