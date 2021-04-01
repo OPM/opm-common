@@ -453,3 +453,6 @@ else()
     set(OPM_ENABLE_EMBEDDED_PYTHON OFF CACHE BOOL "Enable embedded python?" FORCE)
   endif()
 endif()
+
+install(DIRECTORY docs/man1 DESTINATION ${CMAKE_INSTALL_MANDIR}
+  FILES_MATCHING PATTERN "*.1")
