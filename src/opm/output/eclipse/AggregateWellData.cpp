@@ -252,21 +252,6 @@ namespace {
             }
         }
 
-        template <typename IWellArray>
-        void setHistoryControlMode(const Opm::Well& well,
-                                   const int        curr,
-                                   IWellArray&      iWell)
-        {
-            iWell[VI::IWell::index::HistReqWCtrl] =
-                well.predictionMode() ? 0 : curr;
-        }
-
-        template <typename IWellArray>
-        void setCurrentControl(const int   curr,
-                               IWellArray& iWell)
-        {
-            iWell[VI::IWell::index::ActWCtrl] = curr;
-        }
 
         template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
@@ -332,10 +317,13 @@ namespace {
             // deck.  This item is supposed to be the well's actual, active
             // target control mode in the simulator.
             //
-            // Observe that the setupCurrentContro() function is called again
-            // for open wells in the dynamicContrib() function.
-            setCurrentControl(eclipseControlMode(well, st), iWell);
-            setHistoryControlMode(well, eclipseControlMode(well, st), iWell);
+            // Observe that active control is assigned to twice, first here
+            // where it is initialized with the control mode value from the
+            // input deck, and then subsequently in the dynamicContrib()
+            // function where the active control mode from the simulator is
+            // assigned.
+            iWell[VI::IWell::index::ActWCtrl] = eclipseControlMode(well,st);
+            iWell[VI::IWell::index::HistReqWCtrl] = well.predictionMode() ? 0 : iWell[VI::IWell::index::ActWCtrl];
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
@@ -395,7 +383,7 @@ namespace {
             using Value = VI::IWell::Value::Status;
 
             if (wellControlDefined(xw)) {
-                setCurrentControl(ctrlMode(well, xw), iWell);
+                iWell[VI::IWell::index::ActWCtrl] = ctrlMode(well, xw);
             }
 
             const auto any_flowing_conn =
