@@ -62,8 +62,7 @@ namespace Opm {
                        double c2_,
                        const std::pair<bool, double>& p0_,
                        const std::vector<double>& td_,
-                       const std::vector<double>& pi_,
-                       const std::vector<int>& cell_id_);
+                       const std::vector<double>& pi_);
 
             int aquiferID;
             int inftableID, pvttableID;
@@ -80,7 +79,6 @@ namespace Opm {
 
             std::pair<bool, double> p0; //Initial aquifer pressure at datum depth, d0
             std::vector<double> td, pi;
-            std::vector<int> cell_id;
 
             bool operator==(const AQUCT_data& other) const;
 
@@ -102,7 +100,6 @@ namespace Opm {
                 serializer(p0);
                 serializer(td);
                 serializer(pi);
-                serializer(cell_id);
             }
         };
 
