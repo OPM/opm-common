@@ -323,20 +323,24 @@ namespace Opm {
 
         /*********************************************************************/
 
-        ptr_member<PAvg> pavg;
-        ptr_member<WellTestConfig> wtest_config;
         ptr_member<GConSale> gconsale;
         ptr_member<GConSump> gconsump;
+        ptr_member<GuideRateConfig> guide_rate;
+
         ptr_member<WListManager> wlist_manager;
-        ptr_member<Network::ExtNetwork> network;
-        ptr_member<RPTConfig> rpt_config;
-        ptr_member<Action::Actions> actions;
-        ptr_member<UDQActive> udq_active;
         ptr_member<NameOrder> well_order;
         ptr_member<GroupOrder> group_order;
+
+        ptr_member<Action::Actions> actions;
         ptr_member<UDQConfig> udq;
+        ptr_member<UDQActive> udq_active;
+
+        ptr_member<PAvg> pavg;
+        ptr_member<WellTestConfig> wtest_config;
         ptr_member<GasLiftOpt> glo;
-        ptr_member<GuideRateConfig> guide_rate;
+        ptr_member<Network::ExtNetwork> network;
+
+        ptr_member<RPTConfig> rpt_config;
         ptr_member<RFTConfig> rft_config;
         ptr_member<RSTConfig> rst_config;
 
