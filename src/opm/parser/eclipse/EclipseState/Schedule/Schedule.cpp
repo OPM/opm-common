@@ -1233,6 +1233,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     bool Schedule::operator==(const Schedule& data) const {
         return this->m_static == data.m_static &&
+               this->m_sched_deck == data.m_sched_deck &&
                this->snapshots == data.snapshots;
      }
 
