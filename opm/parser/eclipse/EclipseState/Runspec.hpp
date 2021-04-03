@@ -124,14 +124,17 @@ public:
         return this->m_location;
     }
 
-
-    bool operator==(const Welldims& data) const {
+    bool data_equal(const Welldims& data) const {
         return this->maxConnPerWell() == data.maxConnPerWell() &&
                this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
                this->maxGroupsInField() == data.maxGroupsInField() &&
                this->maxWellsInField() == data.maxWellsInField() &&
                this->maxWellListsPrWell() == data.maxWellListsPrWell() &&
-               this->maxDynamicWellLists() == data.maxDynamicWellLists() &&
+               this->maxDynamicWellLists() == data.maxDynamicWellLists();
+    }
+
+    bool operator==(const Welldims& data) const {
+        return this->data_equal(data) &&
                this->location() == data.location();
     }
 
