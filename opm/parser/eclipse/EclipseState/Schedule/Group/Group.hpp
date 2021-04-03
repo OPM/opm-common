@@ -338,7 +338,7 @@ private:
 
     std::map<Phase, GroupInjectionProperties> injection_properties;
     GroupProductionProperties production_properties;
-    std::pair<Phase, bool> m_topup_phase{Phase::WATER, false};
+    std::optional<Phase> m_topup_phase;
     std::optional<GPMaint> m_gpmaint;
 };
 
