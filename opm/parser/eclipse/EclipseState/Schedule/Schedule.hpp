@@ -68,6 +68,7 @@ namespace Opm
     struct ScheduleStatic {
         std::shared_ptr<const Python> m_python_handle;
         std::string m_input_path;
+        std::pair<std::time_t, std::size_t> m_restart_info;
         MessageLimits m_deck_message_limits;
         UnitSystem m_unit_system;
         Runspec m_runspec;
@@ -81,6 +82,7 @@ namespace Opm
         {}
 
         ScheduleStatic(std::shared_ptr<const Python> python_handle,
+                       const std::pair<std::time_t, std::size_t>& restart_info,
                        const Deck& deck,
                        const Runspec& runspec,
                        const std::optional<int>& output_interval_,
@@ -88,6 +90,7 @@ namespace Opm
                        ErrorGuard& errors):
             m_python_handle(python_handle),
             m_input_path(deck.getInputPath()),
+            m_restart_info(restart_info),
             m_deck_message_limits( deck ),
             m_unit_system( deck.getActiveUnitSystem() ),
             m_runspec( runspec ),
@@ -100,6 +103,7 @@ namespace Opm
         void serializeOp(Serializer& serializer)
         {
             m_deck_message_limits.serializeOp(serializer);
+            serializer(this->m_restart_info);
             m_runspec.serializeOp(serializer);
             m_unit_system.serializeOp(serializer);
             serializer(this->m_input_path);
@@ -116,6 +120,7 @@ namespace Opm
             st.m_unit_system = UnitSystem::newFIELD();
             st.m_input_path = "Some/funny/path";
             st.rst_config = RSTConfig::serializeObject();
+            st.m_restart_info = std::make_pair(0, 0);
             return st;
         }
 
@@ -124,6 +129,7 @@ namespace Opm
                    this->m_deck_message_limits == other.m_deck_message_limits &&
                    this->m_unit_system == other.m_unit_system &&
                    this->rst_config == other.rst_config &&
+                   this->m_restart_info == other.m_restart_info &&
                    this->m_runspec == other.m_runspec;
         }
     };
@@ -301,7 +307,6 @@ namespace Opm
             m_sched_deck.serializeOp(serializer);
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
-            serializer(m_restart_info);
 
             pack_unpack<PAvg, Serializer>(serializer);
             pack_unpack<WellTestConfig, Serializer>(serializer);
@@ -461,7 +466,6 @@ namespace Opm
 
     private:
         ScheduleStatic m_static;
-        std::pair<std::time_t, std::size_t> m_restart_info;
         ScheduleDeck m_sched_deck;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
