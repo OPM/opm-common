@@ -108,12 +108,11 @@ namespace {
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst)
     try :
-        m_static( python, deck, runspec, output_interval, parseContext, errors ),
-        m_restart_info( restart_info(rst)),
-        m_sched_deck(deck, m_restart_info )
+        m_static( python, restart_info(rst), deck, runspec, output_interval, parseContext, errors ),
+        m_sched_deck(deck, m_static.m_restart_info)
     {
         if (rst) {
-            auto restart_step = this->m_restart_info.second;
+            auto restart_step = this->m_static.m_restart_info.second;
             this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, nullptr, &grid, &fp, "");
             this->load_rst(*rst, grid, fp);
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp, "");
@@ -344,14 +343,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                these keywords will be assigned to report step 0.
         */
 
-        auto restart_skip = load_start < this->m_restart_info.second;
+        auto restart_skip = load_start < this->m_static.m_restart_info.second;
         ScheduleLogger logger(restart_skip);
         {
             const auto& location = this->m_sched_deck.location();
             current_file = location.filename;
             logger.info(fmt::format("{0}\n{0}Processing dynamic information from\n{0}{1} line {2}", prefix, current_file, location.lineno));
             if (restart_skip) {
-                auto [restart_time, restart_offset] = this->m_restart_info;
+                auto [restart_time, restart_offset] = this->m_static.m_restart_info;
                 logger.info(fmt::format("{}This is a restarted run - skipping until report step {} at {}", prefix, restart_offset, Schedule::formatDate(restart_time)));
             }
             logger(fmt::format("{}Initializing report step {}/{} at {} {} {} line {}",
@@ -1233,9 +1232,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     bool Schedule::operator==(const Schedule& data) const {
-
-        return this->m_restart_info == data.m_restart_info &&
-               this->m_static == data.m_static &&
+        return this->m_static == data.m_static &&
                this->snapshots == data.snapshots;
      }
 
