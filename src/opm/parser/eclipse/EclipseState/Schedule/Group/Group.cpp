@@ -113,7 +113,7 @@ Group Group::serializeObject()
     result.m_groups = {{"test7", "test8"}, {"test9", "test10"}};
     result.injection_properties = {{Opm::Phase::OIL, GroupInjectionProperties::serializeObject()}};
     result.production_properties = GroupProductionProperties::serializeObject();
-    result.m_topup_phase = {Phase::OIL, true};
+    result.m_topup_phase = Phase::OIL;
     result.m_gpmaint = GPMaint::serializeObject();
 
     return result;
@@ -186,14 +186,15 @@ bool Group::updateInjection(const GroupInjectionProperties& injection) {
     if (detail::has_control(injection.injection_controls, Group::InjectionCMode::RESV) ||
         detail::has_control(injection.injection_controls, Group::InjectionCMode::REIN) ||
         detail::has_control(injection.injection_controls, Group::InjectionCMode::VREP)) {
-        auto topup_phase = std::make_pair(injection.phase, true);
+        auto topup_phase = injection.phase;
         if (topup_phase != this->m_topup_phase) {
             this->m_topup_phase = topup_phase;
             update = true;
         }
     } else {
-        if (this->m_topup_phase == std::make_pair(injection.phase, true))
-            this->m_topup_phase = std::make_pair(injection.phase, false);
+        if (this->m_topup_phase.has_value())
+            update = true;
+        this->m_topup_phase = {};
     }
     return update;
 }
@@ -487,15 +488,15 @@ std::optional<std::string> Group::flow_group() const {
 }
 
 const Phase& Group::topup_phase() const {
-    if (this->m_topup_phase.second)
-        return this->m_topup_phase.first;
+    if (this->m_topup_phase.has_value())
+        return this->m_topup_phase.value();
     else
         throw std::logic_error("Asked for topup phase in well without topup phase defined");
 }
 
 
 bool Group::has_topup_phase() const {
-    return this->m_topup_phase.second;
+    return this->m_topup_phase.has_value();
 }
 
 
