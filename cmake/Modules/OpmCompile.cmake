@@ -40,7 +40,7 @@ macro (opm_compile opm)
   if (${opm}_SOURCES)
         add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE} ${${opm}_SOURCES})
         set_target_properties (${${opm}_TARGET} PROPERTIES
-          SOVERSION ${${opm}_VERSION_MAJOR}
+          SOVERSION ${${opm}_VERSION}
           VERSION ${${opm}_VERSION}
           LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}"
           POSITION_INDEPENDENT_CODE TRUE 
