@@ -57,7 +57,7 @@ bool AquiferConfig::active() const {
            this->hasNumericalAquifer();
 }
 
-bool AquiferConfig::operator==(const AquiferConfig& other) {
+bool AquiferConfig::operator==(const AquiferConfig& other) const {
     return this->aquifetp == other.aquifetp &&
            this->aquiferct == other.aquiferct &&
            this->aqconn == other.aqconn &&
