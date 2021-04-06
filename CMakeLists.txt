@@ -308,7 +308,7 @@ if(ENABLE_ECL_INPUT)
 endif()
 
 # Install build system files
-install(DIRECTORY cmake DESTINATION share/opm)
+install(DIRECTORY cmake DESTINATION share/opm USE_SOURCE_PERMISSIONS)
 
 # Install tab completion skeleton
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
