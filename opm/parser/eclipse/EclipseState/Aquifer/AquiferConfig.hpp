@@ -53,6 +53,7 @@ public:
     bool hasNumericalAquifer() const;
     bool hasAnalyticalAquifer() const;
     const NumericalAquifers& numericalAquifers() const;
+    NumericalAquifers& mutableNumericalAquifers() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -66,7 +67,7 @@ public:
 private:
     Aquifetp aquifetp;
     AquiferCT aquiferct;
-    NumericalAquifers numerical_aquifers;
+    mutable NumericalAquifers numerical_aquifers;
     Aquancon aqconn;
 };
 

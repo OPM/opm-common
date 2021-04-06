@@ -65,9 +65,11 @@ namespace Opm {
             serializer(this->ve_frac_cappress);
         }
 
-        static std::map<size_t, std::map<size_t, NumericalAquiferConnection>> generateConnections(const Deck& deck, const EclipseGrid& grid);
+        static std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
+                generateConnections(const Deck& deck, const EclipseGrid& grid, const std::vector<int>& actnum);
     private:
-        static std::vector<NumericalAquiferConnection> connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record);
+        static std::vector<NumericalAquiferConnection>
+                connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record, const std::vector<int>& actnum);
     };
 }
 

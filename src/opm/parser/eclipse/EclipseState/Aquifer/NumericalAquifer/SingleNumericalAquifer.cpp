@@ -72,14 +72,6 @@ namespace Opm {
         return aqucellprops;
     }
 
-    std::vector<NNCdata>
-    SingleNumericalAquifer::aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
-        auto nncs = this->aquiferCellNNCs();
-        auto con_nncs = this->aquiferConnectionNNCs(grid, fp);
-        nncs.insert(nncs.end(), con_nncs.begin(), con_nncs.end());
-        return nncs;
-    }
-
     std::vector<NNCdata> SingleNumericalAquifer::aquiferCellNNCs() const {
         std::vector<NNCdata> nncs;
         // aquifer cells are connected to each other through NNCs to form the aquifer
