@@ -60,7 +60,8 @@ namespace Opm {
     }
 
     bool EclipseConfig::operator==(const EclipseConfig& data) const {
-        return this->init() == data.init();
+        return this->init() == data.init() &&
+               this->io() == data.io();
     }
 
     IOConfig& EclipseConfig::io() {
