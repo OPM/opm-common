@@ -125,7 +125,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
           m_inputNnc(          m_inputGrid, deck),
           m_gridDims(          deck ),
           field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
-          m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
+          m_simulationConfig(  m_eclipseConfig.init().restartRequested(), deck, field_props),
           m_transMult(         GridDims(deck), deck, field_props),
           tracer_config(       m_deckUnitSystem, deck)
     {
@@ -202,7 +202,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
     /// [[deprecated]] --- use cfg().init()
     const InitConfig& EclipseState::getInitConfig() const {
-        return m_eclipseConfig.getInitConfig();
+        return m_eclipseConfig.init();
     }
 
     /// [[deprecated]] --- use cfg().init()

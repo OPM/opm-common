@@ -58,14 +58,10 @@ namespace Opm {
     const InitConfig& EclipseConfig::init() const{
         return m_initConfig;
     }
-    
-    // [[deprecated]] --- use init()
-    const InitConfig& EclipseConfig::getInitConfig() const{
-        return init();
-    }
 
     bool EclipseConfig::operator==(const EclipseConfig& data) const {
-        return this->init() == data.init();
+        return this->init() == data.init() &&
+               this->io() == data.io();
     }
 
     IOConfig& EclipseConfig::io() {
