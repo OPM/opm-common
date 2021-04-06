@@ -42,7 +42,6 @@ namespace Opm {
         IOConfig& io();
         const IOConfig& io() const;
         const InitConfig& init() const;
-        const InitConfig& getInitConfig() const;
 
         bool operator==(const EclipseConfig& data) const;
 
