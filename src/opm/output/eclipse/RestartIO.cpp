@@ -42,11 +42,11 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
-//#include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -438,8 +438,10 @@ namespace {
     {
         writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
 
-        //write network data if the network option is used
-        if (es.runspec().networkDimensions().maxNONodes() >= 1) {
+        // Write network data if the network option is used and network defined
+        if ((es.runspec().networkDimensions().maxNONodes() >= 1) &&
+            schedule[sim_step].network().active())
+        {
             writeNetwork(es, sim_step, units, schedule, sumState, inteHD, rstFile);
         }
 
