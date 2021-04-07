@@ -580,7 +580,8 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .dimensions(nx, ny, nz)
          .numActive(nactive)
          .unitConventions(unit_system)
-         .wellTableDimensions({ numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField})
+         .wellTableDimensions({ numWells, maxPerf, maxWellsInGroup,
+                                maxGroupInField, maxWellsInField, 0, 0 })
          .calendarDate({year, month, mday, hour, minute, seconds, mseconds})
          .activePhases(Ph{1,1,1})
          .params_NWELZ(niwelz, nswelz, nxwelz, nzwelz)
