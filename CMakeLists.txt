@@ -308,7 +308,7 @@ if(ENABLE_ECL_INPUT)
 endif()
 
 # Install build system files
-install(DIRECTORY cmake DESTINATION share/opm)
+install(DIRECTORY cmake DESTINATION share/opm USE_SOURCE_PERMISSIONS)
 
 # Install tab completion skeleton
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
@@ -453,3 +453,6 @@ else()
     set(OPM_ENABLE_EMBEDDED_PYTHON OFF CACHE BOOL "Enable embedded python?" FORCE)
   endif()
 endif()
+
+install(DIRECTORY docs/man1 DESTINATION ${CMAKE_INSTALL_MANDIR}
+  FILES_MATCHING PATTERN "*.1")
