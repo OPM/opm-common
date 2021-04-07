@@ -19,7 +19,6 @@
 #ifndef FIELDPROPS_HPP
 #define FIELDPROPS_HPP
 
-#include <memory>
 #include <limits>
 #include <optional>
 #include <string>
@@ -534,7 +533,7 @@ private:
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
     const TableManager& tables;
-    std::shared_ptr<satfunc::RawTableEndPoints> m_rtep;
+    std::optional<satfunc::RawTableEndPoints> m_rtep;
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
     std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;

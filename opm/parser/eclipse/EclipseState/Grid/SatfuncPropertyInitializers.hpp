@@ -142,12 +142,12 @@ namespace Opm { namespace satfunc {
         } pc;
     };
 
-    std::shared_ptr<RawTableEndPoints>
+    RawTableEndPoints
     getRawTableEndpoints(const Opm::TableManager& tm,
                          const Opm::Phases&       phases,
                          const double             tolcrit);
 
-    std::shared_ptr<RawFunctionValues>
+    RawFunctionValues
     getRawFunctionValues(const Opm::TableManager& tm,
                          const Opm::Phases&       phases,
                          const RawTableEndPoints& ep);

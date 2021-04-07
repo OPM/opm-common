@@ -1584,46 +1584,46 @@ namespace {
 } // namespace Anonymous
 
 
-std::shared_ptr<Opm::satfunc::RawTableEndPoints>
+Opm::satfunc::RawTableEndPoints
 Opm::satfunc::getRawTableEndpoints(const Opm::TableManager& tm,
                                    const Opm::Phases&       phases,
                                    const double             tolcrit)
 {
-    auto ep = std::make_shared<RawTableEndPoints>();
+    RawTableEndPoints ep;
 
-    ep->connate.gas   = findMinGasSaturation(tm, phases);
-    ep->connate.water = findMinWaterSaturation(tm, phases);
+    ep.connate.gas   = findMinGasSaturation(tm, phases);
+    ep.connate.water = findMinWaterSaturation(tm, phases);
 
-    ep->critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep->connate.water, tolcrit);
-    ep->critical.oil_in_water = findCriticalOilWater(tm, phases, tolcrit);
-    ep->critical.gas          = findCriticalGas(tm, phases, tolcrit);
-    ep->critical.water        = findCriticalWater(tm, phases, tolcrit);
+    ep.critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep.connate.water, tolcrit);
+    ep.critical.oil_in_water = findCriticalOilWater(tm, phases, tolcrit);
+    ep.critical.gas          = findCriticalGas(tm, phases, tolcrit);
+    ep.critical.water        = findCriticalWater(tm, phases, tolcrit);
 
-    ep->maximum.gas   = findMaxGasSaturation(tm, phases);
-    ep->maximum.water = findMaxWaterSaturation(tm, phases);
+    ep.maximum.gas   = findMaxGasSaturation(tm, phases);
+    ep.maximum.water = findMaxWaterSaturation(tm, phases);
 
     return ep;
 }
 
-std::shared_ptr<Opm::satfunc::RawFunctionValues>
+Opm::satfunc::RawFunctionValues
 Opm::satfunc::getRawFunctionValues(const Opm::TableManager& tm,
                                    const Opm::Phases&       phases,
                                    const RawTableEndPoints& ep)
 {
-    auto fval = std::make_shared<RawFunctionValues>();
+    RawFunctionValues fval;
 
-    fval->kro.max = findMaxKro(tm, phases);
-    fval->kro.rg  = findKrorg(tm, phases, ep);
-    fval->kro.rw  = findKrorw(tm, phases, ep);
+    fval.kro.max = findMaxKro(tm, phases);
+    fval.kro.rg  = findKrorg(tm, phases, ep);
+    fval.kro.rw  = findKrorw(tm, phases, ep);
 
-    fval->krg.max = findMaxKrg(tm, phases);
-    fval->krg.r   = findKrgr(tm, phases, ep);
+    fval.krg.max = findMaxKrg(tm, phases);
+    fval.krg.r   = findKrgr(tm, phases, ep);
 
-    fval->krw.max = findMaxKrw(tm, phases);
-    fval->krw.r   = findKrwr(tm, phases, ep);
+    fval.krw.max = findMaxKrw(tm, phases);
+    fval.krw.r   = findKrwr(tm, phases, ep);
 
-    fval->pc.g = findMaxPcog(tm, phases);
-    fval->pc.w = findMaxPcow(tm, phases);
+    fval.pc.g = findMaxPcog(tm, phases);
+    fval.pc.w = findMaxPcow(tm, phases);
 
     return fval;
 }

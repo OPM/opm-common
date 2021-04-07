@@ -1043,9 +1043,9 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_I_TolCrit_Zero) {
 
     // Water end-points
     {
-        const auto swl  = rtepPtr->connate .water;
-        const auto swcr = rtepPtr->critical.water;
-        const auto swu  = rtepPtr->maximum .water;
+        const auto swl  = rtepPtr.connate .water;
+        const auto swcr = rtepPtr.critical.water;
+        const auto swu  = rtepPtr.maximum .water;
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
         BOOST_CHECK_CLOSE(swcr[0], 0.071004, 1.0e-10);  // == SWL.  TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
@@ -1053,17 +1053,17 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_I_TolCrit_Zero) {
 
     // Oil end-points
     {
-        const auto sowcr = rtepPtr->critical.oil_in_water;
-        const auto sogcr = rtepPtr->critical.oil_in_gas;
+        const auto sowcr = rtepPtr.critical.oil_in_water;
+        const auto sogcr = rtepPtr.critical.oil_in_gas;
         BOOST_CHECK_CLOSE(sowcr[0], 1.0 - 0.791004, 1.0e-10);  // TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(sogcr[0], 1.0 - 0.858996 - 0.071004, 1.0e-10);  // Include SWL
     }
 
     // Gas end-points
     {
-        const auto sgl  = rtepPtr->connate .gas;
-        const auto sgcr = rtepPtr->critical.gas;
-        const auto sgu  = rtepPtr->maximum .gas;
+        const auto sgl  = rtepPtr.connate .gas;
+        const auto sgcr = rtepPtr.critical.gas;
+        const auto sgu  = rtepPtr.maximum .gas;
         BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(sgcr[0], 0.03, 1.0e-10);
         BOOST_CHECK_CLOSE(sgu [0], 0.928996, 1.0e-10);
@@ -1083,9 +1083,9 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_II_TolCrit_Zero) {
 
     // Water end-points
     {
-        const auto swl  = rtepPtr->connate .water;
-        const auto swcr = rtepPtr->critical.water;
-        const auto swu  = rtepPtr->maximum .water;
+        const auto swl  = rtepPtr.connate .water;
+        const auto swcr = rtepPtr.critical.water;
+        const auto swu  = rtepPtr.maximum .water;
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
         BOOST_CHECK_CLOSE(swcr[0], 0.071004, 1.0e-10);  // == SWL.  TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
@@ -1093,17 +1093,17 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_II_TolCrit_Zero) {
 
     // Oil end-points
     {
-        const auto sowcr = rtepPtr->critical.oil_in_water;
-        const auto sogcr = rtepPtr->critical.oil_in_gas;
+        const auto sowcr = rtepPtr.critical.oil_in_water;
+        const auto sogcr = rtepPtr.critical.oil_in_gas;
         BOOST_CHECK_CLOSE(sowcr[0], 1.0 - 0.791004, 1.0e-10);  // TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(sogcr[0], 1.0 - 0.858996 - 0.071004, 1.0e-10);  // Include SWL
     }
 
     // Gas end-points
     {
-        const auto sgl  = rtepPtr->connate .gas;
-        const auto sgcr = rtepPtr->critical.gas;
-        const auto sgu  = rtepPtr->maximum .gas;
+        const auto sgl  = rtepPtr.connate .gas;
+        const auto sgcr = rtepPtr.critical.gas;
+        const auto sgu  = rtepPtr.maximum .gas;
         BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(sgcr[0], 0.03, 1.0e-10);
         BOOST_CHECK_CLOSE(sgu [0], 0.928996, 1.0e-10);
@@ -1124,9 +1124,9 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_I_TolCrit_Default) {
 
     // Water end-points
     {
-        const auto swl  = rtepPtr->connate .water;
-        const auto swcr = rtepPtr->critical.water;
-        const auto swu  = rtepPtr->maximum .water;
+        const auto swl  = rtepPtr.connate .water;
+        const auto swcr = rtepPtr.critical.water;
+        const auto swu  = rtepPtr.maximum .water;
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
         BOOST_CHECK_CLOSE(swcr[0], 0.091004, 1.0e-10);  // Max Sw for which Krw(Sw) <= TOLCRIT
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
@@ -1134,17 +1134,17 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_I_TolCrit_Default) {
 
     // Oil end-points
     {
-        const auto sowcr = rtepPtr->critical.oil_in_water;
-        const auto sogcr = rtepPtr->critical.oil_in_gas;
+        const auto sowcr = rtepPtr.critical.oil_in_water;
+        const auto sogcr = rtepPtr.critical.oil_in_gas;
         BOOST_CHECK_CLOSE(sowcr[0], 0.228996, 1.0e-10);  // Max So for which Krow(So) <= TOLCRIT
         BOOST_CHECK_CLOSE(sogcr[0], 0.070000, 1.0e-10);  // Max So for which Krog(So) <= TOLCRIT
     }
 
     // Gas end-points
     {
-        const auto sgl  = rtepPtr->connate .gas;
-        const auto sgcr = rtepPtr->critical.gas;
-        const auto sgu  = rtepPtr->maximum .gas;
+        const auto sgl  = rtepPtr.connate .gas;
+        const auto sgcr = rtepPtr.critical.gas;
+        const auto sgu  = rtepPtr.maximum .gas;
         BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(sgcr[0], 0.03, 1.0e-10);  // Max Sg for which Krg(Sg) <= TOLCRIT
         BOOST_CHECK_CLOSE(sgu [0], 0.928996, 1.0e-10);
@@ -1165,9 +1165,9 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_II_TolCrit_Default) {
 
     // Water end-points
     {
-        const auto swl  = rtepPtr->connate .water;
-        const auto swcr = rtepPtr->critical.water;
-        const auto swu  = rtepPtr->maximum .water;
+        const auto swl  = rtepPtr.connate .water;
+        const auto swcr = rtepPtr.critical.water;
+        const auto swu  = rtepPtr.maximum .water;
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
         BOOST_CHECK_CLOSE(swcr[0], 0.091004, 1.0e-10);  // Max Sw for which Krw(Sw) <= TOLCRIT
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
@@ -1175,17 +1175,17 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_II_TolCrit_Default) {
 
     // Oil end-points
     {
-        const auto sowcr = rtepPtr->critical.oil_in_water;
-        const auto sogcr = rtepPtr->critical.oil_in_gas;
+        const auto sowcr = rtepPtr.critical.oil_in_water;
+        const auto sogcr = rtepPtr.critical.oil_in_gas;
         BOOST_CHECK_CLOSE(sowcr[0], 0.228996, 1.0e-10);  // Max So for which Krow(So) <= TOLCRIT
         BOOST_CHECK_CLOSE(sogcr[0], 0.070000, 1.0e-10);  // Max So for which Krog(So) <= TOLCRIT
     }
 
     // Gas end-points
     {
-        const auto sgl  = rtepPtr->connate .gas;
-        const auto sgcr = rtepPtr->critical.gas;
-        const auto sgu  = rtepPtr->maximum .gas;
+        const auto sgl  = rtepPtr.connate .gas;
+        const auto sgcr = rtepPtr.critical.gas;
+        const auto sgu  = rtepPtr.maximum .gas;
         BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(sgcr[0], 0.03, 1.0e-10);  // Max Sg for which Krg(Sg) <= TOLCRIT
         BOOST_CHECK_CLOSE(sgu [0], 0.928996, 1.0e-10);
@@ -1205,9 +1205,9 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_I_TolCrit_Large) {
 
     // Water end-points
     {
-        const auto swl  = rtepPtr->connate .water;
-        const auto swcr = rtepPtr->critical.water;
-        const auto swu  = rtepPtr->maximum .water;
+        const auto swl  = rtepPtr.connate .water;
+        const auto swcr = rtepPtr.critical.water;
+        const auto swu  = rtepPtr.maximum .water;
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
         BOOST_CHECK_CLOSE(swcr[0], 0.231004, 1.0e-10);  // Max Sw for which Krw(Sw) <= TOLCRIT
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
@@ -1215,17 +1215,17 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_I_TolCrit_Large) {
 
     // Oil end-points
     {
-        const auto sowcr = rtepPtr->critical.oil_in_water;
-        const auto sogcr = rtepPtr->critical.oil_in_gas;
+        const auto sowcr = rtepPtr.critical.oil_in_water;
+        const auto sogcr = rtepPtr.critical.oil_in_gas;
         BOOST_CHECK_CLOSE(sowcr[0], 0.448996, 1.0e-10);  // Max So for which Krow(So) <= TOLCRIT
         BOOST_CHECK_CLOSE(sogcr[0], 0.238996, 1.0e-10);  // Max So for which Krog(So) <= TOLCRIT
     }
 
     // Gas end-points
     {
-        const auto sgl  = rtepPtr->connate .gas;
-        const auto sgcr = rtepPtr->critical.gas;
-        const auto sgu  = rtepPtr->maximum .gas;
+        const auto sgl  = rtepPtr.connate .gas;
+        const auto sgcr = rtepPtr.critical.gas;
+        const auto sgu  = rtepPtr.maximum .gas;
         BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(sgcr[0], 0.09, 1.0e-10);  // Max Sg for which Krg(Sg) <= TOLCRIT
         BOOST_CHECK_CLOSE(sgu [0], 0.928996, 1.0e-10);
@@ -1245,9 +1245,9 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_II_TolCrit_Large) {
 
     // Water end-points
     {
-        const auto swl  = rtepPtr->connate .water;
-        const auto swcr = rtepPtr->critical.water;
-        const auto swu  = rtepPtr->maximum .water;
+        const auto swl  = rtepPtr.connate .water;
+        const auto swcr = rtepPtr.critical.water;
+        const auto swu  = rtepPtr.maximum .water;
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
         BOOST_CHECK_CLOSE(swcr[0], 0.231004, 1.0e-10);  // Max Sw for which Krw(Sw) <= TOLCRIT
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
@@ -1255,17 +1255,17 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_II_TolCrit_Large) {
 
     // Oil end-points
     {
-        const auto sowcr = rtepPtr->critical.oil_in_water;
-        const auto sogcr = rtepPtr->critical.oil_in_gas;
+        const auto sowcr = rtepPtr.critical.oil_in_water;
+        const auto sogcr = rtepPtr.critical.oil_in_gas;
         BOOST_CHECK_CLOSE(sowcr[0], 0.448996, 1.0e-10);  // Max So for which Krow(So) <= TOLCRIT
         BOOST_CHECK_CLOSE(sogcr[0], 0.248996, 1.0e-10);  // Max So for which Krog(So) <= TOLCRIT
     }
 
     // Gas end-points
     {
-        const auto sgl  = rtepPtr->connate .gas;
-        const auto sgcr = rtepPtr->critical.gas;
-        const auto sgu  = rtepPtr->maximum .gas;
+        const auto sgl  = rtepPtr.connate .gas;
+        const auto sgcr = rtepPtr.critical.gas;
+        const auto sgu  = rtepPtr.maximum .gas;
         BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(sgcr[0], 0.09, 1.0e-10);  // Max Sg for which Krg(Sg) <= TOLCRIT
         BOOST_CHECK_CLOSE(sgu [0], 0.928996, 1.0e-10);
@@ -1284,20 +1284,20 @@ BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Zero) {
     const auto  tolcrit = 0.0;
 
     const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
-    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, rtepPtr);
 
     // Oil values (TOLCRIT = 0.0)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 1.0, 1.0e-10);       // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10);  // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);       // Krow(So=Somax) = Krog(So=Somax)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rw [0], 1.0, 1.0e-10);       // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rg [0], 0.896942, 1.0e-10);  // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.max[0], 1.0, 1.0e-10);       // Krow(So=Somax) = Krog(So=Somax)
 
     // Gas values
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
 
     // Water values
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.911429, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.r  [0], 0.911429, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
 }
 
 BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Zero) {
@@ -1310,20 +1310,20 @@ BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Zero) {
     const auto  tolcrit = 0.0;
 
     const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
-    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, rtepPtr);
 
     // Oil values
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 1.0, 1.0e-10);      // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rw [0], 1.0, 1.0e-10);      // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
 
     // Gas values
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
 
     // Water values
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.911429, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.r  [0], 0.911429, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
 }
 
 BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Default) {
@@ -1337,20 +1337,20 @@ BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Default) {
         .minimumRelpermMobilityThreshold(); // 1.0e-6.
 
     const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
-    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, rtepPtr);
 
     // Oil values
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.882459, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.908996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rw [0], 0.882459, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.908996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
 
     // Gas values
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
 
     // Water values
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.835916, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.771004)
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.r  [0], 0.835916, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.771004)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
 }
 
 BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Default) {
@@ -1364,20 +1364,20 @@ BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Default) {
         .minimumRelpermMobilityThreshold(); // 1.0e-6.
 
     const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
-    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, rtepPtr);
 
     // Oil values
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.882459, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.908996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0     , 1.0e-10); // Krow(So=Somax) = Krog(So=Somax)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rw [0], 0.882459, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.908996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.max[0], 1.0     , 1.0e-10); // Krow(So=Somax) = Krog(So=Somax)
 
     // Gas values
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
 
     // Water values
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.835916, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.771004)
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.r  [0], 0.835916, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.771004)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
 }
 
 BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Large) {
@@ -1390,20 +1390,20 @@ BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Large) {
     const auto  tolcrit = 0.01;
 
     const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
-    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, rtepPtr);
 
     // Oil values
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.328347, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.768996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.712749, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.838996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rw [0], 0.328347, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.768996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rg [0], 0.712749, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.838996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
 
     // Gas values
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.578171, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.690000)
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.r  [0], 0.578171, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.690000)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
 
     // Water values
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.261115, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.551004)
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.r  [0], 0.261115, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.551004)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
 }
 
 BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Large) {
@@ -1416,20 +1416,20 @@ BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Large) {
     const auto  tolcrit = 0.01;
 
     const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
-    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, rtepPtr);
 
     // Oil values
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.328347, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.768996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.712749, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.838996)
-    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rw [0], 0.328347, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.768996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.rg [0], 0.712749, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.838996)
+    BOOST_CHECK_CLOSE(rfuncPtr.kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
 
     // Gas values
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.562914, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.680000)
-    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.r  [0], 0.562914, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.680000)
+    BOOST_CHECK_CLOSE(rfuncPtr.krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
 
     // Water values
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.261115, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.551004)
-    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.r  [0], 0.261115, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.551004)
+    BOOST_CHECK_CLOSE(rfuncPtr.krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
 }
 
 // =====================================================================
