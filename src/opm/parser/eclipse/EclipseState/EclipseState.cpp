@@ -238,6 +238,10 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         return m_inputNnc;
     }
 
+    void EclipseState::setInputNNC(const NNC& nnc) {
+        m_inputNnc = nnc;
+    }
+
     void EclipseState::appendInputNNC(const std::vector<NNCdata>& nnc) {
         for (const auto& nnc_data : nnc ) {
             this->m_inputNnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
