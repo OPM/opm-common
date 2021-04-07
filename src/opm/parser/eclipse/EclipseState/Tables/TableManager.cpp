@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/J.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -110,6 +111,19 @@
 
 namespace Opm {
 
+namespace {
+
+std::optional<JFunc> make_jfunc(const Deck& deck) {
+    if (!deck.hasKeyword<ParserKeywords::JFUNC>())
+        return {};
+
+    return JFunc(deck);
+}
+
+}
+
+
+
     TableManager::TableManager( const Deck& deck )
         :
         m_tabdims( Tabdims(deck)),
@@ -117,11 +131,9 @@ namespace Opm {
         m_tlmixpar( deck ),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
-        hasEqlnum (deck.hasKeyword("EQLNUM"))
+        hasEqlnum (deck.hasKeyword("EQLNUM")),
+        jfunc( make_jfunc(deck))
     {
-        if (deck.hasKeyword("JFUNC"))
-            jfunc.reset( new JFunc(deck) );
-
         // determine the default resevoir temperature in Kelvin
         m_rtemp = ParserKeywords::RTEMP::TEMP::defaultValue;
         m_rtemp += Metric::TemperatureOffset; // <- default values always use METRIC as the unit system!
@@ -260,8 +272,7 @@ namespace Opm {
         hasEnptvd = data.hasEnptvd;
         hasEqlnum = data.hasEqlnum;
         hasShrate = data.hasShrate;
-        if (data.jfunc)
-          jfunc = std::make_shared<JFunc>(*data.jfunc);
+        jfunc = data.jfunc;
         m_rtemp = data.m_rtemp;
         m_salinity = data.m_salinity;
         gasDenT = data.gasDenT;
@@ -309,7 +320,7 @@ namespace Opm {
         result.hasEnptvd = true;
         result.hasEqlnum = true;
         result.hasShrate = true;
-        result.jfunc = std::make_shared<Opm::JFunc>(Opm::JFunc::serializeObject());
+        result.jfunc = Opm::JFunc::serializeObject();
         result.oilDenT = DenT::serializeObject();
         result.gasDenT = DenT::serializeObject();
         result.watDenT = DenT::serializeObject();
@@ -1145,9 +1156,9 @@ namespace Opm {
     }
 
     const JFunc& TableManager::getJFunc() const {
-        if (!jfunc)
+        if (!this->jfunc.has_value())
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
-        return *jfunc;
+        return this->jfunc.value();
     }
 
     const PlyvmhTable& TableManager::getPlyvmhTable() const {
@@ -1216,12 +1227,6 @@ namespace Opm {
     }
 
     bool TableManager::operator==(const TableManager& data) const {
-        bool jfuncOk = false;
-        if (jfunc && data.jfunc)
-            jfuncOk = *jfunc == *data.jfunc;
-        if (!jfunc && !data.jfunc)
-            jfuncOk = true;
-
         return m_simpleTables == data.m_simpleTables &&
                m_pvtgTables == data.m_pvtgTables &&
                m_pvtgwTables == data.m_pvtgwTables &&
@@ -1259,7 +1264,7 @@ namespace Opm {
                oilDenT == data.oilDenT &&
                watDenT == data.watDenT &&
                stcond == data.stcond &&
-               jfuncOk &&
+               jfunc == data.jfunc &&
                m_rtemp == data.m_rtemp &&
                m_salinity == data.m_salinity &&
                m_gas_comp_index == data.m_gas_comp_index;

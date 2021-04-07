@@ -22,6 +22,7 @@
 #define OPM_TABLE_MANAGER_HPP
 
 #include <cassert>
+#include <optional>
 #include <set>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -542,7 +543,7 @@ namespace Opm {
         bool hasEnptvd = false;// if deck has keyword ENPTVD
         bool hasEqlnum = false;// if deck has keyword EQLNUM
         bool hasShrate = false;// if deck has keyword SHRATE
-        std::shared_ptr<JFunc> jfunc;
+        std::optional<JFunc> jfunc;
 
         DenT oilDenT;
         DenT gasDenT;
