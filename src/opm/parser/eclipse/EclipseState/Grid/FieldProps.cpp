@@ -1101,7 +1101,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
 
 
 void FieldProps::init_satfunc(const std::string& keyword, Fieldprops::FieldData<double>& satfunc) {
-    if (this->m_rtep == nullptr)
+    if (!this->m_rtep.has_value())
         this->m_rtep = satfunc::getRawTableEndpoints(this->tables, this->m_phases,
                                                      this->m_satfuncctrl.minimumRelpermMobilityThreshold());
 
