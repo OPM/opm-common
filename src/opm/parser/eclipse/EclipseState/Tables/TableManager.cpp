@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/J.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -110,6 +111,19 @@
 
 namespace Opm {
 
+namespace {
+
+std::optional<JFunc> make_jfunc(const Deck& deck) {
+    if (!deck.hasKeyword<ParserKeywords::JFUNC>())
+        return {};
+
+    return JFunc(deck);
+}
+
+}
+
+
+
     TableManager::TableManager( const Deck& deck )
         :
         m_tabdims( Tabdims(deck)),
@@ -117,11 +131,9 @@ namespace Opm {
         m_tlmixpar( deck ),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
-        hasEqlnum (deck.hasKeyword("EQLNUM"))
+        hasEqlnum (deck.hasKeyword("EQLNUM")),
+        jfunc( make_jfunc(deck))
     {
-        if (deck.hasKeyword("JFUNC"))
-            jfunc.reset( new JFunc(deck) );
-
         // determine the default resevoir temperature in Kelvin
         m_rtemp = ParserKeywords::RTEMP::TEMP::defaultValue;
         m_rtemp += Metric::TemperatureOffset; // <- default values always use METRIC as the unit system!
@@ -227,52 +239,6 @@ namespace Opm {
             this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
     }
 
-    TableManager& TableManager::operator=(const TableManager& data) {
-        m_simpleTables = data.m_simpleTables;
-        m_pvtgTables = data.m_pvtgTables;
-        m_pvtgwTables = data.m_pvtgwTables;
-        m_pvtgwoTables = data.m_pvtgwoTables;
-        m_pvtoTables = data.m_pvtoTables;
-        m_rock2dTables = data.m_rock2dTables;
-        m_rock2dtrTables = data.m_rock2dtrTables;
-        m_pvtwTable = data.m_pvtwTable;
-        m_pvcdoTable = data.m_pvcdoTable;
-        m_plyvmhTable = data.m_plyvmhTable;
-        m_densityTable = data.m_densityTable;
-        m_diffCoeffTable = data.m_diffCoeffTable;
-        m_plmixparTable = data.m_plmixparTable;
-        m_shrateTable = data.m_shrateTable;
-        m_stone1exTable = data.m_stone1exTable;
-        m_viscrefTable = data.m_viscrefTable;
-        m_watdentTable = data.m_watdentTable;
-        m_pvtwsaltTables = data.m_pvtwsaltTables;
-        m_rwgsaltTables = data.m_rwgsaltTables;
-        m_bdensityTables = data.m_bdensityTables;
-        m_sdensityTables = data.m_sdensityTables;
-        m_plymwinjTables = data.m_plymwinjTables;
-        m_skprwatTables = data.m_skprwatTables;
-        m_skprpolyTables = data.m_skprpolyTables;
-        m_tabdims = data.m_tabdims;
-        m_regdims = data.m_regdims;
-        m_eqldims = data.m_eqldims;
-        m_aqudims = data.m_aqudims;
-        hasImptvd = data.hasImptvd;
-        hasEnptvd = data.hasEnptvd;
-        hasEqlnum = data.hasEqlnum;
-        hasShrate = data.hasShrate;
-        if (data.jfunc)
-          jfunc = std::make_shared<JFunc>(*data.jfunc);
-        m_rtemp = data.m_rtemp;
-        m_salinity = data.m_salinity;
-        gasDenT = data.gasDenT;
-        oilDenT = data.oilDenT;
-        watDenT = data.watDenT;
-        stcond = data.stcond;
-        m_gas_comp_index = data.m_gas_comp_index;
-        m_tlmixpar = data.m_tlmixpar;
-
-        return *this;
-    }
 
     TableManager TableManager::serializeObject()
     {
@@ -309,7 +275,7 @@ namespace Opm {
         result.hasEnptvd = true;
         result.hasEqlnum = true;
         result.hasShrate = true;
-        result.jfunc = std::make_shared<Opm::JFunc>(Opm::JFunc::serializeObject());
+        result.jfunc = Opm::JFunc::serializeObject();
         result.oilDenT = DenT::serializeObject();
         result.gasDenT = DenT::serializeObject();
         result.watDenT = DenT::serializeObject();
@@ -1145,9 +1111,9 @@ namespace Opm {
     }
 
     const JFunc& TableManager::getJFunc() const {
-        if (!jfunc)
+        if (!this->jfunc.has_value())
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
-        return *jfunc;
+        return this->jfunc.value();
     }
 
     const PlyvmhTable& TableManager::getPlyvmhTable() const {
@@ -1216,12 +1182,6 @@ namespace Opm {
     }
 
     bool TableManager::operator==(const TableManager& data) const {
-        bool jfuncOk = false;
-        if (jfunc && data.jfunc)
-            jfuncOk = *jfunc == *data.jfunc;
-        if (!jfunc && !data.jfunc)
-            jfuncOk = true;
-
         return m_simpleTables == data.m_simpleTables &&
                m_pvtgTables == data.m_pvtgTables &&
                m_pvtgwTables == data.m_pvtgwTables &&
@@ -1259,7 +1219,7 @@ namespace Opm {
                oilDenT == data.oilDenT &&
                watDenT == data.watDenT &&
                stcond == data.stcond &&
-               jfuncOk &&
+               jfunc == data.jfunc &&
                m_rtemp == data.m_rtemp &&
                m_salinity == data.m_salinity &&
                m_gas_comp_index == data.m_gas_comp_index;
