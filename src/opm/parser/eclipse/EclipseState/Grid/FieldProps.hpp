@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
@@ -39,7 +40,6 @@ namespace Opm {
 
 class Deck;
 class EclipseGrid;
-class TableManager;
 class NumericalAquifers;
 
 namespace Fieldprops
@@ -532,7 +532,7 @@ private:
     std::vector<double> cell_depth;
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
-    const TableManager& tables;
+    TableManager tables;
     std::optional<satfunc::RawTableEndPoints> m_rtep;
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
