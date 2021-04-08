@@ -25,11 +25,11 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FieldData.hpp>
 #include <opm/parser/eclipse/Deck/value_status.hpp>
 
-#include<string>
-#include<vector>
-#include<optional>
-#include<array>
-#include<algorithm>
+#include <string>
+#include <vector>
+#include <optional>
+#include <array>
+#include <algorithm>
 
 namespace Opm
 {
