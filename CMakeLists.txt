@@ -365,6 +365,18 @@ if (OPM_ENABLE_PYTHON)
     string(REGEX REPLACE ";" "', '"  _tmp "${pybind11_INCLUDE_DIRS}")
     set(SETUP_PY_PYBIND_INCLUDE_DIR "'${_tmp}'")
   endif()
+
+  if (TARGET fmt::fmt)
+     get_target_property(SETUP_PY_FMT_LIBS fmt::fmt LOCATION)
+     get_target_property(FMT_FLAGS fmt::fmt INTERFACE_COMPILE_DEFINITIONS)
+     foreach(flag ${FMT_FLAGS})
+       set(SETUP_PY_FMT_FLAGS "${SETUP_PY_FMT_FLAGS} '-D${flag}',")
+     endforeach()
+     list(APPEND opm-common_PYTHON_LINKAGE "'${SETUP_PY_FMT_LIBS}'")
+  else()
+    set(SETUP_PY_FMT_FLAGS "'-DFMT_HEADER_ONLY'")
+  endif()
+
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
   file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
   execute_process(COMMAND ${Python3_EXECUTABLE} target_name.py
