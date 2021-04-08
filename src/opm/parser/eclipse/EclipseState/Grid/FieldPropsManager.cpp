@@ -29,6 +29,15 @@
 
 namespace Opm {
 
+
+bool FieldPropsManager::operator==(const FieldPropsManager& other) const {
+    return *this->fp == *other.fp;
+}
+
+bool FieldPropsManager::rst_cmp(const FieldPropsManager& full_arg, const FieldPropsManager& rst_arg) {
+    return FieldProps::rst_cmp(*full_arg.fp, *rst_arg.fp);
+}
+
 FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, const EclipseGrid& grid_arg, const TableManager& tables) :
     fp(std::make_shared<FieldProps>(deck, phases, grid_arg, tables))
 {}

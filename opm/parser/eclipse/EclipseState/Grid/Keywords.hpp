@@ -36,6 +36,15 @@ struct keyword_info {
     bool top = false;
     bool global = false;
 
+    bool operator==(const keyword_info& other) const {
+        return this->unit == other.unit &&
+               this->scalar_init == other.scalar_init &&
+               this->multiplier == other.multiplier &&
+               this->top == other.top &&
+               this->global == other.global;
+    }
+
+
     keyword_info<T>& init(T init_value) {
         this->scalar_init = init_value;
         return *this;

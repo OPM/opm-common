@@ -291,6 +291,12 @@ public:
             region_name(rn)
         {}
 
+
+        bool operator==(const MultregpRecord& other) const {
+            return this->region_value == other.region_value &&
+                   this->multiplier == other.multiplier &&
+                   this->region_name == other.region_name;
+        }
     };
 
 
@@ -478,6 +484,8 @@ public:
     void apply_tran(const std::string& keyword, std::vector<double>& data);
     std::vector<char> serialize_tran() const;
     void deserialize_tran(const std::vector<char>& buffer);
+    bool operator==(const FieldProps& other) const;
+    static bool rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg);
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);

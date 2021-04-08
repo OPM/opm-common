@@ -60,6 +60,15 @@ namespace Fieldprops
         std::optional<std::vector<value::status>> global_value_status;
         mutable bool all_set;
 
+        bool operator==(const FieldData& other) const {
+            return this->data == other.data &&
+                   this->value_status == other.value_status &&
+                   this->kw_info == other.kw_info &&
+                   this->global_data == other.global_data &&
+                   this->global_value_status == other.global_value_status;
+        }
+
+
         FieldData() = default;
 
         FieldData(const keywords::keyword_info<T>& info, std::size_t active_size, std::size_t global_size) :
@@ -92,6 +101,11 @@ namespace Fieldprops
 
             return this->all_set;
         }
+
+        bool valid_default() const {
+            return std::all_of( this->value_status.begin(), this->value_status.end(), [] (const value::status& status) {return status == value::status::valid_default; });
+        }
+
 
         void compress(const std::vector<bool>& active_map) {
             Fieldprops::compress(this->data, active_map);

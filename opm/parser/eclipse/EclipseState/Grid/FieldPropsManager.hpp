@@ -55,7 +55,8 @@ public:
     */
     std::size_t active_size() const;
 
-
+    bool operator==(const FieldPropsManager& other) const;
+    static bool rst_cmp(const FieldPropsManager& full_arg, const FieldPropsManager& rst_arg);
     /*
       Because the FieldProps class can autocreate properties the semantics of
       get() and has() is slightly non intuitve:

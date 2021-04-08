@@ -2529,7 +2529,7 @@ COPYREG
         BOOST_CHECK_CLOSE(to_si(multn[g]), permx[g], 1e-5);
         BOOST_CHECK_EQUAL(permx[g], permy[g]);
     }
- 
+
     BOOST_CHECK(permx == fp.get_double("PERMR"));
     BOOST_CHECK(permy == fp.get_double("PERMTHT"));
 }
@@ -2572,7 +2572,8 @@ COPYREG
     auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::permeability, raw_value); };
     EclipseGrid grid(10,10, 2);
     Deck deck1 = Parser{}.parseString(deck_string1);
-    FieldPropsManager fp(deck1, Phases{true, true, true}, grid, TableManager());
+    TableManager tables;
+    FieldPropsManager fp(deck1, Phases{true, true, true}, grid, tables);
     const auto& permx = fp.get_double("PERMX");
     const auto& permy = fp.get_double("PERMY");
     const auto& multn = fp.get_int("MULTNUM");
@@ -2582,5 +2583,20 @@ COPYREG
     }
 
     BOOST_CHECK(permx == fp.get_double("PERMR"));
-    BOOST_CHECK(permy == fp.get_double("PERMTHT"));    
+    BOOST_CHECK(permy == fp.get_double("PERMTHT"));
+
+    FieldPropsManager fp2(deck1, Phases{true, true, true}, grid, tables);
+    BOOST_CHECK( fp == fp2 );
+    BOOST_CHECK( FieldPropsManager::rst_cmp(fp, fp2) );
+
+
+    const auto& ntg = fp2.get_double("NTG");
+    BOOST_CHECK( !(fp == fp2) );
+    BOOST_CHECK( FieldPropsManager::rst_cmp(fp, fp2) );
+    (void) ntg;
+
+    const auto& satnum = fp.get_int("SATNUM");
+    BOOST_CHECK( !(fp == fp2) );
+    BOOST_CHECK( FieldPropsManager::rst_cmp(fp, fp2) );
+    (void) satnum;
 }
