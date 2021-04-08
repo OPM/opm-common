@@ -293,6 +293,16 @@ namespace Opm {
     }
 
 
+    bool IOConfig::rst_cmp(const IOConfig& full_config, const IOConfig& rst_config) {
+        return full_config.getWriteINITFile() == rst_config.getWriteINITFile() &&
+               full_config.getWriteEGRIDFile() == rst_config.getWriteEGRIDFile() &&
+               full_config.getUNIFIN() == rst_config.getUNIFIN() &&
+               full_config.getUNIFOUT() == rst_config.getUNIFOUT() &&
+               full_config.getFMTIN() == rst_config.getFMTIN() &&
+               full_config.getFMTOUT() == rst_config.getFMTOUT();
+    }
+
+
     /*****************************************************************/
     /* Here at the bottom are some forwarding proxy methods which just
        forward to the appropriate RestartConfig method. They are

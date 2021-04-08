@@ -185,6 +185,8 @@ namespace Opm {
         bool initOnly() const;
 
         bool operator==(const IOConfig& data) const;
+        static bool rst_cmp(const IOConfig& full_config, const IOConfig& rst_config);
+
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
