@@ -147,4 +147,11 @@ namespace Opm {
                m_restartRootName == data.m_restartRootName;
     }
 
+    bool InitConfig::rst_cmp(const InitConfig& full_config, const InitConfig& rst_config) {
+        return full_config.foamconfig == rst_config.foamconfig &&
+               full_config.m_filleps == rst_config.m_filleps &&
+               full_config.m_gravity == rst_config.m_gravity;
+    }
+
+
 } //namespace Opm

@@ -57,6 +57,9 @@ namespace Opm {
 
         bool operator==(const InitConfig& config) const;
 
+        static bool rst_cmp(const InitConfig& full_config, const InitConfig& rst_config);
+
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
