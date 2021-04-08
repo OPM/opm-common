@@ -104,6 +104,7 @@ namespace Opm {
 
         bool operator==( const UnitSystem& ) const;
         bool operator!=( const UnitSystem& ) const;
+        static bool rst_cmp(const UnitSystem& full_arg, const UnitSystem& rst_arg);
 
         Dimension parse(const std::string& dimension) const;
 
