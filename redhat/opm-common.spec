@@ -143,12 +143,22 @@ cd openmpi
 make install DESTDIR=${RPM_BUILD_ROOT}
 mkdir -p ${RPM_BUILD_ROOT}/usr/include/openmpi-x86_64/
 mv ${RPM_BUILD_ROOT}/usr/lib64/openmpi/include/* ${RPM_BUILD_ROOT}/usr/include/openmpi-x86_64/
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/opmhash.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/opmpack.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/summary.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/compareECL.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/convertECL.1
 cd ..
 
 cd mpich
 make install DESTDIR=${RPM_BUILD_ROOT}
 mkdir -p ${RPM_BUILD_ROOT}/usr/include/mpich-x86_64/
 mv ${RPM_BUILD_ROOT}/usr/lib64/mpich/include/* ${RPM_BUILD_ROOT}/usr/include/mpich-x86_64/
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/opmhash.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/opmpack.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/summary.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/compareECL.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/convertECL.1
 
 %clean
 rm -rf %{buildroot}
@@ -158,6 +168,7 @@ rm -rf %{buildroot}
 
 %files doc
 %{_docdir}/*
+%{_datadir}/man/*
 
 %files bin
 %{_bindir}/*
