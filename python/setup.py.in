@@ -60,7 +60,8 @@ ext_modules = [
                 'cxx/summary_state.cpp',
                 'cxx/table_manager.cpp',
                 'cxx/well.cpp',
-                'cxx/export.cpp'
+                'cxx/export.cpp',
+                'cxx/builtin_pybind11.cpp'
         ],
         libraries=libs,
         language='c++',
