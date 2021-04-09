@@ -27,8 +27,8 @@
 namespace Opm {
 
 ImportContainer::ImportContainer(const Parser& parser, const UnitSystem& unit_system, const std::string& fname, bool formatted, std::size_t deck_size) {
-    const std::unordered_set<std::string> float_kw = {"COORD", "MULTPV", "NTG", "PERMX", "PERMY", "PERMZ", "PORO", "ZCORN"};
-    const std::unordered_set<std::string> int_kw = {"ACTNUM", "FIPNUM" , "MULTNUM", "FLUXNUM", "OPERNUM"};
+    const std::unordered_set<std::string> float_kw = {"COORD", "MULTPV", "NTG", "PERMX", "PERMY", "PERMZ", "PORO", "SWATINIT", "ZCORN"};
+    const std::unordered_set<std::string> int_kw = {"ACTNUM", "EQLNUM", "FIPNUM" , "MULTNUM", "FLUXNUM", "OPERNUM", "SATNUM"};
 
     EclIO::EclFile ecl_file(fname, EclIO::EclFile::Formatted{formatted});
     const auto& header = ecl_file.getList();
