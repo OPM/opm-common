@@ -348,4 +348,35 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
             }
         }
     }
+
+
+namespace {
+
+template <typename T>
+bool rst_cmp_obj(const T& full_arg, const T& rst_arg, const std::string& object_name) {
+    if (full_arg == rst_arg)
+        return true;
+
+    fmt::print("Difference in {}\n", object_name);
+    return false;
+}
+
+}
+    bool EclipseState::rst_cmp(const EclipseState& full_state, const EclipseState& rst_state) {
+        return Runspec::rst_cmp(full_state.m_runspec, rst_state.m_runspec) &&
+            EclipseConfig::rst_cmp(full_state.m_eclipseConfig, rst_state.m_eclipseConfig) &&
+            UnitSystem::rst_cmp(full_state.m_deckUnitSystem, rst_state.m_deckUnitSystem) &&
+            FieldPropsManager::rst_cmp(full_state.field_props, rst_state.field_props) &&
+            SimulationConfig::rst_cmp(full_state.m_simulationConfig, rst_state.m_simulationConfig) &&
+            rst_cmp_obj(full_state.m_tables, rst_state.m_tables, "Tables") &&
+            rst_cmp_obj(full_state.m_inputGrid, rst_state.m_inputGrid, "Inputgrid") &&
+            rst_cmp_obj(full_state.m_inputNnc, rst_state.m_inputNnc, "NNC") &&
+            rst_cmp_obj(full_state.m_gridDims, rst_state.m_gridDims, "Grid dims") &&
+            rst_cmp_obj(full_state.aquifer_config, rst_state.aquifer_config, "AquiferConfig") &&
+            rst_cmp_obj(full_state.m_transMult, rst_state.m_transMult, "TransMult") &&
+            rst_cmp_obj(full_state.m_faults, rst_state.m_faults, "Faults") &&
+            rst_cmp_obj(full_state.m_title, rst_state.m_title, "Title") &&
+            rst_cmp_obj(full_state.tracer_config, rst_state.tracer_config, "Tracer");
+    }
+
 }

@@ -1371,17 +1371,18 @@ namespace {
         return *this == other;
     }
 
+    bool UnitSystem::rst_cmp(const UnitSystem& full_arg, const UnitSystem& rst_arg) {
+        return full_arg.m_name == rst_arg.m_name
+            && full_arg.m_unittype == rst_arg.m_unittype
+            && full_arg.measure_table_to_si_offset == rst_arg.measure_table_to_si_offset
+            && full_arg.measure_table_from_si == rst_arg.measure_table_from_si
+            && full_arg.measure_table_to_si == rst_arg.measure_table_to_si
+            && full_arg.unit_name_table == rst_arg.unit_name_table;
+    }
+
     bool UnitSystem::operator==( const UnitSystem& rhs ) const {
-        return this->m_name == rhs.m_name
-            && this->m_unittype == rhs.m_unittype
-            && this->m_dimensions.size() == rhs.m_dimensions.size()
-            && std::equal( this->m_dimensions.begin(),
-                           this->m_dimensions.end(),
-                           rhs.m_dimensions.begin() )
-            && this->measure_table_to_si_offset == rhs.measure_table_to_si_offset
-            && this->measure_table_from_si == rhs.measure_table_from_si
-            && this->measure_table_to_si == rhs.measure_table_to_si
-            && this->unit_name_table == rhs.unit_name_table;
+        return UnitSystem::rst_cmp(*this, rhs) &&
+            this->m_dimensions == rhs.m_dimensions;
     }
 
     bool UnitSystem::operator!=( const UnitSystem& rhs ) const {

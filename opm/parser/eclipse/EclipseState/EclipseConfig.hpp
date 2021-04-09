@@ -44,7 +44,7 @@ namespace Opm {
         const InitConfig& init() const;
 
         bool operator==(const EclipseConfig& data) const;
-
+        static bool rst_cmp(const EclipseConfig& full_config, const EclipseConfig& rst_config);
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {

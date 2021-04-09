@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
@@ -39,7 +40,6 @@ namespace Opm {
 
 class Deck;
 class EclipseGrid;
-class TableManager;
 class NumericalAquifers;
 
 namespace Fieldprops
@@ -291,6 +291,12 @@ public:
             region_name(rn)
         {}
 
+
+        bool operator==(const MultregpRecord& other) const {
+            return this->region_value == other.region_value &&
+                   this->multiplier == other.multiplier &&
+                   this->region_name == other.region_name;
+        }
     };
 
 
@@ -478,6 +484,8 @@ public:
     void apply_tran(const std::string& keyword, std::vector<double>& data);
     std::vector<char> serialize_tran() const;
     void deserialize_tran(const std::vector<char>& buffer);
+    bool operator==(const FieldProps& other) const;
+    static bool rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg);
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);
@@ -532,7 +540,7 @@ private:
     std::vector<double> cell_depth;
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
-    const TableManager& tables;
+    TableManager tables;
     std::optional<satfunc::RawTableEndPoints> m_rtep;
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;

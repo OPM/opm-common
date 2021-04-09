@@ -50,7 +50,7 @@ namespace Opm {
 
         return result;
     }
-    
+
     InitConfig& EclipseConfig::init() {
         return const_cast<InitConfig &>(this->m_initConfig);
     }
@@ -70,5 +70,11 @@ namespace Opm {
 
     const IOConfig& EclipseConfig::io() const {
         return this->io_config;
+    }
+
+
+    bool EclipseConfig::rst_cmp(const EclipseConfig& full_config, const EclipseConfig& rst_config) {
+        return IOConfig::rst_cmp(full_config.io(), rst_config.io()) &&
+               InitConfig::rst_cmp(full_config.init(), rst_config.init());
     }
 }

@@ -130,6 +130,9 @@ namespace Opm {
             tracer_config.serializeOp(serializer);
         }
 
+        static bool rst_cmp(const EclipseState& full_state, const EclipseState& rst_state);
+
+
     private:
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();

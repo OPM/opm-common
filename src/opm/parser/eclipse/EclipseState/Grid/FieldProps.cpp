@@ -21,6 +21,7 @@
 #include <array>
 #include <vector>
 #include <set>
+#include <unordered_set>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -34,7 +35,6 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
@@ -43,6 +43,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/common/utility/Serializer.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include "FieldProps.hpp"
 #include "Operate.hpp"
@@ -330,6 +331,101 @@ std::vector<double> extract_cell_depth(const EclipseGrid& grid) {
     return cell_depth;
 }
 
+
+
+/*
+  The rst_compare_data function compares the main std::map<std::string,
+  std::vector<T>> data containers. If one of the containers contains a keyword
+  *which is fully defaulted* and the other container does not contain said
+  keyword - the containers are considered to be equal.
+*/
+template <typename T>
+bool rst_compare_data(const std::unordered_map<std::string, Fieldprops::FieldData<T>>& data1,
+                  const std::unordered_map<std::string, Fieldprops::FieldData<T>>& data2) {
+    std::unordered_set<std::string> keys;
+    for (const auto& [key, _] : data1) {
+        (void)_;
+        keys.insert(key);
+    }
+
+    for (const auto& [key, _] : data2) {
+        (void)_;
+        keys.insert(key);
+    }
+
+    for (const auto& key : keys) {
+        const auto& d1 = data1.find(key);
+        const auto& d2 = data2.find(key);
+
+        if (d1 == data1.end()) {
+            if (!d2->second.valid_default())
+                return false;
+            continue;
+        }
+
+        if (d2 == data2.end()) {
+            if (!d1->second.valid_default())
+                return false;
+            continue;
+        }
+
+        if (!(d1->second == d2->second))
+            return false;
+    }
+
+    return true;
+}
+
+
+}
+
+
+
+
+
+bool FieldProps::operator==(const FieldProps& other) const {
+    return this->unit_system == other.unit_system &&
+           this->nx == other.nx &&
+           this->ny == other.ny &&
+           this->nz == other.nz &&
+           this->m_phases == other.m_phases &&
+           this->m_satfuncctrl == other.m_satfuncctrl &&
+           this->m_actnum == other.m_actnum &&
+           this->cell_volume == other.cell_volume &&
+           this->cell_depth == other.cell_depth &&
+           this->m_default_region == other.m_default_region &&
+           this->m_rtep == other.m_rtep &&
+           this->tables == other.tables &&
+           this->int_data == other.int_data &&
+           this->double_data == other.double_data &&
+           this->multregp == other.multregp &&
+           this->tran == other.tran;
+}
+
+bool FieldProps::rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg) {
+
+    if (!rst_compare_data(full_arg.double_data, rst_arg.double_data))
+        return false;
+
+    if (!rst_compare_data(full_arg.int_data, rst_arg.int_data))
+        return false;
+
+    if (!UnitSystem::rst_cmp(full_arg.unit_system, rst_arg.unit_system))
+        return false;
+
+    return full_arg.nx == rst_arg.nx &&
+        full_arg.ny == rst_arg.ny &&
+        full_arg.nz == rst_arg.nz &&
+        full_arg.m_phases == rst_arg.m_phases &&
+        full_arg.m_satfuncctrl == rst_arg.m_satfuncctrl &&
+        full_arg.m_actnum == rst_arg.m_actnum &&
+        full_arg.cell_volume == rst_arg.cell_volume &&
+        full_arg.cell_depth == rst_arg.cell_depth &&
+        full_arg.m_default_region == rst_arg.m_default_region &&
+        full_arg.m_rtep == rst_arg.m_rtep &&
+        full_arg.tables == rst_arg.tables &&
+        full_arg.multregp == rst_arg.multregp &&
+        full_arg.tran == rst_arg.tran;
 }
 
 
@@ -1110,7 +1206,7 @@ void FieldProps::init_satfunc(const std::string& keyword, Fieldprops::FieldData<
         ? this->get<int>("IMBNUM")
         : this->get<int>("SATNUM");
 
-    satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, *this->m_rtep, this->cell_depth, satreg, endnum));
+    satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->m_rtep.value(), this->cell_depth, satreg, endnum));
 }
 
 

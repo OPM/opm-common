@@ -51,6 +51,7 @@ namespace Opm {
         bool isDiffusive() const;
 
         bool operator==(const SimulationConfig& data) const;
+        static bool rst_cmp(const SimulationConfig& full_config, const SimulationConfig& rst_config);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

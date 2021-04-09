@@ -124,19 +124,20 @@ public:
         return this->m_location;
     }
 
-    bool data_equal(const Welldims& data) const {
-        return this->maxConnPerWell() == data.maxConnPerWell() &&
-               this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
-               this->maxGroupsInField() == data.maxGroupsInField() &&
-               this->maxWellsInField() == data.maxWellsInField() &&
-               this->maxWellListsPrWell() == data.maxWellListsPrWell() &&
-               this->maxDynamicWellLists() == data.maxDynamicWellLists();
+    static bool rst_cmp(const Welldims& full_dims, const Welldims& rst_dims) {
+        return full_dims.maxConnPerWell() == rst_dims.maxConnPerWell() &&
+            full_dims.maxWellsPerGroup() == rst_dims.maxWellsPerGroup() &&
+            full_dims.maxGroupsInField() == rst_dims.maxGroupsInField() &&
+            full_dims.maxWellsInField() == rst_dims.maxWellsInField() &&
+            full_dims.maxWellListsPrWell() == rst_dims.maxWellListsPrWell() &&
+            full_dims.maxDynamicWellLists() == rst_dims.maxDynamicWellLists();
     }
 
     bool operator==(const Welldims& data) const {
-        return this->data_equal(data) &&
-               this->location() == data.location();
+        return this->location() == data.location() &&
+            rst_cmp(*this, data);
     }
+
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -397,6 +398,7 @@ public:
     bool co2Storage() const noexcept;
 
     bool operator==(const Runspec& data) const;
+    static bool rst_cmp(const Runspec& full_state, const Runspec& rst_state);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

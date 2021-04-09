@@ -76,6 +76,15 @@ namespace Opm { namespace satfunc {
             /// region  All zero values unless gas is an active phase.
             std::vector<double> water;
         } maximum;
+
+        bool operator==(const RawTableEndPoints& other) const {
+            return this->connate.gas == other.connate.gas &&
+                   this->connate.water == other.connate.water &&
+                   this->critical.gas == other.critical.gas &&
+                   this->critical.water == other.critical.water &&
+                   this->maximum.gas == other.maximum.gas &&
+                   this->maximum.water == other.maximum.water;
+        }
     };
 
     /// Collection of unscaled/raw saturation function value range endpoints

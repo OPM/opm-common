@@ -586,6 +586,20 @@ const UDQParams& Runspec::udqParams() const noexcept {
     return this->udq_params;
 }
 
+bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
+    return full_spec.phases() == rst_spec.phases() &&
+        full_spec.tabdims() == rst_spec.tabdims() &&
+        full_spec.endpointScaling() == rst_spec.endpointScaling() &&
+        full_spec.wellSegmentDimensions() == rst_spec.wellSegmentDimensions() &&
+        full_spec.aquiferDimensions() == rst_spec.aquiferDimensions() &&
+        full_spec.hysterPar() == rst_spec.hysterPar() &&
+        full_spec.actdims() == rst_spec.actdims() &&
+        full_spec.saturationFunctionControls() == rst_spec.saturationFunctionControls() &&
+        full_spec.m_nupcol == rst_spec.m_nupcol &&
+        full_spec.m_co2storage == rst_spec.m_co2storage &&
+        Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
+}
+
 bool Runspec::operator==(const Runspec& data) const {
     return this->phases() == data.phases() &&
            this->tabdims() == data.tabdims() &&
@@ -599,5 +613,6 @@ bool Runspec::operator==(const Runspec& data) const {
            this->m_nupcol == data.m_nupcol &&
            this->m_co2storage == data.m_co2storage;
 }
+
 
 }

@@ -74,6 +74,8 @@ namespace Opm {
         bool restart() const;
 
         bool operator==(const ThresholdPressure& data) const;
+        static bool rst_cmp(const ThresholdPressure& full_arg, const ThresholdPressure& rst_arg);
+
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

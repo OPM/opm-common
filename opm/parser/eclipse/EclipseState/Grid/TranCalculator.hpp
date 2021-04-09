@@ -45,6 +45,11 @@ public:
     struct TranAction {
         ScalarOperation op;
         std::string field;
+
+        bool operator==(const TranAction& other) const {
+            return this->op == other.op &&
+                   this->field == other.field;
+        }
     };
 
 
@@ -97,6 +102,12 @@ public:
         }
         return kw_info;
     }
+
+    bool operator==(const TranCalculator& other) const {
+        return this->m_name == other.m_name &&
+               this->actions == other.actions;
+    }
+
 private:
     std::string m_name;
     std::vector<TranAction> actions;

@@ -66,7 +66,7 @@ void initLogging() {
 */
 
 
-Opm::Schedule load_schedule(std::shared_ptr<const Opm::Python> python, const std::string& fname, int& report_step) {
+std::pair<Opm::EclipseState, Opm::Schedule> load_schedule(std::shared_ptr<const Opm::Python> python, const std::string& fname, int& report_step) {
     Opm::Parser parser;
     auto deck = parser.parseFile(fname);
     Opm::EclipseState state(deck);
@@ -78,12 +78,12 @@ Opm::Schedule load_schedule(std::shared_ptr<const Opm::Python> python, const std
         Opm::EclIO::ERst rst_file(rst_filename);
 
         const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
-        return Opm::Schedule(deck, state, python, {}, &rst);
+        return {state, Opm::Schedule(deck, state, python, {}, &rst)};
     } else
-        return Opm::Schedule(deck, state, python);
+        return {state, Opm::Schedule(deck, state, python)};
 }
 
-Opm::Schedule load_schedule(std::shared_ptr<const Opm::Python> python, const std::string& fname) {
+std::pair<Opm::EclipseState, Opm::Schedule> load_schedule(std::shared_ptr<const Opm::Python> python, const std::string& fname) {
     int report_step;
     return load_schedule(python, fname, report_step);
 }
@@ -96,16 +96,29 @@ int main(int argc, char ** argv) {
     if (argc == 2)
         load_schedule(python, argv[1]);
     else {
+        bool equal = true;
         int report_step;
-        const auto& sched = load_schedule(python, argv[1]);
-        const auto& rst_sched = load_schedule(python, argv[2], report_step);
+        const auto& [state, sched] = load_schedule(python, argv[1]);
+        const auto& [rst_state, rst_sched] = load_schedule(python, argv[2], report_step);
 
-        if (Opm::Schedule::cmp(sched, rst_sched, static_cast<std::size_t>(report_step)) ) {
-            std::cout << "Schedule objects were equal!" << std::endl;
-            std::exit( EXIT_SUCCESS );
-        } else {
-            std::cout << "Differences were encountered between the Schedule objects" << std::endl;
-            std::exit( EXIT_FAILURE );
+
+        if (Opm::EclipseState::rst_cmp(state, rst_state))
+            std::cout << "EclipseState objects were equal!" << std::endl;
+        else {
+            std::cout << "EclipseState objects were different!" << std::endl;
+            equal = false;
         }
+
+        if (Opm::Schedule::cmp(sched, rst_sched, static_cast<std::size_t>(report_step)) )
+            std::cout << "Schedule objects were equal!" << std::endl;
+        else {
+            std::cout << "Differences were encountered between the Schedule objects" << std::endl;
+            equal = false;
+        }
+
+        if (equal)
+            std::exit( EXIT_SUCCESS );
+        else
+            std::exit( EXIT_FAILURE );
     }
 }

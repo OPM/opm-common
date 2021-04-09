@@ -47,7 +47,7 @@ public:
     const AquiferCT& ct() const;
     const Aquifetp& fetp() const;
     const Aquancon& connections() const;
-    bool operator==(const AquiferConfig& other);
+    bool operator==(const AquiferConfig& other) const;
     bool hasAquifer(const int aquID) const;
 
     bool hasNumericalAquifer() const;

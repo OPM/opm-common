@@ -153,4 +153,16 @@ namespace Opm {
                this->isDiffusive() == data.isDiffusive();
     }
 
+    bool SimulationConfig::rst_cmp(const SimulationConfig& full_config, const SimulationConfig& rst_config) {
+        return ThresholdPressure::rst_cmp(full_config.getThresholdPressure(), rst_config.getThresholdPressure()) &&
+               full_config.bcconfig() == rst_config.bcconfig() &&
+               full_config.rock_config() == rst_config.rock_config() &&
+               full_config.useCPR() == rst_config.useCPR() &&
+               full_config.hasDISGAS() == rst_config.hasDISGAS() &&
+               full_config.hasVAPOIL() == rst_config.hasVAPOIL() &&
+               full_config.isThermal() == rst_config.isThermal() &&
+               full_config.isDiffusive() == rst_config.isDiffusive();
+    }
+
+
 } //namespace Opm

@@ -223,4 +223,10 @@ namespace Opm {
     }
 
 
+    bool ThresholdPressure::rst_cmp(const ThresholdPressure& full_arg, const ThresholdPressure& rst_arg) {
+        return full_arg.active() == rst_arg.active() &&
+               full_arg.m_thresholdPressureTable == rst_arg.m_thresholdPressureTable &&
+               full_arg.m_pressureTable == rst_arg.m_pressureTable;
+    }
+
 } //namespace Opm
