@@ -160,15 +160,6 @@ namespace Opm {
         return cell_props;
     }
 
-    std::vector<NNCdata> NumericalAquifers::aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
-        // begin with the NNCs from the cells
-        auto nncs = this->aquiferCellNNCs();
-        // appending the NNCs from the connections
-        auto con_nncs = this->aquiferConnectionNNCs(grid, fp);
-        nncs.insert(nncs.end(), con_nncs.begin(), con_nncs.end());
-        return nncs;
-    }
-
     std::unordered_map<size_t, double> NumericalAquifers::aquiferCellVolumes() const {
         std::unordered_map<size_t, double> cell_volumes;
         const auto aquifer_cells = this->allAquiferCells();
@@ -183,7 +174,7 @@ namespace Opm {
         std::vector<NNCdata> nncs;
         for ([[maybe_unused]] const auto& [id, aquifer] : this->m_aquifers) {
             auto aqu_nncs = aquifer.aquiferCellNNCs();
-            nncs.insert(nncs.end(), aqu_nncs.begin(), aqu_nncs.end());
+            nncs.insert( nncs.end(), std::make_move_iterator(aqu_nncs.begin()), std::make_move_iterator(aqu_nncs.end()));
         }
         return nncs;
     }
@@ -193,7 +184,7 @@ namespace Opm {
         std::vector<NNCdata> nncs;
         for ([[maybe_unused]] const auto& [id, aquifer] : this->m_aquifers) {
             auto aqu_nncs = aquifer.aquiferConnectionNNCs(grid, fp);
-            nncs.insert(nncs.end(), aqu_nncs.begin(), aqu_nncs.end());
+            nncs.insert( nncs.end(), std::make_move_iterator(aqu_nncs.begin()), std::make_move_iterator(aqu_nncs.end()));
         }
         return nncs;
     }
