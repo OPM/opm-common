@@ -160,7 +160,7 @@ npArray get_erst_vector(Opm::EclIO::ERst * file_ptr, const std::string& key, siz
 
     auto array_list = file_ptr->listOfRstArrays(rstep);
 
-    size_t array_index = get_array_index(array_list, key, 0);
+    size_t array_index = get_array_index(array_list, key, occurrence);
 
     return get_erst_by_index(file_ptr, array_index, rstep);
 }
