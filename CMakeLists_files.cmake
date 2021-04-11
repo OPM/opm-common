@@ -229,6 +229,7 @@ if(ENABLE_ECL_INPUT)
           python/cxx/eclipse_config.cpp
           python/cxx/eclipse_grid.cpp
           python/cxx/eclipse_state.cpp
+          python/cxx/emodel_util.cpp
           python/cxx/export.cpp
           python/cxx/group.cpp
           python/cxx/log.cpp
@@ -310,6 +311,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/WriteRPT.cpp
           src/opm/output/eclipse/report/WELSPECS.cpp
           src/opm/output/data/Solution.cpp
+          src/opm/utility/EModel.cpp
       )
 endif()
 
@@ -879,6 +881,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WriteRPT.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
+        opm/utility/EModel.hpp
         )
 endif()
 

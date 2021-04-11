@@ -19,6 +19,7 @@ void python::common::export_all(py::module& module) {
     export_UnitSystem(module);
     export_Log(module);
     export_IO(module);
+    export_EModel(module);
     export_SummaryState(module);
     export_ParserKeywords(module);
 }

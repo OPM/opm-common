@@ -60,8 +60,9 @@ ext_modules = [
                 'cxx/summary_state.cpp',
                 'cxx/table_manager.cpp',
                 'cxx/well.cpp',
-                'cxx/export.cpp',
-                'cxx/builtin_pybind11.cpp'
+                'cxx/emodel_util.cpp',
+                'cxx/builtin_pybind11.cpp',
+                'cxx/export.cpp'
         ],
         libraries=libs,
         language='c++',
@@ -92,7 +93,8 @@ setup(
                 'opm.io.parser',
                 'opm.io.schedule',
                 'opm.io.ecl',
-                'opm.tools'
+                'opm.tools',
+                'opm.util'
             ],
     ext_modules=ext_modules,
     include_package_data=True,
