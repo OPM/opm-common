@@ -156,7 +156,7 @@ namespace Opm {
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
-        std::vector<double> activeVolume() const;
+        const std::vector<double>& activeVolume() const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
         double getCellThickness(size_t globalIndex) const;
@@ -199,6 +199,8 @@ namespace Opm {
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
         PinchMode::ModeEnum m_pinchGapMode;
+
+        mutable std::optional<std::vector<double>> active_volume;
 
         bool m_circle = false;
 
