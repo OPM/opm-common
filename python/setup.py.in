@@ -60,13 +60,14 @@ ext_modules = [
                 'cxx/summary_state.cpp',
                 'cxx/table_manager.cpp',
                 'cxx/well.cpp',
-                'cxx/export.cpp'
+                'cxx/export.cpp',
+                'cxx/builtin_pybind11.cpp'
         ],
         libraries=libs,
         language='c++',
         undef_macros=["NDEBUG"],
         include_dirs=[@SETUP_PY_PYBIND_INCLUDE_DIR@],
-        extra_compile_args=['-std=c++17', '-fopenmp'],
+        extra_compile_args=['-std=c++17', '-fopenmp', @SETUP_PY_FMT_FLAGS@],
         extra_link_args=['-fopenmp', @opm-common_PYTHON_LINKAGE@]
     )
 ]
