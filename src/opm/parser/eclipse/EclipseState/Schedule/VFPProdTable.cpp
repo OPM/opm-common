@@ -519,7 +519,7 @@ Dimension VFPProdTable::ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem&
 
     switch (alq_type) {
     case ALQ_TYPE::ALQ_IGLR:
-        scaling_factor = gas_surface_volume / (liquid_surface_volume * time);
+        scaling_factor = gas_surface_volume / liquid_surface_volume;
         break;
     case ALQ_TYPE::ALQ_TGLR:
         scaling_factor = gas_surface_volume / liquid_surface_volume;
