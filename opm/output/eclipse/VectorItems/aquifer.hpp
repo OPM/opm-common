@@ -35,6 +35,13 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             Unknown_1 = 11,     // Unknown item.  =1 in all cases seen thus far.
         };
+
+        namespace Value {
+            enum ModelType : int {
+                Fetkovich = 0,
+                CarterTracy = 1,
+            };
+        } // Value
     } // IAnalyticAquifer
 
     namespace IAnalyticAquiferConn {

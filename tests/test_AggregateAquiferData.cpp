@@ -473,8 +473,7 @@ AQUANCON
     template <class Coll1, class Coll2>
     void check_is_close(const Coll1& coll1, const Coll2& coll2, const double tol)
     {
-        BOOST_REQUIRE_EQUAL(std::distance(std::begin(coll1), std::end(coll1)),
-                            std::distance(std::begin(coll2), std::end(coll2)));
+        BOOST_REQUIRE_EQUAL(std::size(coll1), std::size(coll2));
 
         if (coll1.empty()) { return; }
 

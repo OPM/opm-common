@@ -115,7 +115,7 @@ namespace {
                 iaaq[Ix::WatPropTable] = aquifer.pvttableID; // One-based (=AQUCT(10))
 
                 iaaq[Ix::CTInfluenceFunction] = aquifer.inftableID;
-                iaaq[Ix::TypeRelated1] = 1; // =1 for Carter-Tracy
+                iaaq[Ix::TypeRelated1] = VI::IAnalyticAquifer::Value::ModelType::CarterTracy;
 
                 iaaq[Ix::Unknown_1] = 1; // Not characterised; =1 in all cases seen thus far.
             }
@@ -133,6 +133,7 @@ namespace {
                 iaaq[Ix::NumAquiferConn] = numActiveConn;
                 iaaq[Ix::WatPropTable] = aquifer.pvttableID; // One-based (=AQUFETP(7))
 
+                iaaq[Ix::TypeRelated1] = VI::IAnalyticAquifer::Value::ModelType::Fetkovich;
                 iaaq[Ix::Unknown_1] = 1; // Not characterised; =1 in all cases seen thus far.
             }
         } // Fetckovich
@@ -316,11 +317,7 @@ namespace {
         {
             const auto key = fmt::format("{}:{}", variable, aquiferID);
 
-            if (summaryState.has(key)) {
-                return summaryState.get(key);
-            }
-
-            return 0.0;
+            return summaryState.get(key, 0.0);
         }
 
         Opm::RestartIO::Helpers::WindowedArray<double>
