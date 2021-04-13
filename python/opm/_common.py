@@ -26,6 +26,8 @@ from .libopmcommon_python import ESmry
 from .libopmcommon_python import EGrid
 from .libopmcommon_python import ERft
 from .libopmcommon_python import EclOutput
+from .libopmcommon_python import EModel
+from .libopmcommon_python import calc_cell_vol
 from .libopmcommon_python import SummaryState
 
 #from .schedule            import Well, Connection, Schedule

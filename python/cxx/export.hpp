@@ -30,6 +30,7 @@ void export_TableManager(py::module& module);
 void export_Well(py::module& module);
 void export_Log(py::module& module);
 void export_IO(py::module& module);
+void export_EModel(py::module& module);
 void export_SummaryState(py::module& module);
 
 // The export_ParserKeywords() function is implemented in the source file
