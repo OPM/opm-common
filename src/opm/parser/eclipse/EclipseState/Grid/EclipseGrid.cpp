@@ -1394,32 +1394,40 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return this->cellActive(globalIndex);
     }
 
-    std::vector<double> EclipseGrid::activeVolume() const {
-        std::vector<double> active_volume( this->m_nactive );
+    const std::vector<double>& EclipseGrid::activeVolume() const {
+        if (!this->active_volume.has_value()) {
+            std::vector<double> volume(this->m_nactive);
 
-        #pragma omp parallel for schedule(static)
-        for (std::size_t active_index = 0; active_index < this->m_active_to_global.size(); active_index++) {
-            std::array<double,8> X;
-            std::array<double,8> Y;
-            std::array<double,8> Z;
-            auto global_index = this->m_active_to_global[active_index];
-            this->getCellCorners(global_index, X, Y, Z );
-            if (m_rv && m_thetav) {
-                const auto[i,j,k] = this->getIJK(global_index);
-                auto& r = *m_rv;
-                auto& t = *m_thetav;
-                active_volume[active_index] = calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[4]);
-            } else {
-                active_volume[active_index] = calculateCellVol(X, Y, Z);
+            #pragma omp parallel for schedule(static)
+            for (std::size_t active_index = 0; active_index < this->m_active_to_global.size(); active_index++) {
+                std::array<double,8> X;
+                std::array<double,8> Y;
+                std::array<double,8> Z;
+                auto global_index = this->m_active_to_global[active_index];
+                this->getCellCorners(global_index, X, Y, Z );
+                if (m_rv && m_thetav) {
+                    const auto[i,j,k] = this->getIJK(global_index);
+                    auto& r = *m_rv;
+                    auto& t = *m_thetav;
+                    volume[active_index] = calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[4]);
+                } else
+                    volume[active_index] = calculateCellVol(X, Y, Z);
             }
+
+            this->active_volume = std::move(volume);
         }
 
-        return active_volume;
+        return this->active_volume.value();
     }
 
 
     double EclipseGrid::getCellVolume(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
+        if (this->cellActive(globalIndex) && this->active_volume.has_value()) {
+            auto active_index = this->activeIndex(globalIndex);
+            return this->active_volume.value()[active_index];
+        }
+
         std::array<double,8> X;
         std::array<double,8> Y;
         std::array<double,8> Z;
@@ -1736,6 +1744,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         this->m_global_to_active.resize(global_size);
         std::iota(this->m_global_to_active.begin(), this->m_global_to_active.end(), 0);
         this->m_active_to_global = this->m_global_to_active;
+        this->active_volume = std::nullopt;
     }
 
     void EclipseGrid::resetACTNUM(const int* actnum) {
@@ -1763,6 +1772,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
                 }
             }
+            this->active_volume = std::nullopt;
         }
     }
 

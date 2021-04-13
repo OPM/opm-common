@@ -649,6 +649,8 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
 
     Opm::EclipseGrid grid( deck);
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
+    BOOST_CHECK_EQUAL( 1000U , grid.activeVolume().size());
+
     std::vector<int> actnum(1000);
     actnum[0] = 1;
     actnum[2] = 1;
@@ -658,6 +660,7 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
     grid.resetACTNUM( actnum );
 
     BOOST_CHECK_EQUAL( 4U , grid.getNumActive() );
+    BOOST_CHECK_EQUAL( 4U , grid.activeVolume().size());
     {
         std::vector<int> full(grid.getCartesianSize());
         std::iota(full.begin(), full.end(), 0);
