@@ -67,13 +67,25 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WaterRate  =  1,  // Surface flow rate (water)
             GasRate    =  2,  // Surface Flow rate (gas)
 
+            OilPrTotal =  3,  // Total cumulative oil production
+            WatPrTotal =  4,  // Total cumulative water production
+            GasPrTotal =  5,  // Total cumulative gas production
+
+            OilInjTotal = 6,  // Total cumulative oil injection
+            WatInjTotal = 7,  // Total cumulative water injection
+            GasInjTotal = 8,  // Total cumulative gas injection
+
+            GORatio    = 10,  // Producing gas/oil ratio
+
             OilRate_Copy    =  17,  // Surface flow rate (oil)
             WaterRate_Copy  =  18,  // Surface flow rate (water)
             GasRate_Copy    =  19,  // Surface Flow rate (gas)
 
             Pressure   = 34,  // Connection pressure value
 
-            ResVRate   = 49,  // Reservoir voidage rate
+            ResVRate     = 49,  // Reservoir voidage rate
+            VoidPrTotal  = 50,  // Total cumulative reservoir voidage volume production
+            VoidInjTotal = 51,  // Total cumulative reservoir voidage volume injection
         };
     } // XConn
 }}}} // Opm::RestartIO::Helpers::VectorItems
