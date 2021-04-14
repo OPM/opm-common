@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import io
 
-from opm.io.ecl import ERst, eclArrType
+from opm.io.ecl import ERst, eclArrType, EclOutput
 try:
     from tests.utils import test_path
 except ImportError:
@@ -160,6 +160,56 @@ class TestERst(unittest.TestCase):
                 self.assertEqual(array.dtype, "bool")
             elif arrType == eclArrType.CHAR:
                 self.assertTrue(isinstance(array, list))
+
+
+    def test_get_occurence(self):
+
+        testFile = test_path("data/TMP.UNRST")
+
+        npArr11 = np.array([11.1, 11.2, 11.3, 11.4], dtype='float32')
+        npArr12 = np.array([12.1, 12.2, 12.3, 12.4], dtype='float32')
+        npArr13 = np.array([13.1, 13.2, 13.3, 13.4], dtype='float32')
+
+        npArr21 = np.array([21.1, 21.2, 21.3, 21.4], dtype='float32')
+        npArr22 = np.array([22.1, 22.2, 22.3, 22.4], dtype='float32')
+        npArr23 = np.array([23.1, 23.2, 23.3, 23.4], dtype='float32')
+
+        seqn1 = np.array([1], dtype='int32')
+        seqn2 = np.array([2], dtype='int32')
+
+        out1 = EclOutput(testFile)
+
+        out1.write("SEQNUM", seqn1)
+        out1.write("TESTING", npArr11)
+        out1.write("TESTING", npArr12)
+        out1.write("TESTING", npArr13)
+
+        out1.write("SEQNUM", seqn2)
+        out1.write("TESTING", npArr21)
+        out1.write("TESTING", npArr22)
+        out1.write("TESTING", npArr23)
+
+        rst1 = ERst(testFile)
+
+        with self.assertRaises(IndexError):
+            arr = rst1["TESTING", 1, 3]
+            arr = rst1["TESTING", 2, 3]
+
+        test_npArr11 = rst1["TESTING",1, 0]
+        test_npArr12 = rst1["TESTING",1, 1]
+        test_npArr13 = rst1["TESTING",1, 2]
+
+        self.assertTrue( np.array_equal(test_npArr11, npArr11) )
+        self.assertTrue( np.array_equal(test_npArr12, npArr12) )
+        self.assertTrue( np.array_equal(test_npArr13, npArr13) )
+
+        test_npArr21 = rst1["TESTING",2, 0]
+        test_npArr22 = rst1["TESTING",2, 1]
+        test_npArr23 = rst1["TESTING",2, 2]
+
+        self.assertTrue( np.array_equal(test_npArr21, npArr21) )
+        self.assertTrue( np.array_equal(test_npArr22, npArr22) )
+        self.assertTrue( np.array_equal(test_npArr23, npArr23) )
 
 
 if __name__ == "__main__":
