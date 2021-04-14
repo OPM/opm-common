@@ -296,8 +296,7 @@ struct ProductionControls {
     void set_gpmaint();
 
     bool operator==(const Group& data) const;
-    const Phase& topup_phase() const;
-    bool has_topup_phase() const;
+    const std::optional<Phase>& topup_phase() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

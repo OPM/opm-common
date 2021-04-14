@@ -487,17 +487,10 @@ std::optional<std::string> Group::flow_group() const {
         return this->parent();
 }
 
-const Phase& Group::topup_phase() const {
-    if (this->m_topup_phase.has_value())
-        return this->m_topup_phase.value();
-    else
-        throw std::logic_error("Asked for topup phase in well without topup phase defined");
+const std::optional<Phase>& Group::topup_phase() const {
+    return this->m_topup_phase;
 }
 
-
-bool Group::has_topup_phase() const {
-    return this->m_topup_phase.has_value();
-}
 
 
 bool Group::updateParent(const std::string& parent) {
