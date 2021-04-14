@@ -81,7 +81,11 @@ namespace Opm {
             const double tran = 1. / (1. / trans1 + 1. / trans2);
             const size_t gc1 = this->cells_[i].global_index;
             const size_t gc2 = this->cells_[i + 1].global_index;
-            nncs.emplace_back(gc1, gc2, tran);
+            if (gc1 < gc2) {
+                nncs.emplace_back(gc1, gc2, tran);
+            } else {
+                nncs.emplace_back(gc2, gc1, tran);
+            }
         }
         return nncs;
     }
@@ -126,7 +130,11 @@ namespace Opm {
             const double trans_con = 2 * cell_perm * face_area * ntg[grid.activeIndex(con.global_index)] / d;
 
             const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
-            nncs.emplace_back(gc1, gc2, tran);
+            if (gc1 < gc2) {
+                nncs.emplace_back(gc1, gc2, tran);
+            } else {
+                nncs.emplace_back(gc2, gc1, tran);
+            }
         }
         return nncs;
     }
