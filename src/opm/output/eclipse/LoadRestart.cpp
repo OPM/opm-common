@@ -811,6 +811,23 @@ namespace {
         return wells;
     }
 
+    template <typename AssignCumulative>
+    void restoreConnCumulatives(const WellVectors::Window<double>& xcon,
+                                AssignCumulative&&                 asgn)
+    {
+        asgn("COPT", xcon[VI::XConn::index::OilPrTotal]);
+        asgn("COIT", xcon[VI::XConn::index::OilInjTotal]);
+
+        asgn("CGPT", xcon[VI::XConn::index::GasPrTotal]);
+        asgn("CGIT", xcon[VI::XConn::index::GasInjTotal]);
+
+        asgn("CWPT", xcon[VI::XConn::index::WatPrTotal]);
+        asgn("CWIT", xcon[VI::XConn::index::WatInjTotal]);
+
+        asgn("CVPT", xcon[VI::XConn::index::VoidPrTotal]);
+        asgn("CVIT", xcon[VI::XConn::index::VoidInjTotal]);
+    }
+
     void restoreConnRates(const WellVectors::Window<double>& xcon,
                           const Opm::UnitSystem&             usys,
                           const bool                         oil,
@@ -855,6 +872,7 @@ namespace {
                             const Opm::UnitSystem&  usys,
                             const Opm::Phases&      phases,
                             const WellVectors&      wellData,
+                            Opm::SummaryState&      smry,
                             Opm::data::Well&        xw)
     {
         using M  = ::Opm::UnitSystem::measure;
@@ -888,6 +906,7 @@ namespace {
             return;
         }
 
+        const auto& wname = well.name();
         for (auto rstConnID = 0*nConn; rstConnID < nConn; ++rstConnID) {
             const auto icon = wellData.icon(wellID, rstConnID);
 
@@ -895,10 +914,18 @@ namespace {
             const auto j = icon[VI::IConn::index::CellJ] - 1;
             const auto k = icon[VI::IConn::index::CellK] - 1;
 
-            auto* xc = xw.find_connection(grid.getGlobalIndex(i, j, k));
+            const auto globCell = grid.getGlobalIndex(i, j, k);
+            const auto xcon = wellData.xcon(wellID, rstConnID);
+
+            restoreConnCumulatives(xcon, [globCell, &wname, &smry]
+                (const std::string& vector, const double value)
+            {
+                smry.update_conn_var(wname, vector, globCell + 1, value);
+            });
+
+            auto* xc = xw.find_connection(globCell);
             if (xc == nullptr) { continue; }
 
-            const auto xcon = wellData.xcon(wellID, rstConnID);
             restoreConnRates(xcon, usys, oil, gas, wat, *xc);
 
             xc->pressure = usys.to_si(M::pressure, xcon[Ix::Pressure]);
@@ -1038,7 +1065,8 @@ namespace {
                  const Opm::UnitSystem&  usys,
                  const Opm::Phases&      phases,
                  const WellVectors&      wellData,
-                 const SegmentVectors&   segData)
+                 const SegmentVectors&   segData,
+                 Opm::SummaryState&      smry)
     {
         if (! wellData.hasDefinedWellValues()) {
             // Result set does not provide well information.
@@ -1114,9 +1142,11 @@ namespace {
         xw.thp = usys.to_si(M::pressure, xwel[VI::XWell::index::TubHeadPr]);
         xw.temperature = 0.0;
 
-        // 4) Restore connection flow rates (xw.connections[i].rates)
-        //    and pressure values (xw.connections[i].pressure).
-        restoreConnResults(well, wellID, grid, usys, phases, wellData, xw);
+        // 4) Restore connection flow rates (xw.connections[i].rates),
+        //    cumulatives (Cx{P,I}T), and pressure values
+        //    (xw.connections[i].pressure).
+        restoreConnResults(well, wellID, grid, usys,
+                           phases, wellData, smry, xw);
 
         // 5) Restore well's active/current control
         restoreCurrentControl(wellID, wellData, xw);
@@ -1145,6 +1175,7 @@ namespace {
     restore_wells_ecl(const ::Opm::EclipseState&                   es,
                       const ::Opm::EclipseGrid&                    grid,
                       const ::Opm::Schedule&                       schedule,
+                      Opm::SummaryState&                           smry,
                       std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
         auto soln = ::Opm::data::Wells{};
@@ -1165,7 +1196,7 @@ namespace {
 
             soln[well.name()] =
                 restore_well(well, wellID, grid, units,
-                             phases, wellData, segData);
+                             phases, wellData, segData, smry);
         }
 
         return soln;
@@ -1446,7 +1477,8 @@ namespace Opm { namespace RestartIO  {
 
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_opm(es, grid, schedule, *rst_view)
-            : restore_wells_ecl(es, grid, schedule,  rst_view);
+            : restore_wells_ecl(es, grid, schedule, summary_state, rst_view);
+
         data::GroupAndNetworkValues xg_nwrk;
 
         auto aquifers = hasAnalyticAquifers(*rst_view)
