@@ -464,6 +464,7 @@ Runspec::Runspec( const Deck& deck ) :
     welldims( deck ),
     wsegdims( deck ),
     netwrkdims( deck ),
+    aquiferdims( deck ),
     udq_params( deck ),
     hystpar( deck ),
     m_actdims( deck ),

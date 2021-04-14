@@ -315,18 +315,28 @@ BOOST_AUTO_TEST_CASE(GroupSize_Parameters)
 BOOST_AUTO_TEST_CASE(Analytic_Aquifer_Parameters)
 {
     // https://oeis.org/A001622
+    const auto aqudims = Opm::RestartIO::InteHEAD::AquiferDims {
+        1, 61, 803, 3988, 74989, 484820, 45868, 3436, 563, 81, 1177203
+    };
+
     const auto ih = Opm::RestartIO::InteHEAD{}
-        .params_NAAQZ(1, 61, 803, 3988, 74989, 484820, 4586834);
+        .aquiferDimensions(aqudims);
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[VI::intehead::NCAMAX], 1);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NIAAQZ], 61);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NSAAQZ], 803);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NXAAQZ], 3988);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NICAQZ], 74989);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NSCAQZ], 484820);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NACAQZ], 4586834);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NAQUIF], 1);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NCAMAX], 803);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NIAAQZ], 484820);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSAAQZ], 45868);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NXAAQZ], 3436);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NICAQZ], 563);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSCAQZ], 81);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NACAQZ], 1177203);
+
+    BOOST_CHECK_EQUAL(v[VI::intehead::MAX_ACT_ANLYTIC_AQUCONN], 3988);
+    BOOST_CHECK_EQUAL(v[VI::intehead::MAX_AN_AQUIFER_ID], 74989);
+    BOOST_CHECK_EQUAL(v[VI::intehead::AQU_UNKNOWN_1], 1);
+    BOOST_CHECK_EQUAL(v[VI::intehead::MAX_ANALYTIC_AQUIFERS], 61);
 }
 
 BOOST_AUTO_TEST_CASE(Time_and_report_step)
@@ -575,6 +585,10 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     const auto nmfipr = 22;
     const auto ngroup  = 8;
 
+    const auto aqudims = Opm::RestartIO::InteHEAD::AquiferDims {
+        1, 61, ncamax, 3988, 74989, niaaqz, nsaaqz, nxaaqz, nicaqz, nscaqz, nacaqz
+    };
+
     auto unit_system = Opm::UnitSystem::newMETRIC();
     auto ih = Opm::RestartIO::InteHEAD{}
          .dimensions(nx, ny, nz)
@@ -587,7 +601,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .params_NWELZ(niwelz, nswelz, nxwelz, nzwelz)
          .params_NCON(niconz, nsconz, nxconz)
          .params_GRPZ({nigrpz, nsgrpz, nxgrpz, nzgrpz})
-         .params_NAAQZ(ncamax, niaaqz, nsaaqz, nxaaqz, nicaqz, nscaqz, nacaqz)
+         .aquiferDimensions(aqudims)
          .stepParam(tstep, report_step)
          .tuningParam({newtmx, newtmn, litmax, litmin, mxwsit, mxwpit, 0})
          .variousParam(version, iprog)

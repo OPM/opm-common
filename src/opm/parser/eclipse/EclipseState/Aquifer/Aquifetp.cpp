@@ -17,14 +17,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utility>
+#include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <utility>
+#include <vector>
 
 namespace Opm {
 

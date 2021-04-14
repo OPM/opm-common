@@ -24,6 +24,7 @@
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
+#include <opm/output/eclipse/AggregateAquiferData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/AggregateNetworkData.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
@@ -423,18 +424,49 @@ namespace {
         rstFile.write("XCON", connectionData.getXConn());
     }
 
-    void writeDynamicData(const int                     sim_step,
-                          const bool                    ecl_compatible_rst,
-                          const Phases&                 phases,
-                          const UnitSystem&             units,
-                          const EclipseGrid&            grid,
-                          const EclipseState&           es,
-                          const Schedule&               schedule,
-                          const data::WellRates&        wellSol,
-                          const Opm::Action::State&     action_state,
-                          const Opm::SummaryState&      sumState,
-                          const std::vector<int>&       inteHD,
-                          EclIO::OutputStream::Restart& rstFile)
+    void updateAndWriteAquiferData(const AquiferConfig&           aqConfig,
+                                   const SummaryState&            summaryState,
+                                   const TableManager&            tables,
+                                   const UnitSystem&              usys,
+                                   Helpers::AggregateAquiferData& aquiferData,
+                                   EclIO::OutputStream::Restart&  rstFile)
+    {
+        aquiferData.captureDynamicdAquiferData(aqConfig, summaryState,
+                                               tables.getPvtwTable(),
+                                               tables.getDensityTable(), usys);
+
+        rstFile.write("IAAQ", aquiferData.getIntegerAquiferData());
+        rstFile.write("SAAQ", aquiferData.getSinglePrecAquiferData());
+        rstFile.write("XAAQ", aquiferData.getDoublePrecAquiferData());
+
+        const auto maxAquiferID = aquiferData.maximumActiveAnalyticAquiferID();
+        for (auto aquiferID = 1 + 0*maxAquiferID; aquiferID <= maxAquiferID; ++aquiferID) {
+            const auto xCAQnum = std::vector<int>{ aquiferID };
+
+            rstFile.write("ICAQNUM", xCAQnum);
+            rstFile.write("ICAQ", aquiferData.getIntegerAquiferConnectionData(aquiferID));
+
+            rstFile.write("SCAQNUM", xCAQnum);
+            rstFile.write("SCAQ", aquiferData.getSinglePrecAquiferConnectionData(aquiferID));
+
+            rstFile.write("ACAQNUM", xCAQnum);
+            rstFile.write("ACAQ", aquiferData.getDoublePrecAquiferConnectionData(aquiferID));
+        }
+    }
+
+    void writeDynamicData(const int                                     sim_step,
+                          const bool                                    ecl_compatible_rst,
+                          const Phases&                                 phases,
+                          const UnitSystem&                             units,
+                          const EclipseGrid&                            grid,
+                          const EclipseState&                           es,
+                          const Schedule&                               schedule,
+                          const data::WellRates&                        wellSol,
+                          const Opm::Action::State&                     action_state,
+                          const Opm::SummaryState&                      sumState,
+                          const std::vector<int>&                       inteHD,
+                          std::optional<Helpers::AggregateAquiferData>& aquiferData,
+                          EclIO::OutputStream::Restart&                 rstFile)
     {
         writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
 
@@ -457,13 +489,17 @@ namespace {
                 });
 
             if (haveMSW) {
-                writeMSWData(sim_step, units, schedule, grid, sumState,
-                             wellSol, inteHD, rstFile);
+                writeMSWData(sim_step, units, schedule, grid,
+                             sumState, wellSol, inteHD, rstFile);
             }
 
-            writeWell(sim_step, ecl_compatible_rst,
-                      phases, units, grid, schedule, wells,
-                      wellSol, action_state, sumState, inteHD, rstFile);
+            writeWell(sim_step, ecl_compatible_rst, phases, units, grid, schedule,
+                      wells, wellSol, action_state, sumState, inteHD, rstFile);
+        }
+
+        if (es.aquifer().hasAnalyticalAquifer() && aquiferData.has_value()) {
+            updateAndWriteAquiferData(es.aquifer(), sumState, es.getTableManager(),
+                                      units, aquiferData.value(), rstFile);
         }
     }
 
@@ -691,17 +727,18 @@ namespace {
 
 } // Anonymous namespace
 
-void save(EclIO::OutputStream::Restart& rstFile,
-          int                           report_step,
-          double                        seconds_elapsed,
-          RestartValue                  value,
-          const EclipseState&           es,
-          const EclipseGrid&            grid,
-          const Schedule&               schedule,
-          const Action::State&          action_state,
-          const SummaryState&           sumState,
-          const UDQState&               udqState,
-          bool                          write_double)
+void save(EclIO::OutputStream::Restart&                 rstFile,
+          int                                           report_step,
+          double                                        seconds_elapsed,
+          RestartValue                                  value,
+          const EclipseState&                           es,
+          const EclipseGrid&                            grid,
+          const Schedule&                               schedule,
+          const Action::State&                          action_state,
+          const SummaryState&                           sumState,
+          const UDQState&                               udqState,
+          std::optional<Helpers::AggregateAquiferData>& aquiferData,
+          bool                                          write_double)
 {
     ::Opm::RestartIO::checkSaveArguments(es, value, grid);
 
@@ -724,8 +761,8 @@ void save(EclIO::OutputStream::Restart& rstFile,
 
     if (report_step > 0) {
         writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
-                         units, grid, es, schedule, value.wells, action_state, sumState,
-                         inteHD, rstFile);
+                         units, grid, es, schedule, value.wells, action_state,
+                         sumState, inteHD, aquiferData, rstFile);
     }
 
     writeActionx(report_step, sim_step, es, schedule, action_state, sumState, rstFile);

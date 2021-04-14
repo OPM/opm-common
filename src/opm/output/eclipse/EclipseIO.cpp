@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
@@ -37,6 +38,7 @@
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/output/eclipse/AggregateAquiferData.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/WriteInit.hpp>
@@ -51,6 +53,7 @@
 #include <cstdlib>
 #include <cctype>
 #include <memory>     // unique_ptr
+#include <optional>
 #include <stdexcept>
 #include <sstream>
 #include <unordered_map>
@@ -110,6 +113,7 @@ class EclipseIO::Impl {
         SummaryConfig summaryConfig;
         out::Summary summary;
         bool output_enabled;
+        std::optional<RestartIO::Helpers::AggregateAquiferData> aquiferData{std::nullopt};
 };
 
 EclipseIO::Impl::Impl( const EclipseState& eclipseState,
@@ -124,7 +128,15 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
     , summaryConfig( summary_config )
     , summary( eclipseState, summaryConfig, grid , schedule )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
-{}
+{
+    if (this->es.aquifer().hasAnalyticalAquifer()) {
+        this->aquiferData = RestartIO::Helpers::AggregateAquiferData {
+            RestartIO::inferAquiferDimensions(this->es),
+            this->es.aquifer(),
+            this->grid
+        };
+    }
+}
 
 
 void EclipseIO::Impl::writeINITFile(const data::Solution&                   simProps,
@@ -247,7 +259,8 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
         };
 
         RestartIO::save(rstFile, report_step, secs_elapsed, value,
-                        es, grid, schedule, action_state, st, udq_state, write_double);
+                        es, grid, schedule, action_state, st,
+                        udq_state, this->impl->aquiferData, write_double);
     }
 
     // RFT file written only if requested and never for substeps.

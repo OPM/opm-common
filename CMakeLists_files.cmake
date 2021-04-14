@@ -282,6 +282,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/rst/well.cpp
           src/opm/output/eclipse/ActiveIndexByColumns.cpp
           src/opm/output/eclipse/AggregateActionxData.cpp
+          src/opm/output/eclipse/AggregateAquiferData.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateNetworkData.cpp
@@ -409,6 +410,7 @@ if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
           tests/test_ActiveIndexByColumns.cpp
           tests/test_AggregateActionxData.cpp
+          tests/test_AggregateAquiferData.cpp
           tests/test_AggregateWellData.cpp
           tests/test_AggregateGroupData.cpp
           tests/test_AggregateNetworkData.cpp
@@ -856,6 +858,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/VectorItems/well.hpp
         opm/output/eclipse/ActiveIndexByColumns.hpp
         opm/output/eclipse/AggregateActionxData.hpp
+        opm/output/eclipse/AggregateAquiferData.hpp
         opm/output/eclipse/AggregateGroupData.hpp
         opm/output/eclipse/AggregateNetworkData.hpp
         opm/output/eclipse/AggregateConnectionData.hpp

@@ -35,6 +35,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
@@ -67,7 +68,7 @@ namespace Opm {
         }
 
         void add_cell(const KeywordLocation& location,
-                      std::unordered_map<std::size_t, Aquancon::AquancCell>& work,
+                      std::map<std::size_t, Aquancon::AquancCell>& work,
                       const EclipseGrid& grid,
                       const int aquiferID,
                       const std::size_t global_index,
@@ -108,7 +109,7 @@ namespace Opm {
 
     Aquancon::Aquancon(const EclipseGrid& grid, const Deck& deck)
     {
-        std::unordered_map<std::size_t, Aquancon::AquancCell> work;
+        std::map<std::size_t, Aquancon::AquancCell> work;
         for (std::size_t iaq = 0; iaq < deck.count("AQUANCON"); iaq++) {
             const auto& aquanconKeyword = deck.getKeyword("AQUANCON", iaq);
             OpmLog::info(OpmInputError::format("Initializing aquifer connections from {keyword} in {file} line {line}", aquanconKeyword.location()));

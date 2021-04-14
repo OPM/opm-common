@@ -26,7 +26,9 @@
 
 #include <opm/output/eclipse/RestartValue.hpp>
 
+#include <opm/output/eclipse/AggregateAquiferData.hpp>
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -76,17 +78,18 @@ namespace Opm { namespace Action {
 */
 namespace Opm { namespace RestartIO {
 
-    void save(EclIO::OutputStream::Restart& rstFile,
-              int                           report_step,
-              double                        seconds_elapsed,
-              RestartValue                  value,
-              const EclipseState&           es,
-              const EclipseGrid&            grid,
-              const Schedule&               schedule,
-              const Action::State&          action_state,
-              const SummaryState&           sumState,
-              const UDQState&               udqState,
-              bool                          write_double = false);
+    void save(EclIO::OutputStream::Restart&                 rstFile,
+              int                                           report_step,
+              double                                        seconds_elapsed,
+              RestartValue                                  value,
+              const EclipseState&                           es,
+              const EclipseGrid&                            grid,
+              const Schedule&                               schedule,
+              const Action::State&                          action_state,
+              const SummaryState&                           sumState,
+              const UDQState&                               udqState,
+              std::optional<Helpers::AggregateAquiferData>& aquiferData,
+              bool                                          write_double = false);
 
 
     RestartValue load(const std::string&             filename,

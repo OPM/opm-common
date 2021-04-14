@@ -25,21 +25,18 @@
   This includes the logic for parsing as well as the associated tables. It is meant to be used by opm-grid and opm-simulators in order to
   implement the Carter Tracy analytical aquifer model in OPM Flow.
 */
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp>
+#include <cstddef>
+#include <utility>
+#include <vector>
 
 namespace Opm {
-
+    class Deck;
+    class DeckRecord;
     class TableManager;
+}
+
+namespace Opm {
 
     class AquiferCT {
         public:

@@ -1,13 +1,40 @@
+/*
+  Copyright 2021 Equinor ASA.
+  Copyright 2016, 2017, 2018 Statoil ASA.
+
+  This file is part of the Open Porous Media Project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <opm/output/eclipse/InteHEAD.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <ctime>
+#include <numeric>
 #include <ratio>
 #include <utility>
 #include <vector>
@@ -61,7 +88,7 @@ enum index : std::vector<int>::size_type {
   NSGRPZ       =       VI::intehead::NSGRPZ,   //       112       0       112       NSGRPZ = number of data elements per group in SGRP array
   NXGRPZ       =       VI::intehead::NXGRPZ,   //       180       0       180       NXGRPZ = number of data elements per group in XGRP array
   NZGRPZ       =       VI::intehead::NZGRPZ,   //       5       0              NZGRPZ = number of data elements per group in ZGRP array
-  ih_040       =       40       ,              //       0       0
+  NAQUIF       =       VI::intehead::NAQUIF,   //       0       0              NAQUIF = number of analytic aquifers in model
   NCAMAX       =       VI::intehead::NCAMAX,   //       1       0              NCAMAX = maximum number of analytic aquifer connections
   NIAAQZ       =       VI::intehead::NIAAQZ,   //       18       0              NIAAQZ = number of data elements per aquifer in IAAQ array
   NSAAQZ       =       VI::intehead::NSAAQZ,   //       24       0              NSAAQZ = number of data elements per aquifer in SAAQ array
@@ -183,7 +210,7 @@ enum index : std::vector<int>::size_type {
   ih_159       =      159       ,              //       0       0
   ih_160       =      160       ,              //       0       0
   ih_161       =      161       ,              //       0       0
-  NGCAUS       =      162       ,              //       0       0              NGCAUS = maximum number of aquifer connections actually used.
+  NGCAUS       =      VI::intehead::MAX_ACT_ANLYTIC_AQUCONN, //       0       0 NGCAUS = maximum number of aquifer connections actually used.
   NWMAXZ       =      VI::intehead::NWMAXZ,    //       0       0
   ih_164       =      164       ,              //       0       0
   ih_165       =      165       ,              //       0       0
@@ -273,7 +300,7 @@ enum index : std::vector<int>::size_type {
   ih_249       =      249       ,              //       0
   ih_250       =      250       ,              //       0
   ih_251       =      251       ,              //       0
-  MAAQID       =      VI::intehead::MAX_AN_AQUIFERS,              //       0                     MAAQID = maximum number of analytic aquifers
+  MAAQID       =      VI::intehead::MAX_AN_AQUIFER_ID, //       0             MAAQID = maximum aquifer ID of all analytic aquifers
   ih_253       =      253       ,              //       0
   ih_254       =      254       ,              //       0
   ih_255       =      255       ,              //       0
@@ -290,7 +317,7 @@ enum index : std::vector<int>::size_type {
   NOWUDQS      =      VI::intehead::NO_WELL_UDQS,     //       0
   UDQPAR_1     =      VI::intehead::UDQPAR_1,  //       0
   ih_268       =      268       ,              //       0
-  ih_269       =      269       ,              //       0
+  AQU_UNKNOWN_1=      VI::intehead::AQU_UNKNOWN_1,              //       0  Not characterised.  Equal to NAQUIF in all cases seen so far.
   ih_270       =      270       ,              //       0
   NCRDMX       =      271       ,              //       0                     NCRDMX = maximum number of chord segment links per well
   ih_272       =      272       ,              //       0
@@ -307,7 +334,7 @@ enum index : std::vector<int>::size_type {
   ih_283       =      283       ,              //       0
   ih_284       =      284       ,              //       0
   ih_285       =      285       ,              //       0
-  ih_286       =      286       ,              //       0
+  MAX_ANALYTIC_AQUIFERS= VI::intehead::MAX_ANALYTIC_AQUIFERS, //  Declared maximum number of analytic aquifers in model.  AQUDIMS(5).
   ih_287       =      287       ,              //       0
   ih_288       =      288       ,              //       0
   ih_289       =      289       ,              //       0
@@ -574,21 +601,26 @@ params_NGCTRL(const int gct)
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
-params_NAAQZ(const int ncamax,
-             const int niaaqz,
-             const int nsaaqz,
-             const int nxaaqz,
-             const int nicaqz,
-             const int nscaqz,
-             const int nacaqz)
+aquiferDimensions(const AquiferDims& aqdims)
 {
-    this -> data_[NCAMAX] = ncamax;
-    this -> data_[NIAAQZ] = niaaqz;
-    this -> data_[NSAAQZ] = nsaaqz;
-    this -> data_[NXAAQZ] = nxaaqz;
-    this -> data_[NICAQZ] = nicaqz;
-    this -> data_[NSCAQZ] = nscaqz;
-    this -> data_[NACAQZ] = nacaqz;
+    this -> data_[NAQUIF] = aqdims.numAquifers;
+    this -> data_[NCAMAX] = aqdims.maxNumAquiferConn;
+
+    this -> data_[NIAAQZ] = aqdims.numIntAquiferElem;
+    this -> data_[NSAAQZ] = aqdims.numRealAquiferElem;
+    this -> data_[NXAAQZ] = aqdims.numDoubAquiferElem;
+
+    this -> data_[NICAQZ] = aqdims.numIntConnElem;
+    this -> data_[NSCAQZ] = aqdims.numRealConnElem;
+    this -> data_[NACAQZ] = aqdims.numDoubConnElem;
+
+    this -> data_[NGCAUS] = aqdims.maxNumActiveAquiferConn;
+    this -> data_[MAAQID] = aqdims.maxAquiferID;
+
+    // Not characterised.  Equal to NAQUIF in all cases seen this far.
+    this -> data_[AQU_UNKNOWN_1] = this -> data_[NAQUIF];
+
+    this -> data_[MAX_ANALYTIC_AQUIFERS] = aqdims.maxNumAquifers;
 
     return *this;
 }
@@ -712,8 +744,8 @@ actionParam(const ActionParam& act_par)
     return *this;
 }
 
-
-//InteHEAD parameters which meaning are currently not known, but which are needed for Eclipse restart runs with UDQ and ACTIONX data
+// InteHEAD parameters which meaning are currently not known, but which are
+// needed for Eclipse restart runs with UDQ and ACTIONX data
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
 variousUDQ_ACTIONXParam()
@@ -773,7 +805,7 @@ Opm::RestartIO::InteHEAD::networkDimensions(const NetworkDims& nwdim)
     return *this;
 }
 
-
+// =====================================================================
 
 Opm::RestartIO::InteHEAD::TimePoint
 Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
@@ -799,4 +831,71 @@ Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
         // Fractional seconds in microsecond resolution.
         static_cast<int>(usec),
     };
+}
+
+namespace {
+    int getNumberOfAnalyticAquifers(const Opm::AquiferConfig& cfg)
+    {
+        const auto numAnalyticAquifers = cfg.ct().size() + cfg.fetp().size();
+
+        return static_cast<int>(numAnalyticAquifers);
+    }
+
+    int getMaximumNumberOfAnalyticAquifers(const Opm::Runspec& runspec)
+    {
+        return runspec.aquiferDimensions().maxAnalyticAquifers();
+    }
+
+    int getMaximumNumberOfAnalyticAquiferConnections(const Opm::Runspec& runspec)
+    {
+        return runspec.aquiferDimensions().maxAnalyticAquiferConnections();
+    }
+
+    int getMaximumNumberOfActiveAnalyticAquiferConnections(const Opm::AquiferConfig& cfg)
+    {
+        auto maxNumActiveConn = 0;
+        for (const auto& aqConn : cfg.connections().data()) {
+            const auto nActiveConn = static_cast<int>(aqConn.second.size());
+
+            maxNumActiveConn = std::max(maxNumActiveConn, nActiveConn);
+        }
+
+        return maxNumActiveConn;
+    }
+
+    int getMaximumAnalyticAquiferID(const Opm::AquiferConfig& cfg)
+    {
+        auto maxAquID = [](const auto& aquiferCollection) -> int
+        {
+            return std::accumulate(aquiferCollection.begin(), aquiferCollection.end(), 0,
+                                   [](const int maxID, const auto& aquiferData)
+                                   {
+                                       return std::max(maxID, aquiferData.aquiferID);
+                                   });
+        };
+
+        return std::max(maxAquID(cfg.ct()), maxAquID(cfg.fetp()));
+    }
+}
+
+Opm::RestartIO::InteHEAD::AquiferDims
+Opm::RestartIO::inferAquiferDimensions(const EclipseState& es)
+{
+    auto dim = Opm::RestartIO::InteHEAD::AquiferDims{};
+    const auto& cfg = es.aquifer();
+
+    if (cfg.hasAnalyticalAquifer()) {
+        dim.numAquifers = getNumberOfAnalyticAquifers(cfg);
+        dim.maxNumAquifers = getMaximumNumberOfAnalyticAquifers(es.runspec());
+
+        dim.maxNumAquiferConn =
+            getMaximumNumberOfAnalyticAquiferConnections(es.runspec());
+
+        dim.maxNumActiveAquiferConn =
+            getMaximumNumberOfActiveAnalyticAquiferConnections(cfg);
+
+        dim.maxAquiferID = getMaximumAnalyticAquiferID(cfg);
+    }
+
+    return dim;
 }
