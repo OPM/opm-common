@@ -30,6 +30,8 @@
 #include <cctype>
 #include <ctime>
 
+#include <fmt/format.h>
+
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
@@ -61,6 +63,11 @@ using i_cmode = Opm::Group::InjectionCMode;
 
 namespace {
     double sm3_pr_day()
+    {
+       return unit::cubic(unit::meter) / unit::day;
+    }
+
+    double rm3_pr_day()
     {
        return unit::cubic(unit::meter) / unit::day;
     }
@@ -264,11 +271,11 @@ data::Wells result_wells(const bool w3_injector = true)
       syncronized with the global index in the COMPDAT keyword in the
       input deck.
     */
-    data::Connection well1_comp1 { 0  , crates1, 1.9 *unit::barsa , 123.4, 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db() };
-    data::Connection well2_comp1 { 1  , crates2, 1.10 , 123.4, 212.1 , 0.78 , 0.0 ,  12.34   , 222.333*cp_rm3_per_db() };
-    data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6 , 0.001, 0.89, 100.0    , 333.444*cp_rm3_per_db() };
-    data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0  , 0.15, 432.1    , 444.555*cp_rm3_per_db() };
-    data::Connection well6_comp1 { 5  , crates6, 6.11 , 623.4, 656.78, 0.0  , 0.65, 632.1    , 555.666*cp_rm3_per_db() };
+    data::Connection well1_comp1 { 0  , crates1, 1.9 *unit::barsa, -123.4 *rm3_pr_day(), 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db() };
+    data::Connection well2_comp1 { 1  , crates2, 1.10*unit::barsa, - 23.4 *rm3_pr_day(), 212.1 , 0.78 , 0.0 ,  12.34   , 222.333*cp_rm3_per_db() };
+    data::Connection well2_comp2 { 101, crates3, 1.11*unit::barsa, -234.5 *rm3_pr_day(), 150.6 , 0.001, 0.89, 100.0    , 333.444*cp_rm3_per_db() };
+    data::Connection well3_comp1 { 2  , crates3, 1.11*unit::barsa,  432.1 *rm3_pr_day(), 456.78, 0.0  , 0.15, 432.1    , 444.555*cp_rm3_per_db() };
+    data::Connection well6_comp1 { 77 , crates6, 6.11*unit::barsa,  321.09*rm3_pr_day(), 656.78, 0.0  , 0.65, 632.1    , 555.666*cp_rm3_per_db() };
 
     /*
       The completions
@@ -316,6 +323,17 @@ data::Wells result_wells(const bool w3_injector = true)
     }
     else {
         well3.current_control.prod = ::Opm::Well::ProducerCMode::BHP;
+
+        auto& xc = well3.connections[0];
+        xc.reservoir_rate = - xc.reservoir_rate;
+
+        for (const auto& p : { rt::wat, rt::oil, rt::gas, rt::solvent,
+                    rt::dissolved_gas, rt::vaporized_oil,
+                    rt::reservoir_water, rt::reservoir_oil, rt::reservoir_gas,
+                    rt::polymer, rt::brine })
+        {
+            xc.rates.set(p, - xc.rates.get(p));
+        }
     }
 
     well3.guide_rates.set(GRValue::Item::ResV, 355.113*sm3_pr_day());
@@ -455,6 +473,17 @@ double ecl_sum_get_well_connection_var( const EclIO::ESmry* smry,
 {
     const auto ijk = std::to_string(i) + ',' + std::to_string(j) + ',' + std::to_string(k);
     return smry->get(variable + ':' + wellname + ':' + ijk)[timeIdx];
+}
+
+bool ecl_sum_has_well_connection_var( const EclIO::ESmry* smry,
+                                      const std::string&  wellname,
+                                      const std::string&  variable,
+                                      const int           i,
+                                      const int           j,
+                                      const int           k)
+{
+    const auto key = fmt::format("{}:{}:{},{},{}", wellname, variable, i, j, k);
+    return ecl_sum_has_key(smry, key);
 }
 
 struct setup {
@@ -1126,7 +1155,15 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
     BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CWPR", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "COPR", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGPR", 1, 1, 1 ), 1e-5 );
+
     BOOST_CHECK_CLOSE( 1.9,       ecl_sum_get_well_connection_var( resp, 1, "W_1", "CPR",  1, 1, 1), 1e-5);
+
+    BOOST_CHECK_MESSAGE(! ecl_sum_has_well_connection_var( resp, "W_1", "CVPR", 1, 1, 1 ),
+                        "Summary vector CVPR must NOT exist for connection 1,1,1 of well W_1");
+
+    BOOST_CHECK_CLOSE(  23.4,     ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVPR", 2, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 234.5,     ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPR", 2, 1, 2 ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0,     ecl_sum_get_well_connection_var( resp, 1, "W_3", "CVPR", 3, 1, 1 ), 1e-5 );
 
     BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_1", "WOPRL__1"), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPR", 1,1,1), 1e-5);
     BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_2", "WOPRL__2"), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
@@ -1140,6 +1177,9 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
     BOOST_CHECK_CLOSE(ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPRL", 2, 1, 2), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
                                                                                          ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,2), 1e-5);
 
+    // Flow ratios
+    BOOST_CHECK_CLOSE( 100.2 / 100.1, ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGOR", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0,         ecl_sum_get_well_connection_var( resp, 1, "W_6", "CGOR", 8, 8, 1 ), 1e-5 );
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CWPT", 1, 1, 1 ), 1e-5 );
@@ -1159,10 +1199,26 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
 
     BOOST_CHECK_CLOSE( 2 * 100.3, ecl_sum_get_well_connection_var( resp, 2, "W_1", "CNPT", 1, 1, 1 ), 1e-5 );
 
+    BOOST_CHECK_CLOSE( 1.0 * 123.4,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CVPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.0 *  23.4,     ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVPT", 2, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.0 * 234.5,     ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVPT", 2, 1, 2 ), 1e-5 );
+
+    BOOST_CHECK_MESSAGE(! ecl_sum_has_well_connection_var( resp, "W_3", "CVPT", 3, 1, 1 ),
+                        "Summary vector CVPT must NOT exist for connection 3,1,1 of well W_3");
+
+    BOOST_CHECK_CLOSE( 2.0 * 123.4,     ecl_sum_get_well_connection_var( resp, 2, "W_1", "CVPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2.0 *  23.4,     ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPT", 2, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2.0 * 234.5,     ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPT", 2, 1, 2 ), 1e-5 );
+
     /* Injection rates */
     BOOST_CHECK_CLOSE( 300.0,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CWIR", 3, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 300.2,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CGIR", 3, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 300.16, ecl_sum_get_well_connection_var( resp, 1, "W_3", "CCIR", 3, 1, 1 ), 1e-5 );
+
+    BOOST_CHECK_CLOSE(   0.0,     ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVIR", 2, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0,     ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVIR", 2, 1, 2 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 432.1,     ecl_sum_get_well_connection_var( resp, 1, "W_3", "CVIR", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 321.09,    ecl_sum_get_well_connection_var( resp, 1, "W_6", "CVIR", 8, 8, 1 ), 1e-5 );
 
     /* Injection totals */
     BOOST_CHECK_CLOSE( 300.0,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CWIT", 3, 1, 1 ), 1e-5 );
@@ -1174,6 +1230,11 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
     BOOST_CHECK_CLOSE( 2 * 300.3,   ecl_sum_get_well_connection_var( resp, 2, "W_3", "CNIT", 3, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 300.16,
                                     ecl_sum_get_well_connection_var( resp, 2, "W_3", "CCIT", 3, 1, 1 ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 1.0 * 432.1,  ecl_sum_get_well_connection_var( resp, 1, "W_3", "CVIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1.0 * 321.09, ecl_sum_get_well_connection_var( resp, 1, "W_6", "CVIT", 8, 8, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2.0 * 432.1,  ecl_sum_get_well_connection_var( resp, 2, "W_3", "CVIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2.0 * 321.09, ecl_sum_get_well_connection_var( resp, 2, "W_6", "CVIT", 8, 8, 1 ), 1e-5 );
 
     /* Solvent flow rate + or - Note OPM uses negative values for producers, while CNFR outputs positive
     values for producers*/
@@ -1922,6 +1983,16 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         const auto* resp = res.get();
 
         /* No WEFAC assigned to W_1 */
+        BOOST_CHECK_CLOSE(     123.4, ecl_sum_get_well_connection_var( resp, 1, "W_1", "CVPT", 1, 1, 1 ), 1e-5 );
+        BOOST_CHECK_CLOSE( 2 * 123.4, ecl_sum_get_well_connection_var( resp, 2, "W_1", "CVPT", 1, 1, 1 ), 1e-5 );
+
+        BOOST_CHECK_CLOSE( 100.2 / 100.1, ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGOR", 1, 1, 1 ), 1e-5 );
+        BOOST_CHECK_CLOSE( 100.2 / 100.1, ecl_sum_get_well_connection_var( resp, 2, "W_1", "CGOR", 1, 1,
+ 1 ), 1e-5 );
+
+        BOOST_CHECK_CLOSE( 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WOPT" ), 1e-5 );
+        BOOST_CHECK_CLOSE( 2 * 10.1, ecl_sum_get_well_var( resp, 2, "W_1", "WOPT" ), 1e-5 );
+
         BOOST_CHECK_CLOSE( 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WOPR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WOPT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 2 * 10.1, ecl_sum_get_well_var( resp, 2, "W_1", "WOPT" ), 1e-5 );
@@ -1943,6 +2014,11 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WOPR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 20.1 * 0.2 * 0.01, ecl_sum_get_well_var( resp, 1, "W_2", "WOPT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 2 * 20.1 * 0.2 * 0.01, ecl_sum_get_well_var( resp, 2, "W_2", "WOPT" ), 1e-5 );
+        BOOST_CHECK_CLOSE(  23.4,     ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVPR", 2, 1, 1 ), 1e-5 );
+        BOOST_CHECK_CLOSE( 234.5,     ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPR", 2, 1, 2 ), 1e-5 );
+
+        BOOST_CHECK_CLOSE(      23.4 * 0.2 * 0.01, ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVPT", 2, 1, 1 ), 1e-5 );
+        BOOST_CHECK_CLOSE( 2 * 234.5 * 0.2 * 0.01, ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPT", 2, 1, 2 ), 1e-5 );
 
         BOOST_CHECK_CLOSE( -20.13 * 0.2, ecl_sum_get_group_var( resp, 1, "G_2", "GWPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( -20.14 * 0.2, ecl_sum_get_group_var( resp, 1, "G_2", "GOPP" ), 1e-5 );
@@ -1971,6 +2047,16 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         /* WEFAC 0.3 assigned to W_3.
          * W_3 assigned to group G3. GEFAC G_3 = 0.02
          * G_3 assigned to group G4. GEFAC G_4 = 0.03*/
+        BOOST_CHECK_CLOSE( 300.2 / 300.1, ecl_sum_get_well_connection_var( resp, 1, "W_3", "CGOR", 3, 1, 1 ), 1e-5 );
+
+        BOOST_CHECK_CLOSE( 300.2 / 300.1, ecl_sum_get_well_connection_var( resp, 2, "W_3", "CGOR", 3, 1, 1 ), 1e-5 );
+
+        BOOST_CHECK_CLOSE( 432.1 * 0.3 * 0.02 * 0.03,
+                           ecl_sum_get_well_connection_var( resp, 1, "W_3", "CVPT", 3, 1, 1 ), 1e-5 );
+        BOOST_CHECK_CLOSE( 432.1 * 0.3 * 0.02 * 0.03 +
+                           432.1 * 0.3 * 0.02 * 0.04,
+                           ecl_sum_get_well_connection_var( resp, 2, "W_3", "CVPT", 3, 1, 1 ), 1e-5 );
+
         BOOST_CHECK_CLOSE( 30.1, ecl_sum_get_well_var( resp, 1, "W_3", "WOIR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_well_var( resp, 1, "W_3", "WOIT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03 + 30.1 * 0.3 * 0.02 * 0.04, ecl_sum_get_well_var( resp, 2, "W_3", "WOIT" ), 1e-5 );
@@ -2052,7 +2138,9 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 1, "FOIT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03 + 30.1 * 0.3 * 0.02 * 0.04, ecl_sum_get_field_var( resp, 2, "FOIT" ), 1e-5 );
 
-        BOOST_CHECK_CLOSE( 200.1 * 0.2 * 0.01, ecl_sum_get_general_var( resp , 1 , "ROPR:1" ) , 1e-5);
+        BOOST_CHECK_CLOSE( 200.1 * 0.2 * 0.01
+                           + 300.1 * 0.3 * 0.02 * 0.03,
+                           ecl_sum_get_general_var( resp , 1 , "ROPR:1" ) , 1e-5);
 
         BOOST_CHECK_CLOSE( 100.1, ecl_sum_get_general_var( resp , 1 , "ROPR:2" ) , 1e-5);
 
