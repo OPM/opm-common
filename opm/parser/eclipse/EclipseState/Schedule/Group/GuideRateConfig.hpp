@@ -20,9 +20,9 @@
 #ifndef GUIDE_RATE_CONFIG_HPP
 #define GUIDE_RATE_CONFIG_HPP
 
+#include <optional>
 #include <string>
 #include <unordered_map>
-#include <memory>
 #include <utility>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
@@ -129,7 +129,7 @@ private:
         }
     };
 
-    std::shared_ptr<GuideRateModel> m_model;
+    std::optional<GuideRateModel> m_model;
     std::unordered_map<std::string, WellTarget> wells;
     std::unordered_map<std::string, GroupProdTarget> production_groups;
     std::unordered_map<pair, GroupInjTarget, pair_hash> injection_groups;

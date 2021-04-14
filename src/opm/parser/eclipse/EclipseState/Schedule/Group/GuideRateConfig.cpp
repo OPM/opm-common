@@ -26,7 +26,7 @@ namespace Opm {
 GuideRateConfig GuideRateConfig::serializeObject()
 {
     GuideRateConfig result;
-    result.m_model = std::make_shared<GuideRateModel>(GuideRateModel::serializeObject());
+    result.m_model = GuideRateModel::serializeObject();
     result.wells = {{"test1", WellTarget{1.0, Well::GuideRateTarget::COMB, 2.0}}};
     result.production_groups = {{"test2", GroupProdTarget{1.0, Group::GuideRateProdTarget::COMB}}};
     result.injection_groups = {{{Phase::OIL, "test3"}, GroupInjTarget{1.0, Group::GuideRateInjTarget::NETV}}};
@@ -35,25 +35,23 @@ GuideRateConfig GuideRateConfig::serializeObject()
 
 
 const GuideRateModel& GuideRateConfig::model() const {
-    if (this->m_model)
-        return *this->m_model;
+    if (this->m_model.has_value())
+        return this->m_model.value();
     else
         throw std::logic_error("Tried to dereference empty GuideRateModel");
 }
 
 
 bool GuideRateConfig::has_model() const {
-    if (this->m_model)
-        return true;
-    else
-        return false;
+    return this->m_model.has_value();
 }
 
 bool GuideRateConfig::update_model(const GuideRateModel& new_model) {
-    if (!this->m_model || *(this->m_model) != new_model) {
-        this->m_model.reset( new GuideRateModel(new_model) );
+    if (!this->m_model.has_value() || this->m_model.value() != new_model) {
+        this->m_model = new_model;
         return true;
     }
+
     return false;
 }
 
@@ -123,16 +121,10 @@ bool GuideRateConfig::has_production_group(const std::string& name) const {
 }
 
 bool GuideRateConfig::operator==(const GuideRateConfig& data) const {
-    if ((this->m_model && !data.m_model) || (!this->m_model && data.m_model))
-        return false;
-
-    if (this->m_model && !(*this->m_model == *data.m_model))
-        return false;
-
     return this->wells == data.wells &&
-            this->production_groups == data.production_groups &&
-            this->injection_groups == data.injection_groups;
-
+           this->m_model == data.m_model &&
+           this->production_groups == data.production_groups &&
+           this->injection_groups == data.injection_groups;
 }
 
 }
