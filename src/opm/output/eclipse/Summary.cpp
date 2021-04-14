@@ -178,10 +178,21 @@ namespace {
             {"COPR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CWPR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CGPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CVPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"COPT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CWPT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CGPT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CVPT", Opm::EclIO::SummaryNode::Type::Total},
             {"COIR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CWIR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CGIR", Opm::EclIO::SummaryNode::Type::Rate},
-            {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure}
+            {"CVIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"COIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CWIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CGIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CVIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure},
+            {"CGOR", Opm::EclIO::SummaryNode::Type::Ratio},
         };
 
         using Cat = Opm::EclIO::SummaryNode::Category;
