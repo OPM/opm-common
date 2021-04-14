@@ -434,13 +434,11 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         g1.injectionControls(Phase::GAS, st);
         BOOST_CHECK_THROW(g1.injectionControls(Phase::OIL, st), std::out_of_range);
 
-        BOOST_CHECK(g1.has_topup_phase());
-        BOOST_CHECK(Phase::GAS == g1.topup_phase());
+        BOOST_CHECK(Phase::GAS == g1.topup_phase().value());
     }
     {
         const auto& g2 = schedule.getGroup("G2", 0);
-        BOOST_CHECK(!g2.has_topup_phase());
-        BOOST_CHECK_THROW(g2.topup_phase(), std::logic_error);
+        BOOST_CHECK( !g2.topup_phase().has_value());
         BOOST_CHECK(  g2.injectionGroupControlAvailable(Phase::WATER) );
     }
     // Step 1
@@ -455,13 +453,12 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         g2.injectionControls(Phase::GAS, st);
         BOOST_CHECK_THROW(g2.injectionControls(Phase::OIL, st), std::out_of_range);
 
-        BOOST_CHECK(g2.has_topup_phase());
-        BOOST_CHECK(Phase::GAS == g2.topup_phase());
+        BOOST_CHECK(g2.topup_phase().has_value());
+        BOOST_CHECK(Phase::GAS == g2.topup_phase().value());
     }
     {
         const auto& g1 = schedule.getGroup("G1", 1);
-        BOOST_CHECK(!g1.has_topup_phase());
-        BOOST_CHECK_THROW(g1.topup_phase(), std::logic_error);
+        BOOST_CHECK(!g1.topup_phase().has_value());
     }
 }
 
