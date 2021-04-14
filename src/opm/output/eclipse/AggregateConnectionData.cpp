@@ -38,6 +38,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include <fmt/format.h>
+
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
 // #####################################################################
@@ -61,23 +63,28 @@ namespace {
                         const Opm::data::Well*  wellRes,
                         ConnOp&&                connOp)
     {
+        const auto& wellName = well.name();
+        const auto  wellID   = well.seqIndex();
+        const auto  isProd   = well.isProducer();
+
         std::size_t connID = 0;
         for (const auto* connPtr : well.getConnections().output(grid)) {
             const auto* dynConnRes = (wellRes == nullptr)
                 ? nullptr : wellRes->find_connection(connPtr->global_index());
 
-            connOp(well, *connPtr, connID, connPtr->global_index(), dynConnRes);
+            connOp(wellName, wellID, isProd, *connPtr, connID,
+                   connPtr->global_index(), dynConnRes);
 
             ++connID;
         }
     }
 
     template <class ConnOp>
-    void wellConnectionLoop(const Opm::Schedule&        sched,
-                            const std::size_t           sim_step,
-                            const Opm::EclipseGrid&     grid,
+    void wellConnectionLoop(const Opm::Schedule&    sched,
+                            const std::size_t       sim_step,
+                            const Opm::EclipseGrid& grid,
                             const Opm::data::Wells& xw,
-                            ConnOp&&                    connOp)
+                            ConnOp&&                connOp)
     {
         for (const auto& wname : sched.wellNames(sim_step)) {
             const auto  well_iter = xw.find(wname);
@@ -234,60 +241,60 @@ namespace {
         }
 
         template <class XConnArray>
-        void dynamicContrib(const Opm::Well& well,
-                            const std::size_t& global_index,
+        void dynamicContrib(const std::string&       well_name,
+                            const bool               is_producer,
+                            const std::size_t        global_index,
                             const Opm::SummaryState& summary_state,
-                            const Opm::data::Connection& x,
-                            const Opm::UnitSystem&       units,
-                            XConnArray&                  xConn)
+                            XConnArray&              xConn)
         {
-            using M  = ::Opm::UnitSystem::measure;
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
-            using R  = ::Opm::data::Rates::opt;
-            const auto& wname = well.name();
 
-            xConn[Ix::Pressure] = summary_state.get_conn_var(wname, "CPR", global_index + 1);
+            auto get = [global_index, &well_name, &summary_state]
+                (const std::string& var)
+            {
+                return summary_state
+                    .get_conn_var(well_name, var, global_index + 1, 0.0);
+            };
 
-            // Note flow rate sign.  Treat production rates as positive.
-            const auto& Q = x.rates;
-            if (well.isProducer()) {
-                if (summary_state.has_conn_var(wname, "COPR", global_index + 1))
-                    xConn[Ix::OilRate] = summary_state.get_conn_var(wname, "COPR", global_index + 1);
+            auto connRate = [is_producer, &get](const char phase) -> double
+            {
+                const auto var =
+                    fmt::format("C{}{}R", phase, is_producer ? 'P' : 'I');
 
-                if (summary_state.has_conn_var(wname, "CWPR", global_index + 1))
-                    xConn[Ix::WaterRate] = summary_state.get_conn_var(wname, "CWPR", global_index + 1);
+                const auto val = get(var);
 
-                if (summary_state.has_conn_var(wname, "CGPR", global_index + 1))
-                    xConn[Ix::GasRate] = summary_state.get_conn_var(wname, "CGPR", global_index + 1);
-            } else {
-                if (summary_state.has_conn_var(wname, "COIR", global_index + 1))
-                    xConn[Ix::OilRate] = -summary_state.get_conn_var(wname, "COIR", global_index + 1);
+                // Note: Production rates are positive but injection rates
+                // are reported as negative values in XCON.
+                return is_producer ? val : -val;
+            };
 
-                if (summary_state.has_conn_var(wname, "CWIR", global_index + 1))
-                    xConn[Ix::WaterRate] = -summary_state.get_conn_var(wname, "CWIR", global_index + 1);
+            auto connTotal = [&get](const char phase, const char direction)
+            {
+                return get(fmt::format("C{}{}T", phase, direction));
+            };
 
-                if (summary_state.has_conn_var(wname, "CGIR", global_index + 1))
-                    xConn[Ix::GasRate] = -summary_state.get_conn_var(wname, "CGIR", global_index + 1);
-            }
+            xConn[Ix::Pressure] = get("CPR");
+
+            xConn[Ix::OilRate]   = connRate('O');
+            xConn[Ix::WaterRate] = connRate('W');
+            xConn[Ix::GasRate]   = connRate('G');
+            xConn[Ix::ResVRate]  = connRate('V');
+
+            xConn[Ix::OilPrTotal]  = connTotal('O', 'P');
+            xConn[Ix::WatPrTotal]  = connTotal('W', 'P');
+            xConn[Ix::GasPrTotal]  = connTotal('G', 'P');
+            xConn[Ix::VoidPrTotal] = connTotal('V', 'P');
+
+            xConn[Ix::OilInjTotal]  = connTotal('O', 'I');
+            xConn[Ix::WatInjTotal]  = connTotal('W', 'I');
+            xConn[Ix::GasInjTotal]  = connTotal('G', 'I');
+            xConn[Ix::VoidInjTotal] = connTotal('V', 'I');
+
+            xConn[Ix::GORatio] = get("CGOR");
+
             xConn[Ix::OilRate_Copy] = xConn[Ix::OilRate];
             xConn[Ix::GasRate_Copy] = xConn[Ix::GasRate];
             xConn[Ix::WaterRate_Copy] = xConn[Ix::WaterRate];
-
-            xConn[Ix::ResVRate] = 0.0;
-            if (Q.has(R::reservoir_oil)) {
-                xConn[Ix::ResVRate] -=
-                    units.from_si(M::rate, Q.get(R::reservoir_oil));
-            }
-
-            if (Q.has(R::reservoir_water)) {
-                xConn[Ix::ResVRate] -=
-                    units.from_si(M::rate, Q.get(R::reservoir_water));
-            }
-
-            if (Q.has(R::reservoir_gas)) {
-                xConn[Ix::ResVRate] -=
-                    units.from_si(M::rate, Q.get(R::reservoir_gas));
-            }
         }
     } // XConn
 } // Anonymous
@@ -311,13 +318,14 @@ captureDeclaredConnData(const Schedule&        sched,
                         const std::size_t      sim_step)
 {
     wellConnectionLoop(sched, sim_step, grid, xw, [&units, &summary_state, this]
-        (const Well&             well,
+        (const std::string&      wellName,
+         const std::size_t       wellID,
+         const bool              is_producer,
          const Connection&       conn,
          const std::size_t       connID,
          const std::size_t       global_index,
          const data::Connection* dynConnRes) -> void
     {
-        const auto wellID = well.seqIndex();
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
 
@@ -327,10 +335,12 @@ captureDeclaredConnData(const Schedule&        sched,
         if (dynConnRes != nullptr) {
             // Simulator provides dynamic connection results such as flow
             // rates and PI-adjusted transmissibility factors.
-            auto xc = this->xConn_(wellID, connID);
 
             SConn::dynamicContrib(*dynConnRes, units, sc);
-            XConn::dynamicContrib(well, global_index, summary_state, *dynConnRes, units, xc);
         }
+
+        auto xc = this->xConn_(wellID, connID);
+        XConn::dynamicContrib(wellName, is_producer,
+                              global_index, summary_state, xc);
     });
 }

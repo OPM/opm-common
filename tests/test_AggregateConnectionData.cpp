@@ -17,21 +17,20 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #define BOOST_TEST_MODULE Aggregate_Connection_Data
-#include <opm/output/eclipse/AggregateMSWData.hpp>
+
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
-#include <opm/output/eclipse/VectorItems/connection.hpp>
-#include <opm/io/eclipse/rst/header.hpp>
-#include <opm/io/eclipse/rst/connection.hpp>
-#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
-
+#include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+
+#include <opm/io/eclipse/rst/connection.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
@@ -40,14 +39,15 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
 
+#include <cstddef>
 #include <exception>
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include <iostream>
-#include <cstddef>
 
 struct MockIH
 {
@@ -482,20 +482,22 @@ END
         {
             xw["PROD"].rates.set(o::wat, 1.0).set(o::oil, 2.0).set(o::gas, 3.0);
             xw["PROD"].bhp = 213.0;
-            double qo = 5.;
-            double qw = 4.;
-            double qg = 50.;
+
+            const double qv = 12.34;
             {
+                const double qw =  4.0;
+                const double qo =  5.0;
+                const double qg = 50.0;
+
                 const auto& well = sched.getWell("PROD", 0);
                 const auto& connections = well.getConnections();
                 for (int i = 0; i < 5; i++) {
-                    xw["PROD"].connections.emplace_back();
-                    auto& c = xw["PROD"].connections.back();
+                    auto& c = xw["PROD"].connections.emplace_back();
 
-                    c.rates.set(o::wat, qw * (float(i) + 1.))
-                        .set(o::oil, qo * (float(i) + 1.))
-                        .set(o::gas, qg * (float(i) + 1.));
-                    c.pressure = 215.;
+                    c.rates.set(o::wat, qw * (float(i) + 1.0))
+                        .set(o::oil, qo * (float(i) + 1.0))
+                        .set(o::gas, qg * (float(i) + 1.0));
+                    c.pressure = 215.0;
                     c.index = connections[i].global_index();
                     c.trans_factor = connections[i].CF();
 
@@ -503,7 +505,16 @@ END
                     sum_state.update_conn_var("PROD", "CWPR", global_index + 1, qw * (i + 1));
                     sum_state.update_conn_var("PROD", "COPR", global_index + 1, qo * (i + 1));
                     sum_state.update_conn_var("PROD", "CGPR", global_index + 1, qg * (i + 1));
-                    sum_state.update_conn_var("PROD", "CPR",  global_index + 1, 215);
+                    sum_state.update_conn_var("PROD", "CVPR", global_index + 1, qv * (i + 1));
+
+                    sum_state.update_conn_var("PROD", "COPT", global_index + 1, qo * (i + 1) * 2.0);
+                    sum_state.update_conn_var("PROD", "CWPT", global_index + 1, qw * (i + 1) * 2.0);
+                    sum_state.update_conn_var("PROD", "CGPT", global_index + 1, qg * (i + 1) * 2.0);
+                    sum_state.update_conn_var("PROD", "CVPT", global_index + 1, qv * (i + 1) * 2.0);
+
+                    sum_state.update_conn_var("PROD", "CGOR", global_index + 1, qg / qo);
+
+                    sum_state.update_conn_var("PROD", "CPR",  global_index + 1, 215.0);
                 }
 
                 auto seg = Opm::data::Segment {};
@@ -520,13 +531,14 @@ END
                 xw["WINJ"].rates.set(o::wat, 5.0);
                 xw["WINJ"].rates.set(o::oil, 0.0);
                 xw["WINJ"].rates.set(o::gas, 0.0);
-                qw = 7.;
+
+                const double qw = 7.0;
                 for (int i = 0; i < 4; i++) {
                     xw["WINJ"].connections.emplace_back();
                     auto& c = xw["WINJ"].connections.back();
 
-                    c.rates.set(o::wat, qw * (float(i) + 1.)).set(o::oil, 0.).set(o::gas, 0.);
-                    c.pressure = 218.;
+                    c.rates.set(o::wat, qw * (float(i) + 1.0)).set(o::oil, 0.0).set(o::gas, 0.0);
+                    c.pressure = 218.0;
                     c.index = connections[i].global_index();
                     c.trans_factor = connections[i].CF();
 
@@ -534,7 +546,14 @@ END
                     sum_state.update_conn_var("WINJ", "CWIR", global_index+ 1, qw*(i + 1));
                     sum_state.update_conn_var("WINJ", "COIR", global_index+ 1, 0.0);
                     sum_state.update_conn_var("WINJ", "CGIR", global_index+ 1, 0.0);
-                    sum_state.update_conn_var("WINJ", "CPR", global_index + 1, 218);
+                    sum_state.update_conn_var("WINJ", "CVIR", global_index+ 1, qv*(i + 1));
+
+                    sum_state.update_conn_var("WINJ", "COIT", global_index + 1, 543.21 * (i + 1));
+                    sum_state.update_conn_var("WINJ", "CWIT", global_index + 1, qw * (i + 1) * 2.0);
+                    sum_state.update_conn_var("WINJ", "CGIT", global_index + 1, 9876.54 * (i + 1));
+                    sum_state.update_conn_var("WINJ", "CVIT", global_index + 1, qv * (i + 1) * 2.0);
+
+                    sum_state.update_conn_var("WINJ", "CPR", global_index + 1, 218.0);
                 }
             }
         }
@@ -706,34 +725,84 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         // PROD well
         int connNo = 1;
         auto i0 = (connNo - 1) * ih.nxconz;
-        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilRate],
-                          5. * (float(connNo)),
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilRate], 5.0 * (float(connNo)),
                           1.0e-5); // PROD - conn 1 : Surface oil rate
-        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate],
-                          4. * (float(connNo)),
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 4.0 * (float(connNo)),
                           1.0e-5); // PROD - conn 1 : Surface water rate
-        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasRate],
-                          50. * (float(connNo)),
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasRate], 50.0 * (float(connNo)),
                           1.0e-5); // PROD - conn 1 : Surface gas rate
-        BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure], 215., 1.0e-5); // PROD - conn 1 : Connection pressure
-        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate], 0., 1.0e-5); // PROD - conn 1 : Reservoir volume rate
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate],
+                          12.34 * static_cast<float>(connNo),
+                          1.0e-5); // PROD - conn 1 : Reservoir volume rate
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilPrTotal],
+                          5.0 * static_cast<float>(connNo) * 2.0,
+                          1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WatPrTotal],
+                          4.0 * static_cast<float>(connNo) * 2.0,
+                          1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasPrTotal],
+                          50.0 * static_cast<float>(connNo) * 2.0,
+                          1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::VoidPrTotal],
+                          12.34 * static_cast<float>(connNo) * 2.0,
+                          1.0e-5);
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GORatio],
+                          50.0 / 5.0,
+                          1.0e-5);
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilInjTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WatInjTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasInjTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::VoidInjTotal], 0.0, 1.0e-5);
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure], 215.0, 1.0e-5); // PROD - conn 1 : Connection pressure
 
         // WINJ well
         connNo = 3;
         i0 = ih.ncwmax * ih.nxconz + (connNo - 1) * ih.nxconz;
         BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate],
-                          -7. * (float(connNo)),
+                          -7.0 * (float(connNo)),
                           1.0e-5); // WINJ - conn 3 : Surface water rate
         BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure], 218., 1.0e-5); // WINJ - conn 3 : Connection pressure
-        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate], 0., 1.0e-5); // WINJ - conn 3 : Reservoir volume rate
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate],
+                          -12.34 * static_cast<float>(connNo),
+                          1.0e-5); // WINJ - conn 3 : Reservoir volume rate
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilPrTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WatPrTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasPrTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::VoidPrTotal], 0.0, 1.0e-5);
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GORatio], 0.0, 1.0e-5);
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilInjTotal] , 543.21 * connNo, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WatInjTotal] , 7.0 * connNo * 2.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasInjTotal] , 9876.54 * connNo, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::VoidInjTotal], 12.34 * connNo * 2.0, 1.0e-5);
 
         connNo = 4;
         i0 = ih.ncwmax * ih.nxconz + (connNo - 1) * ih.nxconz;
         BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate],
-                          -7. * (float(connNo)),
+                          -7.0 * (float(connNo)),
                           1.0e-5); // WINJ - conn 3 : Surface water rate
         BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure], 218., 1.0e-5); // WINJ - conn 3 : Connection pressure
-        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate], 0., 1.0e-5); // WINJ - conn 3 : Reservoir volume rate
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate],
+                          -12.34 * static_cast<float>(connNo),
+                          1.0e-5); // WINJ - conn 3 : Reservoir volume rate
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilPrTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WatPrTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasPrTotal] , 0.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::VoidPrTotal], 0.0, 1.0e-5);
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GORatio], 0.0, 1.0e-5);
+
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilInjTotal] , 543.21 * connNo, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WatInjTotal] , 7.0 * connNo * 2.0, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasInjTotal] , 9876.54 * connNo, 1.0e-5);
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::VoidInjTotal], 12.34 * connNo * 2.0, 1.0e-5);
     }
 }
 
