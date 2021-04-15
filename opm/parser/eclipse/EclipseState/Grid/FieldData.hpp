@@ -30,6 +30,7 @@
 #include <optional>
 #include <array>
 #include <algorithm>
+#include <stdexcept>
 
 namespace Opm
 {
