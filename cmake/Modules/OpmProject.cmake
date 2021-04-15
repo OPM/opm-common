@@ -138,14 +138,10 @@ function (opm_cmake_config name)
 	APPEND "${${name}_CONFIG_VARS}"
 	)
 
-  # put this in the right system location; if we have binaries then it
-  # should go in the arch-specific lib/ directory, otherwise use the
-  # common/noarch lib/ directory (these targets come from UseMultiArch)
-  if (${name}_TARGET)
-    set (_pkg_dir ${CMAKE_INSTALL_LIBDIR})
-  else ()
-    set (_pkg_dir lib)
-  endif ()
+  # Even if we do not ship a library, our pkg-config file will include
+  # architecture dependent library path and libraries that we depend on.
+  # Hence we still need to install into the multiarch library directory.
+  set (_pkg_dir ${CMAKE_INSTALL_LIBDIR})
 
   # If there is a library then the cmake package configuration file is architecture
   # dependent and should move to the corresponding multiarch libdir.
