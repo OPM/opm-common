@@ -194,10 +194,21 @@ namespace {
             {"COPR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CWPR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CGPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"CVPR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"COPT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CWPT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CGPT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CVPT", Opm::EclIO::SummaryNode::Type::Total},
             {"COIR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CWIR", Opm::EclIO::SummaryNode::Type::Rate},
             {"CGIR", Opm::EclIO::SummaryNode::Type::Rate},
-            {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure}
+            {"CVIR", Opm::EclIO::SummaryNode::Type::Rate},
+            {"COIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CWIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CGIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CVIT", Opm::EclIO::SummaryNode::Type::Total},
+            {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure},
+            {"CGOR", Opm::EclIO::SummaryNode::Type::Ratio},
         };
 
         using Cat = Opm::EclIO::SummaryNode::Category;
@@ -794,6 +805,47 @@ inline quantity crate( const fn_args& args ) {
         return { v, measure::mass_rate };
 
     return { v, rate_unit< phase >() };
+}
+
+template <bool injection = true>
+quantity crate_resv( const fn_args& args ) {
+    const quantity zero = { 0.0, rate_unit<rt::reservoir_oil>() };
+    if (args.schedule_wells.empty())
+        return zero;
+
+    const auto& name = args.schedule_wells.front().name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
+        (xwPos->second.current_control.isProducer == injection))
+    {
+        return zero;
+    }
+
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclipse SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const auto global_index = static_cast<std::size_t>(args.num - 1);
+
+    const auto& well_data = xwPos->second;
+    const auto completion =
+        std::find_if(well_data.connections.begin(),
+                     well_data.connections.end(),
+            [global_index](const Opm::data::Connection& c)
+        {
+            return c.index == global_index;
+        });
+
+    if (completion == well_data.connections.end())
+        return zero;
+
+    const auto eff_fac = efac( args.eff_factors, name );
+    auto v = completion->reservoir_rate * eff_fac;
+    if (! injection)
+        v *= -1;
+
+    return { v, rate_unit<rt::reservoir_oil>() };
 }
 
 template< rt phase>
@@ -1688,15 +1740,19 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
     { "COIR", crate< rt::oil, injector > },
+    { "CVIR", crate_resv<injector> },
     { "CCIR", crate< rt::polymer, injector > },
     { "CSIR", crate< rt::brine, injector > },
+    { "COIT", mul( crate< rt::oil, injector >, duration ) },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },
+    { "CVIT", mul( crate_resv<injector>, duration ) },
     { "CNIT", mul( crate< rt::solvent, injector >, duration ) },
 
     { "CWPR", crate< rt::wat, producer > },
     { "COPR", crate< rt::oil, producer > },
     { "CGPR", crate< rt::gas, producer > },
+    { "CVPR", crate_resv<producer> },
     { "CCPR", crate< rt::polymer, producer > },
     { "CSPR", crate< rt::brine, producer > },
     { "CGFR", sub(crate<rt::gas, producer>, crate<rt::gas, injector>) },
@@ -1710,6 +1766,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CWPT", mul( crate< rt::wat, producer >, duration ) },
     { "COPT", mul( crate< rt::oil, producer >, duration ) },
     { "CGPT", mul( crate< rt::gas, producer >, duration ) },
+    { "CVPT", mul( crate_resv<producer>, duration ) },
     { "CNPT", mul( crate< rt::solvent, producer >, duration ) },
     { "CCIT", mul( crate< rt::polymer, injector >, duration ) },
     { "CCPT", mul( crate< rt::polymer, producer >, duration ) },
