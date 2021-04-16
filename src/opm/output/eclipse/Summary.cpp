@@ -926,6 +926,7 @@ quantity roew(const fn_args& args) {
     return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
 }
 
+template< bool injection = true>
 inline quantity temperature( const fn_args& args ) {
     const quantity zero = { 0, measure::temperature };
     if (args.schedule_wells.empty())
@@ -933,7 +934,8 @@ inline quantity temperature( const fn_args& args ) {
 
     const auto p = args.wells.find(args.schedule_wells.front().name());
     if ((p == args.wells.end()) ||
-        (p->second.dynamicStatus == Opm::Well::Status::SHUT))
+        (p->second.dynamicStatus == Opm::Well::Status::SHUT) || 
+        (p->second.current_control.isProducer == injection))
     {
         return zero;
     }
@@ -1510,8 +1512,8 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WBHP", bhp },
     { "WTHP", thp },
-    { "WTPCHEA", temperature},
-    { "WTICHEA", temperature},
+    { "WTPCHEA", temperature< producer >},
+    { "WTICHEA", temperature< injector >},
     { "WVPRT", res_vol_production_target },
 
     { "WMCTL", well_control_mode },
