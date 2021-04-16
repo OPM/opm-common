@@ -693,8 +693,8 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     const std::vector<int> inobr = inobrFunc(sched, lookup_step);
 
     // Define Static Contributions to INobr Array
-    if (inobr.size() != entriesPerInobr(inteHead)) {
-        auto msg = fmt::format("Actual size of inobr: {} is different from required size: {} ", inobr.size(), entriesPerInobr(inteHead));
+    if (inobr.size() > entriesPerInobr(inteHead)) {
+        auto msg = fmt::format("Actual size of inobr: {} is larger than maximum size: {} ", inobr.size(), entriesPerInobr(inteHead));
         throw std::logic_error(msg);
     }
     auto i_nobr = this->iNobr_[0];

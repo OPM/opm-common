@@ -498,7 +498,7 @@ namespace {
         const int ninode = 10;
         const int nrnode = 17;
         const int nznode = 2;
-        const int ninobr = 2*noactbr;
+        const int ninobr = 2*nbrmax;
 
         return {
             noactnod,
