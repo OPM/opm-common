@@ -116,6 +116,11 @@ namespace Opm
              * Injection type changed
              */
             INJECTION_TYPE_CHANGED = (1 << 18),
+
+            /*
+             * Well switched between injector and producer
+             */
+            WELL_SWITCHED_INJECTOR_PRODUCER = (1 << 19),
         };
     }
 

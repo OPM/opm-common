@@ -949,6 +949,7 @@ namespace {
                     inj_props->resetBHPLimit();
                     well2.updateInjection(inj_props);
                     update_well = true;
+                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
                 }
 
                 if (well2.updateProduction(properties))
@@ -1014,6 +1015,7 @@ namespace {
                 if (switching_from_injector) {
                     properties->resetDefaultBHPLimit();
                     update_well = true;
+                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
                 }
 
                 if (well2.updateProduction(properties))
@@ -1056,8 +1058,12 @@ namespace {
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 auto previousInjectorType = injection->injectorType;
                 injection->handleWCONINJE(record, well2.isAvailableForGroupControl(), well_name);
+                const bool switching_from_producer = well2.isProducer();
                 if (well2.updateInjection(injection))
                     update_well = true;
+
+                if (switching_from_producer)
+                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
 
                 if (well2.updatePrediction(true))
                     update_well = true;
@@ -1118,9 +1124,13 @@ namespace {
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 auto previousInjectorType = injection->injectorType;
                 injection->handleWCONINJH(record, well2.isProducer(), well_name);
+                const bool switching_from_producer = well2.isProducer();
 
                 if (well2.updateInjection(injection))
                     update_well = true;
+
+                if (switching_from_producer)
+                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
 
                 if (well2.updatePrediction(false))
                     update_well = true;
