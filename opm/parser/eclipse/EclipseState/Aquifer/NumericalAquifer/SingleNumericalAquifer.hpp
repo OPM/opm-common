@@ -48,6 +48,8 @@ namespace Opm {
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnection(const NumericalAquiferConnection& aqu_con);
 
+        void postProcessingConnections(const EclipseGrid& grid, const std::vector<int>& actnum);
+
         // TODO: the following two can be made one function. Let us see
         // how we use them at the end
         size_t numCells() const;

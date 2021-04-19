@@ -66,10 +66,10 @@ namespace Opm {
         }
 
         static std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
-                generateConnections(const Deck& deck, const EclipseGrid& grid, const std::vector<int>& actnum);
+                generateConnections(const Deck& deck, const EclipseGrid& grid);
     private:
         static std::vector<NumericalAquiferConnection>
-                connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record, const std::vector<int>& actnum);
+                connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record);
     };
 }
 

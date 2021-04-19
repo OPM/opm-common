@@ -142,4 +142,19 @@ namespace Opm {
     const std::vector<NumericalAquiferConnection>& SingleNumericalAquifer::connections() const {
         return this->connections_;
     }
+
+    void SingleNumericalAquifer::postProcessingConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
+        std::vector<NumericalAquiferConnection> conns;
+        for (const auto& con : this->connections_) {
+            const size_t i = con.I;
+            const size_t j = con.J;
+            const size_t k = con.K;
+            if (!actnum[grid.getGlobalIndex(i, j, k)]) continue;
+            if (con.connect_active_cell
+               || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, con.face_dir, actnum)) {
+                conns.push_back(con);
+            }
+        }
+        this->connections_ = std::move(conns);
+    }
 }
