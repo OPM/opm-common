@@ -142,9 +142,11 @@ const KeywordLocation& ScheduleBlock::location() const {
 
 ScheduleBlock ScheduleBlock::serializeObject() {
     ScheduleBlock block;
+    block.m_time_type = ScheduleTimeType::TSTEP;
     block.m_start_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2003, 10, 10 )));
     block.m_end_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 1993, 07, 06 )));
-    block.m_location = KeywordLocation{ "Dummy", "File", 123 };
+    block.m_location = KeywordLocation::serializeObject();
+    block.m_keywords = {DeckKeyword::serializeObject()};
     return block;
 }
 
@@ -324,7 +326,7 @@ ScheduleDeck ScheduleDeck::serializeObject() {
     ScheduleDeck deck;
     deck.m_restart_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2013, 12, 12 )));
     deck.m_restart_offset = 123;
-    deck.m_location = KeywordLocation{ "Deck", "DeckFile", 321 };
+    deck.m_location = KeywordLocation::serializeObject();
     deck.m_blocks = { ScheduleBlock::serializeObject(), ScheduleBlock::serializeObject() };
     return deck;
 }

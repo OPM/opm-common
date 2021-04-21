@@ -398,7 +398,7 @@ namespace Opm
                 pack_map<K,T>(value_list, index_list);
 
             serializer.vector(value_list);
-            serializer.template vector<std::size_t, false>(index_list);
+            serializer(index_list);
 
             if (!serializer.isSerializing())
                 unpack_map<K,T>(value_list, index_list);
@@ -419,7 +419,8 @@ namespace Opm
                 for (const auto& key : key_list) {
                     auto& value = current_map.get_ptr(key);
                     if (value) {
-                        if (!(*value == current_value[key])) {
+                        auto it = current_value.find(key);
+                        if (it == current_value.end() || !(*value == it->second)) {
                             value_list.push_back( *value );
                             index_list.push_back( index );
 
