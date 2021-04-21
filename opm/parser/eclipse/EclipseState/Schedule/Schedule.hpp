@@ -419,7 +419,8 @@ namespace Opm
                 for (const auto& key : key_list) {
                     auto& value = current_map.get_ptr(key);
                     if (value) {
-                        if (!(*value == current_value[key])) {
+                        auto it = current_value.find(key);
+                        if (it == current_value.end() || !(*value == it->second)) {
                             value_list.push_back( *value );
                             index_list.push_back( index );
 
