@@ -197,7 +197,7 @@ namespace Opm {
     private:
         constexpr static std::size_t numvals = 5;
 
-        std::array<double, numvals> values_;
+        std::array<double, numvals> values_ = {0};
 
         std::size_t index(const Value ix) const
         {
