@@ -210,6 +210,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
 
         result.m_static = ScheduleStatic::serializeObject();
         result.snapshots = { ScheduleState::serializeObject() };
+        result.m_sched_deck = ScheduleDeck::serializeObject();
 
         return result;
     }
