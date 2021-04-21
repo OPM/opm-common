@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest){
     new_actnum[0] = 0;
     new_actnum[1] = 0;
     new_actnum[3] = 0;
-    num_aqu.postProcessingConnections(grid, new_actnum);
+    num_aqu.postProcessConnections(grid, new_actnum);
     BOOST_CHECK(num_aqu.hasAquifer(1));
     BOOST_CHECK(num_aqu.size() == 1);
     const auto all_aquifer_cells = num_aqu.allAquiferCells();

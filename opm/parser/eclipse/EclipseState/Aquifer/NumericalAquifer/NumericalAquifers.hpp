@@ -51,8 +51,8 @@ namespace Opm {
 
         std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
 
-        void preGeneratingConnections(const Deck& deck, const EclipseGrid& grid);
-        void postProcessingConnections(const EclipseGrid& grid, const std::vector<int>& actnum);
+        void initConnections(const Deck& deck, const EclipseGrid& grid);
+        void postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum);
 
         static NumericalAquifers serializeObject();
         template <class Serializer>

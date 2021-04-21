@@ -143,7 +143,7 @@ namespace Opm {
         return this->connections_;
     }
 
-    void SingleNumericalAquifer::postProcessingConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
+    void SingleNumericalAquifer::postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
         std::vector<NumericalAquiferConnection> conns;
         for (const auto& con : this->connections_) {
             const size_t i = con.I;

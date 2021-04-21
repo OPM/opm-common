@@ -60,7 +60,7 @@ namespace Opm {
             }
         }
 
-        this->preGeneratingConnections(deck, grid);
+        this->initConnections(deck, grid);
     }
 
 
@@ -79,7 +79,7 @@ namespace Opm {
     }
 
     void NumericalAquifers::
-    preGeneratingConnections(const Deck& deck, const EclipseGrid& grid) {
+    initConnections(const Deck& deck, const EclipseGrid& grid) {
         const auto aquifer_connections = NumericalAquiferConnection::generateConnections(deck, grid);
 
         for (auto& pair : this->m_aquifers) {
@@ -191,9 +191,9 @@ namespace Opm {
         return nncs;
     }
 
-    void NumericalAquifers::postProcessingConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
+    void NumericalAquifers::postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
         for ([[maybe_unused]] auto& [id, aquifer] : this->m_aquifers) {
-            aquifer.postProcessingConnections(grid, actnum);
+            aquifer.postProcessConnections(grid, actnum);
         }
     }
 }
