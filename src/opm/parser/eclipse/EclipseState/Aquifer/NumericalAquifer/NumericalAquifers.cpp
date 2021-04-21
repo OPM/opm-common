@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
@@ -59,7 +60,7 @@ namespace Opm {
             }
         }
 
-        this->addAquiferConnections(deck, grid);
+        this->initConnections(deck, grid);
     }
 
 
@@ -77,7 +78,8 @@ namespace Opm {
         return (this->m_aquifers.find(aquifer_id) != this->m_aquifers.end());
     }
 
-    void NumericalAquifers::addAquiferConnections(const Deck& deck, const EclipseGrid& grid) {
+    void NumericalAquifers::
+    initConnections(const Deck& deck, const EclipseGrid& grid) {
         const auto aquifer_connections = NumericalAquiferConnection::generateConnections(deck, grid);
 
         for (auto& pair : this->m_aquifers) {
@@ -160,15 +162,6 @@ namespace Opm {
         return cell_props;
     }
 
-    std::vector<NNCdata> NumericalAquifers::aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
-        std::vector<NNCdata> nncs;
-        for ([[maybe_unused]] const auto& [id, aquifer] : this->m_aquifers) {
-            auto aqu_nncs = aquifer.aquiferNNCs(grid, fp);
-            nncs.insert(nncs.end(), aqu_nncs.begin(), aqu_nncs.end());
-        }
-        return nncs;
-    }
-
     std::unordered_map<size_t, double> NumericalAquifers::aquiferCellVolumes() const {
         std::unordered_map<size_t, double> cell_volumes;
         const auto aquifer_cells = this->allAquiferCells();
@@ -176,5 +169,31 @@ namespace Opm {
             cell_volumes.insert(std::make_pair(global_index, cell->cellVolume()));
         }
         return cell_volumes;
+    }
+
+    std::vector<NNCdata>
+    NumericalAquifers::aquiferCellNNCs() const {
+        std::vector<NNCdata> nncs;
+        for ([[maybe_unused]] const auto& [id, aquifer] : this->m_aquifers) {
+            auto aqu_nncs = aquifer.aquiferCellNNCs();
+            nncs.insert( nncs.end(), std::make_move_iterator(aqu_nncs.begin()), std::make_move_iterator(aqu_nncs.end()));
+        }
+        return nncs;
+    }
+
+    std::vector<NNCdata>
+    NumericalAquifers::aquiferConnectionNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
+        std::vector<NNCdata> nncs;
+        for ([[maybe_unused]] const auto& [id, aquifer] : this->m_aquifers) {
+            auto aqu_nncs = aquifer.aquiferConnectionNNCs(grid, fp);
+            nncs.insert( nncs.end(), std::make_move_iterator(aqu_nncs.begin()), std::make_move_iterator(aqu_nncs.end()));
+        }
+        return nncs;
+    }
+
+    void NumericalAquifers::postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
+        for ([[maybe_unused]] auto& [id, aquifer] : this->m_aquifers) {
+            aquifer.postProcessConnections(grid, actnum);
+        }
     }
 }

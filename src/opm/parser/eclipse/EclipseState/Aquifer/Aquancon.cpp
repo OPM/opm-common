@@ -110,6 +110,7 @@ namespace Opm {
     Aquancon::Aquancon(const EclipseGrid& grid, const Deck& deck)
     {
         std::map<std::size_t, Aquancon::AquancCell> work;
+        const std::vector<int>& actnum = grid.getACTNUM();
         for (std::size_t iaq = 0; iaq < deck.count("AQUANCON"); iaq++) {
             const auto& aquanconKeyword = deck.getKeyword("AQUANCON", iaq);
             OpmLog::info(OpmInputError::format("Initializing aquifer connections from {keyword} in {file} line {line}", aquanconKeyword.location()));
@@ -133,9 +134,9 @@ namespace Opm {
                 for (int k = k1; k <= k2; k++) {
                     for (int j = j1; j <= j2; j++) {
                         for (int i = i1; i <= i2; i++) {
-                            if (grid.cellActive(i, j, k)) { // the cell itself needs to be active
+                            if (actnum[grid.getGlobalIndex(i, j, k)]) { // the cell itself needs to be active
                                 if (allow_aquifer_inside_reservoir
-                                    || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir)) {
+                                    || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir, actnum)) {
                                     std::optional<double> influx_coeff;
                                     if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
                                         influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);

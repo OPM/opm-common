@@ -48,6 +48,8 @@ namespace Opm {
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnection(const NumericalAquiferConnection& aqu_con);
 
+        void postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum);
+
         // TODO: the following two can be made one function. Let us see
         // how we use them at the end
         size_t numCells() const;
@@ -57,7 +59,9 @@ namespace Opm {
 
         std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
 
-        std::vector<NNCdata> aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
+        std::vector<NNCdata> aquiferCellNNCs() const;
+        std::vector<NNCdata> aquiferConnectionNNCs(const EclipseGrid &grid, const FieldPropsManager &fp) const;
+
         const std::vector<NumericalAquiferConnection>& connections() const;
 
         bool operator==(const SingleNumericalAquifer& other) const;
@@ -77,9 +81,6 @@ namespace Opm {
             size_t id_;
             std::vector<NumericalAquiferCell> cells_;
             std::vector<NumericalAquiferConnection> connections_;
-
-            std::vector<NNCdata> aquiferCellNNCs() const;
-            std::vector<NNCdata> aquiferConnectionNNCs(const EclipseGrid &grid, const FieldPropsManager &fp) const;
         };
 }
 

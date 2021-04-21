@@ -617,7 +617,13 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest){
     const Opm::EclipseState ecl_state(numaquifer_deck);
     const Opm::EclipseGrid& grid = ecl_state.getInputGrid();
 
-    const Opm::NumericalAquifers num_aqu{numaquifer_deck, grid, ecl_state.fieldProps()};
+    Opm::NumericalAquifers num_aqu{numaquifer_deck, grid, ecl_state.fieldProps()};
+    // using processed actnum for numerical aquifer connection generation
+    std::vector<int> new_actnum(360, 1);
+    new_actnum[0] = 0;
+    new_actnum[1] = 0;
+    new_actnum[3] = 0;
+    num_aqu.postProcessConnections(grid, new_actnum);
     BOOST_CHECK(num_aqu.hasAquifer(1));
     BOOST_CHECK(num_aqu.size() == 1);
     const auto all_aquifer_cells = num_aqu.allAquiferCells();

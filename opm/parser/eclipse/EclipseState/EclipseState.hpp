@@ -87,6 +87,8 @@ namespace Opm {
         /// non-neighboring connections
         /// the non-standard adjacencies as specified in input deck
         const NNC& getInputNNC() const;
+        void appendInputNNC(const std::vector<NNCdata>& nnc);
+        void setInputNNC(const NNC& nnc);
         bool hasInputNNC() const;
 
         // The potentially parallelized field properties

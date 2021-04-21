@@ -46,9 +46,13 @@ namespace Opm {
 
         std::unordered_map<size_t, double> aquiferCellVolumes() const;
 
-        std::vector<NNCdata> aquiferNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
+        std::vector<NNCdata> aquiferCellNNCs() const;
+        std::vector<NNCdata> aquiferConnectionNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
 
         std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
+
+        void initConnections(const Deck& deck, const EclipseGrid& grid);
+        void postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum);
 
         static NumericalAquifers serializeObject();
         template <class Serializer>
@@ -61,7 +65,6 @@ namespace Opm {
         std::map<size_t, SingleNumericalAquifer> m_aquifers;
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
-        void addAquiferConnections(const Deck &deck, const EclipseGrid &grid);
     };
 }
 
