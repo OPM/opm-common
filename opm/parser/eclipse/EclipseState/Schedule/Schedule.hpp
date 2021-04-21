@@ -398,7 +398,7 @@ namespace Opm
                 pack_map<K,T>(value_list, index_list);
 
             serializer.vector(value_list);
-            serializer.template vector<std::size_t, false>(index_list);
+            serializer(index_list);
 
             if (!serializer.isSerializing())
                 unpack_map<K,T>(value_list, index_list);
