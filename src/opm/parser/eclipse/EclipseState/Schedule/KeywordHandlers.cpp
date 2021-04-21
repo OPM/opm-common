@@ -355,7 +355,8 @@ namespace {
                 }
 
                 {
-                    const bool availableForGroupControl = is_free && !is_field;
+                    // FLD overrides item 8 (is_free i.e if FLD the group is available for higher up groups)
+                    const bool availableForGroupControl = (is_free || controlMode == Group::InjectionCMode::FLD)&& !is_field;
                     auto new_group = this->snapshots.back().groups.get(group_name);
                     Group::GroupInjectionProperties injection;
                     injection.phase = phase;
@@ -467,7 +468,8 @@ namespace {
                 }
 
                 {
-                    const bool availableForGroupControl { respond_to_parent && !is_field } ;
+                    // FLD overrides item 8 (respond_to_parent i.e if FLD the group is available for higher up groups)
+                    const bool availableForGroupControl { (respond_to_parent || controlMode == Group::ProductionCMode::FLD) && !is_field } ;
                     auto new_group = this->snapshots.back().groups.get(group_name);
                     Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
                     production.cmode = controlMode;
