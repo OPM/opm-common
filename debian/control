@@ -21,8 +21,15 @@ Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: libopm-common
-Description: OPM common library
- The OPM common library contains generic code shared across all OPM modules.
+Description: Tools for Eclipse reservoir simulation files -- library
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery
+ .
+ The Eclipse file format is widely used in the reservoir simulation
+ community. This package provides library containing code for processing
+ files in Eclipse format as well as utility code used by other OPM
+ modules.
 
 Package: libopm-common1-bin
 Section: libs
@@ -31,8 +38,15 @@ Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: libopm-common-bin
-Description: OPM common binaries
- The OPM common binaries.
+Description: Tools for Eclipse reservoir simulation files -- utility programs
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery
+ .
+ The Eclipse file format is widely used in the reservoir simulation
+ community. This package provides utility programs to process files
+ in this format, like for comparing two files, converting between
+ binary version and formatted text file format, etc.
 
 Package: libopm-common1-dev
 Section: libdevel
@@ -41,18 +55,28 @@ Multi-Arch: foreign
 Provides: libopm-common-dev
 Suggests: libopm-common1-doc
 Depends: libopm-common1 (= ${binary:Version})
-Description: OPM common library -- development files
- The OPM common library contains the shared buildsystem
- and helpers shared across all OPM modules.
+Description: Tools for Eclipse reservoir simulation files -- development files
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery
+ .
+ This package contains the shared buildsystem of all OPM modules,
+ the headers for input, parsing, and output of files in Eclipse format,
+ a format widely used in the reservoir simulation community, and generic
+ utilities used in other OPM modules.
 
 Package: libopm-common1-doc
 Section: doc
 Architecture: all
 Multi-Arch: foreign
 Provides: libopm-common-doc
-Description: OPM common library -- documentation
- The OPM common library contains the shared buildsystem
- and helpers shared across all OPM modules.
+Description: Tools for Eclipse reservoir simulation files -- documentation
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery
+ .
+ This package contains the source code documentation of library and tools
+ for Eclipse reservoir simulation files.
 
 Package: python3-opm-common
 Section: libs
@@ -60,5 +84,11 @@ Pre-Depends: ${misc:Pre-Depends}
 Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}, libopm-common1, python3-numpy, python3-decorator
-Description: OPM common python bindings
-  Python package for opm-common
+Description: Tools for Eclipse reservoir simulation files -- python wrappers.
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery
+ .
+ This package contains the python wrappers for reading, parsing, and writing
+ files in Eclipse format, a format widely used in the reservoir simulation
+ community.
