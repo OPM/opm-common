@@ -23,7 +23,6 @@
 #include <memory>
 #include <vector>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
@@ -35,28 +34,15 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
-    bool enable3DPropsTesting();
-
-    template< typename > class GridProperty;
-    template< typename > class GridProperties;
-
-    class Box;
-    class BoxManager;
     class Deck;
-    class DeckItem;
     class DeckKeyword;
-    class DeckRecord;
-    class EclipseGrid;
     class InitConfig;
     class IOConfig;
-    class RestartConfig;
     class DeckSection;
-    class SimulationConfig;
-    class TableManager;
-    class UnitSystem;
 
 
     class EclipseState {
