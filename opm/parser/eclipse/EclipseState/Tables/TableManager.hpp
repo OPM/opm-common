@@ -25,13 +25,6 @@
 #include <optional>
 #include <set>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
-
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
 #include <opm/parser/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgwTable.hpp>
@@ -65,6 +58,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TLMixpar.hpp>
 
 namespace Opm {
+
+    class Deck;
 
     class TableManager {
     public:
@@ -287,87 +282,16 @@ namespace Opm {
         //void initRockTables(const Deck& deck, const std::string& keywordName);
 
         template <class TableType>
-        void initRockTables(const Deck& deck, const std::string& keywordName, std::vector<TableType>& rocktable ) {
-
-            if (!deck.hasKeyword(keywordName))
-                return;
-
-            if (!deck.hasKeyword("ROCKCOMP")) {
-                OpmLog::error("ROCKCOMP must be present if ROCK2DTR is used");
-            }
-
-            if (!deck.hasKeyword("ROCKWNOD")) {
-                OpmLog::error("ROCKWNOD must be present if ROCK2DTR is used");
-            }
-
-            const auto& rockcompKeyword = deck.getKeyword("ROCKCOMP");
-            const auto& record = rockcompKeyword.getRecord( 0 );
-            size_t numTables = record.getItem("NTROCC").get< int >(0);
-            rocktable.resize(numTables);
-
-            const auto& keyword = deck.getKeyword(keywordName);
-            size_t numEntries = keyword.size();
-            size_t regionIdx = 0;
-            size_t tableIdx = 0;
-            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
-                if (keyword.getRecord(lineIdx).getItem("PRESSURE").hasValue(0)) {
-                    rocktable[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
-                    tableIdx++;
-                } else { // next region
-                    tableIdx = 0;
-                    regionIdx++;
-                }
-            }
-            assert(regionIdx == numTables - 1 );
-        }
-
+        void initRockTables(const Deck& deck, const std::string& keywordName, std::vector<TableType>& rocktable );
 
         template <class TableType>
-        void initPvtwsaltTables(const Deck& deck,  std::vector<TableType>& pvtwtables ) {
-
-            size_t numTables = m_tabdims.getNumPVTTables();
-            pvtwtables.resize(numTables);
-
-            const auto& keyword = deck.getKeyword("PVTWSALT");
-            size_t numEntries = keyword.size();
-            size_t regionIdx = 0;
-            for (unsigned lineIdx = 0; lineIdx < numEntries; lineIdx += 2) {
-                pvtwtables[regionIdx].init(keyword.getRecord(lineIdx), keyword.getRecord(lineIdx+1));
-                ++regionIdx;
-            }
-            assert(regionIdx == numTables);
-        }
+        void initPvtwsaltTables(const Deck& deck,  std::vector<TableType>& pvtwtables );
 
         template <class TableType>
-        void initRwgsaltTables(const Deck& deck,  std::vector<TableType>& rwgtables ) {
-
-            size_t numTables = m_tabdims.getNumPVTTables();
-            rwgtables.resize(numTables);
-
-            const auto& keyword = deck.getKeyword("RWGSALT");
-            size_t regionIdx = 0;
-            for (const auto& record : keyword) {
-                rwgtables[regionIdx].init(record);
-                ++regionIdx;
-            }
-            assert(regionIdx == numTables);
-        }
-
+        void initRwgsaltTables(const Deck& deck,  std::vector<TableType>& rwgtables );
 
         template <class TableType>
-        void initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables ) {
-
-            size_t numTables = m_tabdims.getNumPVTTables();
-            brinetables.resize(numTables);
-
-            const auto& keyword = deck.getKeyword("BDENSITY");
-            size_t numEntries = keyword.size();
-            assert(numEntries == numTables);
-            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
-                brinetables[lineIdx].init(keyword.getRecord(lineIdx));
-            }
-        }
-
+        void initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables );
 
         void initSolventTables(const Deck& deck, std::vector<SolventDensityTable>& solventtables);
 
@@ -378,123 +302,33 @@ namespace Opm {
         void initSimpleTableContainerWithJFunc(const Deck& deck,
                                       const std::string& keywordName,
                                       const std::string& tableName,
-                                      size_t numTables) {
-            if (!deck.hasKeyword(keywordName))
-                return; // the table is not featured by the deck...
-
-            auto& container = forceGetTables(tableName , numTables);
-
-            if (deck.count(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, keywordName);
-                return;
-            }
-
-            const auto& tableKeyword = deck.getKeyword(keywordName);
-            for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
-                if (dataItem.data_size() > 0) {
-                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, useJFunc() );
-                    container.addTable( tableIdx , table );
-                }
-            }
-        }
-
-
+                                      size_t numTables);
 
         template <class TableType>
         void initSimpleTableContainer(const Deck& deck,
                                       const std::string& keywordName,
                                       const std::string& tableName,
-                                      size_t numTables) {
-            if (!deck.hasKeyword(keywordName))
-                return; // the table is not featured by the deck...
-
-            auto& container = forceGetTables(tableName , numTables);
-
-            if (deck.count(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, keywordName);
-                return;
-            }
-
-            const auto& tableKeyword = deck.getKeyword(keywordName);
-            for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
-                if (dataItem.data_size() > 0) {
-                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem );
-                    container.addTable( tableIdx , table );
-                }
-            }
-        }
+                                      size_t numTables);
 
         template <class TableType>
         void initSimpleTableContainer(const Deck& deck,
                                       const std::string& keywordName,
-                                      size_t numTables) {
-            initSimpleTableContainer<TableType>(deck , keywordName , keywordName , numTables);
-        }
-
+                                      size_t numTables);
 
         template <class TableType>
         void initSimpleTableContainerWithJFunc(const Deck& deck,
-                                      const std::string& keywordName,
-                                      size_t numTables) {
-            initSimpleTableContainerWithJFunc<TableType>(deck , keywordName , keywordName , numTables);
-        }
-
-
+                                               const std::string& keywordName,
+                                               size_t numTables);
 
         template <class TableType>
         void initSimpleTable(const Deck& deck,
-                              const std::string& keywordName,
-                              std::vector<TableType>& tableVector) {
-            if (!deck.hasKeyword(keywordName))
-                return; // the table is not featured by the deck...
-
-            if (deck.count(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, keywordName);
-                return;
-            }
-
-            const auto& tableKeyword = deck.getKeyword(keywordName);
-            for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
-                if (dataItem.data_size() == 0) {
-                    // for simple tables, an empty record indicates that the previous table
-                    // should be copied...
-                    if (tableIdx == 0) {
-                        std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
-                        const auto& location = tableKeyword.location();
-                        OpmLog::warning(Log::fileMessage(location, msg));
-                        return;
-                    }
-                    tableVector.push_back(tableVector.back());
-                    continue;
-                }
-
-                tableVector.push_back(TableType());
-                tableVector[tableIdx].init(dataItem);
-            }
-        }
-
+                             const std::string& keywordName,
+                             std::vector<TableType>& tableVector);
 
         template <class TableType>
         void initFullTables(const Deck& deck,
                             const std::string& keywordName,
-                            std::vector<TableType>& tableVector) {
-            if (!deck.hasKeyword(keywordName))
-                return; // the table is not featured by the deck...
-
-            if (deck.count(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, keywordName);
-                return;
-            }
-
-            const auto& tableKeyword = deck.getKeyword(keywordName);
-
-            int numTables = TableType::numTables( tableKeyword );
-            for (int tableIdx = 0; tableIdx < numTables; ++tableIdx)
-                tableVector.emplace_back( tableKeyword , tableIdx );
-        }
+                            std::vector<TableType>& tableVector);
 
         void checkPVTOMonotonicity(const Deck& deck) const;
 
