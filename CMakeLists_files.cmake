@@ -164,6 +164,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Aqudims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/ColumnSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/DenT.cpp
     src/opm/parser/eclipse/EclipseState/Tables/JFunc.cpp

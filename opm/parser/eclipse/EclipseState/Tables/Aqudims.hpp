@@ -20,47 +20,23 @@
 #ifndef AQUDIMS_HPP
 #define AQUDIMS_HPP
 
+#include <cstddef>
+
 /*
   The Aqudims class is a small utility class designed to hold on to
   the values from the AQUDIMS keyword.
 */
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-
 namespace Opm {
+
+    class Deck;
+
     class Aqudims {
     public:
 
-        Aqudims() :
-            m_mxnaqn( ParserKeywords::AQUDIMS::MXNAQN::defaultValue ),
-            m_mxnaqc( ParserKeywords::AQUDIMS::MXNAQC::defaultValue ),
-            m_niftbl( ParserKeywords::AQUDIMS::NIFTBL::defaultValue ),
-            m_nriftb( ParserKeywords::AQUDIMS::NRIFTB::defaultValue ),
-            m_nanaqu( ParserKeywords::AQUDIMS::NANAQU::defaultValue ),
-            m_ncamax( ParserKeywords::AQUDIMS::NCAMAX::defaultValue ),
-            m_mxnali( ParserKeywords::AQUDIMS::MXNALI::defaultValue ),
-            m_mxaaql( ParserKeywords::AQUDIMS::MXAAQL::defaultValue )
-            
-        { }
+        Aqudims();
 
-        explicit Aqudims(const Deck& deck) :
-            Aqudims()
-        {
-            if (deck.hasKeyword("AQUDIMS")) {
-                const auto& record = deck.getKeyword( "AQUDIMS" , 0 ).getRecord( 0 );
-                m_mxnaqn  = record.getItem("MXNAQN").get<int>(0);
-                m_mxnaqc  = record.getItem("MXNAQC").get<int>(0);
-                m_niftbl  = record.getItem("NIFTBL").get<int>(0);
-                m_nriftb  = record.getItem("NRIFTB").get<int>(0);
-                m_nanaqu  = record.getItem("NANAQU").get<int>(0);
-                m_ncamax  = record.getItem("NCAMAX").get<int>(0);
-                m_mxnali  = record.getItem("MXNALI").get<int>(0);
-                m_mxaaql  = record.getItem("MXAAQL").get<int>(0);
-            }
-        }
+        explicit Aqudims(const Deck& deck);
 
         static Aqudims serializeObject()
         {
