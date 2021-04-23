@@ -308,7 +308,8 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     zAcn[ind + 0] = z_data.lhs.quantity;
                 // right hand quantity
                 if ((z_data.rhs.quantity.substr(0,1) == "W") ||
-                    (z_data.rhs.quantity.substr(0,1) == "G"))
+                    (z_data.rhs.quantity.substr(0,1) == "G") ||
+                    (z_data.rhs.quantity.substr(0,1) == "F"))
                     zAcn[ind + 1] = z_data.rhs.quantity;
                 // operator (comparator)
                 zAcn[ind + 2] = z_data.cmp_string;
