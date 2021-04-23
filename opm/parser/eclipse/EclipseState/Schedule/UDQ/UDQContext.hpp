@@ -28,12 +28,12 @@
 
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 
 namespace Opm {
     class SummaryState;
     class UDQFunctionTable;
+    class UDQSet;
     class UDQState;
 
     class UDQContext{
