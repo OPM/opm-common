@@ -167,6 +167,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/Aqudims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/ColumnSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/DenT.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Eqldims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/JFunc.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PvtxTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SimpleTable.cpp
