@@ -24,10 +24,10 @@
 #include <stdexcept>
 #include <vector>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-
 namespace Opm {
+    class Deck;
+    class DeckKeyword;
+
     class GridDims
     {
     public:
