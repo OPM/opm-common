@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE WellSolventTests
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>

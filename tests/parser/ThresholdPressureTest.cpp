@@ -24,7 +24,6 @@
 #define BOOST_TEST_MODULE ThresholdPressureTests
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>

@@ -23,8 +23,6 @@
 #define BOOST_TEST_MODULE FaultTests
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>

@@ -19,12 +19,10 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdexcept>
 #include <iostream>
-#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE EclipseStateTests
 
 #include <boost/test/unit_test.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>

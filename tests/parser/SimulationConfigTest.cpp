@@ -22,7 +22,6 @@
 #define BOOST_TEST_MODULE SimulationConfigTests
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>

@@ -21,7 +21,6 @@
 #include <memory>
 #include <stdlib.h>
 #include <iostream>
-#include <boost/filesystem.hpp>
 #define BOOST_TEST_MODULE ParseContextTests
 #include <boost/test/unit_test.hpp>
 

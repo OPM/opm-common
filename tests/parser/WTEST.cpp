@@ -19,7 +19,6 @@
 
 #include <stdexcept>
 #include <iostream>
-#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE WTEST
 #include <boost/test/unit_test.hpp>

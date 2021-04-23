@@ -28,9 +28,7 @@
 
 #define BOOST_TEST_MODULE FieldPropsTests
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>

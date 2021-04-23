@@ -22,11 +22,9 @@
 #include <stdexcept>
 #include <set>
 
-#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE WellConnectionsTests
 #include <boost/test/unit_test.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <string>
 
