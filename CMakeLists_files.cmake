@@ -170,6 +170,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/Eqldims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/JFunc.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PvtxTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Regdims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SimpleTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PolyInjTables.cpp
     src/opm/parser/eclipse/EclipseState/Tables/StandardCond.cpp
