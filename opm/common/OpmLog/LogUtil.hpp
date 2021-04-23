@@ -23,9 +23,9 @@
 #include <cstdint>
 #include <string>
 
-#include <opm/common/OpmLog/KeywordLocation.hpp>
-
 namespace Opm {
+
+class KeywordLocation;
 
 namespace Log {
     namespace MessageType {

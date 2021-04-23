@@ -20,6 +20,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 
 namespace Opm {
