@@ -19,12 +19,10 @@
 
 #include <stdexcept>
 #include <iostream>
-#include <boost/filesystem.hpp>
 #include <cstdio>
 
 #define BOOST_TEST_MODULE MultiRegTests
 #include <boost/test/unit_test.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>

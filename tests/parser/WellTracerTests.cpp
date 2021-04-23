@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE WellTracerTests
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>

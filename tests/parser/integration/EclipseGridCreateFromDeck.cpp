@@ -22,7 +22,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/common/utility/FileSystem.hpp>
 

@@ -24,8 +24,6 @@
 #define BOOST_TEST_MODULE BoxManagereTests
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>

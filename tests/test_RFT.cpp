@@ -58,7 +58,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
