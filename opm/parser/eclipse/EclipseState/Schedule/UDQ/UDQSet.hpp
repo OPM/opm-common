@@ -26,10 +26,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include <opm/common/utility/Serializer.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
+
+class Serializer;
 
 class UDQScalar {
 public:
