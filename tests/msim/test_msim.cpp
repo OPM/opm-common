@@ -31,6 +31,7 @@
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/ERsm.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
