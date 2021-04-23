@@ -66,6 +66,11 @@ RockConfig::Hysteresis hysteresis(const std::string& s) {
 
 }
 
+RockConfig::RockConfig() :
+    num_property(ParserKeywords::ROCKOPTS::TABLE_TYPE::defaultValue),
+    num_tables(ParserKeywords::ROCKCOMP::NTROCC::defaultValue)
+{
+}
 
 bool RockConfig::RockComp::operator==(const RockConfig::RockComp& other) const {
     return this->pref == other.pref &&

@@ -21,7 +21,6 @@
 #define OPM_ROCK_CONFIG_HPP
 
 #include <string>
-#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 
 namespace Opm {
 
@@ -59,7 +58,7 @@ struct RockComp {
 };
 
 
-    RockConfig() = default;
+    RockConfig();
     RockConfig(const Deck& deck, const FieldPropsManager& fp);
 
     static RockConfig serializeObject();
@@ -87,8 +86,8 @@ struct RockComp {
 private:
     bool m_active = false;
     std::vector<RockComp> m_comp;
-    std::string num_property = ParserKeywords::ROCKOPTS::TABLE_TYPE::defaultValue;
-    std::size_t num_tables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
+    std::string num_property;
+    std::size_t num_tables;
     bool m_water_compaction = false;
     Hysteresis hyst_mode = Hysteresis::REVERS;
 };

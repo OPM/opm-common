@@ -20,25 +20,19 @@
 #ifndef EQLDIMS_HPP
 #define EQLDIMS_HPP
 
+#include <cstddef>
+
+namespace Opm {
+
 /*
   The Eqldims class is a small utility class designed to hold on to
   the values from the EQLDIMS keyword.
 */
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
-
-namespace Opm {
     class Eqldims {
     public:
 
-        Eqldims() :
-            m_ntequl( ParserKeywords::EQLDIMS::NTEQUL::defaultValue ),
-            m_depth_nodes_p( ParserKeywords::EQLDIMS::DEPTH_NODES_P::defaultValue ),
-            m_depth_nodes_tab( ParserKeywords::EQLDIMS::DEPTH_NODES_TAB::defaultValue ),
-            m_nttrvd(  ParserKeywords::EQLDIMS::NTTRVD::defaultValue ),
-            m_nstrvd(  ParserKeywords::EQLDIMS::NSTRVD::defaultValue )
-        { }
-
+        Eqldims();
 
         Eqldims( size_t ntequl , size_t depth_nodes_p , size_t depth_nodes_tab , size_t nttrvd , size_t nstrvd) :
             m_ntequl( ntequl ),

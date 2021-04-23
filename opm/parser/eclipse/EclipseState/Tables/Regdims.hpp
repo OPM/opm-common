@@ -20,24 +20,19 @@
 #ifndef REGDIMS_HPP
 #define REGDIMS_HPP
 
+#include <cstddef>
+
+namespace Opm {
+
 /*
   The Regdims class is a small utility class designed to hold on to
   the values from the REGDIMS keyword.
 */
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
-
-namespace Opm {
     class Regdims {
     public:
 
-        Regdims() :
-            m_NTFIP( ParserKeywords::REGDIMS::NTFIP::defaultValue ),
-            m_NMFIPR( ParserKeywords::REGDIMS::NMFIPR::defaultValue ),
-            m_NRFREG( ParserKeywords::REGDIMS::NRFREG::defaultValue ),
-            m_NTFREG( ParserKeywords::REGDIMS::NTFREG::defaultValue ),
-            m_NPLMIX( ParserKeywords::REGDIMS::NPLMIX::defaultValue )
-        { }
+        Regdims();
 
         Regdims(size_t ntfip , size_t nmfipr , size_t nrfregr , size_t ntfreg , size_t nplmix) :
             m_NTFIP( ntfip ),

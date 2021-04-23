@@ -85,6 +85,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/PinchMode.cpp
     src/opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
     src/opm/parser/eclipse/EclipseState/Grid/setKeywordBox.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/TranCalculator.cpp
     src/opm/parser/eclipse/EclipseState/Grid/TransMult.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/Equil.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.cpp
@@ -137,6 +138,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.cpp
@@ -162,10 +164,13 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Aqudims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/ColumnSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/DenT.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Eqldims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/JFunc.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PvtxTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Regdims.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SimpleTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PolyInjTables.cpp
     src/opm/parser/eclipse/EclipseState/Tables/StandardCond.cpp
@@ -182,6 +187,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Tabdims.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp
