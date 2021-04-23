@@ -28,6 +28,8 @@
 #include <utility>
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
