@@ -27,6 +27,21 @@
 
 namespace Opm {
 
+    MessageLimits::MessageLimits()
+    {
+        message_print_limit = ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue;
+        comment_print_limit = ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue;
+        warning_print_limit = ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue;
+        problem_print_limit = ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT::defaultValue;
+        error_print_limit   = ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT::defaultValue;
+        bug_print_limit     = ParserKeywords::MESSAGES::BUG_PRINT_LIMIT::defaultValue;
+        message_stop_limit  = ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT::defaultValue;
+        comment_stop_limit  = ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT::defaultValue;
+        warning_stop_limit  = ParserKeywords::MESSAGES::WARNING_STOP_LIMIT::defaultValue;
+        problem_stop_limit  = ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT::defaultValue;
+        error_stop_limit    = ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue;
+        bug_stop_limit      = ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue;
+    }
 
     MessageLimits::MessageLimits(const Deck& deck ) :
         MessageLimits()

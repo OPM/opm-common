@@ -20,8 +20,6 @@
 #ifndef OPM_MESSAGES_HPP
 #define OPM_MESSAGES_HPP
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
-
 namespace Opm {
 
     class Deck;
@@ -29,7 +27,7 @@ namespace Opm {
 
     class MessageLimits {
     public:
-        MessageLimits() = default;
+        MessageLimits();
         explicit MessageLimits(const Deck& deck);
 
         static MessageLimits serializeObject();
@@ -82,18 +80,18 @@ namespace Opm {
         }
 
     private:
-        int message_print_limit = ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue;
-        int comment_print_limit = ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue;
-        int warning_print_limit = ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue;
-        int problem_print_limit = ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT::defaultValue;
-        int error_print_limit   = ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT::defaultValue;
-        int bug_print_limit     = ParserKeywords::MESSAGES::BUG_PRINT_LIMIT::defaultValue;
-        int message_stop_limit  = ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT::defaultValue;
-        int comment_stop_limit  = ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT::defaultValue;
-        int warning_stop_limit  = ParserKeywords::MESSAGES::WARNING_STOP_LIMIT::defaultValue;
-        int problem_stop_limit  = ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT::defaultValue;
-        int error_stop_limit    = ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue;
-        int bug_stop_limit      = ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue;
+        int message_print_limit;
+        int comment_print_limit;
+        int warning_print_limit;
+        int problem_print_limit;
+        int error_print_limit;
+        int bug_print_limit;
+        int message_stop_limit;
+        int comment_stop_limit;
+        int warning_stop_limit;
+        int problem_stop_limit;
+        int error_stop_limit;
+        int bug_stop_limit;
     };
 }
 
