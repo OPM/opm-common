@@ -19,7 +19,6 @@
 #ifndef OPM_PARSER_PLYSHLOG_TABLE_HPP
 #define	OPM_PARSER_PLYSHLOG_TABLE_HPP
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include "SimpleTable.hpp"
 
 
