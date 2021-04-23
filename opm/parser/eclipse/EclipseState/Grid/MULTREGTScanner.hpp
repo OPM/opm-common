@@ -21,13 +21,12 @@
 #ifndef OPM_PARSER_MULTREGTSCANNER_HPP
 #define OPM_PARSER_MULTREGTSCANNER_HPP
 
-#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 
 namespace Opm {
 
-    template< typename > class GridProperties;
+    class FieldPropsManager;
 
     class DeckRecord;
     class DeckKeyword;

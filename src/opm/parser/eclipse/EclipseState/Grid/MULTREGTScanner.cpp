@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
@@ -68,7 +69,7 @@ namespace Opm {
 
 namespace {
 
-std::vector<int> unique(const std::vector<int> data) {
+std::vector<int> unique(const std::vector<int>& data) {
     std::set<int> set_data(data.begin(), data.end());
     return { set_data.begin(), set_data.end() };
 }
