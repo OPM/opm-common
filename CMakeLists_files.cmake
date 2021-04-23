@@ -187,6 +187,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Tabdims.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp

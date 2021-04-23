@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>

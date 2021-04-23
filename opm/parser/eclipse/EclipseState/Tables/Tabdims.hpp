@@ -20,17 +20,19 @@
 #ifndef TABDIMS_HPP
 #define TABDIMS_HPP
 
+#include <cstddef>
+
 /*
   The Tabdims class is a small utility class designed to hold on to
   the values from the TABDIMS keyword.
 */
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-
 namespace Opm {
+
+    class Deck;
+    class DeckKeyword;
+    class DeckRecord;
+
     class Tabdims {
     public:
 
@@ -39,29 +41,9 @@ namespace Opm {
           are ECLIPSE300 only and quite exotic. Here we only
           internalize the most common items.
         */
-        Tabdims() :
-            m_ntsfun( ParserKeywords::TABDIMS::NTSFUN::defaultValue ),
-            m_ntpvt( ParserKeywords::TABDIMS::NTPVT::defaultValue ),
-            m_nssfun( ParserKeywords::TABDIMS::NSSFUN::defaultValue ),
-            m_nppvt(  ParserKeywords::TABDIMS::NPPVT::defaultValue ),
-            m_ntfip(  ParserKeywords::TABDIMS::NTFIP::defaultValue ),
-            m_nrpvt(  ParserKeywords::TABDIMS::NRPVT::defaultValue )
-        { }
+        Tabdims();
 
-
-        explicit Tabdims(const Deck& deck) :
-            Tabdims()
-        {
-            if (deck.hasKeyword("TABDIMS")) {
-                const auto& record = deck.getKeyword( "TABDIMS" , 0 ).getRecord( 0 );
-                m_ntsfun = record.getItem("NTSFUN").get<int>(0);
-                m_ntpvt  = record.getItem("NTPVT").get<int>(0);
-                m_nssfun = record.getItem("NSSFUN").get<int>(0);
-                m_nppvt  = record.getItem("NPPVT").get<int>(0);
-                m_ntfip  = record.getItem("NTFIP").get<int>(0);
-                m_nrpvt  = record.getItem("NRPVT").get<int>(0);
-            }
-        }
+        explicit Tabdims(const Deck& deck);
 
         static Tabdims serializeObject()
         {
