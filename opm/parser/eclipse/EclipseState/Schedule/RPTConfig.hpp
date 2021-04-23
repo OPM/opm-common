@@ -22,9 +22,9 @@
 #include <string>
 #include <unordered_map>
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-
 namespace Opm {
+
+class DeckKeyword;
 
 class RPTConfig {
 public:
