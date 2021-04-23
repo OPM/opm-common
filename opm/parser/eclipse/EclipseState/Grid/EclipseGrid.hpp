@@ -25,9 +25,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-
-#include <opm/io/eclipse/EclFile.hpp>
 
 #include <array>
 #include <memory>
@@ -38,8 +35,10 @@
 namespace Opm {
 
     class Deck;
+    namespace EclIO { class EclFile; }
+    struct NNCdata;
+    class UnitSystem;
     class ZcornMapper;
-    class NNC;
 
     /**
        About cell information and dimension: The actual grid
