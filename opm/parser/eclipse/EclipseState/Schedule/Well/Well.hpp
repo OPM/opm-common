@@ -48,6 +48,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 

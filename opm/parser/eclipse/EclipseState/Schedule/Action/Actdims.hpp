@@ -21,9 +21,12 @@
 #ifndef ACTDIMS_HPP_
 #define ACTDIMS_HPP_
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <cstddef>
 
 namespace Opm {
+
+class Deck;
+
 class Actdims {
 public:
     Actdims();
