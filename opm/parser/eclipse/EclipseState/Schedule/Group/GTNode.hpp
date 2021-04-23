@@ -17,14 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef GROUPTREE2
+#define GROUPTREE2
+
 #include <optional>
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
-
-#ifndef GROUPTREE2
-#define GROUPTREE2
 
 namespace Opm {
 
@@ -57,5 +57,3 @@ private:
 
 }
 #endif
-
-
