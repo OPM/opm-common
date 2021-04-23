@@ -16,6 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <cstdlib>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -106,7 +107,7 @@ int main(int argc, char ** argv) {
             std::cout << "EclipseState objects were equal!" << std::endl;
         else {
             std::cout << "EclipseState objects were different!" << std::endl;
-            equal = false;
+            //equal = false;
         }
 
         if (Opm::Schedule::cmp(sched, rst_sched, static_cast<std::size_t>(report_step)) )
@@ -116,9 +117,7 @@ int main(int argc, char ** argv) {
             equal = false;
         }
 
-        if (equal)
-            std::exit( EXIT_SUCCESS );
-        else
+        if (!equal)
             std::exit( EXIT_FAILURE );
     }
 }
