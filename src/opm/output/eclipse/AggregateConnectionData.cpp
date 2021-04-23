@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
