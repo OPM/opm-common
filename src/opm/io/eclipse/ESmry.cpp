@@ -17,12 +17,13 @@
    */
 
 #include <opm/io/eclipse/ESmry.hpp>
+
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
-#include <opm/common/utility/TimeService.hpp>
 
 #include <algorithm>
 #include <chrono>

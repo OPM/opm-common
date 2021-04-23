@@ -19,6 +19,7 @@
 #ifndef OPM_IO_EINIT_HPP
 #define OPM_IO_EINIT_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 
 #include <array>

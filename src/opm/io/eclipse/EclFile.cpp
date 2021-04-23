@@ -631,6 +631,24 @@ const std::vector<std::string>& EclFile::get<std::string>(const std::string &nam
 }
 
 
+template<class T>
+const std::vector<T>& EclFile::getImpl(int arrIndex, eclArrType type,
+                                       const std::unordered_map<int, std::vector<T>>& array,
+                                       const std::string& typeStr)
+{
+    if (array_type[arrIndex] != type) {
+        std::string message = "Array with index " + std::to_string(arrIndex) + " is not of type " + typeStr;
+        OPM_THROW(std::runtime_error, message);
+    }
+
+    if (!arrayLoaded[arrIndex]) {
+        loadData(arrIndex);
+    }
+
+    return array.at(arrIndex);
+}
+
+
 std::size_t EclFile::size() const {
     return this->array_name.size();
 }

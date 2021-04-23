@@ -19,6 +19,7 @@
 #ifndef OPM_IO_ERST_HPP
 #define OPM_IO_ERST_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 
 #include <ios>
