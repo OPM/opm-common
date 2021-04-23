@@ -85,6 +85,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/PinchMode.cpp
     src/opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
     src/opm/parser/eclipse/EclipseState/Grid/setKeywordBox.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/TranCalculator.cpp
     src/opm/parser/eclipse/EclipseState/Grid/TransMult.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/Equil.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.cpp

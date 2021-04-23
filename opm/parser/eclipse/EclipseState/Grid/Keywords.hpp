@@ -20,6 +20,8 @@
 #ifndef OPM_KEYWORDS_HPP
 #define OPM_KEYWORDS_HPP
 
+#include <optional>
+
 namespace Opm
 {
 

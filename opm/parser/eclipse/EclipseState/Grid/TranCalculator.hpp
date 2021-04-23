@@ -19,16 +19,16 @@
 #ifndef TRAN_CALCULATOR_HPP
 #define TRAN_CALCULATOR_HPP
 
-#include<string>
-
-#include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
-
+#include <string>
+#include <vector>
 
 namespace Opm
 {
 
 namespace Fieldprops
 {
+
+namespace keywords { template<class T> class keyword_info; }
 
 enum class ScalarOperation {
     ADD = 1,
@@ -81,27 +81,7 @@ public:
         return this->m_name;
     }
 
-
-    keywords::keyword_info<double> make_kw_info(ScalarOperation op) {
-        keywords::keyword_info<double> kw_info;
-        switch (op) {
-        case ScalarOperation::MUL:
-            kw_info.init(1);
-            break;
-        case ScalarOperation::ADD:
-            kw_info.init(0);
-            break;
-        case ScalarOperation::MAX:
-            kw_info.init(std::numeric_limits<double>::max());
-            break;
-        case ScalarOperation::MIN:
-            kw_info.init(std::numeric_limits<double>::lowest());
-            break;
-        default:
-            break;
-        }
-        return kw_info;
-    }
+    keywords::keyword_info<double> make_kw_info(ScalarOperation op);
 
     bool operator==(const TranCalculator& other) const {
         return this->m_name == other.m_name &&
