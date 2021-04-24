@@ -107,7 +107,7 @@ int main(int argc, char ** argv) {
             std::cout << "EclipseState objects were equal!" << std::endl;
         else {
             std::cout << "EclipseState objects were different!" << std::endl;
-            //equal = false;
+            equal = false;
         }
 
         if (Opm::Schedule::cmp(sched, rst_sched, static_cast<std::size_t>(report_step)) )
