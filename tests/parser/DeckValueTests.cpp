@@ -29,8 +29,6 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>

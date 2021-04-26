@@ -21,24 +21,18 @@
 #include <unordered_map>
 #include <vector>
 
-#include <opm/io/eclipse/rst/state.hpp>
-#include <opm/io/eclipse/ERst.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
 
 void initLogging() {
     std::shared_ptr<Opm::StreamLog> cout_log = std::make_shared<Opm::StreamLog>(std::cout, Opm::Log::DefaultMessageTypes);

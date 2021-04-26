@@ -21,8 +21,6 @@
 #ifndef UDQINPUT__HPP_
 #define UDQINPUT__HPP_
 
-#include <memory>
-
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {

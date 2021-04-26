@@ -20,8 +20,6 @@
 #ifndef OPM_MINPVMODE_HPP
 #define OPM_MINPVMODE_HPP
 
-#include <string>
-
 namespace Opm {
     
     namespace MinpvMode {

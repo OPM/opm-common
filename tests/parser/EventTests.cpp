@@ -24,7 +24,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/common/utility/TimeService.hpp>
 
 
 
