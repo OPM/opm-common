@@ -21,7 +21,7 @@
 #include <iostream>
 #include <memory>
 
-#define BOOST_TEST_MODULE BoxManagereTests
+#define BOOST_TEST_MODULE BoxManagerTests
 
 #include <boost/test/unit_test.hpp>
 
