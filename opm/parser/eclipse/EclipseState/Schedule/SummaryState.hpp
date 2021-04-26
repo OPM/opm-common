@@ -30,8 +30,9 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
-namespace Opm{
+namespace Opm {
 
+class UDQSet;
 
 /*
   The purpose of this class is to serve as a small container object for
@@ -64,8 +65,6 @@ namespace Opm{
       st.has("WGOR:OPY") => True
       st.has_well_var("OPY", "WGOR") => False
 */
-
-class UDQSet;
 
 class SummaryState {
 public:
