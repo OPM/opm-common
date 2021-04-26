@@ -25,8 +25,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
-
 namespace Opm {
 
 class RFTConfig {
