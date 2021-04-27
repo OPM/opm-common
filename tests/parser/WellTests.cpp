@@ -155,6 +155,34 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(WellDefaultBhpWithoutConnections) {
+    Opm::Parser parser;
+    std::string input =
+                "START             -- 0 \n"
+                "19 JUN 2007 / \n"
+                "SCHEDULE\n"
+                "WELSPECS\n"
+                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                "/\n"
+                "DATES             -- 2\n"
+                " 20  JAN 2010 / \n"
+                "/\n";
+
+
+    auto deck = parser.parseString(input);
+    auto python = std::make_shared<Python>();
+    Opm::EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    Opm::Runspec runspec (deck);
+    Opm::Schedule schedule(deck, grid , fp, runspec, python);
+    const auto& op_1 = schedule.getWell("OP_1", 1);
+
+    const auto& connections = op_1.getConnections();
+    BOOST_CHECK(connections.empty());
+    BOOST_CHECK_EQUAL(op_1.getRefDepth(), -1.e+20);
+}
+
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     Opm::Parser parser;
     std::string input =

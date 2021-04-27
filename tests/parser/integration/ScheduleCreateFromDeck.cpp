@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     const auto& well4 = sched.getWellatEnd("W_4");
     BOOST_CHECK_EQUAL( well1.getRefDepth() , grid.getCellDepth( 29 , 36 , 0 ));
     BOOST_CHECK_EQUAL( well2.getRefDepth() , 100 );
-    BOOST_CHECK_THROW( well4.getRefDepth() , std::exception );
+    BOOST_CHECK_EQUAL( well4.getRefDepth() , -1.e+20);
 }
 
 

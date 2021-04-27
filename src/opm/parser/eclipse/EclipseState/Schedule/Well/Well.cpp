@@ -813,7 +813,9 @@ bool Well::getAllowCrossFlow() const {
 
 double Well::getRefDepth() const {
     if (!this->ref_depth.has_value())
-        throw std::logic_error(fmt::format("Well: {} - tried to access not initialized well reference depth", this->name()));
+        // for wells with default bhp reference depth while no connections defined,
+        // using this specific value following commercial simulation reference result
+        return -1.e+20;
     return *this->ref_depth;
 }
 
@@ -822,14 +824,11 @@ double Well::getWPaveRefDepth() const {
 }
 
 void Well::updateRefDepth() {
-    if( !this->ref_depth ) {
-        // ref depth was defaulted and we get the depth of the first completion
-
-        if( this->connections->empty() )
-            throw std::invalid_argument( "No completions defined for well: "
-                                         + name()
-                                     + ". Can not infer reference depth" );
-        this->ref_depth = this->connections->get(0).depth();
+    if( !this->ref_depth.has_value() ) {
+        // ref depth was defaulted and we get the depth of the first connection
+        // if the well does not have active connections, we keep ref_depth undefined
+        if( !this->connections->empty() )
+            this->ref_depth = this->connections->get(0).depth();
     }
 }
 
