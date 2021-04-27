@@ -130,7 +130,7 @@ bool ActionX::ready(const State& state, std::time_t sim_time) const {
         return true;
 
     auto last_run = state.run_time(*this);
-    return std::difftime(sim_time, last_run) > this->min_wait();
+    return std::difftime(sim_time, last_run) >= this->min_wait();
 }
 
 
