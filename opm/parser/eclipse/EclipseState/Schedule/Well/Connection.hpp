@@ -29,8 +29,6 @@
 #include <vector>
 #include <optional>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
-
 namespace Opm {
 
 namespace RestartIO {

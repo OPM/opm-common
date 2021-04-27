@@ -37,6 +37,8 @@
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/io/eclipse/rst/state.hpp>
+
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -98,6 +100,24 @@ namespace {
             return rst->header.restart_info();
     }
 }
+
+    ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
+                                   const std::pair<std::time_t, std::size_t>& restart_info,
+                                   const Deck& deck,
+                                   const Runspec& runspec,
+                                   const std::optional<int>& output_interval_,
+                                   const ParseContext& parseContext,
+                                   ErrorGuard& errors) :
+        m_python_handle(python_handle),
+        m_input_path(deck.getInputPath()),
+        m_restart_info(restart_info),
+        m_deck_message_limits( deck ),
+        m_unit_system( deck.getActiveUnitSystem() ),
+        m_runspec( runspec ),
+        rst_config( SOLUTIONSection(deck), parseContext, errors ),
+        output_interval(output_interval_)
+    {
+    }
 
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,

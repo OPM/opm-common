@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <set>
+
 #define BOOST_TEST_MODULE ActiveGridCells
 #include <boost/test/unit_test.hpp>
 

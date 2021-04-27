@@ -31,7 +31,6 @@ namespace Opm {
     class Deck;
     class DeckRecord;
     class ParseContext;
-    class ParserItem;
     class RawRecord;
     class ErrorGuard;
     class UnitSystem;

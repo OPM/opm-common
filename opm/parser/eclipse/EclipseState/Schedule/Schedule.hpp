@@ -24,45 +24,39 @@
 #include <optional>
 #include <unordered_set>
 
-#include <opm/parser/eclipse/Deck/DeckSection.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
-#include <opm/common/utility/TimeService.hpp>
-
-#include <opm/common/utility/ActiveGridCells.hpp>
-#include <opm/io/eclipse/rst/state.hpp>
 
 
 
 namespace Opm
 {
+    class ActiveGridCells;
     class Deck;
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
     class EclipseState;
     class FieldPropsManager;
-    class Runspec;
+    class ParseContext;
     class SCHEDULESection;
     class SummaryState;
     class ErrorGuard;
     class UDQConfig;
+    namespace RestartIO { class RstState; }
 
 
     struct ScheduleStatic {
@@ -87,17 +81,7 @@ namespace Opm
                        const Runspec& runspec,
                        const std::optional<int>& output_interval_,
                        const ParseContext& parseContext,
-                       ErrorGuard& errors):
-            m_python_handle(python_handle),
-            m_input_path(deck.getInputPath()),
-            m_restart_info(restart_info),
-            m_deck_message_limits( deck ),
-            m_unit_system( deck.getActiveUnitSystem() ),
-            m_runspec( runspec ),
-            rst_config( SOLUTIONSection(deck), parseContext, errors ),
-            output_interval(output_interval_)
-        {
-        }
+                       ErrorGuard& errors);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

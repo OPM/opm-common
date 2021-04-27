@@ -20,8 +20,6 @@
 #ifndef OPM_ECLIPSE_CONFIG_HPP
 #define OPM_ECLIPSE_CONFIG_HPP
 
-#include <memory>
-
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 

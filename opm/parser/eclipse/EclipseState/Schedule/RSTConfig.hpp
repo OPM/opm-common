@@ -186,12 +186,12 @@
 #include <map>
 #include <optional>
 
-#include <opm/parser/eclipse/Deck/DeckSection.hpp>
-
 namespace Opm {
 
-class ParseContext;
+class DeckKeyword;
 class ErrorGuard;
+class ParseContext;
+class SOLUTIONSection;
 
 class RSTConfig {
 public:

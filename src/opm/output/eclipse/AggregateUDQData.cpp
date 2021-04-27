@@ -44,6 +44,7 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateGroupData

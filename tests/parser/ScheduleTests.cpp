@@ -27,8 +27,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>

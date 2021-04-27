@@ -27,6 +27,8 @@
 #include <cmath>
 
 #include "src/opm/parser/eclipse/EclipseState/Schedule/MSW/icd_convert.hpp"
+#include "src/opm/parser/eclipse/EclipseState/Schedule/MSW/FromWSEG.hpp"
+
 
 
 namespace Opm {
@@ -107,7 +109,7 @@ namespace Opm {
     std::map<std::string, std::vector<std::pair<int, SICD> > >
     SICD::fromWSEGSICD(const DeckKeyword& wsegsicd)
     {
-        return SICD::fromWSEG<SICD>(wsegsicd);
+        return fromWSEG<SICD>(wsegsicd);
     }
 
     const std::optional<double>& SICD::maxAbsoluteRate() const {

@@ -23,8 +23,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
-#include <opm/common/utility/ActiveGridCells.hpp>
-
 #include <cstddef>
 #include <optional>
 #include <vector>
@@ -32,6 +30,7 @@
 #include <stddef.h>
 
 namespace Opm {
+    class ActiveGridCells;
     class DeckRecord;
     class EclipseGrid;
     class FieldPropsManager;

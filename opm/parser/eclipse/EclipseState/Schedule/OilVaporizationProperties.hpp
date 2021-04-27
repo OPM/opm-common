@@ -20,7 +20,6 @@
 #define DRSDT_HPP
 
 #include <string>
-#include <memory>
 #include <vector>
 
 namespace Opm

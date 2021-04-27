@@ -20,10 +20,9 @@
 #ifndef OPM_JFUNC_HPP_
 #define OPM_JFUNC_HPP_
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-
-
 namespace Opm {
+
+class Deck;
 
 class JFunc
 {

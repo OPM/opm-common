@@ -18,6 +18,7 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 
 namespace Opm {

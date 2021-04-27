@@ -19,6 +19,7 @@
 
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/parser/eclipse/Deck/ImportContainer.hpp>

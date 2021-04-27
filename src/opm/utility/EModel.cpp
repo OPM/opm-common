@@ -17,6 +17,7 @@
    */
 
 #include <opm/utility/EModel.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 
 #include <fmt/format.h>

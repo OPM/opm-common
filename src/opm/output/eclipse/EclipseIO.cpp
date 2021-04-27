@@ -24,6 +24,8 @@
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>

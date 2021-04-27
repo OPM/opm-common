@@ -33,7 +33,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
-#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 
 namespace Opm {

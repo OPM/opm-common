@@ -22,7 +22,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FieldData.hpp>
 #include <opm/parser/eclipse/Deck/value_status.hpp>
 
 #include <string>

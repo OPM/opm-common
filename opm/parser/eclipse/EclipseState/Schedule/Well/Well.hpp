@@ -32,8 +32,8 @@
 
 #include <stddef.h>
 
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
@@ -48,18 +48,23 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 
 namespace Opm {
 
-class DeckRecord;
-class EclipseGrid;
+class ActiveGridCells;
+class AutoICD;
 class DeckKeyword;
+class DeckRecord;
+class ErrorGuard;
+class EclipseGrid;
+class ParseContext;
+class SICD;
+class SummaryState;
 class UDQActive;
 class UDQConfig;
-class SICD;
-class AutoICD;
 
 namespace RestartIO {
 struct RstWell;

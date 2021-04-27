@@ -25,9 +25,10 @@
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm {
+
+    class SummaryState;
 
     class GConSale {
     public:

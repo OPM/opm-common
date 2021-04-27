@@ -28,9 +28,12 @@
 #include <utility>
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>

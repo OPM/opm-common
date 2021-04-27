@@ -44,8 +44,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
-#include <opm/common/utility/OpmInputError.hpp>
-
 #include "src/opm/parser/eclipse/EclipseState/Grid/FieldProps.hpp"
 
 using namespace Opm;

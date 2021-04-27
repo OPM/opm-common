@@ -22,18 +22,16 @@
 
 #include <string>
 #include <vector>
-#include <memory>
-#include <utility>
 
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/value_status.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
     class DeckOutput;
+    class DeckValue;
     class ParserKeyword;
+    class UnitSystem;
 
     class DeckKeyword {
     public:

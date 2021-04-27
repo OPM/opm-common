@@ -18,6 +18,7 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 

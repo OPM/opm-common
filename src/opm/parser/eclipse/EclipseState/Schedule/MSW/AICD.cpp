@@ -20,6 +20,11 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/AICD.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
+#include "src/opm/parser/eclipse/EclipseState/Schedule/MSW/FromWSEG.hpp"
+
 
 namespace Opm {
 
@@ -59,7 +64,7 @@ AutoICD::AutoICD(const DeckRecord& record) :
 //     ....
 std::map<std::string, std::vector<std::pair<int, AutoICD> > >
 AutoICD::fromWSEGAICD(const DeckKeyword& wsegaicd) {
-    return SICD::fromWSEG<AutoICD>(wsegaicd);
+    return fromWSEG<AutoICD>(wsegaicd);
 }
 
 

@@ -21,6 +21,7 @@
 #include <cmath>
 #include <fmt/format.h>
 
+#include <opm/common/utility/Serializer.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 
 namespace Opm {
