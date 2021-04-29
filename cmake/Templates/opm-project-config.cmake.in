@@ -93,6 +93,16 @@ if(NOT @opm-project_NAME@_FOUND)
 
   # this is the contents of config.h as far as our probes can tell:
 
+  # Require correct CMake standard. Needed for user modules as
+  # some software will add incompatible compile switches like
+  # -std=gnu++11 otherwise when search for (I guess because of
+  # imported targets using INTERFACE_COMPILE_FEATURES), and will
+  # break compilation because of missing c++17 features.
+  if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+  endif()
 
   # The settings in this block do not mix well with the DEST_PREFIX
   # setting.
@@ -104,6 +114,7 @@ if(NOT @opm-project_NAME@_FOUND)
     @OPM_PROJECT_EXTRA_CODE@
     # end extra code
 
+    include(OpmPackage)
     include(@opm-project_NAME@-prereqs)
   endif()
 endif()
