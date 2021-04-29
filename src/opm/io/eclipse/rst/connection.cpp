@@ -17,6 +17,7 @@
 */
 
 #include <cmath>
+#include <stdexcept>
 
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
