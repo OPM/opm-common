@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
 #include <utility>
 
 namespace Opm {
