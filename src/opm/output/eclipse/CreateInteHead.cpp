@@ -21,6 +21,7 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -462,11 +463,23 @@ namespace {
     }
 
     int getLiftOptPar(const ::Opm::Schedule& sched,
-                   const std::size_t      lookup_step)
+                      const std::size_t      report_step,
+                      const std::size_t      lookup_step)
     {
-        const auto& each_nupcol = sched.glo(lookup_step).all_newton();
-        int in_enc = (each_nupcol) ? 2 : 1;
-        return in_enc;
+        using Value = ::Opm::RestartIO::Helpers::VectorItems::InteheadValues::LiftOpt;
+
+        if (report_step == std::size_t{0}) {
+            return Value::NotActive;
+        }
+
+        const auto& gasLiftOpt = sched.glo(lookup_step);
+        if (! gasLiftOpt.active()) {
+            return Value::NotActive;
+        }
+
+        return gasLiftOpt.all_newton()
+            ? Value::EachNupCol
+            : Value::FirstIterationOnly;
     }
 
     Opm::RestartIO::InteHEAD::NetworkDims
@@ -546,7 +559,7 @@ createInteHead(const EclipseState& es,
         .aquiferDimensions  (inferAquiferDimensions(es))
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched[lookup_step].tuning()))
-        .liftOptParam       (getLiftOptPar(sched, lookup_step))
+        .liftOptParam       (getLiftOptPar(sched, report_step, lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, report_step, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })

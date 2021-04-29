@@ -161,6 +161,14 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         ISECND = 410 //  ISECND = current simulation time HH:MM:SS - number of seconds (SS), reported in microseconds
                      //  (0-59,999,999)
     };
+
+    namespace InteheadValues {
+        enum LiftOpt : int {
+            NotActive = 0,          // Gas lift not enabled (LIFTOPT not present)
+            FirstIterationOnly = 1, // Optimise gas lift in first Newton iteration only (LIFTOPT(4) = NO)
+            EachNupCol = 2,         // Optimise gas lift in each of first NUPCOL Newton iterations (LIFTOPT(4) = YES)
+        };
+    } // InteheadValues
 }}}} // Opm::RestartIO::Helpers::VectorItems
 
 #endif // OPM_OUTPUT_ECLIPSE_VECTOR_INTEHEAD_HPP
