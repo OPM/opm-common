@@ -20,6 +20,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
 
+#include <limits>
+
 namespace Opm
 {
 

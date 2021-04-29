@@ -28,7 +28,7 @@ namespace Opm
 namespace Fieldprops
 {
 
-namespace keywords { template<class T> class keyword_info; }
+namespace keywords { template<class T> struct keyword_info; }
 
 enum class ScalarOperation {
     ADD = 1,
