@@ -99,7 +99,7 @@ if(NOT @opm-project_NAME@_FOUND)
   # imported targets using INTERFACE_COMPILE_FEATURES), and will
   # break compilation because of missing c++17 features.
   if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD @CMAKE_CXX_STANDARD@)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
   endif()
