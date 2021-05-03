@@ -171,7 +171,6 @@ namespace Opm {
         const std::vector<double>& getCOORD() const;
         const std::vector<double>& getZCORN() const;
         const std::vector<int>& getACTNUM( ) const;
-        const std::vector<double>& getMAPAXES() const;
         const std::string& getMAPUNITS() const { return m_mapunits; } ;
 
         /*

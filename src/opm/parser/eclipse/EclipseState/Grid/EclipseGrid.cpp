@@ -1595,11 +1595,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return m_actnum;
     }
 
-    const std::vector<double>& EclipseGrid::getMAPAXES( ) const {
-
-        return m_mapaxes;
-    }
-
     const std::vector<double>& EclipseGrid::getCOORD() const {
 
         return m_coord;
