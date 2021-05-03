@@ -3,37 +3,14 @@
   "sections": [
     "GRID"
   ],
-  "size": 1,
-  "items": [
-    {
-      "name": "X1",
-      "value_type": "DOUBLE",
-      "dimension": "Length"
-    },
-    {
-      "name": "Y1",
-      "value_type": "DOUBLE",
-      "dimension": "Length"
-    },
-    {
-      "name": "X2",
-      "value_type": "DOUBLE",
-      "dimension": "Length"
-    },
-    {
-      "name": "Y2",
-      "value_type": "DOUBLE",
-      "dimension": "Length"
-    },
-    {
-      "name": "X3",
-      "value_type": "DOUBLE",
-      "dimension": "Length"
-    },
-    {
-      "name": "Y3",
-      "value_type": "DOUBLE",
-      "dimension": "Length"
+    "comment" : "
+
+This keyword is organized as a DATA keyword to enable loading it with IMPORT.
+The keyword should have exactly six elements (X1,Y1), (X2,Y2), (X3,Y3)
+
+",
+    "data" : {
+        "value_type" : "DOUBLE",
+        "dimension" : "Length"
     }
-  ]
 }

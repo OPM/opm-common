@@ -237,9 +237,13 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     if (deck.hasKeyword("MAPAXES")){
        if ((m_mapaxes.size() == 0) || ( !keywInputBeforeGdfile(deck, "MAPAXES"))) {
           const Opm::DeckKeyword& mapaxesKeyword = deck.getKeyword<ParserKeywords::MAPAXES>();
+          const auto& mapaxes_data = mapaxesKeyword.getSIDoubleData();
+          if (mapaxes_data.size( ) != 6)
+              throw std::logic_error("Incorrect size for MAPAXES keyword");
+
           m_mapaxes.resize(6);
-          for (size_t n=0; n < 6; n++){
-             m_mapaxes[n] = mapaxesKeyword.getRecord(0).getItem(n).get<double>(0);
+          for (std::size_t n=0; n < 6; n++){
+              m_mapaxes[n] = mapaxes_data[n];
           }
        }
     }
