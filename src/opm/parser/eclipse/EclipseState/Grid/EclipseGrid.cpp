@@ -35,6 +35,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -237,13 +238,21 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     if (deck.hasKeyword("MAPAXES")){
        if ((m_mapaxes.size() == 0) || ( !keywInputBeforeGdfile(deck, "MAPAXES"))) {
           const Opm::DeckKeyword& mapaxesKeyword = deck.getKeyword<ParserKeywords::MAPAXES>();
-          const auto& mapaxes_data = mapaxesKeyword.getSIDoubleData();
+          const auto& mapaxes_data = mapaxesKeyword.getRawDoubleData();
           if (mapaxes_data.size( ) != 6)
               throw std::logic_error("Incorrect size for MAPAXES keyword");
 
+          auto length_factor = deck.getActiveUnitSystem().getDimension(UnitSystem::measure::length).getSIScaling();
+          if (m_mapunits == "METRES")
+              length_factor = unit::meter;
+          else if (m_mapunits == "FEET")
+              length_factor = unit::feet;
+          else if (m_mapunits == "CM")
+              length_factor = prefix::centi*unit::meter;
+
           m_mapaxes.resize(6);
           for (std::size_t n=0; n < 6; n++){
-              m_mapaxes[n] = mapaxes_data[n];
+              m_mapaxes[n] = length_factor * mapaxes_data[n];
           }
        }
     }
@@ -1685,9 +1694,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             mapunits.push_back(m_mapunits);
         }
 
+        auto length_factor = units.getDimension(UnitSystem::measure::length).getSIScaling();
+        if (m_mapunits == "METRES")
+            length_factor = unit::meter;
+        else if (m_mapunits == "FEET")
+            length_factor = unit::feet;
+        else if (m_mapunits == "CM")
+            length_factor = prefix::centi*unit::meter;
+
         if (m_mapaxes.size() > 0){
             for (double dv :  m_mapaxes){
-                mapaxes_f.push_back(static_cast<float>(dv));
+                mapaxes_f.push_back(static_cast<float>(dv / length_factor));
             }
         }
 

@@ -1920,7 +1920,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
     BOOST_CHECK( test_mapaxes2.size() == ref2_mapaxes.size());
 
     for (size_t n =0; n< ref2_mapaxes.size(); n++) {
-        BOOST_CHECK( ref2_mapaxes[n] == test_mapaxes2[n]);
+        BOOST_CHECK_EQUAL( ref2_mapaxes[n], test_mapaxes2[n]);
     }
 
     // testing deck in field units and MAPUNITS in FEET
