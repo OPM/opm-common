@@ -79,6 +79,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/Fault.cpp
     src/opm/parser/eclipse/EclipseState/Grid/FaultFace.cpp
     src/opm/parser/eclipse/EclipseState/Grid/GridDims.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/MapAxes.cpp
     src/opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
     src/opm/parser/eclipse/EclipseState/Grid/NNC.cpp
     src/opm/parser/eclipse/EclipseState/Grid/Operate.cpp
@@ -632,6 +633,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp
        opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp
        opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp
+       opm/parser/eclipse/EclipseState/Grid/MapAxes.hpp
        opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp
        opm/parser/eclipse/EclipseState/EndpointScaling.hpp
        opm/parser/eclipse/EclipseState/TracerConfig.hpp

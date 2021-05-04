@@ -228,34 +228,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     initGrid(deck);
 
-    if (deck.hasKeyword("MAPUNITS")){
-       if ((m_mapunits =="") || ( !keywInputBeforeGdfile(deck, "MAPUNITS"))) {
-            const auto& record = deck.getKeyword<ParserKeywords::MAPUNITS>( ).getStringData();
-            m_mapunits = record[0];
-       }
-    }
-
-    if (deck.hasKeyword("MAPAXES")){
-       if ((m_mapaxes.size() == 0) || ( !keywInputBeforeGdfile(deck, "MAPAXES"))) {
-          const Opm::DeckKeyword& mapaxesKeyword = deck.getKeyword<ParserKeywords::MAPAXES>();
-          const auto& mapaxes_data = mapaxesKeyword.getRawDoubleData();
-          if (mapaxes_data.size( ) != 6)
-              throw std::logic_error("Incorrect size for MAPAXES keyword");
-
-          auto length_factor = deck.getActiveUnitSystem().getDimension(UnitSystem::measure::length).getSIScaling();
-          if (m_mapunits == "METRES")
-              length_factor = unit::meter;
-          else if (m_mapunits == "FEET")
-              length_factor = unit::feet;
-          else if (m_mapunits == "CM")
-              length_factor = prefix::centi*unit::meter;
-
-          m_mapaxes.resize(6);
-          for (std::size_t n=0; n < 6; n++){
-              m_mapaxes[n] = length_factor * mapaxes_data[n];
-          }
-       }
-    }
+    if (deck.hasKeyword<ParserKeywords::MAPAXES>())
+        this->m_mapaxes = std::make_optional<MapAxes>( deck );
 
     if (actnum != nullptr) {
         resetACTNUM(actnum);
@@ -399,15 +373,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             resetACTNUM( actnum );
         }
 
-        if (egridfile.hasKey("MAPAXES")) {
-            const std::vector<float>& mapaxes_f = egridfile.get<float>("MAPAXES");
-            m_mapaxes.assign(mapaxes_f.begin(), mapaxes_f.end());
-        }
+        if (egridfile.hasKey("MAPAXES"))
+            this->m_mapaxes = std::make_optional<MapAxes>(egridfile);
 
-        if (egridfile.hasKey("MAPUNITS")) {
-            const std::vector<std::string>& mapunits = egridfile.get<std::string>("MAPUNITS");
-            m_mapunits=mapunits[0];
-        }
 
         ZcornMapper mapper( getNX(), getNY(), getNZ());
         zcorn_fixed = mapper.fixupZCORN( m_zcorn );
@@ -1354,7 +1322,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         if (m_zcorn.size() != other.m_zcorn.size())
             return false;
 
-        if (m_mapaxes.size() != other.m_mapaxes.size())
+        if (!(m_mapaxes == other.m_mapaxes))
             return false;
 
         if (m_actnum != other.m_actnum)
@@ -1364,9 +1332,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return false;
 
         if (m_zcorn != other.m_zcorn)
-            return false;
-
-        if (m_mapaxes != other.m_mapaxes)
             return false;
 
         bool status = ((m_pinch == other.m_pinch)  && (m_minpvMode == other.getMinpvMode()));
@@ -1641,8 +1606,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             zcorn_f[n] = static_cast<double>(units.from_si(length, m_zcorn[n]));
         }
 
-        std::vector<float> mapaxes_f;
-
         std::vector<int> filehead(100,0);
         filehead[0] = 3;                     // version number
         filehead[1] = 2007;                  // release year
@@ -1682,31 +1645,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             OPM_THROW(std::runtime_error, "Unit system not supported when writing to EGRID file");
             break;
         }
-
         gridunits.push_back("");
-
-        // map units is not dependent on deck units. A user may specify FIELD units for the model
-        // and metric units for the MAPAXES keyword (MAPUNITS)
-
-        std::vector<std::string> mapunits;
-
-        if ((m_mapunits.size() > 0) && (m_mapaxes.size() > 0)) {
-            mapunits.push_back(m_mapunits);
-        }
-
-        auto length_factor = units.getDimension(UnitSystem::measure::length).getSIScaling();
-        if (m_mapunits == "METRES")
-            length_factor = unit::meter;
-        else if (m_mapunits == "FEET")
-            length_factor = unit::feet;
-        else if (m_mapunits == "CM")
-            length_factor = prefix::centi*unit::meter;
-
-        if (m_mapaxes.size() > 0){
-            for (double dv :  m_mapaxes){
-                mapaxes_f.push_back(static_cast<float>(dv / length_factor));
-            }
-        }
 
         std::vector<int> endgrid = {};
 
@@ -1715,12 +1654,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         Opm::EclIO::EclOutput egridfile(filename, formatted);
         egridfile.write("FILEHEAD", filehead);
 
-        if (mapunits.size() > 0) {
-            egridfile.write("MAPUNITS", mapunits);
-        }
+        if (this->m_mapaxes.has_value()) {
+            const auto& mapunits = this->m_mapaxes.value().mapunits();
+            if (mapunits.has_value())
+                egridfile.write("MAPUNITS", std::vector<std::string>{ mapunits.value() });
 
-        if (mapaxes_f.size() > 0){
-            egridfile.write("MAPAXES", mapaxes_f);
+            egridfile.write("MAPAXES", this->m_mapaxes.value().input());
         }
 
         egridfile.write("GRIDUNIT", gridunits);

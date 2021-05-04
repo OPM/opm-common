@@ -22,6 +22,7 @@
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 
 
+#include <opm/parser/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
@@ -206,9 +207,8 @@ namespace Opm {
         // Input grid data.
         std::vector<double> m_zcorn;
         std::vector<double> m_coord;
-        std::vector<double> m_mapaxes;
         std::vector<int> m_actnum;
-        std::string m_mapunits;
+        std::optional<MapAxes> m_mapaxes;
 
         // Mapping to/from active cells.
         int m_nactive;
