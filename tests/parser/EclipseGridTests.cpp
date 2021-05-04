@@ -2814,8 +2814,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         BOOST_CHECK( actGrid1[n] == 1 );
     }
 
-    BOOST_CHECK( grid1.getMAPUNITS() == "" );
-
 
     auto deck2 = parser.parseString( deckData2) ;
     Opm::EclipseGrid grid2( deck2);
@@ -2828,15 +2826,11 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         BOOST_CHECK( actGrid2[n] == ref_act_egrid[n] );
     }
 
-    BOOST_CHECK( grid2.getMAPUNITS() == "" );
-
 
     auto deck3a = parser.parseString( deckData3a) ;
     Opm::EclipseGrid grid3a( deck3a);
 
     // mapunits and mapaxes define in deck (only)
-
-    BOOST_CHECK( grid3a.getMAPUNITS() == "FEET" );
 
     std::vector<int> actGrid3 = grid3a.getACTNUM();
 
@@ -2858,8 +2852,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
     // mapunits and mapaxes both in egrid and deck. Uses properties
     // from the egrid keyword gdfile input after MAPUNITS and MAPAXES
 
-    BOOST_CHECK( grid3b.getMAPUNITS() == "METRES" );
-
     actGrid3 = grid3b.getACTNUM();
 
     // check that actnum is reset from deck since input after keyword GDFILE
@@ -2877,8 +2869,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
 
     auto deck3c = parser.parseString( deckData3c) ;
     Opm::EclipseGrid grid3c( deck3c);
-
-    BOOST_CHECK( grid3c.getMAPUNITS() == "FEET" );
 
 }
 
