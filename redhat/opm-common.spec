@@ -2,7 +2,7 @@
 # spec file for package opm-common
 #
 
-%define tag rc2
+%define tag final
 
 Name:           opm-common
 Version:        2021.04
