@@ -65,15 +65,14 @@ namespace Opm {
 EclipseGrid::EclipseGrid(const std::array<int, 3>& dims ,
                          const std::vector<double>& coord ,
                          const std::vector<double>& zcorn ,
-                         const int * actnum,
-                         const double * mapaxes)
+                         const int * actnum)
     : GridDims(dims),
       m_minpvMode(MinpvMode::ModeEnum::Inactive),
       m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
       m_multzMode(PinchMode::ModeEnum::TOP),
       m_pinchGapMode(PinchMode::ModeEnum::GAP)
 {
-    initCornerPointGrid( coord , zcorn , actnum , mapaxes );
+    initCornerPointGrid( coord , zcorn , actnum );
 }
 
 /**
@@ -1080,7 +1079,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 }
 
             }
-            initCornerPointGrid( coord, zcorn, nullptr, nullptr);
+            initCornerPointGrid( coord, zcorn, nullptr);
         }
     }
 
@@ -1088,8 +1087,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     void EclipseGrid::initCornerPointGrid(const std::vector<double>& coord ,
                                           const std::vector<double>& zcorn ,
-                                          const int * actnum,
-                                          const double * mapaxes)
+                                          const int * actnum)
 
 
     {
@@ -1099,13 +1097,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         ZcornMapper mapper( getNX(), getNY(), getNZ());
         zcorn_fixed = mapper.fixupZCORN( m_zcorn );
         this->resetACTNUM(actnum);
-
-        if (mapaxes != nullptr){
-            m_mapaxes.resize(6);
-            for (size_t n = 0; n < 6; n++){
-                m_mapaxes[n] = mapaxes[n];
-            }
-        }
     }
 
     void EclipseGrid::initCornerPointGrid(const Deck& deck) {
@@ -1132,7 +1123,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             } else
 	      OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN and COORD"));
 
-            initCornerPointGrid( coord , zcorn, actnum, nullptr );
+            initCornerPointGrid( coord , zcorn, actnum);
         }
     }
 
@@ -1593,11 +1584,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     const std::vector<int>& EclipseGrid::getACTNUM( ) const {
 
         return m_actnum;
-    }
-
-    const std::vector<double>& EclipseGrid::getMAPAXES( ) const {
-
-        return m_mapaxes;
     }
 
     const std::vector<double>& EclipseGrid::getCOORD() const {

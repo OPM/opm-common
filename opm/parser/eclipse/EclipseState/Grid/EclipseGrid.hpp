@@ -70,8 +70,7 @@ namespace Opm {
         EclipseGrid(const std::array<int, 3>& dims ,
                     const std::vector<double>& coord ,
                     const std::vector<double>& zcorn ,
-                    const int * actnum = nullptr,
-                    const double * mapaxes = nullptr);
+                    const int * actnum = nullptr);
 
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
@@ -171,8 +170,6 @@ namespace Opm {
         const std::vector<double>& getCOORD() const;
         const std::vector<double>& getZCORN() const;
         const std::vector<int>& getACTNUM( ) const;
-        const std::vector<double>& getMAPAXES() const;
-        const std::string& getMAPUNITS() const { return m_mapunits; } ;
 
         /*
           The fixupZCORN method is run as part of constructiong the grid. This will adjust the
@@ -233,8 +230,7 @@ namespace Opm {
 
         void initCornerPointGrid(const std::vector<double>& coord ,
                                  const std::vector<double>& zcorn ,
-                                 const int * actnum,
-                                 const double * mapaxes);
+                                 const int * actnum);
 
         bool keywInputBeforeGdfile(const Deck& deck, const std::string keyword) const;
 

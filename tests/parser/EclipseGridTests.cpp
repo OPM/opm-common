@@ -1745,48 +1745,6 @@ static Opm::Deck BAD_CP_GRID() {
     return parser.parseString( deckData);
 }
 
-static Opm::Deck BAD_CP_GRID_MAPAXES() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "MAPAXES\n"
-        " 0.  100.  0.  0.  100.  0.  /\n"
-        "\n"
-        "SPECGRID\n"
-        " 2 2 2 1 F /\n"
-        "COORD\n"
-        "  2002.0000  2002.0000   100.0000   1999.8255  1999.9127   108.4935\n"
-        "  2011.9939  2000.0000   100.3490   2009.8194  1999.9127   108.8425\n"
-        "  2015.9878  2000.0000   100.6980   2019.8133  1999.9127   109.1915\n"
-        "  2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681 \n"
-        "  2010.9939  2011.9985   100.5235   2009.8194  2009.9112   109.0170\n"
-        "  2019.9878  2009.9985   100.8725   2019.8133  2009.9112   109.3660\n"
-        "  2005.0000  2019.9970   100.3490   1999.8255  2019.9097   108.8426\n"
-        "  2009.9939  2019.9970   100.6980   2009.8194  2019.9097   109.1916\n"
-        "  2016.9878  2019.9970   101.0470   2019.8133  2019.9097   109.5406 /\n"
-        "ZCORN\n"
-        "    98.0000   100.3490    97.3490   100.6980   100.1745   100.5235\n"
-        "   100.5235   100.8725   100.1745   100.5235   100.5235   100.8725\n"
-        "   100.3490   101.6980   101.6980   102.5470   102.4973   102.1463\n"
-        "   103.2463   104.1953   103.6719   104.0209   104.0209   104.3698\n"
-        "   103.6719   104.0209   104.0209   104.3698   103.8464   104.1954\n"
-        "   104.1954   104.5444   103.4973   103.8463   103.8463   104.1953\n"
-        "   103.6719   104.0209   104.0209   104.3698   103.6719   104.0209\n"
-        "   104.0209   104.3698   103.8464   104.1954   104.1954   104.5444\n"
-        "   108.4935   108.8425   108.8425   109.1915   108.6681   109.0170\n"
-        "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
-        "   108.8426   109.1916   109.1916   109.5406  /\n"
-        "\n"
-        "PORO\n"
-        "  8*0.15 /\n"
-        "EDIT\n";
-
-    Opm::Parser parser;
-    return parser.parseString( deckData);
-}
 
 BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
@@ -2243,39 +2201,6 @@ BOOST_AUTO_TEST_CASE(CalcCellDims) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(ExportMAPAXES_TEST) {
-
-    Opm::Deck deck1 = BAD_CP_GRID_MAPAXES();
-    Opm::EclipseGrid grid1( deck1 );
-
-    std::vector<double> ref_mapaxes = { 0.0, 100.0, 0.0, 0.0, 100.0, 0.0 };
-
-    std::vector<double> mapaxes = grid1.getMAPAXES();
-
-    for (size_t n=0; n< mapaxes.size(); n++ ) {
-        BOOST_CHECK_EQUAL( ref_mapaxes[n] , mapaxes[n]);
-    }
-
-    Opm::Deck deck2 = BAD_CP_GRID();
-    Opm::EclipseGrid grid2( deck2 );
-
-    BOOST_CHECK( !grid1.equal( grid2 ));
-
-    std::vector<double> coord = grid1.getCOORD();
-    std::vector<double> zcorn = grid1.getZCORN();
-    std::vector<int> actnum = grid1.getACTNUM();
-
-    std::array<int, 3> dims = grid1.getNXYZ();
-
-    Opm::EclipseGrid grid3(dims, coord, zcorn, actnum.data(), mapaxes.data());
-
-    BOOST_CHECK( grid3.equal( grid1 ));
-
-    mapaxes[1] = 101;
-    Opm::EclipseGrid grid4(dims, coord, zcorn, actnum.data(), mapaxes.data());
-
-    BOOST_CHECK( !grid4.equal( grid1 ));
-}
 
 BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_UPDATE) {
     const char* deckData =
@@ -2889,11 +2814,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         BOOST_CHECK( actGrid1[n] == 1 );
     }
 
-    BOOST_CHECK( grid1.getMAPUNITS() == "" );
-
-    std::vector<double> mapaxes = grid1.getMAPAXES();
-    BOOST_CHECK( mapaxes.size() == 0 );
-
 
     auto deck2 = parser.parseString( deckData2) ;
     Opm::EclipseGrid grid2( deck2);
@@ -2906,25 +2826,11 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         BOOST_CHECK( actGrid2[n] == ref_act_egrid[n] );
     }
 
-    BOOST_CHECK( grid2.getMAPUNITS() == "" );
-
-    mapaxes = grid2.getMAPAXES();
-    BOOST_CHECK( mapaxes.size() == 0 );
-
 
     auto deck3a = parser.parseString( deckData3a) ;
     Opm::EclipseGrid grid3a( deck3a);
 
     // mapunits and mapaxes define in deck (only)
-
-    BOOST_CHECK( grid3a.getMAPUNITS() == "FEET" );
-
-    mapaxes = grid3a.getMAPAXES();
-    BOOST_CHECK( mapaxes.size() == 6 );
-
-    for (size_t n = 0; n < mapaxes.size(); n++){
-        BOOST_CHECK( mapaxes[n] == ref_mapaxes_deck[n] );
-    }
 
     std::vector<int> actGrid3 = grid3a.getACTNUM();
 
@@ -2946,15 +2852,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
     // mapunits and mapaxes both in egrid and deck. Uses properties
     // from the egrid keyword gdfile input after MAPUNITS and MAPAXES
 
-    BOOST_CHECK( grid3b.getMAPUNITS() == "METRES" );
-
-    mapaxes = grid3b.getMAPAXES();
-    BOOST_CHECK( mapaxes.size() == 6 );
-
-    for (size_t n = 0; n < mapaxes.size(); n++){
-        BOOST_CHECK( mapaxes[n] == ref_mapaxes_egrid[n] );
-    }
-
     actGrid3 = grid3b.getACTNUM();
 
     // check that actnum is reset from deck since input after keyword GDFILE
@@ -2973,14 +2870,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
     auto deck3c = parser.parseString( deckData3c) ;
     Opm::EclipseGrid grid3c( deck3c);
 
-    BOOST_CHECK( grid3c.getMAPUNITS() == "FEET" );
-
-    mapaxes = grid3c.getMAPAXES();
-    BOOST_CHECK( mapaxes.size() == 6 );
-
-    for (size_t n = 0; n < mapaxes.size(); n++){
-        BOOST_CHECK( mapaxes[n] == ref_mapaxes_deck[n] );
-    }
 }
 
 BOOST_AUTO_TEST_CASE(TEST_COLLAPSED_CELL) {
