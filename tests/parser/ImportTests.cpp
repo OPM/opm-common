@@ -32,6 +32,7 @@
 #include <fstream>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/Z.hpp>
 
@@ -63,13 +64,15 @@ BOOST_AUTO_TEST_CASE(CreateImportContainer) {
         output.write<float>("PERMX", {10, 20, 30, 40});
         output.write<int>("FIPNUM", {100, 200, 300, 400});
         output.write<int>("UNKNOWN", {100, 200, 300, 400});
+        output.write<float>("MAPAXES", {10, 20, 30, 40, 50, 60});
     }
 
     ImportContainer container2(parser, unit_system, "FILE_NAME", false, 0);
     for (auto kw : container2)
         deck.addKeyword(std::move(kw));
 
-    BOOST_CHECK_EQUAL(deck.size(), 3);
+    BOOST_CHECK_EQUAL(deck.size(), 4);
+    BOOST_CHECK( deck.hasKeyword<ParserKeywords::MAPAXES>());
 }
 
 

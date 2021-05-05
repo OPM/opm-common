@@ -29,6 +29,7 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
@@ -41,6 +42,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
@@ -1920,7 +1922,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
     BOOST_CHECK( test_mapaxes2.size() == ref2_mapaxes.size());
 
     for (size_t n =0; n< ref2_mapaxes.size(); n++) {
-        BOOST_CHECK( ref2_mapaxes[n] == test_mapaxes2[n]);
+        BOOST_CHECK_EQUAL( ref2_mapaxes[n], test_mapaxes2[n]);
     }
 
     // testing deck in field units and MAPUNITS in FEET
@@ -2877,3 +2879,72 @@ BOOST_AUTO_TEST_CASE(TEST_COLLAPSED_CELL) {
     for (std::size_t g = 0; g < grid.getCartesianSize(); g++)
         BOOST_CHECK_EQUAL(grid.getCellVolume(g), 0);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(MAPAXES_DEFAULT) {
+    Opm::MapAxes ma1;
+    const double x1 = 77;
+    const double y1 = 99;
+    {
+        double xt{x1};
+        double yt{y1};
+
+        ma1.transform(xt,yt);
+        BOOST_CHECK_EQUAL(x1,xt);
+        BOOST_CHECK_EQUAL(y1,yt);
+    }
+    {
+        double xi{x1};
+        double yi{y1};
+
+        ma1.inv_transform(xi,yi);
+        BOOST_CHECK_EQUAL(x1,xi);
+        BOOST_CHECK_EQUAL(y1,yi);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(MAPAXES) {
+    const double origo_x = 10;
+    const double origo_y = 10;
+    const double px = 5;
+    const double py = 5;
+    Opm::MapAxes ma( 5,5, origo_x, origo_y, 15,5 );
+    double xt{px};
+    double yt{py};
+    ma.transform(xt,yt);
+    BOOST_CHECK_EQUAL( xt, origo_x );
+    BOOST_CHECK_CLOSE( yt, origo_y - std::sqrt(2) * px, 1e-8);
+
+    double xi{xt};
+    double yi{yt};
+    ma.inv_transform(xi,yi);
+    BOOST_CHECK_CLOSE( px, xi, 1e-8);
+    BOOST_CHECK_CLOSE( py, yi, 1e-8);
+}
+
+BOOST_AUTO_TEST_CASE(MAPAXES_MAPUNITS) {
+    const double feet = Opm::unit::feet;
+    const double origo_x = 10;
+    const double origo_y = 10;
+    const double px = 5;
+    const double py = 5;
+    Opm::MapAxes ma( "FEET", 5/feet,5/feet, origo_x/feet, origo_y/feet, 15/feet, 5/feet );
+    double xt{px};
+    double yt{py};
+    ma.transform(xt,yt);
+    BOOST_CHECK_CLOSE( xt, origo_x , 1e-8);
+    BOOST_CHECK_CLOSE( yt, origo_y - std::sqrt(2) * px, 1e-8);
+
+    double xi{xt};
+    double yi{yt};
+    ma.inv_transform(xi,yi);
+    BOOST_CHECK_CLOSE( px, xi, 1e-8);
+    BOOST_CHECK_CLOSE( py, yi, 1e-8);
+
+    auto mapunits = ma.mapunits();
+    BOOST_CHECK_EQUAL(mapunits.value(), "FEET");
+    BOOST_CHECK_THROW(Opm::MapAxes( "NO_SUCH_LENGTH_UNIT", 5,5, origo_x, origo_y, 15, 5 ), std::exception);
+
+}
+
