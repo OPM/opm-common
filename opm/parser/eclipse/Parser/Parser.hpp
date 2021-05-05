@@ -89,9 +89,9 @@ namespace Opm {
         std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
-        bool loadKeywordFromFile(const Opm::filesystem::path& configFile);
+        bool loadKeywordFromFile(const filesystem::path& configFile);
 
-        void loadKeywordsFromDirectory(const Opm::filesystem::path& directory , bool recursive = true);
+        void loadKeywordsFromDirectory(const filesystem::path& directory , bool recursive = true);
         void applyUnitsToDeck(Deck& deck) const;
 
         /*!

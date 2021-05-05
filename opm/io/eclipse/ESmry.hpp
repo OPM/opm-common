@@ -74,10 +74,10 @@ public:
     const std::string& get_unit(const SummaryNode& node) const;
 
     void write_rsm(std::ostream&) const;
-    void write_rsm_file(std::optional<Opm::filesystem::path> = std::nullopt) const;
+    void write_rsm_file(std::optional<filesystem::path> = std::nullopt) const;
 
 private:
-    Opm::filesystem::path inputFileName, lodFileName;
+    filesystem::path inputFileName, lodFileName;
     int nI, nJ, nK, nSpecFiles;
     bool fromSingleRun, lodEnabeled;
     uint64_t lod_offset, lod_arr_size;
@@ -104,13 +104,13 @@ private:
 
     time_point startdat;
 
-    std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
+    std::vector<std::string> checkForMultipleResultFiles(const filesystem::path& rootN, bool formatted) const;
 
     void getRstString(const std::vector<std::string>& restartArray,
-                      Opm::filesystem::path& pathRst,
-                      Opm::filesystem::path& rootN) const;
+                      filesystem::path& pathRst,
+                      filesystem::path& rootN) const;
 
-    void updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::path& rootN) const;
+    void updatePathAndRootName(filesystem::path& dir, filesystem::path& rootN) const;
 
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num) const;
 
