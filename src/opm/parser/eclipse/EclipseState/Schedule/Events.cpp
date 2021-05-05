@@ -42,6 +42,11 @@ namespace Opm {
         return this->m_events == data.m_events;
     }
 
+    void Events::clearEvent(uint64_t eventMask) {
+        auto diff = this->m_events & eventMask;
+        this->m_events -= diff;
+    }
+
     void Events::reset() {
         this->m_events = 0;
     }
@@ -71,6 +76,12 @@ namespace Opm {
         if (events_iter == this->m_wellgroup_events.end())
             return false;
         return events_iter->second.hasEvent(eventMask);
+    }
+
+    void WellGroupEvents::clearEvent(const std::string& wgname, uint64_t eventMask) {
+        const auto events_iter = this->m_wellgroup_events.find(wgname);
+        if (events_iter != this->m_wellgroup_events.end())
+            events_iter->second.clearEvent(eventMask);
     }
 
     void WellGroupEvents::addEvent(const std::string& wgname, ScheduleEvents::Events event) {
