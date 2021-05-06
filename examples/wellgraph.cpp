@@ -20,6 +20,7 @@
 #include <fstream>
 #include <iomanip>
 #include <chrono>
+#include <sstream>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>

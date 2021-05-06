@@ -73,6 +73,7 @@
 #include <memory>
 #include <numeric>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
