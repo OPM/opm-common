@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <fmt/format.h>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
