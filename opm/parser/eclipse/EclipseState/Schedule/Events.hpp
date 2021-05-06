@@ -145,6 +145,7 @@ namespace Opm
 
         void addEvent(ScheduleEvents::Events event);
         bool hasEvent(uint64_t eventMask) const;
+        void clearEvent(uint64_t eventMask);
         void reset();
 
         bool operator==(const Events& data) const;
@@ -168,6 +169,7 @@ namespace Opm
         void addGroup(const std::string& gname);
         void addEvent(const std::string& wgname, ScheduleEvents::Events event);
         bool hasEvent(const std::string& wgname, uint64_t eventMask) const;
+        void clearEvent(const std::string& wgname, uint64_t eventMask);
         void reset();
         bool operator==(const WellGroupEvents& data) const;
 

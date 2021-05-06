@@ -39,5 +39,16 @@ BOOST_AUTO_TEST_CASE(CreateEmpty) {
     BOOST_CHECK_EQUAL( true  , events.hasEvent(Opm::ScheduleEvents::NEW_WELL));
     BOOST_CHECK_EQUAL( true  , events.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE));
     BOOST_CHECK_EQUAL( true  , events.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE | Opm::ScheduleEvents::NEW_WELL));
+
+
+    events.clearEvent(Opm::ScheduleEvents::NEW_WELL);
+    BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::NEW_WELL));
+
+    events.addEvent( Opm::ScheduleEvents::NEW_WELL);
+    BOOST_CHECK_EQUAL( true , events.hasEvent(Opm::ScheduleEvents::NEW_WELL));
+
+    events.clearEvent(Opm::ScheduleEvents::NEW_WELL | Opm::ScheduleEvents::WELL_STATUS_CHANGE | Opm::ScheduleEvents::NEW_GROUP);
+    BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::NEW_WELL));
+    BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE));
 }
 
