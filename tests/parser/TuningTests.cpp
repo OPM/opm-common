@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       BOOST_CHECK_CLOSE(TRGCNV_default, 0.001, diff);
 
       double TRGMBE_default = tuning.TRGMBE;
-      BOOST_CHECK_CLOSE(TRGMBE_default, 0.0, diff);
+      BOOST_CHECK_CLOSE(TRGMBE_default, 1e-7, diff);
 
       double TRGLCV_default = tuning.TRGLCV;
       BOOST_CHECK_CLOSE(TRGLCV_default, 0.0001, diff);
