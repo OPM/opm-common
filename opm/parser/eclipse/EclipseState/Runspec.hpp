@@ -25,6 +25,7 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
@@ -385,6 +386,7 @@ public:
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
     const Tabdims&  tabdims() const noexcept;
+    const Regdims&  regdims() const noexcept;
     const EndpointScaling& endpointScaling() const noexcept;
     const Welldims& wellDimensions() const noexcept;
     const WellSegmentDims& wellSegmentDimensions() const noexcept;
@@ -405,6 +407,7 @@ public:
     {
         active_phases.serializeOp(serializer);
         m_tabdims.serializeOp(serializer);
+        m_regdims.serializeOp(serializer);
         endscale.serializeOp(serializer);
         welldims.serializeOp(serializer);
         wsegdims.serializeOp(serializer);
@@ -421,6 +424,7 @@ public:
 private:
     Phases active_phases;
     Tabdims m_tabdims;
+    Regdims m_regdims;
     EndpointScaling endscale;
     Welldims welldims;
     WellSegmentDims wsegdims;

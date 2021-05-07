@@ -460,6 +460,7 @@ bool SatFuncControls::operator==(const SatFuncControls& rhs) const
 Runspec::Runspec( const Deck& deck ) :
     active_phases( inferActivePhases(deck) ),
     m_tabdims( deck ),
+    m_regdims( deck ),
     endscale( deck ),
     welldims( deck ),
     wsegdims( deck ),
@@ -498,6 +499,7 @@ Runspec Runspec::serializeObject()
     Runspec result;
     result.active_phases = Phases::serializeObject();
     result.m_tabdims = Tabdims::serializeObject();
+    result.m_regdims = Regdims::serializeObject();
     result.endscale = EndpointScaling::serializeObject();
     result.welldims = Welldims::serializeObject();
     result.wsegdims = WellSegmentDims::serializeObject();
@@ -518,6 +520,10 @@ const Phases& Runspec::phases() const noexcept {
 
 const Tabdims& Runspec::tabdims() const noexcept {
     return this->m_tabdims;
+}
+
+const Regdims& Runspec::regdims() const noexcept {
+    return this->m_regdims;
 }
 
 const Actdims& Runspec::actdims() const noexcept {
@@ -590,6 +596,7 @@ const UDQParams& Runspec::udqParams() const noexcept {
 bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
     return full_spec.phases() == rst_spec.phases() &&
         full_spec.tabdims() == rst_spec.tabdims() &&
+        full_spec.regdims() == rst_spec.regdims() &&
         full_spec.endpointScaling() == rst_spec.endpointScaling() &&
         full_spec.wellSegmentDimensions() == rst_spec.wellSegmentDimensions() &&
         full_spec.aquiferDimensions() == rst_spec.aquiferDimensions() &&
@@ -604,6 +611,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
 bool Runspec::operator==(const Runspec& data) const {
     return this->phases() == data.phases() &&
            this->tabdims() == data.tabdims() &&
+           this->regdims() == data.regdims() &&
            this->endpointScaling() == data.endpointScaling() &&
            this->wellDimensions() == data.wellDimensions() &&
            this->wellSegmentDimensions() == data.wellSegmentDimensions() &&

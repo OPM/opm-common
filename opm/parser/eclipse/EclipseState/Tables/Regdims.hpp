@@ -24,6 +24,10 @@
 
 namespace Opm {
 
+    class Deck;
+    class DeckKeyword;
+    class DeckRecord;
+
 /*
   The Regdims class is a small utility class designed to hold on to
   the values from the REGDIMS keyword.
@@ -34,6 +38,9 @@ namespace Opm {
 
         Regdims();
 
+        explicit Regdims(const Deck& deck);
+
+#if 0
         Regdims(size_t ntfip , size_t nmfipr , size_t nrfregr , size_t ntfreg , size_t nplmix) :
             m_NTFIP( ntfip ),
             m_NMFIPR( nmfipr ),
@@ -41,6 +48,7 @@ namespace Opm {
             m_NTFREG(  ntfreg ),
             m_NPLMIX( nplmix )
         {}
+#endif
 
         static Regdims serializeObject()
         {
