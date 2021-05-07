@@ -652,11 +652,11 @@ std::string ParserItem::inlineClassInit(const std::string& parentClass,
             case type_tag::integer:
                 return std::to_string( this->getDefault< int >() );
             case type_tag::fdouble:
-                return std::to_string( this->getDefault< double >() );
+                return as_string( this->getDefault< double >() );
             case type_tag::uda:
                 {
                     double value = this->getDefault<UDAValue>().get<double>();
-                    return "UDAValue(" + std::to_string(value) + ")";
+                    return "UDAValue(" + as_string(value) + ")";
                 }
             case type_tag::string:
                 return "\"" + this->getDefault< std::string >() + "\"";
