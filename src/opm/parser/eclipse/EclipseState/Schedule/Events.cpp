@@ -102,5 +102,10 @@ namespace Opm {
         return this->m_wellgroup_events == data.m_wellgroup_events;
     }
 
-}
 
+    const Events& WellGroupEvents::at(const std::string& wgname) const {
+        return this->m_wellgroup_events.at(wgname);
+    }
+
+
+}

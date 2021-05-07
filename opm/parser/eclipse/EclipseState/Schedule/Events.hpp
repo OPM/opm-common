@@ -171,6 +171,7 @@ namespace Opm
         bool hasEvent(const std::string& wgname, uint64_t eventMask) const;
         void clearEvent(const std::string& wgname, uint64_t eventMask);
         void reset();
+        const Events& at(const std::string& wgname) const;
         bool operator==(const WellGroupEvents& data) const;
 
         template<class Serializer>
