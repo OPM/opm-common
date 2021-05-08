@@ -13,8 +13,6 @@ yum install -y blas-devel suitesparse-devel trilinos-openmpi-devel
 
 #${PYTHON27} -m pip install pip --upgrade
 #${PYTHON27} -m pip install wheel setuptools twine pytest-runner auditwheel
-${PYTHON35} -m pip install pip --upgrade
-${PYTHON35} -m pip install wheel setuptools twine pytest-runner auditwheel
 ${PYTHON36} -m pip install pip --upgrade
 ${PYTHON36} -m pip install wheel setuptools twine pytest-runner auditwheel
 ${PYTHON37} -m pip install pip --upgrade
