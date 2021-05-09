@@ -50,5 +50,15 @@ BOOST_AUTO_TEST_CASE(CreateEmpty) {
     events.clearEvent(Opm::ScheduleEvents::NEW_WELL | Opm::ScheduleEvents::WELL_STATUS_CHANGE | Opm::ScheduleEvents::NEW_GROUP);
     BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::NEW_WELL));
     BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE));
+
+
+
+    Opm::WellGroupEvents wg_events;
+    wg_events.addWell("W1");
+    wg_events.addEvent("W1", Opm::ScheduleEvents::WELL_STATUS_CHANGE );
+    auto ev = wg_events.at("W1");
+    BOOST_CHECK_EQUAL( false , ev.hasEvent(Opm::ScheduleEvents::NEW_GROUP));
+    BOOST_CHECK_EQUAL( true , ev.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK_THROW(wg_events.at("NO_SUCH_WELL"), std::exception);
 }
 
