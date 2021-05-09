@@ -169,6 +169,7 @@ namespace Opm
         void addGroup(const std::string& gname);
         void addEvent(const std::string& wgname, ScheduleEvents::Events event);
         bool hasEvent(const std::string& wgname, uint64_t eventMask) const;
+        bool has(const std::string& wgname) const;
         void clearEvent(const std::string& wgname, uint64_t eventMask);
         void reset();
         const Events& at(const std::string& wgname) const;

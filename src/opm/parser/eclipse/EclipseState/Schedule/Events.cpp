@@ -108,4 +108,8 @@ namespace Opm {
     }
 
 
+    bool WellGroupEvents::has(const std::string& wgname) const {
+        return this->m_wellgroup_events.count(wgname);
+    }
+
 }
