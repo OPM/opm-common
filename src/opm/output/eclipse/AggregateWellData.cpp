@@ -613,11 +613,6 @@ namespace {
                     sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate, pc.resv_rate);
                     //}
                 }
-                if ((well.getStatus() == Opm::Well::Status::SHUT)) {
-                    sWell[Ix::OilRateTarget]   = 0.;
-                    sWell[Ix::WatRateTarget]   = 0.;
-                    sWell[Ix::GasRateTarget]   = 0.;
-                }
             }
             else if (well.isInjector()) {
                 const auto& ic = well.injectionControls(smry);

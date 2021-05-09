@@ -760,9 +760,9 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         const auto i1 = 4*ih_8.nswelz;
 
         const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::OilRateTarget], 0.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::WatRateTarget], 0.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::GasRateTarget], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::OilRateTarget], 20000.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::WatRateTarget], 1.0e+20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::GasRateTarget], 1.0e+20f, 1.0e-7f);
 
 
         const auto i2 = 5*ih_8.nswelz;
