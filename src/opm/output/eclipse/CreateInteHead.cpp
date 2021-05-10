@@ -404,11 +404,11 @@ namespace {
     }
 
     Opm::RestartIO::InteHEAD::RockOpts
-    getRockOpts(const ::Opm::RockConfig& rckCfg)
+    getRockOpts(const ::Opm::RockConfig& rckCfg, const Opm::Regdims& reg_dims)
     {
         int nttyp  = 1;   // Default value (PVTNUM)
         if (rckCfg.rocknum_property() == "SATNUM") nttyp = 2;
-        if (rckCfg.rocknum_property() == "ROCKNUM") nttyp = 5;
+        if (rckCfg.rocknum_property() == "ROCKNUM") nttyp = 4 + reg_dims.getNMFIPR();
 
         return {
             nttyp
@@ -498,7 +498,7 @@ namespace {
         const int ninode = 10;
         const int nrnode = 17;
         const int nznode = 2;
-        const int ninobr = 2*noactbr;
+        const int ninobr = 2*nbrmax;
 
         return {
             noactnod,
@@ -571,7 +571,7 @@ createInteHead(const EclipseState& es,
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched, report_step, lookup_step))
         .whistControlMode   (getWhistctlMode(sched, report_step, lookup_step))
         .networkDimensions  (getNetworkDims(sched, lookup_step, rspec))
-        .rockOpts(getRockOpts(rckcfg))
+        .rockOpts(getRockOpts(rckcfg,rdim))
         ;
 
     return ih.data();

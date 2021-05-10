@@ -20,6 +20,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {
 
@@ -30,5 +33,18 @@ Regdims::Regdims() :
     m_NTFREG( ParserKeywords::REGDIMS::NTFREG::defaultValue ),
     m_NPLMIX( ParserKeywords::REGDIMS::NPLMIX::defaultValue )
 { }
+
+Regdims::Regdims(const Deck& deck) :
+    Regdims()
+{
+    if (deck.hasKeyword("REGDIMS")) {
+        const auto& record = deck.getKeyword( "REGDIMS" , 0 ).getRecord( 0 );
+        m_NTFIP   = record.getItem("NTFIP").get<int>(0);
+        m_NMFIPR  = record.getItem("NMFIPR").get<int>(0);
+        m_NRFREG  = record.getItem("NRFREG").get<int>(0);
+        m_NTFREG  = record.getItem("NTFREG").get<int>(0);
+        m_NPLMIX  = record.getItem("NPLMIX").get<int>(0);
+    }
+}
 
 }

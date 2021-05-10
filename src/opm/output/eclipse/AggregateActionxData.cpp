@@ -75,7 +75,7 @@ namespace {
                                                     {cmp_enum::LESS,          1},
                                                     {cmp_enum::GREATER_EQUAL, 0},
                                                     {cmp_enum::LESS_EQUAL,    1},
-                                                    {cmp_enum::EQUAL,         1},
+                                                    {cmp_enum::EQUAL,         0},
                                                     {cmp_enum::INVALID,       0},
     };
 
@@ -308,7 +308,8 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     zAcn[ind + 0] = z_data.lhs.quantity;
                 // right hand quantity
                 if ((z_data.rhs.quantity.substr(0,1) == "W") ||
-                    (z_data.rhs.quantity.substr(0,1) == "G"))
+                    (z_data.rhs.quantity.substr(0,1) == "G") ||
+                    (z_data.rhs.quantity.substr(0,1) == "F"))
                     zAcn[ind + 1] = z_data.rhs.quantity;
                 // operator (comparator)
                 zAcn[ind + 2] = z_data.cmp_string;
@@ -399,10 +400,12 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 }
 
                  /*item[12] - index for relational operator (<, =, > )
-                 0 - for LHS quantity greater RHS quantity
-                 1 - for LHS quantity less than or equal to RHS quantity
+                 1 - for LHS quantity of first condition greater RHS quantity
+                 0 - for LHS quantity of first condition less than RHS quantity
+                 0 - for LHS quantity of first condition equal to RHS quantity
                 */
-                const auto it_lhs_it = cmpToIacn_12.find(cond.cmp);
+                const auto& first_cond = actx_cond.begin();
+                const auto it_lhs_it = cmpToIacn_12.find(first_cond->cmp);
                 if (it_lhs_it != cmpToIacn_12.end()) {
                     iAcn[ind + 12] = it_lhs_it->second;
                 }
