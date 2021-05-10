@@ -159,6 +159,19 @@ namespace Opm {
         unit_system_access_count = d.unit_system_access_count;
     }
 
+    Deck::Deck( Deck&& d ) :
+        DeckView(d.begin(), d.end()),
+        keywordList( std::move(d.keywordList) ),
+        defaultUnits( d.defaultUnits ),
+        m_dataFile( d.m_dataFile ),
+        input_path( d.input_path )
+    {
+        this->init(this->keywordList.begin(), this->keywordList.end());
+        if (d.activeUnits)
+            this->activeUnits = std::move(d.activeUnits);
+        unit_system_access_count = d.unit_system_access_count;
+    }
+
     Deck Deck::serializeObject()
     {
         Deck result;
