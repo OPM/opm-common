@@ -56,12 +56,18 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     // Observe that these value should not be used as ordinary indices into
     // the the IGRP vector, they should all be used as IGRP[NWGMAX + $index]
     enum index : std::vector<int>::size_type {
+        NoOfChildGroupsWells = 0,
         ProdActiveCMode = 1,
+        ProdHighLevCtrl = 5,
         GuideRateDef = 6,
         ExceedAction = 7,
-        WInjCMode = 16,
         GConProdCMode = 10,
-        GInjCMode = 21,
+        WInjActiveCMode = 16,
+        WInjHighLevCtrl = 17,
+        GConInjeWInjCMode = 19,
+        GInjActiveCMode = 21,
+        GInjHighLevCtrl = 22,
+        GConInjeGInjCMode = 24,
         GroupType = 26,
         GroupLevel = 27,
         ParentGroup = 28,
