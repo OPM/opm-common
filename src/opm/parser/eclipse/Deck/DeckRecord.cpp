@@ -31,26 +31,28 @@
 namespace Opm {
 
 
-    DeckRecord::DeckRecord( std::vector< DeckItem >&& items ) :
+    DeckRecord::DeckRecord( std::vector< DeckItem >&& items, const bool check_for_duplicate_names ) :
         m_items( std::move( items ) ) {
 
-        std::unordered_set< std::string > names;
-        for( const auto& item : this->m_items )
-            names.insert( item.name() );
+        if (check_for_duplicate_names) {
+            std::unordered_set< std::string > names;
+            for( const auto& item : this->m_items )
+                names.insert( item.name() );
 
-        if( names.size() == this->m_items.size() )
-            return;
+            if( names.size() == this->m_items.size() )
+                return;
 
-        names.clear();
-        std::string msg = "Duplicate item names in DeckRecord:";
-        for( const auto& item : this->m_items ) {
-            if( names.count( item.name() ) != 0 )
-                msg += std::string( " " ) += item.name();
+            names.clear();
+            std::string msg = "Duplicate item names in DeckRecord:";
+            for( const auto& item : this->m_items ) {
+                if( names.count( item.name() ) != 0 )
+                    msg += std::string( " " ) += item.name();
 
-            names.insert( item.name() );
+                names.insert( item.name() );
+            }
+
+            throw std::invalid_argument( msg );
         }
-
-        throw std::invalid_argument( msg );
     }
 
     DeckRecord DeckRecord::serializeObject()
