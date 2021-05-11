@@ -34,7 +34,7 @@ namespace Opm {
         typedef std::vector< DeckItem >::const_iterator const_iterator;
 
         DeckRecord() = default;
-        DeckRecord( std::vector< DeckItem >&& );
+        DeckRecord( std::vector< DeckItem >&& items, const bool check_for_duplicate_names = true );
 
         static DeckRecord serializeObject();
 
