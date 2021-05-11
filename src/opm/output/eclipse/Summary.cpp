@@ -447,6 +447,7 @@ struct fn_args
 {
     const std::vector<const Opm::Well*>& schedule_wells;
     const std::string group_name;
+    const std::string keyword_name;
     double duration;
     const int sim_step;
     int  num;
@@ -576,6 +577,10 @@ template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
+    std::string tracer_name = "";
+    if ( phase == rt::tracer && args.keyword_name.size() > 4) 
+        tracer_name = args.keyword_name.substr(4,std::string::npos);
+
     for (const auto* sched_well : args.schedule_wells) {
         const auto& name = sched_well->name();
 
@@ -587,7 +592,7 @@ inline quantity rate( const fn_args& args ) {
         }
 
         const double eff_fac = efac(args.eff_factors, name);
-        const auto v = xwPos->second.rates.get(phase, 0.0) * eff_fac;
+        const auto v = xwPos->second.rates.get(phase, 0.0, tracer_name) * eff_fac;
 
         if ((v > 0.0) == injection) {
             sum += v;
@@ -1443,6 +1448,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::polymer, injector > },
     { "WSIR", rate< rt::brine, injector > },
+    { "WTIR", rate< rt::tracer, injector > },
+    { "WTIC", div( rate< rt::tracer, injector >, rate< rt::wat, injector >) },
     { "WVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                        rate< rt::reservoir_gas, injector > ) },
     { "WGIGR", well_guiderate<injector, Opm::data::GuideRateValue::Item::Gas> },
@@ -1456,6 +1463,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "WCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "WSIT", mul( rate< rt::brine, injector >, duration ) },
+    { "WTIT", mul( rate< rt::tracer, injector >, duration ) },
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -1483,6 +1491,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
+    { "WTPR", rate< rt::tracer, producer > },
+    { "WTPC", div( rate< rt::tracer, producer >, rate< rt::wat, producer >) },
     { "WCPC", div( rate< rt::polymer, producer >, rate< rt::wat, producer >) },
     { "WSPC", div( rate< rt::brine, producer >, rate< rt::wat, producer >) },
 
@@ -1508,6 +1518,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNPT", mul( rate< rt::solvent, producer >, duration ) },
     { "WCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "WSPT", mul( rate< rt::brine, producer >, duration ) },
+    { "WTPT", mul( rate< rt::tracer, producer >, duration ) },
     { "WLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
     { "WGPTS", mul( rate< rt::dissolved_gas, producer >, duration )},
@@ -2301,7 +2312,7 @@ namespace Evaluator {
             efac.setFactors(this->node_, input.sched, wells, sim_step);
 
             const fn_args args {
-                wells, this->group_name(), stepSize, static_cast<int>(sim_step),
+                wells, this->group_name(), this->node_.keyword, stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
@@ -2329,6 +2340,7 @@ namespace Evaluator {
             return need_grp_name
                 ? this->node_.wgname : std::string{""};
         }
+
     };
 
     class BlockValue : public Base
@@ -2834,6 +2846,13 @@ namespace Evaluator {
             return true;
         }
 
+        keyword = keyword.substr(0, 4);
+        pos = funs.find(keyword);
+        if (pos != funs.end()) { //TODO: Perhaps check for tracer related prefixes?
+            this->paramFunction_ = pos->second;
+            return true;
+        }
+
         return false;
     }
 
@@ -2847,7 +2866,7 @@ namespace Evaluator {
         const auto reg = Opm::out::RegionCache{};
 
         const fn_args args {
-            {}, "", 0.0, 0, std::max(0, this->node_->number),
+            {}, "", "", 0.0, 0, std::max(0, this->node_->number),
             this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
             {}, {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)

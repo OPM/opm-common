@@ -68,8 +68,8 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                 const auto& tracer_keyword = deck.getKeyword(tracer_field);
                 auto concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
                 logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
-                for (auto& c : concentration)
-                    c *= inv_volume;
+                //for (auto& c : concentration)  // TODO: Proper scaling of c input must also take into account item 3 from kw TRACER.
+                //    c *= inv_volume;           //       For now we assume this to be defaulted, leading to unit scaling (vol/vol).
 
                 this->tracers.emplace_back(name, phase, std::move(concentration)) ;
                 continue;

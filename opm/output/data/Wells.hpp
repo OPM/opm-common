@@ -29,6 +29,8 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <vector>
+#include <iostream>
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
@@ -69,7 +71,8 @@ namespace Opm {
                 well_potential_oil     = (1 << 15),
                 well_potential_gas     = (1 << 16),
                 brine            = (1 << 17),
-                alq              = (1 << 18)
+                alq              = (1 << 18),
+                tracer           = (1 << 19)
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -82,11 +85,11 @@ namespace Opm {
             inline double get( opt m ) const;
             /// Read the value indicated by m. Returns a default value if
             /// the requested value is unset.
-            inline double get( opt m, double default_value ) const;
+            inline double get( opt m, double default_value , const std::string tracer_name="" ) const;
             /// Set the value specified by m. Throws an exception if multiple
             /// values are requested. Returns a self-reference to support
             /// chaining.
-            inline Rates& set( opt m, double value );
+            inline Rates& set( opt m, double value , const std::string tracer_name="" );
 
             /// Returns true if any of the rates oil, gas, water is nonzero
             inline bool flowing() const;
@@ -100,8 +103,8 @@ namespace Opm {
 
         inline void init_json(Json::JsonObject& json_data) const;
         private:
-            double& get_ref( opt );
-            const double& get_ref( opt ) const;
+            double& get_ref( opt, const std::string tracer_name = "" );
+            const double& get_ref( opt, const std::string tracer_name = "" ) const;
 
             opt mask = static_cast< opt >( 0 );
 
@@ -124,6 +127,7 @@ namespace Opm {
             double well_potential_gas = 0.0;
             double brine = 0.0;
             double alq = 0.0;
+            std::map<std::string, double> tracer;
     };
 
     struct Connection {
@@ -411,14 +415,17 @@ namespace Opm {
         return this->get_ref( m );
     }
 
-    inline double Rates::get( opt m, double default_value ) const {
+    inline double Rates::get( opt m, double default_value, const std::string tracer_name) const {
         if( !this->has( m ) ) return default_value;
 
-        return this->get_ref( m );
+        if( m == opt::tracer && this->tracer.find(tracer_name) == this->tracer.end()) return default_value;
+
+        return this->get_ref( m, tracer_name);
     }
 
-    inline Rates& Rates::set( opt m, double value ) {
-        this->get_ref( m ) = value;
+    inline Rates& Rates::set( opt m, double value , const std::string tracer_name ) {
+        this->get_ref( m , tracer_name) = value;
+
         /* mask |= m */
         this->mask = static_cast< opt >(
                         static_cast< enum_size >( this->mask ) |
@@ -449,7 +456,8 @@ namespace Opm {
              well_potential_oil == rate.well_potential_oil &&
              well_potential_gas == rate.well_potential_gas &&
              brine == rate.brine &&
-             alq == rate.alq;
+             alq == rate.alq &&
+             tracer == rate.tracer;
     }
 
 
@@ -462,7 +470,7 @@ namespace Opm {
      * This is an implementation detail and understanding this has no
      * significant impact on correct use of the class.
      */
-    inline const double& Rates::get_ref( opt m ) const {
+    inline const double& Rates::get_ref( opt m, const std::string tracer_name ) const {
         switch( m ) {
             case opt::wat: return this->wat;
             case opt::oil: return this->oil;
@@ -483,6 +491,7 @@ namespace Opm {
             case opt::well_potential_gas: return this->well_potential_gas;
             case opt::brine: return this->brine;
             case opt::alq: return this->alq;
+            case opt::tracer: return this->tracer.at(tracer_name);
         }
 
         throw std::invalid_argument(
@@ -492,9 +501,10 @@ namespace Opm {
 
     }
 
-    inline double& Rates::get_ref( opt m ) {
+    inline double& Rates::get_ref( opt m, const std::string tracer_name ) {
+        if (m == opt::tracer) this->tracer.emplace(tracer_name, 0.0);
         return const_cast< double& >(
-                static_cast< const Rates* >( this )->get_ref( m )
+                static_cast< const Rates* >( this )->get_ref( m, tracer_name )
                 );
     }
 
@@ -544,6 +554,7 @@ namespace Opm {
             buffer.write(this->well_potential_gas);
             buffer.write(this->brine);
             buffer.write(this->alq);
+            buffer.write(this->tracer);
     }
 
     template <class MessageBufferType>
@@ -647,6 +658,7 @@ namespace Opm {
             buffer.read(this->well_potential_gas);
             buffer.read(this->brine);
             buffer.read(this->alq);
+            buffer.read(this->tracer);
     }
 
    template <class MessageBufferType>

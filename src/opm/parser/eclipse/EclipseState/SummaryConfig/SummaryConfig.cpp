@@ -206,13 +206,13 @@ struct SummaryConfigContext {
 
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
-            "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "VPR",
+            "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
             "OPGR", "GPGR", "WPGR", "VPGR",
             "OPRH", "GPRH", "WPRH", "LPRH",
             "OVPR", "GVPR", "WVPR",
             "OPRS", "GPRS", "OPRF", "GPRF",
 
-            "OIR", "GIR", "WIR", "LIR", "NIR", "VIR",
+            "OIR", "GIR", "WIR", "LIR", "NIR", "CIR", "VIR", "TIR", "TIC"
             "OIGR", "GIGR", "WIGR",
             "OIRH", "GIRH", "WIRH",
             "OVIR", "GVIR", "WVIR",
@@ -222,7 +222,7 @@ struct SummaryConfigContext {
             "AQR", "AQRG", "NQR",
         };
 
-        return is_in_set(ratekw, keyword.substr(1));
+        return is_in_set(ratekw, keyword.substr(1)) || (keyword.length() > 4 && is_in_set({"TPR","TPC","TIR","TIC"}, keyword.substr(1,3)));;
     }
 
     bool is_ratio(const std::string& keyword) {
@@ -236,18 +236,18 @@ struct SummaryConfigContext {
 
     bool is_total(const std::string& keyword) {
         static const keyword_set totalkw {
-            "OPT", "GPT", "WPT", "LPT", "NPT",
-            "VPT", "OVPT", "GVPT", "WVPT",
+            "OPT", "GPT", "WPT", "LPT", "NPT", "CPT",
+            "VPT", "TPT", "OVPT", "GVPT", "WVPT",
             "WPTH", "OPTH", "GPTH", "LPTH",
             "GPTS", "OPTS", "GPTF", "OPTF",
 
-            "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT",
+            "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT", "TIT",
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
 
             "AQT", "AQTG", "NQT",
         };
 
-        return is_in_set(totalkw, keyword.substr(1));
+        return is_in_set(totalkw, keyword.substr(1)) || (keyword.length() > 4 && is_in_set({"TPT","TIT"}, keyword.substr(1,3)));
     }
 
     bool is_count(const std::string& keyword) {
