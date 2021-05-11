@@ -123,7 +123,7 @@ namespace {
 
     DeckRecord ParserRecord::parse(const ParseContext& parseContext , ErrorGuard& errors , RawRecord& rawRecord, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const KeywordLocation& location) const {
         std::vector< DeckItem > items;
-        items.reserve( this->size() + 20 );
+        items.reserve( this->size() );
         for( const auto& parserItem : *this )
             items.emplace_back( parserItem.scan( rawRecord, active_unitsystem, default_unitsystem ) );
 
