@@ -127,6 +127,7 @@ namespace Opm {
 
             Deck();
             Deck( const Deck& );
+            Deck( Deck&& );
 
             static Deck serializeObject();
 
