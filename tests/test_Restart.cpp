@@ -49,6 +49,7 @@
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
+#include <sstream>
 #include <tuple>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -1104,4 +1105,102 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
             BOOST_CHECK_EQUAL(st1.get(kw), st2.get(kw));
     }
 }
+}
+
+namespace {
+
+struct MessageBuffer
+{
+    std::stringstream str_;
+
+    template <class T>
+    void read( T& value )
+    {
+        str_.read( (char *) &value, sizeof(value) );
+    }
+
+    template <class T>
+    void write( const T& value )
+    {
+        str_.write( (const char *) &value, sizeof(value) );
+    }
+
+    void write( const std::string& str)
+    {
+        int size = str.size();
+        write(size);
+        for (int k = 0; k < size; ++k) {
+            write(str[k]);
+        }
+    }
+
+    void read( std::string& str)
+    {
+        int size = 0;
+        read(size);
+        str.resize(size);
+        for (int k = 0; k < size; ++k) {
+            read(str[k]);
+        }
+    }
+};
+
+Opm::data::AquiferData getFetkovichAquifer(const int aquiferID = 1)
+{
+    auto aquifer = Opm::data::AquiferData {
+        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5, Opm::data::AquiferType::Fetkovich
+    };
+
+    aquifer.aquFet = std::make_shared<Opm::data::FetkovichData>();
+
+    aquifer.aquFet->initVolume = 1.23;
+    aquifer.aquFet->prodIndex = 45.67;
+    aquifer.aquFet->timeConstant = 890.123;
+
+    return aquifer;
+}
+
+Opm::data::AquiferData getCarterTracyAquifer(const int aquiferID = 5)
+{
+    auto aquifer = Opm::data::AquiferData {
+        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5, Opm::data::AquiferType::CarterTracy
+    };
+
+    aquifer.aquCT = std::make_shared<Opm::data::CarterTracyData>();
+
+    aquifer.aquCT->timeConstant = 987.65;
+    aquifer.aquCT->influxConstant = 43.21;
+    aquifer.aquCT->waterDensity = 1014.5;
+    aquifer.aquCT->waterViscosity = 0.00318;
+    aquifer.aquCT->dimensionless_time = 42.0;
+    aquifer.aquCT->dimensionless_pressure = 2.34;
+
+    return aquifer;
+}
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(ReadWrite_CarterTracy_Data)
+{
+    const auto src = getCarterTracyAquifer(1729);
+
+    MessageBuffer buffer;
+    buffer.write(src);
+
+    auto dest = Opm::data::AquiferData{};
+    buffer.read(dest);
+
+    BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Carter-Tracy aquifer object must be equal to source object");
+}
+
+BOOST_AUTO_TEST_CASE(ReadWrite_Fetkovich_Data)
+{
+    const auto src = getFetkovichAquifer(42);
+
+    MessageBuffer buffer;
+    buffer.write(src);
+
+    auto dest = Opm::data::AquiferData{};
+    buffer.read(dest);
+
+    BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Fetkovich object must be equal to source object");
 }
