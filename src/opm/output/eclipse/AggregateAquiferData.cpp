@@ -148,7 +148,7 @@ namespace {
             }
         } // CarterTracy
 
-        namespace Fetckovich
+        namespace Fetkovich
         {
             template <typename IAaqArray>
             void staticContrib(const Opm::Aquifetp::AQUFETP_data& aquifer,
@@ -163,7 +163,7 @@ namespace {
                 iaaq[Ix::TypeRelated1] = VI::IAnalyticAquifer::Value::ModelType::Fetkovich;
                 iaaq[Ix::Unknown_1] = 1; // Not characterised; =1 in all cases seen thus far.
             }
-        } // Fetckovich
+        } // Fetkovich
     } // IntegerAnalyticAquifer
 
     namespace IntegerNumericAquifer
@@ -278,19 +278,18 @@ namespace {
 
                 // Unit hack: *to_si()* here since we don't have a compressibility unit.
                 saaq[Ix::Compressibility] =
-                    static_cast<float>(usys.to_si(M::pressure, aquifer.C_t));
+                    static_cast<float>(usys.to_si(M::pressure, aquifer.total_compr));
 
-                saaq[Ix::CTRadius] = cvrt(M::length, aquifer.r_o);
-                saaq[Ix::CTPermeability] = cvrt(M::permeability, aquifer.k_a);
-                saaq[Ix::CTPorosity] = cvrt(M::identity, aquifer.phi_aq);
+                saaq[Ix::CTRadius] = cvrt(M::length, aquifer.inner_radius);
+                saaq[Ix::CTPermeability] = cvrt(M::permeability, aquifer.permeability);
+                saaq[Ix::CTPorosity] = cvrt(M::identity, aquifer.porosity);
 
-                saaq[Ix::InitPressure] = cvrt(M::pressure, aquifer.p0.second);
-                saaq[Ix::DatumDepth] = cvrt(M::length, aquifer.d0);
+                saaq[Ix::InitPressure] = cvrt(M::pressure, aquifer.initial_pressure.value());
+                saaq[Ix::DatumDepth] = cvrt(M::length, aquifer.datum_depth);
 
-                saaq[Ix::CTThickness] = cvrt(M::length, aquifer.h);
-                saaq[Ix::CTAngle] = cvrt(M::identity, aquifer.theta);
-
-                const auto dp = aquifer.p0.second - pvtw.reference_pressure;
+                saaq[Ix::CTThickness] = cvrt(M::length, aquifer.thickness);
+                saaq[Ix::CTAngle] = cvrt(M::identity, aquifer.angle_fraction);
+                const auto dp = aquifer.initial_pressure.value() - pvtw.reference_pressure;
                 const auto bw = pvtw.volume_factor * (1.0 - pvtw.compressibility*dp);
                 saaq[Ix::CTWatMassDensity] = cvrt(M::density, rhoWS / bw);
 
@@ -299,7 +298,7 @@ namespace {
             }
         } // CarterTracy
 
-        namespace Fetckovich {
+        namespace Fetkovich {
             template <typename SAaqArray>
             void staticContrib(const Opm::Aquifetp::AQUFETP_data& aquifer,
                                const Opm::UnitSystem&             usys,
@@ -314,20 +313,21 @@ namespace {
                 };
 
                 // Time constant
-                const auto Tc = aquifer.C_t * aquifer.V0 / aquifer.J;
+                const auto Tc = aquifer.total_compr * aquifer.initial_watvolume / aquifer.prod_index;
 
                 // Unit hack: *to_si()* here since we don't have a compressibility unit.
                 saaq[Ix::Compressibility] =
-                    static_cast<float>(usys.to_si(M::pressure, aquifer.C_t));
+                    static_cast<float>(usys.to_si(M::pressure, aquifer.total_compr));
 
-                saaq[Ix::FetInitVol] = cvrt(M::liquid_surface_volume, aquifer.V0);
-                saaq[Ix::FetProdIndex] = cvrt(M::liquid_productivity_index, aquifer.J);
+                saaq[Ix::FetInitVol] = cvrt(M::liquid_surface_volume, aquifer.initial_watvolume);
+                saaq[Ix::FetProdIndex] = cvrt(M::liquid_productivity_index, aquifer.prod_index);
+
                 saaq[Ix::FetTimeConstant] = cvrt(M::time, Tc);
 
-                saaq[Ix::InitPressure] = cvrt(M::pressure, aquifer.p0.second);
-                saaq[Ix::DatumDepth] = cvrt(M::length, aquifer.d0);
+                saaq[Ix::InitPressure] = cvrt(M::pressure, aquifer.initial_pressure.value());
+                saaq[Ix::DatumDepth] = cvrt(M::length, aquifer.datum_depth);
             }
-        } // Fetckovich
+        } // Fetkovich
     } // SinglePrecAnalyticAquifer
 
     namespace SinglePrecAnalyticAquiferConn
@@ -412,12 +412,12 @@ namespace {
                 Common::dynamicContrib(std::forward<SummaryVariable>(summaryVariable),
                                        tot_influx, usys, xaaq);
 
-                const auto x = aquifer.phi_aq * aquifer.C_t * aquifer.r_o * aquifer.r_o;
+                const auto x = aquifer.porosity * aquifer.total_compr * aquifer.inner_radius * aquifer.inner_radius;
 
-                const auto dp   = aquifer.p0.second - pvtw.reference_pressure;
+                const auto dp   = aquifer.initial_pressure.value() - pvtw.reference_pressure;
                 const auto mu   = pvtw.viscosity * (1.0 + pvtw.viscosibility*dp);
-                const auto Tc   = mu * x / (aquifer.c1 * aquifer.k_a);
-                const auto beta = aquifer.c2 * aquifer.h * aquifer.theta * x;
+                const auto Tc   = mu * x / aquifer.permeability;
+                const auto beta = 6.283 * aquifer.thickness * aquifer.angle_fraction * x;
 
                 // Note: *to_si()* here since this is a *reciprocal* time constant
                 xaaq[Ix::CTRecipTimeConst] = usys.to_si(M::time, 1.0 / Tc);
@@ -562,10 +562,10 @@ captureDynamicdAquiferData(const AquiferConfig& aqConfig,
 
         auto iaaq = this->integerAnalyticAq_[aquIndex];
         const auto nActiveConn = this->numActiveConn_[aquIndex];
-        IntegerAnalyticAquifer::Fetckovich::staticContrib(aquifer, nActiveConn, iaaq);
+        IntegerAnalyticAquifer::Fetkovich::staticContrib(aquifer, nActiveConn, iaaq);
 
         auto saaq = this->singleprecAnalyticAq_[aquIndex];
-        SinglePrecAnalyticAquifer::Fetckovich::staticContrib(aquifer, usys, saaq);
+        SinglePrecAnalyticAquifer::Fetkovich::staticContrib(aquifer, usys, saaq);
 
         auto xaaq = this->doubleprecAnalyticAq_[aquIndex];
         const auto tot_influx = this->totalInflux_[aquIndex];

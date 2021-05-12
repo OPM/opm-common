@@ -15,9 +15,12 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 
@@ -27,51 +30,92 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
-#include <utility>
 #include <vector>
 
 namespace Opm {
 
 using AQUFETP = ParserKeywords::AQUFETP;
 
-Aquifetp::AQUFETP_data::AQUFETP_data(const DeckRecord& record) :
-    aquiferID( record.getItem<AQUFETP::AQUIFER_ID>().get<int>(0)),
-    pvttableID( record.getItem<AQUFETP::TABLE_NUM_WATER_PRESS>().get<int>(0)),
-    J( record.getItem<AQUFETP::PI>().getSIDouble(0)),
-    C_t( record.getItem<AQUFETP::C_T>().getSIDouble(0)),
-    V0( record.getItem<AQUFETP::V0>().getSIDouble(0)),
-    d0( record.getItem<AQUFETP::DAT_DEPTH>().getSIDouble(0)),
-    p0(false, 0)
+Aquifetp::AQUFETP_data::AQUFETP_data(const DeckRecord& record, const TableManager& tables)
+    : aquiferID        (record.getItem<AQUFETP::AQUIFER_ID>().get<int>(0))
+    , pvttableID       (record.getItem<AQUFETP::TABLE_NUM_WATER_PRESS>().get<int>(0))
+    , prod_index       (record.getItem<AQUFETP::PI>().getSIDouble(0))
+    , total_compr      (record.getItem<AQUFETP::C_T>().getSIDouble(0))
+    , initial_watvolume(record.getItem<AQUFETP::V0>().getSIDouble(0))
+    , datum_depth      (record.getItem<AQUFETP::DAT_DEPTH>().getSIDouble(0))
 {
-    if (record.getItem<AQUFETP::P0>().hasValue(0) )
-        this->p0 = std::make_pair(true, record.getItem<AQUFETP::P0>().getSIDouble(0));
+    if (record.getItem<AQUFETP::P0>().hasValue(0))
+        this->initial_pressure = record.getItem<AQUFETP::P0>().getSIDouble(0);
+
+    this->finishInitialisation(tables);
 }
 
-
-bool Aquifetp::AQUFETP_data::operator==(const Aquifetp::AQUFETP_data& other) const {
-    return this->aquiferID == other.aquiferID &&
-           this->pvttableID == other.pvttableID &&
-           this->J == other.J &&
-           this->C_t == other.C_t &&
-           this->V0 == other.V0 &&
-           this->d0 == other.d0 &&
-           this->p0 == other.p0;
+bool Aquifetp::AQUFETP_data::operator==(const Aquifetp::AQUFETP_data& other) const
+{
+    return (this->aquiferID == other.aquiferID)
+        && (this->pvttableID == other.pvttableID)
+        && (this->prod_index == other.prod_index)
+        && (this->total_compr == other.total_compr)
+        && (this->initial_watvolume == other.initial_watvolume)
+        && (this->datum_depth == other.datum_depth)
+        && (this->initial_pressure == other.initial_pressure)
+        && (this->timeConstant() == other.timeConstant())
+        && (this->waterDensity() == other.waterDensity())
+        && (this->waterViscosity() == other.waterViscosity())
+        ;
 }
 
-
-Aquifetp::AQUFETP_data::AQUFETP_data(int aquiferID_, int pvttableID_, double J_, double C_t_, double V0_, double d0_, const std::pair<bool, double>& p0_) :
-    aquiferID(aquiferID_),
-    pvttableID(pvttableID_),
-    J(J_),
-    C_t(C_t_),
-    V0(V0_),
-    d0(d0_),
-    p0(p0_)
+Aquifetp::AQUFETP_data::AQUFETP_data(const int aquiferID_,
+                                     const int pvttableID_,
+                                     const double J_,
+                                     const double C_t_,
+                                     const double V0_,
+                                     const double d0_,
+                                     const double p0_)
+    : aquiferID        (aquiferID_)
+    , pvttableID       (pvttableID_)
+    , prod_index       (J_)
+    , total_compr      (C_t_)
+    , initial_watvolume(V0_)
+    , datum_depth      (d0_)
+    , initial_pressure (p0_)
 {}
 
+Aquifetp::AQUFETP_data Aquifetp::AQUFETP_data::serializeObject()
+{
+    auto ret = AQUFETP_data {
+        1, 2, 3.0, 4.0, 5.0, 6.0, 7.0
+    };
 
+    ret.time_constant_ = 8.0;
+    ret.water_density_ = 9.0;
+    ret.water_viscosity_ = 10.0;
 
-Aquifetp::Aquifetp(const Deck& deck)
+    return ret;
+}
+
+void Aquifetp::AQUFETP_data::finishInitialisation(const TableManager& tables)
+{
+    this->time_constant_ = this->total_compr * this->initial_watvolume / this->prod_index;
+
+    const auto& pvtwTables = tables.getPvtwTable();
+    const auto& densityTables = tables.getDensityTable();
+    if (this->initial_pressure.has_value() &&
+        !pvtwTables.empty() &&
+        !densityTables.empty())
+    {
+        const auto& pvtw = pvtwTables[this->pvttableID - 1];
+        const auto& density = densityTables[this->pvttableID - 1];
+
+        const auto press_diff = this->initial_pressure.value() - pvtw.reference_pressure;
+        const auto BW = pvtw.volume_factor * (1.0 - pvtw.compressibility*press_diff);
+
+        this->water_viscosity_ = pvtw.viscosity * (1.0 + pvtw.viscosibility*press_diff);
+        this->water_density_ = density.water / BW;
+    }
+}
+
+Aquifetp::Aquifetp(const TableManager& tables, const Deck& deck)
 {
     if (!deck.hasKeyword<AQUFETP>())
         return;
@@ -79,7 +123,7 @@ Aquifetp::Aquifetp(const Deck& deck)
     const auto& aqufetpKeyword = deck.getKeyword<AQUFETP>();
     OpmLog::info(OpmInputError::format("Initializing Fetkovich aquifers from {keyword} in {file} line {line}", aqufetpKeyword.location()));
     for (auto& record : aqufetpKeyword)
-        this->m_aqufetp.emplace_back(record);
+        this->m_aqufetp.emplace_back(record, tables);
 }
 
 
@@ -91,7 +135,7 @@ Aquifetp::Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data) :
 Aquifetp Aquifetp::serializeObject()
 {
     Aquifetp result;
-    result.m_aqufetp = {{1, 2, 3.0, 4.0, 5.0, 6.0, {true, 7.0}}};
+    result.m_aqufetp = { AQUFETP_data::serializeObject() };
 
     return result;
 }

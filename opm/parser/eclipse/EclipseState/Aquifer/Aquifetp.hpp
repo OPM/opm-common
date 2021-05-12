@@ -27,12 +27,13 @@
 */
 
 #include <cstddef>
-#include <utility>
+#include <optional>
 #include <vector>
 
 namespace Opm {
     class Deck;
     class DeckRecord;
+    class TableManager;
 }
 
 namespace Opm {
@@ -40,35 +41,61 @@ namespace Opm {
 class Aquifetp {
     public:
 
-    struct AQUFETP_data{
-        AQUFETP_data(const DeckRecord& record);
+    struct AQUFETP_data
+    {
         AQUFETP_data() = default;
-        AQUFETP_data(int aquiferID_, int pvttableID_, double J_, double C_t_, double V0_, double d0_, const std::pair<bool, double>& p0_);
+        AQUFETP_data(const DeckRecord& record, const TableManager& tables);
+        AQUFETP_data(const int aquiferID_,
+                     const int pvttableID_,
+                     const double J_,
+                     const double C_t_,
+                     const double V0_,
+                     const double d0_,
+                     const double p0_);
+
+        int aquiferID{};
+        int pvttableID{};
+
+        double prod_index{};
+        double total_compr{};
+        double initial_watvolume{};
+        double datum_depth{};
+
+        std::optional<double> initial_pressure{};
+
+        static AQUFETP_data serializeObject();
+
+        double timeConstant() const { return this->time_constant_; }
+        double waterDensity() const { return this->water_density_; }
+        double waterViscosity() const { return this->water_viscosity_; }
+
         bool operator==(const AQUFETP_data& other) const;
 
-        int aquiferID;
-        int pvttableID;
-        double  J, // Specified Productivity Index
-                C_t, // total rock compressibility
-                V0, // initial volume of water in aquifer
-                d0; // aquifer datum depth
-        std::pair<bool, double> p0;
+        void finishInitialisation(const TableManager& tables);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(aquiferID);
-            serializer(pvttableID);
-            serializer(J);
-            serializer(C_t);
-            serializer(V0);
-            serializer(d0);
-            serializer(p0);
+            serializer(this->aquiferID);
+            serializer(this->pvttableID);
+            serializer(this->prod_index);
+            serializer(this->total_compr);
+            serializer(this->initial_watvolume);
+            serializer(this->datum_depth);
+            serializer(this->initial_pressure);
+            serializer(this->time_constant_);
+            serializer(this->water_density_);
+            serializer(this->water_viscosity_);
         }
+
+    private:
+        double time_constant_{};
+        double water_density_{};
+        double water_viscosity_{};
     };
 
     Aquifetp() = default;
-    Aquifetp(const Deck& deck);
+    Aquifetp(const TableManager& tables, const Deck& deck);
     Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data);
 
     static Aquifetp serializeObject();

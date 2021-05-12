@@ -180,6 +180,35 @@ namespace {
         return table;
     }
 
+    Opm::TableManager waterProperties()
+    {
+        const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+TABDIMS
+  1  2  50  60  2 60 /
+
+AQUDIMS
+  1*  1*  3  100  3  1000 /
+
+PROPS
+PVTW
+  279.0  1.038  5.0E-05  0.318  0.0001 /
+  279.0  1.038  5.0E-05  0.118  0.0001 /
+
+DENSITY
+  856.50000  1053.0  0.85204 /
+  856.50000  1033.0  0.85204 /
+
+AQUTAB
+   0.01   0.112
+1000.00 666.982 /
+
+   0.01   0.112
+1000.00 250.578 /
+)");
+
+        return Opm::TableManager { deck };
+    }
+
     std::pair<std::vector<double>, std::vector<double>> CTInfluenceFunction_1()
     {
         return {
@@ -255,13 +284,10 @@ namespace {
         const auto porosity        = 0.3;
         const auto compr           = 3.0e-5*compressibilityUnit();
         const auto datumDepth      = 2000.0*depthUnit();
-        const auto initialPressure = std::make_pair(true, 269.0*pressureUnit());
+        const auto initialPressure = 269.0*pressureUnit();
 
         const auto angle = 360.0; // degrees
         const auto thickness = 10.0*depthUnit();
-
-        const auto c1 = 1.0;
-        const auto c2 = 6.283;  // Really should be 2\pi.
 
         auto properties = std::vector<Opm::AquiferCT::AQUCT_data>{};
 
@@ -274,9 +300,15 @@ namespace {
 
             const auto& [tD, pD] = CTInfluenceFunction_1();
 
-            properties.emplace_back(aquiferID, influenceFunction, pvtTable, porosity,
-                                    datumDepth, compr, ro, ka, c1, thickness,
-                                    angle / 360.0, c2, initialPressure, tD, pD);
+            auto& ct = properties
+                .emplace_back(aquiferID, influenceFunction, pvtTable,
+                              porosity, datumDepth, compr, ro, ka,
+                              thickness, angle / 360.0, initialPressure);
+
+            ct.dimensionless_time = tD;
+            ct.dimensionless_pressure = pD;
+
+            ct.finishInitialisation(waterProperties());
         }
 
         {
@@ -288,9 +320,15 @@ namespace {
 
             const auto& [tD, pD] = CTInfluenceFunction_3();
 
-            properties.emplace_back(aquiferID, influenceFunction, pvtTable, porosity,
-                                    datumDepth, compr, ro, ka, c1, thickness,
-                                    angle / 360.0, c2, initialPressure, tD, pD);
+            auto& ct = properties
+                .emplace_back(aquiferID, influenceFunction, pvtTable,
+                              porosity, datumDepth, compr, ro, ka,
+                              thickness, angle / 360.0, initialPressure);
+
+            ct.dimensionless_time = tD;
+            ct.dimensionless_pressure = pD;
+
+            ct.finishInitialisation(waterProperties());
         }
 
         return { properties };
@@ -323,7 +361,7 @@ namespace {
     {
         const auto compr           = 1.5312e-4*compressibilityUnit();
         const auto datumDepth      = 2000.0*depthUnit();
-        const auto initialPressure = std::make_pair(true, 250.0*pressureUnit());
+        const auto initialPressure = 250.0*pressureUnit();
 
         auto properties = std::vector<Opm::Aquifetp::AQUFETP_data>{};
 
@@ -333,8 +371,11 @@ namespace {
             const auto prodIndex     = 495.0*prodIndexUnit();
             const auto initialVolume = 5.0e+10*volumeUnit();
 
-            properties.emplace_back(aquiferID, pvtTable, prodIndex, compr,
-                                    initialVolume, datumDepth, initialPressure);
+            auto& fetp = properties
+                .emplace_back(aquiferID, pvtTable, prodIndex, compr,
+                              initialVolume, datumDepth, initialPressure);
+
+            fetp.finishInitialisation(waterProperties());
         }
 
         {
@@ -343,8 +384,11 @@ namespace {
             const auto prodIndex     = 910.0*prodIndexUnit();
             const auto initialVolume = 2.0e+10*volumeUnit();
 
-            properties.emplace_back(aquiferID, pvtTable, prodIndex, compr,
-                                    initialVolume, datumDepth, initialPressure);
+            auto& fetp = properties
+                .emplace_back(aquiferID, pvtTable, prodIndex, compr,
+                              initialVolume, datumDepth, initialPressure);
+
+            fetp.finishInitialisation(waterProperties());
         }
 
         return { properties };
@@ -816,7 +860,6 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
 
     aquiferData.captureDynamicdAquiferData(aqConfig, sim_state(), pvtw(), density(),
                                            Opm::UnitSystem::newMETRIC());
-
 
     // IAAQ
     {

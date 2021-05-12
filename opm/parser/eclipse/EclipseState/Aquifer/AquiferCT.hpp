@@ -27,7 +27,7 @@
 */
 
 #include <cstddef>
-#include <utility>
+#include <optional>
 #include <vector>
 
 namespace Opm {
@@ -41,63 +41,76 @@ namespace Opm {
     class AquiferCT {
         public:
 
-        struct AQUCT_data{
-
-            AQUCT_data(const DeckRecord& record, const TableManager& tables);
+        struct AQUCT_data
+        {
             AQUCT_data() = default;
-            AQUCT_data(int aqID,
-                       int infID,
-                       int pvtID,
-                       double phi_aq_,
-                       double d0_,
-                       double C_t_,
-                       double r_o_,
-                       double k_a_,
-                       double c1_,
-                       double h_,
-                       double theta_,
-                       double c2_,
-                       const std::pair<bool, double>& p0_,
-                       const std::vector<double>& td_,
-                       const std::vector<double>& pi_);
+            AQUCT_data(const DeckRecord& record, const TableManager& tables);
+            AQUCT_data(const int aqID,
+                       const int infID,
+                       const int pvtID,
+                       const double phi_aq_,
+                       const double d0_,
+                       const double C_t_,
+                       const double r_o_,
+                       const double k_a_,
+                       const double h_,
+                       const double theta_,
+                       const double p0_);
 
-            int aquiferID;
-            int inftableID, pvttableID;
+            int aquiferID{};
+            int inftableID{};
+            int pvttableID{};
 
-            double  phi_aq , // aquifer porosity
-                    d0,      // aquifer datum depth
-                    C_t ,    // total compressibility
-                    r_o ,    // aquifer inner radius
-                    k_a ,    // aquifer permeability
-                    c1,      // 0.008527 (METRIC, PVT-M); 0.006328 (FIELD); 3.6 (LAB)
-                    h ,      // aquifer thickness
-                    theta ,  // angle subtended by the aquifer boundary
-                    c2 ;     // 6.283 (METRIC, PVT-M); 1.1191 (FIELD); 6.283 (LAB).
+            double porosity{};
+            double datum_depth{};
+            double total_compr{};
+            double inner_radius{};
+            double permeability{};
+            double thickness{};
+            double angle_fraction{};
 
-            std::pair<bool, double> p0; //Initial aquifer pressure at datum depth, d0
-            std::vector<double> td, pi;
+            std::optional<double> initial_pressure{};
+            std::vector<double> dimensionless_time{};
+            std::vector<double> dimensionless_pressure{};
+
+            static AQUCT_data serializeObject();
+
+            double timeConstant() const { return this->time_constant_; }
+            double influxConstant() const { return this->influx_constant_; }
+            double waterDensity() const { return this->water_density_; }
+            double waterViscosity() const { return this->water_viscosity_; }
 
             bool operator==(const AQUCT_data& other) const;
+
+            void finishInitialisation(const TableManager& tables);
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer(aquiferID);
-                serializer(inftableID);
-                serializer(pvttableID);
-                serializer(phi_aq);
-                serializer(d0);
-                serializer(C_t);
-                serializer(r_o);
-                serializer(k_a);
-                serializer(c1);
-                serializer(h);
-                serializer(theta);
-                serializer(c2);
-                serializer(p0);
-                serializer(td);
-                serializer(pi);
+                serializer(this->aquiferID);
+                serializer(this->inftableID);
+                serializer(this->pvttableID);
+                serializer(this->porosity);
+                serializer(this->datum_depth);
+                serializer(this->total_compr);
+                serializer(this->inner_radius);
+                serializer(this->permeability);
+                serializer(this->thickness);
+                serializer(this->angle_fraction);
+                serializer(this->initial_pressure);
+                serializer(this->dimensionless_time);
+                serializer(this->dimensionless_pressure);
+                serializer(this->time_constant_);
+                serializer(this->influx_constant_);
+                serializer(this->water_density_);
+                serializer(this->water_viscosity_);
             }
+
+        private:
+            double time_constant_{};
+            double influx_constant_{};
+            double water_density_{};
+            double water_viscosity_{};
         };
 
         AquiferCT() = default;
