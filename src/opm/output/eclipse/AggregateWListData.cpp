@@ -115,7 +115,7 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
                 if (well_no) {
                     std::cout << "well found in well list - well no: " << well_no.value() << "  wlist.wells()[well_no.value()] " << wlist.wells()[well_no.value()] << std::endl;
                 } else {
-                    std::cout << "well found in well list" << std::endl;
+                    std::cout << "well not found in well list" << std::endl;
                 }
                 if (well_no) well_order[iwlst] = well_no.value() + 1;
                 std::cout << "WList-name: " << wlst_name << " iwlst: " << iwlst << " well_order[iwlst]: " << well_order[iwlst] << std::endl;
@@ -134,50 +134,6 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
     }
     return curWelOrd;
 }
-/*
-std::map<std::size_t, std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sched,
-                                                                const std::size_t sim_step,
-                                                                const std::vector<int>& inteHead ) {
-    const auto& wells = sched.wellNames(sim_step);
-    const auto& wlmngr = sched.getWListManager(sim_step);
-
-    std::map<std::size_t, std::vector<std::size_t>> curWelOrd;
-    std::size_t iwlst;
-    std::size_t iwell = 0;
-    Opm::Wlist wlist;
-    //std::vector<std::size_t> min_ind;
-    //min_ind.resize(maxNoOfWellListsPrWell(inteHead), maxNoOfWellListsPrWell(inteHead));
-    std::vector<std::size_t> well_order;
-    well_order.resize(maxNoOfWellListsPrWell(inteHead), 0);
-
-    // loop over wells and establish map
-    //
-    for (const auto& wname : wells) {
-        const auto& well = sched.getWell(wname, sim_step);
-        const auto& wsind = well.seqIndex();
-
-        // loop over well lists for well - and assign well sequence in the different well lists
-        //
-        iwlst = 0;
-        for ( const auto& wlst_name : well.wListNames()) {
-            if (wlmngr.hasList(wlst_name)) {
-                wlist = wlmngr.getList(wlst_name);
-                auto well_no = findInVector<int>(wlist.wells(), wname);
-                if (well_no) well_order[iwlst] = well_no.value() + 1;
-                iwlst += 1;
-            } else {
-                auto msg = fmt::format("Well List Manager does not contain WLIST: {} ", wlst_name);
-                throw std::logic_error(msg);
-            }
-        }
-        //store vector in map
-        curWelOrd.insert(std::pair<std::size_t, std::vector<std::size_t>> (iwell, well_order));
-        iwell += 1;
-    }
-    return curWelOrd;
-}
-*/
-
 
 template <typename WellOp>
 void wellLoop(const std::vector<std::string>& wells,
@@ -212,7 +168,7 @@ void staticContrib(const Opm::Well&                well,
 {
     const auto& seq_ind = well.seqIndex();
 
-    // set values if iWls to the well order for all Wlists
+    // set values for iWls to the well order for all Wlists
     //
     std::size_t ind = 0;
     std::cout << "Well-name: " << well.name() << " seq_ind: " << seq_ind << std::endl;
@@ -287,8 +243,6 @@ captureDeclaredWListData(const Schedule&   sched,
     // Static contributions to ZWLS array.
 
     {
-        //const auto actResStat = ZWell::act_res_stat(sched, action_state, smry, sim_step);
-
         // Static contributions to ZWLS array.
         wellLoop(wells, sched, sim_step, [&welOrdLst, this]
                  (const Well& well, const std::size_t wellID) -> void
