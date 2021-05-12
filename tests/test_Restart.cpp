@@ -400,7 +400,7 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
     auto wells = mkWells();
     auto groups = mkGroups();
     const auto& udq = setup.schedule.getUDQConfig(report_step);
-    RestartValue restart_value(sol, wells, groups);
+    RestartValue restart_value(sol, wells, groups, {});
 
     udq.eval(report_step, setup.schedule.wellMatcher(report_step), st, udq_state);
     eclWriter.writeTimeStep( action_state,
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         Action::State action_state;
         {
-            RestartValue restart_value(cells, wells, groups);
+            RestartValue restart_value(cells, wells, groups, {});
 
             io_config.setEclCompatibleRST( false );
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
         BOOST_CHECK_THROW( RestartIO::save(rstFile, seqnum,
                                            100,
-                                           RestartValue(cells, wells, groups),
+                                           RestartValue(cells, wells, groups, {}),
                                            setup.es,
                                            setup.grid ,
                                            setup.schedule,
@@ -652,7 +652,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
     auto cells = mkSolution( num_cells );
     auto wells = mkWells();
     auto groups = mkGroups();
-    RestartValue restart_value(cells, wells, groups);
+    RestartValue restart_value(cells, wells, groups, {});
 
     BOOST_CHECK_THROW( restart_value.addExtra("TOO-LONG-KEY", {0,1,2}), std::runtime_error);
 
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         const auto& units = setup.es.getUnits();
         {
-            RestartValue restart_value(cells, wells, groups);
+            RestartValue restart_value(cells, wells, groups, {});
             SummaryState st(TimeService::now());
             const auto sumState = sim_state(setup.schedule);
 
@@ -766,8 +766,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         const auto outputDir = test_area.currentWorkingDirectory();
         {
-            RestartValue restart_value(cells, wells, groups);
-            RestartValue restart_value2(cells, wells, groups);
+            RestartValue restart_value(cells, wells, groups, {});
+            RestartValue restart_value2(cells, wells, groups, {});
 
             /* Missing THPRES data in extra container. */
             /* Because it proved to difficult to update the legacy simulators
@@ -873,7 +873,8 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     const auto restart_value = RestartValue {
         mkSolution(setup.grid.getNumActive()),
         mkWells(),
-        mkGroups()
+        mkGroups(),
+        {}
     };
     const auto sumState = sim_state(setup.schedule);
     UDQState udq_state(98);

@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
                                      timestep,
                                      false,
                                      schedule.seconds(timestep),
-                                     Opm::RestartValue(solution, wells, group_nwrk));
+                                     Opm::RestartValue(solution, wells, group_nwrk, {}));
     }
 
     for (int i=1; i <=4; i++) {

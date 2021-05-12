@@ -1330,12 +1330,14 @@ namespace {
         return data;
     }
 
-    void restore_aquifers(const ::Opm::EclipseState&       es,
-                          std::shared_ptr<RestartFileView> rst_view,
-                          Opm::RestartValue&               rst_value)
+    Opm::data::Aquifers
+    restore_aquifers(const ::Opm::EclipseState&       es,
+                     std::shared_ptr<RestartFileView> rst_view)
     {
         using M  = ::Opm::UnitSystem::measure;
         using Ix = VI::XAnalyticAquifer::index;
+
+        auto aquifers = Opm::data::Aquifers{};
 
         const auto& intehead    = rst_view->intehead();
         const auto  aquiferData = AquiferVectors{ intehead, rst_view };
@@ -1347,9 +1349,7 @@ namespace {
             const auto& saaq = aquiferData.saaq(aquiferID);
             const auto& xaaq = aquiferData.xaaq(aquiferID);
 
-            rst_value.aquifer.emplace_back();
-
-            auto& aqData = rst_value.aquifer.back();
+            auto& aqData = aquifers[1 + static_cast<int>(aquiferID)];
 
             aqData.aquiferID = 1 + static_cast<int>(aquiferID);
             aqData.pressure  = units.to_si(M::pressure, xaaq[Ix::Pressure]);
@@ -1368,6 +1368,8 @@ namespace {
                 aqData.aquFet = extractFetkcovichData(units, saaq);
             }
         }
+
+        return aquifers;
     }
 
     void assign_well_cumulatives(const std::string& well,
@@ -1565,14 +1567,15 @@ namespace Opm { namespace RestartIO  {
             : restore_wells_ecl(es, grid, schedule,  rst_view);
         data::GroupAndNetworkValues xg_nwrk;
 
-        auto rst_value = RestartValue{ std::move(xr), std::move(xw), std::move(xg_nwrk)};
+        auto aquifers = hasAnalyticAquifers(*rst_view)
+            ? restore_aquifers(es, rst_view) : data::Aquifers{};
+
+        auto rst_value = RestartValue {
+            std::move(xr), std::move(xw), std::move(xg_nwrk), std::move(aquifers)
+        };
 
         if (! extra_keys.empty()) {
             restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);
-        }
-
-        if (hasAnalyticAquifers(*rst_view)) {
-            restore_aquifers(es, rst_view, rst_value);
         }
 
         restore_udq(summary_state, schedule, rst_view);
