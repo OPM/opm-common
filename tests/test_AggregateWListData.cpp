@@ -122,21 +122,19 @@ BOOST_AUTO_TEST_CASE (Constructor)
     const auto simCase = SimulationCase{first_sim("TEST_WLIST.DATA")};
 
     Opm::EclipseState es = simCase.es;
-    //Opm::Runspec rspec   = es.runspec();
-    //Opm::SummaryState st = sum_state();
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
-    //const auto& ioConfig = es.getIOConfig();
     const auto& units    = es.getUnits();
 
-
-    // Report Step 1: 2008-10-10 --> 2011-01-20
-    const auto rptStep = std::size_t{8};
-
+    // Report Step 2
+    std::size_t rptStep = 0;
+    std::size_t rptStepP1 = 0;
+    rptStep = std::size_t{2};
+    rptStepP1 = rptStep + 1;
     double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
         createInteHead(es, grid, sched, secs_elapsed,
-                       rptStep, rptStep+1, rptStep);
+                       rptStep, rptStepP1, rptStep);
 
     auto wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
     wListData.captureDeclaredWListData(sched, rptStep, ih);
@@ -145,7 +143,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_EQUAL(static_cast<int>(wListData.getZWls().size()), ih[VI::intehead::NWMAXZ] * ih[VI::intehead::MXWLSTPRWELL]);
 
     //IWls-parameters
-    const auto& iWLs = wListData.getIWls();
+    auto iWLs = wListData.getIWls();
     auto start = 0*ih[VI::intehead::MXWLSTPRWELL];
     BOOST_CHECK_EQUAL(iWLs[start + 0], 2);
     BOOST_CHECK_EQUAL(iWLs[start + 1], 2);
@@ -173,7 +171,262 @@ BOOST_AUTO_TEST_CASE (Constructor)
     //ZWLs-parameters
     const std::string blank8 = "        ";
 
+    auto zWLs = wListData.getZWls();
+    start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*INJ1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    // Report Step 3
+    rptStep = std::size_t{3};
+    rptStepP1 = rptStep + 1;
+    secs_elapsed = 3.1536E07;
+    ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStepP1, rptStep);
+
+    wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
+    wListData.captureDeclaredWListData(sched, rptStep, ih);
+    //IWls-parameters
+    iWLs = wListData.getIWls();
+    start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 3);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    //ZWLs-parameters
+    zWLs = wListData.getZWls();
+    start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*INJ1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    // Report Step 4
+    rptStep = std::size_t{4};
+    secs_elapsed = 3.1536E07;
+    ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep+1, rptStep);
+
+    wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
+    wListData.captureDeclaredWListData(sched, rptStep, ih);
+
+
+    //IWls-parameters
+    iWLs = wListData.getIWls();
+    start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 3);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    //ZWLs-parameters
+    const std::string blank8 = "        ";
+
     const auto& zWLs = wListData.getZWls();
+    start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*INJ1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+
+    // Report Step 6
+    rptStep = std::size_t{6};
+    secs_elapsed = 3.1536E07;
+    ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep+1, rptStep);
+
+    wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
+    wListData.captureDeclaredWListData(sched, rptStep, ih);
+
+    //IWls-parameters
+    iWLs = wListData.getIWls();
+    start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 3);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    //ZWLs-parameters
+    const std::string blank8 = "        ";
+
+    const auto& zWLs = wListData.getZWls();
+    start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*INJ1"));
+    BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+    BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+
+    // Report Step 8
+    rptStep = std::size_t{8};
+    secs_elapsed = 3.1536E07;
+    ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep+1, rptStep);
+
+    wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
+    wListData.captureDeclaredWListData(sched, rptStep, ih);
+
+    //IWls-parameters
+    iWLs = wListData.getIWls();
+    auto start = 0*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 2);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 1*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 3);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 2*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    start = 3*ih[VI::intehead::MXWLSTPRWELL];
+    BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+    BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+    BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+    //ZWLs-parameters
+    zWLs = wListData.getZWls();
     start = 0*ih[VI::intehead::MXWLSTPRWELL];
     BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD1"));
     BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD2"));

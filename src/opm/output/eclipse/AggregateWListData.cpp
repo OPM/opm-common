@@ -66,7 +66,7 @@ std::size_t maxNoWells(const std::vector<int>& inteHead)
     return inteHead[VI::intehead::NWMAXZ];
 }
 
-int maxNoOfWellListsPrWell(const std::vector<int>& inteHead)
+std::size_t maxNoOfWellListsPrWell(const std::vector<int>& inteHead)
 {
     return inteHead[VI::intehead::MXWLSTPRWELL];
 }
@@ -90,8 +90,6 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
     std::vector<std::vector<std::size_t>> curWelOrd;
     std::size_t iwlst;
     Opm::WList wlist;
-    //std::vector<std::size_t> min_ind;
-    //min_ind.resize(maxNoOfWellListsPrWell(inteHead), maxNoOfWellListsPrWell(inteHead));
     std::vector<std::size_t> well_order;
     well_order.resize(maxNoOfWellListsPrWell(inteHead), 0);
 
@@ -103,22 +101,11 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
         // loop over well lists for well - and assign well sequence in the different well lists
         //
         iwlst = 0;
-        std::cout << "wellOrderInWList - loop over wells, well - name: " << wname << std::endl;
         for ( const auto& wlst_name : well.wListNames()) {
-            std::cout << "wlst_name: " << wlst_name << "  Wells: " << std::endl;
             if (wlmngr.hasList(wlst_name)) {
                 wlist = wlmngr.getList(wlst_name);
-                for (auto& wn : wlist.wells()) {
-                    std::cout << "well-name - wn; " << wn << std::endl;
-                }
                 auto well_no = findInVector<std::string>(wlist.wells(), wname);
-                if (well_no) {
-                    std::cout << "well found in well list - well no: " << well_no.value() << "  wlist.wells()[well_no.value()] " << wlist.wells()[well_no.value()] << std::endl;
-                } else {
-                    std::cout << "well not found in well list" << std::endl;
-                }
                 if (well_no) well_order[iwlst] = well_no.value() + 1;
-                std::cout << "WList-name: " << wlst_name << " iwlst: " << iwlst << " well_order[iwlst]: " << well_order[iwlst] << std::endl;
                 iwlst += 1;
             } else {
                 auto msg = fmt::format("Well List Manager does not contain WLIST: {} ", wlst_name);
@@ -127,9 +114,6 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
         }
         //store vector in map - and reset vector values to zero
         curWelOrd.push_back(well_order);
-        for (auto& wno : well_order) {
-            std::cout << "well_order; " << wno << std::endl;
-        }
         std::fill(well_order.begin(), well_order.end(), 0);
     }
     return curWelOrd;
@@ -171,9 +155,7 @@ void staticContrib(const Opm::Well&                well,
     // set values for iWls to the well order for all Wlists
     //
     std::size_t ind = 0;
-    std::cout << "Well-name: " << well.name() << " seq_ind: " << seq_ind << std::endl;
     for (const auto& wlist_vec : welOrdLst[seq_ind]) {
-        std::cout << " ind " << ind  << "well seq no in WList: " << wlist_vec << std::endl;
         iWls[ind] = wlist_vec;
         ind += 1;
     }
@@ -208,9 +190,7 @@ void staticContrib(const Opm::Well& well,
     // set values if zWls to the well list name for wells with well order > 0
     //
     std::size_t ind = 0;
-    std::cout << "Well-name: " << well.name() << " seq_ind: " << seq_ind << std::endl;
     for (const auto& wlist_vec : welOrdLst[seq_ind]) {
-        std::cout << " ind " << ind  << "well seq no in WList: " << wlist_vec << std::endl;
         if (wlist_vec > 0) zWls[ind] = well.wListNames()[ind];
         ind += 1;
     }

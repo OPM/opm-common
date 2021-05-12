@@ -1619,8 +1619,6 @@ namespace {
                 for (const auto& well : wells) {
                     wlist.add(well);
                     auto wel = this->snapshots.back().wells.get( well );
-                    std::cout << "kwrd_handl - wlist - name: " << name << std::endl;
-                    std::cout << "kwrd_handl - add well: " << well << "  well name wel.name(): " << wel.name() << std::endl;
                     wel.addWlist(name);
                     this->snapshots.back().wells.update( std::move(wel) );
                 }
