@@ -263,8 +263,7 @@ namespace {
         namespace CarterTracy {
             template <typename SAaqArray>
             void staticContrib(const Opm::AquiferCT::AQUCT_data& aquifer,
-                               const double                      rhoWS,
-                               const Opm::PVTWRecord&            pvtw,
+                               const Opm::data::AquiferData&     aquData,
                                const Opm::UnitSystem&            usys,
                                SAaqArray&                        saaq)
             {
@@ -284,23 +283,21 @@ namespace {
                 saaq[Ix::CTPermeability] = cvrt(M::permeability, aquifer.permeability);
                 saaq[Ix::CTPorosity] = cvrt(M::identity, aquifer.porosity);
 
-                saaq[Ix::InitPressure] = cvrt(M::pressure, aquifer.initial_pressure.value());
+                saaq[Ix::InitPressure] = cvrt(M::pressure, aquData.initPressure);
                 saaq[Ix::DatumDepth] = cvrt(M::length, aquifer.datum_depth);
 
                 saaq[Ix::CTThickness] = cvrt(M::length, aquifer.thickness);
                 saaq[Ix::CTAngle] = cvrt(M::identity, aquifer.angle_fraction);
-                const auto dp = aquifer.initial_pressure.value() - pvtw.reference_pressure;
-                const auto bw = pvtw.volume_factor * (1.0 - pvtw.compressibility*dp);
-                saaq[Ix::CTWatMassDensity] = cvrt(M::density, rhoWS / bw);
 
-                const auto mu = pvtw.viscosity * (1.0 + pvtw.viscosibility*dp);
-                saaq[Ix::CTWatViscosity] = cvrt(M::viscosity, mu);
+                saaq[Ix::CTWatMassDensity] = cvrt(M::density, aquData.aquCT->waterDensity);
+                saaq[Ix::CTWatViscosity] = cvrt(M::viscosity, aquData.aquCT->waterViscosity);
             }
         } // CarterTracy
 
         namespace Fetkovich {
             template <typename SAaqArray>
             void staticContrib(const Opm::Aquifetp::AQUFETP_data& aquifer,
+                               const Opm::data::AquiferData&      aquData,
                                const Opm::UnitSystem&             usys,
                                SAaqArray&                         saaq)
             {
@@ -312,9 +309,6 @@ namespace {
                     return static_cast<float>(usys.from_si(unit, x));
                 };
 
-                // Time constant
-                const auto Tc = aquifer.total_compr * aquifer.initial_watvolume / aquifer.prod_index;
-
                 // Unit hack: *to_si()* here since we don't have a compressibility unit.
                 saaq[Ix::Compressibility] =
                     static_cast<float>(usys.to_si(M::pressure, aquifer.total_compr));
@@ -322,10 +316,12 @@ namespace {
                 saaq[Ix::FetInitVol] = cvrt(M::liquid_surface_volume, aquifer.initial_watvolume);
                 saaq[Ix::FetProdIndex] = cvrt(M::liquid_productivity_index, aquifer.prod_index);
 
-                saaq[Ix::FetTimeConstant] = cvrt(M::time, Tc);
-
-                saaq[Ix::InitPressure] = cvrt(M::pressure, aquifer.initial_pressure.value());
+                saaq[Ix::InitPressure] = cvrt(M::pressure, aquData.initPressure);
                 saaq[Ix::DatumDepth] = cvrt(M::length, aquifer.datum_depth);
+
+                saaq[Ix::FetTimeConstant] = (aquData.aquFet != nullptr)
+                    ? cvrt(M::time, aquData.aquFet->timeConstant)
+                    : cvrt(M::time, aquifer.timeConstant());
             }
         } // Fetkovich
     } // SinglePrecAnalyticAquifer
@@ -399,12 +395,11 @@ namespace {
 
         namespace CarterTracy {
             template <typename SummaryVariable, typename XAaqArray>
-            void dynamicContrib(SummaryVariable&&                 summaryVariable,
-                                const Opm::AquiferCT::AQUCT_data& aquifer,
-                                const Opm::PVTWRecord&            pvtw,
-                                const double                      tot_influx,
-                                const Opm::UnitSystem&            usys,
-                                XAaqArray&                        xaaq)
+            void dynamicContrib(SummaryVariable&&             summaryVariable,
+                                const Opm::data::AquiferData& aquData,
+                                const double                  tot_influx,
+                                const Opm::UnitSystem&        usys,
+                                XAaqArray&                    xaaq)
             {
                 using M = Opm::UnitSystem::measure;
                 using Ix = VI::XAnalyticAquifer::index;
@@ -412,12 +407,8 @@ namespace {
                 Common::dynamicContrib(std::forward<SummaryVariable>(summaryVariable),
                                        tot_influx, usys, xaaq);
 
-                const auto x = aquifer.porosity * aquifer.total_compr * aquifer.inner_radius * aquifer.inner_radius;
-
-                const auto dp   = aquifer.initial_pressure.value() - pvtw.reference_pressure;
-                const auto mu   = pvtw.viscosity * (1.0 + pvtw.viscosibility*dp);
-                const auto Tc   = mu * x / aquifer.permeability;
-                const auto beta = 6.283 * aquifer.thickness * aquifer.angle_fraction * x;
+                const auto Tc   = aquData.aquCT->timeConstant;
+                const auto beta = aquData.aquCT->influxConstant;
 
                 // Note: *to_si()* here since this is a *reciprocal* time constant
                 xaaq[Ix::CTRecipTimeConst] = usys.to_si(M::time, 1.0 / Tc);
@@ -549,13 +540,12 @@ AggregateAquiferData(const InteHEAD::AquiferDims& aqDims,
 
 void
 Opm::RestartIO::Helpers::AggregateAquiferData::
-captureDynamicdAquiferData(const AquiferConfig& aqConfig,
-                           const SummaryState&  summaryState,
-                           const PvtwTable&     pvtwTable,
-                           const DensityTable&  densityTable,
-                           const UnitSystem&    usys)
+captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
+                           const data::Aquifers& aquData,
+                           const SummaryState&   summaryState,
+                           const UnitSystem&     usys)
 {
-    FetkovichAquiferLoop(aqConfig, [this, &summaryState, &usys]
+    FetkovichAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
         (const Aquifetp::AQUFETP_data& aquifer)
     {
         const auto aquIndex = static_cast<WindowedArray<int>::Idx>(aquifer.aquiferID - 1);
@@ -564,8 +554,13 @@ captureDynamicdAquiferData(const AquiferConfig& aqConfig,
         const auto nActiveConn = this->numActiveConn_[aquIndex];
         IntegerAnalyticAquifer::Fetkovich::staticContrib(aquifer, nActiveConn, iaaq);
 
-        auto saaq = this->singleprecAnalyticAq_[aquIndex];
-        SinglePrecAnalyticAquifer::Fetkovich::staticContrib(aquifer, usys, saaq);
+        auto xaqPos = aquData.find(aquifer.aquiferID);
+        if ((xaqPos != aquData.end()) && (xaqPos->second.aquFet != nullptr)) {
+            const auto& aquFetPData = xaqPos->second;
+
+            auto saaq = this->singleprecAnalyticAq_[aquIndex];
+            SinglePrecAnalyticAquifer::Fetkovich::staticContrib(aquifer, aquFetPData, usys, saaq);
+        }
 
         auto xaaq = this->doubleprecAnalyticAq_[aquIndex];
         const auto tot_influx = this->totalInflux_[aquIndex];
@@ -576,30 +571,33 @@ captureDynamicdAquiferData(const AquiferConfig& aqConfig,
         DoublePrecAnalyticAquifer::Fetkovich::dynamicContrib(sumVar, tot_influx, usys, xaaq);
     });
 
-    CarterTracyAquiferLoop(aqConfig, [this, &summaryState, &pvtwTable, &densityTable, &usys]
+    CarterTracyAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
         (const AquiferCT::AQUCT_data& aquifer)
     {
         const auto aquIndex = static_cast<WindowedArray<int>::Idx>(aquifer.aquiferID - 1);
-        const auto pvtNum = static_cast<std::vector<double>::size_type>(aquifer.pvttableID - 1);
 
         auto iaaq = this->integerAnalyticAq_[aquIndex];
         const auto nActiveConn = this->numActiveConn_[aquIndex];
         IntegerAnalyticAquifer::CarterTracy::staticContrib(aquifer, nActiveConn, iaaq);
 
-        auto saaq = this->singleprecAnalyticAq_[aquIndex];
-        const auto rhoWS = densityTable[pvtNum].water;
-        const auto& pvtw = pvtwTable[pvtNum];
-        SinglePrecAnalyticAquifer::CarterTracy::staticContrib(aquifer, rhoWS,
-                                                              pvtw, usys, saaq);
+        auto xaqPos = aquData.find(aquifer.aquiferID);
+        if ((xaqPos != aquData.end()) && (xaqPos->second.aquCT != nullptr)) {
+            const auto& aquCTData = xaqPos->second;
 
-        auto xaaq = this->doubleprecAnalyticAq_[aquIndex];
-        const auto tot_influx = this->totalInflux_[aquIndex];
-        auto sumVar = [&summaryState, &aquifer](const std::string& vector)
-        {
-            return getSummaryVariable(summaryState, vector, aquifer.aquiferID);
-        };
-        DoublePrecAnalyticAquifer::CarterTracy::dynamicContrib(sumVar, aquifer, pvtw,
-                                                               tot_influx, usys, xaaq);
+            auto saaq = this->singleprecAnalyticAq_[aquIndex];
+            SinglePrecAnalyticAquifer::CarterTracy::
+                staticContrib(aquifer, aquCTData, usys, saaq);
+
+            auto xaaq = this->doubleprecAnalyticAq_[aquIndex];
+            const auto tot_influx = this->totalInflux_[aquIndex];
+            auto sumVar = [&summaryState, &aquifer](const std::string& vector)
+            {
+                return getSummaryVariable(summaryState, vector, aquifer.aquiferID);
+            };
+
+            DoublePrecAnalyticAquifer::CarterTracy::dynamicContrib(sumVar, aquCTData,
+                                                                   tot_influx, usys, xaaq);
+        }
     });
 
     numericAquiferLoop(aqConfig, [this, &summaryState, &usys]

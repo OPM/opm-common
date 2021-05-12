@@ -118,68 +118,6 @@ namespace {
         return Opm::UnitSystem::newMETRIC().to_si(M::permeability, 1.0);
     }
 
-    double viscosityUnit()
-    {
-        using M = Opm::UnitSystem::measure;
-        return Opm::UnitSystem::newMETRIC().to_si(M::viscosity, 1.0);
-    }
-
-    double viscosibilityUnit()
-    {
-        using M = Opm::UnitSystem::measure;
-        return Opm::UnitSystem::newMETRIC().from_si(M::pressure, 1.0);
-    }
-
-    double densityUnit()
-    {
-        using M = Opm::UnitSystem::measure;
-        return Opm::UnitSystem::newMETRIC().to_si(M::density, 1.0);
-    }
-
-    Opm::PvtwTable pvtw()
-    {
-        auto table = Opm::PvtwTable{};
-
-        {
-            auto& t1 = table.emplace_back();
-
-            t1.reference_pressure = 279.0*pressureUnit();
-            t1.volume_factor = 1.038;
-            t1.compressibility = 5.0e-5*compressibilityUnit();
-            t1.viscosity = 0.318*viscosityUnit();
-            t1.viscosibility = 1.0e-4*viscosibilityUnit();
-        }
-
-        table.push_back(table.back());
-        {
-            auto& t2 = table.back();
-            t2.viscosity = 0.118*viscosityUnit();
-        }
-
-        return table;
-    }
-
-    Opm::DensityTable density()
-    {
-        auto table = Opm::DensityTable{};
-
-        {
-            auto& t1 = table.emplace_back();
-
-            t1.oil = 856.5*densityUnit();
-            t1.water = 1053.0*densityUnit();
-            t1.gas = 0.85204*densityUnit();
-        }
-
-        table.push_back(table.back());
-        {
-            auto& t2 = table.back();
-            t2.water = 1033.0*densityUnit();
-        }
-
-        return table;
-    }
-
     Opm::TableManager waterProperties()
     {
         const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
@@ -603,6 +541,44 @@ AQUANCON
         return state;
     }
 
+    Opm::data::Aquifers aquiferValues(const Opm::AquiferConfig& aquConfig)
+    {
+        auto aquiferValues = Opm::data::Aquifers{};
+
+        for (const auto& aquct : aquConfig.ct()) {
+            auto& aquifer = aquiferValues[aquct.aquiferID];
+
+            aquifer.aquiferID = aquct.aquiferID;
+            aquifer.initPressure = aquct.initial_pressure.value();
+            aquifer.datumDepth = aquct.datum_depth;
+
+            aquifer.type = Opm::data::AquiferType::CarterTracy;
+            aquifer.aquCT = std::make_shared<Opm::data::CarterTracyData>();
+
+            aquifer.aquCT->timeConstant = aquct.timeConstant();
+            aquifer.aquCT->influxConstant = aquct.influxConstant();
+            aquifer.aquCT->waterDensity = aquct.waterDensity();
+            aquifer.aquCT->waterViscosity = aquct.waterViscosity();
+        }
+
+        for (const auto& aqufetp : aquConfig.fetp()) {
+            auto& aquifer = aquiferValues[aqufetp.aquiferID];
+
+            aquifer.aquiferID = aqufetp.aquiferID;
+            aquifer.initPressure = aqufetp.initial_pressure.value();
+            aquifer.datumDepth = aqufetp.datum_depth;
+
+            aquifer.type = Opm::data::AquiferType::Fetkovich;
+            aquifer.aquFet = std::make_shared<Opm::data::FetkovichData>();
+
+            aquifer.aquFet->initVolume = aqufetp.initial_watvolume;
+            aquifer.aquFet->prodIndex = aqufetp.prod_index;
+            aquifer.aquFet->timeConstant = aqufetp.timeConstant();
+        }
+
+        return aquiferValues;
+    }
+
     template <class Coll1, class Coll2>
     void check_is_close(const Coll1& coll1, const Coll2& coll2, const double tol)
     {
@@ -858,7 +834,7 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
     auto aquiferData = Opm::RestartIO::Helpers::
         AggregateAquiferData{ aqDims, aqConfig, createGrid() };
 
-    aquiferData.captureDynamicdAquiferData(aqConfig, sim_state(), pvtw(), density(),
+    aquiferData.captureDynamicdAquiferData(aqConfig, aquiferValues(aqConfig), sim_state(),
                                            Opm::UnitSystem::newMETRIC());
 
     // IAAQ
@@ -970,8 +946,8 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Numeric_Aquifers)
         BOOST_CHECK_EQUAL(aquiferData.getNumericAquiferDoublePrecData().size(), 4u * 13);
     }
 
-    aquiferData.captureDynamicdAquiferData(aqConfig, aqunum_sim_state(),
-                                           pvtw(), density(),
+    aquiferData.captureDynamicdAquiferData(aqConfig, aquiferValues(aqConfig),
+                                           aqunum_sim_state(),
                                            Opm::UnitSystem::newMETRIC());
 
     // IAQN

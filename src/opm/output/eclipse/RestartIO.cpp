@@ -462,15 +462,13 @@ namespace {
     }
 
     void updateAndWriteAquiferData(const AquiferConfig&           aqConfig,
+                                   const data::Aquifers&          aquData,
                                    const SummaryState&            summaryState,
-                                   const TableManager&            tables,
                                    const UnitSystem&              usys,
                                    Helpers::AggregateAquiferData& aquiferData,
                                    EclIO::OutputStream::Restart&  rstFile)
     {
-        aquiferData.captureDynamicdAquiferData(aqConfig, summaryState,
-                                               tables.getPvtwTable(),
-                                               tables.getDensityTable(), usys);
+        aquiferData.captureDynamicdAquiferData(aqConfig, aquData, summaryState, usys);
 
         if (aqConfig.hasAnalyticalAquifer()) {
             writeAnalyticAquiferData(aquiferData, rstFile);
@@ -492,6 +490,7 @@ namespace {
                           const Opm::Action::State&                     action_state,
                           const Opm::SummaryState&                      sumState,
                           const std::vector<int>&                       inteHD,
+                          const data::Aquifers&                         aquDynData,
                           std::optional<Helpers::AggregateAquiferData>& aquiferData,
                           EclIO::OutputStream::Restart&                 rstFile)
     {
@@ -527,7 +526,7 @@ namespace {
         if ((es.aquifer().hasAnalyticalAquifer() || es.aquifer().hasNumericalAquifer()) &&
             aquiferData.has_value())
         {
-            updateAndWriteAquiferData(es.aquifer(), sumState, es.getTableManager(),
+            updateAndWriteAquiferData(es.aquifer(), aquDynData, sumState,
                                       units, aquiferData.value(), rstFile);
         }
     }
@@ -791,7 +790,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
     if (report_step > 0) {
         writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
                          units, grid, es, schedule, value.wells, action_state,
-                         sumState, inteHD, aquiferData, rstFile);
+                         sumState, inteHD, value.aquifer, aquiferData, rstFile);
     }
 
     writeActionx(report_step, sim_step, es, schedule, action_state, sumState, rstFile);
