@@ -158,6 +158,7 @@ std::optional<DeckKeyword> ScheduleBlock::get(const std::string& kw) const {
     return {};
 }
 
+
 /*****************************************************************************/
 
 struct ScheduleDeckContext {
@@ -329,6 +330,14 @@ ScheduleDeck ScheduleDeck::serializeObject() {
     deck.m_location = KeywordLocation::serializeObject();
     deck.m_blocks = { ScheduleBlock::serializeObject(), ScheduleBlock::serializeObject() };
     return deck;
+}
+
+bool ScheduleDeck::rst_cmp(const ScheduleDeck& full_deck, const ScheduleDeck& rst_deck) {
+    if (full_deck.m_blocks.size() != rst_deck.m_blocks.size())
+        return false;
+
+    return std::equal( full_deck.begin() + rst_deck.m_restart_offset, full_deck.end(),
+                       rst_deck.begin() + rst_deck.m_restart_offset );
 }
 
 }

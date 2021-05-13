@@ -208,6 +208,7 @@ struct GroupProductionProperties {
     bool operator!=(const GroupProductionProperties& other) const;
     bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
 
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {

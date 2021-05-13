@@ -97,6 +97,7 @@ struct GroupInjTarget {
     void update_well(const Well& well);
     void update_injection_group(const std::string& group_name, const Group::GroupInjectionProperties& properties);
     void update_production_group(const Group& group);
+    void update_injection_group(const Group& group);
     const WellTarget& well(const std::string& well) const;
     const GroupProdTarget& production_group(const std::string& group) const;
     const GroupInjTarget& injection_group(const Phase& phase, const std::string& group) const;
@@ -106,6 +107,9 @@ struct GroupInjTarget {
     bool has_production_group(const std::string& group) const;
 
     bool operator==(const GuideRateConfig& data) const;
+
+    std::string format() const;
+
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

@@ -46,6 +46,28 @@
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateGroupData
 // ---------------------------------------------------------------------
+/*
+  15 : (2,1)      -- Insane logic
+  16 : (8,0)      -- GuideRateDef
+  43 : (8,1)      -- Total number of wells
+  ---------------
+  15 : (0,-1)
+  43 : (17,7)
+  ---------------
+  15 : (2,1)
+  16 : (8,0)
+  43 : (7,4)
+  ---------------
+ */
+
+
+/*
+
+  1. While running the base run the groups production control = FLD (128)
+  2. While writing the restart file we write higher_lev_ctrl_mode = ORAT (1)
+  3. When restarting we read the control = 1 and go with ORAT?
+*/
+
 
 
 namespace {
@@ -862,10 +884,10 @@ void staticContrib(const Opm::Group&        group,
     
     if (group.isProductionGroup()) {
         const auto& prod_cntl = group.productionControls(sumState);
-        
         if (prod_cntl.oil_target > 0.) {
             sGrp[Isp::OilRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.oil_target);
             sGrp[52] = sGrp[Isp::OilRateLimit];  // "ORAT" control
+            printf("Writing OILRATE: %lg -> %lg \n", prod_cntl.oil_target, sGrp[52]);
         }
         if (prod_cntl.water_target > 0.) {
             sGrp[Isp::WatRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.water_target);

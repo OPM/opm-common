@@ -206,6 +206,7 @@ int rst_cmp_header(const Opm::RestartIO::RstHeader& header1, const Opm::RestartI
     error_count += compare_header("nmfipr", header1.nmfipr, header2.nmfipr);
     error_count += compare_header("ngroup", header1.ngroup, header2.ngroup);
     error_count += compare_header("nwgmax", header1.nwgmax, header2.nwgmax);
+
     error_count += compare_header("next_timestep1", header1.next_timestep1, header2.next_timestep1);
     error_count += compare_header("next_timestep2", header1.next_timestep2, header2.next_timestep2);
     error_count += compare_header("max_timestep", header1.max_timestep, header2.max_timestep);

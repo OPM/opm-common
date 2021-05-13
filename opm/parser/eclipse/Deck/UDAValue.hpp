@@ -92,8 +92,8 @@ public:
     }
 
 private:
-    bool numeric_value;
-    double double_value;
+    bool numeric_value = true;
+    double double_value = 0.0;
     std::string string_value;
 
     Dimension dim;

@@ -104,7 +104,7 @@ int main(int argc, char ** argv) {
             equal = false;
         }
 
-        if (Opm::Schedule::cmp(sched, rst_sched, static_cast<std::size_t>(report_step)) )
+        if (Opm::Schedule::rst_cmp(sched, rst_sched, static_cast<std::size_t>(report_step)) )
             std::cout << "Schedule objects were equal!" << std::endl;
         else {
             std::cout << "Differences were encountered between the Schedule objects" << std::endl;
