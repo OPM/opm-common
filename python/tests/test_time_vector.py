@@ -66,7 +66,7 @@ class TestTimeVector(unittest.TestCase):
         tv.load(test_path("data/schedule/part2.sch"))
 
         self.assertEqual(tv.dates, [datetime.datetime(1997, 11,  6),
-                                    datetime.datetime(1997, 11, 14),
+                                    datetime.datetime(1997, 11, 14, 0, 0, 0, 1000),
                                     datetime.datetime(1997, 12,  1),
                                     datetime.datetime(1997, 12, 17),
                                     datetime.datetime(1998,  1,  1),
@@ -136,12 +136,12 @@ class TestTimeVector(unittest.TestCase):
         with self.assertRaises(KeyError):
             tv.delete(datetime.datetime(2019,1,1))
 
-        ts = tv[datetime.datetime(1997,11,14)]
+        ts = tv[datetime.datetime(1997,11,14,0,0,0,1000)]
         self.assertTrue("WTEST" in ts)
-        tv.delete(datetime.datetime(1997,11,14))
+        tv.delete(datetime.datetime(1997,11,14,0,0,0,1000))
 
         with self.assertRaises(KeyError):
-            tv.delete(datetime.datetime(1997,11,14))
+            tv.delete(datetime.datetime(1997,11,14,0,0,0,1000))
 
         for ts in tv:
             self.assertFalse("WTEST" in ts)
