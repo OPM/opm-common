@@ -3604,15 +3604,7 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
         makeEvaluator(node);
 
     if (aqConfig.hasAnalyticalAquifer()) {
-        auto aquiferIDs = std::vector<int>{};
-
-        for (const auto& aquifer : aqConfig.ct())
-            aquiferIDs.push_back(aquifer.aquiferID);
-
-        for (const auto& aquifer : aqConfig.fetp())
-            aquiferIDs.push_back(aquifer.aquiferID);
-
-        std::sort(aquiferIDs.begin(), aquiferIDs.end());
+        const auto aquiferIDs = analyticAquiferIDs(aqConfig);
 
         for (const auto& node : requiredAquiferVectors(aquiferIDs))
             makeEvaluator(node);

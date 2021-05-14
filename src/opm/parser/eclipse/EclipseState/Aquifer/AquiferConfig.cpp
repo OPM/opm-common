@@ -22,6 +22,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <algorithm>
+
 namespace Opm {
 
 AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
@@ -99,4 +101,39 @@ bool AquiferConfig::hasAnalyticalAquifer() const {
            this->aquifetp.size() > 0;
 }
 
+}
+
+std::vector<int> Opm::analyticAquiferIDs(const AquiferConfig& cfg)
+{
+    auto aquiferIDs = std::vector<int>{};
+
+    if (! cfg.hasAnalyticalAquifer())
+        return aquiferIDs;
+
+    for (const auto& aquifer : cfg.ct())
+        aquiferIDs.push_back(aquifer.aquiferID);
+
+    for (const auto& aquifer : cfg.fetp())
+        aquiferIDs.push_back(aquifer.aquiferID);
+
+    std::sort(aquiferIDs.begin(), aquiferIDs.end());
+
+    return aquiferIDs;
+}
+
+std::vector<int> Opm::numericAquiferIDs(const AquiferConfig& cfg)
+{
+    auto aquiferIDs = std::vector<int>{};
+
+    if (! cfg.hasNumericalAquifer())
+        return aquiferIDs;
+
+    const auto& aqunum = cfg.numericalAquifers();
+
+    for (const auto& aq : aqunum.aquifers())
+        aquiferIDs.push_back(static_cast<int>(aq.first));
+
+    std::sort(aquiferIDs.begin(), aquiferIDs.end());
+
+    return aquiferIDs;
 }

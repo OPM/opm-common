@@ -71,6 +71,8 @@ private:
     Aquancon aqconn;
 };
 
+std::vector<int> analyticAquiferIDs(const AquiferConfig& cfg);
+std::vector<int> numericAquiferIDs(const AquiferConfig& cfg);
 }
 
 #endif
