@@ -41,9 +41,6 @@ public:
     bool has(const std::string& well) const;
 
     std::vector<std::string> wells() const;
-    //storage::const_iterator begin() const;
-    //storage::const_iterator end() const;
-
     bool operator==(const WList& data) const;
 
     template<class Serializer>
