@@ -196,7 +196,9 @@ struct SummaryConfigContext {
 
     bool is_pressure(const std::string& keyword) {
         static const keyword_set presskw {
-            "BHP", "BHPH", "THP", "THPH", "PR", "PRD", "PRDH", "PRDF", "PRDA",
+            "BHP", "BHPH", "THP", "THPH", "PR",
+            "PRD", "PRDH", "PRDF", "PRDA",
+            "AQP", "NQP",
         };
 
         return is_in_set(presskw, keyword.substr(1));
@@ -216,6 +218,8 @@ struct SummaryConfigContext {
             "OVIR", "GVIR", "WVIR",
 
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
+
+            "AQR", "AQRG", "NQR",
         };
 
         return is_in_set(ratekw, keyword.substr(1));
@@ -239,6 +243,8 @@ struct SummaryConfigContext {
 
             "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT",
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
+
+            "AQT", "AQTG", "NQT",
         };
 
         return is_in_set(totalkw, keyword.substr(1));
@@ -288,7 +294,22 @@ struct SummaryConfigContext {
 
     bool is_aquifer(const std::string& keyword)
     {
-        return (keyword[0] == 'A') && (keyword != "ALL");
+        static const auto aqukw = keyword_set {
+            "AQP", "AQR", "AQRG", "AQT", "AQTG",
+            "LQR", "LQT", "LQRG", "LQTG",
+            "NQP", "NQR", "NQT",
+            "AQTD", "AQPD",
+        };
+
+        return (keyword.size() >= std::string::size_type{4})
+            && (keyword[0] == 'A')
+            && is_in_set(aqukw, keyword.substr(1));
+    }
+
+    bool is_numeric_aquifer(const std::string& keyword)
+    {
+        // ANQP, ANQR, ANQT
+        return is_aquifer(keyword) && (keyword[1] == 'N');
     }
 
     bool is_connection_completion(const std::string& keyword)
@@ -398,9 +419,15 @@ void handleMissingNode( const ParseContext& parseContext, ErrorGuard& errors, co
     parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_NODE, msg_fmt, location, errors );
 }
 
-void handleMissingAquifer( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const int id) {
-    std::string msg_fmt = fmt::format("Request for missing aquifer {} in {{keyword}}\n"
-                                      "In {{file}} line {{line}}", id);
+void handleMissingAquifer( const ParseContext& parseContext,
+                           ErrorGuard& errors,
+                           const KeywordLocation& location,
+                           const int id,
+                           const bool is_numeric)
+{
+    std::string msg_fmt = fmt::format("Request for missing {} aquifer {} in {{keyword}}\n"
+                                      "In {{file}} line {{line}}",
+                                      is_numeric ? "numeric" : "anlytic", id);
     parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_AQUIFER, msg_fmt, location, errors);
 }
 
@@ -412,30 +439,28 @@ inline void keywordW( SummaryConfig::keyword_list& list,
 }
 
 inline void keywordAquifer( SummaryConfig::keyword_list& list,
-                            const AquiferConfig& aquiferConfig,
-                            SummaryConfigNode baseAquiferParam) {
-    if ( !aquiferConfig.active() ) return;
-
-    for (const auto& aq : aquiferConfig.ct()) {
-        list.push_back(baseAquiferParam.number(aq.aquiferID));
-    }
-    for (const auto& aq : aquiferConfig.fetp()) {
-        list.push_back(baseAquiferParam.number(aq.aquiferID));
+                            const std::vector<int>& aquiferIDs,
+                            SummaryConfigNode baseAquiferParam)
+{
+    for (const auto& id : aquiferIDs) {
+        list.push_back(baseAquiferParam.number(id));
     }
 }
+
 // later check whether parseContext and errors are required
 // maybe loc will be needed
-inline void keywordAquifer( SummaryConfig::keyword_list& list,
-                            const AquiferConfig& aquiferConfig,
-                            const ParseContext& parseContext,
-                            ErrorGuard& errors,
-                            const DeckKeyword& keyword) {
-
+void keywordAquifer( SummaryConfig::keyword_list& list,
+                     const std::vector<int>& analyticAquiferIDs,
+                     const std::vector<int>& numericAquiferIDs,
+                     const ParseContext& parseContext,
+                     ErrorGuard& errors,
+                     const DeckKeyword& keyword)
+{
     /*
       The keywords starting with AL take as arguments a list of Aquiferlists -
       this is not supported at all.
     */
-    if (keyword.name().rfind("AL", 0) == 0) {
+    if (keyword.name().find("AL") == std::string::size_type{0}) {
         Opm::OpmLog::warning(Opm::OpmInputError::format("Unhandled summary keyword {keyword}\n"
                                                         "In {file} line {line}", keyword.location()));
         return;
@@ -447,16 +472,33 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
 
-    if (!keyword.empty() && keyword.getDataRecord().getDataItem().hasValue(0)) {
-        for( const int id: keyword.getIntData()) {
-            if (aquiferConfig.hasAquifer(id)) {
-                list.push_back(param.number(id));
-            } else {
-                handleMissingAquifer(parseContext, errors, keyword.location(), id);
+    const auto is_numeric = is_numeric_aquifer(keyword.name());
+    const auto& pertinentIDs = is_numeric
+        ? numericAquiferIDs : analyticAquiferIDs;
+
+    if (keyword.empty() ||
+        ! keyword.getDataRecord().getDataItem().hasValue(0))
+    {
+        keywordAquifer(list, pertinentIDs, param);
+    }
+    else {
+        auto ids = std::vector<int>{};
+        auto end = pertinentIDs.end();
+
+        for (const int id : keyword.getIntData()) {
+            // Note: std::find() could be std::lower_bound() here, but we
+            // typically expect the number of pertinent aquifer IDs to be
+            // small (< 10) so there's no big gain from a log(N) algorithm
+            // in the common case.
+            if (std::find(pertinentIDs.begin(), end, id) == end) {
+                handleMissingAquifer(parseContext, errors, keyword.location(), id, is_numeric);
+                continue;
             }
+
+            ids.push_back(id);
         }
-    } else {
-        keywordAquifer(list, aquiferConfig, param);
+
+        keywordAquifer(list, ids, param);
     }
 }
 
@@ -700,15 +742,21 @@ inline void keywordF( SummaryConfig::keyword_list& list,
 
 inline void keywordAquifer( SummaryConfig::keyword_list& list,
                             const std::string& keyword,
-                            const AquiferConfig& aquiferConfig,
-                            KeywordLocation loc) {
+                            const std::vector<int>& analyticAquiferIDs,
+                            const std::vector<int>& numericAquiferIDs,
+                            KeywordLocation loc)
+{
     auto param = SummaryConfigNode {
-            keyword, SummaryConfigNode::Category::Aquifer, std::move(loc)
+        keyword, SummaryConfigNode::Category::Aquifer, std::move(loc)
     }
-            .parameterType( parseKeywordType(keyword) )
-            .isUserDefined( is_udq(keyword) );
+    .parameterType( parseKeywordType(keyword) )
+    .isUserDefined( is_udq(keyword) );
 
-    keywordAquifer(list, aquiferConfig, param);
+    const auto& pertinentIDs = is_numeric_aquifer(keyword)
+        ? numericAquiferIDs
+        : analyticAquiferIDs;
+
+    keywordAquifer(list, pertinentIDs, param);
 }
 
 inline void keywordF( SummaryConfig::keyword_list& list,
@@ -1127,10 +1175,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
   inline void handleKW( SummaryConfig::keyword_list& list,
                         SummaryConfigContext& context,
                         const std::vector<std::string>& node_names,
+                        const std::vector<int>& analyticAquiferIDs,
+                        const std::vector<int>& numericAquiferIDs,
                         const DeckKeyword& keyword,
                         const Schedule& schedule,
                         const FieldPropsManager& field_props,
-                        const AquiferConfig& aquiferConfig,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         const GridDims& dims) {
@@ -1149,7 +1198,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
         case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );
-        case Cat::Aquifer: return keywordAquifer(list, aquiferConfig, parseContext, errors, keyword);
+        case Cat::Aquifer: return keywordAquifer(list, analyticAquiferIDs, numericAquiferIDs, parseContext, errors, keyword);
         case Cat::Miscellaneous: return keywordMISC( list, keyword );
 
         default:
@@ -1162,9 +1211,10 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
 inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
+                      const std::vector<int>& analyticAquiferIDs,
+                      const std::vector<int>& numericAquiferIDs,
                       const KeywordLocation& location,
                       const Schedule& schedule,
-                      const AquiferConfig& aquiferConfig,
                       const ParseContext& /* parseContext */,
                       ErrorGuard& /* errors */) {
 
@@ -1179,7 +1229,7 @@ inline void handleKW( SummaryConfig::keyword_list& list,
         case Cat::Well: return keywordW( list, keyword, location, schedule );
         case Cat::Group: return keywordG( list, keyword, location, schedule );
         case Cat::Field: return keywordF( list, keyword, location );
-        case Cat::Aquifer: return keywordAquifer( list, keyword, aquiferConfig, location );
+        case Cat::Aquifer: return keywordAquifer( list, keyword, analyticAquiferIDs, numericAquiferIDs, location );
         case Cat::Miscellaneous: return keywordMISC( list, keyword, location);
 
         default:
@@ -1430,13 +1480,21 @@ SummaryConfig::SummaryConfig( const Deck& deck,
     try {
         SUMMARYSection section( deck );
         SummaryConfigContext context;
-        const auto node_names = need_node_names(section) ? collect_node_names(schedule) : std::vector<std::string> {};
+
+        const auto node_names = need_node_names(section)
+            ? collect_node_names(schedule)
+            : std::vector<std::string> {};
+
+        const auto analyticAquifers = analyticAquiferIDs(aquiferConfig);
+        const auto numericAquifers = numericAquiferIDs(aquiferConfig);
 
         for (const auto& kw : section) {
             if (is_processing_instruction(kw.name())) {
                 handleProcessingInstruction(kw.name());
             } else {
-                handleKW(this->m_keywords, context, node_names, kw, schedule, field_props, aquiferConfig, parseContext, errors, dims);
+                handleKW(this->m_keywords, context,
+                         node_names, analyticAquifers, numericAquifers,
+                         kw, schedule, field_props, parseContext, errors, dims);
             }
         }
 
@@ -1448,7 +1506,9 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                         KeywordLocation location = deck_keyword.location();
                         location.keyword = fmt::format("{}/{}", meta_pair.first, kw);
 
-                        handleKW(this->m_keywords, kw, location, schedule, aquiferConfig, parseContext, errors);
+                        handleKW(this->m_keywords, kw,
+                                 analyticAquifers, numericAquifers,
+                                 location, schedule, parseContext, errors);
                     }
                 }
             }
