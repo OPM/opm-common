@@ -447,7 +447,7 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
 
-    if (keyword.size() && keyword.getDataRecord().getDataItem().hasValue(0)) {
+    if (!keyword.empty() && keyword.getDataRecord().getDataItem().hasValue(0)) {
         for( const int id: keyword.getIntData()) {
             if (aquiferConfig.hasAquifer(id)) {
                 list.push_back(param.number(id));
@@ -580,7 +580,7 @@ inline void keywordW( SummaryConfig::keyword_list& list,
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
 
-    if (keyword.size() && keyword.getDataRecord().getDataItem().hasValue(0)) {
+    if (!keyword.empty() && keyword.getDataRecord().getDataItem().hasValue(0)) {
         for( const std::string& pattern : keyword.getStringData()) {
           auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
 
@@ -624,7 +624,7 @@ inline void keywordG( SummaryConfig::keyword_list& list,
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
 
-    if( keyword.size() == 0 ||
+    if( keyword.empty() ||
         !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
 
         for( const auto& group : schedule.groupNames() ) {
@@ -664,7 +664,7 @@ void keyword_node( SummaryConfig::keyword_list& list,
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
 
-    if( keyword.size() == 0 ||
+    if( keyword.empty() ||
         !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
 
         for (const auto& node_name : node_names) {
@@ -1065,7 +1065,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         const auto last_timestep = schedule.size() - 1;
 
-        if (keyword.size() > 0) {
+        if (! keyword.empty()) {
             // Keyword with explicit records.
             // Handle as alternatives SOFR and SPR above
             keywordSWithRecords(last_timestep, parseContext, errors,
