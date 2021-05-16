@@ -100,6 +100,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
     DeckKeyword deck_kw(addreg, {record}, unit_active, unit_default);
 
     BOOST_CHECK_EQUAL( deck_kw.size(), 1U );
+    BOOST_CHECK_MESSAGE( !deck_kw.empty(), "Deck keyword must not be empty" );
 
     const DeckRecord& deck_record = deck_kw.getRecord(0);
     BOOST_CHECK_EQUAL( deck_record.size(), 4U );

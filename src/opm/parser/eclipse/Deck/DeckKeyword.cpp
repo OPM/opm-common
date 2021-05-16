@@ -227,6 +227,9 @@ namespace Opm {
         return m_recordList.size();
     }
 
+    bool DeckKeyword::empty() const {
+        return this->m_recordList.empty();
+    }
 
     void DeckKeyword::addRecord(DeckRecord&& record) {
         this->m_recordList.push_back( std::move( record ) );

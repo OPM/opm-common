@@ -54,6 +54,7 @@ namespace Opm {
 
 
         size_t size() const;
+        bool empty() const;
         void addRecord(DeckRecord&& record);
         const DeckRecord& getRecord(size_t index) const;
         DeckRecord& getRecord(size_t index);
