@@ -566,6 +566,104 @@ PORO
     BOOST_CHECK( conf == conf2 );
 }
 
+BOOST_AUTO_TEST_CASE(Test_Aquifer_Config_Active)
+{
+    const auto deck = Parser{}.parseString(R"(
+START             -- 0
+10 MAY 2007 /
+RUNSPEC
+
+DIMENS
+ 10 10 10 /
+REGDIMS
+  3/
+AQUDIMS
+4 4 1* 1* 3 200 1* 1* /
+GRID
+DXV
+   10*400 /
+DYV
+   10*400 /
+DZV
+   10*400 /
+TOPS
+   100*2202 /
+PERMX
+  1000*0.25 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+   1000*0.15 /
+AQUNUM
+  4       1 1 1      15000  5000  0.3  30  2700  / aq cell
+  5       2 1 1     150000  9000  0.3  30  2700  / aq cell
+  6       3 1 1     150000  9000  0.3  30  2700  / aq cell
+  7       4 1 1     150000  9000  0.3  30  2700  / aq cell
+/
+AQUCON
+-- #    I1 I2  J1 J2   K1  K2    Face
+   4    1  1   16 18   19  20   'I-'    / connecting cells
+   5    2  2   16 18   19  20   'I-'    / connecting cells
+   6    3  3   16 18   19  20   'I-'    / connecting cells
+   7    4  4   16 18   19  20   'I-'    / connecting cells
+/
+REGIONS
+FIPNUM
+200*1 300*2 500*3 /
+FIPREG
+200*10 300*20 500*30 /
+SOLUTION
+AQUCT
+1    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /
+2    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /
+3    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /
+/
+AQUANCON
+1     1   10     10    2    10  10   'I-'      0.88      1  /
+2     9   10     10    10    10  10   'I+'      0.88      1  /
+3     9   9      8    10    9   8   'I+'      0.88      1  /
+/
+
+END
+)");
+
+    const auto es = EclipseState { deck };
+
+    const auto& aquConfig = es.aquifer();
+
+    BOOST_CHECK_MESSAGE(aquConfig.hasAnalyticalAquifer(),
+                        "Aquifer configuration object must have analytic aquifers");
+
+    BOOST_CHECK_MESSAGE(aquConfig.hasNumericalAquifer(),
+                        "Aquifer configuration object must have numeric aquifers");
+
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(1), "Configuration object must have Aquifer ID 1");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(2), "Configuration object must have Aquifer ID 2");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(3), "Configuration object must have Aquifer ID 3");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(4), "Configuration object must have Aquifer ID 4");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(5), "Configuration object must have Aquifer ID 5");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(6), "Configuration object must have Aquifer ID 6");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(7), "Configuration object must have Aquifer ID 7");
+    BOOST_CHECK_MESSAGE(! aquConfig.hasAquifer(8), "Configuration object must NOT have Aquifer ID 8");
+
+    {
+        const auto expect = std::vector<int>{ 1, 2, 3 };
+        const auto analytic = analyticAquiferIDs(aquConfig);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(analytic.begin(), analytic.end(),
+                                      expect  .begin(), expect  .end());
+    }
+
+    {
+        const auto expect = std::vector<int>{ 4, 5, 6, 7 };
+        const auto numeric = numericAquiferIDs(aquConfig);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(numeric.begin(), numeric.end(),
+                                      expect .begin(), expect .end());
+    }
+}
 
 inline Deck createNumericalAquiferDeck() {
     const char *deckData = R"(

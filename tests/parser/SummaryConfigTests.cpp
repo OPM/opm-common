@@ -83,7 +83,7 @@ DIMENS
 REGDIMS
   3/
 AQUDIMS
-1* 1* 1* 1* 3 200 1* 1* /
+4 4 1* 1* 3 200 1* 1* /
 GRID
 DXV
    10*400 /
@@ -101,6 +101,19 @@ COPY
 /
 PORO
    1000*0.15 /
+AQUNUM
+  4       1 1 1      15000  5000  0.3  30  2700  / aq cell
+  5       2 1 1     150000  9000  0.3  30  2700  / aq cell
+  6       3 1 1     150000  9000  0.3  30  2700  / aq cell
+  7       4 1 1     150000  9000  0.3  30  2700  / aq cell
+/
+AQUCON
+-- #    I1 I2  J1 J2   K1  K2    Face
+   4    1  1   16 18   19  20   'I-'    / connecting cells
+   5    2  2   16 18   19  20   'I-'    / connecting cells
+   6    3  3   16 18   19  20   'I-'    / connecting cells
+   7    4  4   16 18   19  20   'I-'    / connecting cells
+/
 REGIONS
 FIPNUM
 200*1 300*2 500*3 /
@@ -175,7 +188,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
     return ret;
 }
 
-static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
+static SummaryConfig createSummary(const std::string& input , const ParseContext& parseContext = ParseContext()) {
     ErrorGuard errors;
     auto deck = createDeck( input );
     auto python = std::make_shared<Python>();
@@ -563,22 +576,44 @@ BOOST_AUTO_TEST_CASE( REMOVE_DUPLICATED_ENTRIES ) {
 }
 
 BOOST_AUTO_TEST_CASE( ANALYTICAL_AQUIFERS ) {
+    {
+        const auto faulty_input = std::string {R"(
+AAQT
+-- Neither of these are analytic aquifers => input error
+    4 5 6 7 /
+)" };
+
+        BOOST_CHECK_THROW(const auto summary = createSummary(faulty_input),
+                          OpmInputError);
+    }
+
+    {
+        const auto faulty_input = std::string {R"(
+AAQP
+-- Aquifer ID out of range => input error
+    1729 /
+)" };
+
+        BOOST_CHECK_THROW(const auto summary = createSummary(faulty_input),
+                          OpmInputError);
+    }
+
     const std::string input = R"(
-            AAQR
-                1 2 /
-            AAQP
-                2 1 /
-            AAQT
-                /
-            AAQRG
-                /
-            AAQTG
-                /
-            AAQTD
-                /
-            AAQPD
-                /
-    )";
+AAQR
+    1 2 /
+AAQP
+    2 1 /
+AAQT
+    /
+AAQRG
+    /
+AAQTG
+    /
+AAQTD
+    /
+AAQPD
+    /
+)";
     const auto summary = createSummary( input );
 
     const auto keywords = { "AAQP", "AAQP", "AAQPD", "AAQPD", "AAQPD",
@@ -593,16 +628,46 @@ BOOST_AUTO_TEST_CASE( ANALYTICAL_AQUIFERS ) {
             names.begin(), names.end() );
 }
 
-BOOST_AUTO_TEST_CASE( NUMERICAL_AQUIFERS ) {
+BOOST_AUTO_TEST_CASE( NUMERICAL_AQUIFERS )
+{
+    {
+        const auto faulty_input = std::string {R"(
+ANQR
+-- Neither of these are numeric aquifers => input error
+    1 2 3 /
+)" };
+
+        BOOST_CHECK_THROW(const auto summary = createSummary(faulty_input),
+                          OpmInputError);
+    }
+
+    {
+        const auto faulty_input = std::string {R"(
+ANQP
+-- Aquifer ID out of range => input error
+    42 /
+)" };
+
+        BOOST_CHECK_THROW(const auto summary = createSummary(faulty_input),
+                          OpmInputError);
+    }
+
     const std::string input = R"(
-            ANQR
-                1 2 /
-            ANQP
-                2 1 /
-            ANQT
-                /
-    )";
+ANQR
+    5 /
+ANQP
+    4 7 /
+ANQT
+    /
+)";
     const auto summary = createSummary( input );
+
+    const auto keywords = { "ANQP", "ANQP", "ANQR", "ANQT", "ANQT", "ANQT", "ANQT" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
 }
 
 static const auto GMWSET_keywords = {
