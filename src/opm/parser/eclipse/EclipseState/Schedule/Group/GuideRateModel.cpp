@@ -135,7 +135,7 @@ double GuideRateModel::pot(Target target, double oil_pot, double gas_pot, double
         throw std::logic_error("Not implemented - don't have a clue?");
 
     case Target::RES:
-        throw std::logic_error("Not implemented - don't have a clue?");
+        return oil_pot + wat_pot + gas_pot;
 
     default:
         throw std::logic_error("Hmmm - should not be here?");
@@ -174,7 +174,9 @@ double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) cons
         throw std::logic_error("Not implemented - don't have a clue?");
 
     case Target::RES:
-        throw std::logic_error("Not implemented - don't have a clue?");
+        R1 = wat_pot / oil_pot;
+        R2 = gas_pot / oil_pot;
+        break;
 
     default:
         throw std::logic_error("Hmmm - should not be here?");
@@ -309,6 +311,9 @@ GuideRateModel::Target GuideRateModel::convert_target(Well::GuideRateTarget well
     if (well_target == Well::GuideRateTarget::WAT)
         return Target::WAT;
 
+    if (well_target == Well::GuideRateTarget::RES)
+        return Target::RES;
+
     throw std::logic_error("Can not convert this .... ");
 }
 
@@ -324,6 +329,9 @@ GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateProdTarget
 
     if (group_target == Group::GuideRateProdTarget::WAT)
         return Target::WAT;
+
+    if (group_target == Group::GuideRateProdTarget::RES)
+        return Target::RES;
 
     throw std::logic_error("Can not convert this .... ");
 }

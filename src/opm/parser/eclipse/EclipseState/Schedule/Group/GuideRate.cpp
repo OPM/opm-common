@@ -57,6 +57,9 @@ double GuideRate::RateVector::eval(GuideRateModel::Target target) const
     if (target == GuideRateModel::Target::WAT)
         return this->wat_rat;
 
+    if (target == GuideRateModel::Target::RES)
+        return this->oil_rat + this->wat_rat + this->gas_rat;
+
     throw std::logic_error {
         "Don't know how to convert target type " + std::to_string(static_cast<int>(target))
     };
