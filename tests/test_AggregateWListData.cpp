@@ -96,13 +96,13 @@ BOOST_AUTO_TEST_CASE (Constructor)
 
     // Report Step 2
     {
-        const auto rptStep = std::size_t {1};
+        const auto simStep = std::size_t {1};
         double secs_elapsed = 3.1536E07;
         const auto ih
-            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep + 1, rptStep);
+            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, simStep, simStep + 1, simStep);
 
         auto wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
-        wListData.captureDeclaredWListData(sched, rptStep, ih);
+        wListData.captureDeclaredWListData(sched, simStep, ih);
 
         BOOST_CHECK_EQUAL(static_cast<int>(wListData.getIWls().size()),
                           ih[VI::intehead::NWMAXZ] * ih[VI::intehead::MXWLSTPRWELL]);
@@ -166,13 +166,13 @@ BOOST_AUTO_TEST_CASE (Constructor)
 
     // Report Step 3
     {
-        const auto rptStep = std::size_t {2};
+        const auto simStep = std::size_t {2};
         double secs_elapsed = 3.1536E07;
         const auto ih
-            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep + 1, rptStep);
+            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, simStep, simStep + 1, simStep);
 
         auto wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
-        wListData.captureDeclaredWListData(sched, rptStep, ih);
+        wListData.captureDeclaredWListData(sched, simStep, ih);
 
         // IWls-parameters
         auto iWLs = wListData.getIWls();
@@ -231,13 +231,13 @@ BOOST_AUTO_TEST_CASE (Constructor)
 
     // Report Step 4
     {
-        const auto rptStep = std::size_t {3};
+        const auto simStep = std::size_t {3};
         double secs_elapsed = 3.1536E07;
         const auto ih
-            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep + 1, rptStep);
+            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, simStep, simStep + 1, simStep);
 
         auto wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
-        wListData.captureDeclaredWListData(sched, rptStep, ih);
+        wListData.captureDeclaredWListData(sched, simStep, ih);
 
         // IWls-parameters
         auto iWLs = wListData.getIWls();
@@ -296,13 +296,13 @@ BOOST_AUTO_TEST_CASE (Constructor)
 
         // Report Step 6
     {
-        const auto rptStep = std::size_t {5};
+        const auto simStep = std::size_t {5};
         double secs_elapsed = 3.1536E07;
         const auto ih
-            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep + 1, rptStep);
+            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, simStep, simStep + 1, simStep);
 
         auto wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
-        wListData.captureDeclaredWListData(sched, rptStep, ih);
+        wListData.captureDeclaredWListData(sched, simStep, ih);
 
         // IWls-parameters
         auto iWLs = wListData.getIWls();
@@ -361,13 +361,13 @@ BOOST_AUTO_TEST_CASE (Constructor)
 
     // Report Step 8
     {
-        const auto rptStep = std::size_t {7};
+        const auto simStep = std::size_t {7};
         double secs_elapsed = 3.1536E07;
         const auto ih
-            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep + 1, rptStep);
+            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, simStep, simStep + 1, simStep);
 
         auto wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
-        wListData.captureDeclaredWListData(sched, rptStep, ih);
+        wListData.captureDeclaredWListData(sched, simStep, ih);
 
         // IWls-parameters
         auto iWLs = wListData.getIWls();
