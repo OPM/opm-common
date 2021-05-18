@@ -17,38 +17,42 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
-#include <fmt/format.h>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 
-#include <set>
+#include <fmt/format.h>
 
+#include <cstddef>
+#include <unordered_set>
 
 namespace Opm {
 
     NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid,
-                                         const FieldPropsManager& field_props) {
+                                         const FieldPropsManager& field_props)
+    {
         using AQUNUM=ParserKeywords::AQUNUM;
         if ( !deck.hasKeyword<AQUNUM>() ) return;
 
-        std::set<size_t> cells;
+        std::unordered_set<std::size_t> cells;
         // there might be multiple keywords of keyword AQUNUM, it is not totally
         // clear about the rules here. For now, we take care of all the keywords
         const auto& aqunum_keywords = deck.getKeywordList<AQUNUM>();
         for (const auto& keyword : aqunum_keywords) {
             for (const auto& record : *keyword) {
-                const NumericalAquiferCell aqu_cell(record, grid, field_props);
+                const NumericalAquiferCell aqu_cell(this->m_num_records++, record, grid, field_props);
                 if (cells.count(aqu_cell.global_index) > 0) {
                     auto error = fmt::format("Numerical aquifer cell at ({}, {}, {}) is declared more than once",
                                              aqu_cell.I + 1, aqu_cell.J + 1, aqu_cell.K + 1);
@@ -115,7 +119,8 @@ namespace Opm {
     }
 
     bool NumericalAquifers::operator==(const NumericalAquifers& other) const {
-        return this->m_aquifers == other.m_aquifers;
+        return (this->m_aquifers == other.m_aquifers)
+            && (this->m_num_records == other.m_num_records);
     }
 
     size_t NumericalAquifers::size() const {

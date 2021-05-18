@@ -20,6 +20,7 @@
 #ifndef OPM_NUMERICALAQUIFERCELL_HPP
 #define OPM_NUMERICALAQUIFERCELL_HPP
 
+#include <cstddef>
 #include <optional>
 
 namespace Opm {
@@ -28,19 +29,20 @@ namespace Opm {
     class FieldPropsManager;
 
     struct NumericalAquiferCell {
-        NumericalAquiferCell(const DeckRecord&, const EclipseGrid&, const FieldPropsManager&);
+        NumericalAquiferCell(const std::size_t record_id_, const DeckRecord&, const EclipseGrid&, const FieldPropsManager&);
         NumericalAquiferCell() = default;
-        size_t aquifer_id;
-        size_t I, J, K;
-        double area;
-        double length;
-        double porosity;
-        double permeability;
-        double depth;
-        std::optional<double> init_pressure;
-        int pvttable;
-        int sattable;
-        size_t global_index;
+        std::size_t aquifer_id{};
+        std::size_t I{}, J{}, K{};
+        double area{};
+        double length{};
+        double porosity{};
+        double permeability{};
+        double depth{};
+        std::optional<double> init_pressure{};
+        int pvttable{};
+        int sattable{};
+        std::size_t global_index{};
+        std::size_t record_id{};
 
         double cellVolume() const;
         double poreVolume() const;
@@ -62,6 +64,7 @@ namespace Opm {
             serializer(this->pvttable);
             serializer(this->sattable);
             serializer(this->global_index);
+            serializer(this->record_id);
         }
     };
 }

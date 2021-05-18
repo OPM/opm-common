@@ -20,8 +20,10 @@
 #ifndef OPM_NUMERICALAQUIFERS_HPP
 #define OPM_NUMERICALAQUIFERS_HPP
 
-#include <unordered_map>
 #include <map>
+#include <unordered_map>
+
+#include <stddef.h>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 
@@ -36,6 +38,7 @@ namespace Opm {
         NumericalAquifers() = default;
         NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
+        int numRecords() const { return static_cast<int>(this->m_num_records); }
         size_t size() const;
         bool hasAquifer(size_t aquifer_id) const;
         const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
@@ -59,10 +62,12 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer.map(this->m_aquifers);
+            serializer(this->m_num_records);
         }
 
     private:
-        std::map<size_t, SingleNumericalAquifer> m_aquifers;
+        std::map<size_t, SingleNumericalAquifer> m_aquifers{};
+        size_t m_num_records{0};
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
     };
