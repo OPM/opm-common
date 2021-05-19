@@ -25,6 +25,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 
+#include <opm/parser/eclipse/Units/Units.hpp>
+
 using namespace Opm;
 
 
@@ -717,6 +719,64 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest){
     const Opm::EclipseGrid& grid = ecl_state.getInputGrid();
 
     Opm::NumericalAquifers num_aqu{numaquifer_deck, grid, ecl_state.fieldProps()};
+
+    BOOST_CHECK_EQUAL(num_aqu.numRecords(), 3);
+    {
+        const auto mD = unit::convert::from(1.0, prefix::milli*unit::darcy);
+
+        const auto* c1 = num_aqu.getAquifer(1).getCellPrt(0);
+        const auto* c2 = num_aqu.getAquifer(1).getCellPrt(1);
+        const auto* c3 = num_aqu.getAquifer(1).getCellPrt(2);
+
+        BOOST_CHECK_EQUAL(c1->record_id, std::size_t{0});
+        BOOST_CHECK_EQUAL(c1->I, std::size_t{0});
+        BOOST_CHECK_EQUAL(c1->J, std::size_t{0});
+        BOOST_CHECK_EQUAL(c1->K, std::size_t{0});
+
+        BOOST_CHECK_CLOSE(c1->area, 1.0e6, 1.0e-10);
+        BOOST_CHECK_CLOSE(c1->length, 10.0e3, 1.0e-10);
+        BOOST_CHECK_CLOSE(c1->porosity, 0.25, 1.0e-10);
+        BOOST_CHECK_CLOSE(c1->permeability, 400*mD, 1.0e-10);
+        BOOST_CHECK_CLOSE(c1->depth, 2585.0, 1.0e-10);
+        BOOST_CHECK_MESSAGE(c1->init_pressure.has_value(), "Cell 1 must have an initial pressure");
+        BOOST_CHECK_CLOSE(c1->init_pressure.value(), 285.0*unit::barsa, 1.0e-10);
+        BOOST_CHECK_EQUAL(c1->pvttable, 2);
+        BOOST_CHECK_EQUAL(c1->sattable, 2);
+        BOOST_CHECK_EQUAL(c1->global_index, 0);
+
+        BOOST_CHECK_EQUAL(c2->record_id, std::size_t{1});
+        BOOST_CHECK_EQUAL(c2->I, std::size_t{2});
+        BOOST_CHECK_EQUAL(c2->J, std::size_t{0});
+        BOOST_CHECK_EQUAL(c2->K, std::size_t{0});
+
+        BOOST_CHECK_CLOSE(c2->area, 1.5e6, 1.0e-10);
+        BOOST_CHECK_CLOSE(c2->length, 20.0e3, 1.0e-10);
+        BOOST_CHECK_CLOSE(c2->porosity, 0.24, 1.0e-10);
+        BOOST_CHECK_CLOSE(c2->permeability, 600*mD, 1.0e-10);
+        BOOST_CHECK_CLOSE(c2->depth, 2585.0, 1.0e-10);
+        BOOST_CHECK_MESSAGE(c2->init_pressure.has_value(), "Cell 2 must have an initial pressure");
+        BOOST_CHECK_CLOSE(c2->init_pressure.value(), 285.0*unit::barsa, 1.0e-10);
+        BOOST_CHECK_EQUAL(c2->pvttable, 3);
+        BOOST_CHECK_EQUAL(c2->sattable, 1);
+        BOOST_CHECK_EQUAL(c2->global_index, 2);
+
+        BOOST_CHECK_EQUAL(c3->record_id, std::size_t{2});
+        BOOST_CHECK_EQUAL(c3->I, std::size_t{3});
+        BOOST_CHECK_EQUAL(c3->J, std::size_t{0});
+        BOOST_CHECK_EQUAL(c3->K, std::size_t{0});
+
+        BOOST_CHECK_CLOSE(c3->area, 2.0e6, 1.0e-10);
+        BOOST_CHECK_CLOSE(c3->length, 30.0e3, 1.0e-10);
+        BOOST_CHECK_CLOSE(c3->porosity, 0.25, 1.0e-10);
+        BOOST_CHECK_CLOSE(c3->permeability, 700*mD, 1.0e-10);
+        BOOST_CHECK_CLOSE(c3->depth, 2585.0, 1.0e-10);
+        BOOST_CHECK_MESSAGE(c3->init_pressure.has_value(), "Cell 3 must have an initial pressure");
+        BOOST_CHECK_CLOSE(c3->init_pressure.value(), 285.0*unit::barsa, 1.0e-10);
+        BOOST_CHECK_EQUAL(c3->pvttable, 1);
+        BOOST_CHECK_EQUAL(c3->sattable, 3);
+        BOOST_CHECK_EQUAL(c3->global_index, 3);
+    }
+
     // using processed actnum for numerical aquifer connection generation
     std::vector<int> new_actnum(360, 1);
     new_actnum[0] = 0;

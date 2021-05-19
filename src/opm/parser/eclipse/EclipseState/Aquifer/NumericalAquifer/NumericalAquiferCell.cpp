@@ -27,21 +27,24 @@
 namespace Opm {
 
     using AQUNUM = ParserKeywords::AQUNUM;
-    NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
-            : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
-            , I ( record.getItem<AQUNUM::I>().get<int>(0) - 1 )
-            , J ( record.getItem<AQUNUM::J>().get<int>(0) - 1 )
-            , K ( record.getItem<AQUNUM::K>().get<int>(0) - 1 )
-            , area (record.getItem<AQUNUM::CROSS_SECTION>().getSIDouble(0) )
-            , length ( record.getItem<AQUNUM::LENGTH>().getSIDouble(0) )
-            , permeability( record.getItem<AQUNUM::PERM>().getSIDouble(0) )
+    NumericalAquiferCell::NumericalAquiferCell(const std::size_t record_id_,
+                                               const DeckRecord& record,
+                                               const EclipseGrid& grid,
+                                               const FieldPropsManager& field_props)
+        : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
+        , I ( record.getItem<AQUNUM::I>().get<int>(0) - 1 )
+        , J ( record.getItem<AQUNUM::J>().get<int>(0) - 1 )
+        , K ( record.getItem<AQUNUM::K>().get<int>(0) - 1 )
+        , area (record.getItem<AQUNUM::CROSS_SECTION>().getSIDouble(0) )
+        , length ( record.getItem<AQUNUM::LENGTH>().getSIDouble(0) )
+        , permeability( record.getItem<AQUNUM::PERM>().getSIDouble(0) )
     {
         const auto& poro = field_props.get_double("PORO");
         const auto& pvtnum = field_props.get_int("PVTNUM");
         const auto& satnum = field_props.get_int("SATNUM");
 
         this->global_index = grid.getGlobalIndex(I, J, K);
-        const size_t active_index = grid.activeIndex(this->global_index);
+        const std::size_t active_index = grid.activeIndex(this->global_index);
 
         if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
             this->porosity = record.getItem<AQUNUM::PORO>().getSIDouble(0);
@@ -70,6 +73,8 @@ namespace Opm {
         } else {
             this->sattable = satnum[active_index];
         }
+
+        this->record_id = record_id_;
     }
 
     double NumericalAquiferCell::cellVolume() const {
@@ -89,7 +94,8 @@ namespace Opm {
                this->init_pressure == other.init_pressure &&
                this->pvttable == other.pvttable &&
                this->sattable == other.sattable &&
-               this->global_index == other.global_index;
+               this->global_index == other.global_index &&
+               this->record_id == other.record_id;
     }
 
     double NumericalAquiferCell::poreVolume() const {
