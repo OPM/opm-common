@@ -22,6 +22,7 @@
 
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
@@ -148,9 +149,11 @@ std::vector<std::string> ActionX::keyword_strings() const {
     std::string keyword_string;
     {
         std::stringstream ss;
-
-        for (const auto& kw : this->keywords)
+        DeckOutput::format fmt;
+        for (const auto& kw : this->keywords) {
             ss << kw;
+            ss << fmt.keyword_sep;
+        }
 
         keyword_string = ss.str();
     }
