@@ -112,6 +112,18 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->doubleprecAnalyticAq_.data();
         }
 
+        /// Retrieve Integer Aquifer Data Array for Numeric Aquifers.
+        const std::vector<int>& getNumericAquiferIntegerData() const
+        {
+            return this->integerNumericAq_.data();
+        }
+
+        /// Retrieve Double Precision Aquifer Data Array for Numeric Aquifers.
+        const std::vector<double>& getNumericAquiferDoublePrecData() const
+        {
+            return this->doubleprecNumericAq_.data();
+        }
+
         /// Retrieve Integer Aquifer Connection Data Array (analytic aquifers)
         ///
         /// \param[in] aquiferID Aquifer for which to retrieve integer
@@ -159,6 +171,12 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         /// Aggregate 'XAAQ' array (Double Precision) for all analytic aquifers.
         WindowedArray<double> doubleprecAnalyticAq_;
+
+        /// Aggregate 'IAQN' array (integer) for all numeric aquifers.
+        WindowedArray<int> integerNumericAq_;
+
+        /// Aggregate 'RAQN' array (Double Precision) for all numeric aquifers.
+        WindowedArray<double> doubleprecNumericAq_;
 
         /// Aggregate ICAQ array (Integer) for all analytic aquifer
         /// connections.  Separate array for each aquifer.

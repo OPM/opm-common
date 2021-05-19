@@ -615,6 +615,11 @@ aquiferDimensions(const AquiferDims& aqdims)
     this -> data_[NACAQZ] = aqdims.numDoubConnElem;
 
     this -> data_[NGCAUS] = aqdims.maxNumActiveAquiferConn;
+
+    this -> data_[NIIAQN] = aqdims.numNumericAquiferIntElem;
+    this -> data_[NIRAQN] = aqdims.numNumericAquiferDoubleElem;
+    this -> data_[NUMAQN] = aqdims.numNumericAquiferRecords;
+
     this -> data_[MAAQID] = aqdims.maxAquiferID;
 
     // Not characterised.  Equal to NAQUIF in all cases seen this far.
@@ -895,6 +900,10 @@ Opm::RestartIO::inferAquiferDimensions(const EclipseState& es)
             getMaximumNumberOfActiveAnalyticAquiferConnections(cfg);
 
         dim.maxAquiferID = getMaximumAnalyticAquiferID(cfg);
+    }
+
+    if (cfg.hasNumericalAquifer()) {
+        dim.numNumericAquiferRecords = cfg.numericalAquifers().numRecords();
     }
 
     return dim;

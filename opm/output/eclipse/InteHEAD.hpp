@@ -154,6 +154,9 @@ namespace Opm { namespace RestartIO {
             // Maximum aquifer ID across all of the model's analytic aquifers.
             int maxAquiferID {0};
 
+            // Number of numeric aquifer records (lines of AQUNUM data)
+            int numNumericAquiferRecords {0};
+
             // Number of data elements per aquifer in IAAQ array.
             int numIntAquiferElem {18};
 
@@ -162,6 +165,12 @@ namespace Opm { namespace RestartIO {
 
             // Number of data elements per aquifer in XAAQ array.
             int numDoubAquiferElem {10};
+
+            // Number of data elements in IAQN array per numeric aquifer record.
+            int numNumericAquiferIntElem {10};
+
+            // Number of data elements in RAQN array per numeric aquifer record.
+            int numNumericAquiferDoubleElem {13};
 
             // Number of data elements per coonnection in ICAQ array.
             int numIntConnElem {7};
