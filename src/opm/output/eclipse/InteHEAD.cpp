@@ -271,10 +271,10 @@ enum index : std::vector<int>::size_type {
   ih_220       =      220       ,              //       0
   ih_221       =      221       ,              //       0
   ih_222       =      222       ,              //       0
-  NIIAQN       =      223       ,              //       0                     NIIAQN = number of lines of integer AQUNUM data.
-  NIRAQN       =      224       ,              //       0                     NIRAQN = number of lines of real AQUNUM data.
+  NIIAQN       =      VI::intehead::NIIAQN,    //       0                     NIIAQN = Number of integer data elements in IAQN array pr. numeric aquifer record in AQUNUM.
+  NIRAQN       =      VI::intehead::NIRAQN,    //       0                     NIRAQN = number of double precision data elements in RAQN array pr. numeric aquifer record in AQUNUM.
   ih_225       =      225       ,              //       0
-  NUMAQN       =      226       ,              //       0                     NUMAQN = number of lines of AQUNUM data entered.
+  NUMAQN       =      VI::intehead::NUM_AQUNUM_RECORDS, // 0                  NUMAQN = number of lines of AQUNUM data entered (#records).
   ih_227       =      227       ,              //       0
   ih_228       =      228       ,              //       0
   ih_229       =      229       ,              //       0
