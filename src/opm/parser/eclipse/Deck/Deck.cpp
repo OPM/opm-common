@@ -289,7 +289,7 @@ namespace Opm {
             keyword.write( output );
             kw_index++;
             if (kw_index < size())
-                output.write_string( output.keyword_sep );
+                output.write_string( output.fmt.keyword_sep );
         }
     }
 

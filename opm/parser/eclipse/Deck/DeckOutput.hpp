@@ -28,6 +28,13 @@ namespace Opm {
 
     class DeckOutput {
     public:
+        struct format {
+            std::string item_sep = " ";        // Separator between items on a row.
+            size_t      columns = 16;          // The maximum number of columns on a record.
+            std::string record_indent = "   "; // The indentation when starting a new line.
+            std::string keyword_sep = "\n\n";  // The separation between keywords;
+        };
+
         explicit DeckOutput(std::ostream& s, int precision = 10);
         ~DeckOutput();
         void stash_default( );
@@ -41,11 +48,7 @@ namespace Opm {
         void endl();
         void write_string(const std::string& s);
         template <typename T> void write(const T& value);
-
-        std::string item_sep = " ";        // Separator between items on a row.
-        size_t      columns = 16;          // The maximum number of columns on a record.
-        std::string record_indent = "   "; // The indentation when starting a new line.
-        std::string keyword_sep = "\n\n";  // The separation between keywords;
+        format fmt;
     private:
         std::ostream& os;
         size_t default_count;

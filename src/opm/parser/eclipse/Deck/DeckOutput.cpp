@@ -120,14 +120,14 @@ namespace Opm {
 
     void DeckOutput::write_sep( ) {
         if (record_on && this->split_line) {
-            if ((row_count > 0) && ((row_count % columns) == 0))
+            if ((row_count > 0) && ((row_count % this->fmt.columns) == 0))
                 split_record();
         }
 
         if (row_count > 0)
-            os << item_sep;
+            os << this->fmt.item_sep;
         else if (record_on)
-            os << record_indent;
+            os << this->fmt.record_indent;
     }
 
     void DeckOutput::start_record( ) {

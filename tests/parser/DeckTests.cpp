@@ -558,10 +558,10 @@ ABC";
     std::stringstream s;
     DeckOutput out(s);
 
-    out.record_indent = "==";
-    out.item_sep = "-";
-    out.columns = 2;
-    out.keyword_sep = "ABC";
+    out.fmt.record_indent = "==";
+    out.fmt.item_sep = "-";
+    out.fmt.columns = 2;
+    out.fmt.keyword_sep = "ABC";
 
     out.start_keyword("KEYWORD");
     out.start_record();
@@ -577,7 +577,7 @@ ABC";
     out.write<int>(10);
     out.end_record();
     out.end_keyword(true);
-    out.write_string( out.keyword_sep );
+    out.write_string( out.fmt.keyword_sep );
 
     BOOST_CHECK_EQUAL( expected, s.str());
 }
