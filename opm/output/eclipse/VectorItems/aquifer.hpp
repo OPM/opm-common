@@ -60,6 +60,38 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
        } // Value
    } // IAnalyticAquiferConn
 
+    namespace INumericAquifer {
+        enum index : std::vector<int>::size_type {
+            AquiferID = 0,      // ID of numeric aquifer
+            Cell_I = 1,         // I coordinate of aquifer cell
+            Cell_J = 2,         // J coordinate of aquifer cell
+            Cell_K = 3,         // K coordinate of aquifer cell
+            PVTTableID = 4,     // PVT Table ID of numeric aquifer
+            SatFuncID = 5,      // Saturation function ID of numeric aquifer
+        };
+    } // INumericAquifer
+
+    namespace RNumericAquifer {
+        enum index : std::vector<double>::size_type {
+            Area = 0,           // Aquifer inflow area, AQUNUM(5)
+            Length = 1,         // Aquifer length, AQUNUM(6)
+            Porosity = 2,       // Aquifer porosity, AQUNUM(7)
+            Permeability = 3,   // Aquifer permeability, AQUNUM(8)
+            Depth = 4,          // Aquifer depth, AQUNUM(9)
+            Pressure = 5,       // Aquifer pressure, AQUNUM(10)
+
+            Unknown_1 = 6,      // Unknown item, = 1.0
+            Unknown_2 = 7,      // Unknown item, = 1.0
+            Unknown_3 = 8,      // Unknown item, = 1.0
+
+            PoreVolume = 9,     // Total aquifer pore-volume (= Area * Length * Porosity)
+
+            FlowRate = 10,      // Aquifer inflow rate (ANQR:N)
+            ProdVolume = 11,    // Total liquid volume produced from aquifer (AQNT:N)
+            DynPressure = 12,   // Dynamic aquifer pressure (ANQP:N)
+        };
+    } // RNumericAquifer
+
     namespace SAnalyticAquifer {
         enum index : std::vector<float>::size_type {
             Compressibility = 0, // Total aquifer compressibility (AQUCT(6), AQUFETP(5))

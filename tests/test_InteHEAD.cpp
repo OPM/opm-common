@@ -316,7 +316,20 @@ BOOST_AUTO_TEST_CASE(Analytic_Aquifer_Parameters)
 {
     // https://oeis.org/A001622
     const auto aqudims = Opm::RestartIO::InteHEAD::AquiferDims {
-        1, 61, 803, 3988, 74989, 484820, 45868, 3436, 563, 81, 1177203
+        1,                      // numAquifers
+        61,                     // maxNumAquifers
+        803,                    // maxNumAquiferConn
+        3988,                   // maxNumActiveAquiferConn
+        74989,                  // maxAquiferID
+        484820,                 // numNumericAquiferRecords
+        45868,                  // numIntAquiferElem
+        3436,                   // numRealAquiferElem
+        563,                    // numDoubAquiferElem
+        81,                     // numNumericAquiferIntElem
+        17,                     // numNumericAquiferDoubleElem
+        720,                    // numIntConnElem
+        30,                     // numRealConnElem
+        9,                      // numDoubConnElem
     };
 
     const auto ih = Opm::RestartIO::InteHEAD{}
@@ -326,17 +339,21 @@ BOOST_AUTO_TEST_CASE(Analytic_Aquifer_Parameters)
 
     BOOST_CHECK_EQUAL(v[VI::intehead::NAQUIF], 1);
     BOOST_CHECK_EQUAL(v[VI::intehead::NCAMAX], 803);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NIAAQZ], 484820);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NSAAQZ], 45868);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NXAAQZ], 3436);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NICAQZ], 563);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NSCAQZ], 81);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NACAQZ], 1177203);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NIAAQZ], 45868);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSAAQZ], 3436);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NXAAQZ], 563);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NICAQZ], 720);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSCAQZ], 30);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NACAQZ], 9);
 
     BOOST_CHECK_EQUAL(v[VI::intehead::MAX_ACT_ANLYTIC_AQUCONN], 3988);
     BOOST_CHECK_EQUAL(v[VI::intehead::MAX_AN_AQUIFER_ID], 74989);
     BOOST_CHECK_EQUAL(v[VI::intehead::AQU_UNKNOWN_1], 1);
     BOOST_CHECK_EQUAL(v[VI::intehead::MAX_ANALYTIC_AQUIFERS], 61);
+
+    BOOST_CHECK_EQUAL(v[VI::intehead::NIIAQN], 81);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NIRAQN], 17);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NUM_AQUNUM_RECORDS], 484820);
 }
 
 BOOST_AUTO_TEST_CASE(Time_and_report_step)
@@ -564,6 +581,9 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     const auto nicaqz = 111111;
     const auto nscaqz = 1111111;
     const auto nacaqz = 11111111;
+    const auto niiaqn = 22222222;
+    const auto niraqn = 2222222;
+    const auto numaqn = 222222;
     const auto tstep  = 78;
     const auto report_step = 12;
     const auto newtmx	= 17;
@@ -586,7 +606,10 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     const auto ngroup  = 8;
 
     const auto aqudims = Opm::RestartIO::InteHEAD::AquiferDims {
-        1, 61, ncamax, 3988, 74989, niaaqz, nsaaqz, nxaaqz, nicaqz, nscaqz, nacaqz
+        1, 61, ncamax, 3988, 74989,
+        numaqn, niaaqz, nsaaqz, nxaaqz,
+        niiaqn, niraqn,
+        nicaqz, nscaqz, nacaqz
     };
 
     auto unit_system = Opm::UnitSystem::newMETRIC();

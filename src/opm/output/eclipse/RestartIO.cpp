@@ -424,21 +424,14 @@ namespace {
         rstFile.write("XCON", connectionData.getXConn());
     }
 
-    void updateAndWriteAquiferData(const AquiferConfig&           aqConfig,
-                                   const SummaryState&            summaryState,
-                                   const TableManager&            tables,
-                                   const UnitSystem&              usys,
-                                   Helpers::AggregateAquiferData& aquiferData,
-                                   EclIO::OutputStream::Restart&  rstFile)
+    void writeAnalyticAquiferData(const Helpers::AggregateAquiferData& aquiferData,
+                                  EclIO::OutputStream::Restart&        rstFile)
     {
-        aquiferData.captureDynamicdAquiferData(aqConfig, summaryState,
-                                               tables.getPvtwTable(),
-                                               tables.getDensityTable(), usys);
-
         rstFile.write("IAAQ", aquiferData.getIntegerAquiferData());
         rstFile.write("SAAQ", aquiferData.getSinglePrecAquiferData());
         rstFile.write("XAAQ", aquiferData.getDoublePrecAquiferData());
 
+        // Aquifer IDs in 1..maxID inclusive.
         const auto maxAquiferID = aquiferData.maximumActiveAnalyticAquiferID();
         for (auto aquiferID = 1 + 0*maxAquiferID; aquiferID <= maxAquiferID; ++aquiferID) {
             const auto xCAQnum = std::vector<int>{ aquiferID };
@@ -451,6 +444,33 @@ namespace {
 
             rstFile.write("ACAQNUM", xCAQnum);
             rstFile.write("ACAQ", aquiferData.getDoublePrecAquiferConnectionData(aquiferID));
+        }
+    }
+
+    void writeNumericAquiferData(const Helpers::AggregateAquiferData& aquiferData,
+                                 EclIO::OutputStream::Restart&        rstFile)
+    {
+        rstFile.write("IAQN", aquiferData.getNumericAquiferIntegerData());
+        rstFile.write("RAQN", aquiferData.getNumericAquiferDoublePrecData());
+    }
+
+    void updateAndWriteAquiferData(const AquiferConfig&           aqConfig,
+                                   const SummaryState&            summaryState,
+                                   const TableManager&            tables,
+                                   const UnitSystem&              usys,
+                                   Helpers::AggregateAquiferData& aquiferData,
+                                   EclIO::OutputStream::Restart&  rstFile)
+    {
+        aquiferData.captureDynamicdAquiferData(aqConfig, summaryState,
+                                               tables.getPvtwTable(),
+                                               tables.getDensityTable(), usys);
+
+        if (aqConfig.hasAnalyticalAquifer()) {
+            writeAnalyticAquiferData(aquiferData, rstFile);
+        }
+
+        if (aqConfig.hasNumericalAquifer()) {
+            writeNumericAquiferData(aquiferData, rstFile);
         }
     }
 
@@ -497,7 +517,9 @@ namespace {
                       wells, wellSol, action_state, sumState, inteHD, rstFile);
         }
 
-        if (es.aquifer().hasAnalyticalAquifer() && aquiferData.has_value()) {
+        if ((es.aquifer().hasAnalyticalAquifer() || es.aquifer().hasNumericalAquifer()) &&
+            aquiferData.has_value())
+        {
             updateAndWriteAquiferData(es.aquifer(), sumState, es.getTableManager(),
                                       units, aquiferData.value(), rstFile);
         }

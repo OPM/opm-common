@@ -141,6 +141,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         
         WSEGITR_IT2 = 208, // NR - maximum no of times that a new iteration cycle with a reduced Wp will be started
 
+        NIIAQN = 223, // Number of data elements in IAQN array pr AQUNUM record
+        NIRAQN = 224, // Number of data elements in RAQN array pr AQUNUM record
+
+        NUM_AQUNUM_RECORDS = 226, // Number of AQUNUM records (lines of AQUNUM data)
+
         MAX_ACT_COND = 245, //  Maximum number of conditions pr action
         MAX_AN_AQUIFER_ID = 252, // Maximum aquifer ID of all analytic aquifers (<= AQUDIMS(5))
 

@@ -361,6 +361,58 @@ namespace {
         };
     }
 
+    Opm::AquiferConfig createNumericAquiferConfig()
+    {
+        const auto deck = Opm::Parser{}.parseString(R"(
+START             -- 0
+10 MAY 2007 /
+RUNSPEC
+
+DIMENS
+ 10 10 10 /
+REGDIMS
+  3/
+AQUDIMS
+4 4 1* 1* 3 200 1* 1* /
+
+GRID
+DXV
+   10*400 /
+DYV
+   10*400 /
+DZV
+   10*400 /
+TOPS
+   100*2202 /
+PERMX
+  1000*0.25 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+   1000*0.15 /
+AQUNUM
+--ID      I J K     Area    Len   Phi  K     Depth  P0  PVT  SAT
+  1       1 1 1      15000  5000  0.3  30    2700   285        /
+  1       2 1 1     160000  6000  0.4  400   2705   295 1*   3 /
+  1       3 1 1     150000  7000  0.5  5000  2710   1*  2      /
+  2       4 1 1     140000  9000  0.3  300   2715   250 2    3 / aq cell
+/
+AQUCON
+-- #    I1 I2  J1 J2   K1  K2    Face
+   1    1  1   16 18   19  20   'I-'    /
+   1    2  2   16 18   19  20   'I-'    /
+   1    3  3   16 18   19  20   'I-'    /
+   2    4  4   16 18   19  20   'I-'    /
+/
+
+END
+)");
+
+        return Opm::EclipseState { deck }.aquifer();
+    }
+
     Opm::EclipseGrid createGrid()
     {
         auto grid = Opm::EclipseGrid { 20, 5, 10, 5.0, 4.0, 0.2 };
@@ -390,6 +442,15 @@ namespace {
         return aqDims;
     }
 
+    Opm::RestartIO::InteHEAD::AquiferDims syntheticNumericAquiferDimensions()
+    {
+        auto aqDims = Opm::RestartIO::InteHEAD::AquiferDims{};
+
+        aqDims.numNumericAquiferRecords = 4;
+
+        return aqDims;
+    }
+
     Opm::RestartIO::InteHEAD::AquiferDims parseAquiferDimensions()
     {
         const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
@@ -398,7 +459,7 @@ DIMENS
 
 AQUDIMS
 -- MXNAQN   MXNAQC   NIFTBL  NRIFTB   NANAQU    NNCAMAX
-    1*       1*        5       100      5         1000 /
+    4       4        5       100      5         1000 /
 
 GRID
 
@@ -420,6 +481,19 @@ PORO
 EQUALS
   'PORO' 0.0 2 3 2 2 2 2 /
   'PORO' 0.0 20 20 2 3 7 7 /
+/
+AQUNUM
+  4       1 1 1      15000  5000  0.3  30  2700  / aq cell
+  5       2 1 1     150000  9000  0.3  30  2700  / aq cell
+  6       3 1 1     150000  9000  0.3  30  2700  / aq cell
+  7       4 1 1     150000  9000  0.3  30  2700  / aq cell
+/
+AQUCON
+-- #    I1 I2  J1 J2   K1  K2    Face
+   4    1  1   16 18   19  20   'I-'    / connecting cells
+   5    2  2   16 18   19  20   'I-'    / connecting cells
+   6    3  3   16 18   19  20   'I-'    / connecting cells
+   7    4  4   16 18   19  20   'I-'    / connecting cells
 /
 
 SOLUTION
@@ -470,6 +544,21 @@ AQUANCON
         return state;
     }
 
+    Opm::SummaryState aqunum_sim_state()
+    {
+        auto state = Opm::SummaryState{Opm::TimeService::now()};
+
+        state.update("ANQP:1", 123.456);
+        state.update("ANQR:1", 234.567);
+        state.update("ANQT:1", 3456.789);
+
+        state.update("ANQP:2", 121.212);
+        state.update("ANQR:2", 222.333);
+        state.update("ANQT:2", 333.444);
+
+        return state;
+    }
+
     template <class Coll1, class Coll2>
     void check_is_close(const Coll1& coll1, const Coll2& coll2, const double tol)
     {
@@ -497,6 +586,7 @@ BOOST_AUTO_TEST_CASE(AquiferDimensions)
     BOOST_CHECK_EQUAL(aqDims.maxNumAquiferConn, 1000);     // AQUDIMS(6)
     BOOST_CHECK_EQUAL(aqDims.maxNumActiveAquiferConn, 13); // In aquifer ID 2
     BOOST_CHECK_EQUAL(aqDims.maxAquiferID, 4);             // Maximum aquifer ID
+    BOOST_CHECK_EQUAL(aqDims.numNumericAquiferRecords, 4); // Number of lines of AQUNUM data
 
     // # Data items per analytic aquifer
     BOOST_CHECK_EQUAL(aqDims.numIntAquiferElem, 18);       // # Integer
@@ -507,6 +597,10 @@ BOOST_AUTO_TEST_CASE(AquiferDimensions)
     BOOST_CHECK_EQUAL(aqDims.numIntConnElem, 7);           // # Integer
     BOOST_CHECK_EQUAL(aqDims.numRealConnElem, 2);          // # Single precision
     BOOST_CHECK_EQUAL(aqDims.numDoubConnElem, 4);          // # Double precision
+
+    // # Data items per numeric aquifer
+    BOOST_CHECK_EQUAL(aqDims.numNumericAquiferIntElem, 10);    // # Integer
+    BOOST_CHECK_EQUAL(aqDims.numNumericAquiferDoubleElem, 13); // # Double precision
 }
 
 BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
@@ -810,6 +904,64 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
         const auto& xaaq = aquiferData.getDoublePrecAquiferData();
 
         check_is_close(xaaq, expect, 1.0e-7);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Dynamic_Information_Numeric_Aquifers)
+{
+    const auto aqDims = syntheticNumericAquiferDimensions();
+    const auto aqConfig = createNumericAquiferConfig();
+
+    BOOST_REQUIRE_MESSAGE(aqConfig.hasNumericalAquifer(), "Aquifer configuration object must have numeric aquifers");
+
+    auto aquiferData = Opm::RestartIO::Helpers::
+        AggregateAquiferData{ aqDims, aqConfig, createGrid() };
+
+    {
+        BOOST_CHECK_EQUAL(aquiferData.maximumActiveAnalyticAquiferID(), 0);
+        BOOST_CHECK_MESSAGE(aquiferData.getIntegerAquiferData().empty(), "IAAQ must be empty");
+        BOOST_CHECK_MESSAGE(aquiferData.getSinglePrecAquiferData().empty(), "SAAQ must be empty");
+        BOOST_CHECK_MESSAGE(aquiferData.getDoublePrecAquiferData().empty(), "XAAQ must be empty");
+
+        BOOST_CHECK_EQUAL(aquiferData.getNumericAquiferIntegerData().size(), 4u * 10);
+        BOOST_CHECK_EQUAL(aquiferData.getNumericAquiferDoublePrecData().size(), 4u * 13);
+    }
+
+    aquiferData.captureDynamicdAquiferData(aqConfig, aqunum_sim_state(),
+                                           pvtw(), density(),
+                                           Opm::UnitSystem::newMETRIC());
+
+    // IAQN
+    {
+        const auto expect = std::vector<int> {
+            1,  1, 1, 1,  1, 1, 0, 0, 0, 0, //  0.. 9 (record 0)
+            1,  2, 1, 1,  1, 3, 0, 0, 0, 0, // 10..19 (record 1)
+            1,  3, 1, 1,  2, 1, 0, 0, 0, 0, // 20..29 (record 2)
+            2,  4, 1, 1,  2, 3, 0, 0, 0, 0, // 30..39 (record 3)
+        };
+
+        const auto& iaqn = aquiferData.getNumericAquiferIntegerData();
+        BOOST_CHECK_EQUAL_COLLECTIONS(iaqn.begin(), iaqn.end(), expect.begin(), expect.end());
+    }
+
+    // RAQN
+    {
+        const auto pv = std::vector<double> {
+             15.0e3 * 5.0e3 * 0.3,
+            160.0e3 * 6.0e3 * 0.4,
+            150.0e3 * 7.0e3 * 0.5,
+            140.0e3 * 9.0e3 * 0.3,
+        };
+
+        const auto expect = std::vector<double> {
+             15.0e3, 5.0e3, 0.3,   30.0, 2700.0, 285.0,   1.0, 1.0, 1.0,   pv[0], 234.567, 3456.789, 123.456, //  0..12 (record 0)
+            160.0e3, 6.0e3, 0.4,  400.0, 2705.0, 295.0,   1.0, 1.0, 1.0,   pv[1],   0.0  ,    0.0  ,   0.0  , // 13..25 (record 1)
+            150.0e3, 7.0e3, 0.5, 5000.0, 2710.0,   0.0,   1.0, 1.0, 1.0,   pv[2],   0.0  ,    0.0  ,   0.0  , // 26..38 (record 2)
+            140.0e3, 9.0e3, 0.3,  300.0, 2715.0, 250.0,   1.0, 1.0, 1.0,   pv[3], 222.333,  333.444, 121.212, // 39..51 (record 3)
+        };
+
+        const auto& raqn = aquiferData.getNumericAquiferDoublePrecData();
+        check_is_close(raqn, expect, 1.0e-10);
     }
 }
 

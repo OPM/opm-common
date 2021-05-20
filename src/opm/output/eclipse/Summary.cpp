@@ -310,6 +310,29 @@ namespace {
         return entities;
     }
 
+    std::vector<Opm::EclIO::SummaryNode>
+    requiredNumericAquiferVectors(const std::vector<int>& aquiferIDs)
+    {
+        auto entities = std::vector<Opm::EclIO::SummaryNode> {};
+
+        const auto vectors = std::vector<ParamCTorArgs> {
+            { "ANQR" , Opm::EclIO::SummaryNode::Type::Rate     },
+            { "ANQP" , Opm::EclIO::SummaryNode::Type::Pressure },
+            { "ANQT" , Opm::EclIO::SummaryNode::Type::Total    },
+        };
+
+        using Cat = Opm::EclIO::SummaryNode::Category;
+
+        for (const auto& aquiferID : aquiferIDs) {
+            for (const auto& vector : vectors) {
+                entities.push_back({ vector.kw, Cat::Aquifer,
+                                     vector.type, "", aquiferID, {} });
+            }
+        }
+
+        return entities;
+    }
+
 Opm::TimeStampUTC make_sim_time(const Opm::Schedule& sched, const Opm::SummaryState& st, double sim_step) {
     auto elapsed = st.get_elapsed() + sim_step;
     return Opm::TimeStampUTC( sched.getStartTime() )  + std::chrono::duration<double>(elapsed);
@@ -3607,6 +3630,13 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
         const auto aquiferIDs = analyticAquiferIDs(aqConfig);
 
         for (const auto& node : requiredAquiferVectors(aquiferIDs))
+            makeEvaluator(node);
+    }
+
+    if (aqConfig.hasNumericalAquifer()) {
+        const auto aquiferIDs = numericAquiferIDs(aqConfig);
+
+        for (const auto& node : requiredNumericAquiferVectors(aquiferIDs))
             makeEvaluator(node);
     }
 }
