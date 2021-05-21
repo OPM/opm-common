@@ -376,6 +376,29 @@ private:
     KeywordFamily satfunc_family = KeywordFamily::Undefined;
 };
 
+
+class Nupcol {
+public:
+    Nupcol();
+    explicit Nupcol(const Deck& deck);
+    void update(int value);
+    int value() const;
+
+    static Nupcol serializeObject();
+    bool operator==(const Nupcol& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer) {
+        serializer(this->nupcol_value);
+        serializer(this->min_nupcol);
+    }
+
+private:
+    int min_nupcol;
+    int nupcol_value;
+};
+
+
 class Runspec {
 public:
     Runspec() = default;

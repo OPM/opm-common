@@ -24,6 +24,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 
 #include <stdexcept>
 
@@ -977,3 +979,27 @@ BOOST_AUTO_TEST_CASE(Co2Storage) {
 
 
 }
+
+BOOST_AUTO_TEST_CASE(NUPCOL) {
+    const std::string input = R"(
+    RUNSPEC
+    MINNPCOL
+       3 /
+    OIL
+    GAS
+    CO2STORE
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+    Nupcol np(deck);
+    BOOST_CHECK_EQUAL(np.value(), ParserKeywords::NUPCOL::NUM_ITER::defaultValue);
+
+    np.update(10);
+    BOOST_CHECK_EQUAL(np.value(), 10);
+
+    np.update(1);
+    BOOST_CHECK_EQUAL(np.value(), 3);
+}
+

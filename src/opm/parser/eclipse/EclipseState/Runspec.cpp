@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -38,6 +39,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
+#include <fmt/format.h>
 
 namespace {
     Opm::Phases inferActivePhases(const Opm::Deck& deck)
@@ -456,6 +458,43 @@ bool SatFuncControls::operator==(const SatFuncControls& rhs) const
         && (this->krModel() == rhs.krModel())
         && (this->family() == rhs.family());
 }
+
+Nupcol::Nupcol() :
+    min_nupcol(ParserKeywords::MINNPCOL::VALUE::defaultValue),
+    nupcol_value(ParserKeywords::NUPCOL::NUM_ITER::defaultValue)
+{}
+
+Nupcol::Nupcol(const Deck& deck) :
+    Nupcol()
+{
+    const RUNSPECSection runspecSection{deck};
+    if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
+        const auto& min_item = runspecSection.getKeyword<ParserKeywords::MINNPCOL>().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
+        this->min_nupcol = min_item.get<int>(0);
+    }
+}
+
+void Nupcol::update(int value) {
+    if (value < this->min_nupcol)
+        OpmLog::note(fmt::format("OPM Flow uses {} as minimum NUPCOL value", this->min_nupcol));
+    this->nupcol_value = std::max(value, this->min_nupcol);
+}
+
+Nupcol Nupcol::serializeObject() {
+    Nupcol nc;
+    nc.update(123);
+    return nc;
+}
+
+int Nupcol::value() const {
+    return this->nupcol_value;
+}
+
+bool Nupcol::operator==(const Nupcol& data) const {
+    return this->min_nupcol == data.min_nupcol &&
+           this->nupcol_value == data.nupcol_value;
+}
+
 
 Runspec::Runspec( const Deck& deck ) :
     active_phases( inferActivePhases(deck) ),
