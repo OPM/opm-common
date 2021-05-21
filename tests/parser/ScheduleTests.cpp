@@ -3330,6 +3330,8 @@ BOOST_AUTO_TEST_CASE(nupcol) {
 RUNSPEC
 START             -- 0
 19 JUN 2007 /
+MINNPCOL
+  6 /
 NUPCOL
   20 /
 SCHEDULE
@@ -3342,7 +3344,7 @@ DATES             -- 1
  10  OKT 2009 /
 /
 NUPCOL
-  10 /
+  4 /
 DATES             -- 1
  10  OKT 2010 /
 /
@@ -3352,7 +3354,7 @@ DATES             -- 1
         // Flow uses 12 as default
         BOOST_CHECK_EQUAL(schedule[0].nupcol(),20);
         BOOST_CHECK_EQUAL(schedule[1].nupcol(),12);
-        BOOST_CHECK_EQUAL(schedule[2].nupcol(),10);
+        BOOST_CHECK_EQUAL(schedule[2].nupcol(), 6);
     }
 }
 

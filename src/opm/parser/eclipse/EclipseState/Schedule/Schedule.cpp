@@ -1657,7 +1657,7 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
         this->snapshots.emplace_back(start_time);
 
     auto& sched_state = snapshots.back();
-    sched_state.update_nupcol( this->m_static.m_runspec.nupcol() );
+    sched_state.init_nupcol( this->m_static.m_runspec.nupcol() );
     sched_state.update_oilvap( OilVaporizationProperties( this->m_static.m_runspec.tabdims().getNumPVTTables() ));
     sched_state.update_message_limits( this->m_static.m_deck_message_limits );
     sched_state.pavg.update( PAvg() );

@@ -509,19 +509,20 @@ Runspec::Runspec( const Deck& deck ) :
     hystpar( deck ),
     m_actdims( deck ),
     m_sfuncctrl( deck ),
-    m_nupcol( ParserKeywords::NUPCOL::NUM_ITER::defaultValue ),
+    m_nupcol( deck ),
     m_co2storage (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
-        if (runspecSection.hasKeyword("NUPCOL")) {
-            using NC = ParserKeywords::NUPCOL;
+        using NC = ParserKeywords::NUPCOL;
+        if (runspecSection.hasKeyword<NC>()) {
             const auto& item = runspecSection.getKeyword<NC>().getRecord(0).getItem<NC::NUM_ITER>();
-            m_nupcol = item.get<int>(0);
             if (item.defaultApplied(0)) {
                 std::string msg = "OPM Flow uses 12 as default NUPCOL value";
                 OpmLog::note(msg);
             }
+            auto deck_nupcol = item.get<int>(0);
+            this->m_nupcol.update(deck_nupcol);
         }
         if (runspecSection.hasKeyword<ParserKeywords::CO2STORE>() ||
                 runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
@@ -547,7 +548,7 @@ Runspec Runspec::serializeObject()
     result.hystpar = EclHysterConfig::serializeObject();
     result.m_actdims = Actdims::serializeObject();
     result.m_sfuncctrl = SatFuncControls::serializeObject();
-    result.m_nupcol = 2;
+    result.m_nupcol = Nupcol::serializeObject();
     result.m_co2storage = true;
 
     return result;
@@ -603,7 +604,7 @@ const SatFuncControls& Runspec::saturationFunctionControls() const noexcept
     return this->m_sfuncctrl;
 }
 
-int Runspec::nupcol() const noexcept
+const Nupcol& Runspec::nupcol() const noexcept
 {
     return this->m_nupcol;
 }

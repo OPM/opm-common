@@ -419,7 +419,7 @@ public:
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
-    int nupcol() const noexcept;
+    const Nupcol& nupcol() const noexcept;
     bool co2Storage() const noexcept;
 
     bool operator==(const Runspec& data) const;
@@ -440,7 +440,7 @@ public:
         hystpar.serializeOp(serializer);
         m_actdims.serializeOp(serializer);
         m_sfuncctrl.serializeOp(serializer);
-        serializer(m_nupcol);
+        m_nupcol.serializeOp(serializer);
         serializer(m_co2storage);
     }
 
@@ -457,7 +457,7 @@ private:
     EclHysterConfig hystpar;
     Actdims m_actdims;
     SatFuncControls m_sfuncctrl;
-    int m_nupcol;
+    Nupcol m_nupcol;
     bool m_co2storage;
 };
 

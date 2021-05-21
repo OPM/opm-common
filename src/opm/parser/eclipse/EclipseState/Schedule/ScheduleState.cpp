@@ -140,12 +140,16 @@ bool ScheduleState::first_in_year() const {
     return this->m_first_in_year;
 }
 
+void ScheduleState::init_nupcol(Nupcol nupcol) {
+    this->m_nupcol = std::move(nupcol);
+}
+
 void ScheduleState::update_nupcol(int nupcol) {
-    this->m_nupcol = nupcol;
+    this->m_nupcol.update(nupcol);
 }
 
 int ScheduleState::nupcol() const {
-    return this->m_nupcol;
+    return this->m_nupcol.value();
 }
 
 void ScheduleState::update_oilvap(OilVaporizationProperties oilvap) {
@@ -241,7 +245,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.vfpinj = map_member<int, VFPInjTable>::serializeObject();
     ts.groups = map_member<std::string, Group>::serializeObject();
     ts.m_events = Events::serializeObject();
-    ts.update_nupcol(77);
+    ts.m_nupcol = Nupcol::serializeObject();
     ts.update_oilvap( Opm::OilVaporizationProperties::serializeObject() );
     ts.m_message_limits = MessageLimits::serializeObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
