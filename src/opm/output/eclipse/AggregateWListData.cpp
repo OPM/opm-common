@@ -85,7 +85,7 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
                                                                 const std::size_t sim_step,
                                                                 const std::vector<int>& inteHead ) {
     const auto& wells = sched.wellNames(sim_step);
-    const auto& wlmngr = sched.getWListManager(sim_step);
+    const auto& wlmngr = sched[sim_step].wlist_manager.get();
 
     std::vector<std::vector<std::size_t>> curWelOrd;
     std::size_t iwlst;
@@ -96,20 +96,21 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
     // loop over wells and establish map
     //
     for (const auto& wname : wells) {
-        const auto& well = sched.getWell(wname, sim_step);
-
-        // loop over well lists for well - and assign well sequence in the different well lists
-        //
-        iwlst = 0;
-        for ( const auto& wlst_name : well.wListNames()) {
-            if (wlmngr.hasList(wlst_name)) {
-                wlist = wlmngr.getList(wlst_name);
-                auto well_no = findInVector<std::string>(wlist.wells(), wname);
-                if (well_no) well_order[iwlst] = well_no.value() + 1;
-                iwlst += 1;
-            } else {
-                auto msg = fmt::format("Well List Manager does not contain WLIST: {} ", wlst_name);
-                throw std::logic_error(msg);
+        if (wlmngr.hasWList(wname)) {
+            const auto& wListNames = wlmngr.getWListNames(wname);
+            // loop over well lists for well - and assign well sequence in the different well lists
+            //
+            iwlst = 0;
+            for ( const auto& wlst_name : wListNames) {
+                if (wlmngr.hasList(wlst_name)) {
+                    wlist = wlmngr.getList(wlst_name);
+                    auto well_no = findInVector<std::string>(wlist.wells(), wname);
+                    if (well_no) well_order[iwlst] = well_no.value() + 1;
+                    iwlst += 1;
+                } else {
+                    auto msg = fmt::format("Well List Manager does not contain WLIST: {} ", wlst_name);
+                    throw std::logic_error(msg);
+                }
             }
         }
         //store vector in map - and reset vector values to zero
@@ -183,16 +184,21 @@ allocate(const std::vector<int>& inteHead)
 template <class ZWlsArray>
 void staticContrib(const Opm::Well& well,
                    const std::vector<std::vector<std::size_t>> &  welOrdLst,
+                   const Opm::WListManager& wlmngr,
                    ZWlsArray& zWls)
 {
     const auto& seq_ind = well.seqIndex();
 
     // set values if zWls to the well list name for wells with well order > 0
     //
-    std::size_t ind = 0;
-    for (const auto& wlist_vec : welOrdLst[seq_ind]) {
-        if (wlist_vec > 0) zWls[ind] = well.wListNames()[ind];
-        ind += 1;
+    if (wlmngr.hasWList(well.name())) {
+        const auto& wListNames = wlmngr.getWListNames(well.name());
+        const auto& wln = wListNames;
+        std::size_t ind = 0;
+        for (const auto& wlist_vec : welOrdLst[seq_ind]) {
+            if (wlist_vec > 0) zWls[ind] = wln[ind];
+            ind += 1;
+        }
     }
 }
 
@@ -217,31 +223,34 @@ captureDeclaredWListData(const Schedule&   sched,
                          const std::vector<int>& inteHead)
 {
     const auto& wells = sched.wellNames(sim_step);
+    const auto& wlmngr = sched[sim_step].wlist_manager.get();
+    if (wlmngr.WListSize() > 0) {
 
-    const auto welOrdLst = wellOrderInWList(sched, sim_step, inteHead );
+        const auto welOrdLst = wellOrderInWList(sched, sim_step, inteHead );
 
-    // Static contributions to ZWLS array.
-
-    {
         // Static contributions to ZWLS array.
-        wellLoop(wells, sched, sim_step, [&welOrdLst, this]
-                 (const Well& well, const std::size_t wellID) -> void
-        {
-            auto zw = this->zWls_[wellID];
-            ZWls::staticContrib(well, welOrdLst, zw);
-        });
-    }
-    // Static contributions to IWLS array.
-    {
-        wellLoop(wells, sched, sim_step, [&welOrdLst, this]
-                 (const Well& well, const std::size_t wellID) -> void
-        {
-            auto iw   = this->iWls_[wellID];
 
-            IWls::staticContrib(well, welOrdLst, iw);
-        });
-    }
+        {
+            // Static contributions to ZWLS array.
+            wellLoop(wells, sched, sim_step, [&welOrdLst, wlmngr, this]
+                    (const Well& well, const std::size_t wellID) -> void
+            {
+                auto zw = this->zWls_[wellID];
+                ZWls::staticContrib(well, welOrdLst, wlmngr, zw);
+            });
+        }
+        // Static contributions to IWLS array.
+        {
+            wellLoop(wells, sched, sim_step, [&welOrdLst, this]
+                    (const Well& well, const std::size_t wellID) -> void
+            {
+                auto iw   = this->iWls_[wellID];
 
+                IWls::staticContrib(well, welOrdLst, iw);
+            });
+        }
+
+    }
 }
 
 

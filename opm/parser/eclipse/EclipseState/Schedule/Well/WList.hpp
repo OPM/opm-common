@@ -32,10 +32,7 @@ public:
 
     WList() = default;
     WList(const storage& wlist);
-    std::size_t insert_index() const;
-    std::string name() const;
     std::size_t size() const;
-    void setName(const std::string& wListName);
     void add(const std::string& well);
     void del(const std::string& well);
     bool has(const std::string& well) const;
@@ -47,14 +44,11 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(well_list);
-        serializer(m_insert_index);
-        serializer(m_name);
     }
 
 private:
     storage well_list;
-    std::size_t m_insert_index;
-    std::string m_name;
+
 };
 
 }

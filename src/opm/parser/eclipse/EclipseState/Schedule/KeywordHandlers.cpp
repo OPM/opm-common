@@ -1596,31 +1596,28 @@ namespace {
 
             if (action == "NEW") {
                 new_wlm.newList(name);
-                new_wlm.getList(name).setName(name);
             }
 
             if (!new_wlm.hasList(name))
                 throw std::invalid_argument("Invalid well list: " + name);
 
-            auto& wlist = new_wlm.getList(name);
+            //auto& wlist = new_wlm.getList(name);
             if (action == "MOV") {
                 for (const auto& well : wells) {
-                    auto wel = this->snapshots.back().wells.get( well );
-                    wel.clearWlist(name);
-                    this->snapshots.back().wells.update( std::move(wel) );
                     new_wlm.delWell(well);
+                    //new_wlm.clearWLists(well);
                 }
             }
 
             if (action == "DEL") {
-                for (const auto& well : wells)
-                    wlist.del(well);
+                for (const auto& well : wells) {
+                    //wlist.del(well);
+                    new_wlm.delWListWell(well, name);
+                }
             } else {
                 for (const auto& well : wells) {
-                    wlist.add(well);
-                    auto wel = this->snapshots.back().wells.get( well );
-                    wel.addWlist(name);
-                    this->snapshots.back().wells.update( std::move(wel) );
+                    //wlist.add(well);
+                    new_wlm.addWListWell(well, name);
                 }
             }
             this->snapshots.back().wlist_manager.update( std::move(new_wlm) );

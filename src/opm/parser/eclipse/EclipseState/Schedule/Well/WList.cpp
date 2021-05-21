@@ -27,13 +27,6 @@ WList::WList(const storage& wlist) :
 {
 }
 
-std::size_t WList::insert_index() const {
-    return this->m_insert_index;
-}
-
-std::string WList::name() const {
-    return this->m_name;
-}
 
 std::size_t WList::size() const {
     return this->well_list.size();
@@ -50,14 +43,11 @@ void WList::add(const std::string& well) {
         this->well_list.push_back(well);
 }
 
-void WList::setName(const std::string& wListName) {
-    this->m_name = wListName;
-}
-
 void WList::del(const std::string& well) {
     auto end_keep = std::remove(this->well_list.begin(), this->well_list.end(), well);
     this->well_list.erase(end_keep, this->well_list.end());
 }
+
 
 std::vector<std::string> WList::wells() const {
     return this->well_list;

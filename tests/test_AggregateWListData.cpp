@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
 
-    // Report Step 2
+    // Report Step 2  (3.07.20)
     {
         const auto simStep = std::size_t {1};
         double secs_elapsed = 3.1536E07;
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
         BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
     }
 
-    // Report Step 3
+    // Report Step 3  (5.07.20)
     {
         const auto simStep = std::size_t {2};
         double secs_elapsed = 3.1536E07;
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
         BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
     }
 
-    // Report Step 4
+    // Report Step 4  (1.08.20)
     {
         const auto simStep = std::size_t {3};
         double secs_elapsed = 3.1536E07;
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
         BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
     }
 
-        // Report Step 6
+        // Report Step 6  (20.08.20)
     {
         const auto simStep = std::size_t {5};
         double secs_elapsed = 3.1536E07;
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
         BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
     }
 
-    // Report Step 8
+    // Report Step 8  (10.09.20)
     {
         const auto simStep = std::size_t {7};
         double secs_elapsed = 3.1536E07;

@@ -922,10 +922,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->snapshots[timeStep].groups.get(groupName);
     }
 
-    const WListManager& Schedule::getWListManager(std::size_t timeStep) const {
-        return this->snapshots[timeStep].wlist_manager.get();
-    }
-
     void Schedule::updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step) {
         auto new_config = this->snapshots[report_step].guide_rate();
         if (new_config.update_model(new_model))

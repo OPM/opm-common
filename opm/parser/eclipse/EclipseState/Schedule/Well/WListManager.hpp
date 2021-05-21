@@ -33,11 +33,18 @@ public:
 
     static WListManager serializeObject();
 
+    std::size_t WListSize() const;
     bool hasList(const std::string&) const;
     WList& getList(const std::string& name);
     const WList& getList(const std::string& name) const;
     WList& newList(const std::string& name);
-    void delWell(const std::string& well);
+    //void delWell(const std::string& well);
+
+    const std::vector<std::string>& getWListNames(const std::string& wname) const;
+    bool hasWList(const std::string& wname) const;
+    void addWListWell(const std::string& wname, const std::string& wlname);
+    void delWell(const std::string& wname);
+    void delWListWell(const std::string& wname, const std::string& wlname);
 
     bool operator==(const WListManager& data) const;
     std::vector<std::string> wells(const std::string& wlist_pattern) const;
@@ -45,10 +52,12 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer.map(wlists);
+        serializer.map(well_wlist_names);
     }
 
 private:
     std::map<std::string, WList> wlists;
+    std::map<std::string, std::vector<std::string>> well_wlist_names;
 };
 
 }

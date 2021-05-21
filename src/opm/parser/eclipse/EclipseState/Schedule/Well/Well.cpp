@@ -841,9 +841,10 @@ double Well::getDrainageRadius() const {
     return this->drainage_radius;
 }
 
-const std::vector<std::string>& Well::wListNames() const {
-    return this->w_list_names;
-}
+//const std::vector<std::string>& Well::wListNames() const {
+//    return this->w_list_names;
+//}
+
 
 const std::string& Well::name() const {
     return this->wname;
@@ -1151,6 +1152,7 @@ bool Well::hasBeenDefined(size_t timeStep) const {
         return true;
 }
 
+#if 0
 bool Well::hasWlist(const std::string& name) const {
     if (std::count(this->w_list_names.begin(), this->w_list_names.end(), name) > 0)
         return true;
@@ -1166,6 +1168,8 @@ void Well::addWlist(const std::string& name) {
 void Well::clearWlist(const std::string& name) {
     this->w_list_names.clear();
 }
+
+#endif
 
 Well::GasInflowEquation Well::gas_inflow_equation() const {
     return this->gas_inflow;
