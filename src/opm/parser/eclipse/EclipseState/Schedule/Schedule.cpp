@@ -1194,6 +1194,12 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 &affected_wells,
                                 &target_wellpi);
         }
+        if (!affected_wells.empty()) {
+            this->snapshots.back().events().addEvent( ScheduleEvents::ACTIONX_WELL_EVENT );
+            for (const auto& well: affected_wells)
+                this->snapshots.back().wellgroup_events().addEvent(well, ScheduleEvents::ACTIONX_WELL_EVENT);
+        }
+
         if (reportStep < this->m_sched_deck.size() - 1)
             iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, true, &target_wellpi, nullptr, nullptr, prefix);
         OpmLog::info("\\----------------------------------------------------------------------");

@@ -150,6 +150,22 @@ TSTEP
     BOOST_CHECK_EQUAL( affected_wells.size(), 1);
     BOOST_CHECK_EQUAL( affected_wells.count("W1"), 1);
 
+    {
+        const auto& wg_events = sched[0].wellgroup_events();
+        const auto& events = sched[0].events();
+        BOOST_CHECK(events.hasEvent(ScheduleEvents::ACTIONX_WELL_EVENT));
+        BOOST_CHECK(wg_events.hasEvent("W1", ScheduleEvents::ACTIONX_WELL_EVENT));
+        BOOST_CHECK(!wg_events.hasEvent("W2", ScheduleEvents::ACTIONX_WELL_EVENT));
+    }
+
+    {
+        const auto& wg_events = sched[1].wellgroup_events();
+        const auto& events = sched[1].events();
+        BOOST_CHECK(!events.hasEvent(ScheduleEvents::ACTIONX_WELL_EVENT));
+        BOOST_CHECK(!wg_events.hasEvent("W1", ScheduleEvents::ACTIONX_WELL_EVENT));
+        BOOST_CHECK(!wg_events.hasEvent("W2", ScheduleEvents::ACTIONX_WELL_EVENT));
+    }
+
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
     BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );

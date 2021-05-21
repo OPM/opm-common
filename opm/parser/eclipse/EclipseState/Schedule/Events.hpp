@@ -121,6 +121,11 @@ namespace Opm
              * Well switched between injector and producer
              */
             WELL_SWITCHED_INJECTOR_PRODUCER = (1 << 19),
+
+            /*
+             * The well has been affected in an ACTIONX keyword.
+             */
+            ACTIONX_WELL_EVENT = (1 << 20),
         };
     }
 
