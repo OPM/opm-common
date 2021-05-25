@@ -17,9 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef UDQ_ENUMS_HPP
 #define UDQ_ENUMS_HPP
+
+#include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -68,8 +70,6 @@ enum class UDQVarType {
     WELL_VAR = 8,
     GROUP_VAR = 9
 };
-
-
 
 enum class UDQTokenType{
     error = 0,
@@ -139,7 +139,6 @@ enum class UDQUpdate {
     NEXT
 };
 
-
 enum class UDAControl {
     WCONPROD_ORAT,
     WCONPROD_GRAT,
@@ -157,9 +156,13 @@ enum class UDAControl {
     GCONPROD_OIL_TARGET,
     GCONPROD_WATER_TARGET,
     GCONPROD_GAS_TARGET,
-    GCONPROD_LIQUID_TARGET
+    GCONPROD_LIQUID_TARGET,
+    //
+    GCONINJE_SURFACE_MAX_RATE,
+    GCONINJE_RESV_MAX_RATE,
+    GCONINJE_TARGET_REINJ_FRACTION,
+    GCONINJE_TARGET_VOID_FRACTION,
 };
-
 
 enum class UDAKeyword {
     WCONPROD,
@@ -167,8 +170,6 @@ enum class UDAKeyword {
     GCONINJE,
     GCONPROD
 };
-
-
 
 namespace UDQ {
 
@@ -191,7 +192,7 @@ namespace UDQ {
     int uadCode(UDAControl control);
 
     constexpr double restart_default = -0.3E+21;
-}
-}
+} // UDQ
+} // Opm
 
-#endif
+#endif  // UDQ_ENUMS_HPP

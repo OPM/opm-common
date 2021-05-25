@@ -14,8 +14,11 @@ Copyright 2018 Statoil ASA.
 */
 
 #define BOOST_TEST_MODULE UDQTests
+
 #include <boost/test/unit_test.hpp>
+
 #include <limits>
+#include <stdexcept>
 
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
@@ -1512,6 +1515,63 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
 
 }
 
+BOOST_AUTO_TEST_CASE(UDQControl_Keyword)
+{
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONPROD_ORAT) == UDAKeyword::WCONPROD, "WCONPROD_ORAT control keyword must be WCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONPROD_GRAT) == UDAKeyword::WCONPROD, "WCONPROD_GRAT control keyword must be WCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONPROD_WRAT) == UDAKeyword::WCONPROD, "WCONPROD_WRAT control keyword must be WCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONPROD_LRAT) == UDAKeyword::WCONPROD, "WCONPROD_LRAT control keyword must be WCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONPROD_RESV) == UDAKeyword::WCONPROD, "WCONPROD_RESV control keyword must be WCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONPROD_BHP)  == UDAKeyword::WCONPROD, "WCONPROD_BHP control keyword must be WCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONPROD_THP)  == UDAKeyword::WCONPROD, "WCONPROD_THP control keyword must be WCONPROD");
+
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONINJE_RATE) == UDAKeyword::WCONINJE, "WCONINJE_RATE control keyword must be WCONINJE");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONINJE_RESV) == UDAKeyword::WCONINJE, "WCONINJE_RESV control keyword must be WCONINJE");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONINJE_BHP)  == UDAKeyword::WCONINJE, "WCONINJE_BHP control keyword must be WCONINJE");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WCONINJE_THP)  == UDAKeyword::WCONINJE, "WCONINJE_THP control keyword must be WCONINJE");
+
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONPROD_OIL_TARGET)    == UDAKeyword::GCONPROD, "GCONPROD_OIL_TARGET control keyword must be GCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONPROD_WATER_TARGET)  == UDAKeyword::GCONPROD, "GCONPROD_WATER_TARGET control keyword must be GCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONPROD_GAS_TARGET)    == UDAKeyword::GCONPROD, "GCONPROD_GAS_TARGET control keyword must be GCONPROD");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONPROD_LIQUID_TARGET) == UDAKeyword::GCONPROD, "GCONPROD_LIQUID_TARGET control keyword must be GCONPROD");
+
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONINJE_SURFACE_MAX_RATE)      == UDAKeyword::GCONINJE, "GCONINJE_SURFACE_MAX_RATE control keyword must be GCONINJE");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONINJE_RESV_MAX_RATE)         == UDAKeyword::GCONINJE, "GCONINJE_RESV_MAX_RATE control keyword must be GCONINJE");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONINJE_TARGET_REINJ_FRACTION) == UDAKeyword::GCONINJE, "GCONINJE_TARGET_REINJ_FRACTION control keyword must be GCONINJE");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONINJE_TARGET_VOID_FRACTION)  == UDAKeyword::GCONINJE, "GCONINJE_TARGET_VOID_FRACTION control keyword must be GCONINJE");
+
+    BOOST_CHECK_THROW(UDQ::keyword(static_cast<UDAControl>(1729)),
+                      std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(UDAControl_IUAD_0)
+{
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_ORAT), 300004);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_GRAT), 500004);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_WRAT), 400004);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_LRAT), 600004);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_RESV), 999999);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_BHP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_THP),  999999);
+
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_RATE), 400003);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_RESV), 500003);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_BHP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_THP),  999999);
+
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_OIL_TARGET),     200019);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_WATER_TARGET),   300019);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_GAS_TARGET),     400019);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_LIQUID_TARGET),  500019);
+
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_SURFACE_MAX_RATE),       300017);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_RESV_MAX_RATE),          400017);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_TARGET_REINJ_FRACTION),  500017);
+    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_TARGET_VOID_FRACTION),   600017);
+
+    BOOST_CHECK_THROW(UDQ::uadCode(static_cast<UDAControl>(1729)),
+                      std::logic_error);
+}
 
 BOOST_AUTO_TEST_CASE(IntegrationTest) {
 #include "data/integration_tests/udq.data"
