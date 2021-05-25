@@ -1508,8 +1508,6 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
             BOOST_CHECK(record.control == UDAControl::WCONPROD_ORAT);
         else
             BOOST_CHECK(record.control == UDAControl::WCONPROD_GRAT);
-
-        index += 1;
     }
 
 }
