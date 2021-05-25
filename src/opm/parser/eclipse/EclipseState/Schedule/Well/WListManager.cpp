@@ -27,10 +27,20 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 namespace Opm {
 
+    template <typename T>
+    std::optional<int> findInVector(const std::vector<T>  & vecOfElements, const T  & element)
+    {
+        // Find given element in vector
+        auto it = std::find(vecOfElements.begin(), vecOfElements.end(), element);
+
+        return (it != vecOfElements.end()) ? std::optional<int> {std::distance(vecOfElements.begin(), it)} :
+            std::nullopt;
+}
+
     WListManager WListManager::serializeObject()
     {
         WListManager result;
-        result.wlists = {{"test1", WList({"test2", "test3"})}};
+        result.wlists = {{"test1", WList({"test2", "test3"}, "test1")}};
 
         return result;
     }
@@ -44,12 +54,36 @@ namespace Opm {
     }
 
 
-    WList& WListManager::newList(const std::string& name) {
+    /*WList& WListManager::newList(const std::string& name) {
         this->wlists.erase(name);
-        this->wlists.insert( {name, WList() });
+        this->wlists.insert({name, WList({}, name)});
+        return this->getList(name);
+    }*/
+
+    WList& WListManager::newList(const std::string& name, const std::vector<std::string>& new_well_names) {
+        if (this->hasList(name)) {
+            auto& wlist = getList(name);
+            std::vector<std::string> replace_wellnames;
+            for (const auto& wname : wlist.wells()){
+                if (std::count(new_well_names.begin(), new_well_names.end(), wname) == 0) {
+                    this->delWListWell(wname, name);
+                } else {
+                    replace_wellnames.push_back(wname);
+                }
+            }
+            for (const auto& rwname : replace_wellnames) {
+                wlist.del(rwname);
+            }
+        } else {
+            //this->wlist_input_seq.push_back(name);
+            this->wlists.insert( {name, WList({}, name)} );
+        }
         return this->getList(name);
     }
 
+    //const std::vector<std::string> WListManager::wListInputSeq() const {
+    //    return this->wlist_input_seq;
+    //}
 
     WList& WListManager::getList(const std::string& name) {
         return this->wlists.at(name);
@@ -78,20 +112,29 @@ namespace Opm {
         }
     }
 
+    std::size_t WListManager::getNoWListsWell(std::string wname) const {
+        return this->no_wlists_well.at(wname);
+    }
+
     void WListManager::addWListWell(const std::string& wname, const std::string& wlname) {
         //add well to wlist if it is not already in the well list
         auto& wlist = this->getList(wlname);
         wlist.add(wname);
         //add well list to well if not in vector already
         if (this->well_wlist_names.count(wname) > 0) {
+            auto& no_wl = this->no_wlists_well.at(wname);
             auto& wlist_vec = this->well_wlist_names.at(wname);
-            if (std::count(wlist_vec.begin(), wlist_vec.end(), wlname) == 0)
+            if (std::count(wlist_vec.begin(), wlist_vec.end(), wlname) == 0) {
                 wlist_vec.push_back(wlname);
+                no_wl += 1;
+            }
         } else {
             //make wlist vector for new well
             std::vector<std::string> new_wlvec;
+            std::size_t sz = 1;
             new_wlvec.push_back(wlname);
             this->well_wlist_names.insert({wname, new_wlvec});
+            this->no_wlists_well.insert({wname, sz});
         }
     }
 
@@ -99,21 +142,38 @@ namespace Opm {
         for (auto& pair: this->wlists) {
             auto& wlist = pair.second;
             wlist.del(wname);
+            if (this->well_wlist_names.count(wname) > 0) {
+                auto& wlist_vec = this->well_wlist_names.at(wname);
+                auto& no_wl = this->no_wlists_well.at(wname);
+                auto itwl = std::find(wlist_vec.begin(), wlist_vec.end(), wlist.getName());
+                if (itwl != wlist_vec.end()) {
+                    wlist_vec.erase(itwl);
+                    no_wl -= 1;
+                    if (no_wl == 0) {
+                        wlist_vec.clear();
+                    }
+                }
+            }
         }
-        const auto& it = this->well_wlist_names.find(wname);
-        this->well_wlist_names.erase(it);
     }
 
     void WListManager::delWListWell(const std::string& wname, const std::string& wlname) {
         //delete well from well list
         auto& wlist = this->getList(wlname);
         wlist.del(wname);
+
         if (this->well_wlist_names.count(wname) > 0) {
             auto& wlist_vec = this->well_wlist_names.at(wname);
-            // remove wlist element from vector of well lists for a well
+            auto& no_wl = this->no_wlists_well.at(wname);
+            // reduce the no of well lists associated with a well, delete whole list if no wlists is zero
             const auto& it = std::find(wlist_vec.begin(), wlist_vec.end(), wlname);
             if (it != wlist_vec.end()) {
-                wlist_vec.erase(it);
+                //wlist_vec.erase(it);
+                no_wl -= 1;
+                if (no_wl == 0) {
+                    wlist_vec.clear();
+                }
+
             }
         }
     }

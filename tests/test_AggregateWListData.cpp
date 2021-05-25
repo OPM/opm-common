@@ -84,7 +84,7 @@ struct SimulationCase
 BOOST_AUTO_TEST_SUITE(Aggregate_WList)
 
 
-// test dimensions of multisegment data
+// test dimensions for IWLS and ZWLS plus the vectors for different cases
 BOOST_AUTO_TEST_CASE (Constructor)
 {
     namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
@@ -424,6 +424,70 @@ BOOST_AUTO_TEST_CASE (Constructor)
         BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
     }
 
+        // Report Step 9  (10.09.20)
+    {
+        const auto simStep = std::size_t {8};
+        double secs_elapsed = 3.1536E07;
+        const auto ih
+            = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, simStep, simStep + 1, simStep);
+
+        auto wListData = Opm::RestartIO::Helpers::AggregateWListData(ih);
+        wListData.captureDeclaredWListData(sched, simStep, ih);
+
+        // IWls-parameters
+        auto iWLs = wListData.getIWls();
+        auto start = 0 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+        BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+        start = 1 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(iWLs[start + 0], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 1], 1);
+        BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+        start = 2 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(iWLs[start + 0], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 1], 2);
+        BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+        start = 3 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(iWLs[start + 0], 1);
+        BOOST_CHECK_EQUAL(iWLs[start + 1], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 2], 0);
+        BOOST_CHECK_EQUAL(iWLs[start + 3], 0);
+
+        // ZWLs-parameters
+        const std::string blank8 = "        ";
+
+        auto zWLs = wListData.getZWls();
+        start = 0 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*PRD2"));
+        BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+        start = 1 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD1"));
+        BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+        start = 2 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), pad8("*PRD1"));
+        BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+
+        start = 3 * ih[VI::intehead::MXWLSTPRWELL];
+        BOOST_CHECK_EQUAL(zWLs[start + 0].c_str(), pad8("*INJ1"));
+        BOOST_CHECK_EQUAL(zWLs[start + 1].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 2].c_str(), blank8);
+        BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1595,7 +1595,7 @@ namespace {
                 throw std::invalid_argument("The list name in WLIST must start with a '*'");
 
             if (action == "NEW") {
-                new_wlm.newList(name);
+                new_wlm.newList(name, wells);
             }
 
             if (!new_wlm.hasList(name))

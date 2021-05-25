@@ -112,6 +112,19 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
                     throw std::logic_error(msg);
                 }
             }
+            /*for (const auto& wlst_name : wlmngr.wListInputSeq()) {
+                if (std::count(wListNames.begin(), wListNames.end(), wlst_name) > 0) {
+                    if (wlmngr.hasList(wlst_name)) {
+                        wlist = wlmngr.getList(wlst_name);
+                        auto well_no = findInVector<std::string>(wlist.wells(), wname);
+                        if (well_no) well_order[iwlst] = well_no.value() + 1;
+                        iwlst += 1;
+                    } else {
+                        auto msg = fmt::format("Well List Manager does not contain WLIST: {} ", wlst_name);
+                        throw std::logic_error(msg);
+                    }
+                }
+            }*/
         }
         //store vector in map - and reset vector values to zero
         curWelOrd.push_back(well_order);

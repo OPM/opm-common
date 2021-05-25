@@ -2564,6 +2564,17 @@ WLIST    --written by schedule script
 
 DATES
  10 SEP 2020 /
+/
+
+WLIST    --written by schedule script
+        '*PRD1'  NEW  'P2' 'P3' /
+/
+
+WLIST    --written by schedule script
+        '*PRD2'  NEW  'P1' /
+/
+
+DATES
  20 SEP 2020 /
   1 OCT 2020 /
  10 OCT 2020 /
@@ -2572,9 +2583,6 @@ DATES
   1 DEC 2020 /
   1 JAN 2021 /
 /
-   
--- 1.5 2 2 5 10 10 30 30 30 30 30 30 30  /
-
 
 END
 

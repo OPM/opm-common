@@ -22,8 +22,9 @@
 
 namespace Opm {
 
-WList::WList(const storage& wlist) :
-    well_list(wlist)
+WList::WList(const storage& wlist, std::string wlname) :
+    well_list(wlist),
+    name(wlname)
 {
 }
 
@@ -32,6 +33,10 @@ std::size_t WList::size() const {
     return this->well_list.size();
 }
 
+
+std::string WList::getName() const {
+    return this->name;
+}
 
 bool WList::has(const std::string& well) const {
     return (std::count(this->well_list.begin(), this->well_list.end(), well) > 0);
