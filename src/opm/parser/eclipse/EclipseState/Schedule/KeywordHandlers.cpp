@@ -397,6 +397,10 @@ namespace {
                         this->snapshots.back().groups.update( std::move(new_group));
                         this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
                         this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
+
+                        auto udq_active = this->snapshots.back().udq_active.get();
+                        if (injection.updateUDQActive(this->getUDQConfig(current_step), udq_active))
+                            this->snapshots.back().udq_active.update( std::move(udq_active));
                     }
                 }
             }

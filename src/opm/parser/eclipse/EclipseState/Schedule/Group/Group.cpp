@@ -269,9 +269,19 @@ bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties&
         this->voidage_group           == other.voidage_group;
 }
 
-
 bool Group::GroupInjectionProperties::operator!=(const GroupInjectionProperties& other) const {
     return !(*this == other);
+}
+
+bool Group::GroupInjectionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
+    int update_count = 0;
+
+    update_count += active.update(udq_config, this->surface_max_rate, this->group_name, UDAControl::GCONINJE_SURFACE_MAX_RATE);
+    update_count += active.update(udq_config, this->resv_max_rate, this->group_name, UDAControl::GCONINJE_RESV_MAX_RATE);
+    update_count += active.update(udq_config, this->target_reinj_fraction, this->group_name, UDAControl::GCONINJE_TARGET_REINJ_FRACTION);
+    update_count += active.update(udq_config, this->target_void_fraction, this->group_name, UDAControl::GCONINJE_TARGET_VOID_FRACTION);
+
+    return (update_count > 0);
 }
 
 Group::GroupProductionProperties::GroupProductionProperties() :
