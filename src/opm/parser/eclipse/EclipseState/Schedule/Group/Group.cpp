@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <utility>
+
 #include <fmt/format.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -74,7 +76,7 @@ Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg,
     }
 
     if (rst_group.winj_cmode != 0) {
-        Group::GroupInjectionProperties injection;
+        Group::GroupInjectionProperties injection{this->m_name};
         injection.surface_max_rate.update(rst_group.water_surface_limit);
         injection.resv_max_rate.update(rst_group.water_reservoir_limit);
         injection.target_reinj_fraction.update(rst_group.water_reinject_limit);
@@ -85,7 +87,7 @@ Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg,
     }
 
     if (rst_group.ginj_cmode != 0) {
-        Group::GroupInjectionProperties injection;
+        Group::GroupInjectionProperties injection{this->m_name};
         injection.surface_max_rate.update(rst_group.gas_surface_limit);
         injection.resv_max_rate.update(rst_group.gas_reservoir_limit);
         injection.target_reinj_fraction.update(rst_group.gas_reinject_limit);
@@ -199,7 +201,6 @@ bool Group::updateInjection(const GroupInjectionProperties& injection) {
     return update;
 }
 
-
 bool Group::updateProduction(const GroupProductionProperties& production) {
     bool update = false;
 
@@ -216,27 +217,26 @@ bool Group::updateProduction(const GroupProductionProperties& production) {
     return update;
 }
 
-Group::GroupInjectionProperties::GroupInjectionProperties() :
-    GroupInjectionProperties(Phase::WATER, UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC))
+Group::GroupInjectionProperties::GroupInjectionProperties(std::string group_name_arg)
+    : GroupInjectionProperties(std::move(group_name_arg), Phase::WATER, UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC))
 {}
 
-Group::GroupInjectionProperties::GroupInjectionProperties(Phase phase_arg, const UnitSystem& unit_system) :
-    phase(phase_arg),
-    target_reinj_fraction(unit_system.getDimension(UnitSystem::measure::identity)),
-    target_void_fraction(unit_system.getDimension(UnitSystem::measure::identity))
-{
-    if (phase == Phase::WATER) {
-        this->surface_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate));
-        this->resv_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::rate));
-    } else {
-        this->surface_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::gas_surface_rate));
-        this->resv_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::rate));
-    }
-}
+Group::GroupInjectionProperties::GroupInjectionProperties(std::string group_name_arg,
+                                                          const Phase phase_arg,
+                                                          const UnitSystem& unit_system)
+    : group_name { std::move(group_name_arg) }
+    , phase { phase_arg }
+    , surface_max_rate { unit_system.getDimension((phase == Phase::WATER)
+                                                  ? UnitSystem::measure::liquid_surface_rate
+                                                  : UnitSystem::measure::gas_surface_rate) }
+    , resv_max_rate { unit_system.getDimension(UnitSystem::measure::rate) }
+    , target_reinj_fraction { unit_system.getDimension(UnitSystem::measure::identity) }
+    , target_void_fraction { unit_system.getDimension(UnitSystem::measure::identity) }
+{}
 
 Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject()
 {
-    Group::GroupInjectionProperties result;
+    Group::GroupInjectionProperties result{"G"};
     result.phase = Phase::OIL;
     result.cmode = InjectionCMode::REIN;
     result.surface_max_rate = UDAValue(1.0);
@@ -252,9 +252,9 @@ Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject
     return result;
 }
 
-
 bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties& other) const {
     return
+        this->group_name              == other.group_name &&
         this->phase                   == other.phase &&
         this->cmode                   == other.cmode &&
         this->surface_max_rate        == other.surface_max_rate &&

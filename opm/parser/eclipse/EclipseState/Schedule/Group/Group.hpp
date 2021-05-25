@@ -20,11 +20,10 @@
 #ifndef GROUP2_HPP
 #define GROUP2_HPP
 
-
+#include <algorithm>
 #include <map>
 #include <optional>
 #include <string>
-#include <algorithm>
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
@@ -128,9 +127,11 @@ static GuideRateInjTarget GuideRateInjTargetFromInt(int ecl_id);
 
 
 struct GroupInjectionProperties {
-    GroupInjectionProperties();
-    GroupInjectionProperties(Phase phase, const UnitSystem& unit_system);
+    GroupInjectionProperties() = default;
+    explicit GroupInjectionProperties(std::string group_name_arg);
+    GroupInjectionProperties(std::string group_name_arg, Phase phase, const UnitSystem& unit_system);
 
+    std::string group_name{};
     Phase phase = Phase::WATER;
     InjectionCMode cmode = InjectionCMode::NONE;
     UDAValue surface_max_rate;
@@ -152,6 +153,7 @@ struct GroupInjectionProperties {
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
+        serializer(this->group_name);
         serializer(phase);
         serializer(cmode);
         surface_max_rate.serializeOp(serializer);
