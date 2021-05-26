@@ -42,6 +42,7 @@
 #include <exception>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace {
@@ -365,6 +366,25 @@ namespace {
         };
     }
 
+    int numRsegElem(const ::Opm::Phases& phase)
+    {
+        const auto nact = phase.active(::Opm::Phase::OIL)
+            + phase.active(::Opm::Phase::GAS)
+            + phase.active(::Opm::Phase::WATER);
+
+        switch (nact) {
+        case 1: return 126;
+        case 2: return 134;
+        case 3: return 146;
+        }
+
+        throw std::invalid_argument {
+            "NRSEGZ is not supported for " +
+            std::to_string(nact) +
+            " active phases"
+        };
+    }
+
     Opm::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const ::Opm::Runspec&  rspec,
                    const ::Opm::Schedule& sched,
@@ -378,9 +398,9 @@ namespace {
             wsd.maxSegmentedWells(),
             wsd.maxSegmentsPerWell(),
             wsd.maxLateralBranchesPerWell(),
-             22,   // Number of entries per segment in ISEG (2017.2)
-            146,   // Number of entries per segment in RSEG (2017.2)
-             10    // Number of entries per segment in ILBR (2017.2)
+             22,           // Number of entries per segment in ISEG (2017.2)
+            numRsegElem(rspec.phases()), // Number of entries per segment in RSEG
+             10            // Number of entries per segment in ILBR (2017.2)
         };
     }
 
