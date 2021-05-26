@@ -53,8 +53,7 @@ public:
     {
         serializer.map(wlists);
         serializer.map(well_wlist_names);
-        serializer(no_wlists_well);
-
+        serializer.template map<std::map<std::string, std::size_t>, false>(no_wlists_well);
     }
 
 private:

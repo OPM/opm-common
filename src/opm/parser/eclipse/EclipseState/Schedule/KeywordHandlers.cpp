@@ -1611,7 +1611,7 @@ namespace {
                 for (const auto& well : wells) {
                     new_wlm.delWListWell(well, name);
                 }
-            } else {
+            } else if (action != "NEW"){
                 for (const auto& well : wells) {
                     new_wlm.addWListWell(well, name);
                 }

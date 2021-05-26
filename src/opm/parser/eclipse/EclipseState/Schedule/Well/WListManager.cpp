@@ -44,19 +44,36 @@ namespace Opm {
     WList& WListManager::newList(const std::string& name, const std::vector<std::string>& new_well_names) {
         if (this->hasList(name)) {
             auto& wlist = getList(name);
-            std::vector<std::string> replace_wellnames;
-            for (const auto& wname : wlist.wells()){
-                if (std::count(new_well_names.begin(), new_well_names.end(), wname) == 0) {
+            if (new_well_names.size() > 0) {
+                // new well list contains wells
+                std::vector<std::string> replace_wellnames;
+                for (const auto& wname : wlist.wells()){
+                    if (std::count(new_well_names.begin(), new_well_names.end(), wname) == 0) {
+                        this->delWListWell(wname, name);
+                    } else {
+                        replace_wellnames.push_back(wname);
+                    }
+                }
+                for (const auto& rwname : replace_wellnames) {
+                    // delete wells to be replaced from well list
+                    wlist.del(rwname);
+                }
+                for (const auto& wname : new_well_names) {
+                    // add wells on new wlist
+                    this->addWListWell(wname, name);
+                }
+            } else  {
+                // remove all wells from existing well list (empty WLIST NEW)
+                for (const auto& wname : wlist.wells()){
                     this->delWListWell(wname, name);
-                } else {
-                    replace_wellnames.push_back(wname);
                 }
             }
-            for (const auto& rwname : replace_wellnames) {
-                wlist.del(rwname);
-            }
         } else {
+            // create a new wlist (new well list name)
             this->wlists.insert( {name, WList({}, name)} );
+            for (const auto& wname : new_well_names){
+                this->addWListWell(wname, name);
+            }
         }
         return this->getList(name);
     }

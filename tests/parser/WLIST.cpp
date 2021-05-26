@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(WLISTManager) {
 
 
     {
-        auto& wlist1 = wlm.newList("LIST1", {"A", "B", "C"});
-        //wlist1.add("A");
-        //wlist1.add("B");
-        //wlist1.add("C");
+        auto& wlist1 = wlm.newList("LIST1", {});
+        wlist1.add("A");
+        wlist1.add("B");
+        wlist1.add("C");
     }
 
     // If a new list is added with the same name as an existing list the old
@@ -88,16 +88,16 @@ BOOST_AUTO_TEST_CASE(WLISTManager) {
         auto& wlist1 = wlm.newList("LIST1", {});
         BOOST_CHECK_EQUAL(wlist1.size(), 0U);
     }
-    auto& wlist1 = wlm.newList("LIST1", {"W1", "W2", "W3"});
-    auto& wlist2 = wlm.newList("LIST2", {"W1", "W2", "W3"});
+    auto& wlist1 = wlm.newList("LIST1", {});
+    auto& wlist2 = wlm.newList("LIST2", {});
 
-    /*wlist1.add("W1");
+    wlist1.add("W1");
     wlist1.add("W2");
     wlist1.add("W3");
 
     wlist2.add("W1");
     wlist2.add("W2");
-    wlist2.add("W3"); */
+    wlist2.add("W3");
 
     // The delWell operation will work across all well lists.
     wlm.delWell("W1");
