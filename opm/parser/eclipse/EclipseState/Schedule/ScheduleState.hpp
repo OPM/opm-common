@@ -291,6 +291,7 @@ namespace Opm {
         Tuning& tuning();
         const Tuning& tuning() const;
 
+        void init_nupcol(Nupcol nupcol);
         void update_nupcol(int nupcol);
         int nupcol() const;
 
@@ -457,7 +458,7 @@ namespace Opm {
             serializer(m_first_in_month);
             serializer(m_save_step);
             m_tuning.serializeOp(serializer);
-            serializer(m_nupcol);
+            m_nupcol.serializeOp(serializer);
             m_oilvap.serializeOp(serializer);
             m_events.serializeOp(serializer);
             m_wellgroup_events.serializeOp(serializer);
@@ -480,7 +481,7 @@ namespace Opm {
         std::optional<int> m_save_step;
 
         Tuning m_tuning;
-        int m_nupcol;
+        Nupcol m_nupcol;
         OilVaporizationProperties m_oilvap;
         Events m_events;
         WellGroupEvents m_wellgroup_events;

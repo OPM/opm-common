@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -38,6 +39,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
+#include <fmt/format.h>
 
 namespace {
     Opm::Phases inferActivePhases(const Opm::Deck& deck)
@@ -457,6 +459,43 @@ bool SatFuncControls::operator==(const SatFuncControls& rhs) const
         && (this->family() == rhs.family());
 }
 
+Nupcol::Nupcol() :
+    min_nupcol(ParserKeywords::MINNPCOL::VALUE::defaultValue),
+    nupcol_value(ParserKeywords::NUPCOL::NUM_ITER::defaultValue)
+{}
+
+Nupcol::Nupcol(const Deck& deck) :
+    Nupcol()
+{
+    const RUNSPECSection runspecSection{deck};
+    if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
+        const auto& min_item = runspecSection.getKeyword<ParserKeywords::MINNPCOL>().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
+        this->min_nupcol = min_item.get<int>(0);
+    }
+}
+
+void Nupcol::update(int value) {
+    if (value < this->min_nupcol)
+        OpmLog::note(fmt::format("OPM Flow uses {} as minimum NUPCOL value", this->min_nupcol));
+    this->nupcol_value = std::max(value, this->min_nupcol);
+}
+
+Nupcol Nupcol::serializeObject() {
+    Nupcol nc;
+    nc.update(123);
+    return nc;
+}
+
+int Nupcol::value() const {
+    return this->nupcol_value;
+}
+
+bool Nupcol::operator==(const Nupcol& data) const {
+    return this->min_nupcol == data.min_nupcol &&
+           this->nupcol_value == data.nupcol_value;
+}
+
+
 Runspec::Runspec( const Deck& deck ) :
     active_phases( inferActivePhases(deck) ),
     m_tabdims( deck ),
@@ -470,19 +509,20 @@ Runspec::Runspec( const Deck& deck ) :
     hystpar( deck ),
     m_actdims( deck ),
     m_sfuncctrl( deck ),
-    m_nupcol( ParserKeywords::NUPCOL::NUM_ITER::defaultValue ),
+    m_nupcol( deck ),
     m_co2storage (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
-        if (runspecSection.hasKeyword("NUPCOL")) {
-            using NC = ParserKeywords::NUPCOL;
+        using NC = ParserKeywords::NUPCOL;
+        if (runspecSection.hasKeyword<NC>()) {
             const auto& item = runspecSection.getKeyword<NC>().getRecord(0).getItem<NC::NUM_ITER>();
-            m_nupcol = item.get<int>(0);
             if (item.defaultApplied(0)) {
                 std::string msg = "OPM Flow uses 12 as default NUPCOL value";
                 OpmLog::note(msg);
             }
+            auto deck_nupcol = item.get<int>(0);
+            this->m_nupcol.update(deck_nupcol);
         }
         if (runspecSection.hasKeyword<ParserKeywords::CO2STORE>() ||
                 runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
@@ -508,7 +548,7 @@ Runspec Runspec::serializeObject()
     result.hystpar = EclHysterConfig::serializeObject();
     result.m_actdims = Actdims::serializeObject();
     result.m_sfuncctrl = SatFuncControls::serializeObject();
-    result.m_nupcol = 2;
+    result.m_nupcol = Nupcol::serializeObject();
     result.m_co2storage = true;
 
     return result;
@@ -564,7 +604,7 @@ const SatFuncControls& Runspec::saturationFunctionControls() const noexcept
     return this->m_sfuncctrl;
 }
 
-int Runspec::nupcol() const noexcept
+const Nupcol& Runspec::nupcol() const noexcept
 {
     return this->m_nupcol;
 }
