@@ -784,12 +784,6 @@ namespace {
 
     void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
-
-        if (handlerContext.keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
-            std::string msg = "OPM Flow uses 12 as default NUPCOL value";
-            OpmLog::note(msg);
-        }
-
         this->snapshots.back().update_nupcol(nupcol);
     }
 

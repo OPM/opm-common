@@ -472,11 +472,13 @@ Nupcol::Nupcol(const Deck& deck) :
         const auto& min_item = runspecSection.getKeyword<ParserKeywords::MINNPCOL>().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
         this->min_nupcol = min_item.get<int>(0);
     }
+    // make sure the default value is above the minimum
+    Nupcol::update(Nupcol::value());
 }
 
 void Nupcol::update(int value) {
     if (value < this->min_nupcol)
-        OpmLog::note(fmt::format("OPM Flow uses {} as minimum NUPCOL value", this->min_nupcol));
+        OpmLog::note(fmt::format("OPM Flow uses {} as minimum NUPCOL value. Use MINNPCOL to change the minimum value", this->min_nupcol));
     this->nupcol_value = std::max(value, this->min_nupcol);
 }
 
@@ -517,10 +519,6 @@ Runspec::Runspec( const Deck& deck ) :
         using NC = ParserKeywords::NUPCOL;
         if (runspecSection.hasKeyword<NC>()) {
             const auto& item = runspecSection.getKeyword<NC>().getRecord(0).getItem<NC::NUM_ITER>();
-            if (item.defaultApplied(0)) {
-                std::string msg = "OPM Flow uses 12 as default NUPCOL value";
-                OpmLog::note(msg);
-            }
             auto deck_nupcol = item.get<int>(0);
             this->m_nupcol.update(deck_nupcol);
         }
