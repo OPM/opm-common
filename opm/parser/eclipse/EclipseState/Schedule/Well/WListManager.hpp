@@ -52,7 +52,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer.map(wlists);
-        serializer.map(well_wlist_names);
+        serializer.template map<std::map<std::string, std::vector<std::string>>, false>(well_wlist_names);
         serializer.template map<std::map<std::string, std::size_t>, false>(no_wlists_well);
     }
 
