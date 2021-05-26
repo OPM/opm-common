@@ -21,9 +21,7 @@
 #define OPM_AGGREGATE_WLIST_DATA_HPP
 
 #include <opm/output/eclipse/WindowedArray.hpp>
-
 #include <opm/io/eclipse/PaddedOutputString.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
 #include <cstddef>
 #include <string>

@@ -24,32 +24,14 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/output/data/Wells.hpp>
-
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
-
-#include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <exception>
 #include <iterator>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <fmt/format.h>
@@ -112,19 +94,6 @@ std::vector<std::vector<std::size_t>> wellOrderInWList(const Opm::Schedule&   sc
                     throw std::logic_error(msg);
                 }
             }
-            /*for (const auto& wlst_name : wlmngr.wListInputSeq()) {
-                if (std::count(wListNames.begin(), wListNames.end(), wlst_name) > 0) {
-                    if (wlmngr.hasList(wlst_name)) {
-                        wlist = wlmngr.getList(wlst_name);
-                        auto well_no = findInVector<std::string>(wlist.wells(), wname);
-                        if (well_no) well_order[iwlst] = well_no.value() + 1;
-                        iwlst += 1;
-                    } else {
-                        auto msg = fmt::format("Well List Manager does not contain WLIST: {} ", wlst_name);
-                        throw std::logic_error(msg);
-                    }
-                }
-            }*/
         }
         //store vector in map - and reset vector values to zero
         curWelOrd.push_back(well_order);

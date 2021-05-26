@@ -1601,22 +1601,18 @@ namespace {
             if (!new_wlm.hasList(name))
                 throw std::invalid_argument("Invalid well list: " + name);
 
-            //auto& wlist = new_wlm.getList(name);
             if (action == "MOV") {
                 for (const auto& well : wells) {
                     new_wlm.delWell(well);
-                    //new_wlm.clearWLists(well);
                 }
             }
 
             if (action == "DEL") {
                 for (const auto& well : wells) {
-                    //wlist.del(well);
                     new_wlm.delWListWell(well, name);
                 }
             } else {
                 for (const auto& well : wells) {
-                    //wlist.add(well);
                     new_wlm.addWListWell(well, name);
                 }
             }

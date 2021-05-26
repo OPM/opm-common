@@ -474,9 +474,6 @@ public:
     double getGuideRateScalingFactor() const;
 
     bool hasBeenDefined(size_t timeStep) const;
-    //bool hasWlist(const std::string& name) const;
-    //void addWlist(const std::string& name);
-    //void clearWlist(const std::string& name);
     std::size_t firstTimeStep() const;
     const WellType& wellType() const;
     bool predictionMode() const;
