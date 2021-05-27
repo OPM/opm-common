@@ -18,11 +18,13 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
+#include <algorithm>
 
 namespace Opm {
 
-WList::WList(const storage& wlist) :
-    well_list(wlist)
+WList::WList(const storage& wlist, std::string wlname) :
+    well_list(wlist),
+    name(wlname)
 {
 }
 
@@ -32,28 +34,28 @@ std::size_t WList::size() const {
 }
 
 
+std::string WList::getName() const {
+    return this->name;
+}
+
 bool WList::has(const std::string& well) const {
-    return (this->well_list.find(well) != this->well_list.end());
+    return (std::count(this->well_list.begin(), this->well_list.end(), well) > 0);
 }
 
 void WList::add(const std::string& well) {
-    this->well_list.insert(well);
+    //add well if it is not already in the well list
+    if (std::count(this->well_list.begin(), this->well_list.end(), well) == 0)
+        this->well_list.push_back(well);
 }
 
 void WList::del(const std::string& well) {
-    this->well_list.erase(well);
+    auto end_keep = std::remove(this->well_list.begin(), this->well_list.end(), well);
+    this->well_list.erase(end_keep, this->well_list.end());
 }
+
 
 std::vector<std::string> WList::wells() const {
-    return { this->well_list.begin(), this->well_list.end() };
-}
-
-WList::storage::const_iterator WList::begin() const {
-    return this->well_list.begin();
-}
-
-WList::storage::const_iterator WList::end() const {
-    return this->well_list.end();
+    return this->well_list;
 }
 
 bool WList::operator==(const WList& data) const {

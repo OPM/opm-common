@@ -1594,24 +1594,27 @@ namespace {
             if (name[0] != '*')
                 throw std::invalid_argument("The list name in WLIST must start with a '*'");
 
-            if (action == "NEW")
-                new_wlm.newList(name);
+            if (action == "NEW") {
+                new_wlm.newList(name, wells);
+            }
 
             if (!new_wlm.hasList(name))
                 throw std::invalid_argument("Invalid well list: " + name);
 
-            auto& wlist = new_wlm.getList(name);
             if (action == "MOV") {
-                for (const auto& well : wells)
+                for (const auto& well : wells) {
                     new_wlm.delWell(well);
+                }
             }
 
             if (action == "DEL") {
-                for (const auto& well : wells)
-                    wlist.del(well);
-            } else {
-                for (const auto& well : wells)
-                    wlist.add(well);
+                for (const auto& well : wells) {
+                    new_wlm.delWListWell(well, name);
+                }
+            } else if (action != "NEW"){
+                for (const auto& well : wells) {
+                    new_wlm.addWListWell(well, name);
+                }
             }
             this->snapshots.back().wlist_manager.update( std::move(new_wlm) );
         }

@@ -841,6 +841,10 @@ double Well::getDrainageRadius() const {
     return this->drainage_radius;
 }
 
+//const std::vector<std::string>& Well::wListNames() const {
+//    return this->w_list_names;
+//}
+
 
 const std::string& Well::name() const {
     return this->wname;

@@ -28,29 +28,30 @@ namespace Opm {
 
 class WList {
 public:
-    using storage = std::unordered_set<std::string>;
+    using storage = std::vector<std::string>;
 
     WList() = default;
-    WList(const storage& wlist);
+    WList(const storage& wlist, std::string wlname);
     std::size_t size() const;
     void add(const std::string& well);
     void del(const std::string& well);
     bool has(const std::string& well) const;
+    std::string getName() const;
 
     std::vector<std::string> wells() const;
-    storage::const_iterator begin() const;
-    storage::const_iterator end() const;
-
     bool operator==(const WList& data) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(well_list);
+        serializer(name);
     }
 
 private:
     storage well_list;
+    std::string name;
+
 };
 
 }

@@ -28,6 +28,7 @@
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/AggregateNetworkData.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/output/eclipse/AggregateWListData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateUDQData.hpp>
@@ -401,6 +402,12 @@ namespace {
         rstFile.write("SWEL", wellData.getSWell());
         rstFile.write("XWEL", wellData.getXWell());
         rstFile.write("ZWEL", wellData.getZWell());
+
+        auto wListData = Helpers::AggregateWListData(ih);
+        wListData.captureDeclaredWListData(schedule, sim_step, ih);
+
+        rstFile.write("ZWLS", wListData.getZWls());
+        rstFile.write("IWLS", wListData.getIWls());
 
         // Extended set of OPM well vectors
         if (!ecl_compatible_rst)

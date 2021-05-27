@@ -487,6 +487,7 @@ public:
     bool getAutomaticShutIn() const;
     bool getAllowCrossFlow() const;
     const std::string& name() const;
+    const std::vector<std::string>& wListNames() const;
     int getHeadI() const;
     int getHeadJ() const;
     double getWPaveRefDepth() const;

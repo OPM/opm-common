@@ -296,6 +296,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/AggregateMSWData.cpp
           src/opm/output/eclipse/AggregateUDQData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
+          src/opm/output/eclipse/AggregateWListData.cpp
           src/opm/output/eclipse/CreateActionxDims.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
@@ -421,6 +422,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateWellData.cpp
           tests/test_AggregateGroupData.cpp
           tests/test_AggregateNetworkData.cpp
+          tests/test_AggregateWListData.cpp
           tests/test_AggregateMSWData.cpp
           tests/test_AggregateConnectionData.cpp
           tests/test_AggregateUDQData.cpp
@@ -488,6 +490,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA
           tests/2_WLIFT_MODEL5_NOINC.DATA
           tests/TEST_NETWORK_ALL.DATA
+          tests/TEST_WLIST.DATA
           tests/act1.py
           tests/MSW.DATA
           tests/EXIT_TEST.DATA
@@ -873,6 +876,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/AggregateMSWData.hpp
         opm/output/eclipse/AggregateUDQData.hpp
         opm/output/eclipse/AggregateWellData.hpp
+        opm/output/eclipse/AggregateWListData.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
