@@ -568,6 +568,7 @@ DeckItem ParserItem::scan( RawRecord& record, UnitSystem& active_unitsystem, Uni
         {
             DeckItem item( this->name(), int());
             scan_item< int >( item, *this, record );
+            item.shrink_to_fit<int>();
             return item;
         }
         break;
@@ -582,6 +583,7 @@ DeckItem ParserItem::scan( RawRecord& record, UnitSystem& active_unitsystem, Uni
 
             DeckItem item(this->name(), double(), active_dimensions, default_dimensions);
             scan_item< double >( item, *this, record );
+            item.shrink_to_fit<double>();
             return item;
         }
         break;

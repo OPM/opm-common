@@ -77,6 +77,10 @@ namespace Opm {
         const std::vector< double >& getSIDoubleData() const;
         const std::vector<value::status>& getValueStatus() const;
 
+        template< typename T>
+        void shrink_to_fit();
+
+
         void push_back( UDAValue );
         void push_back( int );
         void push_back( double );
