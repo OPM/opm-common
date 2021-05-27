@@ -980,26 +980,28 @@ BOOST_AUTO_TEST_CASE(Co2Storage) {
 
 }
 
+BOOST_AUTO_TEST_CASE(NUPCOL_DEFAULT) {
+    Nupcol np;
+    auto default_value = ParserKeywords::NUPCOL::NUM_ITER::defaultValue;
+    auto min_value = ParserKeywords::MINNPCOL::VALUE::defaultValue;
+    if (default_value > min_value)
+        BOOST_CHECK_EQUAL(np.value(), default_value);
+    else
+        BOOST_CHECK_EQUAL(np.value(), min_value);
+}
+
+
 BOOST_AUTO_TEST_CASE(NUPCOL) {
-    const std::string input = R"(
-    RUNSPEC
-    MINNPCOL
-       3 /
-    OIL
-    GAS
-    CO2STORE
-    )";
-
-    Parser parser;
-
-    auto deck = parser.parseString(input);
-    Nupcol np(deck);
+    const int min_value = 3;
+    Nupcol np(min_value);
     BOOST_CHECK_EQUAL(np.value(), ParserKeywords::NUPCOL::NUM_ITER::defaultValue);
 
-    np.update(10);
-    BOOST_CHECK_EQUAL(np.value(), 10);
+    auto above = min_value + 1;
+    auto below = min_value - 1;
+    np.update(above);
+    BOOST_CHECK_EQUAL(np.value(), above);
 
-    np.update(1);
-    BOOST_CHECK_EQUAL(np.value(), 3);
+    np.update(below);
+    BOOST_CHECK_EQUAL(np.value(), min_value);
 }
 

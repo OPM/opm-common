@@ -460,23 +460,19 @@ bool SatFuncControls::operator==(const SatFuncControls& rhs) const
 }
 
 Nupcol::Nupcol() :
-    min_nupcol(ParserKeywords::MINNPCOL::VALUE::defaultValue),
-    nupcol_value(ParserKeywords::NUPCOL::NUM_ITER::defaultValue)
-{}
-
-Nupcol::Nupcol(const Deck& deck) :
-    Nupcol()
+    Nupcol(ParserKeywords::MINNPCOL::VALUE::defaultValue)
 {
-    const RUNSPECSection runspecSection{deck};
-    if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
-        const auto& min_item = runspecSection.getKeyword<ParserKeywords::MINNPCOL>().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
-        this->min_nupcol = min_item.get<int>(0);
-    }
+}
+
+Nupcol::Nupcol(int min_value) :
+    min_nupcol(min_value)
+{
+    this->update( ParserKeywords::NUPCOL::NUM_ITER::defaultValue );
 }
 
 void Nupcol::update(int value) {
-    if (value < this->min_nupcol)
-        OpmLog::note(fmt::format("OPM Flow uses {} as minimum NUPCOL value", this->min_nupcol));
+    if (value < this->min_nupcol && this->min_nupcol == ParserKeywords::MINNPCOL::VALUE::defaultValue)
+        OpmLog::note(fmt::format("Minimum NUPCOL value is {} - see keyword MINNPCOL to adjust the minimum value", this->min_nupcol));
     this->nupcol_value = std::max(value, this->min_nupcol);
 }
 
@@ -509,21 +505,28 @@ Runspec::Runspec( const Deck& deck ) :
     hystpar( deck ),
     m_actdims( deck ),
     m_sfuncctrl( deck ),
-    m_nupcol( deck ),
+    m_nupcol( ),
     m_co2storage (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
+        if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
+            const auto& min_item = runspecSection.getKeyword<ParserKeywords::MINNPCOL>().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
+            auto min_value = min_item.get<int>(0);
+            this->m_nupcol = Nupcol(min_value);
+        }
+
         using NC = ParserKeywords::NUPCOL;
         if (runspecSection.hasKeyword<NC>()) {
             const auto& item = runspecSection.getKeyword<NC>().getRecord(0).getItem<NC::NUM_ITER>();
             if (item.defaultApplied(0)) {
-                std::string msg = "OPM Flow uses 12 as default NUPCOL value";
+                std::string msg = fmt::format("OPM Flow uses {} as default NUPCOL value", NC::NUM_ITER::defaultValue);
                 OpmLog::note(msg);
             }
             auto deck_nupcol = item.get<int>(0);
             this->m_nupcol.update(deck_nupcol);
         }
+
         if (runspecSection.hasKeyword<ParserKeywords::CO2STORE>() ||
                 runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
             m_co2storage = true;
