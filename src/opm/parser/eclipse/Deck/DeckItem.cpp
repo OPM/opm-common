@@ -188,6 +188,16 @@ UDAValue DeckItem::get( size_t index ) const {
     }
 }
 
+template <>
+void DeckItem::shrink_to_fit<int>() {
+    this->ival.shrink_to_fit();
+}
+
+template <>
+void DeckItem::shrink_to_fit<double>() {
+    this->dval.shrink_to_fit();
+}
+
 
 template< typename T >
 const std::vector< T >& DeckItem::getData() const {
