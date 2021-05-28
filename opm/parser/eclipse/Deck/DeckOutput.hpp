@@ -30,9 +30,9 @@ namespace Opm {
     public:
         struct format {
             std::string item_sep = " ";        // Separator between items on a row.
-            size_t      columns = 16;          // The maximum number of columns on a record.
-            std::string record_indent = "   "; // The indentation when starting a new line.
-            std::string keyword_sep = "\n\n";  // The separation between keywords;
+            size_t      columns = 7;          // The maximum number of columns on a record.
+            std::string record_indent = " "; // The indentation when starting a new line.
+            std::string keyword_sep = "";  // The separation between keywords;
         };
 
         explicit DeckOutput(std::ostream& s, int precision = 10);

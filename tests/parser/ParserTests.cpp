@@ -1929,8 +1929,8 @@ AQUTAB
 
 BOOST_AUTO_TEST_CASE(ParseRAW_STRING) {
     const std::string deck_string = R"(UDQ
-   DEFINE 'WUBHP' 'P*X*' /
-   DEFINE 'WUBHP' 'P*X*' 5*(1 + LOG(WBHP)) /
+ DEFINE 'WUBHP' 'P*X*' /
+ DEFINE 'WUBHP' 'P*X*' 5*(1 + LOG(WBHP)) /
 /
 )";
     Parser parser;
