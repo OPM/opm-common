@@ -380,7 +380,7 @@ private:
 class Nupcol {
 public:
     Nupcol();
-    explicit Nupcol(const Deck& deck);
+    explicit Nupcol(int min_value);
     void update(int value);
     int value() const;
 
