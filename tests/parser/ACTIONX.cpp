@@ -651,7 +651,7 @@ BOOST_AUTO_TEST_CASE(TestWLIST) {
 
 
     Action::Context context(st, wlm);
-    auto& wl = wlm.newList("*LIST1", {"W1", "W3", "W5"});
+    wlm.newList("*LIST1", {"W1", "W3", "W5"});
     auto res = ast.eval(context);
     auto wells = res.wells();
     BOOST_CHECK(res);
