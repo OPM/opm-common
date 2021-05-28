@@ -75,9 +75,7 @@ BOOST_AUTO_TEST_CASE(WLISTManager) {
     BOOST_CHECK(!wlm.hasList("NO_SUCH_LIST"));
 
 
-    {
-        auto& wlist1 = wlm.newList("LIST1", {"A", "B", "C"});
-    }
+    wlm.newList("LIST1", {"A", "B", "C"});
 
     // If a new list is added with the same name as an existing list the old
     // list is dropped and a new list is created.
