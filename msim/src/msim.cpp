@@ -18,6 +18,7 @@
 */
 
 #include <iostream>
+#include <utility>
 
 #include <opm/output/eclipse/Inplace.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
@@ -141,14 +142,14 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
 
 
 void msim::output(Action::State& action_state, SummaryState& st, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupAndNetworkValues& group_nwrk_data, EclipseIO& io) const {
-    RestartValue value(sol, well_data, group_nwrk_data);
+    RestartValue value(sol, well_data, group_nwrk_data, {});
     io.writeTimeStep(action_state,
                      st,
                      udq_state,
                      report_step,
                      substep,
                      seconds_elapsed,
-                     value);
+                     std::move(value));
 }
 
 

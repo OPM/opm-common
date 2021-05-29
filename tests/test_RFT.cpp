@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
             std::move(well2_comps), SegRes{}, Ctrl{}
         };
 
-        RestartValue restart_value(std::move(solution), std::move(wells), std::move(group_nwrk));
+        RestartValue restart_value(std::move(solution), std::move(wells), std::move(group_nwrk), {});
 
         eclipseWriter.writeTimeStep( action_state,
                                      st,
@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                     std::move(well2_comps), SegRes{}, Ctrl{}
                 };
 
-                RestartValue restart_value(std::move(solution), std::move(wells), data::GroupAndNetworkValues());
+                RestartValue restart_value(std::move(solution), std::move(wells), data::GroupAndNetworkValues(), {});
 
                 eclipseWriter.writeTimeStep( action_state,
                                              st,

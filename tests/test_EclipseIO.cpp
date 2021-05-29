@@ -50,6 +50,7 @@
 #include <numeric>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <time.h>
@@ -326,7 +327,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 
             Action::State action_state;
             UDQState udq_state(1);
-            RestartValue restart_value(sol, wells, grp_nwrk);
+            RestartValue restart_value(sol, wells, grp_nwrk, {});
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
             eclWriter.writeTimeStep( action_state,
                                      st,
@@ -334,7 +335,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
                                      i,
                                      false,
                                      first_step - start_time,
-                                     restart_value);
+                                     std::move(restart_value));
 
             checkRestartFile( i );
         }

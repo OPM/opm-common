@@ -49,6 +49,7 @@
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
+#include <sstream>
 #include <tuple>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -399,7 +400,7 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
     auto wells = mkWells();
     auto groups = mkGroups();
     const auto& udq = setup.schedule.getUDQConfig(report_step);
-    RestartValue restart_value(sol, wells, groups);
+    RestartValue restart_value(sol, wells, groups, {});
 
     udq.eval(report_step, setup.schedule.wellMatcher(report_step), st, udq_state);
     eclWriter.writeTimeStep( action_state,
@@ -485,7 +486,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         Action::State action_state;
         {
-            RestartValue restart_value(cells, wells, groups);
+            RestartValue restart_value(cells, wells, groups, {});
 
             io_config.setEclCompatibleRST( false );
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
@@ -632,7 +633,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
         BOOST_CHECK_THROW( RestartIO::save(rstFile, seqnum,
                                            100,
-                                           RestartValue(cells, wells, groups),
+                                           RestartValue(cells, wells, groups, {}),
                                            setup.es,
                                            setup.grid ,
                                            setup.schedule,
@@ -651,7 +652,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
     auto cells = mkSolution( num_cells );
     auto wells = mkWells();
     auto groups = mkGroups();
-    RestartValue restart_value(cells, wells, groups);
+    RestartValue restart_value(cells, wells, groups, {});
 
     BOOST_CHECK_THROW( restart_value.addExtra("TOO-LONG-KEY", {0,1,2}), std::runtime_error);
 
@@ -683,7 +684,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         const auto& units = setup.es.getUnits();
         {
-            RestartValue restart_value(cells, wells, groups);
+            RestartValue restart_value(cells, wells, groups, {});
             SummaryState st(TimeService::now());
             const auto sumState = sim_state(setup.schedule);
 
@@ -765,8 +766,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         const auto outputDir = test_area.currentWorkingDirectory();
         {
-            RestartValue restart_value(cells, wells, groups);
-            RestartValue restart_value2(cells, wells, groups);
+            RestartValue restart_value(cells, wells, groups, {});
+            RestartValue restart_value2(cells, wells, groups, {});
 
             /* Missing THPRES data in extra container. */
             /* Because it proved to difficult to update the legacy simulators
@@ -872,7 +873,8 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     const auto restart_value = RestartValue {
         mkSolution(setup.grid.getNumActive()),
         mkWells(),
-        mkGroups()
+        mkGroups(),
+        {}
     };
     const auto sumState = sim_state(setup.schedule);
     UDQState udq_state(98);
@@ -1104,4 +1106,102 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
             BOOST_CHECK_EQUAL(st1.get(kw), st2.get(kw));
     }
 }
+}
+
+namespace {
+
+struct MessageBuffer
+{
+    std::stringstream str_;
+
+    template <class T>
+    void read( T& value )
+    {
+        str_.read( (char *) &value, sizeof(value) );
+    }
+
+    template <class T>
+    void write( const T& value )
+    {
+        str_.write( (const char *) &value, sizeof(value) );
+    }
+
+    void write( const std::string& str)
+    {
+        int size = str.size();
+        write(size);
+        for (int k = 0; k < size; ++k) {
+            write(str[k]);
+        }
+    }
+
+    void read( std::string& str)
+    {
+        int size = 0;
+        read(size);
+        str.resize(size);
+        for (int k = 0; k < size; ++k) {
+            read(str[k]);
+        }
+    }
+};
+
+Opm::data::AquiferData getFetkovichAquifer(const int aquiferID = 1)
+{
+    auto aquifer = Opm::data::AquiferData {
+        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5, Opm::data::AquiferType::Fetkovich
+    };
+
+    aquifer.aquFet = std::make_shared<Opm::data::FetkovichData>();
+
+    aquifer.aquFet->initVolume = 1.23;
+    aquifer.aquFet->prodIndex = 45.67;
+    aquifer.aquFet->timeConstant = 890.123;
+
+    return aquifer;
+}
+
+Opm::data::AquiferData getCarterTracyAquifer(const int aquiferID = 5)
+{
+    auto aquifer = Opm::data::AquiferData {
+        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5, Opm::data::AquiferType::CarterTracy
+    };
+
+    aquifer.aquCT = std::make_shared<Opm::data::CarterTracyData>();
+
+    aquifer.aquCT->timeConstant = 987.65;
+    aquifer.aquCT->influxConstant = 43.21;
+    aquifer.aquCT->waterDensity = 1014.5;
+    aquifer.aquCT->waterViscosity = 0.00318;
+    aquifer.aquCT->dimensionless_time = 42.0;
+    aquifer.aquCT->dimensionless_pressure = 2.34;
+
+    return aquifer;
+}
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(ReadWrite_CarterTracy_Data)
+{
+    const auto src = getCarterTracyAquifer(1729);
+
+    MessageBuffer buffer;
+    buffer.write(src);
+
+    auto dest = Opm::data::AquiferData{};
+    buffer.read(dest);
+
+    BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Carter-Tracy aquifer object must be equal to source object");
+}
+
+BOOST_AUTO_TEST_CASE(ReadWrite_Fetkovich_Data)
+{
+    const auto src = getFetkovichAquifer(42);
+
+    MessageBuffer buffer;
+    buffer.write(src);
+
+    auto dest = Opm::data::AquiferData{};
+    buffer.read(dest);
+
+    BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Fetkovich object must be equal to source object");
 }

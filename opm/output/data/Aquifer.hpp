@@ -37,15 +37,40 @@ namespace Opm { namespace data {
 
     struct FetkovichData
     {
-        double initVolume;
-        double prodIndex;
-        double timeConstant;
+        double initVolume{};
+        double prodIndex{};
+        double timeConstant{};
+
+        bool operator==(const FetkovichData& other) const;
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
     };
 
     struct CarterTracyData
     {
-        double dimensionless_time;
-        double dimensionless_pressure;
+        double timeConstant{};
+        double influxConstant{};
+        double waterDensity{};
+        double waterViscosity{};
+
+        double dimensionless_time{};
+        double dimensionless_pressure{};
+
+        bool operator==(const CarterTracyData& other) const;
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
     };
 
     struct AquiferData
@@ -58,10 +83,12 @@ namespace Opm { namespace data {
         double datumDepth = 0.0;   //< Aquifer's pressure reference depth
 
         AquiferType type;
-        std::shared_ptr<FetkovichData> aquFet;
-        std::shared_ptr<CarterTracyData> aquCT;
+        std::shared_ptr<FetkovichData> aquFet{};
+        std::shared_ptr<CarterTracyData> aquCT{};
 
         double get(const std::string& key) const;
+
+        bool operator==(const AquiferData& other) const;
 
         // MessageBufferType API should be similar to Dune::MessageBufferIF
         template <class MessageBufferType>
@@ -74,6 +101,61 @@ namespace Opm { namespace data {
 
     // TODO: not sure what extension we will need
     using Aquifers = std::map<int, AquiferData>;
+
+    inline bool FetkovichData::operator==(const FetkovichData& other) const
+    {
+        return (this->initVolume == other.initVolume)
+            && (this->prodIndex == other.prodIndex)
+            && (this->timeConstant == other.timeConstant);
+    }
+
+    template <class MessageBufferType>
+    void FetkovichData::write(MessageBufferType& buffer) const
+    {
+        buffer.write(this->initVolume);
+        buffer.write(this->prodIndex);
+        buffer.write(this->timeConstant);
+    }
+
+    template <class MessageBufferType>
+    void FetkovichData::read(MessageBufferType& buffer)
+    {
+        buffer.read(this->initVolume);
+        buffer.read(this->prodIndex);
+        buffer.read(this->timeConstant);
+    }
+
+    inline bool CarterTracyData::operator==(const CarterTracyData& other) const
+    {
+        return (this->timeConstant == other.timeConstant)
+            && (this->influxConstant == other.influxConstant)
+            && (this->waterDensity == other.waterDensity)
+            && (this->waterViscosity == other.waterViscosity)
+            && (this->dimensionless_time == other.dimensionless_time)
+            && (this->dimensionless_pressure == other.dimensionless_pressure);
+    }
+
+    template <class MessageBufferType>
+    void CarterTracyData::write(MessageBufferType& buffer) const
+    {
+        buffer.write(this->timeConstant);
+        buffer.write(this->influxConstant);
+        buffer.write(this->waterDensity);
+        buffer.write(this->waterViscosity);
+        buffer.write(this->dimensionless_time);
+        buffer.write(this->dimensionless_pressure);
+    }
+
+    template <class MessageBufferType>
+    void CarterTracyData::read(MessageBufferType& buffer)
+    {
+        buffer.read(this->timeConstant);
+        buffer.read(this->influxConstant);
+        buffer.read(this->waterDensity);
+        buffer.read(this->waterViscosity);
+        buffer.read(this->dimensionless_time);
+        buffer.read(this->dimensionless_pressure);
+    }
 
     inline double AquiferData::get(const std::string& key) const
     {
@@ -96,6 +178,36 @@ namespace Opm { namespace data {
         return 0.0;
     }
 
+    inline bool AquiferData::operator==(const AquiferData& other) const
+    {
+        const auto equal_structure =
+            (this->aquiferID == other.aquiferID) &&
+            (this->pressure == other.pressure) &&
+            (this->fluxRate == other.fluxRate) &&
+            (this->volume == other.volume) &&
+            (this->initPressure == other.initPressure) &&
+            (this->datumDepth == other.datumDepth) &&
+            (this->type == other.type) &&
+            ((this->aquFet == nullptr) == (other.aquFet == nullptr)) &&
+            ((this->aquCT == nullptr) == (other.aquCT == nullptr)) &&
+            ((this->aquFet == nullptr) != (this->aquCT == nullptr));
+
+        if (! equal_structure) {
+            return false;
+        }
+
+        auto equalSub = true;
+        if (this->aquFet != nullptr) {
+            equalSub = *this->aquFet == *other.aquFet;
+        }
+
+        if (equalSub && (this->aquCT != nullptr)) {
+            equalSub = *this->aquCT == *other.aquCT;
+        }
+
+        return equalSub;
+    }
+
     template <class MessageBufferType>
     void AquiferData::write(MessageBufferType& buffer) const
     {
@@ -110,13 +222,10 @@ namespace Opm { namespace data {
         buffer.write(aqu);
 
         if (this->aquFet != nullptr) {
-            buffer.write(this->aquFet->initVolume);
-            buffer.write(this->aquFet->prodIndex);
-            buffer.write(this->aquFet->timeConstant);
+            this->aquFet->write(buffer);
         }
         else if (this->aquCT != nullptr) {
-            buffer.write(this->aquCT->dimensionless_time);
-            buffer.write(this->aquCT->dimensionless_pressure);
+            this->aquCT->write(buffer);
         }
     }
 
@@ -139,9 +248,7 @@ namespace Opm { namespace data {
                 this->aquFet = std::make_shared<FetkovichData>();
             }
 
-            buffer.read(this->aquFet->initVolume);
-            buffer.read(this->aquFet->prodIndex);
-            buffer.read(this->aquFet->timeConstant);
+            this->aquFet->read(buffer);
         }
         else if (aqu == 2) {
             this->type = AquiferType::CarterTracy;
@@ -150,8 +257,7 @@ namespace Opm { namespace data {
                 this->aquCT = std::make_shared<CarterTracyData>();
             }
 
-            buffer.read(this->aquCT->dimensionless_time);
-            buffer.read(this->aquCT->dimensionless_pressure);
+            this->aquCT->read(buffer);
         }
     }
 }} // Opm::data
