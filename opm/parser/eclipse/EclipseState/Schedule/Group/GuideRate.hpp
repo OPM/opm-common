@@ -92,7 +92,7 @@ struct GRValState {
 
 public:
     GuideRate(const Schedule& schedule);
-    void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot, const bool update_now=false);
     void compute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
     double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
     double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
@@ -101,8 +101,11 @@ public:
     bool has(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
 
+    // prototyping for now, might make it private later
+    bool timeToUpdate(const double sim_time, const double time_interval) const;
+
 private:
-    void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot, const bool update_now=false);
     void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot) const;
     double eval_group_pot() const;
