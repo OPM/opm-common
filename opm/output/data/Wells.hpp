@@ -29,8 +29,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <vector>
-#include <iostream>
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
@@ -85,11 +83,13 @@ namespace Opm {
             inline double get( opt m ) const;
             /// Read the value indicated by m. Returns a default value if
             /// the requested value is unset.
-            inline double get( opt m, double default_value , const std::string tracer_name="" ) const;
+            inline double get( opt m, double default_value ) const;
+            inline double get( opt m, double default_value , const std::string& tracer_name ) const;
             /// Set the value specified by m. Throws an exception if multiple
             /// values are requested. Returns a self-reference to support
             /// chaining.
-            inline Rates& set( opt m, double value , const std::string tracer_name="" );
+            inline Rates& set( opt m, double value );
+            inline Rates& set( opt m, double value , const std::string& tracer_name );
 
             /// Returns true if any of the rates oil, gas, water is nonzero
             inline bool flowing() const;
@@ -103,8 +103,10 @@ namespace Opm {
 
         inline void init_json(Json::JsonObject& json_data) const;
         private:
-            double& get_ref( opt, const std::string tracer_name = "" );
-            const double& get_ref( opt, const std::string tracer_name = "" ) const;
+            double& get_ref( opt );
+            double& get_ref( opt, const std::string& tracer_name );
+            const double& get_ref( opt ) const;
+            const double& get_ref( opt, const std::string& tracer_name ) const;
 
             opt mask = static_cast< opt >( 0 );
 
@@ -415,7 +417,13 @@ namespace Opm {
         return this->get_ref( m );
     }
 
-    inline double Rates::get( opt m, double default_value, const std::string tracer_name) const {
+    inline double Rates::get( opt m, double default_value ) const {
+        if( !this->has( m ) ) return default_value;
+
+        return this->get_ref( m );
+    }
+
+    inline double Rates::get( opt m, double default_value, const std::string& tracer_name) const {
         if( !this->has( m ) ) return default_value;
 
         if( m == opt::tracer && this->tracer.find(tracer_name) == this->tracer.end()) return default_value;
@@ -423,7 +431,19 @@ namespace Opm {
         return this->get_ref( m, tracer_name);
     }
 
-    inline Rates& Rates::set( opt m, double value , const std::string tracer_name ) {
+    inline Rates& Rates::set( opt m, double value ) {
+        this->get_ref( m ) = value;
+
+        /* mask |= m */
+        this->mask = static_cast< opt >(
+                        static_cast< enum_size >( this->mask ) |
+                        static_cast< enum_size >( m )
+                    );
+
+        return *this;
+    }
+
+    inline Rates& Rates::set( opt m, double value , const std::string& tracer_name ) {
         this->get_ref( m , tracer_name) = value;
 
         /* mask |= m */
@@ -470,7 +490,7 @@ namespace Opm {
      * This is an implementation detail and understanding this has no
      * significant impact on correct use of the class.
      */
-    inline const double& Rates::get_ref( opt m, const std::string tracer_name ) const {
+    inline const double& Rates::get_ref( opt m ) const {
         switch( m ) {
             case opt::wat: return this->wat;
             case opt::oil: return this->oil;
@@ -491,7 +511,7 @@ namespace Opm {
             case opt::well_potential_gas: return this->well_potential_gas;
             case opt::brine: return this->brine;
             case opt::alq: return this->alq;
-            case opt::tracer: return this->tracer.at(tracer_name);
+            case opt::tracer: return this->tracer.at("");
         }
 
         throw std::invalid_argument(
@@ -501,7 +521,45 @@ namespace Opm {
 
     }
 
-    inline double& Rates::get_ref( opt m, const std::string tracer_name ) {
+    inline const double& Rates::get_ref( opt m, const std::string& tracer_name ) const {
+        switch( m ) {
+            case opt::tracer: return this->tracer.at(tracer_name);
+            case opt::wat: return this->wat;
+            case opt::oil: return this->oil;
+            case opt::gas: return this->gas;
+            case opt::polymer: return this->polymer;
+            case opt::solvent: return this->solvent;
+            case opt::energy: return this->energy;
+            case opt::dissolved_gas: return this->dissolved_gas;
+            case opt::vaporized_oil: return this->vaporized_oil;
+            case opt::reservoir_water: return this->reservoir_water;
+            case opt::reservoir_oil: return this->reservoir_oil;
+            case opt::reservoir_gas: return this->reservoir_gas;
+            case opt::productivity_index_water: return this->productivity_index_water;
+            case opt::productivity_index_oil: return this->productivity_index_oil;
+            case opt::productivity_index_gas: return this->productivity_index_gas;
+            case opt::well_potential_water: return this->well_potential_water;
+            case opt::well_potential_oil: return this->well_potential_oil;
+            case opt::well_potential_gas: return this->well_potential_gas;
+            case opt::brine: return this->brine;
+            case opt::alq: return this->alq;
+        }
+
+        throw std::invalid_argument(
+                "Unknown value type '"
+                + std::to_string( static_cast< enum_size >( m ) )
+                + " (" + tracer_name + ") "
+                + "'" );
+
+    }
+
+    inline double& Rates::get_ref( opt m ) {
+        return const_cast< double& >(
+                static_cast< const Rates* >( this )->get_ref( m )
+                );
+    }
+
+    inline double& Rates::get_ref( opt m, const std::string& tracer_name ) {
         if (m == opt::tracer) this->tracer.emplace(tracer_name, 0.0);
         return const_cast< double& >(
                 static_cast< const Rates* >( this )->get_ref( m, tracer_name )
@@ -520,7 +578,6 @@ namespace Opm {
             json_data.add_item("gas", this->get(opt::gas));
 
     }
-
 
     bool inline Rates::flowing() const {
         return ((this->wat != 0) ||

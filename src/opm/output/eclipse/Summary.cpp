@@ -577,10 +577,6 @@ template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
-    std::string tracer_name = "";
-    if ( phase == rt::tracer && args.keyword_name.size() > 4) 
-        tracer_name = args.keyword_name.substr(4,std::string::npos);
-
     for (const auto* sched_well : args.schedule_wells) {
         const auto& name = sched_well->name();
 
@@ -592,7 +588,7 @@ inline quantity rate( const fn_args& args ) {
         }
 
         const double eff_fac = efac(args.eff_factors, name);
-        const auto v = xwPos->second.rates.get(phase, 0.0, tracer_name) * eff_fac;
+        const auto v = xwPos->second.rates.get(phase, 0.0) * eff_fac;
 
         if ((v > 0.0) == injection) {
             sum += v;
@@ -605,6 +601,37 @@ inline quantity rate( const fn_args& args ) {
 
     if (phase == rt::polymer || phase == rt::brine) {
         return { sum, measure::mass_rate };
+    }
+
+    return { sum, rate_unit< phase >() };
+}
+
+template< rt tracer, rt phase, bool injection = true >
+inline quantity ratetracer( const fn_args& args ) {
+    double sum = 0.0;
+
+    std::string tracer_name = args.keyword_name.substr(4);
+
+    for (const auto* sched_well : args.schedule_wells) {
+        const auto& name = sched_well->name();
+
+        auto xwPos = args.wells.find(name);
+        if ((xwPos == args.wells.end()) ||
+            (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        {
+            continue;
+        }
+
+        const double eff_fac = efac(args.eff_factors, name);
+        const auto v = xwPos->second.rates.get(tracer, 0.0, tracer_name) * eff_fac;
+
+        if ((v > 0.0) == injection) {
+            sum += v;
+        }
+    }
+
+    if (! injection) {
+        sum *= -1.0;
     }
 
     return { sum, rate_unit< phase >() };
@@ -1448,8 +1475,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::polymer, injector > },
     { "WSIR", rate< rt::brine, injector > },
-    { "WTIR", rate< rt::tracer, injector > },
-    { "WTIC", div( rate< rt::tracer, injector >, rate< rt::wat, injector >) },
+    { "WTIR#W", ratetracer< rt::tracer, rt::wat, injector > },
+    { "WTIR#O", ratetracer< rt::tracer, rt::oil, injector > },
+    { "WTIR#G", ratetracer< rt::tracer, rt::gas, injector > },
+    { "WTIC#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "WTIC#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "WTIC#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
     { "WVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                        rate< rt::reservoir_gas, injector > ) },
     { "WGIGR", well_guiderate<injector, Opm::data::GuideRateValue::Item::Gas> },
@@ -1463,7 +1494,9 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "WCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "WSIT", mul( rate< rt::brine, injector >, duration ) },
-    { "WTIT", mul( rate< rt::tracer, injector >, duration ) },
+    { "WTIT#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "WTIT#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "WTIT#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -1491,8 +1524,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
-    { "WTPR", rate< rt::tracer, producer > },
-    { "WTPC", div( rate< rt::tracer, producer >, rate< rt::wat, producer >) },
+    { "WTPR#W", ratetracer< rt::tracer, rt::wat, producer > },
+    { "WTPR#O", ratetracer< rt::tracer, rt::oil, producer > },
+    { "WTPR#G", ratetracer< rt::tracer, rt::gas, producer > },
+    { "WTPC#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "WTPC#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "WTPC#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
     { "WCPC", div( rate< rt::polymer, producer >, rate< rt::wat, producer >) },
     { "WSPC", div( rate< rt::brine, producer >, rate< rt::wat, producer >) },
 
@@ -1518,7 +1555,9 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNPT", mul( rate< rt::solvent, producer >, duration ) },
     { "WCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "WSPT", mul( rate< rt::brine, producer >, duration ) },
-    { "WTPT", mul( rate< rt::tracer, producer >, duration ) },
+    { "WTPT#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "WTPT#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "WTPT#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
     { "WLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
     { "WGPTS", mul( rate< rt::dissolved_gas, producer >, duration )},
@@ -1765,6 +1804,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FSPR", rate< rt::brine, producer > },
     { "FCPC", div( rate< rt::polymer, producer >, rate< rt::wat, producer >) },
     { "FSPC", div( rate< rt::brine, producer >, rate< rt::wat, producer >) },
+    { "FTPR#W", ratetracer< rt::tracer, rt::wat, producer > },
+    { "FTPR#O", ratetracer< rt::tracer, rt::oil, producer > },
+    { "FTPR#G", ratetracer< rt::tracer, rt::gas, producer > },
+    { "FTPC#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "FTPC#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "FTPC#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
     { "FVPR", sum( sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
                    rate< rt::reservoir_gas, producer>)},
     { "FGPRS", rate< rt::dissolved_gas, producer > },
@@ -1781,6 +1826,9 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FNPT", mul( rate< rt::solvent, producer >, duration ) },
     { "FCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "FSPT", mul( rate< rt::brine, producer >, duration ) },
+    { "FTPT#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "FTPT#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "FTPT#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
     { "FLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
     { "FVPT", mul(sum (sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
@@ -1799,9 +1847,13 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FTIRHEA", rate< rt::energy, injector > },
     { "FNIR", rate< rt::solvent, injector > },
     { "FCIR", rate< rt::polymer, injector > },
-    { "FCPR", rate< rt::polymer, producer > },
     { "FSIR", rate< rt::brine, injector > },
-    { "FSPR", rate< rt::brine, producer > },
+    { "FTIR#W", ratetracer< rt::tracer, rt::wat, injector > },
+    { "FTIR#O", ratetracer< rt::tracer, rt::oil, injector > },
+    { "FTIR#G", ratetracer< rt::tracer, rt::gas, injector > },
+    { "FTIC#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "FTIC#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "FTIC#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
     { "FVIR", sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>)},
 
@@ -1813,9 +1865,10 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "FCIT", mul( rate< rt::polymer, injector >, duration ) },
-    { "FCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "FSIT", mul( rate< rt::brine, injector >, duration ) },
-    { "FSPT", mul( rate< rt::brine, producer >, duration ) },
+    { "FTIT#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "FTIT#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "FTIT#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
     { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
@@ -2846,11 +2899,28 @@ namespace Evaluator {
             return true;
         }
 
-        keyword = keyword.substr(0, 4);
-        pos = funs.find(keyword);
-        if (pos != funs.end()) { //TODO: Perhaps check for tracer related prefixes?
-            this->paramFunction_ = pos->second;
-            return true;
+        if (keyword.length() > 4 ) {
+            std::string tracer_tag = keyword.substr(0, 4);
+            std::string tracer_name = keyword.substr(4);
+            const auto& tracers = es_.tracer();
+            for (const auto& tracer : tracers) {
+                if (tracer.name == tracer_name) {
+                    if (tracer.phase == Opm::Phase::WATER)
+                        tracer_tag += "#W";
+                    else if (tracer.phase == Opm::Phase::OIL)
+                        tracer_tag += "#O";
+                    else if (tracer.phase == Opm::Phase::GAS)
+                        tracer_tag += "#G";
+
+                    pos = funs.find(tracer_tag);
+                    if (pos != funs.end()) {
+                        this->paramFunction_ = pos->second;
+                        return true;
+                    }
+
+                    break;
+                }
+            }
         }
 
         return false;
@@ -2866,7 +2936,7 @@ namespace Evaluator {
         const auto reg = Opm::out::RegionCache{};
 
         const fn_args args {
-            {}, "", "", 0.0, 0, std::max(0, this->node_->number),
+            {}, "", this->node_->keyword, 0.0, 0, std::max(0, this->node_->number),
             this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
             {}, {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)

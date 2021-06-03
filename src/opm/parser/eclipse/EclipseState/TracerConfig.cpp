@@ -56,20 +56,36 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
         for (const auto& record : keyword) {
             const auto& name = record.getItem<TR::NAME>().get<std::string>(0);
             Phase phase = phase_from_string(record.getItem<TR::FLUID>().get<std::string>(0));
-            double inv_volume;
-
-            if (phase == Phase::GAS)
-                inv_volume = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
-            else
-                inv_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
+            double inv_volume = 1.0; // TODO: Proper scaling of c input must also take into account item 3 from kw TRACER.
+                                     //       For now we assume this to be defaulted, leading to unit scaling (vol/vol).
+            if (!record.getItem<TR::UNIT>().defaultApplied(0))
+                throw std::runtime_error("Non-default unit not supported, tracer " + name);
+            //if (phase == Phase::GAS)
+            //    inv_volume = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
+            //else
+            //    inv_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
 
             std::string tracer_field = "TBLKF" + name;
             if (deck.hasKeyword(tracer_field)) {
                 const auto& tracer_keyword = deck.getKeyword(tracer_field);
                 auto concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
                 logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
-                //for (auto& c : concentration)  // TODO: Proper scaling of c input must also take into account item 3 from kw TRACER.
-                //    c *= inv_volume;           //       For now we assume this to be defaulted, leading to unit scaling (vol/vol).
+
+                for (auto& c : concentration)
+                    c *= inv_volume;
+
+                std::string tracer_field_solution = "TBLKS" + name;
+                if (deck.hasKeyword(tracer_field_solution)) {
+                    const auto& tracer_keyword = deck.getKeyword(tracer_field_solution);
+                    auto concentrationS = tracer_keyword.getRecord(0).getItem(0).getData<double>();
+                    logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
+
+                    for (auto& c : concentrationS)
+                        c *= inv_volume;
+
+                    this->tracers.emplace_back(name, phase, std::move(concentration), std::move(concentrationS)) ;
+                    continue;
+                }
 
                 this->tracers.emplace_back(name, phase, std::move(concentration)) ;
                 continue;
@@ -80,6 +96,18 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                 const auto& tracer_keyword = deck.getKeyword(tracer_table);
                 const auto& deck_item = tracer_keyword.getRecord(0).getItem(0);
                 logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
+
+                std::string tracer_table_solution = "TVDPS" + name;
+                if (deck.hasKeyword(tracer_table_solution)) {
+                    const auto& tracer_keyword = deck.getKeyword(tracer_table_solution);
+                    const auto& deck_item_solution = tracer_keyword.getRecord(0).getItem(0);
+                    logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
+
+                    this->tracers.emplace_back(name, phase, TracerVdTable(deck_item, inv_volume),
+                                                            TracerVdTable(deck_item_solution, inv_volume)) ;
+                    continue;
+                }
+
                 this->tracers.emplace_back(name, phase, TracerVdTable(deck_item, inv_volume));
                 continue;
             }

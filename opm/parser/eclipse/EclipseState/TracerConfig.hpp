@@ -34,7 +34,9 @@ public:
         std::string name;
         Phase phase = Phase::OIL;
         std::vector<double> concentration;
+        std::vector<double> concentrationS;
         TracerVdTable tvdpf;
+        TracerVdTable tvdpS;
 
         TracerEntry() = default;
         TracerEntry(const std::string& name_, Phase phase_, std::vector<double> concentration_)
@@ -43,17 +45,33 @@ public:
             , concentration(std::move(concentration_))
         {}
 
+        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> concentration_, std::vector<double> concentrationS_)
+            : name(name_)
+            , phase(phase_)
+            , concentration(std::move(concentration_))
+            , concentrationS(std::move(concentrationS_))
+        {}
+
         TracerEntry(const std::string& name_, Phase phase_, TracerVdTable tvdpf_)
             : name(name_)
             , phase(phase_)
             , tvdpf(std::move(tvdpf_))
         {}
 
+        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable tvdpf_, TracerVdTable tvdpS_)
+            : name(name_)
+            , phase(phase_)
+            , tvdpf(std::move(tvdpf_))
+            , tvdpS(std::move(tvdpS_))
+        {}
+
         bool operator==(const TracerEntry& data) const {
             return this->name == data.name &&
                    this->phase == data.phase &&
                    this->concentration == data.concentration &&
-                   this->tvdpf == data.tvdpf;
+                   this->concentrationS == data.concentrationS &&
+                   this->tvdpf == data.tvdpf &&
+                   this->tvdpS == data.tvdpS;
         }
 
         template<class Serializer>
@@ -62,7 +80,9 @@ public:
             serializer(name);
             serializer(phase);
             serializer(concentration);
+            serializer(concentrationS);
             tvdpf.serializeOp(serializer);
+            tvdpS.serializeOp(serializer);
         }
     };
 
