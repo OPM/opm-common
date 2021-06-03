@@ -43,8 +43,6 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace Opm;
 
-constexpr std::pair<std::time_t, std::size_t> restart_info = std::make_pair(std::time_t{0}, std::size_t{0});
-
 inline std::string prepath() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }

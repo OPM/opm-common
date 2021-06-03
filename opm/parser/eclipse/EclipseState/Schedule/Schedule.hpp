@@ -56,7 +56,7 @@ namespace Opm
     class SummaryState;
     class ErrorGuard;
     class UDQConfig;
-    namespace RestartIO { class RstState; }
+    namespace RestartIO { struct RstState; }
 
 
     struct ScheduleStatic {
