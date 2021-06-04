@@ -36,6 +36,7 @@ namespace Opm {
 namespace Opm {
 
     class DeckKeyword;
+    class KeywordLocation;
 
     class WellSegments {
     public:
