@@ -258,42 +258,42 @@ void DeckItem::push_back( UDAValue x, size_t n ) {
 }
 
 template< typename T >
-void DeckItem::push_default( T x ) {
+void DeckItem::push_default( T x, std::size_t n ) {
     auto& val = this->value_ref< T >();
     if( this->value_status.size() != val.size() )
         throw std::logic_error("To add a value to an item, "
                 "no 'pseudo defaults' can be added before");
 
-    val.push_back( std::move( x ) );
-    this->value_status.push_back( value::status::valid_default );
+    val.insert(val.end(), n, std::move( x ) );
+    this->value_status.insert( this->value_status.end(), n, value::status::valid_default );
 }
 
-void DeckItem::push_backDefault( int x ) {
-    this->push_default( x );
+void DeckItem::push_backDefault( int x, std::size_t n ) {
+    this->push_default( x, n );
 }
 
-void DeckItem::push_backDefault( double x ) {
-    this->push_default( x );
+void DeckItem::push_backDefault( double x, std::size_t n ) {
+    this->push_default( x, n );
 }
 
-void DeckItem::push_backDefault( std::string x ) {
-    this->push_default( std::move( x ) );
+void DeckItem::push_backDefault( std::string x, std::size_t n ) {
+    this->push_default( std::move( x ), n );
 }
 
-void DeckItem::push_backDefault( RawString x ) {
-    this->push_default( std::move( x ) );
+void DeckItem::push_backDefault( RawString x, std::size_t n ) {
+    this->push_default( std::move( x ), n );
 }
 
-void DeckItem::push_backDefault( UDAValue x ) {
-    this->push_default( std::move( x ) );
+void DeckItem::push_backDefault( UDAValue x, std::size_t n ) {
+    this->push_default( std::move( x ), n );
 }
 
 
 template<typename T>
-void DeckItem::push_backDummyDefault() {
+void DeckItem::push_backDummyDefault( std::size_t n ) {
     auto& val = this->value_ref< T >();
-    val.push_back( T() );
-    this->value_status.push_back( value::status::empty_default );
+    val.insert( val.end(), n, T() );
+    this->value_status.insert( this->value_status.end(), n, value::status::empty_default );
 }
 
 std::string DeckItem::getTrimmedString( size_t index ) const {
@@ -521,6 +521,11 @@ bool DeckItem::to_bool(std::string string_value) {
     throw std::invalid_argument("Could not convert string " + string_value + " to bool ");
 }
 
+void DeckItem::reserve_additionalRawString(std::size_t n)
+{
+    this->rsval.reserve(rsval.size() + n);
+}
+
 /*
  * Explicit template instantiations. These must be manually maintained and
  * updated with changes in DeckItem so that code is emitted.
@@ -531,11 +536,11 @@ template double DeckItem::get< double >( size_t ) const;
 template std::string DeckItem::get< std::string >( size_t ) const;
 template RawString DeckItem::get< RawString >( size_t ) const;
 
-template void DeckItem::push_backDummyDefault<int>();
-template void DeckItem::push_backDummyDefault<double>();
-template void DeckItem::push_backDummyDefault<std::string>();
-template void DeckItem::push_backDummyDefault<RawString>();
-template void DeckItem::push_backDummyDefault<UDAValue>();
+template void DeckItem::push_backDummyDefault<int>( std::size_t );
+template void DeckItem::push_backDummyDefault<double>( std::size_t );
+template void DeckItem::push_backDummyDefault<std::string>( std::size_t );
+template void DeckItem::push_backDummyDefault<RawString>( std::size_t );
+template void DeckItem::push_backDummyDefault<UDAValue>( std::size_t );
 
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< UDAValue >& DeckItem::getData< UDAValue >() const;
