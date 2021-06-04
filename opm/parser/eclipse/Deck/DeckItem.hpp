@@ -90,15 +90,15 @@ namespace Opm {
         void push_back( int, size_t );
         void push_back( double, size_t );
         void push_back( std::string, size_t );
-        void push_backDefault( UDAValue );
-        void push_backDefault( int );
-        void push_backDefault( double );
-        void push_backDefault( std::string );
-        void push_backDefault( RawString );
+        void push_backDefault( UDAValue, std::size_t n = 1 );
+        void push_backDefault( int, std::size_t n = 1 );
+        void push_backDefault( double, std::size_t n = 1 );
+        void push_backDefault( std::string, std::size_t n = 1 );
+        void push_backDefault( RawString, std::size_t n = 1 );
         // trying to access the data of a "dummy default item" will raise an exception
 
         template <typename T>
-        void push_backDummyDefault();
+        void push_backDummyDefault( std::size_t n = 1 );
 
         type_tag getType() const;
 
@@ -149,6 +149,7 @@ namespace Opm {
             serializer.vector(default_dimensions);
         }
 
+        void reserve_additionalRawString(std::size_t);
     private:
         mutable std::vector< double > dval;
         std::vector< int > ival;
@@ -173,7 +174,7 @@ namespace Opm {
         template< typename T > const std::vector< T >& value_ref() const;
         template< typename T > void push( T );
         template< typename T > void push( T, size_t );
-        template< typename T > void push_default( T );
+        template< typename T > void push_default( T, std::size_t n );
         template< typename T > void write_vector(DeckOutput& writer, const std::vector<T>& data) const;
     };
 }

@@ -461,6 +461,7 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
 
     if( parser_item.sizeType() == ParserItem::item_size::ALL ) {
         if (parse_raw) {
+            deck_item.reserve_additionalRawString(record.size());
             while (record.size()) {
                 auto token = record.pop_front();
                 auto raw_string = RawString{ std::string(token) };
@@ -489,11 +490,9 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
 
             if (parser_item.hasDefault()) {
                 auto value = parser_item.getDefault< T >();
-                for (size_t i=0; i < st.count(); i++)
-                    deck_item.push_backDefault( value );
+                deck_item.push_backDefault( value, st.count());
             } else {
-                for (size_t i=0; i < st.count(); i++)
-                    deck_item.push_backDummyDefault<T>();
+                deck_item.push_backDummyDefault<T>(st.count());
             }
         }
 
