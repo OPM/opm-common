@@ -535,6 +535,33 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1.0;
 }
 
+inline quantity artificial_lift_quantity( const fn_args& args ) {
+    // Note: This function is intentionally supported only at the well level
+    // (meaning there's no loop over args.schedule_wells by intention).  Its
+    // purpose is to calculate WALQ only.
+    auto alq = quantity { 0.0, measure::identity };
+
+    if (args.schedule_wells.empty()) {
+        return alq;
+    }
+
+    const auto* well = args.schedule_wells.front();
+    if (well->isInjector()) {
+        return alq;
+    }
+
+    auto xwPos = args.wells.find(well->name());
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        return alq;
+    }
+
+    alq.value = well->productionControls(args.st).alq_value;
+
+    return alq;
+}
+
 inline bool
 has_alq_type(const Opm::ScheduleState&            sched_state,
              const Opm::Well::ProductionControls& pc)
@@ -1578,6 +1605,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WEPR", rate< rt::energy, producer > },
     { "WTPRHEA", rate< rt::energy, producer > },
     { "WGLIR", glir},
+    { "WALQ", artificial_lift_quantity },
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
