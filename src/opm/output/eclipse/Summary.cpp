@@ -34,10 +34,12 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -461,6 +463,7 @@ struct fn_args
     const Opm::data::GroupAndNetworkValues& grp_nwrk;
     const Opm::out::RegionCache& regionCache;
     const Opm::EclipseGrid& grid;
+    const Opm::Schedule& schedule;
     const std::vector< std::pair< std::string, double > > eff_factors;
     const Opm::Inplace& initial_inplace;
     const Opm::Inplace& inplace;
@@ -532,14 +535,45 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1.0;
 }
 
-/*
-  This is bit dangerous, exactly how the ALQ value should be interpreted varies
-  between the different VFP tables. The code here assumes - without checking -
-  that it represents gas lift rate.
-*/
-inline quantity glir( const fn_args& args ) {
-    double alq_rate = 0;
+inline bool
+has_alq_type(const Opm::ScheduleState&            sched_state,
+             const Opm::Well::ProductionControls& pc)
+{
+    return sched_state.vfpprod.has(pc.vfp_table_number);
+}
 
+inline Opm::VFPProdTable::ALQ_TYPE
+alq_type(const Opm::ScheduleState&            sched_state,
+         const Opm::Well::ProductionControls& pc)
+{
+    return sched_state.vfpprod(pc.vfp_table_number).getALQType();
+}
+
+inline bool is_glir_permissible(const Opm::VFPProdTable::ALQ_TYPE alqType)
+{
+    using ALQ_TYPE = Opm::VFPProdTable::ALQ_TYPE;
+
+    return (alqType == ALQ_TYPE::ALQ_GRAT)
+        || (alqType == ALQ_TYPE::ALQ_IGLR)
+        || (alqType == ALQ_TYPE::ALQ_TGLR);
+}
+
+inline quantity glir( const fn_args& args ) {
+    if (args.schedule_wells.empty()) {
+        return { 0.0, measure::gas_surface_rate };
+    }
+
+    const auto& sched_state = args.schedule[args.sim_step];
+
+    auto alqType = std::optional<Opm::VFPProdTable::ALQ_TYPE>{};
+
+    if (args.schedule_wells.size() > std::vector<Opm::Well*>::size_type{1}) {
+        // Summing to group and field levels is only possible if the ALQ
+        // type is gas flow rate.
+        alqType = Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT;
+    }
+
+    double alq_rate = 0.0;
     for (const auto* well : args.schedule_wells) {
         if (well->isInjector()) {
             continue;
@@ -552,12 +586,30 @@ inline quantity glir( const fn_args& args ) {
             continue;
         }
 
-        const double eff_fac = efac(args.eff_factors, well->name());
         const auto& production = well->productionControls(args.st);
+        if (! has_alq_type(sched_state, production)) {
+            continue;
+        }
+
+        const auto thisAlqType = alq_type(sched_state, production);
+        if (alqType.has_value() && (thisAlqType != alqType.value())) {
+            continue;
+        }
+
+        alqType = thisAlqType;
+        if (! is_glir_permissible(thisAlqType)) {
+            continue;
+        }
+
+        const double eff_fac = efac(args.eff_factors, well->name());
         alq_rate += eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
     }
 
-    return { alq_rate, measure::gas_surface_rate };
+    const auto unit = !alqType.has_value() || (alqType.value() == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT)
+        ? measure::gas_surface_rate
+        : measure::gas_oil_ratio;
+
+    return { alq_rate, unit };
 }
 
 inline quantity wwirt( const fn_args& args ) {
@@ -2373,8 +2425,10 @@ namespace Evaluator {
                 wells, this->group_name(), this->node_.keyword, stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
-                st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
-                std::move(efac.factors), input.initial_inplace, simRes.inplace, input.sched.getUnits()
+                st, simRes.wellSol, simRes.grpNwrkSol,
+                input.reg, input.grid, input.sched,
+                std::move(efac.factors), input.initial_inplace, simRes.inplace,
+                input.sched.getUnits()
             };
 
             const auto& usys = input.es.getUnits();
@@ -2434,7 +2488,6 @@ namespace Evaluator {
             return { this->node_.keyword, this->node_.number };
         }
     };
-
 
     class AquiferValue: public Base
     {
@@ -2674,9 +2727,10 @@ namespace Evaluator {
 
         explicit Factory(const Opm::EclipseState& es,
                          const Opm::EclipseGrid&  grid,
+                         const Opm::Schedule&     sched,
                          const Opm::SummaryState& st,
                          const Opm::UDQConfig&    udq)
-            : es_(es), grid_(grid), st_(st), udq_(udq)
+            : es_(es), sched_(sched), grid_(grid), st_(st), udq_(udq)
         {}
 
         ~Factory() = default;
@@ -2690,6 +2744,7 @@ namespace Evaluator {
 
     private:
         const Opm::EclipseState& es_;
+        const Opm::Schedule&     sched_;
         const Opm::EclipseGrid&  grid_;
         const Opm::SummaryState& st_;
         const Opm::UDQConfig&    udq_;
@@ -2943,7 +2998,7 @@ namespace Evaluator {
         const fn_args args {
             {}, "", this->node_->keyword, 0.0, 0, std::max(0, this->node_->number),
             this->node_->fip_region,
-            this->st_, {}, {}, reg, this->grid_,
+            this->st_, {}, {}, reg, this->grid_, this->sched_,
             {}, {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)
         };
 
@@ -3296,7 +3351,7 @@ SummaryImplementation(const EclipseState&  es,
     };
 
     Evaluator::Factory evaluatorFactory {
-        es, grid, st, sched.getUDQConfig(sched.size() - 1)
+        es, grid, sched, st, sched.getUDQConfig(sched.size() - 1)
     };
 
     this->configureTimeVectors(es, sumcfg);
