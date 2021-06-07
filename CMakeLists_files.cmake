@@ -321,6 +321,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/WriteRFT.cpp
           src/opm/output/eclipse/WriteRPT.cpp
           src/opm/output/eclipse/report/WELSPECS.cpp
+          src/opm/output/data/Aquifer.cpp
           src/opm/output/data/Solution.cpp
           src/opm/utility/EModel.cpp
       )

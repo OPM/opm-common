@@ -1190,24 +1190,24 @@ namespace {
         };
     }
 
-    std::shared_ptr<Opm::data::FetkovichData>
-    extractFetkcovichData(const Opm::UnitSystem&               usys,
-                          const AquiferVectors::Window<float>& saaq)
+    Opm::data::FetkovichData
+    extractFetkovichData(const Opm::UnitSystem&               usys,
+                         const AquiferVectors::Window<float>& saaq)
     {
         using M = ::Opm::UnitSystem::measure;
 
-        auto data = std::make_shared<Opm::data::FetkovichData>();
+        auto data = Opm::data::FetkovichData{};
 
-        data->initVolume =
+        data.initVolume =
             usys.to_si(M::liquid_surface_volume,
                        saaq[VI::SAnalyticAquifer::FetInitVol]);
 
-        data->prodIndex =
+        data.prodIndex =
             usys.to_si(M::liquid_surface_rate,
             usys.from_si(M::pressure,
                          saaq[VI::SAnalyticAquifer::FetProdIndex]));
 
-        data->timeConstant = saaq[VI::SAnalyticAquifer::FetTimeConstant];
+        data.timeConstant = saaq[VI::SAnalyticAquifer::FetTimeConstant];
 
         return data;
     }
@@ -1244,10 +1244,10 @@ namespace {
             aqData.datumDepth =
                 units.to_si(M::length, saaq[VI::SAnalyticAquifer::DatumDepth]);
 
-            aqData.type = determineAquiferType(aquiferData.iaaq(aquiferID));
-
-            if (aqData.type == Opm::data::AquiferType::Fetkovich) {
-                aqData.aquFet = extractFetkcovichData(units, saaq);
+            const auto type = determineAquiferType(aquiferData.iaaq(aquiferID));
+            if (type == Opm::data::AquiferType::Fetkovich) {
+                auto* tData = aqData.typeData.create<Opm::data::AquiferType::Fetkovich>();
+                *tData = extractFetkovichData(units, saaq);
             }
         }
 
