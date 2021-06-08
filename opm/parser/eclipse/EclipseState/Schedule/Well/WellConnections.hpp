@@ -70,8 +70,9 @@ namespace Opm {
         using const_iterator = std::vector< Connection >::const_iterator;
 
         void add( Connection );
-        size_t size() const;
+        std::size_t size() const;
         bool empty() const;
+        std::size_t num_open() const;
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;

@@ -698,6 +698,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
             const auto& cs = well.getConnections( );
 
             BOOST_CHECK_EQUAL( 7U, cs.size() );
+            BOOST_CHECK_EQUAL( 4U, cs.num_open() );
             BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 2 ).state());
             BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 3 ).state());
             BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 4 ).state());

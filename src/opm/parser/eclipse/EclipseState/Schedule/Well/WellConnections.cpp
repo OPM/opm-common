@@ -464,8 +464,14 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
 
-    size_t WellConnections::size() const {
+    std::size_t WellConnections::size() const {
         return m_connections.size();
+    }
+
+    std::size_t WellConnections::num_open() const {
+        return std::count_if(this->m_connections.begin(),
+                             this->m_connections.end(),
+                             [] (const Connection& c) { return c.state() == Connection::State::OPEN; });
     }
 
     bool WellConnections::empty() const {
