@@ -280,6 +280,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/ESmry_write_rsm.cpp
           src/opm/io/eclipse/OutputStream.cpp
+          src/opm/io/eclipse/RestartFileView.cpp
           src/opm/io/eclipse/SummaryNode.cpp
           src/opm/io/eclipse/rst/connection.cpp
           src/opm/io/eclipse/rst/group.cpp
@@ -343,6 +344,7 @@ if(ENABLE_ECL_INPUT)
     tests/rst_test.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
+    tests/test_RestartFileView.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
@@ -845,6 +847,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ESmry.hpp
         opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
+        opm/io/eclipse/RestartFileView.hpp
         opm/io/eclipse/SummaryNode.hpp
         opm/io/eclipse/rst/connection.hpp
         opm/io/eclipse/rst/group.hpp
