@@ -38,8 +38,8 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
-#include <boost/range/iterator_range.hpp>
 #include <opm/grid/utility/ErrorMacros.hpp>
+#include <opm/grid/utility/IteratorRange.hpp>
 
 #include <ostream>
 
@@ -160,23 +160,23 @@ namespace Opm
         }
 
         /// Defining the row type, returned by operator[].
-        typedef boost::iterator_range<const T*> row_type;
-        typedef boost::iterator_range<T*>       mutable_row_type;
+        using row_type = iterator_range<typename std::vector<T>::const_iterator>;
+        using mutable_row_type = mutable_iterator_range<typename std::vector<T>::iterator>;
 
         /// Returns a row of the table.
         row_type operator[](int row) const
         {
             assert(row >= 0 && row < size());
-            const T* start_ptr = data_.data();
-            return row_type(start_ptr + row_start_[row], start_ptr + row_start_[row + 1]);
+            return row_type{data_.begin()+ row_start_[row],
+                            data_.begin() + row_start_[row + 1]};
         }
 
         /// Returns a mutable row of the table.
         mutable_row_type operator[](int row)
         {
             assert(row >= 0 && row < size());
-            T* start_ptr = data_.data();
-            return mutable_row_type(start_ptr + row_start_[row], start_ptr + row_start_[row + 1]);
+            return mutable_row_type{data_.begin() + row_start_[row],
+                                    data_.begin() + row_start_[row + 1]};
         }
 
         /// Iterator for iterating over the container as a whole,
