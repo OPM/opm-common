@@ -511,7 +511,8 @@ namespace Opm {
             case opt::well_potential_gas: return this->well_potential_gas;
             case opt::brine: return this->brine;
             case opt::alq: return this->alq;
-            case opt::tracer: return this->tracer.at("");
+            case opt::tracer: /* Should _not_ be called with tracer argument */
+                break;
         }
 
         throw std::invalid_argument(
@@ -522,35 +523,10 @@ namespace Opm {
     }
 
     inline const double& Rates::get_ref( opt m, const std::string& tracer_name ) const {
-        switch( m ) {
-            case opt::tracer: return this->tracer.at(tracer_name);
-            case opt::wat: return this->wat;
-            case opt::oil: return this->oil;
-            case opt::gas: return this->gas;
-            case opt::polymer: return this->polymer;
-            case opt::solvent: return this->solvent;
-            case opt::energy: return this->energy;
-            case opt::dissolved_gas: return this->dissolved_gas;
-            case opt::vaporized_oil: return this->vaporized_oil;
-            case opt::reservoir_water: return this->reservoir_water;
-            case opt::reservoir_oil: return this->reservoir_oil;
-            case opt::reservoir_gas: return this->reservoir_gas;
-            case opt::productivity_index_water: return this->productivity_index_water;
-            case opt::productivity_index_oil: return this->productivity_index_oil;
-            case opt::productivity_index_gas: return this->productivity_index_gas;
-            case opt::well_potential_water: return this->well_potential_water;
-            case opt::well_potential_oil: return this->well_potential_oil;
-            case opt::well_potential_gas: return this->well_potential_gas;
-            case opt::brine: return this->brine;
-            case opt::alq: return this->alq;
-        }
+        if (m != opt::tracer)
+            throw std::logic_error("Logic error - should be called with tracer argument");
 
-        throw std::invalid_argument(
-                "Unknown value type '"
-                + std::to_string( static_cast< enum_size >( m ) )
-                + " (" + tracer_name + ") "
-                + "'" );
-
+        return this->tracer.at(tracer_name);
     }
 
     inline double& Rates::get_ref( opt m ) {
@@ -561,9 +537,7 @@ namespace Opm {
 
     inline double& Rates::get_ref( opt m, const std::string& tracer_name ) {
         if (m == opt::tracer) this->tracer.emplace(tracer_name, 0.0);
-        return const_cast< double& >(
-                static_cast< const Rates* >( this )->get_ref( m, tracer_name )
-                );
+        return this->tracer.at(tracer_name);
     }
 
     void Rates::init_json(Json::JsonObject& json_data) const {

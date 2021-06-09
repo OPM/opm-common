@@ -1475,9 +1475,10 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::polymer, injector > },
     { "WSIR", rate< rt::brine, injector > },
-    { "WTIR#W", ratetracer< rt::tracer, rt::wat, injector > },
-    { "WTIR#O", ratetracer< rt::tracer, rt::oil, injector > },
-    { "WTIR#G", ratetracer< rt::tracer, rt::gas, injector > },
+    // Allow phase specific interpretation of tracer related summary keywords
+    { "WTIR#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
+    { "WTIR#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
+    { "WTIR#G", ratetracer< rt::tracer, rt::gas, injector > }, // #G: Gas tracers
     { "WTIC#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
     { "WTIC#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
     { "WTIC#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },

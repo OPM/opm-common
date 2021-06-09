@@ -33,45 +33,46 @@ public:
     struct TracerEntry {
         std::string name;
         Phase phase = Phase::OIL;
-        std::vector<double> concentration;
-        std::vector<double> concentrationS;
-        TracerVdTable tvdpf;
-        TracerVdTable tvdpS;
+        std::vector<double> free_concentration;
+        std::vector<double> solution_concentration;
+        TracerVdTable free_tvdp;
+        TracerVdTable solution_tvdp;
 
         TracerEntry() = default;
-        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> concentration_)
+        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> free_concentration_)
             : name(name_)
             , phase(phase_)
-            , concentration(std::move(concentration_))
+            , free_concentration(std::move(free_concentration_))
         {}
 
-        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> concentration_, std::vector<double> concentrationS_)
+        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> free_concentration_, 
+                                                            std::vector<double> solution_concentration_)
             : name(name_)
             , phase(phase_)
-            , concentration(std::move(concentration_))
-            , concentrationS(std::move(concentrationS_))
+            , free_concentration(std::move(free_concentration_))
+            , solution_concentration(std::move(solution_concentration_))
         {}
 
-        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable tvdpf_)
+        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable free_tvdp_)
             : name(name_)
             , phase(phase_)
-            , tvdpf(std::move(tvdpf_))
+            , free_tvdp(std::move(free_tvdp_))
         {}
 
-        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable tvdpf_, TracerVdTable tvdpS_)
+        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable free_tvdp_, TracerVdTable solution_tvdp_)
             : name(name_)
             , phase(phase_)
-            , tvdpf(std::move(tvdpf_))
-            , tvdpS(std::move(tvdpS_))
+            , free_tvdp(std::move(free_tvdp_))
+            , solution_tvdp(std::move(solution_tvdp_))
         {}
 
         bool operator==(const TracerEntry& data) const {
             return this->name == data.name &&
                    this->phase == data.phase &&
-                   this->concentration == data.concentration &&
-                   this->concentrationS == data.concentrationS &&
-                   this->tvdpf == data.tvdpf &&
-                   this->tvdpS == data.tvdpS;
+                   this->free_concentration == data.free_concentration &&
+                   this->solution_concentration == data.solution_concentration &&
+                   this->free_tvdp == data.free_tvdp &&
+                   this->solution_tvdp == data.solution_tvdp;
         }
 
         template<class Serializer>
@@ -79,10 +80,10 @@ public:
         {
             serializer(name);
             serializer(phase);
-            serializer(concentration);
-            serializer(concentrationS);
-            tvdpf.serializeOp(serializer);
-            tvdpS.serializeOp(serializer);
+            serializer(free_concentration);
+            serializer(solution_concentration);
+            free_tvdp.serializeOp(serializer);
+            solution_tvdp.serializeOp(serializer);
         }
     };
 
