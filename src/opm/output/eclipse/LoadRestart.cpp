@@ -25,7 +25,7 @@
 #include <opm/output/eclipse/RestartIO.hpp>
 
 #include <opm/io/eclipse/ERst.hpp>
-#include <opm/io/eclipse/EclIOdata.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
 
 #include <opm/output/data/Aquifer.hpp>
 #include <opm/output/data/Cells.hpp>
@@ -76,165 +76,6 @@ namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
     template <typename T>
-    struct ArrayType;
-
-    template<>
-    struct ArrayType<int>
-    {
-        static Opm::EclIO::eclArrType T;
-    };
-
-    template<>
-    struct ArrayType<float>
-    {
-        static Opm::EclIO::eclArrType T;
-    };
-
-    template<>
-    struct ArrayType<double>
-    {
-        static Opm::EclIO::eclArrType T;
-    };
-
-    template<>
-    struct ArrayType<std::string>
-    {
-        static Opm::EclIO::eclArrType T;
-    };
-
-    Opm::EclIO::eclArrType ArrayType<int>::T         = ::Opm::EclIO::eclArrType::INTE;
-    Opm::EclIO::eclArrType ArrayType<float>::T       = ::Opm::EclIO::eclArrType::REAL;
-    Opm::EclIO::eclArrType ArrayType<double>::T      = ::Opm::EclIO::eclArrType::DOUB;
-    Opm::EclIO::eclArrType ArrayType<std::string>::T = ::Opm::EclIO::eclArrType::CHAR;
-}
-
-
-
-
-class RestartFileView
-{
-public:
-    explicit RestartFileView(const std::string& filename,
-                             const int          report_step);
-
-    ~RestartFileView() = default;
-
-    RestartFileView(const RestartFileView& rhs) = delete;
-    RestartFileView(RestartFileView&& rhs);
-
-    RestartFileView& operator=(const RestartFileView& rhs) = delete;
-    RestartFileView& operator=(RestartFileView&& rhs);
-
-    std::size_t simStep() const
-    {
-        return this->sim_step_;
-    }
-
-    int reportStep() const
-    {
-        return this->report_step_;
-    }
-
-    template <typename ElmType>
-    bool hasKeyword(const std::string& vector) const
-    {
-        if (this->rst_file_ == nullptr) { return false; }
-
-        const auto& coll_iter = this->vectors_.find(ArrayType<ElmType>::T);
-        return (coll_iter != this->vectors_.end() && this->collectionContains(coll_iter->second, vector));
-    }
-
-    template <typename ElmType>
-    const std::vector<ElmType>&
-    getKeyword(const std::string& vector)
-    {
-        return this->rst_file_->getRestartData<ElmType>(vector, this->report_step_, 0);
-    }
-
-    const std::vector<int>& intehead()
-    {
-        const auto& ihkw = std::string { "INTEHEAD" };
-
-        if (! this->hasKeyword<int>(ihkw)) {
-            throw std::domain_error {
-                "Purported Restart File Does not Have Integer Header"
-            };
-        }
-
-        return this->getKeyword<int>(ihkw);
-    }
-
-private:
-    using RstFile = std::unique_ptr<Opm::EclIO::ERst>;
-
-    using VectorColl = std::unordered_set<std::string>;
-    using TypedColl  = std::unordered_map<
-        Opm::EclIO::eclArrType, VectorColl, std::hash<int>
-        >;
-
-    RstFile     rst_file_;
-    int         report_step_;
-    std::size_t sim_step_;
-    TypedColl   vectors_;
-
-    bool collectionContains(const VectorColl&  coll,
-                            const std::string& vector) const
-    {
-        return coll.find(vector) != coll.end();
-    }
-
-};
-
-RestartFileView::RestartFileView(const std::string& filename,
-                                 const int          report_step)
-    : rst_file_   { new Opm::EclIO::ERst{filename} }
-    , report_step_(report_step)
-    , sim_step_   (std::max(report_step - 1, 0))
-{
-    if (! rst_file_->hasReportStepNumber(this->report_step_)) {
-        rst_file_.reset();
-        return;
-    }
-
-    this->rst_file_->loadReportStepNumber(this->report_step_);
-
-    for (const auto& vector : this->rst_file_->listOfRstArrays(this->report_step_)) {
-        const auto& type = std::get<1>(vector);
-
-        switch (type) {
-        case ::Opm::EclIO::eclArrType::LOGI:
-        case ::Opm::EclIO::eclArrType::MESS:
-            // Currently ignored
-            continue;
-
-        default:
-            this->vectors_[type].emplace(std::get<0>(vector));
-            break;
-        }
-    }
-}
-
-RestartFileView::RestartFileView(RestartFileView&& rhs)
-    : rst_file_   (std::move(rhs.rst_file_))
-    , report_step_(rhs.report_step_)
-    , sim_step_   (rhs.sim_step_)            // Scalar (size_t)
-    , vectors_    (std::move(rhs.vectors_))
-{}
-
-RestartFileView& RestartFileView::operator=(RestartFileView&& rhs)
-{
-    this->rst_file_    = std::move(rhs.rst_file_);
-    this->report_step_ = rhs.report_step_;         // Scalar (int)
-    this->sim_step_    = rhs.sim_step_;            // Scalar (size_t)
-    this->vectors_     = std::move(rhs.vectors_);
-
-    return *this;
-}
-
-// ---------------------------------------------------------------------
-
-namespace {
-    template <typename T>
     boost::iterator_range<typename std::vector<T>::const_iterator>
     getDataWindow(const std::vector<T>& arr,
                   const std::size_t     windowSize,
@@ -251,47 +92,53 @@ namespace {
         return { begin, end };
     }
 }
+
 // ---------------------------------------------------------------------
+
 class UDQVectors
 {
 public:
     template <typename T>
     using Window = boost::iterator_range<typename std::vector<T>::const_iterator>;
 
-    UDQVectors(std::shared_ptr<RestartFileView> rst_view) :
-        rstView_(rst_view)
+    UDQVectors(std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+        : rstView_{ std::move(rst_view) }
     {
-        const auto& intehead = rst_view->getKeyword<int>("INTEHEAD");
+        const auto& intehead = this->rstView_->getKeyword<int>("INTEHEAD");
         this->num_wells = intehead[VI::intehead::NWMAXZ];
         this->num_groups = intehead[VI::intehead::NGMAXZ];
     }
 
-    Window<double> next_dudw() {
+    Window<double> next_dudw() const
+    {
         return getDataWindow(this->rstView_->getKeyword<double>("DUDW"),
                              this->num_wells, this->udq_well_index++);
     }
 
-    Window<double> next_dudg() {
+    Window<double> next_dudg() const
+    {
         return getDataWindow(this->rstView_->getKeyword<double>("DUDG"),
                              this->num_groups, this->udq_group_index++);
     }
 
-    double next_dudf() {
+    double next_dudf() const
+    {
         return this->rstView_->getKeyword<double>("DUDF")[ this->udq_field_index++ ];
     }
 
-    const std::vector<std::string>& zudn() {
+    const std::vector<std::string>& zudn() const
+    {
         return this->rstView_->getKeyword<std::string>("ZUDN");
     }
 
 private:
     std::size_t num_wells;
     std::size_t num_groups;
-    std::shared_ptr<RestartFileView> rstView_;
+    std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 
-    std::size_t udq_well_index  = 0;
-    std::size_t udq_group_index = 0;
-    std::size_t udq_field_index = 0;
+    mutable std::size_t udq_well_index  = 0;
+    mutable std::size_t udq_group_index = 0;
+    mutable std::size_t udq_field_index = 0;
 };
 
 // ---------------------------------------------------------------------
@@ -304,8 +151,8 @@ public:
         typename std::vector<T>::const_iterator
     >;
 
-    explicit WellVectors(const std::vector<int>&          intehead,
-                         std::shared_ptr<RestartFileView> rst_view);
+    explicit WellVectors(const std::vector<int>&                      intehead,
+                         std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
 
     bool hasDefinedWellValues() const;
     bool hasDefinedConnectionValues() const;
@@ -326,11 +173,11 @@ private:
     std::size_t numIConElem_;
     std::size_t numXConElem_;
 
-    std::shared_ptr<RestartFileView> rstView_;
+    std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 };
 
-WellVectors::WellVectors(const std::vector<int>&          intehead,
-                         std::shared_ptr<RestartFileView> rst_view)
+WellVectors::WellVectors(const std::vector<int>&                      intehead,
+                         std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     : maxConnPerWell_(intehead[VI::intehead::NCWMAX])
     , numIWelElem_   (intehead[VI::intehead::NIWELZ])
     , numXWelElem_   (intehead[VI::intehead::NXWELZ])
@@ -415,8 +262,8 @@ public:
         typename std::vector<T>::const_iterator
     >;
 
-    explicit GroupVectors(const std::vector<int>&          intehead,
-                          std::shared_ptr<RestartFileView> rst_view);
+    explicit GroupVectors(const std::vector<int>&                      intehead,
+                          std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
 
     bool hasDefinedValues() const;
 
@@ -430,11 +277,11 @@ private:
     std::size_t numIGrpElem_;
     std::size_t numXGrpElem_;
 
-    std::shared_ptr<RestartFileView> rstView_;
+    std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 };
 
-GroupVectors::GroupVectors(const std::vector<int>&          intehead,
-                           std::shared_ptr<RestartFileView> rst_view)
+GroupVectors::GroupVectors(const std::vector<int>&                      intehead,
+                           std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     : maxNumGroups_(intehead[VI::intehead::NGMAXZ] - 1) // -FIELD
     , numIGrpElem_ (intehead[VI::intehead::NIGRPZ])
     , numXGrpElem_ (intehead[VI::intehead::NXGRPZ])
@@ -488,8 +335,8 @@ public:
         typename std::vector<T>::const_iterator
     >;
 
-    explicit SegmentVectors(const std::vector<int>&          intehead,
-                            std::shared_ptr<RestartFileView> rst_view);
+    explicit SegmentVectors(const std::vector<int>&                      intehead,
+                            std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
 
     bool hasDefinedValues() const;
 
@@ -504,11 +351,11 @@ private:
     std::size_t numISegElm_;
     std::size_t numRSegElm_;
 
-    std::shared_ptr<RestartFileView> rstView_;
+    std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 };
 
-SegmentVectors::SegmentVectors(const std::vector<int>&          intehead,
-                               std::shared_ptr<RestartFileView> rst_view)
+SegmentVectors::SegmentVectors(const std::vector<int>&                      intehead,
+                               std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     : maxSegPerWell_(intehead[VI::intehead::NSEGMX])
     , numISegElm_   (intehead[VI::intehead::NISEGZ])
     , numRSegElm_   (intehead[VI::intehead::NRSEGZ])
@@ -559,8 +406,8 @@ public:
         typename std::vector<T>::const_iterator
     >;
 
-    explicit AquiferVectors(const std::vector<int>&          intehead,
-                            std::shared_ptr<RestartFileView> rst_view);
+    explicit AquiferVectors(const std::vector<int>&                      intehead,
+                            std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
 
     bool hasDefinedValues() const;
 
@@ -573,11 +420,11 @@ private:
     std::size_t numFloatAnalyticAquiferElm_;
     std::size_t numDoubleAnalyticAquiferElm_;
 
-    std::shared_ptr<RestartFileView> rstView_;
+    std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 };
 
-AquiferVectors::AquiferVectors(const std::vector<int>&          intehead,
-                               std::shared_ptr<RestartFileView> rst_view)
+AquiferVectors::AquiferVectors(const std::vector<int>&                      intehead,
+                               std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     : numIntAnalyticAquiferElm_   (intehead[VI::intehead::NIAAQZ])
     , numFloatAnalyticAquiferElm_ (intehead[VI::intehead::NSAAQZ])
     , numDoubleAnalyticAquiferElm_(intehead[VI::intehead::NXAAQZ])
@@ -644,18 +491,18 @@ namespace {
         }
     }
 
-    bool hasAnalyticAquifers(const RestartFileView& rst_view)
+    bool hasAnalyticAquifers(const Opm::EclIO::RestartFileView& rst_view)
     {
         return rst_view.hasKeyword<double>("XAAQ");
     }
 
-    std::size_t maximumAnalyticAquiferID(RestartFileView& rst_view)
+    std::size_t maximumAnalyticAquiferID(const Opm::EclIO::RestartFileView& rst_view)
     {
         return rst_view.intehead()[VI::intehead::MAX_AN_AQUIFER_ID];
     }
 
     std::vector<double>
-    double_vector(const std::string& key, RestartFileView& rst_view)
+    double_vector(const std::string& key, const Opm::EclIO::RestartFileView& rst_view)
     {
         if (rst_view.hasKeyword<double>(key)) {
             // Data exists as type DOUB.  Return unchanged.
@@ -691,7 +538,7 @@ namespace {
 
     void loadIfAvailable(const Opm::RestartKey&               value,
                          const std::vector<double>::size_type numcells,
-                         RestartFileView&                     rst_view,
+                         const Opm::EclIO::RestartFileView&   rst_view,
                          Opm::data::Solution&                 sol)
     {
         const auto& kwdata = double_vector(value.key, rst_view);
@@ -711,7 +558,7 @@ namespace {
     void loadHysteresisIfAvailable(const std::string&                   primary,
                                    const Opm::RestartKey&               fallback_key,
                                    const std::vector<double>::size_type numcells,
-                                   RestartFileView&                     rst_view,
+                                   const Opm::EclIO::RestartFileView&   rst_view,
                                    Opm::data::Solution&                 sol)
     {
         auto kwdata = double_vector(primary, rst_view);
@@ -745,10 +592,10 @@ namespace {
         return false;
     }
 
-    void restoreHysteresisVector(const Opm::RestartKey& value,
-                                 const int              numcells,
-                                 RestartFileView&       rst_view,
-                                 Opm::data::Solution&   sol)
+    void restoreHysteresisVector(const Opm::RestartKey&             value,
+                                 const int                          numcells,
+                                 const Opm::EclIO::RestartFileView& rst_view,
+                                 Opm::data::Solution&               sol)
     {
         const auto& key = value.key;
 
@@ -769,9 +616,9 @@ namespace {
     }
 
     std::vector<double>
-    getOpmExtraFromDoubHEAD(const bool             required,
-                            const Opm::UnitSystem& usys,
-                            RestartFileView&       rst_view)
+    getOpmExtraFromDoubHEAD(const bool                         required,
+                            const Opm::UnitSystem&             usys,
+                            const Opm::EclIO::RestartFileView& rst_view)
     {
         using M = Opm::UnitSystem::measure;
 
@@ -789,7 +636,7 @@ namespace {
     Opm::data::Solution
     restoreSOLUTION(const std::vector<Opm::RestartKey>& solution_keys,
                     const int                           numcells,
-                    RestartFileView&                    rst_view)
+                    const Opm::EclIO::RestartFileView&  rst_view)
     {
         Opm::data::Solution sol(/* init_si = */ false);
 
@@ -811,7 +658,7 @@ namespace {
 
     void restoreExtra(const std::vector<Opm::RestartKey>& extra_keys,
                       const Opm::UnitSystem&              usys,
-                      RestartFileView&                    rst_view,
+                      const Opm::EclIO::RestartFileView&  rst_view,
                       Opm::RestartValue&                  rst_value)
     {
         for (const auto& extra : extra_keys) {
@@ -889,10 +736,10 @@ namespace {
     }
 
     Opm::data::Wells
-    restore_wells_opm(const ::Opm::EclipseState& es,
-                      const ::Opm::EclipseGrid&  grid,
-                      const ::Opm::Schedule&     schedule,
-                      RestartFileView&           rst_view)
+    restore_wells_opm(const ::Opm::EclipseState&         es,
+                      const ::Opm::EclipseGrid&          grid,
+                      const ::Opm::Schedule&             schedule,
+                      const Opm::EclIO::RestartFileView& rst_view)
     {
         if (! (rst_view.hasKeyword<int>   ("OPM_IWEL") &&
                rst_view.hasKeyword<double>("OPM_XWEL")))
@@ -1260,10 +1107,10 @@ namespace {
     }
 
     Opm::data::Wells
-    restore_wells_ecl(const ::Opm::EclipseState&       es,
-                      const ::Opm::EclipseGrid&        grid,
-                      const ::Opm::Schedule&           schedule,
-                      std::shared_ptr<RestartFileView> rst_view)
+    restore_wells_ecl(const ::Opm::EclipseState&                   es,
+                      const ::Opm::EclipseGrid&                    grid,
+                      const ::Opm::Schedule&                       schedule,
+                      std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
         auto soln = ::Opm::data::Wells{};
 
@@ -1331,8 +1178,8 @@ namespace {
     }
 
     Opm::data::Aquifers
-    restore_aquifers(const ::Opm::EclipseState&       es,
-                     std::shared_ptr<RestartFileView> rst_view)
+    restore_aquifers(const ::Opm::EclipseState&                   es,
+                     std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
         using M  = ::Opm::UnitSystem::measure;
         using Ix = VI::XAnalyticAquifer::index;
@@ -1450,10 +1297,9 @@ namespace {
         }
     }
 
-
-    void restore_udq(::Opm::SummaryState&             smry,
-                     const ::Opm::Schedule&           schedule,
-                     std::shared_ptr<RestartFileView>& rst_view)
+    void restore_udq(::Opm::SummaryState&                         smry,
+                     const ::Opm::Schedule&                       schedule,
+                     std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
         if (!rst_view->hasKeyword<std::string>(std::string("ZUDN")))
             return;
@@ -1461,7 +1307,7 @@ namespace {
         const auto sim_step = rst_view->simStep();
         const auto& wnames = schedule.wellNames(sim_step);
         const auto& groups = schedule.restart_groups(sim_step);
-        UDQVectors udq_vectors(rst_view);
+        const auto udq_vectors = UDQVectors{ std::move(rst_view) };
 
         for (const auto& udq : udq_vectors.zudn()) {
             if (udq[0] == 'W') {
@@ -1492,9 +1338,9 @@ namespace {
         }
     }
 
-    void restore_cumulative(::Opm::SummaryState&             smry,
-                            const ::Opm::Schedule&           schedule,
-                            std::shared_ptr<RestartFileView> rst_view)
+    void restore_cumulative(::Opm::SummaryState&                         smry,
+                            const ::Opm::Schedule&                       schedule,
+                            std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
         const auto  sim_step = rst_view->simStep();
         const auto& intehead = rst_view->intehead();
@@ -1554,8 +1400,9 @@ namespace Opm { namespace RestartIO  {
          const Schedule&                schedule,
          const std::vector<RestartKey>& extra_keys)
     {
-        auto rst_view =
-            std::make_shared<RestartFileView>(filename, report_step);
+        auto rst_file = std::make_shared<Opm::EclIO::ERst>(filename);
+        auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>
+            (std::move(rst_file), report_step);
 
         auto xr = restoreSOLUTION(solution_keys,
                                   grid.getNumActive(), *rst_view);
