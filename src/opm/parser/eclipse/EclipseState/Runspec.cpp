@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
@@ -106,6 +107,7 @@ namespace {
 
         return Opm::SatFuncControls::KeywordFamily::Undefined;
     }
+
 }
 
 namespace Opm {
@@ -534,6 +536,9 @@ Runspec::Runspec( const Deck& deck ) :
                               "See the OPM manual for details on the used models.";
             OpmLog::note(msg);
         }
+
+        if (runspecSection.hasKeyword<ParserKeywords::DEBUGF>())
+            Runspec::update_debug_config(this->debug_config, runspecSection.getKeyword<ParserKeywords::DEBUGF>());
     }
 }
 
@@ -617,6 +622,13 @@ bool Runspec::co2Storage() const noexcept
     return this->m_co2storage;
 }
 
+const DebugConfig& Runspec::debugConfig() const noexcept
+{
+    return this->debug_config;
+}
+
+
+
 /*
   Returns an integer in the range 0...7 which can be used to indicate
   available phases in Eclipse restart and init files.
@@ -647,6 +659,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
         full_spec.actdims() == rst_spec.actdims() &&
         full_spec.saturationFunctionControls() == rst_spec.saturationFunctionControls() &&
         full_spec.m_nupcol == rst_spec.m_nupcol &&
+        full_spec.debug_config == rst_spec.debug_config &&
         full_spec.m_co2storage == rst_spec.m_co2storage &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
@@ -663,6 +676,7 @@ bool Runspec::operator==(const Runspec& data) const {
            this->actdims() == data.actdims() &&
            this->saturationFunctionControls() == data.saturationFunctionControls() &&
            this->m_nupcol == data.m_nupcol &&
+           this->debug_config == data.debug_config &&
            this->m_co2storage == data.m_co2storage;
 }
 
