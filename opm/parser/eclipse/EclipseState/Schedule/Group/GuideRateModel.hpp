@@ -40,6 +40,7 @@ public:
     };
 
     static Target TargetFromString(const std::string& s);
+    static std::string targetToString(const Target target);
 
     GuideRateModel(double time_interval_arg,
                    Target target_arg,
