@@ -32,6 +32,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/OpmLog/StreamLog.cpp
       src/opm/common/OpmLog/TimerLog.cpp
       src/opm/common/utility/ActiveGridCells.cpp
+      src/opm/common/utility/DebugConfig.cpp
       src/opm/common/utility/FileSystem.cpp
       src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
       src/opm/common/utility/OpmInputError.cpp
@@ -340,6 +341,7 @@ list (APPEND TEST_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
+    tests/test_DebugConfig.cpp
     tests/rst_test.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
@@ -569,6 +571,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/TimerLog.hpp
       opm/common/utility/Serializer.hpp
       opm/common/utility/ActiveGridCells.hpp
+      opm/common/utility/DebugConfig.hpp
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
       opm/common/utility/numeric/cmp.hpp
