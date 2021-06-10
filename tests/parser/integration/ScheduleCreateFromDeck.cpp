@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -61,7 +60,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
         FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck);
         Schedule sched(deck,  grid , fp, runspec, python);
-        BOOST_CHECK_EQUAL(TimeMap::mkdate(2007 , 5 , 10), sched.getStartTime());
+        BOOST_CHECK_EQUAL(asTimeT(TimeStampUTC(2007 , 5 , 10)), sched.getStartTime());
         BOOST_CHECK_EQUAL(9U, sched.size());
         BOOST_CHECK( deck.hasKeyword("NETBALAN") );
     }
@@ -78,7 +77,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     Runspec runspec (deck);
     auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
-    BOOST_CHECK_EQUAL(TimeMap::mkdate(2007, 5 , 10) , sched.getStartTime());
+    BOOST_CHECK_EQUAL(asTimeT(TimeStampUTC(2007, 5 , 10)) , sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, sched.size());
 }
 

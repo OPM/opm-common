@@ -25,10 +25,10 @@
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/io/eclipse/rst/header.hpp>
@@ -44,24 +44,24 @@
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
-    std::vector<double> elapsedTime(const Opm::TimeMap& tmap)
+std::vector<double> elapsedTime(const Opm::Schedule& sched)
+{
+    auto elapsed = std::vector<double>{};
+
+    elapsed.reserve(sched.size());
+    elapsed.push_back(0.0);
+
+    for (auto nstep = sched.size() - 1,
+              step  = 0*nstep; step < nstep; ++step)
     {
-        auto elapsed = std::vector<double>{};
-
-        elapsed.reserve(tmap.size());
-        elapsed.push_back(0.0);
-
-        for (auto nstep = tmap.size() - 1,
-                  step  = 0*nstep; step < nstep; ++step)
-        {
-            elapsed.push_back(tmap.getTimeStepLength(step));
-        }
-
-        std::partial_sum(std::begin(elapsed), std::end(elapsed),
-                         std::begin(elapsed));
-
-        return elapsed;
+        elapsed.push_back(sched.stepLength(step));
     }
+
+    std::partial_sum(std::begin(elapsed), std::end(elapsed),
+                     std::begin(elapsed));
+
+    return elapsed;
+}
 
     void expectDate(const Opm::RestartIO::InteHEAD::TimePoint& tp,
                     const int year, const int month, const int day)
@@ -476,6 +476,17 @@ BOOST_AUTO_TEST_CASE(ngroups)
 
     BOOST_CHECK_EQUAL(v[VI::intehead::NGRP], ngroup);
 }
+
+static Opm::Schedule make_schedule(const std::string& deck_string) {
+    const auto& deck = Opm::Parser{}.parseString(deck_string);
+    auto python = std::make_shared<Opm::Python>();
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::TableManager table ( deck );
+    Opm::FieldPropsManager fp( deck, Opm::Phases{true, true, true}, grid, table);
+    Opm::Runspec runspec (deck);
+    return Opm::Schedule(deck, grid , fp, runspec, python);
+}
+
 BOOST_AUTO_TEST_CASE(SimulationDate)
 {
     const auto input = std::string { R"(
@@ -496,12 +507,10 @@ TSTEP
   10*365.0D0 /
 )"  };
 
-    const auto tmap = ::Opm::TimeMap {
-        ::Opm::Parser{}.parseString(input)
-    };
+    auto sched = make_schedule(input);
 
-    const auto start   = tmap.getStartTime(0);
-    const auto elapsed = elapsedTime(tmap);
+    const auto start = sched.getStartTime();
+    const auto elapsed = elapsedTime(sched);
 
     auto checkDate = [start, &elapsed]
         (const std::vector<double>::size_type i,
