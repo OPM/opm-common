@@ -48,6 +48,7 @@ public:
     static void problem(const std::string& message);
     static void bug(const std::string& message);
     static void debug(const std::string& message);
+    static void debug(DebugConfig::Topic topic, DebugConfig::Verbosity verbosity, const std::string& message);
     static void note(const std::string& message);
 
     static void info(const std::string& tag, const std::string& message);
@@ -64,6 +65,7 @@ public:
     static void removeAllBackends();
     static bool enabledMessageType( int64_t messageType );
     static void addMessageType( int64_t messageType , const std::string& prefix);
+    static void updateDebugConfig(const DebugConfig& dbg_config);
 
     /// Create a basic logging setup that will send all log messages to standard output.
     ///

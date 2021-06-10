@@ -109,6 +109,10 @@ namespace Opm {
         addMessage(Log::MessageType::Debug, message);
     }
 
+    void OpmLog::debug(DebugConfig::Topic topic, DebugConfig::Verbosity verbosity, const std::string& message) {
+        if (m_logger)
+            m_logger->debug(topic, verbosity, message);
+    }
 
     void OpmLog::note(const std::string& message)
     {
@@ -201,6 +205,11 @@ namespace Opm {
     void OpmLog::addBackend(const std::string& name , std::shared_ptr<LogBackend> backend) {
         auto logger = OpmLog::getLogger();
         return logger->addBackend( name , backend );
+    }
+
+    void OpmLog::updateDebugConfig(const DebugConfig& dbg_config) {
+        if (m_logger)
+            m_logger->updateDebugConfig(dbg_config);
     }
 
 
