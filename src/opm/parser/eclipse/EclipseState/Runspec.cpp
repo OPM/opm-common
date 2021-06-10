@@ -666,5 +666,30 @@ bool Runspec::operator==(const Runspec& data) const {
            this->m_co2storage == data.m_co2storage;
 }
 
+void Runspec::update_debug_config(DebugConfig& debug_config, const DeckKeyword& debugf_keyword) {
+    const auto& items = debugf_keyword.getStringData();
+    if (items.empty()) {
+        debug_config.reset();
+        return;
+    }
+
+    for( const auto& item : debugf_keyword.getStringData()) {
+        const auto sep_pos = item.find_first_of( "=" );
+        std::string setting = item.substr( 0, sep_pos );
+        if (sep_pos != std::string::npos) {
+            auto string_verbosity = item.substr(sep_pos+1);
+            auto up = debug_config.update(setting, string_verbosity);
+
+            if (!up) {
+                const auto& location = debugf_keyword.location();
+                auto msg = fmt::format("Problem with{}\n",
+                                       "In {} line{}\n"
+                                       "Debug setting {} not recognized", location.keyword, location.filename, location.lineno, item);
+                OpmLog::warning(msg);
+            }
+        } else
+            debug_config.update(setting);
+    }
+}
 
 }
