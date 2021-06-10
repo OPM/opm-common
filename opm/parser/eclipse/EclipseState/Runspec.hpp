@@ -422,6 +422,7 @@ public:
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
     const Nupcol& nupcol() const noexcept;
+    const DebugConfig& debugConfig() const noexcept;
     bool co2Storage() const noexcept;
 
     bool operator==(const Runspec& data) const;
@@ -444,6 +445,7 @@ public:
         m_sfuncctrl.serializeOp(serializer);
         m_nupcol.serializeOp(serializer);
         serializer(m_co2storage);
+        serializer(this->debug_config);
     }
 
 private:
@@ -461,6 +463,7 @@ private:
     SatFuncControls m_sfuncctrl;
     Nupcol m_nupcol;
     bool m_co2storage;
+    DebugConfig debug_config;
 };
 
 
