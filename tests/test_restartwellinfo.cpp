@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>

@@ -138,7 +138,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
@@ -403,7 +402,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/TableManagerTests.cpp
     tests/parser/TableSchemaTests.cpp
     tests/parser/ThresholdPressureTest.cpp
-    tests/parser/TimeMapTest.cpp
     tests/parser/TracerTests.cpp
     tests/parser/TransMultTests.cpp
     tests/parser/TuningTests.cpp
@@ -749,7 +747,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Network/Branch.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/Node.hpp
-       opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp

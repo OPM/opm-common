@@ -25,7 +25,6 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
@@ -200,7 +199,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     auto python = std::make_shared<Python>();
     EclipseState state(deck);
     Schedule schedule(deck, state, python);
-    BOOST_CHECK_EQUAL(schedule.getStartTime(), TimeMap::mkdate( 1998 , 3 , 8));
+    BOOST_CHECK_EQUAL(schedule.getStartTime(), asTimeT(TimeStampUTC( 1998 , 3 , 8)));
 }
 
 

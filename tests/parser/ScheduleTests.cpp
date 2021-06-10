@@ -39,7 +39,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -362,7 +361,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule schedule(deck, grid , fp, runspec, python);
-    BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1983, 1 , 1));
+    BOOST_CHECK_EQUAL( schedule.getStartTime() , asTimeT( TimeStampUTC(1983, 1, 1)));
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
@@ -472,7 +471,7 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     const auto& schedule = make_schedule( createDeck() );
-    BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1998, 3  , 8 ));
+    BOOST_CHECK_EQUAL( schedule.getStartTime() , asTimeT(TimeStampUTC(1998, 3  , 8 )));
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
