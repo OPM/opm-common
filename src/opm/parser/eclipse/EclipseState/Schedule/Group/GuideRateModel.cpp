@@ -349,4 +349,32 @@ GuideRateModel::Target GuideRateModel::convert_target(Phase injection_phase) {
     throw std::logic_error("Can not convert this .... ");
 }
 
+std::string GuideRateModel::targetToString(const Target target) {
+    switch (target) {
+        case Target::OIL:
+            return "OIL";
+            break;
+        case Target::LIQ:
+            return "LIQ";
+            break;
+        case Target::GAS:
+            return "GAS";
+            break;
+        case Target::WAT:
+            return "WAT";
+            break;
+        case Target::RES:
+            return "RES";
+            break;
+        case Target::COMB:
+            return "COMB";
+            break;
+        case Target::NONE:
+            return "NONE";
+            break;
+        default:
+            throw std::logic_error("Not knowing what kind of target it is");
+    }
+}
+
 }
