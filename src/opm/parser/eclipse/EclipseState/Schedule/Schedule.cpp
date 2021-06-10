@@ -1681,6 +1681,7 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.guide_rate.update( GuideRateConfig() );
     sched_state.rft_config.update( RFTConfig() );
     sched_state.rst_config.update( RSTConfig::first( this->m_static.rst_config ) );
+    sched_state.debug_config.update( this->m_static.m_runspec.debugConfig() );
     //sched_state.update_date( start_time );
     this->addGroup("FIELD", 0);
 }
