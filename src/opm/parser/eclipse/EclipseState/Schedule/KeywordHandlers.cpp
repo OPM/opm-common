@@ -359,7 +359,7 @@ namespace {
                     // FLD overrides item 8 (is_free i.e if FLD the group is available for higher up groups)
                     const bool availableForGroupControl = (is_free || controlMode == Group::InjectionCMode::FLD)&& !is_field;
                     auto new_group = this->snapshots.back().groups.get(group_name);
-                    Group::GroupInjectionProperties injection;
+                    Group::GroupInjectionProperties injection{group_name};
                     injection.phase = phase;
                     injection.cmode = controlMode;
                     injection.surface_max_rate = surfaceInjectionRate;
@@ -397,6 +397,10 @@ namespace {
                         this->snapshots.back().groups.update( std::move(new_group));
                         this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
                         this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
+
+                        auto udq_active = this->snapshots.back().udq_active.get();
+                        if (injection.updateUDQActive(this->getUDQConfig(current_step), udq_active))
+                            this->snapshots.back().udq_active.update( std::move(udq_active));
                     }
                 }
             }
@@ -539,7 +543,7 @@ namespace {
             new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->m_static.m_unit_system);
 
             auto new_group = this->snapshots.back().groups.get( groupName );
-            Group::GroupInjectionProperties injection;
+            Group::GroupInjectionProperties injection{groupName};
             injection.phase = Phase::GAS;
             if (new_group.updateInjection(injection))
                 this->snapshots.back().groups.update(new_group);
