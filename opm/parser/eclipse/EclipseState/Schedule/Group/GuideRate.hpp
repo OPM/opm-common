@@ -49,12 +49,18 @@ struct RateVector {
         wat_rat(wrat)
     {}
 
+    static RateVector rateVectorFromGuideRate(double guide_rate, GuideRateModel::Target target, const RateVector& rates);
 
     double eval(Well::GuideRateTarget target) const;
     double eval(Group::GuideRateProdTarget target) const;
     double eval(GuideRateModel::Target target) const;
 
 
+    bool operator==(const RateVector& other) const {
+        return (this->oil_rat == other.oil_rat) &&
+                (this->gas_rat == other.gas_rat) &&
+                (this->wat_rat == other.wat_rat);
+    }
     double oil_rat;
     double gas_rat;
     double wat_rat;
@@ -65,7 +71,7 @@ private:
 
 struct GuideRateValue {
     GuideRateValue() = default;
-    GuideRateValue(double t, double v, GuideRateModel::Target tg):
+    GuideRateValue(double t, const RateVector& v, GuideRateModel::Target tg):
         sim_time(t),
         value(v),
         target(tg)
@@ -81,7 +87,7 @@ struct GuideRateValue {
     }
 
     double sim_time { std::numeric_limits<double>::lowest() };
-    double value { std::numeric_limits<double>::lowest() };
+    RateVector value { std::numeric_limits<double>::lowest(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::lowest() };
     GuideRateModel::Target target { GuideRateModel::Target::NONE };
 };
 
@@ -92,7 +98,7 @@ struct GRValState {
 
 public:
     GuideRate(const Schedule& schedule);
-    void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot, const bool update_now=false);
     void compute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
     double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
     double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
@@ -101,15 +107,18 @@ public:
     bool has(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
 
+    // prototyping for now, might make it private later
+    bool timeToUpdate(const double sim_time, const double time_interval) const;
+
 private:
-    void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot, const bool update_now=false);
     void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot) const;
+    RateVector eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot) const;
     double eval_group_pot() const;
     double eval_group_resvinj() const;
 
     void assign_grvalue(const std::string& wgname, const GuideRateModel& model, GuideRateValue&& value);
-    double get_grvalue_result(const GRValState& gr) const;
+    // double get_grvalue_result(const GRValState& gr) const;
 
     using GRValPtr = std::unique_ptr<GRValState>;
 
