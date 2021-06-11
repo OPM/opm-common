@@ -307,8 +307,13 @@ if(ENABLE_ECL_INPUT)
   endforeach()
 endif()
 
-# Install build system files
-install(DIRECTORY cmake DESTINATION share/opm USE_SOURCE_PERMISSIONS)
+# Install build system files and documentation
+install(DIRECTORY cmake
+  DESTINATION share/opm USE_SOURCE_PERMISSIONS
+  PATTERN "OPM-CMake.md" EXCLUDE)
+
+install(FILES cmake/OPM-CMake.md
+  DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 # Install tab completion skeleton
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
