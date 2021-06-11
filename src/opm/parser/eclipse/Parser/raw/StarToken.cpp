@@ -152,7 +152,7 @@ namespace Opm {
 
             if (cnt < 1)
                 // TODO: decorate the deck with a warning instead?
-                throw std::invalid_argument("Specifing zero repetitions is not allowed. Token: \'" + std::string(token) + "\'.");
+                throw std::invalid_argument("Specifying zero repetitions is not allowed. Token: \'" + std::string(token) + "\'.");
 
             m_count = static_cast<std::size_t>(cnt);
         }
