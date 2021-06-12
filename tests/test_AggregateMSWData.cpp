@@ -92,11 +92,11 @@ Opm::SummaryState sim_state()
     state.update("WBHP:WINJ",  234.);
     return state;
 }
-Opm::data::WellRates wr()
+Opm::data::Wells wr()
 {
     using o = ::Opm::data::Rates::opt;
 
-    auto xw = ::Opm::data::WellRates {};
+    auto xw = ::Opm::data::Wells {};
 
     {
         xw["PROD"].rates
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 
     //BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
 
-    const Opm::data::WellRates wrc = wr();
+    const Opm::data::Wells wrc = wr();
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
     amswd.captureDeclaredMSWData(simCase.sched,
                                  rptStep,
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(MSW_AICD) {
                                    rptStep, rptStep+1, rptStep);
 
 
-    const Opm::data::WellRates wrc = wr();
+    const Opm::data::Wells wrc = wr();
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
     amswd.captureDeclaredMSWData(simCase.sched,
                                  rptStep,
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(MSW_RST) {
                                    rptStep, rptStep+1, rptStep);
 
 
-    const Opm::data::WellRates wrc = wr();
+    const Opm::data::Wells wrc = wr();
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
     amswd.captureDeclaredMSWData(simCase.sched,
                                  rptStep,

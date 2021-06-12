@@ -32,7 +32,7 @@ namespace Opm {
 } // Opm
 
 namespace Opm { namespace data {
-    class WellRates;
+    class Wells;
 }} // Opm::data
 
 namespace Opm { namespace RestartIO { namespace Helpers {

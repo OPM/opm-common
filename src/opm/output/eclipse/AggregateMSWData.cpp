@@ -727,7 +727,7 @@ namespace {
                                   const Opm::EclipseGrid&     grid,
                                   const Opm::UnitSystem&      units,
                                   const ::Opm::SummaryState&  smry,
-                                  const Opm::data::WellRates& wr,
+                                  const Opm::data::Wells& wr,
                                   RSegArray&                  rSeg)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
@@ -990,7 +990,7 @@ captureDeclaredMSWData(const Schedule&         sched,
                        const std::vector<int>& inteHead,
                        const Opm::EclipseGrid&  grid,
                        const Opm::SummaryState& smry,
-                       const Opm::data::WellRates&  wr
+                       const Opm::data::Wells&  wr
                        )
 {
     const auto& wells = sched.getWells(rptStep);

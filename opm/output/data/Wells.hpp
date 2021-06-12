@@ -308,7 +308,7 @@ namespace Opm {
     };
 
 
-    class WellRates : public std::map<std::string , Well> {
+    class Wells: public std::map<std::string , Well> {
     public:
 
         double get(const std::string& well_name , Rates::opt m) const {
@@ -360,8 +360,6 @@ namespace Opm {
             }
         }
     };
-
-    using Wells = WellRates;
 
 
     /* IMPLEMENTATIONS */

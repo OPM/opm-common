@@ -552,7 +552,7 @@ namespace {
         return xw;
     }
 
-    ::Opm::data::WellRates wellSol(const ::Opm::EclipseGrid& grid)
+    ::Opm::data::Wells wellSol(const ::Opm::EclipseGrid& grid)
     {
         auto xw = ::Opm::data::Wells{};
 

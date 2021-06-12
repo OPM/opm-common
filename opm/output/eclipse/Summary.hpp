@@ -41,7 +41,7 @@ namespace Opm {
 } // namespace Opm
 
 namespace Opm { namespace data {
-    class WellRates;
+    class Wells;
     class GroupAndNetworkValues;
 }} // namespace Opm::data
 
@@ -66,7 +66,7 @@ public:
     void eval(SummaryState&                      summary_state,
               const int                          report_step,
               const double                       secs_elapsed,
-              const data::WellRates&             well_solution,
+              const data::Wells&                 well_solution,
               const data::GroupAndNetworkValues& group_and_nwrk_solution,
               GlobalProcessParameters            single_values,
               const Inplace&                     initial_inplace,

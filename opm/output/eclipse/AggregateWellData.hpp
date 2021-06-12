@@ -39,7 +39,7 @@ namespace Opm {
 } // Opm
 
 namespace Opm { namespace data {
-    class WellRates;
+    class Wells;
 }} // Opm::data
 
 namespace Opm { namespace RestartIO { namespace Helpers {
@@ -58,7 +58,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         void captureDynamicWellData(const Opm::Schedule&        sched,
                                     const std::size_t           sim_step,
-                                    const Opm::data::WellRates& xw,
+                                    const Opm::data::Wells&     xw,
                                     const Opm::SummaryState&    smry);
 
         /// Retrieve Integer Well Data Array.

@@ -388,7 +388,7 @@ void Opm::RftIO::write(const int                        reportStep,
                        const ::Opm::UnitSystem&         usys,
                        const ::Opm::EclipseGrid&        grid,
                        const ::Opm::Schedule&           schedule,
-                       const ::Opm::data::WellRates&    wellSol,
+                       const ::Opm::data::Wells&        wellSol,
                        ::Opm::EclIO::OutputStream::RFT& rftFile)
 {
     const auto& rftCfg = schedule[reportStep].rft_config();

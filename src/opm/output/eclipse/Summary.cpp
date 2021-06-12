@@ -2297,7 +2297,7 @@ namespace Evaluator {
 
     struct SimulatorResults
     {
-        const Opm::data::WellRates& wellSol;
+        const Opm::data::Wells& wellSol;
         const Opm::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
         const Opm::Inplace inplace;
@@ -3144,7 +3144,7 @@ public:
 
     void eval(const int                          sim_step,
               const double                       secs_elapsed,
-              const data::WellRates&             well_solution,
+              const data::Wells&             well_solution,
               const data::GroupAndNetworkValues& grp_nwrk_solution,
               GlobalProcessParameters&           single_values,
               const Inplace&                     initial_inplace,
@@ -3287,7 +3287,7 @@ void
 Opm::out::Summary::SummaryImplementation::
 eval(const int                          sim_step,
      const double                       secs_elapsed,
-     const data::WellRates&             well_solution,
+     const data::Wells&             well_solution,
      const data::GroupAndNetworkValues& grp_nwrk_solution,
      GlobalProcessParameters&           single_values,
      const Inplace&                     initial_inplace,
@@ -3717,7 +3717,7 @@ Summary::Summary(const EclipseState&  es,
 void Summary::eval(SummaryState&                      st,
                    const int                          report_step,
                    const double                       secs_elapsed,
-                   const data::WellRates&             well_solution,
+                   const data::Wells&             well_solution,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
                    const Inplace&                     initial_inplace,

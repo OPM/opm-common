@@ -472,11 +472,11 @@ END
         return Opm::Parser{}.parseString(input);
     }
 
-    std::pair<Opm::data::WellRates, Opm::SummaryState> wr(const Opm::Schedule& sched)
+    std::pair<Opm::data::Wells, Opm::SummaryState> wr(const Opm::Schedule& sched)
     {
         using o = ::Opm::data::Rates::opt;
 
-        auto xw = ::Opm::data::WellRates {};
+        auto xw = ::Opm::data::Wells {};
         Opm::SummaryState sum_state(Opm::TimeService::now());
 
         {

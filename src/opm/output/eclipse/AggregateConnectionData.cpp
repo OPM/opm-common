@@ -76,7 +76,7 @@ namespace {
     void wellConnectionLoop(const Opm::Schedule&        sched,
                             const std::size_t           sim_step,
                             const Opm::EclipseGrid&     grid,
-                            const Opm::data::WellRates& xw,
+                            const Opm::data::Wells& xw,
                             ConnOp&&                    connOp)
     {
         for (const auto& wname : sched.wellNames(sim_step)) {
@@ -306,7 +306,7 @@ Opm::RestartIO::Helpers::AggregateConnectionData::
 captureDeclaredConnData(const Schedule&        sched,
                         const EclipseGrid&     grid,
                         const UnitSystem&      units,
-                        const data::WellRates& xw,
+                        const data::Wells& xw,
                         const SummaryState&    summary_state,
                         const std::size_t      sim_step)
 {
