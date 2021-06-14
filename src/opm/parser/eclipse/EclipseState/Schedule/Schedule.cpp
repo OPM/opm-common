@@ -1133,10 +1133,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->snapshots[timeStep].udq.get();
     }
 
-    const GuideRateConfig& Schedule::guideRateConfig(std::size_t timeStep) const {
-        return this->snapshots[timeStep].guide_rate();
-    }
-
     std::optional<int> Schedule::exitStatus() const {
         return this->exit_status;
     }
