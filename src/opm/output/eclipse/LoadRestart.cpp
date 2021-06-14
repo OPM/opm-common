@@ -1055,24 +1055,29 @@ namespace {
 
         auto xw = ::Opm::data::Well{};
 
-        // 1) Restore well rates (xw.rates)
+        // 1) Restore well rates (xw.rates) including guide rates
         if (wat) {
             xw.rates.set(Opm::data::Rates::opt::wat,
                          - usys.to_si(M::liquid_surface_rate,
                                       xwel[VI::XWell::index::WatPrRate]));
+            xw.guide_rates.set(Opm::data::GuideRateValue::Item::Water, usys.to_si(M::liquid_surface_rate, xwel[VI::XWell::index::WatPrGuideRate]));
         }
 
         if (oil) {
             xw.rates.set(Opm::data::Rates::opt::oil,
                          - usys.to_si(M::liquid_surface_rate,
                                       xwel[VI::XWell::index::OilPrRate]));
+            xw.guide_rates.set(Opm::data::GuideRateValue::Item::Oil, usys.to_si(M::liquid_surface_rate, xwel[VI::XWell::index::PrimGuideRate]));
         }
 
         if (gas) {
             xw.rates.set(Opm::data::Rates::opt::gas,
                          - usys.to_si(M::gas_surface_rate,
                                       xwel[VI::XWell::index::GasPrRate]));
+            xw.guide_rates.set(Opm::data::GuideRateValue::Item::Gas, usys.to_si(M::gas_surface_rate, xwel[VI::XWell::index::GasPrGuideRate]));
         }
+        xw.guide_rates.set(Opm::data::GuideRateValue::Item::ResV, usys.to_si(M::rate, xwel[VI::XWell::index::VoidPrGuideRate]));
+
 
         // 2) Restore other well quantities (really only xw.bhp)
         xw.bhp = usys.to_si(M::pressure, xwel[VI::XWell::index::FlowBHP]);
