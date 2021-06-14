@@ -1021,7 +1021,7 @@ void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDynamicWellData(const Opm::Schedule&        sched,
                        const std::size_t           sim_step,
-                       const Opm::data::WellRates& xw,
+                       const Opm::data::Wells& xw,
                        const ::Opm::SummaryState&  smry)
 {
     const auto& wells = sched.wellNames(sim_step);

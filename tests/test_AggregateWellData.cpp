@@ -485,11 +485,11 @@ TSTEP            -- 9
         return state;
     }
 
-    Opm::data::WellRates well_rates_1()
+    Opm::data::Wells well_rates_1()
     {
         using o = ::Opm::data::Rates::opt;
 
-        auto xw = ::Opm::data::WellRates{};
+        auto xw = ::Opm::data::Wells{};
 
         {
             xw["OP_1"].rates
@@ -524,11 +524,11 @@ TSTEP            -- 9
         return xw;
     }
 
-    Opm::data::WellRates well_rates_2()
+    Opm::data::Wells well_rates_2()
     {
         using o = ::Opm::data::Rates::opt;
 
-        auto xw = ::Opm::data::WellRates{};
+        auto xw = ::Opm::data::Wells{};
 
         {
             xw["OP_1"].bhp = 150.0;  // Closed

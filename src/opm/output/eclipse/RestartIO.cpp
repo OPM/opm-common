@@ -488,7 +488,7 @@ namespace {
                           const EclipseGrid&                            grid,
                           const EclipseState&                           es,
                           const Schedule&                               schedule,
-                          const data::WellRates&                        wellSol,
+                          const data::Wells&                        wellSol,
                           const Opm::Action::State&                     action_state,
                           const Opm::SummaryState&                      sumState,
                           const std::vector<int>&                       inteHD,
