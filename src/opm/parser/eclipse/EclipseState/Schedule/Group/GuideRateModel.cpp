@@ -290,7 +290,7 @@ GuideRateModel::Target GuideRateModel::TargetFromString(const std::string& s) {
        the necessary SummaryState into this.
 */
 
-bool GuideRateModel::updateLINCOM(const UDAValue& , const UDAValue& , const UDAValue& ) {
+bool GuideRateModel::updateLINCOM(const UDAValue& , const UDAValue& , const UDAValue& ) const {
     if (this->m_target == Target::COMB)
         throw std::logic_error("The LINCOM keyword is not supported - at all!");
 

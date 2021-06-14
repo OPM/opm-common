@@ -66,8 +66,8 @@ public:
 
     static GuideRateModel serializeObject();
 
-    bool updateLINCOM(const UDAValue& alpha, const UDAValue& beta, const UDAValue& gamma);
     double eval(double oil_pot, double gas_pot, double wat_pot) const;
+    bool updateLINCOM(const UDAValue& alpha, const UDAValue& beta, const UDAValue& gamma) const;
     double update_delay() const;
     bool allow_increase() const;
     double damping_factor() const;
