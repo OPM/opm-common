@@ -30,6 +30,8 @@
 #include <utility>
 #include <fmt/core.h>
 #include <stddef.h>
+#include <fstream>
+
 
 namespace Opm {
 
@@ -267,6 +269,10 @@ void GuideRate::well_compute(const std::string& wgname,
         }
 
         const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
+        {
+            std::ofstream os("guiderate.txt", std::ofstream::app);
+            os << report_step << " : " << sim_time << "   " << wgname << " Pot: (" << oil_pot <<", " << gas_pot << ", " << wat_pot << ") " << guide_rate << " " << std::endl;
+        }
         this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
     }
     // If neither WGRUPCON nor GUIDERAT is specified potentials are used
