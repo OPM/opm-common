@@ -320,6 +320,13 @@ void GuideRate::assign_grvalue(const std::string&    wgname,
     v->curr.value = damping_factor*new_guide_rate + (1 - damping_factor)*v->prev.value;
 }
 
+
+void GuideRate::init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value) {
+    const auto& model = this->schedule[report_step].guide_rate().model();
+    this->assign_grvalue(wgname, model, std::move(value));
+}
+
+
 double GuideRate::get_grvalue_result(const GRValState& gr) const
 {
     return (gr.curr.sim_time < 0.0)
