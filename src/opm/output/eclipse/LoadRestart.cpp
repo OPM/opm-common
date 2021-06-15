@@ -1390,6 +1390,30 @@ namespace {
             }
         }
     }
+
+
+Opm::data::GroupAndNetworkValues restore_groups(const Opm::Schedule& schedule,
+                                                std::shared_ptr<Opm::EclIO::RestartFileView> rst_view) {
+
+        Opm::data::GroupAndNetworkValues xg_nwrk;
+        auto sim_step = rst_view->simStep();
+        for (const auto& gname : schedule.groupNames(sim_step)) {
+            const auto& group = schedule.getGroup(gname, sim_step);
+            auto& gr_data = xg_nwrk.groupData[gname];
+
+            gr_data.currentControl.currentProdConstraint = ;
+            gr_data.currentControl.currentGasInjectionConstraint = ;
+            gr_data.currentControl.currentWaterInjectionConstraint = ;
+
+            gr_data.guideRates.production = {};
+            gr_data.guideRates.injection = {};
+
+            double node_pressure = -1;
+            xg_nwrk.nodeData[gname].pressure = node_pressure;
+        }
+        return xg_nwrk;
+    }
+
 } // Anonymous namespace
 
 namespace Opm { namespace RestartIO  {
@@ -1417,7 +1441,8 @@ namespace Opm { namespace RestartIO  {
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_opm(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule,  rst_view);
-        data::GroupAndNetworkValues xg_nwrk;
+
+        auto xg_nwrk = restore_groups();
 
         auto aquifers = hasAnalyticAquifers(*rst_view)
             ? restore_aquifers(es, rst_view) : data::Aquifers{};
