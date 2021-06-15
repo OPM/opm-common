@@ -30,8 +30,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <opm/json/JsonObject.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
-
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
@@ -98,6 +98,7 @@ namespace Opm {
 
             bool operator==(const Rates& rat2) const;
 
+        inline void init_json(Json::JsonObject& json_data) const;
         private:
             double& get_ref( opt );
             const double& get_ref( opt ) const;
@@ -155,6 +156,8 @@ namespace Opm {
         void write(MessageBufferType& buffer) const;
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        inline void init_json(Json::JsonObject& json_data) const;
     };
 
     class SegmentPressures {
@@ -242,6 +245,19 @@ namespace Opm {
                     (!this->isProducer && (this->inj == rhs.inj)));
         }
 
+        void init_json(Json::JsonObject& json_data) const
+        {
+            if (this->inj == ::Opm::Well::InjectorCMode::CMODE_UNDEFINED)
+                json_data.add_item("inj", "CMODE_UNDEFINED");
+            else
+                json_data.add_item("inj", ::Opm::Well::InjectorCMode2String(this->inj));
+
+            if (this->prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED)
+                json_data.add_item("prod", "CMODE_UNDEFINED");
+            else
+                json_data.add_item("prod", ::Opm::Well::ProducerCMode2String(this->prod));
+        }
+
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
 
@@ -268,6 +284,8 @@ namespace Opm {
         void write(MessageBufferType& buffer) const;
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        inline void init_json(Json::JsonObject& json_data) const;
 
         const Connection* find_connection(Connection::global_index connection_grid_index) const {
             const auto connection = std::find_if( this->connections.begin() ,
@@ -359,6 +377,21 @@ namespace Opm {
                 this->emplace(name, well);
             }
         }
+
+        void init_json(Json::JsonObject& json_data) const {
+            for (const auto& [wname, well] : *this) {
+                auto json_well = json_data.add_object(wname);
+                well.init_json(json_well);
+            }
+        }
+
+
+        Json::JsonObject json() const {
+            Json::JsonObject json_data;
+            this->init_json(json_data);
+            return json_data;
+        }
+
     };
 
 
@@ -465,6 +498,19 @@ namespace Opm {
                 );
     }
 
+    void Rates::init_json(Json::JsonObject& json_data) const {
+
+        if (this->has(opt::wat))
+            json_data.add_item("wat", this->get(opt::wat));
+
+        if (this->has(opt::oil))
+            json_data.add_item("oil", this->get(opt::oil));
+
+        if (this->has(opt::gas))
+            json_data.add_item("gas", this->get(opt::gas));
+
+    }
+
 
     bool inline Rates::flowing() const {
         return ((this->wat != 0) ||
@@ -511,6 +557,21 @@ namespace Opm {
             buffer.write(this->cell_saturation_gas);
             buffer.write(this->effective_Kh);
             buffer.write(this->trans_factor);
+    }
+
+
+    void Connection::init_json(Json::JsonObject& json_data) const {
+        auto json_rates = json_data.add_object("rates");
+        this->rates.init_json(json_rates);
+
+        json_data.add_item("global_index", static_cast<int>(this->index));
+        json_data.add_item("pressure", this->pressure);
+        json_data.add_item("reservoir_rate", this->reservoir_rate);
+        json_data.add_item("cell_pressure", this->cell_pressure);
+        json_data.add_item("swat", this->cell_saturation_water);
+        json_data.add_item("sgas", this->cell_saturation_gas);
+        json_data.add_item("Kh", this->effective_Kh);
+        json_data.add_item("trans_factor", this->trans_factor);
     }
 
     template <class MessageBufferType>
@@ -588,7 +649,7 @@ namespace Opm {
             buffer.read(this->alq);
     }
 
-  template <class MessageBufferType>
+   template <class MessageBufferType>
    void Connection::read(MessageBufferType& buffer) {
             buffer.read(this->index);
             this->rates.read(buffer);
@@ -663,6 +724,27 @@ namespace Opm {
 
         this->current_control.read(buffer);
         this->guide_rates.read(buffer);
+    }
+
+    void Well::init_json(Json::JsonObject& json_data) const {
+        auto json_connections = json_data.add_array("connections");
+        for (const auto& conn : this->connections) {
+            auto json_conn = json_connections.add_object();
+            conn.init_json(json_conn);
+        }
+        auto json_rates = json_data.add_object("rates");
+        this->rates.init_json(json_rates);
+
+        json_data.add_item("bhp", this->bhp);
+        json_data.add_item("thp", this->thp);
+        json_data.add_item("temperature", this->temperature);
+        json_data.add_item("status", ::Opm::Well::Status2String(this->dynamicStatus));
+
+        auto json_control = json_data.add_object("control");
+        this->current_control.init_json(json_control);
+
+        auto json_guiderate = json_data.add_object("guiderate");
+        this->guide_rates.init_json(json_guiderate);
     }
 
 }} // Opm::data

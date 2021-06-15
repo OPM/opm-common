@@ -28,7 +28,7 @@
 #include <vector>
 
 #include <opm/output/data/GuideRateValue.hpp>
-
+#include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
 namespace Opm { namespace data {
@@ -54,6 +54,12 @@ namespace Opm { namespace data {
         inline GroupConstraints& set(Opm::Group::ProductionCMode cpc,
                                      Opm::Group::InjectionCMode  cgic,
                                      Opm::Group::InjectionCMode  cwic);
+
+        void init_json(Json::JsonObject& json_data) const {
+            json_data.add_item("prod", Opm::Group::ProductionCMode2String(this->currentProdConstraint));
+            json_data.add_item("water_inj", Opm::Group::InjectionCMode2String(this->currentGasInjectionConstraint));
+            json_data.add_item("gas_inj", Opm::Group::InjectionCMode2String(this->currentWaterInjectionConstraint));
+        }
     };
 
     struct GroupGuideRates {
@@ -78,6 +84,14 @@ namespace Opm { namespace data {
         {
             return this->production == other.production
                 && this->injection  == other.injection;
+        }
+
+        void init_json(Json::JsonObject& json_data) const {
+            auto json_prod = json_data.add_object("production");
+            this->production.init_json(json_prod);
+
+            auto json_inj = json_data.add_object("injection");
+            this->injection.init_json(json_inj);
         }
     };
 
@@ -104,6 +118,15 @@ namespace Opm { namespace data {
             return this->currentControl == other.currentControl
                 && this->guideRates     == other.guideRates;
         }
+
+
+        void init_json(Json::JsonObject& json_data) const {
+            auto json_constraints = json_data.add_object("constraints");
+            this->currentControl.init_json(json_constraints);
+
+            auto json_gr = json_data.add_object("guide_rate");
+            this->guideRates.init_json(json_gr);
+        }
     };
 
     struct NodeData {
@@ -124,6 +147,10 @@ namespace Opm { namespace data {
         bool operator==(const NodeData& other) const
         {
             return this->pressure == other.pressure;
+        }
+
+        void init_json(Json::JsonObject& json_data) const {
+            json_data.add_item("pressure", this->pressure);
         }
     };
 
@@ -156,6 +183,26 @@ namespace Opm { namespace data {
         {
             this->groupData.clear();
             this->nodeData.clear();
+        }
+
+        void init_json(Json::JsonObject& json_data) const {
+            auto group_data = json_data.add_object("group_data");
+            for (const auto& [gname, gdata] : this->groupData) {
+                auto group_json_data = group_data.add_object(gname);
+                gdata.init_json( group_json_data );
+            }
+
+            auto node_data = json_data.add_object("node_data");
+            for (const auto& [gname, ndata] : this->nodeData) {
+                auto node_json_data = node_data.add_object(gname);
+                ndata.init_json( node_json_data );
+            }
+        }
+
+        Json::JsonObject json() const {
+            Json::JsonObject json_data;
+            this->init_json(json_data);
+            return json_data;
         }
 
     private:
