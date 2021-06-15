@@ -42,7 +42,6 @@ struct PhaseUsage;
  * Use the create() function to setup a chain of writer based on the
  * configuration values, e.g.
  *
- * \example
  * \code{.cpp}
  *  ParameterGroup params (argc, argv, false);
  *  auto parser = std::make_shared <const Deck> (
