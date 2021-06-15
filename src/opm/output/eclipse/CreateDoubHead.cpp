@@ -84,7 +84,7 @@ namespace {
             double delay = 0.;
             double damping_fact = 0.;
             
-            const auto& guideCFG = sched.guideRateConfig(lookup_step);
+            const auto& guideCFG = sched[lookup_step].guide_rate();
             if (guideCFG.has_model()) {
                 const auto& guideRateModel = guideCFG.model();
                 
