@@ -95,6 +95,7 @@ enum class ProductionCMode : int {
 static const std::string ProductionCMode2String( ProductionCMode enumValue );
 static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
 static ProductionCMode ProductionCModeFromInt(int ecl_int);
+static int             ProductionCMode2Int(Group::ProductionCMode cmode);
 
 enum class GuideRateProdTarget {
     OIL = 0,

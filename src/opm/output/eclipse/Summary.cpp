@@ -87,18 +87,6 @@ namespace {
         Opm::EclIO::SummaryNode::Type type;
     };
 
-    using p_cmode = Opm::Group::ProductionCMode;
-    const std::map<p_cmode, int> pCModeToPCntlMode = {
-        {p_cmode::NONE,       0},
-        {p_cmode::ORAT,       1},
-        {p_cmode::WRAT,       2},
-        {p_cmode::GRAT,       3},
-        {p_cmode::LRAT,       4},
-        {p_cmode::CRAT,       9},
-        {p_cmode::RESV,       5},
-        {p_cmode::PRBL,       6},
-        {p_cmode::FLD,        0}, // same as NONE
-    };
 
     using i_cmode = Opm::Group::InjectionCMode;
     const std::map<i_cmode, int> iCModeToICntlMode = {
@@ -1311,16 +1299,8 @@ inline quantity group_control( const fn_args& args )
     // production control
     if (Producer) {
         auto it_g = args.grp_nwrk.groupData.find(g_name);
-        if (it_g != args.grp_nwrk.groupData.end()) {
-            const auto& value = it_g->second.currentControl.currentProdConstraint;
-            auto it_c = pCModeToPCntlMode.find(value);
-            if (it_c == pCModeToPCntlMode.end()) {
-                std::stringstream str;
-                str << "unknown control CMode: " << static_cast<int>(value);
-                throw std::invalid_argument(str.str());
-            }
-            cntl_mode = it_c->second;
-        }
+        if (it_g != args.grp_nwrk.groupData.end())
+            cntl_mode = Opm::Group::ProductionCMode2Int(it_g->second.currentControl.currentProdConstraint);
     }
     // water injection control
     else if (waterInjector){
