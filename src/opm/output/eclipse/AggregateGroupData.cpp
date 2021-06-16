@@ -448,12 +448,20 @@ void productionGroup(const Opm::Schedule&     sched,
     Other reduction options are currently not covered in the code
     */
 
+    bool debug = false;
+    if (simStep == 37 && group.name() == "LOWER")
+        debug = true;
+
     if (cgroup && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
         auto cgroup_control = static_cast<int>(sumState.get_group_var(cgroup->name(), "GMCTP", 0));
         iGrp[nwgmax + IGroup::ProdActiveCMode]
             = (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
+        if (debug)
+            printf("DEBUG  cgroup_control: %d \n", cgroup_control);
     } else {
         iGrp[nwgmax + IGroup::ProdActiveCMode] = Opm::Group::ProductionCMode2Int(active_cmode);
+        if (debug)
+            printf("DEBUG  active_cmode: %d \n", static_cast<int>(active_cmode));
 
         // The PRBL and CRAT modes where not handled in a previous explicit if
         // statement; whether that was an oversight or a feature?
@@ -461,6 +469,9 @@ void productionGroup(const Opm::Schedule&     sched,
             iGrp[nwgmax + IGroup::ProdActiveCMode] = 0;
     }
     iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdActiveCMode];
+    if (debug) {
+        printf("%ld DEBUG %s %d \n", simStep, group.name().c_str(), iGrp[nwgmax + IGroup::ProdActiveCMode]);
+    }
 
     iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
 
