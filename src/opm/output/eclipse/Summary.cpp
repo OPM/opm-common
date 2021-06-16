@@ -576,29 +576,12 @@ alq_type(const Opm::ScheduleState&            sched_state,
     return sched_state.vfpprod(pc.vfp_table_number).getALQType();
 }
 
-inline bool is_glir_permissible(const Opm::VFPProdTable::ALQ_TYPE alqType)
-{
-    using ALQ_TYPE = Opm::VFPProdTable::ALQ_TYPE;
-
-    return (alqType == ALQ_TYPE::ALQ_GRAT)
-        || (alqType == ALQ_TYPE::ALQ_IGLR)
-        || (alqType == ALQ_TYPE::ALQ_TGLR);
-}
-
 inline quantity glir( const fn_args& args ) {
     if (args.schedule_wells.empty()) {
         return { 0.0, measure::gas_surface_rate };
     }
 
     const auto& sched_state = args.schedule[args.sim_step];
-
-    auto alqType = std::optional<Opm::VFPProdTable::ALQ_TYPE>{};
-
-    if (args.schedule_wells.size() > std::vector<Opm::Well*>::size_type{1}) {
-        // Summing to group and field levels is only possible if the ALQ
-        // type is gas flow rate.
-        alqType = Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT;
-    }
 
     double alq_rate = 0.0;
     for (const auto* well : args.schedule_wells) {
@@ -619,12 +602,7 @@ inline quantity glir( const fn_args& args ) {
         }
 
         const auto thisAlqType = alq_type(sched_state, production);
-        if (alqType.has_value() && (thisAlqType != alqType.value())) {
-            continue;
-        }
-
-        alqType = thisAlqType;
-        if (! is_glir_permissible(thisAlqType)) {
+        if (thisAlqType != Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
             continue;
         }
 
@@ -632,11 +610,7 @@ inline quantity glir( const fn_args& args ) {
         alq_rate += eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
     }
 
-    const auto unit = !alqType.has_value() || (alqType.value() == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT)
-        ? measure::gas_surface_rate
-        : measure::gas_oil_ratio;
-
-    return { alq_rate, unit };
+    return { alq_rate, measure::gas_surface_rate };
 }
 
 inline quantity wwirt( const fn_args& args ) {
