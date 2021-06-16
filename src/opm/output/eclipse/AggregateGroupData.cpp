@@ -318,31 +318,7 @@ void gconprodCMode(const Opm::Group& group,
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
 
     const auto& prod_cmode = group.prod_cmode();
-    switch (prod_cmode) {
-    case Opm::Group::ProductionCMode::NONE:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0;
-        break;
-    case Opm::Group::ProductionCMode::ORAT:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 1;
-        break;
-    case Opm::Group::ProductionCMode::WRAT:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 2;
-        break;
-    case Opm::Group::ProductionCMode::GRAT:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 3;
-        break;
-    case Opm::Group::ProductionCMode::LRAT:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 4;
-        break;
-    case Opm::Group::ProductionCMode::RESV:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 5;
-        break;
-    case Opm::Group::ProductionCMode::FLD:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
-        break;
-    default:
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
-    }
+    iGrp[nwgmax + IGroup::GConProdCMode] = Opm::Group::ProductionCMode2Int(prod_cmode);
 }
 
 
@@ -352,7 +328,6 @@ void productionGroup(const Opm::Schedule&     sched,
                      const int                nwgmax,
                      const std::size_t        simStep,
                      const Opm::SummaryState& sumState,
-                     const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
                      IGrpArray&               iGrp)
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
@@ -371,7 +346,7 @@ void productionGroup(const Opm::Schedule&     sched,
     {
         auto cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
         if (cur_prod_ctrl >= 0)
-            active_cmode = pCtrlToPCmode.at(static_cast<int>(cur_prod_ctrl));
+            active_cmode = Opm::Group::ProductionCModeFromInt(static_cast<int>(cur_prod_ctrl));
     }
 
 #if ENABLE_GCNTL_DEBUG_OUTPUT
@@ -478,31 +453,12 @@ void productionGroup(const Opm::Schedule&     sched,
         iGrp[nwgmax + IGroup::ProdActiveCMode]
             = (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
     } else {
-        switch (active_cmode) {
-        case Opm::Group::ProductionCMode::NONE:
+        iGrp[nwgmax + IGroup::ProdActiveCMode] = Opm::Group::ProductionCMode2Int(active_cmode);
+
+        // The PRBL and CRAT modes where not handled in a previous explicit if
+        // statement; whether that was an oversight or a feature?
+        if (active_cmode == Opm::Group::ProductionCMode::PRBL || active_cmode == Opm::Group::ProductionCMode::CRAT)
             iGrp[nwgmax + IGroup::ProdActiveCMode] = 0;
-            break;
-        case Opm::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + IGroup::ProdActiveCMode] = 1;
-            break;
-        case Opm::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + IGroup::ProdActiveCMode] = 2;
-            break;
-        case Opm::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + IGroup::ProdActiveCMode] = 3;
-            break;
-        case Opm::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + IGroup::ProdActiveCMode] = 4;
-            break;
-        case Opm::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + IGroup::ProdActiveCMode] = 5;
-            break;
-        case Opm::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + IGroup::ProdActiveCMode] = 0; // need to be checked!!
-            break;
-        default:
-            iGrp[nwgmax + IGroup::ProdActiveCMode] = 0;
-        }
     }
     iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdActiveCMode];
 
@@ -546,7 +502,6 @@ void injectionGroup(const Opm::Schedule&     sched,
                     const int                nwgmax,
                     const std::size_t        simStep,
                     const Opm::SummaryState& sumState,
-                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                     IGrpArray&               iGrp)
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
@@ -621,21 +576,12 @@ void injectionGroup(const Opm::Schedule&     sched,
                     iGrp[nwgmax + 17] = -1;
                 }
             }
-            // item[nwgmax + 16] - mode for operation for water injection
-            // 1 - RATE
-            // 2 - RESV
-            // 3 - REIN
-            // 4 - VREP
-            // 0 - ellers
-            const auto& inj_mode = (group.hasInjectionControl(Opm::Phase::WATER))
+            const auto& inj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))
                 ? group.injectionControls(Opm::Phase::WATER, sumState).cmode
                 : Opm::Group::InjectionCMode::NONE;
-            const auto it = cmodeToNum.find(inj_mode);
-            if (it != cmodeToNum.end()) {
-                iGrp[nwgmax + IGroup::WInjCMode] = it->second;
-                iGrp[nwgmax + 18] = iGrp[nwgmax + IGroup::WInjCMode];
-                iGrp[nwgmax + 19] = iGrp[nwgmax + IGroup::WInjCMode];
-            }
+            iGrp[nwgmax + IGroup::WInjCMode] = Opm::Group::InjectionCMode2Int(inj_cmode);
+            iGrp[nwgmax + 18] = iGrp[nwgmax + IGroup::WInjCMode];
+            iGrp[nwgmax + 19] = iGrp[nwgmax + IGroup::WInjCMode];
         }
     }
 
@@ -710,15 +656,12 @@ void injectionGroup(const Opm::Schedule&     sched,
             // 3 - REIN
             // 4 - VREP
             // 0 - ellers
-            const auto& inj_mode = (group.hasInjectionControl(Opm::Phase::GAS))
+            const auto& inj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))
                 ? group.injectionControls(Opm::Phase::GAS, sumState).cmode
                 : Opm::Group::InjectionCMode::NONE;
-            const auto it = cmodeToNum.find(inj_mode);
-            if (it != cmodeToNum.end()) {
-                iGrp[nwgmax + IGroup::GInjCMode] = it->second;
-                iGrp[nwgmax + 23] = iGrp[nwgmax + IGroup::GInjCMode];
-                iGrp[nwgmax + 24] = iGrp[nwgmax + IGroup::GInjCMode];
-            }
+            iGrp[nwgmax + IGroup::GInjCMode] = Opm::Group::InjectionCMode2Int(inj_cmode);
+            iGrp[nwgmax + 23] = iGrp[nwgmax + IGroup::GInjCMode];
+            iGrp[nwgmax + 24] = iGrp[nwgmax + IGroup::GInjCMode];
         }
     }
 }
@@ -792,8 +735,6 @@ void staticContrib(const Opm::Schedule&     sched,
                    const int                ngmaxz,
                    const std::size_t        simStep,
                    const Opm::SummaryState& sumState,
-                   const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
-                   const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
     const bool is_field = group.name() == "FIELD";
@@ -806,11 +747,11 @@ void staticContrib(const Opm::Schedule&     sched,
 
     // Treat al groups which are *not* pure injection groups.
     if (group.getGroupType() != Opm::Group::GroupType::INJECTION)
-        productionGroup(sched, group, nwgmax, simStep, sumState, pCtrlToPCmode, iGrp);
+        productionGroup(sched, group, nwgmax, simStep, sumState, iGrp);
 
     // Treat al groups which are *not* pure production groups.
     if (group.getGroupType() != Opm::Group::GroupType::PRODUCTION)
-        injectionGroup(sched, group, nwgmax, simStep, sumState, cmodeToNum, iGrp);
+        injectionGroup(sched, group, nwgmax, simStep, sumState, iGrp);
 
     if (is_field)
     {
@@ -1117,7 +1058,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
                              auto ig = this->iGroup_[groupID];
 
                              IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
-                                                 simStep, sumState, this->PCntlModeToPCMode, this->cmodeToNum, ig);
+                                                 simStep, sumState, ig);
                          });
 
     // Define Static Contributions to SGrp Array.
