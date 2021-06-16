@@ -1403,7 +1403,7 @@ namespace {
         const auto& nwgmax = intehead[VI::NWGMAX];
         for (const auto& gname : schedule.groupNames(sim_step)) {
             const auto& group = schedule.getGroup(gname, sim_step);
-            const auto group_index = (gname == "FIELD") ? groupData.maxGroups() : group.insert_index();
+            const auto group_index = (gname == "FIELD") ? groupData.maxGroups() : group.insert_index() - 1;
             const auto& igrp = groupData.igrp(group_index);
             const auto& xgrp = groupData.xgrp(group_index);
 
@@ -1430,11 +1430,8 @@ namespace {
             }
             xg_nwrk.groupData[gname] = gr_data;
 
-
             double node_pressure = -1;
             xg_nwrk.nodeData[gname].pressure = node_pressure;
-
-            printf("Restore group: %s \n", gname.c_str());
         }
         return xg_nwrk;
     }
