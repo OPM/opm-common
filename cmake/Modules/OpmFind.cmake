@@ -130,9 +130,18 @@ macro (find_and_append_package_to prefix name)
     # and the likes which is only done via opm_find_package
     if ( (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND )
          OR _search_components GREATER -1)
-       string(REGEX MATCH "(opm)-.*" _is_opm ${name})
+      string(REGEX MATCH "(opm)-.*" _is_opm ${name})
       if(NOT _is_opm)
-        find_package (${name} ${ARGN})
+        # When using Boost >= 1.70 and e.g. CMake 3.18 we need to make sure that
+        # subsequent searches are using config mode too. Otherwise the library
+        # list will be completely messed up. We use a set Boost_Dir to detect that
+        # previous searches were done using config mode.
+        if("${name}" STREQUAL "Boost" AND Boost_DIR)
+          set(_CONFIG_MODE CONFIG)
+        else()
+          set(_CONFIG_MODE "")
+        endif()
+        find_package (${name} ${ARGN} ${_CONFIG_MODE})
       else()
         if(${name}_DIR)
           find_package (${name} ${${prefix}_VERSION_MAJOR}.${${prefix}_VERSION_MINOR} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
