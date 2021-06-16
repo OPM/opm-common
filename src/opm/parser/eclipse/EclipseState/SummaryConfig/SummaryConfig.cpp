@@ -550,7 +550,7 @@ inline void keywordCL( SummaryConfig::keyword_list& list,
                 } else {
                     std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
                                                   "In {{file}} line {{line}}\n"
-                                                  "Connnection ({},{},{}) not defined for well {} ", ijk[0], ijk[1], ijk[2], wname);
+                                                  "Connection ({},{},{}) not defined for well {} ", ijk[0], ijk[1], ijk[2], wname);
                     parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, keyword.location(), errors);
                 }
             }
@@ -1159,7 +1159,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         if (!udq.has_keyword(location.keyword)) {
             std::string msg = "Summary output requested for UDQ {keyword}\n"
                               "In {file} line {line}\n"
-                              "No defintion for this UDQ found in the SCHEDULE section";
+                              "No definition for this UDQ found in the SCHEDULE section";
             parseContext.handleError(ParseContext::SUMMARY_UNDEFINED_UDQ, msg, location, errors);
             return;
         }
@@ -1524,7 +1524,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         throw;
     }
     catch (const std::exception& std_error) {
-        OpmLog::error(fmt::format("An error occured while configuring the summary properties\n"
+        OpmLog::error(fmt::format("An error occurred while configuring the summary properties\n"
                                   "Internal error: {}", std_error.what()));
         throw;
     }

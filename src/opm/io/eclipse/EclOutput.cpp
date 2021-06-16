@@ -102,7 +102,7 @@ void EclOutput::write(const std::string& name, const std::vector<std::string>& d
         });
 
         if (it->size() > static_cast<size_t>(element_size))
-            OPM_THROW(std::runtime_error, "specified element size for type C0NN less than maximum string length in ouput data");
+            OPM_THROW(std::runtime_error, "specified element size for type C0NN less than maximum string length in output data");
     }
 
     if (isFormatted)

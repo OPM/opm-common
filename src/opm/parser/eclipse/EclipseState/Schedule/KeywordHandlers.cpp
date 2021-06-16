@@ -1381,7 +1381,7 @@ namespace {
       is not checked or verified that the well is initialized with any
       WCONxxxx keyword).
 
-      Update: See the discussion following the defintions of the SI factors, due
+      Update: See the discussion following the definitions of the SI factors, due
       to a bad design we currently need the well to be specified with
       WCONPROD / WCONHIST before WELTARG is applied, if not the units for the
       rates will be wrong.

@@ -152,7 +152,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         throw;
     }
     catch (const std::exception& std_error) {
-        OpmLog::error(fmt::format("\nAn error occured while creating the reservoir properties\n"
+        OpmLog::error(fmt::format("\nAn error occurred while creating the reservoir properties\n"
                                   "Internal error: {}\n", std_error.what()));
         throw;
     }

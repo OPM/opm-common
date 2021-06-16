@@ -512,11 +512,11 @@ void ESmry::inspect_lodsmry()
 
         if (keyword[n].size() > 24) {
             if (keyword[n].substr(0,24) != test_str) {
-                OPM_THROW(std::invalid_argument, "keycheck not maching keyword array");
+                OPM_THROW(std::invalid_argument, "keycheck not matching keyword array");
             }
         } else {
             if (keyword[n] != test_str) {
-                OPM_THROW(std::invalid_argument, "keycheck not maching keyword array");
+                OPM_THROW(std::invalid_argument, "keycheck not matching keyword array");
             }
         }
     }

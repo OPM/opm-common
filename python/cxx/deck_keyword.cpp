@@ -168,7 +168,7 @@ void python::common::export_DeckKeyword(py::module& module) {
                       }
                       catch (const std::exception& e_string) {}
 
-                      throw py::type_error("DeckKeyword: tried to add unkown type to record.");
+                      throw py::type_error("DeckKeyword: tried to add unknown type to record.");
 
                  }
                  value_record_list.push_back( value_record );

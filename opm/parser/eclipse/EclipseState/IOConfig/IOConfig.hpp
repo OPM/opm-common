@@ -28,7 +28,7 @@ namespace Opm {
     class GRIDSection;
     class RUNSPECSection;
 
-    /*The IOConfig class holds data about input / ouput configurations
+    /*The IOConfig class holds data about input / output configurations
 
       Amongst these configuration settings, a IOConfig object knows if
       a restart file should be written for a specific report step

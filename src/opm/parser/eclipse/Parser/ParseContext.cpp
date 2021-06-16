@@ -175,7 +175,7 @@ namespace Opm {
 
         if (action == InputError::EXIT1) {
             OpmLog::error(msg);
-            std::cerr << "A fatal error has occured and the application will stop." << std::endl;
+            std::cerr << "A fatal error has occurred and the application will stop." << std::endl;
             std::cerr << msg << std::endl;
             std::exit(1);
         }
