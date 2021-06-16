@@ -502,7 +502,6 @@ void injectionGroup(const Opm::Schedule&     sched,
                     const int                nwgmax,
                     const std::size_t        simStep,
                     const Opm::SummaryState& sumState,
-                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                     IGrpArray&               iGrp)
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
@@ -577,21 +576,12 @@ void injectionGroup(const Opm::Schedule&     sched,
                     iGrp[nwgmax + 17] = -1;
                 }
             }
-            // item[nwgmax + 16] - mode for operation for water injection
-            // 1 - RATE
-            // 2 - RESV
-            // 3 - REIN
-            // 4 - VREP
-            // 0 - ellers
-            const auto& inj_mode = (group.hasInjectionControl(Opm::Phase::WATER))
+            const auto& inj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))
                 ? group.injectionControls(Opm::Phase::WATER, sumState).cmode
                 : Opm::Group::InjectionCMode::NONE;
-            const auto it = cmodeToNum.find(inj_mode);
-            if (it != cmodeToNum.end()) {
-                iGrp[nwgmax + IGroup::WInjCMode] = it->second;
-                iGrp[nwgmax + 18] = iGrp[nwgmax + IGroup::WInjCMode];
-                iGrp[nwgmax + 19] = iGrp[nwgmax + IGroup::WInjCMode];
-            }
+            iGrp[nwgmax + IGroup::WInjCMode] = Opm::Group::InjectionCMode2Int(inj_cmode);
+            iGrp[nwgmax + 18] = iGrp[nwgmax + IGroup::WInjCMode];
+            iGrp[nwgmax + 19] = iGrp[nwgmax + IGroup::WInjCMode];
         }
     }
 
@@ -666,15 +656,12 @@ void injectionGroup(const Opm::Schedule&     sched,
             // 3 - REIN
             // 4 - VREP
             // 0 - ellers
-            const auto& inj_mode = (group.hasInjectionControl(Opm::Phase::GAS))
+            const auto& inj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))
                 ? group.injectionControls(Opm::Phase::GAS, sumState).cmode
                 : Opm::Group::InjectionCMode::NONE;
-            const auto it = cmodeToNum.find(inj_mode);
-            if (it != cmodeToNum.end()) {
-                iGrp[nwgmax + IGroup::GInjCMode] = it->second;
-                iGrp[nwgmax + 23] = iGrp[nwgmax + IGroup::GInjCMode];
-                iGrp[nwgmax + 24] = iGrp[nwgmax + IGroup::GInjCMode];
-            }
+            iGrp[nwgmax + IGroup::GInjCMode] = Opm::Group::InjectionCMode2Int(inj_cmode);
+            iGrp[nwgmax + 23] = iGrp[nwgmax + IGroup::GInjCMode];
+            iGrp[nwgmax + 24] = iGrp[nwgmax + IGroup::GInjCMode];
         }
     }
 }
@@ -748,7 +735,6 @@ void staticContrib(const Opm::Schedule&     sched,
                    const int                ngmaxz,
                    const std::size_t        simStep,
                    const Opm::SummaryState& sumState,
-                   const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
     const bool is_field = group.name() == "FIELD";
@@ -765,7 +751,7 @@ void staticContrib(const Opm::Schedule&     sched,
 
     // Treat al groups which are *not* pure production groups.
     if (group.getGroupType() != Opm::Group::GroupType::PRODUCTION)
-        injectionGroup(sched, group, nwgmax, simStep, sumState, cmodeToNum, iGrp);
+        injectionGroup(sched, group, nwgmax, simStep, sumState, iGrp);
 
     if (is_field)
     {
@@ -1072,7 +1058,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
                              auto ig = this->iGroup_[groupID];
 
                              IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
-                                                 simStep, sumState, this->cmodeToNum, ig);
+                                                 simStep, sumState, ig);
                          });
 
     // Define Static Contributions to SGrp Array.

@@ -79,7 +79,7 @@ enum class InjectionCMode  : int {
 static const std::string InjectionCMode2String( InjectionCMode enumValue );
 static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
 static InjectionCMode InjectionCModeFromInt(int ecl_int);
-
+static int            InjectionCMode2Int(InjectionCMode enumValue);
 
 enum class ProductionCMode : int {
     NONE = 0,

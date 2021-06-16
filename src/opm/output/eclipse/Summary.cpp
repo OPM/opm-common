@@ -88,17 +88,6 @@ namespace {
     };
 
 
-    using i_cmode = Opm::Group::InjectionCMode;
-    const std::map<i_cmode, int> iCModeToICntlMode = {
-        {i_cmode::NONE,       0},
-        {i_cmode::RATE,       1},
-        {i_cmode::RESV,       2},
-        {i_cmode::REIN,       3},
-        {i_cmode::VREP,       4},
-        {i_cmode::FLD,        0},  // same as NONE
-        {i_cmode::SALE,       0},  // not used in E100
-    };
-
     std::vector<ParamCTorArgs> requiredRestartVectors()
     {
         using Type = ::Opm::EclIO::SummaryNode::Type;
@@ -1305,31 +1294,15 @@ inline quantity group_control( const fn_args& args )
     // water injection control
     else if (waterInjector){
         auto it_g = args.grp_nwrk.groupData.find(g_name);
-        if (it_g != args.grp_nwrk.groupData.end()) {
-            const auto& value = it_g->second.currentControl.currentWaterInjectionConstraint;
-            auto it_c = iCModeToICntlMode.find(value);
-            if (it_c == iCModeToICntlMode.end()) {
-                std::stringstream str;
-                str << "unknown control CMode: " << static_cast<int>(value);
-                throw std::invalid_argument(str.str());
-            }
-            cntl_mode = it_c->second;
-        }
+        if (it_g != args.grp_nwrk.groupData.end())
+            cntl_mode = Opm::Group::InjectionCMode2Int(it_g->second.currentControl.currentWaterInjectionConstraint);
     }
 
     // gas injection control
     else if (gasInjector){
         auto it_g = args.grp_nwrk.groupData.find(g_name);
-        if (it_g != args.grp_nwrk.groupData.end()) {
-            const auto& value = it_g->second.currentControl.currentGasInjectionConstraint;
-            auto it_c = iCModeToICntlMode.find(value);
-            if (it_c == iCModeToICntlMode.end()) {
-                std::stringstream str;
-                str << "unknown control CMode: " << static_cast<int>(value);
-                throw std::invalid_argument(str.str());
-            }
-            cntl_mode = it_c->second;
-        }
+        if (it_g != args.grp_nwrk.groupData.end())
+            cntl_mode = Opm::Group::InjectionCMode2Int(it_g->second.currentControl.currentGasInjectionConstraint);
     }
 
     return {static_cast<double>(cntl_mode), Opm::UnitSystem::measure::identity};

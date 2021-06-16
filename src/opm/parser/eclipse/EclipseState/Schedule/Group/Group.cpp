@@ -771,8 +771,7 @@ int Group::ProductionCMode2Int(Group::ProductionCMode cmode) {
 Group::InjectionCMode Group::InjectionCModeFromInt(int ecl_int) {
     switch (ecl_int) {
     case 0:
-        // The inverse function in AggregateGroupData also writes 0
-        // for InjectionCMode::FLD and InjectionCMode::SALE
+        // The inverse function returns 0 also for InjectionCMode::FLD and InjectionCMode::SALE
         return InjectionCMode::NONE;
     case 1:
         return InjectionCMode::RATE;
@@ -782,10 +781,27 @@ Group::InjectionCMode Group::InjectionCModeFromInt(int ecl_int) {
         return InjectionCMode::REIN;
     case 4:
         return InjectionCMode::VREP;
-    case 5:
-        return InjectionCMode::RESV;
     default:
         throw std::logic_error(fmt::format("Not recognized value: {} for INJECTION CMODE", ecl_int));
+    }
+}
+
+int Group::InjectionCMode2Int(InjectionCMode cmode) {
+    switch (cmode) {
+    case InjectionCMode::NONE:
+    case InjectionCMode::FLD:
+    case InjectionCMode::SALE:
+        return 0;
+    case InjectionCMode::RATE:
+        return 1;
+    case InjectionCMode::RESV:
+        return 2;
+    case InjectionCMode::REIN:
+        return 3;
+    case InjectionCMode::VREP:
+        return 4;
+    default:
+        throw std::logic_error(fmt::format("Not handled enum value for Group Injection CMODE"));
     }
 }
 
