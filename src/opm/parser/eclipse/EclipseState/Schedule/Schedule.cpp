@@ -1056,6 +1056,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
+    void Schedule::addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep) {
+        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
+        const auto& sched_state = this->snapshots.back();
+        auto insert_index = sched_state.groups.size();
+        this->addGroup( Group(rst_group, insert_index, udq_undefined, this->m_static.m_unit_system) );
+    }
+
+
     void Schedule::addGroupToGroup( const std::string& parent_name, const std::string& child_name) {
         auto parent_group = this->snapshots.back().groups.get(parent_name);
         if (parent_group.addGroup(child_name))
@@ -1297,7 +1305,7 @@ namespace {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;
         for (const auto& rst_group : rst_state.groups) {
-            this->addGroup(rst_group.name, report_step);
+            this->addGroup(rst_group, report_step);
             const auto& group = this->snapshots.back().groups.get( rst_group.name );
             if (group.isProductionGroup()) {
                 // Was originally at report_step + 1
