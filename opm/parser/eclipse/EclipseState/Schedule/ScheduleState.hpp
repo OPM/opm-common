@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/common/utility/DebugConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -284,6 +285,7 @@ namespace Opm {
         bool first_in_month() const;
         bool first_in_year() const;
 
+        static bool rst_cmp(const ScheduleState& state, const ScheduleState& state2);
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializeObject();
 
@@ -327,23 +329,24 @@ namespace Opm {
         ptr_member<GConSale> gconsale;
         ptr_member<GConSump> gconsump;
         ptr_member<GuideRateConfig> guide_rate;
+        ptr_member<GasLiftOpt> glo;
+        ptr_member<Network::ExtNetwork> network;
 
         ptr_member<WListManager> wlist_manager;
         ptr_member<NameOrder> well_order;
         ptr_member<GroupOrder> group_order;
+        ptr_member<WellTestConfig> wtest_config;
 
         ptr_member<Action::Actions> actions;
         ptr_member<UDQConfig> udq;
         ptr_member<UDQActive> udq_active;
 
         ptr_member<PAvg> pavg;
-        ptr_member<WellTestConfig> wtest_config;
-        ptr_member<GasLiftOpt> glo;
-        ptr_member<Network::ExtNetwork> network;
-
         ptr_member<RPTConfig> rpt_config;
         ptr_member<RFTConfig> rft_config;
         ptr_member<RSTConfig> rst_config;
+
+        ptr_member<DebugConfig> debug_config;
 
         template <typename T> struct always_false1 : std::false_type {};
 
@@ -381,6 +384,8 @@ namespace Opm {
                                   return this->rft_config;
             else if constexpr ( std::is_same_v<T, RSTConfig> )
                                   return this->rst_config;
+            else if constexpr ( std::is_same_v<T, DebugConfig> )
+                                  return this->debug_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
@@ -419,6 +424,8 @@ namespace Opm {
                                   return this->rft_config;
             else if constexpr ( std::is_same_v<T, RSTConfig> )
                                   return this->rst_config;
+            else if constexpr ( std::is_same_v<T, DebugConfig> )
+                                  return this->debug_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }

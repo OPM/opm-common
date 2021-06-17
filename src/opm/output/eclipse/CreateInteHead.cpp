@@ -445,7 +445,7 @@ namespace {
             return { nom_phase };
         }
 
-        const auto& guideCFG = sched.guideRateConfig(lookup_step);
+        const auto& guideCFG = sched[lookup_step].guide_rate();
         if (guideCFG.has_model()) {
             const auto& guideRateModel = guideCFG.model();
             

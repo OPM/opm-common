@@ -74,6 +74,10 @@ namespace Opm {
             serializer.vector(m_keywords);
             m_location.serializeOp(serializer);
         }
+
+        static bool rst_cmp(const ScheduleBlock& full_block, const ScheduleBlock& rst_block);
+
+
     private:
         ScheduleTimeType m_time_type;
         time_point m_start_time;
@@ -117,6 +121,9 @@ namespace Opm {
             serializer.vector(m_blocks);
             m_location.serializeOp(serializer);
         }
+
+        static bool rst_cmp(const ScheduleDeck& full_deck, const ScheduleDeck& rst_deck);
+
 
     private:
         time_point m_restart_time;

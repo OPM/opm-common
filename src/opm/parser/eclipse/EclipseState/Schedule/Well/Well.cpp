@@ -191,6 +191,9 @@ Well::Well(const RestartIO::RstWell& rst_well,
             p->addProductionControl( Well::ProducerCMode::THP );
         }
 
+        if (this->wname == "OPL5") {
+            printf("Loading well OPL5  active_control: %d \n", rst_well.active_control);
+        }
         switch (rst_well.active_control) {
         case CModeVal::Group:
             p->controlMode = Well::ProducerCMode::GRUP;

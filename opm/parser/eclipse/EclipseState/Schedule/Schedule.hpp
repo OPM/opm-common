@@ -116,6 +116,18 @@ namespace Opm
                    this->m_restart_info == other.m_restart_info &&
                    this->m_runspec == other.m_runspec;
         }
+
+        static bool rst_cmp(const ScheduleStatic& full_arg, const ScheduleStatic& rst_arg) {
+            if (!Runspec::rst_cmp(full_arg.m_runspec, rst_arg.m_runspec))
+                return false;
+
+            if (!UnitSystem::rst_cmp(full_arg.m_unit_system, rst_arg.m_unit_system))
+                return false;
+
+            return full_arg.m_deck_message_limits == rst_arg.m_deck_message_limits &&
+                   full_arg.rst_config == rst_arg.rst_config;
+        }
+
     };
 
 
@@ -245,7 +257,6 @@ namespace Opm
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
 
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
-        const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
 
         std::optional<std::size_t> first_RFT() const;
         /*
@@ -283,7 +294,8 @@ namespace Opm
           purpose of this comparison function is to implement regression tests
           for the schedule instances created by loading a restart file.
         */
-        static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
+        static bool rst_cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
+        static bool rst_cmp(const Schedule& sched1, const Schedule& sched2);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -574,6 +586,7 @@ namespace Opm
         void handleCOMPLUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPORD  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPSEGS (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDEBUGF   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDTCON (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);

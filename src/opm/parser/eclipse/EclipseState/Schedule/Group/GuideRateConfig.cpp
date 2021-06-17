@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 
@@ -100,6 +101,13 @@ void GuideRateConfig::update_injection_group(const std::string& group_name, cons
     group_node.target = guide_target;
 }
 
+void GuideRateConfig::update_injection_group(const Group& group) {
+    for (const auto& [_, injection_properties] : group.injectionProperties()) {
+        (void)_;
+        this->update_injection_group(group.name(), injection_properties);
+    }
+}
+
 const GuideRateConfig::GroupProdTarget& GuideRateConfig::production_group(const std::string& group) const {
     return this->production_groups.at(group);
 }
@@ -127,6 +135,29 @@ bool GuideRateConfig::operator==(const GuideRateConfig& data) const {
            this->injection_groups == data.injection_groups;
 }
 
-}
+std::string GuideRateConfig::format() const {
+    std::string msg = "";
+    msg += fmt::format("Has model: {}", this->m_model.has_value());
+    msg += " Wells: [";
+    for (const auto& [well, _] : this->wells) {
+        (void)_;
+        msg += well + " ";
+    }
+    msg += "]";
 
+    msg += " Production groups: [";
+    for (const auto& [group, group_target] : this->production_groups) {
+        msg += group + "{" + group + "  " + std::to_string(group_target.guide_rate) + " " + std::to_string(static_cast<int>(group_target.target)) + "}";
+    msg += "]";
+    }
+
+    msg += " Injection groups: [";
+    for (const auto& [group_pair, _] : this->injection_groups) {
+        (void)_;
+        msg += group_pair.second + std::to_string(static_cast<int>(group_pair.first)) + " ";
+    }
+    msg += "]";
+    return msg;
+}
+}
 
