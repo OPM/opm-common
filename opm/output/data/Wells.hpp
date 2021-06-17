@@ -342,6 +342,12 @@ namespace Opm {
             return well->second.rates.get( m, 0.0 );
         }
 
+        double get(const std::string& well_name , Rates::opt m, const std::string& tracer_name) const {
+            const auto& well = this->find( well_name );
+            if( well == this->end() ) return 0.0;
+
+            return well->second.rates.get( m, 0.0, tracer_name);
+        }
 
         double get(const std::string& well_name , Connection::global_index connection_grid_index, Rates::opt m) const {
             const auto& witr = this->find( well_name );
@@ -585,7 +591,15 @@ namespace Opm {
             buffer.write(this->well_potential_gas);
             buffer.write(this->brine);
             buffer.write(this->alq);
-            buffer.write(this->tracer);
+            //tracer:
+            unsigned int size = this->tracer.size();
+            buffer.write(size);
+            for (const auto& titr : this->tracer) {
+                const std::string& tracer_name = titr.first;
+                buffer.write(tracer_name);
+                const double& tracer_rate = titr.second;
+                buffer.write(tracer_rate);
+            }
     }
 
     template <class MessageBufferType>
@@ -689,7 +703,16 @@ namespace Opm {
             buffer.read(this->well_potential_gas);
             buffer.read(this->brine);
             buffer.read(this->alq);
-            buffer.read(this->tracer);
+            //tracer:
+            unsigned int size;
+            buffer.read(size);
+            for (size_t i = 0; i < size; ++i) {
+                std::string tracer_name;
+                buffer.read(tracer_name);
+                double tracer_rate;
+                buffer.read(tracer_rate);
+                this->tracer.emplace(tracer_name, tracer_rate);
+            }
     }
 
    template <class MessageBufferType>
