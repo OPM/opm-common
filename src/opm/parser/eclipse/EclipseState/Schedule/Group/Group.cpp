@@ -21,6 +21,7 @@
 
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
@@ -65,6 +66,8 @@ Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg,
         production.oil_target.update(rst_group.oil_rate_limit);
         production.production_controls += static_cast<int>(ProductionCMode::ORAT);
     }
+    auto msg = fmt::format("Setting oil rate limit {} for {}", rst_group.oil_rate_limit, rst_group.name);
+    OpmLog::info(msg);
 
     if (rst_group.gas_rate_limit != 0) {
         production.gas_target.update(rst_group.gas_rate_limit);
@@ -592,6 +595,10 @@ Group::ProductionControls Group::productionControls(const SummaryState& st) cons
     pc.guide_rate_def = this->production_properties.guide_rate_def;
     pc.resv_target = this->production_properties.resv_target;
 
+    if (this->m_name == "UPPER") {
+        auto msg = fmt::format("Returning {} oil_target: {} -> {}", this->m_name, this->production_properties.oil_target.get<double>(), pc.oil_target);
+        OpmLog::info(msg);
+    }
     return pc;
 }
 
