@@ -41,6 +41,9 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cassert>
@@ -334,6 +337,13 @@ namespace {
             //
             // Observe that the setupCurrentContro() function is called again
             // for open wells in the dynamicContrib() function.
+            if (well.isProducer())
+            {
+                auto controls = well.productionControls(st);
+                auto msg = fmt::format("Static init current control: {} -> {}", well.name(),
+                                       Opm::Well::ProducerCMode2String(controls.cmode));
+                Opm::OpmLog::info(msg);
+            }
             setCurrentControl(Opm::Well::eclipseControlMode(well, st), iWell);
             setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
@@ -395,6 +405,9 @@ namespace {
             using Value = VI::IWell::Value::Status;
 
             if (wellControlDefined(xw)) {
+                auto msg = fmt::format("Dynamic update current control: {} -> {}", well.name(),
+                                       Opm::Well::ProducerCMode2String(xw.current_control.prod));
+                Opm::OpmLog::info(msg);
                 setCurrentControl(ctrlMode(well, xw), iWell);
             }
 
