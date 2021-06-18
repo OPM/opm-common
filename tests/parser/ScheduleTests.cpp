@@ -3541,13 +3541,13 @@ END
     const auto sched = make_schedule(input);
     const auto st = ::Opm::SummaryState{ TimeService::now() };
 
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W1", 10), st), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W2", 10), st), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W3", 10), st), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W4", 10), st), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W5", 10), st), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W6", 10), st), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W7", 10), st), 6);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W1", 10), st), -1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W2", 10), st), 3);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W3", 10), st), 1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W4", 10), st), 2);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W5", 10), st), 5);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W6", 10), st), 7);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W7", 10), st), 6);
 }
 
 BOOST_AUTO_TEST_CASE(Production_Control_Mode_From_Well) {
@@ -3585,14 +3585,14 @@ END
     const auto sched = make_schedule(input);
     const auto st = ::Opm::SummaryState{ TimeService::now() };
 
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W1", 10), st), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W2", 10), st), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W3", 10), st), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W4", 10), st), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W5", 10), st), 4);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W6", 10), st), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W7", 10), st), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W8", 10), st), 6);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W1", 10), st), -1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W2", 10), st), 1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W3", 10), st), 2);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W4", 10), st), 3);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W5", 10), st), 4);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W6", 10), st), 5);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W7", 10), st), 7);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W8", 10), st), 6);
 }
 
 

@@ -440,6 +440,14 @@ public:
         double getBHPLimit() const;
     };
 
+    static int eclipseControlMode(const Well::InjectorCMode imode,
+                                  const InjectorType        itype);
+
+    static int eclipseControlMode(const Well::ProducerCMode pmode);
+
+    static int eclipseControlMode(const Well&         well,
+                                  const SummaryState& st);
+
 
     Well() = default;
     Well(const std::string& wname,
@@ -684,13 +692,6 @@ private:
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
 std::ostream& operator<<( std::ostream&, const Well::WellProductionProperties& );
 
-int eclipseControlMode(const Well::InjectorCMode imode,
-                       const InjectorType        itype);
-
-int eclipseControlMode(const Well::ProducerCMode pmode);
-
-int eclipseControlMode(const Well&         well,
-                       const SummaryState& st);
 
 std::ostream& operator<<(std::ostream& os, const Well::Status& st);
 std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm);
