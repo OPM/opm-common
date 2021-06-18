@@ -167,10 +167,10 @@ namespace {
             const auto& curr = xw.current_control;
 
             if (curr.isProducer) {
-                return ::Opm::eclipseControlMode(curr.prod);
+                return Opm::Well::eclipseControlMode(curr.prod);
             }
             else { // injector
-                return ::Opm::eclipseControlMode(curr.inj, well.injectorType());
+                return Opm::Well::eclipseControlMode(curr.inj, well.injectorType());
             }
         }
 
@@ -334,8 +334,8 @@ namespace {
             //
             // Observe that the setupCurrentContro() function is called again
             // for open wells in the dynamicContrib() function.
-            setCurrentControl(eclipseControlMode(well, st), iWell);
-            setHistoryControlMode(well, eclipseControlMode(well, st), iWell);
+            setCurrentControl(Opm::Well::eclipseControlMode(well, st), iWell);
+            setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)

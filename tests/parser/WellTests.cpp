@@ -921,47 +921,47 @@ BOOST_AUTO_TEST_CASE(Injector_Control_Mode) {
     using IMode = ::Opm::Well::InjectorCMode;
     using IType = ::Opm::InjectorType;
 
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::GAS), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::WATER), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::MULTI), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::OIL), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::OIL), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::WATER), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::GAS), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::MULTI), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::GAS), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::WATER), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::MULTI), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::OIL), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::GAS), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::WATER), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::MULTI), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::OIL), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::GAS), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::WATER), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::MULTI), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::OIL), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::CMODE_UNDEFINED, IType::WATER), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10); // Unknown combination
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10); // Unknown combination
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::GRUP, IType::GAS), -1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::GRUP, IType::WATER), -1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::GRUP, IType::MULTI), -1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::GRUP, IType::OIL), -1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RATE, IType::OIL), 1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RATE, IType::WATER), 2);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RATE, IType::GAS), 3);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RATE, IType::MULTI), -10);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RESV, IType::GAS), 5);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RESV, IType::WATER), 5);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RESV, IType::MULTI), 5);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::RESV, IType::OIL), 5);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::THP, IType::GAS), 6);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::THP, IType::WATER), 6);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::THP, IType::MULTI), 6);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::THP, IType::OIL), 6);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::BHP, IType::GAS), 7);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::BHP, IType::WATER), 7);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::BHP, IType::MULTI), 7);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::BHP, IType::OIL), 7);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(IMode::CMODE_UNDEFINED, IType::WATER), -10);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10); // Unknown combination
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10); // Unknown combination
 }
 
 BOOST_AUTO_TEST_CASE(Producer_Control_Mode) {
     using PMode = ::Opm::Well::ProducerCMode;
 
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRUP), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::ORAT), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::WRAT), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRAT), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::LRAT), 4);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::RESV), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::THP ), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::BHP ), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CRAT), 9);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::NONE), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CMODE_UNDEFINED), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828)), -10);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::GRUP), -1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::ORAT), 1);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::WRAT), 2);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::GRAT), 3);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::LRAT), 4);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::RESV), 5);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::THP ), 6);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::BHP ), 7);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::CRAT), 9);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::NONE), -10);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(PMode::CMODE_UNDEFINED), -10);
+    BOOST_CHECK_EQUAL(Well::eclipseControlMode(static_cast<PMode>(271828)), -10);
 }
 
 BOOST_AUTO_TEST_CASE(WPIMULT) {
