@@ -297,6 +297,7 @@ namespace Opm {
             const auto& record = this->getRecord(0);
             output.write_string("  ");
             record.write_data( output );
+            output.endl();
         }
     }
 
