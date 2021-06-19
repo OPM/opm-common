@@ -23,6 +23,7 @@
 
 #include <vector>
 
+#include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -49,6 +50,8 @@
 #include <opm/io/eclipse/rst/segment.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
+#include <tests/WorkArea.cpp>
+
 
 namespace {
     Opm::Deck first_sim()
@@ -290,34 +293,60 @@ BOOST_AUTO_TEST_CASE(State_test) {
     auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
     groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
 
-    const auto& iwel = wellData.getIWell();
-    const auto& swel = wellData.getSWell();
-    const auto& xwel = wellData.getXWell();
-    const auto& zwel8 = wellData.getZWell();
+    {
+        WorkArea work_area("test_rstate");
+        std::string outputDir = "./";
+        std::string baseName = "TEST_UDQRST";
+        {
+            Opm::EclIO::OutputStream::Restart rstFile {Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
+                                                       rptStep,
+                                                       Opm::EclIO::OutputStream::Formatted {false},
+                                                       Opm::EclIO::OutputStream::Unified {true}};
+            rstFile.write("INTEHEAD", ih);
+            rstFile.write("DOUBHEAD", dh);
+            rstFile.write("LOGIHEAD", lh);
 
-    const auto& icon = connectionData.getIConn();
-    const auto& scon = connectionData.getSConn();
-    const auto& xcon = connectionData.getXConn();
+            const auto& iwel = wellData.getIWell();
+            const auto& swel = wellData.getSWell();
+            const auto& xwel = wellData.getXWell();
+            const auto& zwel8 = wellData.getZWell();
 
-    const auto& zgrp8 = groupData.getZGroup();
-    const auto& igrp = groupData.getIGroup();
-    const auto& sgrp = groupData.getSGroup();
-    const auto& xgrp = groupData.getXGroup();
+            const auto& icon = connectionData.getIConn();
+            const auto& scon = connectionData.getSConn();
+            const auto& xcon = connectionData.getXConn();
 
-    std::vector<std::string> zwel;
-    for (const auto& s8: zwel8)
-        zwel.push_back(s8.c_str());
+            const auto& zgrp8 = groupData.getZGroup();
+            const auto& igrp = groupData.getIGroup();
+            const auto& sgrp = groupData.getSGroup();
+            const auto& xgrp = groupData.getXGroup();
 
-    std::vector<std::string> zgrp;
-    for (const auto& s8: zgrp8)
-        zgrp.push_back(s8.c_str());
+            std::vector<std::string> zwel;
+            for (const auto& s8 : zwel8)
+                zwel.push_back(s8.c_str());
 
-    Opm::RestartIO::RstState state(units,
-                                   ih, lh, dh,
-                                   zgrp, igrp, sgrp, xgrp,
-                                   zwel, iwel, swel, xwel,
-                                   icon, scon, xcon);
+            std::vector<std::string> zgrp;
+            for (const auto& s8 : zgrp8)
+                zgrp.push_back(s8.c_str());
 
-    const auto& well = state.get_well("OP_3");
-    BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
+            rstFile.write("IWEL", iwel);
+            rstFile.write("SWEL", swel);
+            rstFile.write("XWEL", xwel);
+            rstFile.write("ZWEL", zwel);
+
+            rstFile.write("ICON", icon);
+            rstFile.write("SCON", scon);
+            rstFile.write("XCON", xcon);
+
+            rstFile.write("ZGRP", zgrp);
+            rstFile.write("IGRP", igrp);
+            rstFile.write("SGRP", sgrp);
+            rstFile.write("XGRP", xgrp);
+        }
+
+        Opm::EclIO::ERst rst_file("TEST_UDQRST.UNRST");
+        auto state = Opm::RestartIO::RstState::load(rst_file, rptStep);
+
+        const auto& well = state.get_well("OP_3");
+        BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
+    }
 }

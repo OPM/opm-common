@@ -44,98 +44,6 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system_,
     this->load_tuning(intehead, doubhead);
 }
 
-RstState::RstState(const ::Opm::UnitSystem& unit_system_,
-                   const std::vector<int>& intehead,
-                   const std::vector<bool>& logihead,
-                   const std::vector<double>& doubhead,
-                   const std::vector<std::string>& zgrp,
-                   const std::vector<int>& igrp,
-                   const std::vector<float>& sgrp,
-                   const std::vector<double>& xgrp,
-                   const std::vector<std::string>& zwel,
-                   const std::vector<int>& iwel,
-                   const std::vector<float>& swel,
-                   const std::vector<double>& xwel,
-                   const std::vector<int>& icon,
-                   const std::vector<float>& scon,
-                   const std::vector<double>& xcon):
-    RstState(unit_system_, intehead, logihead, doubhead)
-{
-    this->add_groups(zgrp, igrp, sgrp, xgrp);
-
-    for (int iw = 0; iw < this->header.num_wells; iw++) {
-        std::size_t zwel_offset = iw * this->header.nzwelz;
-        std::size_t iwel_offset = iw * this->header.niwelz;
-        std::size_t swel_offset = iw * this->header.nswelz;
-        std::size_t xwel_offset = iw * this->header.nxwelz;
-        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
-        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
-        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
-        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
-        const std::string group = this->groups[group_index].name;
-
-        this->wells.emplace_back(this->unit_system,
-                                 this->header,
-                                 group,
-                                 zwel.data() + zwel_offset,
-                                 iwel.data() + iwel_offset,
-                                 swel.data() + swel_offset,
-                                 xwel.data() + xwel_offset,
-                                 icon.data() + icon_offset,
-                                 scon.data() + scon_offset,
-                                 xcon.data() + xcon_offset);
-
-        if (this->wells.back().msw_index)
-            throw std::logic_error("MSW data not accounted for in this constructor");
-    }
-}
-
-RstState::RstState(const ::Opm::UnitSystem& unit_system_,
-                   const std::vector<int>& intehead,
-                   const std::vector<bool>& logihead,
-                   const std::vector<double>& doubhead,
-                   const std::vector<std::string>& zgrp,
-                   const std::vector<int>& igrp,
-                   const std::vector<float>& sgrp,
-                   const std::vector<double>& xgrp,
-                   const std::vector<std::string>& zwel,
-                   const std::vector<int>& iwel,
-                   const std::vector<float>& swel,
-                   const std::vector<double>& xwel,
-                   const std::vector<int>& icon,
-                   const std::vector<float>& scon,
-                   const std::vector<double>& xcon,
-                   const std::vector<int>& iseg,
-                   const std::vector<double>& rseg) :
-    RstState(unit_system_, intehead, logihead, doubhead)
-{
-    this->add_groups(zgrp, igrp, sgrp, xgrp);
-
-    for (int iw = 0; iw < this->header.num_wells; iw++) {
-        std::size_t zwel_offset = iw * this->header.nzwelz;
-        std::size_t iwel_offset = iw * this->header.niwelz;
-        std::size_t swel_offset = iw * this->header.nswelz;
-        std::size_t xwel_offset = iw * this->header.nxwelz;
-        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
-        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
-        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
-        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
-        const std::string group = this->groups[group_index].name;
-
-        this->wells.emplace_back(this->unit_system,
-                                 this->header,
-                                 group,
-                                 zwel.data() + zwel_offset,
-                                 iwel.data() + iwel_offset,
-                                 swel.data() + swel_offset,
-                                 xwel.data() + xwel_offset,
-                                 icon.data() + icon_offset,
-                                 scon.data() + scon_offset,
-                                 xcon.data() + xcon_offset,
-                                 iseg,
-                                 rseg);
-    }
-}
 
 void RstState::load_tuning(const std::vector<int>& intehead,
                            const std::vector<double>& doubhead)
@@ -195,6 +103,78 @@ void RstState::add_groups(const std::vector<std::string>& zgrp,
     }
 }
 
+void RstState::add_wells(const std::vector<std::string>& zwel,
+                         const std::vector<int>& iwel,
+                         const std::vector<float>& swel,
+                         const std::vector<double>& xwel,
+                         const std::vector<int>& icon,
+                         const std::vector<float>& scon,
+                         const std::vector<double>& xcon) {
+
+    for (int iw = 0; iw < this->header.num_wells; iw++) {
+        std::size_t zwel_offset = iw * this->header.nzwelz;
+        std::size_t iwel_offset = iw * this->header.niwelz;
+        std::size_t swel_offset = iw * this->header.nswelz;
+        std::size_t xwel_offset = iw * this->header.nxwelz;
+        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
+        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
+        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
+        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
+        const std::string group = this->groups[group_index].name;
+
+        this->wells.emplace_back(this->unit_system,
+                                 this->header,
+                                 group,
+                                 zwel.data() + zwel_offset,
+                                 iwel.data() + iwel_offset,
+                                 swel.data() + swel_offset,
+                                 xwel.data() + xwel_offset,
+                                 icon.data() + icon_offset,
+                                 scon.data() + scon_offset,
+                                 xcon.data() + xcon_offset);
+
+        if (this->wells.back().msw_index)
+            throw std::logic_error("MSW data not accounted for in this constructor");
+    }
+}
+
+void RstState::add_msw(const std::vector<std::string>& zwel,
+                       const std::vector<int>& iwel,
+                       const std::vector<float>& swel,
+                       const std::vector<double>& xwel,
+                       const std::vector<int>& icon,
+                       const std::vector<float>& scon,
+                       const std::vector<double>& xcon,
+                       const std::vector<int>& iseg,
+                       const std::vector<double>& rseg) {
+
+    for (int iw = 0; iw < this->header.num_wells; iw++) {
+        std::size_t zwel_offset = iw * this->header.nzwelz;
+        std::size_t iwel_offset = iw * this->header.niwelz;
+        std::size_t swel_offset = iw * this->header.nswelz;
+        std::size_t xwel_offset = iw * this->header.nxwelz;
+        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
+        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
+        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
+        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
+        const std::string group = this->groups[group_index].name;
+
+        this->wells.emplace_back(this->unit_system,
+                                 this->header,
+                                 group,
+                                 zwel.data() + zwel_offset,
+                                 iwel.data() + iwel_offset,
+                                 swel.data() + swel_offset,
+                                 xwel.data() + xwel_offset,
+                                 icon.data() + icon_offset,
+                                 scon.data() + scon_offset,
+                                 xcon.data() + xcon_offset,
+                                 iseg,
+                                 rseg);
+    }
+}
+
+
 const RstWell& RstState::get_well(const std::string& wname) const {
     const auto well_iter = std::find_if(this->wells.begin(),
                                         this->wells.end(),
@@ -216,12 +196,16 @@ RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
     auto unit_id = intehead[VI::intehead::UNIT];
     ::Opm::UnitSystem unit_system(unit_id);
 
-    if (intehead[VI::intehead::NWELLS] != 0) {
+    RstState state(unit_system, intehead, logihead, doubhead);
+    if (state.header.ngroup > 0) {
         const auto& zgrp = rst_file.getRestartData<std::string>("ZGRP", report_step, 0);
         const auto& igrp = rst_file.getRestartData<int>("IGRP", report_step, 0);
         const auto& sgrp = rst_file.getRestartData<float>("SGRP", report_step, 0);
         const auto& xgrp = rst_file.getRestartData<double>("XGRP", report_step, 0);
+        state.add_groups(zgrp, igrp, sgrp, xgrp);
+    }
 
+    if (state.header.num_wells > 0) {
         const auto& zwel = rst_file.getRestartData<std::string>("ZWEL", report_step, 0);
         const auto& iwel = rst_file.getRestartData<int>("IWEL", report_step, 0);
         const auto& swel = rst_file.getRestartData<float>("SWEL", report_step, 0);
@@ -231,25 +215,19 @@ RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
         const auto& scon = rst_file.getRestartData<float>("SCON", report_step, 0);
         const auto& xcon = rst_file.getRestartData<double>("XCON", report_step, 0);
 
-
         if (rst_file.hasKey("ISEG")) {
             const auto& iseg = rst_file.getRestartData<int>("ISEG", report_step, 0);
             const auto& rseg = rst_file.getRestartData<double>("RSEG", report_step, 0);
 
-            return RstState(unit_system,
-                            intehead, logihead, doubhead,
-                            zgrp, igrp, sgrp, xgrp,
-                            zwel, iwel, swel, xwel,
-                            icon, scon, xcon,
-                            iseg, rseg);
+            state.add_msw(zwel, iwel, swel, xwel,
+                          icon, scon, xcon,
+                          iseg, rseg);
         } else
-            return RstState(unit_system,
-                            intehead, logihead, doubhead,
-                            zgrp, igrp, sgrp, xgrp,
-                            zwel, iwel, swel, xwel,
+            state.add_wells(zwel, iwel, swel, xwel,
                             icon, scon, xcon);
-    } else
-        return RstState(unit_system, intehead, logihead, doubhead);
+    }
+
+    return state;
 }
 
 }
