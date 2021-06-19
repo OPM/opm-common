@@ -238,6 +238,15 @@ UDQUpdate updateType(const std::string& update_string) {
     throw std::invalid_argument("Invalid status update string " + update_string);
 }
 
+UDQUpdate updateType(int int_value) {
+    switch (int_value) {
+    case 0: return UDQUpdate::OFF;
+    case 1: return UDQUpdate::NEXT;
+    case 2: return UDQUpdate::ON;
+    default:
+        throw std::logic_error("Invalid integer for UDQUpdate type");
+    }
+}
 
 
 bool binaryFunc(UDQTokenType token_type) {

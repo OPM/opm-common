@@ -722,6 +722,34 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         BOOST_CHECK_EQUAL(dUdf[start + 0] ,       460); // duDf NO. 1
 
     }
+
+    {
+        Opm::EclIO::ERst rst_file("TEST_UDQRST.UNRST");
+        auto rst_state = Opm::RestartIO::RstState::load(rst_file, 1);
+        BOOST_CHECK_EQUAL(rst_state.header.nwell_udq, 4);
+        BOOST_CHECK_EQUAL(rst_state.header.ngroup_udq, 1);
+        BOOST_CHECK_EQUAL(rst_state.header.nfield_udq, 39);
+        BOOST_CHECK_EQUAL(rst_state.header.num_udq(), 44);
+        BOOST_CHECK_EQUAL(rst_state.udqs.size(), 44);
+
+        std::vector<std::pair<std::string, std::string>> expected = {
+            {"WUOPRL", "SM3/DAY"},
+            {"WULPRL", "SM3/DAY"},
+            {"WUOPRU", "SM3/DAY"},
+            {"GUOPRU", "SM3/DAY"},
+            {"WULPRU", "SM3/DAY"},
+            {"FULPR" , "SM3/DAY"}};
+
+        std::size_t iudq = 0;
+        for (const auto& [name, unit] : expected) {
+            BOOST_CHECK_EQUAL(name, rst_state.udqs[iudq].name);
+            BOOST_CHECK_EQUAL(unit, rst_state.udqs[iudq].unit);
+            iudq += 1;
+        }
+
+
+        BOOST_CHECK_EQUAL(rst_state.udqs[0].define.value(), "(WOPR PROD1 - 170) * 0.60");
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
