@@ -2,6 +2,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -27,6 +30,10 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/output/data/Wells.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 
@@ -185,14 +192,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
 
-    std::string outputDir = "./";
-    std::string baseName = "TEST_UDQRST";
-    Opm::EclIO::OutputStream::Restart rstFile {
-    Opm::EclIO::OutputStream::ResultSet { outputDir, baseName },
-    rptStep,
-    Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
-      Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
-        };
 
     double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
@@ -204,10 +203,49 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep,
                                                             secs_elapsed, next_step_size);
 
+    const auto& lh = Opm::RestartIO::Helpers::createLogiHead(es);
+
     const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
 
+    {
+        std::string outputDir = "./";
+        std::string baseName = "TEST_UDQRST";
+        Opm::EclIO::OutputStream::Restart rstFile {
+            Opm::EclIO::OutputStream::ResultSet { outputDir, baseName },
+            rptStep,
+            Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
+            Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
+        };
+        rstFile.write("INTEHEAD", ih);
+        rstFile.write("DOUBHEAD", dh);
+        rstFile.write("LOGIHEAD", lh);
+        {
+            auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+            group_aggregator.captureDeclaredGroupData(sched, es.getUnits(), rptStep, st, ih);
+            rstFile.write("IGRP", group_aggregator.getIGroup());
+            rstFile.write("SGRP", group_aggregator.getSGroup());
+            rstFile.write("XGRP", group_aggregator.getXGroup());
+            rstFile.write("ZGRP", group_aggregator.getZGroup());
+        }
+        {
+            auto action_state = Opm::Action::State{};
+            auto well_aggregator = Opm::RestartIO::Helpers::AggregateWellData(ih);
+            well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep, action_state, st, ih);
+            rstFile.write("IWEL", well_aggregator.getIWell());
+            rstFile.write("SWEL", well_aggregator.getSWell());
+            rstFile.write("XWEL", well_aggregator.getXWell());
+            rstFile.write("ZWEL", well_aggregator.getZWell());
+        }
+        {
+            auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
+            auto xw = Opm::data::Wells{};
+            conn_aggregator.captureDeclaredConnData(sched, grid, es.getUnits(), xw, st, rptStep);
+            rstFile.write("ICON", conn_aggregator.getIConn());
+            rstFile.write("SCON", conn_aggregator.getSConn());
+            rstFile.write("XCON", conn_aggregator.getXConn());
+        }
         rstFile.write("ZUDN", udqData.getZUDN());
         rstFile.write("ZUDL", udqData.getZUDL());
         rstFile.write("IUDQ", udqData.getIUDQ());
@@ -217,6 +255,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         rstFile.write("IUAD", udqData.getIUAD());
         rstFile.write("IUAP", udqData.getIUAP());
         rstFile.write("IGPH", udqData.getIGPH());
+    }
 
     {
         /*
