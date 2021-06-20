@@ -51,11 +51,20 @@ void python::common::export_Parser(py::module& module) {
     py::class_<ParserKeyword>(module, "ParserKeyword")
         .def_property_readonly("name", &ParserKeyword::getName);
 
+    py::enum_<Opm::Ecl::SectionType>(module, "eclSectionType", py::arithmetic())
+        .value("GRID", Opm::Ecl::GRID)
+        .value("PROPS", Opm::Ecl::PROPS)
+        .value("REGIONS", Opm::Ecl::REGIONS)
+        .value("SOLUTION", Opm::Ecl::SOLUTION)
+        .value("SUMMARY", Opm::Ecl::SUMMARY)
+        .value("SCHEDULE", Opm::Ecl::SCHEDULE)
+        .export_values();
 
     py::class_<Parser>(module, "Parser")
         .def(py::init<bool>(), py::arg("add_default") = true)
         .def("parse", py::overload_cast<const std::string&>(&Parser::parseFile, py::const_))
         .def("parse"       , py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseFile, py::const_))
+        .def("parse"       , py::overload_cast<const std::string&, const ParseContext&, const std::vector<Opm::Ecl::SectionType>&>(&Parser::parseFile, py::const_))
         .def("parse_string", py::overload_cast<const std::string&>(&Parser::parseString, py::const_))
         .def("parse_string", py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseString, py::const_))
         .def("add_keyword",  py::overload_cast<ParserKeyword>(&Parser::addParserKeyword))

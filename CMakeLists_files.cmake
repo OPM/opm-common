@@ -471,6 +471,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE1.DATA
           tests/SPE1CASE1.SMSPEC
           tests/SPE1CASE1A.SMSPEC
+          tests/SPE1CASE1B.DATA
+          tests/props_spe1case1b.inc
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
           tests/UDQ_BASE.DATA
