@@ -30,6 +30,7 @@
 #include <utility>
 #include <fmt/core.h>
 #include <stddef.h>
+#include <cassert>
 
 namespace Opm {
 
@@ -70,20 +71,20 @@ GuideRate::GuideRate(const Schedule& schedule_arg) :
     schedule(schedule_arg)
 {}
 
-double GuideRate::get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const
+double GuideRate::get(const std::string& well, Well::GuideRateTarget target) const
 {
-    return this->get(well, GuideRateModel::convert_target(target), rates);
+    return this->get(well, GuideRateModel::convert_target(target));
 }
 
-double GuideRate::get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const
+double GuideRate::get(const std::string& group, Group::GuideRateProdTarget target) const
 {
-    return this->get(group, GuideRateModel::convert_target(target), rates);
+    return this->get(group, GuideRateModel::convert_target(target));
 }
 
-double GuideRate::get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const
+double GuideRate::get(const std::string& name, GuideRateModel::Target model_target) const
 {
     using namespace unit;
-    using prefix::micro;
+    // using prefix::micro;
 
     auto iter = this->values.find(name);
     if (iter == this->values.end()) {
@@ -91,20 +92,12 @@ double GuideRate::get(const std::string& name, GuideRateModel::Target model_targ
     }
 
     const auto& value = *iter->second;
-    const auto grvalue = this->get_grvalue_result(value);
-    if (value.curr.target == model_target) {
-        return grvalue;
-    }
+    return value.curr.value.eval(model_target);
 
-    const auto value_target_rate = rates.eval(value.curr.target);
+    /* const auto value_target_rate = rates.eval(value.curr.target);
     if (value_target_rate < 1.0*micro*liter/day) {
         return grvalue;
-    }
-
-    // Scale with the current production ratio when the control target
-    // differs from the guide rate target.
-    const auto scale = rates.eval(model_target) / value_target_rate;
-    return grvalue * scale;
+    } */
 }
 
 double GuideRate::get(const std::string& name, const Phase& phase) const
@@ -155,10 +148,8 @@ void GuideRate::group_compute(const std::string& wgname,
     const auto& config = this->schedule[report_step].guide_rate();
     const auto& group = config.production_group(wgname);
     if (group.guide_rate > 0.0) {
-        auto model_target = GuideRateModel::convert_target(group.target);
-
         const auto& model = config.has_model() ? config.model() : GuideRateModel{};
-        this->assign_grvalue(wgname, model, { sim_time, group.guide_rate, model_target });
+        this->assign_grvalue(wgname, model, sim_time, group.guide_rate, {oil_pot, gas_pot, wat_pot});
     }
     else {
         auto iter = this->values.find(wgname);
@@ -174,7 +165,7 @@ void GuideRate::group_compute(const std::string& wgname,
                     };
                 }
 
-                if (!this->guide_rates_expired && this->values.at(wgname)->curr.value > 0) return;
+                if (!this->guide_rates_expired && this->values.at(wgname)->curr.get_value() > 0) return;
             }
         }
 
@@ -195,7 +186,7 @@ void GuideRate::group_compute(const std::string& wgname,
             }
 
             const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
-            this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
+            this->assign_grvalue(wgname, config.model(), sim_time, guide_rate, {oil_pot, gas_pot, wat_pot});
         }
     }
 }
@@ -230,14 +221,12 @@ void GuideRate::well_compute(const std::string& wgname,
 {
     const auto& config = this->schedule[report_step].guide_rate();
 
-    // guide rates spesified with WGRUPCON
+    // guide rates specified with WGRUPCON
     if (config.has_well(wgname)) {
         const auto& well = config.well(wgname);
         if (well.guide_rate > 0.0) {
-            auto model_target = GuideRateModel::convert_target(well.target);
-
             const auto& model = config.has_model() ? config.model() : GuideRateModel{};
-            this->assign_grvalue(wgname, model, { sim_time, well.guide_rate, model_target });
+            this->assign_grvalue(wgname, model, sim_time, well.guide_rate, {oil_pot, gas_pot, wat_pot});
         }
     }
     else if (config.has_model()) { // GUIDERAT
@@ -256,12 +245,12 @@ void GuideRate::well_compute(const std::string& wgname,
         // Newly opened wells without calculated guide rates always need to update guide rates
         // With a non-zero guide rate value basically mean the well exisits in GuideRate already, aka, NOT new well
         if (!this->guide_rates_expired &&
-            (this->values.count(wgname) > 0 && this->values.at(wgname)->curr.value > 0) ) {
+            (this->values.count(wgname) > 0 && this->values.at(wgname)->curr.get_value() > 0) ) {
             return;
         }
 
         const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
-        this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
+        this->assign_grvalue(wgname, config.model(), sim_time, guide_rate, {oil_pot, gas_pot, wat_pot});
     }
     // If neither WGRUPCON nor GUIDERAT is specified potentials are used
 }
@@ -281,41 +270,41 @@ double GuideRate::eval_group_resvinj() const
     return 0.0;
 }
 
-void GuideRate::assign_grvalue(const std::string&    wgname,
-                               const GuideRateModel& model,
-                               GuideRateValue&&      value)
+void GuideRate::assign_grvalue(const std::string& wgname, const GuideRateModel& model, double sim_time, double value,
+                               const RateVector& rates)
 {
+    // TODO: with current way,  assign_grvalue is given too much content to take care of
+    // It is possible, we can create another function do all the processing and make the function assign_grvalue
+    // very simple and straightforward
+
     auto& v = this->values[wgname];
     if (v == nullptr) {
         v = std::make_unique<GRValState>();
     }
 
-    if (value.sim_time > v->curr.sim_time) {
+    if (sim_time > v->curr.sim_time) {
         // We've advanced in time since we previously calculated/stored this
         // guiderate value.  Push current value into the past and prepare to
         // capture new value.
         std::swap(v->prev, v->curr);
     }
 
-    v->curr = std::move(value);
+    auto new_gr_value = value;
 
-    if ((v->prev.sim_time < 0.0) || ! (v->prev.value > 0.0)) {
-        // No previous non-zero guiderate exists.  No further actions.
-        return;
+    // processing the value based on allow_increase and damping_factor
+    if (v->prev.sim_time >= 0.0 && v->prev.get_value() > 0.0) {
+        const auto prev_gr_value = v->prev.get_value();
+
+        // Incorporate damping &c.
+        new_gr_value = model.allow_increase()
+                       ? new_gr_value : std::min(new_gr_value, prev_gr_value);
+
+        const auto damping_factor = model.damping_factor();
+        new_gr_value = damping_factor * new_gr_value + (1 - damping_factor) * prev_gr_value;
     }
 
-    // Incorporate damping &c.
-    const auto new_guide_rate = model.allow_increase()
-        ? v->curr.value : std::min(v->curr.value, v->prev.value);
-
-    const auto damping_factor = model.damping_factor();
-    v->curr.value = damping_factor*new_guide_rate + (1 - damping_factor)*v->prev.value;
-}
-
-
-void GuideRate::init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value) {
-    const auto& model = this->schedule[report_step].guide_rate().model();
-    this->assign_grvalue(wgname, model, std::move(value));
+    const auto guide_rates = GuideRate::rateVectorFromGuideRate(new_gr_value, model.target(), rates);
+    v->curr = {sim_time, guide_rates, model.target()};
 }
 
 
@@ -323,7 +312,58 @@ double GuideRate::get_grvalue_result(const GRValState& gr) const
 {
     return (gr.curr.sim_time < 0.0)
         ? 0.0
-        : std::max(gr.curr.value, 0.0);
+        : std::max(gr.curr.get_value(), 0.0);
+}
+
+GuideRate::RateVector GuideRate::rateVectorFromGuideRate(const double guide_rate, GuideRateModel::Target target,
+                                                         const GuideRate::RateVector& rates) {
+    using namespace unit;
+    using prefix::micro;
+
+    if (guide_rate < 1.0 * micro * liter / day) {
+        return {guide_rate, guide_rate, guide_rate};
+    }
+
+    double scale = 0.;
+
+    switch(target) {
+        case GuideRateModel::Target::OIL: {
+            assert(rates.oil_rat != 0.);
+            scale = guide_rate / rates.oil_rat;
+            break;
+        }
+        case GuideRateModel::Target::GAS: {
+            assert(rates.gas_rat != 0.);
+            scale = guide_rate / rates.gas_rat;
+            break;
+        }
+        case GuideRateModel::Target::LIQ: {
+            const double liq_rat = rates.wat_rat + rates.oil_rat;
+            assert(liq_rat != 0.);
+            scale = guide_rate / liq_rat;
+            break;
+        }
+        case GuideRateModel::Target::RES: {
+            // TODO: not totally sure how to handle RES rate
+            const double total_rate = rates.wat_rat + rates.oil_rat + rates.gas_rat;
+            assert(total_rate != 0.);
+            scale = guide_rate / total_rate;
+            break;
+        }
+        case GuideRateModel::Target::WAT: {
+            // Note: GUIDERAT does not have a WAT nominated phase, we might need it
+            // for injectors?
+           assert(rates.wat_rat != 0.);
+           scale = guide_rate / rates.wat_rat;
+           break;
+        }
+        default:
+            throw std::logic_error{
+                    "do not know what to do to generate the full guide rate vector" +
+                    std::to_string(static_cast<int>(target))
+            };
+    }
+    return {scale * rates.oil_rat, scale * rates.gas_rat, scale * rates.wat_rat};
 }
 
 
@@ -340,7 +380,7 @@ void GuideRate::updateGuideRateExpiration(double sim_time, size_t report_step)
     double last_update_time = std::numeric_limits<double>::max();
     for ([[maybe_unused]] const auto& [wgname, value] : this->values) {
         const double update_time = value->curr.sim_time;
-        if (value->curr.value > 0 && update_time < last_update_time) {
+        if (value->curr.get_value() > 0 && update_time < last_update_time) {
             last_update_time = update_time;
         }
     }

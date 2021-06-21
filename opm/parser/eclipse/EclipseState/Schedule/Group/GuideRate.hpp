@@ -43,17 +43,28 @@ public:
 // used for potentials and well rates
 struct RateVector {
     RateVector () = default;
+    RateVector (double rat) :
+        oil_rat(rat),
+        gas_rat(rat),
+        wat_rat(rat)
+    {}
+
     RateVector (double orat, double grat, double wrat) :
         oil_rat(orat),
         gas_rat(grat),
         wat_rat(wrat)
     {}
 
+    bool operator==(const RateVector& other) const
+    {
+        return (this->oil_rat == other.oil_rat) &&
+               (this->gas_rat == other.gas_rat) &&
+               (this->wat_rat == other.wat_rat);
+    }
 
     double eval(Well::GuideRateTarget target) const;
     double eval(Group::GuideRateProdTarget target) const;
     double eval(GuideRateModel::Target target) const;
-
 
     double oil_rat;
     double gas_rat;
@@ -63,7 +74,7 @@ struct RateVector {
 
 struct GuideRateValue {
     GuideRateValue() = default;
-    GuideRateValue(double t, double v, GuideRateModel::Target tg):
+    GuideRateValue(double t, const RateVector& v, GuideRateModel::Target tg):
         sim_time(t),
         value(v),
         target(tg)
@@ -78,8 +89,14 @@ struct GuideRateValue {
         return !(*this == other);
     }
 
+    // TODO: better name, this is the original meaning of the guide rate
+    double get_value() const
+    {
+        return this->value.eval(this->target);
+    }
+
     double sim_time { std::numeric_limits<double>::lowest() };
-    double value { std::numeric_limits<double>::lowest() };
+    RateVector value { std::numeric_limits<double>::lowest() };
     GuideRateModel::Target target { GuideRateModel::Target::NONE };
 };
 
@@ -94,13 +111,12 @@ public:
     GuideRate(const Schedule& schedule);
     void compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     void compute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
-    double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
-    double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
-    double get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
+    double get(const std::string& well, Well::GuideRateTarget target) const;
+    double get(const std::string& group, Group::GuideRateProdTarget target) const;
+    double get(const std::string& name, GuideRateModel::Target model_target) const;
     double get(const std::string& group, const Phase& phase) const;
     bool has(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
-    void init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value);
 
     void updateGuideRateExpiration(double sim_time, size_t report_step);
 
@@ -111,8 +127,11 @@ private:
     double eval_group_pot() const;
     double eval_group_resvinj() const;
 
-    void assign_grvalue(const std::string& wgname, const GuideRateModel& model, GuideRateValue&& value);
+    void assign_grvalue(const std::string& wgname, const GuideRateModel& model, double sim_time, double value,
+                        const RateVector& rates);
     double get_grvalue_result(const GRValState& gr) const;
+
+    static RateVector rateVectorFromGuideRate(double guide_rate, GuideRateModel::Target target, const RateVector& rates);
 
     using GRValPtr = std::unique_ptr<GRValState>;
 
