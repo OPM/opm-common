@@ -40,13 +40,15 @@ public:
         GasInGasPhase = 6,
         PoreVolume = 7,
         // The Inplace class is implemented in close relation to the
-        // ecloutputblackoilmodule in opm-simulators, ane there are certainly
-        // idiosyncracies here due to that coupling. For instance the three enum
-        // values PressurePV, HydroCarbonPV and PressureHydroCarbonPV are *not*
-        // included in the return value from phases().
+        // ecloutputblackoilmodule in opm-simulators, ane there are
+        // certainly idiosyncracies here due to that coupling. For instance
+        // the enum values PressurePV, HydroCarbonPV, PressureHydroCarbonPV,
+        // and DynamicPoreVolume are *not* included in the return value from
+        // phases().
         PressurePV = 8,
         HydroCarbonPV = 9,
-        PressureHydroCarbonPV = 10
+        PressureHydroCarbonPV = 10,
+        DynamicPoreVolume = 11,
     };
 
     /*
