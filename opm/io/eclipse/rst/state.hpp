@@ -40,41 +40,6 @@ struct RstState {
              const std::vector<bool>& logihead,
              const std::vector<double>& doubhead);
 
-    RstState(const ::Opm::UnitSystem& unit_system,
-             const std::vector<int>& intehead,
-             const std::vector<bool>& logihead,
-             const std::vector<double>& doubhead,
-             const std::vector<std::string>& zgrp,
-             const std::vector<int>& igrp,
-             const std::vector<float>& sgrp,
-             const std::vector<double>& xgrp,
-             const std::vector<std::string>& zwel,
-             const std::vector<int>& iwel,
-             const std::vector<float>& swel,
-             const std::vector<double>& xwel,
-             const std::vector<int>& icon,
-             const std::vector<float>& scon,
-             const std::vector<double>& xcon);
-
-    RstState(const ::Opm::UnitSystem& unit_system,
-             const std::vector<int>& intehead,
-             const std::vector<bool>& logihead,
-             const std::vector<double>& doubhead,
-             const std::vector<std::string>& zgrp,
-             const std::vector<int>& igrp,
-             const std::vector<float>& sgrp,
-             const std::vector<double>& xgrp,
-             const std::vector<std::string>& zwel,
-             const std::vector<int>& iwel,
-             const std::vector<float>& swel,
-             const std::vector<double>& xwel,
-             const std::vector<int>& icon,
-             const std::vector<float>& scon,
-             const std::vector<double>& xcon,
-             const std::vector<int>& iseg,
-             const std::vector<double>& rseg);
-
-
     static RstState load(EclIO::ERst& rst_file, int report_step);
 
     const RstWell& get_well(const std::string& wname) const;
@@ -93,6 +58,24 @@ private:
                     const std::vector<int>& igrp,
                     const std::vector<float>& sgrp,
                     const std::vector<double>& xgrp);
+
+    void add_wells(const std::vector<std::string>& zwel,
+                   const std::vector<int>& iwel,
+                   const std::vector<float>& swel,
+                   const std::vector<double>& xwel,
+                   const std::vector<int>& icon,
+                   const std::vector<float>& scon,
+                   const std::vector<double>& xcon);
+
+    void add_msw(const std::vector<std::string>& zwel,
+                 const std::vector<int>& iwel,
+                 const std::vector<float>& swel,
+                 const std::vector<double>& xwel,
+                 const std::vector<int>& icon,
+                 const std::vector<float>& scon,
+                 const std::vector<double>& xcon,
+                 const std::vector<int>& iseg,
+                 const std::vector<double>& rseg);
 };
 }
 }

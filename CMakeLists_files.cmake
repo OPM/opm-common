@@ -313,6 +313,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/Inplace.cpp
           src/opm/output/eclipse/Summary.cpp
           src/opm/output/eclipse/Tables.cpp
+          src/opm/output/eclipse/UDQDims.cpp
           src/opm/output/eclipse/RegionCache.cpp
           src/opm/output/eclipse/RestartValue.cpp
           src/opm/output/eclipse/WriteInit.cpp
@@ -890,6 +891,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/Inplace.hpp
         opm/output/eclipse/Summary.hpp
         opm/output/eclipse/Tables.hpp
+        opm/output/eclipse/UDQDims.hpp
         opm/output/eclipse/WindowedArray.hpp
         opm/output/eclipse/WriteInit.hpp
         opm/output/eclipse/WriteRFT.hpp

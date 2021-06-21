@@ -29,8 +29,6 @@ WELLDIMS
 UNIFIN
 UNIFOUT
 
-FMTIN
-FMTOUT
 -- Dimensions for used defined quantity facility
 -- max functions permitted in a quantity definition
 -- max arguments permitted in a quantity definition

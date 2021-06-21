@@ -1,6 +1,5 @@
 /*
-  Copyright (c) 2018 Equinor ASA
-  Copyright (c) 2018 Statoil ASA
+  Copyright (c) 2021 Equinor ASA
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,21 +17,30 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/output/eclipse/UDQDims.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
+#ifndef OPM_UDQDIMS_HPP
+#define OPM_UDQDIMS_HPP
 
 #include <vector>
 
+namespace Opm {
 
-std::vector<int>
-Opm::RestartIO::Helpers::
-createUdqDims(const Schedule&     		sched,
-              const std::size_t        	lookup_step,
-              const std::vector<int>&   inteHead)
-{
-    const auto& udqCfg = sched.getUDQConfig(lookup_step);
-    Opm::UDQDims dims(udqCfg, inteHead);
-    return dims.data();
+class UDQConfig;
+
+
+class UDQDims {
+public:
+    UDQDims(const UDQConfig& config, const std::vector<int>& intehead);
+    const std::vector<int>& data() const;
+
+    static std::size_t entriesPerIUDQ();
+    static std::size_t entriesPerIUAD();
+    static std::size_t entriesPerZUDN();
+    static std::size_t entriesPerZUDL();
+
+private:
+    std::vector<int> m_data;
+};
+
 }
+
+#endif
