@@ -30,6 +30,8 @@
 #include <utility>
 #include <fmt/core.h>
 #include <stddef.h>
+#include <fstream>
+
 
 namespace Opm {
 
@@ -136,7 +138,7 @@ void GuideRate::compute(const std::string& wgname,
 {
     this->potentials[wgname] = RateVector{oil_pot, gas_pot, wat_pot};
 
-    const auto& config = this->schedule.guideRateConfig(report_step);
+    const auto& config = this->schedule[report_step].guide_rate();
     if (config.has_production_group(wgname)) {
         this->group_compute(wgname, report_step, sim_time, oil_pot, gas_pot, wat_pot);
     }
@@ -152,7 +154,7 @@ void GuideRate::group_compute(const std::string& wgname,
                               double             gas_pot,
                               double             wat_pot)
 {
-    const auto& config = this->schedule.guideRateConfig(report_step);
+    const auto& config = this->schedule[report_step].guide_rate();
     const auto& group = config.production_group(wgname);
     if (group.guide_rate > 0.0) {
         auto model_target = GuideRateModel::convert_target(group.target);
@@ -209,7 +211,7 @@ void GuideRate::compute(const std::string& wgname,
                         size_t report_step,
                         double guide_rate)
 {
-    const auto& config = this->schedule.guideRateConfig(report_step);
+    const auto& config = this->schedule[report_step].guide_rate();
     if (!config.has_injection_group(phase, wgname))
         return;
 
@@ -232,7 +234,7 @@ void GuideRate::well_compute(const std::string& wgname,
                              double             gas_pot,
                              double             wat_pot)
 {
-    const auto& config = this->schedule.guideRateConfig(report_step);
+    const auto& config = this->schedule[report_step].guide_rate();
 
     // guide rates spesified with WGRUPCON
     if (config.has_well(wgname)) {
@@ -267,6 +269,10 @@ void GuideRate::well_compute(const std::string& wgname,
         }
 
         const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
+        {
+            std::ofstream os("guiderate.txt", std::ofstream::app);
+            os << report_step << " : " << sim_time << "   " << wgname << " Pot: (" << oil_pot <<", " << gas_pot << ", " << wat_pot << ") " << guide_rate << " " << std::endl;
+        }
         this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
     }
     // If neither WGRUPCON nor GUIDERAT is specified potentials are used
@@ -319,6 +325,13 @@ void GuideRate::assign_grvalue(const std::string&    wgname,
     const auto damping_factor = model.damping_factor();
     v->curr.value = damping_factor*new_guide_rate + (1 - damping_factor)*v->prev.value;
 }
+
+
+void GuideRate::init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value) {
+    const auto& model = this->schedule[report_step].guide_rate().model();
+    this->assign_grvalue(wgname, model, std::move(value));
+}
+
 
 double GuideRate::get_grvalue_result(const GRValState& gr) const
 {

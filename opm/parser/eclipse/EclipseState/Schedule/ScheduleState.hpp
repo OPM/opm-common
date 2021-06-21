@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/common/utility/DebugConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -345,6 +346,8 @@ namespace Opm {
         ptr_member<RFTConfig> rft_config;
         ptr_member<RSTConfig> rst_config;
 
+        ptr_member<DebugConfig> debug_config;
+
         template <typename T> struct always_false1 : std::false_type {};
 
         template <typename T>
@@ -381,6 +384,8 @@ namespace Opm {
                                   return this->rft_config;
             else if constexpr ( std::is_same_v<T, RSTConfig> )
                                   return this->rst_config;
+            else if constexpr ( std::is_same_v<T, DebugConfig> )
+                                  return this->debug_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
@@ -419,6 +424,8 @@ namespace Opm {
                                   return this->rft_config;
             else if constexpr ( std::is_same_v<T, RSTConfig> )
                                   return this->rst_config;
+            else if constexpr ( std::is_same_v<T, DebugConfig> )
+                                  return this->debug_config;
             else
                 static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }

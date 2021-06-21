@@ -1494,6 +1494,8 @@ const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
         return "THP";
     case ProducerCMode::GRUP:
         return "GRUP";
+    case ProducerCMode::CMODE_UNDEFINED:
+        return "CMODE_UNDEFINED";
     default:
         throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in ProducerCMode2String");
     }
@@ -1631,8 +1633,8 @@ PAvgCalculator Well::pavg_calculator(const EclipseGrid& grid, const std::vector<
 
 }
 
-int Opm::eclipseControlMode(const Opm::Well::InjectorCMode imode,
-                            const Opm::InjectorType        itype)
+int Opm::Well::eclipseControlMode(const Well::InjectorCMode imode,
+                             const InjectorType        itype)
 {
     using IMode = ::Opm::Well::InjectorCMode;
     using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
@@ -1658,7 +1660,7 @@ int Opm::eclipseControlMode(const Opm::Well::InjectorCMode imode,
     return Val::WMCtlUnk;
 }
 
-int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode)
+int Opm::Well::eclipseControlMode(const Opm::Well::ProducerCMode pmode)
 {
     using PMode = ::Opm::Well::ProducerCMode;
     using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
@@ -1692,8 +1694,8 @@ int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode)
   corresponding to the currently active control is writte to the restart file.
 */
 
-int Opm::eclipseControlMode(const Well&         well,
-                            const SummaryState& st)
+int Opm::Well::eclipseControlMode(const Well&         well,
+                                  const SummaryState& st)
 {
     if (well.isProducer()) {
         const auto& ctrl = well.productionControls(st);

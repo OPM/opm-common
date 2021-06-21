@@ -55,6 +55,13 @@ namespace Opm {
         addTaggedMessage(messageType, "", message);
     }
 
+    void Logger::debug(DebugConfig::Topic topic, DebugConfig::Verbosity verbosity, const std::string& message) const {
+        if (verbosity == DebugConfig::Verbosity::SILENT)
+            return;
+
+        if (verbosity <= this->debug_config[topic])
+            this->addMessage(Log::MessageType::Debug, message);
+    }
 
     void Logger::updateGlobalMask( int64_t mask ) {
         m_globalMask |= mask;
@@ -119,6 +126,10 @@ namespace Opm {
             m_enabledTypes |= messageType;
         } else
             throw std::invalid_argument("The message type id must be ~ 2^n");
+    }
+
+    void Logger::updateDebugConfig(const DebugConfig& dbg_config) {
+        this->debug_config = dbg_config;
     }
 
 }

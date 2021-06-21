@@ -245,7 +245,6 @@ namespace Opm
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
 
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
-        const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
 
         std::optional<std::size_t> first_RFT() const;
         /*
@@ -575,6 +574,7 @@ namespace Opm
         void handleCOMPLUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPORD  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPSEGS (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDEBUGF   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDTCON (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleDRSDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);

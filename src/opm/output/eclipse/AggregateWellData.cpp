@@ -41,6 +41,9 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cassert>
@@ -167,10 +170,10 @@ namespace {
             const auto& curr = xw.current_control;
 
             if (curr.isProducer) {
-                return ::Opm::eclipseControlMode(curr.prod);
+                return Opm::Well::eclipseControlMode(curr.prod);
             }
             else { // injector
-                return ::Opm::eclipseControlMode(curr.inj, well.injectorType());
+                return Opm::Well::eclipseControlMode(curr.inj, well.injectorType());
             }
         }
 
@@ -334,8 +337,15 @@ namespace {
             //
             // Observe that the setupCurrentContro() function is called again
             // for open wells in the dynamicContrib() function.
-            setCurrentControl(eclipseControlMode(well, st), iWell);
-            setHistoryControlMode(well, eclipseControlMode(well, st), iWell);
+            if (well.isProducer())
+            {
+                auto controls = well.productionControls(st);
+                auto msg = fmt::format("Static init current control: {} -> {}", well.name(),
+                                       Opm::Well::ProducerCMode2String(controls.cmode));
+                Opm::OpmLog::info(msg);
+            }
+            setCurrentControl(Opm::Well::eclipseControlMode(well, st), iWell);
+            setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
@@ -395,6 +405,9 @@ namespace {
             using Value = VI::IWell::Value::Status;
 
             if (wellControlDefined(xw)) {
+                auto msg = fmt::format("Dynamic update current control: {} -> {}", well.name(),
+                                       Opm::Well::ProducerCMode2String(xw.current_control.prod));
+                Opm::OpmLog::info(msg);
                 setCurrentControl(ctrlMode(well, xw), iWell);
             }
 

@@ -1290,6 +1290,14 @@ inline quantity group_control( const fn_args& args )
         auto it_g = args.grp_nwrk.groupData.find(g_name);
         if (it_g != args.grp_nwrk.groupData.end())
             cntl_mode = Opm::Group::ProductionCMode2Int(it_g->second.currentControl.currentProdConstraint);
+
+
+        if (g_name == "LOWER") {
+            if (it_g == args.grp_nwrk.groupData.end())
+                printf("DEBUG group not found");
+            else
+                printf("DEBUG %d -> %d \n", static_cast<int>(it_g->second.currentControl.currentProdConstraint), cntl_mode);
+        }
     }
     // water injection control
     else if (waterInjector){
@@ -1341,7 +1349,7 @@ inline quantity well_control_mode( const fn_args& args )
 
     if (! well_control_mode_defined(xwPos->second)) {
         // No dynamic control mode defined.  Use input control.
-        const auto wmctl = ::Opm::eclipseControlMode(*well, args.st);
+        const auto wmctl = Opm::Well::eclipseControlMode(*well, args.st);
 
         return { static_cast<double>(wmctl), unit };
     }
@@ -1350,8 +1358,8 @@ inline quantity well_control_mode( const fn_args& args )
     // appropriate value depending on well type (producer/injector).
     const auto& curr = xwPos->second.current_control;
     const auto wmctl = curr.isProducer
-        ? ::Opm::eclipseControlMode(curr.prod)
-        : ::Opm::eclipseControlMode(curr.inj, well->injectorType());
+        ? Opm::Well::eclipseControlMode(curr.prod)
+        : Opm::Well::eclipseControlMode(curr.inj, well->injectorType());
 
     return { static_cast<double>(wmctl), unit };
 }
