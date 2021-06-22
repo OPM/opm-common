@@ -23,6 +23,8 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
 
+#include <opm/output/data/Aquifer.hpp>
+
 #include <vector>
 
 namespace Opm {
@@ -30,9 +32,6 @@ namespace Opm {
     class EclipseGrid;
     class SummaryState;
     class UnitSystem;
-
-    struct DensityTable;
-    struct PvtwTable;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
@@ -64,25 +63,21 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         ///    of aquifer types (Carter-Tracy vs. Fetkovich) and provides
         ///    read-only access to the individual aquifer objects.
         ///
+        /// \param[in] aquData Dynamic aquifer data, including time
+        ///    constants, water mass densities, water viscosities, and
+        ///    initial aquifer pressures.
+        ///
         /// \param[in] summaryState Current state of summary variables.
         ///    Expected to contain at least the summary variables AAQP
         ///    (aquifer pressure), AAQR (aquifer flow rate), and AAQT (total
         ///    produced inflow volume from aquifer).
         ///
-        /// \param[in] pvtwTable PVT properties for water.  Needed to
-        ///    compute the water viscosity and water density at aquifer
-        ///    conditions.
-        ///
-        /// \param{in] densityTable Phase densities at surface conditions.
-        ///    Needed to compute water density at aquifer conditions.
-        ///
         /// \param[in] usys Unit system.  Needed to convert quantities from
         ///    internal to output units.
-        void captureDynamicdAquiferData(const AquiferConfig& aqConfig,
-                                        const SummaryState&  summaryState,
-                                        const PvtwTable&     pvtwTable,
-                                        const DensityTable&  densityTable,
-                                        const UnitSystem&    usys);
+        void captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
+                                        const data::Aquifers& aquData,
+                                        const SummaryState&   summaryState,
+                                        const UnitSystem&     usys);
 
         /// Retrieve the maximum active aquifer ID over all analytic
         /// aquifers.

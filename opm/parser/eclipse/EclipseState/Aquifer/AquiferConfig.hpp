@@ -65,10 +65,10 @@ public:
     }
 
 private:
-    Aquifetp aquifetp;
-    AquiferCT aquiferct;
-    mutable NumericalAquifers numerical_aquifers;
-    Aquancon aqconn;
+    Aquifetp aquifetp{};
+    AquiferCT aquiferct{};
+    mutable NumericalAquifers numerical_aquifers{};
+    Aquancon aqconn{};
 };
 
 std::vector<int> analyticAquiferIDs(const AquiferConfig& cfg);

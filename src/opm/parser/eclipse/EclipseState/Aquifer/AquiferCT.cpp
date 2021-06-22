@@ -23,6 +23,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -66,88 +67,121 @@ static const std::vector<double> default_time =     { 0.010, 0.050, 0.100, 0.150
 
 }
 
-
-AquiferCT::AQUCT_data::AQUCT_data(const DeckRecord& record, const TableManager& tables) :
-    aquiferID(record.getItem("AQUIFER_ID").get<int>(0)),
-    inftableID(record.getItem("TABLE_NUM_INFLUENCE_FN").get<int>(0)),
-    pvttableID(record.getItem("TABLE_NUM_WATER_PRESS").get<int>(0)),
-    phi_aq(record.getItem("PORO_AQ").getSIDouble(0)),
-    d0(record.getItem("DAT_DEPTH").getSIDouble(0)),
-    C_t(record.getItem("C_T").getSIDouble(0)),
-    r_o(record.getItem("RAD").getSIDouble(0)),
-    k_a(record.getItem("PERM_AQ").getSIDouble(0)),
-    c1(1.0),
-    h(record.getItem("THICKNESS_AQ").getSIDouble(0)),
-    theta( record.getItem("INFLUENCE_ANGLE").getSIDouble(0)/360.0),
-    c2(6.283),         // Value of C2 used by E100 (for METRIC, PVT-M and LAB unit systems)
-    p0(std::make_pair(false, 0))
+AquiferCT::AQUCT_data::AQUCT_data(const DeckRecord& record, const TableManager& tables)
+    : aquiferID     (record.getItem<ParserKeywords::AQUCT::AQUIFER_ID>().get<int>(0))
+    , inftableID    (record.getItem<ParserKeywords::AQUCT::TABLE_NUM_INFLUENCE_FN>().get<int>(0))
+    , pvttableID    (record.getItem<ParserKeywords::AQUCT::TABLE_NUM_WATER_PRESS>().get<int>(0))
+    , porosity      (record.getItem<ParserKeywords::AQUCT::PORO_AQ>().getSIDouble(0))
+    , datum_depth   (record.getItem<ParserKeywords::AQUCT::DAT_DEPTH>().getSIDouble(0))
+    , total_compr   (record.getItem<ParserKeywords::AQUCT::C_T>().getSIDouble(0))
+    , inner_radius  (record.getItem<ParserKeywords::AQUCT::RAD>().getSIDouble(0))
+    , permeability  (record.getItem<ParserKeywords::AQUCT::PERM_AQ>().getSIDouble(0))
+    , thickness     (record.getItem<ParserKeywords::AQUCT::THICKNESS_AQ>().getSIDouble(0))
+    , angle_fraction(record.getItem<ParserKeywords::AQUCT::INFLUENCE_ANGLE>().getSIDouble(0) / 360.0)
 {
-    if (record.getItem("P_INI").hasValue(0))
-        this->p0 = std::make_pair(true, record.getItem("P_INI").getSIDouble(0));
+    if (record.getItem<ParserKeywords::AQUCT::P_INI>().hasValue(0))
+        this->initial_pressure = record.getItem<ParserKeywords::AQUCT::P_INI>().getSIDouble(0);
 
-    // Get the correct influence table values
-    if (this->inftableID > 1) {
-        const auto& aqutabTable = tables.getAqutabTables().getTable(this->inftableID - 2);
-        const auto& aqutab_tdColumn = aqutabTable.getColumn(0);
-        const auto& aqutab_piColumn = aqutabTable.getColumn(1);
-        this->td = aqutab_tdColumn.vectorCopy();
-        this->pi = aqutab_piColumn.vectorCopy();
-    } else {
-        this->td = default_time;
-        this->pi = default_pressure;
-    }
+    this->finishInitialisation(tables);
 }
 
-
-bool AquiferCT::AQUCT_data::operator==(const AquiferCT::AQUCT_data& other) const {
-    return this->aquiferID == other.aquiferID &&
-           this->inftableID == other.inftableID &&
-           this->pvttableID == other.pvttableID &&
-           this->phi_aq == other.phi_aq &&
-           this->d0 == other.d0 &&
-           this->C_t == other.C_t &&
-           this->r_o == other.r_o &&
-           this->k_a == other.k_a &&
-           this->c1  == other.c1  &&
-           this->h   == other.h   &&
-           this->theta == other.theta &&
-           this->c2 == other.c2 &&
-           this->p0 == other.p0 &&
-           this->td == other.td &&
-           this->pi == other.pi;
+bool AquiferCT::AQUCT_data::operator==(const AquiferCT::AQUCT_data& other) const
+{
+    return (this->aquiferID == other.aquiferID)
+        && (this->inftableID == other.inftableID)
+        && (this->pvttableID == other.pvttableID)
+        && (this->porosity == other.porosity)
+        && (this->datum_depth == other.datum_depth)
+        && (this->total_compr == other.total_compr)
+        && (this->inner_radius == other.inner_radius)
+        && (this->permeability == other.permeability)
+        && (this->thickness == other.thickness)
+        && (this->angle_fraction == other.angle_fraction)
+        && (this->initial_pressure == other.initial_pressure)
+        && (this->dimensionless_time == other.dimensionless_time)
+        && (this->dimensionless_pressure == other.dimensionless_pressure)
+        && (this->timeConstant() == other.timeConstant())
+        && (this->influxConstant() == other.influxConstant())
+        && (this->waterDensity() == other.waterDensity())
+        && (this->waterViscosity() == other.waterViscosity())
+        ;
 }
 
-AquiferCT::AQUCT_data::AQUCT_data(int aqID,
-                                  int infID,
-                                  int pvtID,
-                                  double phi_aq_,
-                                  double d0_,
-                                  double C_t_,
-                                  double r_o_,
-                                  double k_a_,
-                                  double c1_,
-                                  double h_,
-                                  double theta_,
-                                  double c2_,
-                                  const std::pair<bool, double>& p0_,
-                                  const std::vector<double>& td_,
-                                  const std::vector<double>& pi_) :
-    aquiferID(aqID),
-    inftableID(infID),
-    pvttableID(pvtID),
-    phi_aq(phi_aq_),
-    d0(d0_),
-    C_t(C_t_),
-    r_o(r_o_),
-    k_a(k_a_),
-    c1(c1_),
-    h(h_),
-    theta(theta_),
-    c2(c2_),
-    p0(p0_),
-    td(td_),
-    pi(pi_)
+AquiferCT::AQUCT_data::AQUCT_data(const int aqID,
+                                  const int infID,
+                                  const int pvtID,
+                                  const double phi_aq_,
+                                  const double d0_,
+                                  const double C_t_,
+                                  const double r_o_,
+                                  const double k_a_,
+                                  const double h_,
+                                  const double theta_,
+                                  const double p0_)
+    : aquiferID(aqID)
+    , inftableID(infID)
+    , pvttableID(pvtID)
+    , porosity(phi_aq_)
+    , datum_depth(d0_)
+    , total_compr(C_t_)
+    , inner_radius(r_o_)
+    , permeability(k_a_)
+    , thickness(h_)
+    , angle_fraction(theta_)
+    , initial_pressure(p0_)
 {}
+
+AquiferCT::AQUCT_data AquiferCT::AQUCT_data::serializeObject()
+{
+    auto ret = AQUCT_data {
+        1, 2, 3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0
+    };
+
+    ret.dimensionless_time = std::vector<double>{ 12.0 };
+    ret.dimensionless_pressure = std::vector<double>{ 13.0 };
+    ret.time_constant_ = 14.0;
+    ret.influx_constant_ = 15.0;
+    ret.water_density_ = 16.0;
+    ret.water_viscosity_ = 17.0;
+
+    return ret;
+}
+
+void AquiferCT::AQUCT_data::finishInitialisation(const TableManager& tables)
+{
+    // Get the correct influence table values
+    if (this->inftableID == 1) {
+        this->dimensionless_time = default_time;
+        this->dimensionless_pressure = default_pressure;
+    }
+    else if (this->inftableID > 1) {
+        const auto& aqutabTable = tables.getAqutabTables().getTable(this->inftableID - 2);
+        this->dimensionless_time = aqutabTable.getColumn(0).vectorCopy();
+        this->dimensionless_pressure = aqutabTable.getColumn(1).vectorCopy();
+    }
+
+    const auto x = this->porosity * this->total_compr * this->inner_radius * this->inner_radius;
+
+    const auto& pvtwTables = tables.getPvtwTable();
+    const auto& densityTables = tables.getDensityTable();
+    if (this->initial_pressure.has_value() &&
+        !pvtwTables.empty() &&
+        !densityTables.empty())
+    {
+        const auto& pvtw = pvtwTables[this->pvttableID - 1];
+        const auto& density = densityTables[this->pvttableID - 1];
+
+        const auto press_diff = this->initial_pressure.value() - pvtw.reference_pressure;
+        const auto BW = pvtw.volume_factor * (1.0 - pvtw.compressibility*press_diff);
+
+        this->water_viscosity_ = pvtw.viscosity * (1.0 + pvtw.viscosibility*press_diff);
+        this->water_density_ = density.water / BW;
+        this->time_constant_ = this->water_viscosity_ * x / this->permeability;
+    }
+
+    const auto tau = 6.283; // ECLIPSE 100's approximation of 2\pi.
+    this->influx_constant_ = tau * this->thickness * this->angle_fraction * x;
+}
 
 AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
 {
@@ -167,11 +201,7 @@ AquiferCT::AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data) :
 
 AquiferCT AquiferCT::serializeObject()
 {
-    AquiferCT result;
-    result.m_aquct = {{1, 2, 3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
-                       11.0, 12.0, {true, 13.0}, {14.0}, {15.0}}};
-
-    return result;
+    return { { AQUCT_data::serializeObject() } };
 }
 
 std::size_t AquiferCT::size() const {
