@@ -36,6 +36,10 @@ namespace Opm {
     class TableManager;
 }
 
+namespace Opm { namespace RestartIO {
+    class RstAquifer;
+}} // Opm::RestartIO
+
 namespace Opm {
 
 class Aquifetp {
@@ -43,6 +47,8 @@ class Aquifetp {
 
     struct AQUFETP_data
     {
+        friend class Aquifetp;
+
         AQUFETP_data() = default;
         AQUFETP_data(const DeckRecord& record, const TableManager& tables);
         AQUFETP_data(const int aquiferID_,
@@ -97,6 +103,9 @@ class Aquifetp {
     Aquifetp() = default;
     Aquifetp(const TableManager& tables, const Deck& deck);
     explicit Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data);
+
+    void loadFromRestart(const RestartIO::RstAquifer& rst,
+                         const TableManager&          tables);
 
     static Aquifetp serializeObject();
 

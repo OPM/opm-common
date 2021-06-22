@@ -47,6 +47,14 @@ void AquiferConfig::load_connections(const Deck& deck, const EclipseGrid& grid) 
     this->aqconn = Aquancon(grid, deck);
 }
 
+void AquiferConfig::loadFromRestart(const RestartIO::RstAquifer& aquifers,
+                                    const TableManager&          tables)
+{
+    this->aquifetp.loadFromRestart(aquifers, tables);
+    this->aquiferct.loadFromRestart(aquifers, tables);
+    this->aqconn.loadFromRestart(aquifers);
+}
+
 AquiferConfig AquiferConfig::serializeObject()
 {
     AquiferConfig result;

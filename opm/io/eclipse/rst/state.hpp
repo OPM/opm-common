@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/aquifer.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/udq.hpp>
@@ -32,6 +33,9 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 
+namespace Opm {
+    class EclipseGrid;
+} // namespace Opm
 
 namespace Opm { namespace EclIO {
     class RestartFileView;
@@ -40,17 +44,17 @@ namespace Opm { namespace EclIO {
 namespace Opm { namespace RestartIO {
 
 struct RstState {
-    RstState(const ::Opm::UnitSystem& unit_system,
-             const std::vector<int>& intehead,
-             const std::vector<bool>& logihead,
-             const std::vector<double>& doubhead);
+    RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
+             const ::Opm::EclipseGrid*               grid);
 
-    static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView);
+    static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView,
+                         const ::Opm::EclipseGrid*               grid = nullptr);
 
     const RstWell& get_well(const std::string& wname) const;
 
-    const ::Opm::UnitSystem unit_system;
+    ::Opm::UnitSystem unit_system;
     RstHeader header;
+    RstAquifer aquifers;
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
     std::vector<RstUDQ> udqs;

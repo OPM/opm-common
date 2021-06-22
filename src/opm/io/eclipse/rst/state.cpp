@@ -20,6 +20,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <optional>
 
 #include <opm/io/eclipse/RestartFileView.hpp>
 
@@ -64,14 +65,13 @@ namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace Opm { namespace RestartIO {
 
-RstState::RstState(const ::Opm::UnitSystem& unit_system_,
-                   const std::vector<int>& intehead,
-                   const std::vector<bool>& logihead,
-                   const std::vector<double>& doubhead):
-    unit_system(unit_system_),
-    header(unit_system_, intehead, logihead, doubhead)
+RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
+                   const ::Opm::EclipseGrid*               grid)
+    : unit_system(rstView->intehead()[VI::intehead::UNIT])
+    , header(unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead())
+    , aquifers(rstView, grid, unit_system)
 {
-    this->load_tuning(intehead, doubhead);
+    this->load_tuning(rstView->intehead(), rstView->doubhead());
 }
 
 
@@ -273,15 +273,11 @@ const RstWell& RstState::get_well(const std::string& wname) const {
     return *well_iter;
 }
 
-RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView) {
-    const auto& intehead = rstView->getKeyword<int>("INTEHEAD");
-    const auto& logihead = rstView->getKeyword<bool>("LOGIHEAD");
-    const auto& doubhead = rstView->getKeyword<double>("DOUBHEAD");
+RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
+                        const ::Opm::EclipseGrid*               grid)
+{
+    RstState state(rstView, grid);
 
-    auto unit_id = intehead[VI::intehead::UNIT];
-    ::Opm::UnitSystem unit_system(unit_id);
-
-    RstState state(unit_system, intehead, logihead, doubhead);
     if (state.header.ngroup > 0) {
         const auto& zgrp = rstView->getKeyword<std::string>("ZGRP");
         const auto& igrp = rstView->getKeyword<int>("IGRP");

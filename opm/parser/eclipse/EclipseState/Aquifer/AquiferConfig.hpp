@@ -26,11 +26,17 @@
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 namespace Opm {
+    class TableManager;
+    class EclipseGrid;
+    class Deck;
+    class FieldPropsManager;
+} // namespace Opm
 
-class TableManager;
-class EclipseGrid;
-class Deck;
-class FieldPropsManager;
+namespace Opm { namespace RestartIO {
+    class RstAquifer;
+}} // namespace Opm::RestartIO
+
+namespace Opm {
 
 class AquiferConfig {
 public:
@@ -40,6 +46,8 @@ public:
     AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
     void load_connections(const Deck& deck, const EclipseGrid& grid);
 
+    void loadFromRestart(const RestartIO::RstAquifer& aquifers,
+                         const TableManager&          tables);
 
     static AquiferConfig serializeObject();
 

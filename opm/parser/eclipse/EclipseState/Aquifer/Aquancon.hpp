@@ -37,6 +37,10 @@ namespace Opm {
     class Deck;
 }
 
+namespace Opm { namespace RestartIO {
+    class RstAquifer;
+}} // Opm::RestartIO
+
 namespace Opm {
 
     class Aquancon {
@@ -82,10 +86,11 @@ namespace Opm {
             }
         };
 
-
             Aquancon() = default;
             Aquancon(const EclipseGrid& grid, const Deck& deck);
             explicit Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data);
+
+            void loadFromRestart(const RestartIO::RstAquifer& rst_aquifers);
 
             static Aquancon serializeObject();
 

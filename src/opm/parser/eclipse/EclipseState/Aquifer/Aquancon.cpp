@@ -15,9 +15,11 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
+
+#include <opm/io/eclipse/rst/aquifer.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
@@ -45,6 +47,36 @@
 #include <fmt/format.h>
 
 #include "AquiferHelpers.hpp"
+
+namespace {
+    Opm::Aquancon::AquancCell
+    makeAquiferCell(const int                                            aquiferID,
+                    const Opm::RestartIO::RstAquifer::Connections::Cell& rst_cell)
+    {
+        return {
+            aquiferID,
+            rst_cell.global_index,
+            rst_cell.influx_coeff,
+            rst_cell.effective_facearea,
+            rst_cell.face_dir
+        };
+    }
+
+    std::vector<Opm::Aquancon::AquancCell>
+    makeAquiferConnections(const int                                      aquiferID,
+                           const Opm::RestartIO::RstAquifer::Connections& rst_connections)
+    {
+        auto connections = std::vector<Opm::Aquancon::AquancCell>{};
+        const auto& rst_cells = rst_connections.cells();
+
+        connections.reserve(rst_cells.size());
+        for (const auto& rst_cell : rst_cells) {
+            connections.push_back(makeAquiferCell(aquiferID, rst_cell));
+        }
+
+        return connections;
+    }
+} // Anonymous
 
 namespace Opm {
 
@@ -182,6 +214,15 @@ namespace Opm {
     Aquancon::Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data) :
         cells(data)
     {}
+
+    void Aquancon::loadFromRestart(const RestartIO::RstAquifer& rst_aquifers)
+    {
+        this->cells.clear();
+
+        for (const auto& [aquiferID, rst_connections] : rst_aquifers.connections()) {
+            this->cells.insert_or_assign(aquiferID, makeAquiferConnections(aquiferID, rst_connections));
+        }
+    }
 
     const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& Aquancon::data() const {
         return this->cells;

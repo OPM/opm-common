@@ -19,6 +19,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 
+#include <opm/io/eclipse/rst/aquifer.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -31,6 +33,25 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <vector>
+
+namespace {
+    Opm::Aquifetp::AQUFETP_data
+    makeAquifer(const Opm::RestartIO::RstAquifer::Fetkovich& rst_aquifer)
+    {
+        auto aquifer = Opm::Aquifetp::AQUFETP_data{};
+
+        aquifer.aquiferID  = rst_aquifer.aquiferID;
+        aquifer.pvttableID = rst_aquifer.pvttableID;
+
+        aquifer.prod_index        = rst_aquifer.prod_index;
+        aquifer.total_compr       = rst_aquifer.total_compr;
+        aquifer.initial_watvolume = rst_aquifer.initial_watvolume;
+        aquifer.datum_depth       = rst_aquifer.datum_depth;
+        aquifer.initial_pressure  = rst_aquifer.initial_pressure;
+
+        return aquifer;
+    }
+}
 
 namespace Opm {
 
@@ -131,6 +152,26 @@ Aquifetp::Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data) :
     m_aqufetp(data)
 {}
 
+void Aquifetp::loadFromRestart(const RestartIO::RstAquifer& rst,
+                               const TableManager&          tables)
+{
+    this->m_aqufetp.clear();
+
+    const auto& rst_aquifers = rst.fetkovich();
+    if (! rst_aquifers.empty()) {
+        this->m_aqufetp.reserve(rst_aquifers.size());
+    }
+
+    for (const auto& rst_aquifer : rst_aquifers) {
+        this->m_aqufetp.push_back(makeAquifer(rst_aquifer));
+
+        auto& new_aquifer = this->m_aqufetp.back();
+        new_aquifer.finishInitialisation(tables);
+
+        // Assign 'private:' members in AQUFETP_data.
+        new_aquifer.time_constant_ = rst_aquifer.time_constant;
+    }
+}
 
 Aquifetp Aquifetp::serializeObject()
 {
