@@ -132,6 +132,32 @@ public:
         return this->getKeyword<int>(ihkw, 0);
     }
 
+    const std::vector<bool>& logihead()
+    {
+        const auto lhkw = std::string { "LOGIHEAD" };
+
+        if (! this->hasKeyword<bool>(lhkw)) {
+            throw std::domain_error {
+                "Purported Restart File Does not Have Logical Header"
+            };
+        }
+
+        return this->getKeyword<bool>(lhkw, 0);
+    }
+
+    const std::vector<double>& doubhead()
+    {
+        const auto dhkw = std::string { "DOUBHEAD" };
+
+        if (! this->hasKeyword<double>(dhkw)) {
+            throw std::domain_error {
+                "Purported Restart File Does not Have Double Header"
+            };
+        }
+
+        return this->getKeyword<double>(dhkw, 0);
+    }
+
 private:
     using RstFile = std::shared_ptr<ERst>;
 
@@ -170,7 +196,6 @@ Implementation(std::shared_ptr<ERst> restart_file,
         const auto& type = std::get<1>(vector);
 
         switch (type) {
-        case ::Opm::EclIO::eclArrType::LOGI:
         case ::Opm::EclIO::eclArrType::MESS:
             // Currently ignored
             continue;
@@ -238,6 +263,16 @@ int Opm::EclIO::RestartFileView::occurrenceCount(const std::string& vector) cons
 const std::vector<int>& Opm::EclIO::RestartFileView::intehead() const
 {
     return this->pImpl_->intehead();
+}
+
+const std::vector<bool>& Opm::EclIO::RestartFileView::logihead() const
+{
+    return this->pImpl_->logihead();
+}
+
+const std::vector<double>& Opm::EclIO::RestartFileView::doubhead() const
+{
+    return this->pImpl_->doubhead();
 }
 
 template <typename ElmType>

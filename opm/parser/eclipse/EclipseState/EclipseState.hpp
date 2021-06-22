@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_ECLIPSE_STATE_HPP
 #define OPM_ECLIPSE_STATE_HPP
@@ -37,13 +37,18 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
-
     class Deck;
     class DeckKeyword;
     class InitConfig;
     class IOConfig;
     class DeckSection;
+} // namespace Opm
 
+namespace Opm { namespace RestartIO {
+    class RstAquifer;
+}} // namespace Opm::RestartIO
+
+namespace Opm {
 
     class EclipseState {
     public:
@@ -100,6 +105,8 @@ namespace Opm {
         const AquiferConfig& aquifer() const;
         const TracerConfig& tracer() const;
 
+        void loadRestartAquifers(const RestartIO::RstAquifer& aquifers);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -148,6 +155,6 @@ namespace Opm {
         std::string m_title;
         TracerConfig tracer_config;
     };
-}
+} // namespace Opm
 
 #endif // OPM_ECLIPSE_STATE_HPP
