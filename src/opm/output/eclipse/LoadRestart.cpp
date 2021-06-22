@@ -49,6 +49,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
@@ -1074,19 +1075,53 @@ namespace {
                                       xwel[VI::XWell::index::GasPrRate]));
         }
 
-        // 2) Restore other well quantities (really only xw.bhp)
+        // 2) Restore guide rates
+        if (well.isProducer()) {
+            if (wat)
+                xw.guide_rates.set(Opm::data::GuideRateValue::Item::Water,
+                                   usys.to_si(M::liquid_surface_rate, xwel[VI::XWell::index::WatPrGuideRate]));
+
+            if (oil)
+                xw.guide_rates.set(Opm::data::GuideRateValue::Item::Oil,
+                                   usys.to_si(M::liquid_surface_rate, xwel[VI::XWell::index::PrimGuideRate]));
+
+            if (gas)
+                xw.guide_rates.set(Opm::data::GuideRateValue::Item::Gas,
+                                   usys.to_si(M::gas_surface_rate, xwel[VI::XWell::index::GasPrGuideRate]));
+
+            xw.guide_rates.set(Opm::data::GuideRateValue::Item::ResV,
+                               usys.to_si(M::rate, xwel[VI::XWell::index::VoidPrGuideRate]));
+        } else {
+            const auto& injector_type = well.injectorType();
+            switch (injector_type) {
+            case Opm::InjectorType::WATER:
+                xw.guide_rates.set(Opm::data::GuideRateValue::Item::Water,
+                                   -usys.to_si(M::liquid_surface_rate, xwel[VI::XWell::index::PrimGuideRate]));
+                break;
+
+            case Opm::InjectorType::GAS:
+                xw.guide_rates.set(Opm::data::GuideRateValue::Item::Gas,
+                                   -usys.to_si(M::gas_surface_rate, xwel[VI::XWell::index::PrimGuideRate]));
+                break;
+            default:
+                throw std::logic_error("Only WATER and GAS injectors are supported when loading from restart file");
+            }
+        }
+
+
+        // 3) Restore other well quantities (really only xw.bhp)
         xw.bhp = usys.to_si(M::pressure, xwel[VI::XWell::index::FlowBHP]);
         xw.thp = usys.to_si(M::pressure, xwel[VI::XWell::index::TubHeadPr]);
         xw.temperature = 0.0;
 
-        // 3) Restore connection flow rates (xw.connections[i].rates)
+        // 4) Restore connection flow rates (xw.connections[i].rates)
         //    and pressure values (xw.connections[i].pressure).
         restoreConnResults(well, wellID, grid, usys, phases, wellData, xw);
 
-        // 4) Restore well's active/current control
+        // 5) Restore well's active/current control
         restoreCurrentControl(wellID, wellData, xw);
 
-        // 5) Restore segment quantities if applicable.
+        // 6) Restore segment quantities if applicable.
         if (well.isMultiSegment() && segData.hasDefinedValues())
         {
             const auto iwel   = wellData.iwel(wellID);
