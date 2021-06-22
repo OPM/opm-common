@@ -21,7 +21,7 @@
 
 #include <iosfwd>
 #include <string>
-#include <set>
+#include <unordered_set>
 
 #include <regex>
 
@@ -85,9 +85,6 @@ namespace Opm {
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem, int size_shift);
 
 
-        typedef std::set<std::string> DeckNameSet;
-
-
         static bool validInternalName(const std::string& name);
         static bool validDeckName(const std::string_view& name);
         bool hasMatchRegex() const;
@@ -112,9 +109,8 @@ namespace Opm {
         void clearDeckNames();
         void addDeckName( const std::string& deckName );
         void setCodeEnd(const std::string& end);
+        const std::unordered_set<std::string>& deck_names() const;
         const std::string& codeEnd() const;
-        DeckNameSet::const_iterator deckNamesBegin() const;
-        DeckNameSet::const_iterator deckNamesEnd() const;
 
         const std::vector<std::string>& requiredKeywords() const;
         const std::vector<std::string>& prohibitedKeywords() const;
@@ -146,8 +142,8 @@ namespace Opm {
     private:
         KeywordSize keyword_size;
         std::string m_name;
-        DeckNameSet m_deckNames;
         DeckNameSet m_validSectionNames;
+        std::unordered_set<std::string> m_deckNames;
         std::string m_matchRegexString;
         std::regex m_matchRegex;
         std::vector< ParserRecord > m_records;
