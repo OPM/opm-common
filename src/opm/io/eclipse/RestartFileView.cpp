@@ -96,6 +96,11 @@ public:
         return this->report_step_;
     }
 
+    int occurrenceCount(const std::string& vector) const
+    {
+        return this->rst_file_->occurrence_count(vector, this->report_step_);
+    }
+
     template <typename ElmType>
     bool hasKeyword(const std::string& vector) const
     {
@@ -223,6 +228,11 @@ std::size_t Opm::EclIO::RestartFileView::simStep() const
 int Opm::EclIO::RestartFileView::reportStep() const
 {
     return this->pImpl_->reportStep();
+}
+
+int Opm::EclIO::RestartFileView::occurrenceCount(const std::string& vector) const
+{
+    return this->pImpl_->occurrenceCount(vector);
 }
 
 const std::vector<int>& Opm::EclIO::RestartFileView::intehead() const

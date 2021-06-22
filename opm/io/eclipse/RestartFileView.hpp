@@ -47,6 +47,8 @@ public:
     std::size_t simStep() const;
     int reportStep() const;
 
+    int occurrenceCount(const std::string& vector) const;
+
     template <typename ElmType>
     bool hasKeyword(const std::string& vector) const;
 
