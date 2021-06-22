@@ -282,6 +282,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/OutputStream.cpp
           src/opm/io/eclipse/RestartFileView.cpp
           src/opm/io/eclipse/SummaryNode.cpp
+          src/opm/io/eclipse/rst/aquifer.cpp
           src/opm/io/eclipse/rst/connection.cpp
           src/opm/io/eclipse/rst/group.cpp
           src/opm/io/eclipse/rst/header.cpp
@@ -855,6 +856,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/OutputStream.hpp
         opm/io/eclipse/RestartFileView.hpp
         opm/io/eclipse/SummaryNode.hpp
+        opm/io/eclipse/rst/aquifer.hpp
         opm/io/eclipse/rst/connection.hpp
         opm/io/eclipse/rst/group.hpp
         opm/io/eclipse/rst/header.hpp
