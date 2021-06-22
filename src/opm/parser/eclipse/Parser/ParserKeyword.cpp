@@ -546,14 +546,6 @@ void set_dimensions( ParserItem& item,
         return m_validSectionNames.size() == 0 || m_validSectionNames.count(sectionName) > 0;
     }
 
-    ParserKeyword::SectionNameSet::const_iterator ParserKeyword::validSectionNamesBegin() const {
-        return m_validSectionNames.begin();
-    }
-
-    ParserKeyword::SectionNameSet::const_iterator ParserKeyword::validSectionNamesEnd() const  {
-        return m_validSectionNames.end();
-    }
-
     ParserKeyword::DeckNameSet::const_iterator ParserKeyword::deckNamesBegin() const {
         return m_deckNames.begin();
     }

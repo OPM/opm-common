@@ -86,7 +86,6 @@ namespace Opm {
 
 
         typedef std::set<std::string> DeckNameSet;
-        typedef std::set<std::string> SectionNameSet;
 
 
         static bool validInternalName(const std::string& name);
@@ -125,8 +124,6 @@ namespace Opm {
         void clearValidSectionNames();
         void addValidSectionName(const std::string& sectionName);
         bool isValidSection(const std::string& sectionName) const;
-        SectionNameSet::const_iterator validSectionNamesBegin() const;
-        SectionNameSet::const_iterator validSectionNamesEnd() const;
 
         DeckKeyword parse(const ParseContext& parseContext, ErrorGuard& errors, RawKeyword& rawKeyword, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem) const;
         enum ParserKeywordSizeEnum getSizeType() const;
