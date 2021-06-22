@@ -271,9 +271,9 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "WELOPEN ");
 
         start = start_a + 1*actDims[8];
-        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "   '?' '");
-        BOOST_CHECK_EQUAL(zLact[start + 1].c_str() ,   "SHUT' 0 ");
-        BOOST_CHECK_EQUAL(zLact[start + 2].c_str() ,   "0 0 /   ");
+        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "'?' 'SHU");
+        BOOST_CHECK_EQUAL(zLact[start + 1].c_str() ,   "T' 0 0 0");
+        BOOST_CHECK_EQUAL(zLact[start + 2].c_str() ,   " /      ");
 
         start = start_a + 2*actDims[8];
         BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "/       ");
@@ -287,9 +287,9 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "WELOPEN ");
 
         start = start_a + 1*actDims[8];
-        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "   '?' '");
-        BOOST_CHECK_EQUAL(zLact[start + 1].c_str() ,   "SHUT' 0 ");
-        BOOST_CHECK_EQUAL(zLact[start + 2].c_str() ,   "0 0 /   ");
+        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "'?' 'SHU");
+        BOOST_CHECK_EQUAL(zLact[start + 1].c_str() ,   "T' 0 0 0");
+        BOOST_CHECK_EQUAL(zLact[start + 2].c_str() ,   " /      ");
 
         start = start_a + 2*actDims[8];
         BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "/       ");
@@ -298,9 +298,9 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "WELOPEN ");
 
         start = start_a + 4*actDims[8];
-        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "   'OPL0");
-        BOOST_CHECK_EQUAL(zLact[start + 1].c_str() ,   "1' 'OPEN");
-        BOOST_CHECK_EQUAL(zLact[start + 2].c_str() ,   "' /     ");
+        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "'OPL01' ");
+        BOOST_CHECK_EQUAL(zLact[start + 1].c_str() ,   "'OPEN' /");
+        BOOST_CHECK_EQUAL(zLact[start + 2].c_str() ,   "        ");
 
         start = start_a + 5*actDims[8];
         BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "/       ");
