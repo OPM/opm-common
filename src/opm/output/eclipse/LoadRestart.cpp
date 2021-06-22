@@ -411,25 +411,40 @@ public:
                             std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
 
     bool hasDefinedValues() const;
+    bool hasDefinedNumericAquiferValues() const;
+
+    std::size_t maxAnalyticAquiferID() const;
+    std::size_t numRecordsForNumericAquifers() const;
 
     Window<int>    iaaq(const std::size_t aquiferID) const;
     Window<float>  saaq(const std::size_t aquiferID) const;
     Window<double> xaaq(const std::size_t aquiferID) const;
 
+    Window<int>    iaqn(const std::size_t recordID) const;
+    Window<double> raqn(const std::size_t recordID) const;
+
 private:
+    std::size_t maxAnalyticAquiferID_;
+    std::size_t numRecordsForNumericAquifers_;
     std::size_t numIntAnalyticAquiferElm_;
+    std::size_t numIntNumericAquiferElm_;
     std::size_t numFloatAnalyticAquiferElm_;
     std::size_t numDoubleAnalyticAquiferElm_;
+    std::size_t numDoubleNumericAquiferElm_;
 
     std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 };
 
 AquiferVectors::AquiferVectors(const std::vector<int>&                      intehead,
                                std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
-    : numIntAnalyticAquiferElm_   (intehead[VI::intehead::NIAAQZ])
-    , numFloatAnalyticAquiferElm_ (intehead[VI::intehead::NSAAQZ])
-    , numDoubleAnalyticAquiferElm_(intehead[VI::intehead::NXAAQZ])
-    , rstView_                    (std::move(rst_view))
+    : maxAnalyticAquiferID_        (intehead[VI::intehead::MAX_ANALYTIC_AQUIFERS])
+    , numRecordsForNumericAquifers_(intehead[VI::intehead::NUM_AQUNUM_RECORDS])
+    , numIntAnalyticAquiferElm_    (intehead[VI::intehead::NIAAQZ])
+    , numIntNumericAquiferElm_     (intehead[VI::intehead::NIIAQN])
+    , numFloatAnalyticAquiferElm_  (intehead[VI::intehead::NSAAQZ])
+    , numDoubleAnalyticAquiferElm_ (intehead[VI::intehead::NXAAQZ])
+    , numDoubleNumericAquiferElm_  (intehead[VI::intehead::NIRAQN])
+    , rstView_                     (std::move(rst_view))
 {}
 
 bool AquiferVectors::hasDefinedValues() const
@@ -437,6 +452,21 @@ bool AquiferVectors::hasDefinedValues() const
     return this->rstView_->hasKeyword<int>   ("IAAQ")
         && this->rstView_->hasKeyword<float> ("SAAQ")
         && this->rstView_->hasKeyword<double>("XAAQ");
+}
+
+bool AquiferVectors::hasDefinedNumericAquiferValues() const
+{
+    return this->rstView_->hasKeyword<int>   ("IAQN")
+        && this->rstView_->hasKeyword<double>("RAQN");
+}
+
+std::size_t AquiferVectors::numRecordsForNumericAquifers() const
+{
+    if (! this->hasDefinedNumericAquiferValues()) {
+        return 0;
+    }
+
+    return this->numRecordsForNumericAquifers_;
 }
 
 AquiferVectors::Window<int>
@@ -478,6 +508,32 @@ AquiferVectors::xaaq(const std::size_t aquiferID) const
                          this->numDoubleAnalyticAquiferElm_, aquiferID);
 }
 
+AquiferVectors::Window<int>
+AquiferVectors::iaqn(const std::size_t recordID) const
+{
+    if (! this->hasDefinedNumericAquiferValues()) {
+        throw std::logic_error {
+            "Cannot Request IAQN Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(this->rstView_->getKeyword<int>("IAQN"),
+                         this->numIntNumericAquiferElm_, recordID);
+}
+
+AquiferVectors::Window<double>
+AquiferVectors::raqn(const std::size_t recordID) const
+{
+    if (! this->hasDefinedNumericAquiferValues()) {
+        throw std::logic_error {
+            "Cannot Request RAQN Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(this->rstView_->getKeyword<double>("RAQN"),
+                         this->numDoubleNumericAquiferElm_, recordID);
+}
+
 // ---------------------------------------------------------------------
 
 namespace {
@@ -492,9 +548,10 @@ namespace {
         }
     }
 
-    bool hasAnalyticAquifers(const Opm::EclIO::RestartFileView& rst_view)
+    bool hasAquifers(const Opm::EclIO::RestartFileView& rst_view)
     {
-        return rst_view.hasKeyword<double>("XAAQ");
+        return rst_view.hasKeyword<double>("XAAQ")
+            || rst_view.hasKeyword<double>("RAQN");
     }
 
     std::size_t maximumAnalyticAquiferID(const Opm::EclIO::RestartFileView& rst_view)
@@ -1263,44 +1320,83 @@ namespace {
         return data;
     }
 
-    Opm::data::Aquifers
-    restore_aquifers(const ::Opm::EclipseState&                   es,
-                     std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+    void restore_analytic_aquifer(const std::size_t      aquiferID,
+                                  const AquiferVectors&  aquiferData,
+                                  const Opm::UnitSystem& units,
+                                  Opm::data::Aquifers&   aquifers)
     {
         using M  = ::Opm::UnitSystem::measure;
         using Ix = VI::XAnalyticAquifer::index;
 
+        const auto saaq = aquiferData.saaq(aquiferID);
+        const auto xaaq = aquiferData.xaaq(aquiferID);
+
+        auto& aqData = aquifers[1 + static_cast<int>(aquiferID)];
+
+        aqData.aquiferID = 1 + static_cast<int>(aquiferID);
+        aqData.pressure  = units.to_si(M::pressure, xaaq[Ix::Pressure]);
+        aqData.volume    = units.to_si(M::liquid_surface_volume,
+                                       xaaq[Ix::ProdVolume]);
+
+        aqData.initPressure =
+            units.to_si(M::pressure, saaq[VI::SAnalyticAquifer::InitPressure]);
+
+        aqData.datumDepth =
+            units.to_si(M::length, saaq[VI::SAnalyticAquifer::DatumDepth]);
+
+        const auto type = determineAquiferType(aquiferData.iaaq(aquiferID));
+        if (type == Opm::data::AquiferType::Fetkovich) {
+            auto* tData = aqData.typeData.create<Opm::data::AquiferType::Fetkovich>();
+            *tData = extractFetkovichData(units, saaq);
+        }
+    }
+
+    void restore_numeric_aquifers(const AquiferVectors&  aquiferData,
+                                  const Opm::UnitSystem& units,
+                                  Opm::data::Aquifers&   aquifers)
+    {
+        using M = ::Opm::UnitSystem::measure;
+        using Opm::data::AquiferType;
+
+        const auto IxAqID = VI::INumericAquifer::index::AquiferID;
+        const auto IxANQT = VI::RNumericAquifer::index::ProdVolume;
+        const auto IxIPR  = VI::RNumericAquifer::index::Pressure;
+
+        const auto numRecords = aquiferData.numRecordsForNumericAquifers();
+        for (auto recordID = 0*numRecords; recordID < numRecords; ++recordID) {
+            const auto aquiferID = aquiferData.iaqn(recordID)[IxAqID];
+            auto& aqData = aquifers[aquiferID];
+
+            if (! aqData.typeData.is<AquiferType::Numerical>()) {
+                aqData.typeData.create<AquiferType::Numerical>();
+                aqData.aquiferID = aquiferID;
+            }
+
+            const auto raqn = aquiferData.raqn(recordID);
+            auto* typeData = aqData.typeData.getMutable<AquiferType::Numerical>();
+
+            typeData->initPressure.push_back(units.to_si(M::pressure, raqn[IxIPR]));
+            if (const auto volume = raqn[IxANQT]; volume > 0.0) {
+                aqData.volume = units.to_si(M::liquid_surface_volume, volume);
+            }
+        }
+    }
+
+    Opm::data::Aquifers
+    restore_aquifers(const ::Opm::EclipseState&                   es,
+                     std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+    {
         auto aquifers = Opm::data::Aquifers{};
 
         const auto& intehead    = rst_view->intehead();
         const auto  aquiferData = AquiferVectors{ intehead, rst_view };
 
-        const auto  maxAqID = maximumAnalyticAquiferID(*rst_view);
-        const auto& units = es.getUnits();
-
+        const auto maxAqID = maximumAnalyticAquiferID(*rst_view);
         for (auto aquiferID = 0*maxAqID; aquiferID < maxAqID; ++aquiferID) {
-            const auto& saaq = aquiferData.saaq(aquiferID);
-            const auto& xaaq = aquiferData.xaaq(aquiferID);
-
-            auto& aqData = aquifers[1 + static_cast<int>(aquiferID)];
-
-            aqData.aquiferID = 1 + static_cast<int>(aquiferID);
-            aqData.pressure  = units.to_si(M::pressure, xaaq[Ix::Pressure]);
-            aqData.volume    = units.to_si(M::liquid_surface_volume,
-                                           xaaq[Ix::ProdVolume]);
-
-            aqData.initPressure =
-                units.to_si(M::pressure, saaq[VI::SAnalyticAquifer::InitPressure]);
-
-            aqData.datumDepth =
-                units.to_si(M::length, saaq[VI::SAnalyticAquifer::DatumDepth]);
-
-            const auto type = determineAquiferType(aquiferData.iaaq(aquiferID));
-            if (type == Opm::data::AquiferType::Fetkovich) {
-                auto* tData = aqData.typeData.create<Opm::data::AquiferType::Fetkovich>();
-                *tData = extractFetkovichData(units, saaq);
-            }
+            restore_analytic_aquifer(aquiferID, aquiferData, es.getUnits(), aquifers);
         }
+
+        restore_numeric_aquifers(aquiferData, es.getUnits(), aquifers);
 
         return aquifers;
     }
@@ -1496,7 +1592,7 @@ namespace Opm { namespace RestartIO  {
 
         auto xgrp_nwrk = restore_grp_nwrk(schedule, es.getUnits(), rst_view);
 
-        auto aquifers = hasAnalyticAquifers(*rst_view)
+        auto aquifers = hasAquifers(*rst_view)
             ? restore_aquifers(es, rst_view) : data::Aquifers{};
 
         auto rst_value = RestartValue {
