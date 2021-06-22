@@ -204,6 +204,7 @@ BOOST_AUTO_TEST_CASE(P1_First)
     const auto rpt  = size_t{1};
 
     cse.gr.compute("P1", rpt, stm, wopp, wgpp, wwpp);
+    cse.gr.update_time_stamp(stm, rpt);
 
     const auto orat = 2.0;
     const auto grat = 4.0;      // == 2 * orat
@@ -247,6 +248,7 @@ BOOST_AUTO_TEST_CASE(P2_Second)
         const auto rpt  = size_t{1};
 
         cse.gr.compute("P2", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     {
@@ -257,6 +259,7 @@ BOOST_AUTO_TEST_CASE(P2_Second)
         const auto rpt  = size_t{1};
 
         cse.gr.compute("P2", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     const auto orat = 2.0;
@@ -296,6 +299,7 @@ BOOST_AUTO_TEST_CASE(P2_Second)
         const auto rpt  = size_t{3};
 
         cse.gr.compute("P2", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     const auto expect_gr_oil_2 = 10.0 / (0.5 + 1.0/10.0); // wopp_2 / (0.5 + wwpp_2/wopp_2)
@@ -337,6 +341,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
         const auto rpt  = size_t{1};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     {
@@ -347,6 +352,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
         const auto rpt  = size_t{3};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     {
@@ -357,6 +363,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
         const auto rpt  = size_t{4};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     const auto expect_gr_oil_1 =  1.0 / (0.5 +  0.1/ 1.0); // wopp_1 / (0.5 + wwpp_1/wopp_1)
@@ -404,6 +411,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
         const auto rpt  = size_t{1};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     {
@@ -414,6 +422,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
         const auto rpt  = size_t{3};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     {
@@ -424,6 +433,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
         const auto rpt  = size_t{4};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     const auto expect_gr_oil_1 =  1.0 / (0.5 +  0.1/ 1.0); // wopp_1 / (0.5 + wwpp_1/wopp_1)
@@ -471,6 +481,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
         const auto rpt  = size_t{1};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     {
@@ -481,6 +492,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
         const auto rpt  = size_t{3};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     {
@@ -491,6 +503,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
         const auto rpt  = size_t{4};
 
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
+        cse.gr.update_time_stamp(stm, rpt);
     }
 
     const auto expect_gr_oil_1 =  1.0 / (0.5 +  0.1/ 1.0); // wopp_1 / (0.5 + wwpp_1/wopp_1)

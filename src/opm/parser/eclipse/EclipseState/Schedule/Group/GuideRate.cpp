@@ -158,7 +158,7 @@ void GuideRate::group_compute(const std::string& wgname,
         auto model_target = GuideRateModel::convert_target(group.target);
 
         const auto& model = config.has_model() ? config.model() : GuideRateModel{};
-        this->assign_grvalue(wgname, model, { sim_time, group.guide_rate, model_target });
+        this->assign_grvalue(wgname, model, { group.guide_rate, model_target });
     }
     else {
         auto iter = this->values.find(wgname);
@@ -174,11 +174,7 @@ void GuideRate::group_compute(const std::string& wgname,
                     };
                 }
 
-                const auto& grv = iter->second->curr;
-                const auto time_diff = sim_time - grv.sim_time;
-                if (config.model().update_delay() > time_diff) {
-                    return;
-                }
+                if ( !this->time_to_update(sim_time, report_step)) return;
             }
         }
 
@@ -199,7 +195,7 @@ void GuideRate::group_compute(const std::string& wgname,
             }
 
             const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
-            this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
+            this->assign_grvalue(wgname, config.model(), { guide_rate, config.model().target() });
         }
     }
 }
@@ -241,7 +237,7 @@ void GuideRate::well_compute(const std::string& wgname,
             auto model_target = GuideRateModel::convert_target(well.target);
 
             const auto& model = config.has_model() ? config.model() : GuideRateModel{};
-            this->assign_grvalue(wgname, model, { sim_time, well.guide_rate, model_target });
+            this->assign_grvalue(wgname, model, { well.guide_rate, model_target });
         }
     }
     else if (config.has_model()) { // GUIDERAT
@@ -257,17 +253,14 @@ void GuideRate::well_compute(const std::string& wgname,
             return;
         }
 
-        auto iter = this->values.find(wgname);
-        if (iter != this->values.end()) {
-            const auto& grv = iter->second->curr;
-            const auto time_diff = sim_time - grv.sim_time;
-            if (config.model().update_delay() > time_diff) {
-                return;
-            }
+        // Newly opened wells without calculated guide rates always need to update guide rates
+        // existing wells need to wait for guide rates to expire to update the guide rate.
+        if (this->values.count(wgname) > 0 && !this->time_to_update(sim_time, report_step)) {
+            return;
         }
 
         const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
-        this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
+        this->assign_grvalue(wgname, config.model(), { guide_rate, config.model().target() });
     }
     // If neither WGRUPCON nor GUIDERAT is specified potentials are used
 }
@@ -296,18 +289,14 @@ void GuideRate::assign_grvalue(const std::string&    wgname,
         v = std::make_unique<GRValState>();
     }
 
-    if (value.sim_time > v->curr.sim_time) {
-        // We've advanced in time since we previously calculated/stored this
-        // guiderate value.  Push current value into the past and prepare to
-        // capture new value.
-        using std::swap;
-
-        swap(v->prev, v->curr);
-    }
+    // We've advanced in time since we previously calculated/stored this
+    // guiderate value.  Push current value into the past and prepare to
+    // capture new value.
+    std::swap(v->prev, v->curr);
 
     v->curr = std::move(value);
 
-    if ((v->prev.sim_time < 0.0) || ! (v->prev.value > 0.0)) {
+    if (v->prev.value <= 0.0) {
         // No previous non-zero guiderate exists.  No further actions.
         return;
     }
@@ -329,9 +318,28 @@ void GuideRate::init_grvalue(std::size_t report_step, const std::string& wgname,
 
 double GuideRate::get_grvalue_result(const GRValState& gr) const
 {
-    return (gr.curr.sim_time < 0.0)
-        ? 0.0
-        : std::max(gr.curr.value, 0.0);
+    return std::max(gr.curr.value, 0.0);
+}
+
+
+bool GuideRate::time_to_update(const double sim_time, const size_t report_step) const
+{
+    const auto& config = this->schedule[report_step].guide_rate();
+    if (!config.has_model()) return false;
+
+    // if currnently there is no guide rates created already, we do not update the time stamp
+    // the precondition is that it is under `GUIDERAT`, aka, config.has_model() == true.
+    if (this->values.empty()) return false;
+
+    const double update_delay = config.model().update_delay();
+    return (sim_time >= this->update_time + update_delay);
+}
+
+void GuideRate::update_time_stamp(const double sim_time, const size_t report_step)
+{
+    if (this->time_to_update(sim_time, report_step)) {
+        this->update_time = sim_time;
+    }
 }
 
 }
