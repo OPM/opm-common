@@ -513,6 +513,9 @@ void set_dimensions( ParserItem& item,
         return this->m_deckNames;
     }
 
+    const std::unordered_set<std::string>& ParserKeyword::sections() const {
+        return this->m_validSectionNames;
+    }
 
     void ParserKeyword::addRecord( ParserRecord record ) {
         m_records.push_back( std::move( record ) );

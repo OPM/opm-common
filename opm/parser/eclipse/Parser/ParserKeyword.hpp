@@ -120,6 +120,7 @@ namespace Opm {
         void clearValidSectionNames();
         void addValidSectionName(const std::string& sectionName);
         bool isValidSection(const std::string& sectionName) const;
+        const std::unordered_set<std::string>& sections() const;
 
         DeckKeyword parse(const ParseContext& parseContext, ErrorGuard& errors, RawKeyword& rawKeyword, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem) const;
         enum ParserKeywordSizeEnum getSizeType() const;
@@ -142,8 +143,8 @@ namespace Opm {
     private:
         KeywordSize keyword_size;
         std::string m_name;
-        DeckNameSet m_validSectionNames;
         std::unordered_set<std::string> m_deckNames;
+        std::unordered_set<std::string> m_validSectionNames;
         std::string m_matchRegexString;
         std::regex m_matchRegex;
         std::vector< ParserRecord > m_records;
