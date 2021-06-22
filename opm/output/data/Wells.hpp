@@ -272,17 +272,17 @@ namespace Opm {
     };
 
     struct Well {
-        Rates rates;
-        double bhp;
-        double thp;
-        double temperature;
-        int control;
+        Rates rates{};
+        double bhp{0.0};
+        double thp{0.0};
+        double temperature{0.0};
+        int control{0};
 
         ::Opm::Well::Status dynamicStatus { Opm::Well::Status::OPEN };
 
-        std::vector< Connection > connections;
-        std::unordered_map<std::size_t, Segment> segments;
-        CurrentControl current_control;
+        std::vector< Connection > connections{};
+        std::unordered_map<std::size_t, Segment> segments{};
+        CurrentControl current_control{};
         GuideRateValue guide_rates{};
 
         inline bool flowing() const noexcept;
@@ -594,11 +594,9 @@ namespace Opm {
             //tracer:
             unsigned int size = this->tracer.size();
             buffer.write(size);
-            for (const auto& titr : this->tracer) {
-                const std::string& tracer_name = titr.first;
-                buffer.write(tracer_name);
-                const double& tracer_rate = titr.second;
-                buffer.write(tracer_rate);
+            for (const auto& [name, rate] : this->tracer) {
+                buffer.write(name);
+                buffer.write(rate);
             }
     }
 
