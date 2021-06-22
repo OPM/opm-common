@@ -509,7 +509,13 @@ void set_dimensions( ParserItem& item,
         return m_records.end();
     }
 
+    const std::unordered_set<std::string>& ParserKeyword::deck_names() const {
+        return this->m_deckNames;
+    }
 
+    const std::unordered_set<std::string>& ParserKeyword::sections() const {
+        return this->m_validSectionNames;
+    }
 
     void ParserKeyword::addRecord( ParserRecord record ) {
         m_records.push_back( std::move( record ) );
@@ -544,22 +550,6 @@ void set_dimensions( ParserItem& item,
 
     bool ParserKeyword::isValidSection(const std::string& sectionName) const {
         return m_validSectionNames.size() == 0 || m_validSectionNames.count(sectionName) > 0;
-    }
-
-    ParserKeyword::SectionNameSet::const_iterator ParserKeyword::validSectionNamesBegin() const {
-        return m_validSectionNames.begin();
-    }
-
-    ParserKeyword::SectionNameSet::const_iterator ParserKeyword::validSectionNamesEnd() const  {
-        return m_validSectionNames.end();
-    }
-
-    ParserKeyword::DeckNameSet::const_iterator ParserKeyword::deckNamesBegin() const {
-        return m_deckNames.begin();
-    }
-
-    ParserKeyword::DeckNameSet::const_iterator ParserKeyword::deckNamesEnd() const  {
-        return m_deckNames.end();
     }
 
     const std::vector<std::string>& ParserKeyword::requiredKeywords() const {

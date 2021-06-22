@@ -1145,11 +1145,9 @@ void Parser::addParserKeyword( ParserKeyword parserKeyword ) {
     const ParserKeyword * ptr = std::addressof(this->keyword_storage.back());
     std::string_view name( ptr->getName() );
 
-    for (auto nameIt = ptr->deckNamesBegin();
-            nameIt != ptr->deckNamesEnd();
-            ++nameIt)
+    for (const auto& deck_name : ptr->deck_names())
     {
-        m_deckParserKeywords[ *nameIt ] = ptr;
+        m_deckParserKeywords[deck_name] = ptr;
     }
 
     if (ptr->hasMatchRegex())
