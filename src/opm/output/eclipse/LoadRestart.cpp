@@ -1439,8 +1439,8 @@ namespace {
 
             Opm::data::GroupData gr_data;
             gr_data.currentControl.currentProdConstraint = Opm::Group::ProductionCModeFromInt(igrp[nwgmax + VI::IGroup::index::ProdActiveCMode]);
-            gr_data.currentControl.currentGasInjectionConstraint = Opm::Group::InjectionCModeFromInt(igrp[nwgmax + VI::IGroup::index::GInjCMode]);
-            gr_data.currentControl.currentWaterInjectionConstraint = Opm::Group::InjectionCModeFromInt(igrp[nwgmax + VI::IGroup::index::WInjCMode]);
+            gr_data.currentControl.currentGasInjectionConstraint = Opm::Group::InjectionCModeFromInt(igrp[nwgmax + VI::IGroup::index::GInjActiveCMode]);
+            gr_data.currentControl.currentWaterInjectionConstraint = Opm::Group::InjectionCModeFromInt(igrp[nwgmax + VI::IGroup::index::WInjActiveCMode]);
 
             auto guide_rate_mode = igrp[nwgmax + VI::IGroup::GuideRateDef];
             if (guide_rate_mode != VI::IGroup::Value::None)
