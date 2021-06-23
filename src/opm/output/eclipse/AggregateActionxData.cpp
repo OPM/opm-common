@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-
+#include <opm/common/utility/String.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
@@ -256,6 +256,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
             // write out the schedule input lines
             const auto& schedule_data = actx.keyword_strings();
             for (auto z_data : schedule_data) {
+                z_data = Opm::ltrim_copy(z_data);
                 int n_sstr =  z_data.size()/l_sstr;
                 if (static_cast<int>(z_data.size()) > max_l_str) {
                     std::cout << "Too long input data string (max 128 characters): " << z_data << std::endl;

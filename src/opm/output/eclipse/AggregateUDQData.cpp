@@ -420,8 +420,13 @@ namespace {
         {
             if (udq_input.is<Opm::UDQDefine>()) {
                 const auto& udq_define = udq_input.get<Opm::UDQDefine>();
+                const auto& update_status =  udq_define.status();
                 const auto& tokens = udq_define.tokens();
-                iUdq[0] = 2;
+                if (update_status.first == Opm::UDQUpdate::ON) {
+                    iUdq[0] = 2;
+                } else {
+                    iUdq[0] = 0;
+                }
                 iUdq[1] = define_type(tokens);
             } else {
                 iUdq[0] = 0;
