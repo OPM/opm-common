@@ -1496,6 +1496,8 @@ const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
         return "THP";
     case ProducerCMode::GRUP:
         return "GRUP";
+    case ProducerCMode::CMODE_UNDEFINED:
+        return "CMODE_UNDEFINED";
     default:
         throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in ProducerCMode2String");
     }
