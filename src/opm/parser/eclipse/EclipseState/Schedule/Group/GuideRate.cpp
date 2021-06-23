@@ -30,6 +30,7 @@
 #include <utility>
 #include <fmt/core.h>
 #include <stddef.h>
+#include <iostream>
 
 namespace Opm {
 
@@ -254,6 +255,10 @@ void GuideRate::well_compute(const std::string& wgname,
 
         // GUIDERAT does not apply to injectors
         if (well.isInjector()) {
+            return;
+        }
+
+        if (well.getStatus() == Well::Status::SHUT) {
             return;
         }
 
