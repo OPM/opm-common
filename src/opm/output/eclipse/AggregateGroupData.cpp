@@ -113,7 +113,7 @@ int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const
 }
 
 
-void groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep, bool& controllable)
+void groupCurrentlyProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep, bool& controllable)
 {
     using wellCtrlMode   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
     if (controllable)
@@ -125,7 +125,7 @@ void groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryS
                              static_cast<int>(sumState.get_group_var(sub_group.name(), "GMCTP", -1));
         if (cur_prod_ctrl <= 0) {
             //come here if group is controlled by higher level
-            groupProductionControllable(sched, sumState, sched.getGroup(group_name, simStep), simStep, controllable);
+            groupCurrentlyProductionControllable(sched, sumState, sched.getGroup(group_name, simStep), simStep, controllable);
         }
     }
 
@@ -147,14 +147,14 @@ void groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryS
 }
 
 
-bool groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep) {
+bool groupCurrentlyProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep) {
     bool controllable = false;
-    groupProductionControllable(sched, sumState, group, simStep, controllable);
+    groupCurrentlyProductionControllable(sched, sumState, group, simStep, controllable);
     return controllable;
 }
 
 
-void groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep, bool& controllable)
+void groupCurrentlyInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep, bool& controllable)
 {
     using wellCtrlMode   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
     if (controllable)
@@ -172,7 +172,7 @@ void groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummarySt
         }
         if (cur_inj_ctrl <= 0) {
             //come here if group is controlled by higher level
-            groupInjectionControllable(sched, sumState, sched.getGroup(group_name, simStep), iPhase, simStep, controllable);
+            groupCurrentlyInjectionControllable(sched, sumState, sched.getGroup(group_name, simStep), iPhase, simStep, controllable);
         }
     }
 
@@ -194,9 +194,9 @@ void groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummarySt
     }
 }
 
-bool groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep) {
+bool groupCurrentlyInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep) {
     bool controllable = false;
-    groupInjectionControllable(sched, sumState, group, iPhase, simStep, controllable);
+    groupCurrentlyInjectionControllable(sched, sumState, group, iPhase, simStep, controllable);
     return controllable;
 }
 
@@ -398,7 +398,7 @@ void productionGroup(const Opm::Schedule&     sched,
             iGrp[nwgmax + IGroup::ProdHighLevCtrl] = 0;
         } else {
             //set default value for the group's availability for higher level control for injection
-            iGrp[nwgmax + IGroup::ProdHighLevCtrl] = (groupProductionControllable(sched, sumState, group, simStep) ) ? 1 : -1;
+            iGrp[nwgmax + IGroup::ProdHighLevCtrl] = (groupCurrentlyProductionControllable(sched, sumState, group, simStep) ) ? 1 : -1;
         }
         return;
     }
@@ -463,8 +463,8 @@ void injectionGroup(const Opm::Schedule&     sched,
             iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 0;
         } else {
             //set default value for the group's availability for higher level control for injection
-            iGrp[nwgmax + IGroup::WInjHighLevCtrl] = (groupInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep) ) ? 1 : -1;
-            iGrp[nwgmax + IGroup::GInjHighLevCtrl] = (groupInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep) ) ? 1 : -1;
+            iGrp[nwgmax + IGroup::WInjHighLevCtrl] = (groupCurrentlyInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep) ) ? 1 : -1;
+            iGrp[nwgmax + IGroup::GInjHighLevCtrl] = (groupCurrentlyInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep) ) ? 1 : -1;
         }
         return;
     }
@@ -532,7 +532,7 @@ void injectionGroup(const Opm::Schedule&     sched,
     }
     else {
         //set default value for the group's availability for higher level control for water injection for groups with no GCONINJE - WATER
-        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = (groupInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep) ) ? 1 : -1;
+        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = (groupCurrentlyInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep) ) ? 1 : -1;
     }
 
     // GAS INJECTION GROUP CONTROL
@@ -597,7 +597,7 @@ void injectionGroup(const Opm::Schedule&     sched,
         }
     } else {
         //set default value for the group's availability for higher level control for water injection for groups with no GCONINJE - WATER
-        iGrp[nwgmax + IGroup::GInjHighLevCtrl] = (groupInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep) ) ? 1 : -1;
+        iGrp[nwgmax + IGroup::GInjHighLevCtrl] = (groupCurrentlyInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep) ) ? 1 : -1;
     }
 }
 
