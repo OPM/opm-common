@@ -87,6 +87,9 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
     nmfipr(intehead[VI::intehead::NMFIPR]),
     ngroup(intehead[VI::intehead::NGRP]),
     nwgmax(intehead[VI::intehead::NWGMAX]),
+    nwell_udq(intehead[VI::intehead::NO_WELL_UDQS]),
+    ngroup_udq(intehead[VI::intehead::NO_GROUP_UDQS]),
+    nfield_udq(intehead[VI::intehead::NO_FIELD_UDQS]),
     //
     e300_radial(logihead[VI::logihead::E300Radial]),
     e100_radial(logihead[VI::logihead::E100Radial]),
@@ -124,6 +127,11 @@ std::pair<std::time_t, std::size_t> RstHeader::restart_info() const {
     return std::make_pair(asTimeT(TimeStampUTC(this->year, this->month, this->mday)),
                           std::size_t(this->report_step));
 }
+
+int RstHeader::num_udq() const {
+    return this->nwell_udq + nfield_udq + ngroup_udq;
+}
+
 
 
 }

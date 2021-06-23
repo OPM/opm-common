@@ -284,6 +284,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/rst/connection.cpp
           src/opm/io/eclipse/rst/group.cpp
           src/opm/io/eclipse/rst/header.cpp
+          src/opm/io/eclipse/rst/udq.cpp
           src/opm/io/eclipse/rst/segment.cpp
           src/opm/io/eclipse/rst/state.cpp
           src/opm/io/eclipse/rst/well.cpp
@@ -852,6 +853,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/rst/header.hpp
         opm/io/eclipse/rst/segment.hpp
         opm/io/eclipse/rst/state.hpp
+        opm/io/eclipse/rst/udq.hpp
         opm/io/eclipse/rst/well.hpp
         opm/output/data/Aquifer.hpp
         opm/output/data/Cells.hpp

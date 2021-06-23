@@ -179,6 +179,7 @@ namespace UDQ {
     UDQVarType coerce(UDQVarType t1, UDQVarType t2);
     UDQAction actionType(const std::string& action_string);
     UDQUpdate updateType(const std::string& update_string);
+    UDQUpdate updateType(int int_value);
     UDQTokenType tokenType(const std::string& func_name);
     UDQTokenType funcType(const std::string& func_name);
     bool binaryFunc(UDQTokenType token_type);

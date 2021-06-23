@@ -17,12 +17,16 @@
 */
 
 #include <algorithm>
+#include <iterator>
+#include <numeric>
+
 
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
+#include <opm/output/eclipse/UDQDims.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
@@ -174,6 +178,57 @@ void RstState::add_msw(const std::vector<std::string>& zwel,
     }
 }
 
+void RstState::add_udqs(const std::vector<int>& iudq,
+                        const std::vector<std::string>& zudn,
+                        const std::vector<std::string>& zudl,
+                        const std::vector<double>& dudw,
+                        const std::vector<double>& dudg,
+                        const std::vector<double>& dudf) {
+
+    for (auto udq_index = 0; udq_index < this->header.num_udq(); udq_index++) {
+        const auto& name = zudn[udq_index * UDQDims::entriesPerZUDN()];
+        const auto& unit = zudn[udq_index * UDQDims::entriesPerZUDN() + 1];
+
+        auto zudl_begin = zudl.begin();
+        auto zudl_end = zudl.begin();
+        std::advance( zudl_begin, udq_index * UDQDims::entriesPerZUDL() );
+        std::advance( zudl_end, (udq_index + 1) * UDQDims::entriesPerZUDL() );
+        auto udq_define = std::accumulate(zudl_begin, zudl_end, std::string{}, std::plus<std::string>());
+        if (udq_define.empty())
+            this->udqs.emplace_back(name, unit);
+        else {
+            auto status_int = iudq[udq_index * UDQDims::entriesPerIUDQ()];
+            auto status = UDQ::updateType(status_int);
+            if (udq_define[0] == '~')
+                udq_define[0] = '-';
+
+            this->udqs.emplace_back(name, unit, udq_define, status);
+        }
+
+        auto& udq = this->udqs.back();
+        if (udq.var_type == UDQVarType::WELL_VAR) {
+            for (std::size_t well_index = 0; well_index < this->wells.size(); well_index++) {
+                auto well_value = dudw[ udq_index * this->header.num_wells + well_index];
+                const auto& well_name = this->wells[well_index].name;
+                udq.add_well_value( well_name, well_value );
+            }
+        }
+
+        if (udq.var_type == UDQVarType::GROUP_VAR) {
+            for (std::size_t group_index = 0; group_index < this->groups.size(); group_index++) {
+                auto group_value = dudg[ udq_index * this->header.ngroup + group_index];
+                const auto& group_name = this->groups[group_index].name;
+                udq.add_group_value( group_name, group_value );
+            }
+        }
+
+        if (udq.var_type == UDQVarType::FIELD_VAR) {
+            auto field_value = dudf[ udq_index ];
+            udq.add_field_value( field_value );
+        }
+    }
+}
+
 
 const RstWell& RstState::get_well(const std::string& wname) const {
     const auto well_iter = std::find_if(this->wells.begin(),
@@ -227,6 +282,17 @@ RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
                             icon, scon, xcon);
     }
 
+    if (state.header.num_udq() > 0) {
+        const auto& iudq = rst_file.getRestartData<int>("IUDQ", report_step, 0);
+        const auto& zudn = rst_file.getRestartData<std::string>("ZUDN", report_step, 0);
+        const auto& zudl = rst_file.getRestartData<std::string>("ZUDL", report_step, 0);
+
+        const auto& dudw = state.header.nwell_udq  > 0 ? rst_file.getRestartData<double>("DUDW", report_step, 0) : std::vector<double>{};
+        const auto& dudg = state.header.ngroup_udq > 0 ? rst_file.getRestartData<double>("DUDG", report_step, 0) : std::vector<double>{};
+        const auto& dudf = state.header.nfield_udq > 0 ? rst_file.getRestartData<double>("DUDF", report_step, 0) : std::vector<double>{};
+
+        state.add_udqs(iudq, zudn, zudl, dudw, dudg, dudf);
+    }
     return state;
 }
 

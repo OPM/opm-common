@@ -19,13 +19,14 @@
 #ifndef RST_STATE
 #define RST_STATE
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
+#include <opm/io/eclipse/rst/udq.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -48,6 +49,7 @@ struct RstState {
     RstHeader header;
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
+    std::vector<RstUDQ> udqs;
     Tuning tuning;
 
 private:
@@ -76,6 +78,14 @@ private:
                  const std::vector<double>& xcon,
                  const std::vector<int>& iseg,
                  const std::vector<double>& rseg);
+
+    void add_udqs(const std::vector<int>& iudq,
+                  const std::vector<std::string>& zudn,
+                  const std::vector<std::string>& zudl,
+                  const std::vector<double>& dudw,
+                  const std::vector<double>& dudg,
+                  const std::vector<double>& dudf);
+
 };
 }
 }

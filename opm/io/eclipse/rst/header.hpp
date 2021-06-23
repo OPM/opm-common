@@ -86,6 +86,10 @@ struct RstHeader {
     int nmfipr;
     int ngroup;
     int nwgmax;
+    int nwell_udq;
+    int ngroup_udq;
+    int nfield_udq;
+
 
     bool e300_radial;
     bool e100_radial;
@@ -118,6 +122,7 @@ struct RstHeader {
     double udq_eps;
 
     std::pair<std::time_t, std::size_t> restart_info() const;
+    int num_udq() const;
 };
 
 
