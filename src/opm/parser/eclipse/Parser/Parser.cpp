@@ -26,6 +26,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include <fmt/format.h>
 
@@ -360,8 +361,13 @@ void InputStack::push( std::string&& input, Opm::filesystem::path p ) {
 
 class ParserState {
     public:
-        ParserState( const std::vector<std::pair<std::string,std::string>>&, const ParseContext&, ErrorGuard& );
-        ParserState( const std::vector<std::pair<std::string,std::string>>&, const ParseContext&, ErrorGuard&, Opm::filesystem::path );
+        ParserState( const std::vector<std::pair<std::string,std::string>>&,
+                     const ParseContext&, ErrorGuard&,
+                     const std::set<Opm::Ecl::SectionType>& ignore = {});
+
+        ParserState( const std::vector<std::pair<std::string,std::string>>&,
+                     const ParseContext&, ErrorGuard&,
+                     Opm::filesystem::path, const std::set<Opm::Ecl::SectionType>& ignore = {});
 
         void loadString( const std::string& );
         void loadFile( const Opm::filesystem::path& );
@@ -379,10 +385,14 @@ class ParserState {
         void ungetline(const std::string_view& ln);
         void closeFile();
 
+        const std::set<Opm::Ecl::SectionType>& get_ignore() {return ignore_sections; };
+        bool check_section_keywords();
+
     private:
         const std::vector<std::pair<std::string, std::string>> code_keywords;
         InputStack input_stack;
 
+        std::set<Opm::Ecl::SectionType> ignore_sections;
         std::map< std::string, std::string > pathMap;
 
     public:
@@ -443,24 +453,61 @@ void ParserState::closeFile() {
 
 ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
                          const ParseContext& __parseContext,
-                         ErrorGuard& errors_arg) :
+                         ErrorGuard& errors_arg,
+                         const std::set<Opm::Ecl::SectionType>& ignore) :
     code_keywords(code_keywords_arg),
     python( std::make_unique<Python>() ),
     parseContext( __parseContext ),
-    errors( errors_arg )
+    errors( errors_arg ),
+    ignore_sections(ignore)
 {}
 
 ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
                           const ParseContext& context,
                           ErrorGuard& errors_arg,
-                          Opm::filesystem::path p ) :
+                          Opm::filesystem::path p,
+                          const std::set<Opm::Ecl::SectionType>& ignore ) :
     code_keywords(code_keywords_arg),
     rootPath( Opm::filesystem::canonical( p ).parent_path() ),
     python( std::make_unique<Python>() ),
     parseContext( context ),
-    errors( errors_arg )
+    errors( errors_arg ),
+    ignore_sections(ignore)
 {
     openRootFile( p );
+}
+
+bool ParserState::check_section_keywords() {
+
+    std::string_view root_file_str = this->input_stack.top().input;
+
+    int n = 0;
+    int p0 = root_file_str.find_first_not_of(" \t\n");
+
+    while (p0 != std::string::npos){
+
+        int p1 = root_file_str.find_first_of(" \t\n", p0 + 1);
+
+        if (root_file_str.substr(p0, p1-p0) == "GRID")
+            n++;
+        else if (root_file_str.substr(p0, p1-p0) == "PROPS")
+            n++;
+        else if (root_file_str.substr(p0, p1-p0) == "REGIONS")
+            n++;
+        else if (root_file_str.substr(p0, p1-p0) == "SOLUTION")
+            n++;
+        else if (root_file_str.substr(p0, p1-p0) == "SUMMARY")
+            n++;
+        else if (root_file_str.substr(p0, p1-p0) == "SCHEDULE")
+            n++;
+
+        p0 = root_file_str.find_first_not_of(" \t\n", p1);
+    }
+
+    if (n < 6)
+        return false;
+    else
+        return true;
 }
 
 void ParserState::loadString(const std::string& input) {
@@ -542,6 +589,7 @@ void ParserState::handleRandomText(const std::string_view& keywordString ) const
 
 
 void ParserState::openRootFile( const Opm::filesystem::path& inputFile) {
+
     this->loadFile( inputFile );
     this->deck.setDataFile( inputFile.string() );
     const Opm::filesystem::path& inputFileCanonical = Opm::filesystem::canonical(inputFile);
@@ -885,14 +933,58 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
     return rawKeyword;
 }
 
+std::string_view advance_parser_state( ParserState& parserState, const std::string& to_keyw )
+{
+    auto line = parserState.getline();
+
+    while (line != to_keyw) {
+        line = parserState.getline();
+    }
+
+    return line;
+}
 
 bool parseState( ParserState& parserState, const Parser& parser ) {
     std::string filename = parserState.current_path().string();
 
+    auto ignore = parserState.get_ignore();
+
+    if (ignore.size() > 0)
+        if (!parserState.check_section_keywords())
+            throw std::runtime_error("Parsing individual sections not posible when section keywords in root input file");
+
+    bool ignore_grid = ignore.find(Opm::Ecl::GRID) !=ignore.end()  ? true : false;
+    bool ignore_props = ignore.find(Opm::Ecl::PROPS) !=ignore.end()  ? true : false;
+    bool ignore_regions = ignore.find(Opm::Ecl::REGIONS) !=ignore.end()  ? true : false;
+    bool ignore_solution = ignore.find(Opm::Ecl::SOLUTION) !=ignore.end()  ? true : false;
+    bool ignore_summary = ignore.find(Opm::Ecl::SUMMARY) !=ignore.end()  ? true : false;
+    bool ignore_schedule = ignore.find(Opm::Ecl::SCHEDULE) !=ignore.end()  ? true : false;
+
     while( !parserState.done() ) {
         auto rawKeyword = tryParseKeyword( parserState, parser);
+
         if( !rawKeyword )
             continue;
+
+        std::string_view keyw = rawKeyword->getKeywordName();
+
+        if ((ignore_grid) && (keyw=="GRID"))
+            keyw = advance_parser_state( parserState, "PROPS" );
+
+        if ((ignore_props) && (keyw=="PROPS"))
+            keyw = advance_parser_state( parserState, "REGIONS" );
+
+        if ((ignore_regions) && (keyw=="REGIONS"))
+            keyw = advance_parser_state( parserState, "SOLUTION" );
+
+        if ((ignore_solution) && (keyw=="SOLUTION"))
+            keyw = advance_parser_state( parserState, "SUMMARY" );
+
+        if ((ignore_summary) && (keyw=="SUMMARY"))
+            keyw = advance_parser_state( parserState, "SCHEDULE" );
+
+        if ((ignore_schedule) && (keyw=="SCHEDULE"))
+            return true;
 
         if (rawKeyword->getKeywordName() == Opm::RawConsts::end)
             return true;
@@ -1002,6 +1094,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         // The addDefaultKeywords() method is implemented in a source file
         // ${PROJECT_BINARY_DIR}/ParserInit.cpp which is generated by the build
         // system.
+
         if (addDefault)
             this->addDefaultKeywords();
     }
@@ -1059,17 +1152,41 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return parse(deck, context).getInputGrid();
     }
 
-    Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext, ErrorGuard& errors) const {
-        ParserState parserState( this->codeKeywords(), parseContext, errors, dataFileName );
-        parseState( parserState, *this );
+    Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext,
+                           ErrorGuard& errors, const std::vector<Opm::Ecl::SectionType>& sections) const {
 
+        std::set<Opm::Ecl::SectionType> ignore_sections;
+
+        if (sections.size() > 0) {
+
+            std::set<Opm::Ecl::SectionType> all_sections;
+            all_sections = {Opm::Ecl::GRID, Opm::Ecl::PROPS, Opm::Ecl::REGIONS, Opm::Ecl::SOLUTION, Opm::Ecl::SUMMARY, Opm::Ecl::SCHEDULE};
+
+            std::set<Opm::Ecl::SectionType> read_sections;
+
+            for (auto sec : sections)
+                 read_sections.insert(sec);
+
+            std::set_difference(all_sections.begin(), all_sections.end(), read_sections.begin(), read_sections.end(),
+                            std::inserter(ignore_sections, ignore_sections.end()));
+        }
+
+        ParserState parserState( this->codeKeywords(), parseContext, errors, dataFileName, ignore_sections);
+        parseState( parserState, *this );
         return std::move( parserState.deck );
     }
 
     Deck Parser::parseFile(const std::string& dataFileName,
                            const ParseContext& parseContext) const {
         ErrorGuard errors;
-        return this->parseFile(dataFileName, parseContext, errors);
+        return this->parseFile(dataFileName, parseContext, errors, {});
+    }
+
+    Deck Parser::parseFile(const std::string& dataFileName,
+                           const ParseContext& parseContext,
+                           const std::vector<Opm::Ecl::SectionType>& sections) const {
+        ErrorGuard errors;
+        return this->parseFile(dataFileName, parseContext, errors, sections);
     }
 
     Deck Parser::parseFile(const std::string& dataFileName) const {

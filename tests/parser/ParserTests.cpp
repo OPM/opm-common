@@ -2375,3 +2375,56 @@ GUIDERAT
     auto deck = parser.parseString(deck_string);
     BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
 }
+
+
+
+BOOST_AUTO_TEST_CASE(parseSections) {
+
+    Opm::Parser parser;
+
+    Opm::ParseContext parseContext;
+
+    parseContext.update(Opm::ParseContext::PARSE_EXTRA_DATA , Opm::InputError::IGNORE );
+    parseContext.update(Opm::ParseContext::PARSE_EXTRA_RECORDS , Opm::InputError::IGNORE );
+    parseContext.update(Opm::ParseContext::PARSE_RANDOM_SLASH , Opm::InputError::IGNORE );
+
+    const auto deck_all = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext);
+
+    BOOST_CHECK_EQUAL( deck_all.size(), 79 );
+
+    std::vector<Opm::Ecl::SectionType> grid_section = {Opm::Ecl::GRID};
+    std::vector<Opm::Ecl::SectionType> props_section = {Opm::Ecl::PROPS};
+    std::vector<Opm::Ecl::SectionType> regions_section = {Opm::Ecl::REGIONS};
+    std::vector<Opm::Ecl::SectionType> solution_section = {Opm::Ecl::SOLUTION};
+    std::vector<Opm::Ecl::SectionType> summary_section = {Opm::Ecl::SUMMARY};
+    std::vector<Opm::Ecl::SectionType> schedule_section = {Opm::Ecl::SCHEDULE};
+
+    std::vector<Opm::Ecl::SectionType> test1 = {Opm::Ecl::PROPS, Opm::Ecl::SOLUTION};
+
+    const auto deck_grid = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, grid_section);
+    const auto deck_props = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, props_section);
+    const auto deck_regions = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, regions_section);
+    const auto deck_solution = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, solution_section);
+    const auto deck_summary = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, summary_section);
+    const auto deck_schecule = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, schedule_section);
+
+    const auto deck_test1 = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, test1);
+
+    BOOST_CHECK_EQUAL( deck_grid.size(), 25 );
+    BOOST_CHECK_EQUAL( deck_props.size(), 21 );
+    BOOST_CHECK_EQUAL( deck_regions.size(), 15 );
+    BOOST_CHECK_EQUAL( deck_solution.size(), 16 );
+    BOOST_CHECK_EQUAL( deck_summary.size(), 37 );
+    BOOST_CHECK_EQUAL( deck_schecule.size(), 30 );
+
+    BOOST_CHECK_EQUAL( deck_test1.size(), 24 );
+
+    const auto deck1b_all = parser.parseFile("./tests/SPE1CASE1B.DATA", parseContext);
+
+    BOOST_CHECK_EQUAL( deck1b_all.size(), 79 );
+
+
+    BOOST_CHECK_THROW(parser.parseFile("./tests/SPE1CASE1B.DATA", parseContext, grid_section), std::runtime_error);
+}
+
+

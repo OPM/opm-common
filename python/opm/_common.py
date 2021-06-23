@@ -11,7 +11,7 @@
 from __future__ import absolute_import
 from .libopmcommon_python import action
 
-from .libopmcommon_python import Parser, ParseContext, Builtin
+from .libopmcommon_python import Parser, ParseContext, Builtin, eclSectionType
 from .libopmcommon_python import DeckKeyword
 from .libopmcommon_python import DeckItem
 

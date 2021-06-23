@@ -10,8 +10,9 @@ try:
 except ImportError:
     from utils import test_path
 
-from opm.io.parser import Parser, ParseContext
+from opm.io.parser import Parser, ParseContext, eclSectionType
 from opm.io.deck import DeckKeyword
+
 
 class TestParse(unittest.TestCase):
 
@@ -147,6 +148,59 @@ FIPNUM
         self.assertEqual(len(eqlnum), 300)
         self.assertTrue(isinstance(eqlnum, np.ndarray))
         self.assertEqual(eqlnum.dtype, "int32")
+
+
+    def test_parser_section_deckItems(self):
+
+        all_spe1case1 = ["RUNSPEC", "TITLE", "DIMENS", "EQLDIMS", "TABDIMS", "REGDIMS", "OIL", "GAS",
+                         "WATER", "DISGAS", "FIELD", "START", "WELLDIMS", "UNIFOUT", "UDQDIMS", "UDADIMS",
+                         "GRID", "INIT", "NOECHO", "DX", "DY", "DZ", "TOPS", "PORO", "PERMX", "PERMY",
+                         "PERMZ", "ECHO", "PROPS", "PVTW", "ROCK", "SWOF", "SGOF", "DENSITY", "PVDG",
+                         "PVTO", "REGIONS", "EQLNUM", "FIPNUM", "SOLUTION", "EQUIL", "RSVD", "SUMMARY",
+                         "FOPR", "WGOR", "FGOR", "BPR", "BGSAT", "WBHP", "WGIR", "WGIT", "WGPR", "WGPT",
+                         "WOIR", "WOIT", "WOPR", "WOPT", "WWIR", "WWIT", "WWPR", "WWPT", "WUOPRL", "SCHEDULE",
+                         "UDQ", "RPTSCHED", "RPTRST", "DRSDT", "WELSPECS", "COMPDAT", "WCONPROD", "WCONINJE", "TSTEP"]
+
+        # notice that RUNSPEC keywords will always be parsed since these properties from these keyword
+        # are needed to parse following sections.
+
+        props_spe1case1 = ["RUNSPEC", "TITLE", "DIMENS", "EQLDIMS", "TABDIMS", "REGDIMS", "OIL", "GAS",
+                         "WATER", "DISGAS", "FIELD", "START", "WELLDIMS", "UNIFOUT", "UDQDIMS", "UDADIMS", "GRID",
+                          "PVTW", "ROCK", "SWOF", "SGOF", "DENSITY", "PVDG",
+                         "PVTO"]
+
+        parser = Parser()
+
+        error_recovery = [("PARSE_RANDOM_SLASH", opm.io.action.ignore),
+                          ("PARSE_EXTRA_RECORDS", opm.io.action.ignore)]
+
+        context = ParseContext(error_recovery)
+
+        deck1 = parser.parse(test_path("data/SPE1CASE1.DATA"), context)
+
+        self.assertEqual( len(deck1), len(all_spe1case1))
+
+        test_1 = [dkw.name for dkw in deck1]
+
+        for test, ref in zip(test_1, all_spe1case1):
+            self.assertEqual( test, ref)
+
+        section_list = [eclSectionType.PROPS]
+
+        deck2 = parser.parse(test_path("data/SPE1CASE1.DATA"), context, section_list)
+
+        self.assertEqual( len(deck2), len(props_spe1case1))
+
+        test_2 = [dkw.name for dkw in deck2]
+
+        for test, ref in zip(test_2, props_spe1case1):
+            self.assertEqual( test, ref)
+
+        # props section keyword located in include file for this deck (SPE1CASE1B.DATA)
+        # not possible to parse individual sections
+
+        with self.assertRaises(RuntimeError):
+            parser.parse(test_path("data/SPE1CASE1B.DATA"), context, section_list)
 
 
 

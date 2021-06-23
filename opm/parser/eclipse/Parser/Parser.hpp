@@ -41,6 +41,13 @@ namespace Json {
 
 namespace Opm {
 
+    namespace Ecl {
+
+        enum SectionType {
+            GRID, PROPS, REGIONS, SOLUTION, SUMMARY, SCHEDULE
+        };
+    };
+
     class Deck;
     class ParseContext;
     class ErrorGuard;
@@ -59,10 +66,16 @@ namespace Opm {
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         Deck parseFile(const std::string &dataFile,
                        const ParseContext&,
-                       ErrorGuard& errors) const;
+                       ErrorGuard& errors,
+                       const std::vector<Opm::Ecl::SectionType>& sections = {}) const;
 
         Deck parseFile(const std::string&,
                        const ParseContext&) const;
+
+        Deck parseFile(const std::string&,
+                       const ParseContext&,
+                       const std::vector<Opm::Ecl::SectionType>& sections
+                      ) const;
 
         Deck parseFile(const std::string& datafile) const;
 
