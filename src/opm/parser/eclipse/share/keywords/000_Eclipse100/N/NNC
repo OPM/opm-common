@@ -35,17 +35,16 @@
       "default": 0
     },
     {
-      "name": "SIM_DEPENDENT1",
-      "value_type": "DOUBLE",
-      "dimension": "ContextDependent",
-      "default": 0
+      "name": "IST1",
+      "value_type": "INT",
+      "default": 0,
+      "comment" : "This item is used very differently in ECL100 and ECL300. In ECL300 it is floating point number representing the diffusitivity of the NNC"
     },
     {
-      "name": "SIM_DEPENDENT2",
-      "comment": "This item is deprecated",
-      "value_type": "DOUBLE",
-      "dimension": "ContextDependent",
-      "default": 0
+      "name": "IST2",
+      "value_type": "INT",
+      "default": 0,
+      "comment" : "This item is used very differently in ECL100 and ECL300. In ECL300 it is a floating point number related to thermal conductivity"
     },
     {
       "name": "PRESSURE_TABLE1",
