@@ -52,10 +52,13 @@ UDQTokenType UDQToken::type() const {
 }
 
 std::string UDQToken::str() const {
-    if (std::holds_alternative<std::string>(this->m_value))
+    if (std::holds_alternative<std::string>(this->m_value)) {
+        if (this->m_selector.empty())
+            return std::get<std::string>(this->m_value);
+
         return std::get<std::string>(this->m_value) + std::string{" "} + std::accumulate(this->m_selector.begin(), this->m_selector.end(), std::string{},
                                                                                          [](const std::string& s1, const std::string& s2) { return s1 + " " + s2; });
-    else
+    } else
         return std::to_string(std::get<double>(this->m_value));
 }
 
