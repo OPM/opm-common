@@ -64,7 +64,7 @@
     {
       "item": 10,
       "name": "NUM_EOS_SURFACE",
-      "value_type": "INT"
+      "value_type": "INT",
       "default": 1,
       "comment": "This item is ECLIPSE300 specific"
     },
