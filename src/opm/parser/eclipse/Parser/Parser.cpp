@@ -456,10 +456,10 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
                          ErrorGuard& errors_arg,
                          const std::set<Opm::Ecl::SectionType>& ignore) :
     code_keywords(code_keywords_arg),
+    ignore_sections(ignore),
     python( std::make_unique<Python>() ),
     parseContext( __parseContext ),
-    errors( errors_arg ),
-    ignore_sections(ignore)
+    errors( errors_arg )
 {}
 
 ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
@@ -468,11 +468,11 @@ ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>
                           Opm::filesystem::path p,
                           const std::set<Opm::Ecl::SectionType>& ignore ) :
     code_keywords(code_keywords_arg),
+    ignore_sections(ignore),
     rootPath( Opm::filesystem::canonical( p ).parent_path() ),
     python( std::make_unique<Python>() ),
     parseContext( context ),
-    errors( errors_arg ),
-    ignore_sections(ignore)
+    errors( errors_arg )
 {
     openRootFile( p );
 }
@@ -481,30 +481,29 @@ bool ParserState::check_section_keywords() {
 
     std::string_view root_file_str = this->input_stack.top().input;
 
-    int n = 0;
-    int p0 = root_file_str.find_first_not_of(" \t\n");
+    auto section_count = 0;
+    auto p0 = root_file_str.find_first_not_of(" \t\n");
 
     while (p0 != std::string::npos){
-
-        int p1 = root_file_str.find_first_of(" \t\n", p0 + 1);
+        auto p1 = root_file_str.find_first_of(" \t\n", p0 + 1);
 
         if (root_file_str.substr(p0, p1-p0) == "GRID")
-            n++;
+            section_count++;
         else if (root_file_str.substr(p0, p1-p0) == "PROPS")
-            n++;
+            section_count++;
         else if (root_file_str.substr(p0, p1-p0) == "REGIONS")
-            n++;
+            section_count++;
         else if (root_file_str.substr(p0, p1-p0) == "SOLUTION")
-            n++;
+            section_count++;
         else if (root_file_str.substr(p0, p1-p0) == "SUMMARY")
-            n++;
+            section_count++;
         else if (root_file_str.substr(p0, p1-p0) == "SCHEDULE")
-            n++;
+            section_count++;
 
         p0 = root_file_str.find_first_not_of(" \t\n", p1);
     }
 
-    if (n < 6)
+    if (section_count < 6)
         return false;
     else
         return true;
