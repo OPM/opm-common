@@ -65,7 +65,7 @@ UDQDims::UDQDims(const UDQConfig& config, const std::vector<int>& inteHead)
     this->m_data[ 3] = entriesPerIUAD();
     this->m_data[ 4] = entriesPerZUDN();
     this->m_data[ 5] = entriesPerZUDL();
-    this->m_data[ 6] = (inteHead[VI::intehead::NO_GROUP_UDQS] > 0) ? inteHead[20] : 0;
+    this->m_data[ 6] = (inteHead[VI::intehead::NO_IUADS] > 0) ? inteHead[20] : 0;
     this->m_data[ 7] = inteHead[VI::intehead::NO_IUAPS];
     this->m_data[ 8] = inteHead[VI::intehead::NWMAXZ];
     this->m_data[ 9] = inteHead[VI::intehead::NO_WELL_UDQS];

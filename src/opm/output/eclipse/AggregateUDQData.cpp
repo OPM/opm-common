@@ -732,7 +732,11 @@ const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Sc
                     phase_sum += 2;
                 if (group.hasInjectionControl(Opm::Phase::GAS))
                     phase_sum += 4;
-                inj_phase[group.insert_index()] = phase_sum;
+                if (group.name() == "FIELD") {
+                    inj_phase[ngmaxz(inteHead) - 1] = phase_sum;
+                } else {
+                    inj_phase[group.insert_index()-1] = phase_sum;
+                }
             }
         }
     }
@@ -854,9 +858,6 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             OpmLog::error(str.str());
         }
 
-
-    }
-    if (inteHead[VI::intehead::NO_GROUP_UDQS] > 0) {
         Opm::RestartIO::Helpers::igphData igph_dat;
         int cnt_igph = 0;
         auto igph = igph_dat.ig_phase(sched, simStep, inteHead);
