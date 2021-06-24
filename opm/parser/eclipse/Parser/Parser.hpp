@@ -46,7 +46,7 @@ namespace Opm {
         enum SectionType {
             GRID, PROPS, REGIONS, SOLUTION, SUMMARY, SCHEDULE
         };
-    };
+    }
 
     class Deck;
     class ParseContext;

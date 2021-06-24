@@ -144,49 +144,49 @@ bool WellEconProductionLimits::operator!=(const WellEconProductionLimits& other)
 // limit switch on?
 bool WellEconProductionLimits::onAnyEffectiveLimit() const {
     return (onAnyRatioLimit() || onAnyRateLimit());
-};
+}
 
 bool WellEconProductionLimits::onAnyRatioLimit() const {
     return (onMaxWaterCut() || onMaxGasOilRatio() || onMaxWaterGasRatio() ||
             onMaxGasLiquidRatio());
-};
+}
 
 bool WellEconProductionLimits::onAnyRateLimit() const {
     return (onMinOilRate() || onMinGasRate() || onMinLiquidRate() ||
             onMinReservoirFluidRate());
-};
+}
 
-bool WellEconProductionLimits::onMinOilRate() const { return (m_min_oil_rate > 0.0); };
+bool WellEconProductionLimits::onMinOilRate() const { return (m_min_oil_rate > 0.0); }
 
-bool WellEconProductionLimits::onMinGasRate() const { return (m_min_gas_rate > 0.0); };
+bool WellEconProductionLimits::onMinGasRate() const { return (m_min_gas_rate > 0.0); }
 
-bool WellEconProductionLimits::onMaxWaterCut() const { return (m_max_water_cut > 0.0); };
+bool WellEconProductionLimits::onMaxWaterCut() const { return (m_max_water_cut > 0.0); }
 
-bool WellEconProductionLimits::onMaxGasOilRatio() const { return (m_max_gas_oil_ratio > 0.0); };
+bool WellEconProductionLimits::onMaxGasOilRatio() const { return (m_max_gas_oil_ratio > 0.0); }
 
-bool WellEconProductionLimits::onMaxWaterGasRatio() const { return (m_max_water_gas_ratio > 0.0); };
+bool WellEconProductionLimits::onMaxWaterGasRatio() const { return (m_max_water_gas_ratio > 0.0); }
 
 bool WellEconProductionLimits::onSecondaryMaxWaterCut() const {
     return (m_secondary_max_water_cut > 0.0);
-};
+}
 
-bool WellEconProductionLimits::onMaxGasLiquidRatio() const { return (m_max_gas_liquid_ratio > 0.0); };
+bool WellEconProductionLimits::onMaxGasLiquidRatio() const { return (m_max_gas_liquid_ratio > 0.0); }
 
 // assuming Celsius temperature is used internally
-bool WellEconProductionLimits::onMaxTemperature() const { return (m_max_temperature > -273.15); };
+bool WellEconProductionLimits::onMaxTemperature() const { return (m_max_temperature > -273.15); }
 
-bool WellEconProductionLimits::onMinLiquidRate() const { return (m_min_liquid_rate > 0.0); };
+bool WellEconProductionLimits::onMinLiquidRate() const { return (m_min_liquid_rate > 0.0); }
 
 bool WellEconProductionLimits::onMinReservoirFluidRate() const {
     return (m_min_reservoir_fluid_rate > 0.0);
-};
+}
 
 // not sure what will happen if the followon well is a well does not exist.
-bool WellEconProductionLimits::validFollowonWell() const { return (m_followon_well != "'"); };
+bool WellEconProductionLimits::validFollowonWell() const { return (m_followon_well != "'"); }
 
 bool WellEconProductionLimits::requireWorkover() const {
     return (m_workover != EconWorkover::NONE);
-};
+}
 
 bool WellEconProductionLimits::requireSecondaryWorkover() const {
     return (m_workover_secondary != EconWorkover::NONE);
@@ -194,39 +194,39 @@ bool WellEconProductionLimits::requireSecondaryWorkover() const {
 
 bool WellEconProductionLimits::endRun() const { return m_end_run; }
 
-double WellEconProductionLimits::minOilRate() const { return m_min_oil_rate; };
+double WellEconProductionLimits::minOilRate() const { return m_min_oil_rate; }
 
-double WellEconProductionLimits::minGasRate() const { return m_min_gas_rate; };
+double WellEconProductionLimits::minGasRate() const { return m_min_gas_rate; }
 
-double WellEconProductionLimits::maxWaterCut() const { return m_max_water_cut; };
+double WellEconProductionLimits::maxWaterCut() const { return m_max_water_cut; }
 
-double WellEconProductionLimits::maxGasOilRatio() const { return m_max_gas_oil_ratio; };
+double WellEconProductionLimits::maxGasOilRatio() const { return m_max_gas_oil_ratio; }
 
-double WellEconProductionLimits::maxWaterGasRatio() const { return m_max_water_gas_ratio; };
+double WellEconProductionLimits::maxWaterGasRatio() const { return m_max_water_gas_ratio; }
 
-double WellEconProductionLimits::maxGasLiquidRatio() const { return m_max_gas_liquid_ratio; };
+double WellEconProductionLimits::maxGasLiquidRatio() const { return m_max_gas_liquid_ratio; }
 
-double WellEconProductionLimits::minLiquidRate() const { return m_min_liquid_rate; };
+double WellEconProductionLimits::minLiquidRate() const { return m_min_liquid_rate; }
 
-double WellEconProductionLimits::maxTemperature() const { return m_max_temperature; };
+double WellEconProductionLimits::maxTemperature() const { return m_max_temperature; }
 
-double WellEconProductionLimits::minReservoirFluidRate() const { return m_min_reservoir_fluid_rate; };
+double WellEconProductionLimits::minReservoirFluidRate() const { return m_min_reservoir_fluid_rate; }
 
-WellEconProductionLimits::EconWorkover WellEconProductionLimits::workover() const { return m_workover; };
+WellEconProductionLimits::EconWorkover WellEconProductionLimits::workover() const { return m_workover; }
 
-const std::string& WellEconProductionLimits::followonWell() const { return m_followon_well; };
+const std::string& WellEconProductionLimits::followonWell() const { return m_followon_well; }
 
 WellEconProductionLimits::QuantityLimit WellEconProductionLimits::quantityLimit() const {
     return m_quantity_limit;
-};
+}
 
 double WellEconProductionLimits::maxSecondaryMaxWaterCut() const {
     return m_secondary_max_water_cut;
-};
+}
 
 WellEconProductionLimits::EconWorkover WellEconProductionLimits::workoverSecondary() const {
     return m_workover_secondary;
-};
+}
 
 std::string WellEconProductionLimits::EconWorkover2String(EconWorkover enumValue) {
     switch(enumValue) {
