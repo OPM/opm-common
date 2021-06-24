@@ -22,6 +22,7 @@
 #include <fmt/format.h>
 #include <exception>
 
+#include <opm/common/utility/String.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
@@ -132,10 +133,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
 {}
 
 namespace {
-std::optional<std::string> next_token(const std::string& item, std::size_t offset, const std::vector<std::string>& splitters) {
-    if (offset == item.size())
-        return {};
-
+std::string next_token(const std::string& item, std::size_t& offset, const std::vector<std::string>& splitters) {
     if (std::isdigit(item[offset])) {
         std::size_t token_size = 0;
         try {
@@ -143,11 +141,14 @@ std::optional<std::string> next_token(const std::string& item, std::size_t offse
             std::ignore = std::stod(substring, &token_size);
         } catch (const std::invalid_argument &) {}
 
-        if (token_size > 0)
-            return item.substr(offset, token_size);
+        if (token_size > 0) {
+            auto token = item.substr(offset, token_size);
+            offset += token.size();
+            return token;
+        }
     }
 
-    std::optional<std::string> token = item.substr(offset);
+    std::string token = item.substr(offset);
     std::size_t min_pos = std::string::npos;
     for (const auto& splitter : splitters) {
         auto pos = item.find(splitter, offset);
@@ -159,8 +160,10 @@ std::optional<std::string> next_token(const std::string& item, std::size_t offse
                 token = item.substr(offset, pos - offset);
         }
     }
-    return token;
+    offset += token.size();
+    return trim_copy(token);
 }
+
 } // Anonymous namespace
 
 UDQDefine::UDQDefine(const UDQParams& udq_params,
@@ -186,13 +189,10 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
 
             const std::vector<std::string> splitters = {"TU*[]", "(", ")", "[", "]", ",", "+", "-", "/", "*", "==", "!=", "^", ">=", "<=", ">", "<"};
             size_t offset = 0;
-            while (true) {
+            while (offset < item.size()) {
                 auto token = next_token(item, offset, splitters);
-                if (token) {
-                    string_tokens.push_back( *token );
-                    offset += token->size();
-                } else
-                    break;
+                if (!token.empty())
+                    string_tokens.push_back( token );
             }
         }
     }
