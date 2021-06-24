@@ -19,6 +19,7 @@
 
 #define BOOST_TEST_MODULE Aggregate_Group_Data
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -88,6 +89,11 @@ MockIH::MockIH(const int numWells,
 }
 
 namespace {
+
+    Opm::Deck second_sim(std::string fname) {
+        return Opm::Parser{}.parseFile(fname);
+    }
+
     Opm::Deck first_sim()
     {
         // Mostly copy of tests/FIRST_SIM.DATA
@@ -474,18 +480,112 @@ END
 
         return state;
     }
+
 }
+
+    Opm::SummaryState sim_state_2()
+    {
+        auto state = Opm::SummaryState{Opm::TimeService::now()};
+
+        state.update("GMCTP:UPPER",   -1.);
+        state.update("GMCTW:UPPER",    0.);
+        state.update("GMCTG:UPPER",    0.);
+
+        state.update("GMCTP:MOD4",     1.);
+        state.update("GMCTW:MOD4",     3.);
+        state.update("GMCTG:MOD4",     0.);
+
+        state.update("GMCTP:LOWER",   -1.);
+        state.update("GMCTW:LOWER",    0.);
+        state.update("GMCTG:LOWER",    0.);
+
+        state.update("GMCTP:AQF",    0.);
+        state.update("GMCTW:AQF",    0.);
+        state.update("GMCTG:AQF",    0.);
+
+        state.update("GMCTP:MAIN",    0.);
+        state.update("GMCTW:MAIN",    0.);
+        state.update("GMCTG:MAIN",    0.);
+
+        state.update("GMCTP:NE",    0.);
+        state.update("GMCTW:NE",    0.);
+        state.update("GMCTG:NE",    0.);
+
+        state.update("GMCTP:NW",    0.);
+        state.update("GMCTW:NW",    3.);
+        state.update("GMCTG:NW",    0.);
+
+        state.update("GMCTP:SE",    0.);
+        state.update("GMCTW:SE",    0.);
+        state.update("GMCTG:SE",    0.);
+
+        /*
+        state.update("GMCTP:CENTRAL",    0.);
+        state.update("GMCTW:CENTRAL",    0.);
+        state.update("GMCTG:CENTRAL",    0.);
+
+        state.update("WOPR:UPPER",   -1.);
+        state.update("WWPR:UPPER",    0.);
+        state.update("WGPR:UPPER",    0.);
+        state.update("WLPR:UPPER",    0.);
+
+        state.update("WOPR:MOD4",     1.);
+        state.update("WWPR:MOD4",     3.);
+        state.update("WGPR:MOD4",     0.);
+        state.update("WLPR:MOD4",     0.);
+
+        state.update("WOPR:LOWER",   -1.);
+        state.update("WWPR:LOWER",    0.);
+        state.update("WGPR:LOWER",    0.);
+        state.update("WLPR:LOWER",    0.);
+
+        state.update("WOPR:AQF",    0.);
+        state.update("WWPR:AQF",    0.);
+        state.update("WGPR:AQF",    0.);
+        state.update("WLPR:AQF",    0.);
+
+        state.update("WOPR:MAIN",    0.);
+        state.update("WWPR:MAIN",    0.);
+        state.update("WGPR:MAIN",    0.);
+        state.update("WLPR:MAIN",    0.);
+
+        state.update("WOPR:NE",    0.);
+        state.update("WWPR:NE",    0.);
+        state.update("WGPR:NE",    0.);
+        state.update("WLPR:NE",    0.);
+
+        state.update("WOPR:NW",    0.);
+        state.update("WWPR:NW",    3.);
+        state.update("WGPR:NW",    0.);
+        state.update("WLPR:NW",    0.);
+
+        state.update("WOPR:SE",    0.);
+        state.update("WWPR:SE",    0.);
+        state.update("WGPR:SE",    0.);
+        state.update("WLPR:SE",    0.);
+
+        state.update("WOPR:CENTRAL",    0.);
+        state.update("WWPR:CENTRAL",    0.);
+        state.update("WGPR:CENTRAL",    0.);
+        state.update("WLPR:CENTRAL",    0.);*/
+
+        return state;
+    }
+}
+
 
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
         : es   ( deck )
+        , grid { deck }
         , python( std::make_shared<Opm::Python>() )
         , sched (deck, es, python )
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
+    Opm::EclipseGrid  grid;
     std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
 };
@@ -508,7 +608,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_EQUAL(agrpd.getZGroup().size(), ih.ngmaxz * ih.nzgrpz);
 }
 
-
+#if 0
 BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 {
     const auto simCase = SimulationCase{first_sim()};
@@ -646,6 +746,50 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 
 
 }
+#endif
+
+BOOST_AUTO_TEST_CASE (Declared_Group_Data_2)
+{
+    namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+    const auto simCase = SimulationCase{second_sim("MOD4_TEST_IGRP-DATA.DATA")};
+
+    Opm::EclipseState es = simCase.es;
+    Opm::Runspec rspec   = es.runspec();
+    Opm::SummaryState st = sim_state_2();
+    Opm::Schedule     sched = simCase.sched;
+    Opm::EclipseGrid  grid = simCase.grid;
+    const auto& units    = es.getUnits();
+
+
+    // Report Step 1:
+    const auto rptStep = std::size_t{1};
+
+    double secs_elapsed = 3.1536E07;
+    const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep+1, rptStep);
+    auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+    agrpd.captureDeclaredGroupData(sched, units, rptStep, st, ih);
+
+    // IGRP (PROD)
+    {
+        auto start = 0*ih[VI::intehead::NIGRPZ];
+        auto nwgmax = ih[VI::NWGMAX];
+
+        const auto& iGrp = agrpd.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  5] ,   2); // group available for higher level production control
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 17] ,   1); // group available for higher level water injection control
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 22] ,  -1); // group available for higher level gas injection control
+
+        start = 1*ih[VI::intehead::NIGRPZ];
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  5] ,   0); // group available for higher level production control
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 17] ,  -1); // group available for higher level water injection control
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 22] ,  -1); // group available for higher level gas injection control
+
+    }
+
+
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()
+
