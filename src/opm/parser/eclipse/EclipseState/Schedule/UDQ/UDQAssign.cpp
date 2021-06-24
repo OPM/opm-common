@@ -27,11 +27,18 @@ UDQAssign::UDQAssign() :
 {
 }
 
-UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value, std::size_t report_step) :
+UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>& input_selector, double value, std::size_t report_step) :
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword))
 {
-    this->add_record(selector, value, report_step);
+    this->add_record(input_selector, value, report_step);
+}
+
+UDQAssign::UDQAssign(const std::string& keyword, const std::unordered_set<std::string>& rst_selector, double value, std::size_t report_step) :
+    m_keyword(keyword),
+    m_var_type(UDQ::varType(keyword))
+{
+    this->add_record(rst_selector, value, report_step);
 }
 
 UDQAssign UDQAssign::serializeObject()
@@ -39,13 +46,17 @@ UDQAssign UDQAssign::serializeObject()
     UDQAssign result;
     result.m_keyword = "test";
     result.m_var_type = UDQVarType::CONNECTION_VAR;
-    result.records = {{{"test1"}, 1.0, 0}};
+    result.records = {{std::vector<std::string>{"test1"}, 1.0, 0}};
 
     return result;
 }
 
-void UDQAssign::add_record(const std::vector<std::string>& selector, double value, std::size_t report_step) {
-    this->records.push_back({selector, value, report_step});
+void UDQAssign::add_record(const std::vector<std::string>& input_selector, double value, std::size_t report_step) {
+    this->records.push_back({input_selector, value, report_step});
+}
+
+void UDQAssign::add_record(const std::unordered_set<std::string>& rst_selector, double value, std::size_t report_step) {
+    this->records.push_back({rst_selector, value, report_step});
 }
 
 const std::string& UDQAssign::keyword() const {
@@ -66,14 +77,8 @@ UDQSet UDQAssign::eval(const std::vector<std::string>& wells) const {
     if (this->m_var_type == UDQVarType::WELL_VAR) {
         UDQSet ws = UDQSet::wells(this->m_keyword, wells);
 
-        for (const auto& record : this->records) {
-            const auto& selector = record.selector;
-            double value = record.value;
-            if (selector.empty())
-                ws.assign(value);
-            else
-                ws.assign(selector[0], value);
-        }
+        for (const auto& record : this->records)
+            record.eval(ws);
 
         return ws;
     }

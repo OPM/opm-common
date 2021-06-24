@@ -965,9 +965,9 @@ BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
 
 
 BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
-    UDQAssign as1("WUPR", {}, 1.0, 1);
-    UDQAssign as2("WUPR", {"P*"}, 2.0, 2);
-    UDQAssign as3("WUPR", {"P1"}, 4.0, 3);
+    UDQAssign as1("WUPR", std::vector<std::string>{}, 1.0, 1);
+    UDQAssign as2("WUPR", std::vector<std::string>{"P*"}, 2.0, 2);
+    UDQAssign as3("WUPR", std::vector<std::string>{"P1"}, 4.0, 3);
     std::vector<std::string> ws1 = {"P1", "P2", "I1", "I2"};
 
     auto res1 = as1.eval(ws1);
@@ -2602,4 +2602,15 @@ UDQ
     BOOST_CHECK_EQUAL(res["W1"].get(), 300);
     BOOST_CHECK_EQUAL(res["W2"].get(), 200);
     BOOST_CHECK_EQUAL(res["W3"].get(), 100);
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_RST) {
+    std::unordered_set<std::string> selector{"W1", "W2"};
+    UDQAssign assign("WUBHP", selector, 100, 2);
+    auto res = assign.eval( {"W1", "W2", "W3"});
+    BOOST_CHECK_EQUAL(res.size(), 3);
+    BOOST_CHECK_EQUAL(res["W1"].get(), 100);
+    BOOST_CHECK_EQUAL(res["W2"].get(), 100);
+    BOOST_CHECK_EQUAL(res["W3"].defined(), false);
 }
