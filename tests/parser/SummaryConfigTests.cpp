@@ -275,6 +275,17 @@ BOOST_AUTO_TEST_CASE(fields) {
             names.begin(), names.end() );
 }
 
+BOOST_AUTO_TEST_CASE(tracer) {
+    const auto input = "FTIRSEA\n WTICSEA\n'W_1'/\n WTPRSEA\n'W_3' 'WX2'/\n";
+    const auto summary = createSummary( input );
+    const auto keywords = { "FTIRSEA", "WTICSEA", "WTPRSEA", "WTPRSEA" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
+}
+
 BOOST_AUTO_TEST_CASE(field_oil_efficiency) {
     const auto input = "FOE\n";
     const auto summary = createSummary( input );

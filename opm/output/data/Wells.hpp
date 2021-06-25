@@ -69,7 +69,8 @@ namespace Opm {
                 well_potential_oil     = (1 << 15),
                 well_potential_gas     = (1 << 16),
                 brine            = (1 << 17),
-                alq              = (1 << 18)
+                alq              = (1 << 18),
+                tracer           = (1 << 19)
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -83,10 +84,12 @@ namespace Opm {
             /// Read the value indicated by m. Returns a default value if
             /// the requested value is unset.
             inline double get( opt m, double default_value ) const;
+            inline double get( opt m, double default_value , const std::string& tracer_name ) const;
             /// Set the value specified by m. Throws an exception if multiple
             /// values are requested. Returns a self-reference to support
             /// chaining.
             inline Rates& set( opt m, double value );
+            inline Rates& set( opt m, double value , const std::string& tracer_name );
 
             /// Returns true if any of the rates oil, gas, water is nonzero
             inline bool flowing() const;
@@ -101,7 +104,9 @@ namespace Opm {
         inline void init_json(Json::JsonObject& json_data) const;
         private:
             double& get_ref( opt );
+            double& get_ref( opt, const std::string& tracer_name );
             const double& get_ref( opt ) const;
+            const double& get_ref( opt, const std::string& tracer_name ) const;
 
             opt mask = static_cast< opt >( 0 );
 
@@ -124,6 +129,7 @@ namespace Opm {
             double well_potential_gas = 0.0;
             double brine = 0.0;
             double alq = 0.0;
+            std::map<std::string, double> tracer;
     };
 
     struct Connection {
@@ -266,17 +272,17 @@ namespace Opm {
     };
 
     struct Well {
-        Rates rates;
-        double bhp;
-        double thp;
-        double temperature;
-        int control;
+        Rates rates{};
+        double bhp{0.0};
+        double thp{0.0};
+        double temperature{0.0};
+        int control{0};
 
         ::Opm::Well::Status dynamicStatus { Opm::Well::Status::OPEN };
 
-        std::vector< Connection > connections;
-        std::unordered_map<std::size_t, Segment> segments;
-        CurrentControl current_control;
+        std::vector< Connection > connections{};
+        std::unordered_map<std::size_t, Segment> segments{};
+        CurrentControl current_control{};
         GuideRateValue guide_rates{};
 
         inline bool flowing() const noexcept;
@@ -336,6 +342,12 @@ namespace Opm {
             return well->second.rates.get( m, 0.0 );
         }
 
+        double get(const std::string& well_name , Rates::opt m, const std::string& tracer_name) const {
+            const auto& well = this->find( well_name );
+            if( well == this->end() ) return 0.0;
+
+            return well->second.rates.get( m, 0.0, tracer_name);
+        }
 
         double get(const std::string& well_name , Connection::global_index connection_grid_index, Rates::opt m) const {
             const auto& witr = this->find( well_name );
@@ -417,8 +429,29 @@ namespace Opm {
         return this->get_ref( m );
     }
 
+    inline double Rates::get( opt m, double default_value, const std::string& tracer_name) const {
+        if( !this->has( m ) ) return default_value;
+
+        if( m == opt::tracer && this->tracer.find(tracer_name) == this->tracer.end()) return default_value;
+
+        return this->get_ref( m, tracer_name);
+    }
+
     inline Rates& Rates::set( opt m, double value ) {
         this->get_ref( m ) = value;
+
+        /* mask |= m */
+        this->mask = static_cast< opt >(
+                        static_cast< enum_size >( this->mask ) |
+                        static_cast< enum_size >( m )
+                    );
+
+        return *this;
+    }
+
+    inline Rates& Rates::set( opt m, double value , const std::string& tracer_name ) {
+        this->get_ref( m , tracer_name) = value;
+
         /* mask |= m */
         this->mask = static_cast< opt >(
                         static_cast< enum_size >( this->mask ) |
@@ -449,7 +482,8 @@ namespace Opm {
              well_potential_oil == rate.well_potential_oil &&
              well_potential_gas == rate.well_potential_gas &&
              brine == rate.brine &&
-             alq == rate.alq;
+             alq == rate.alq &&
+             tracer == rate.tracer;
     }
 
 
@@ -483,6 +517,8 @@ namespace Opm {
             case opt::well_potential_gas: return this->well_potential_gas;
             case opt::brine: return this->brine;
             case opt::alq: return this->alq;
+            case opt::tracer: /* Should _not_ be called with tracer argument */
+                break;
         }
 
         throw std::invalid_argument(
@@ -492,10 +528,22 @@ namespace Opm {
 
     }
 
+    inline const double& Rates::get_ref( opt m, const std::string& tracer_name ) const {
+        if (m != opt::tracer)
+            throw std::logic_error("Logic error - should be called with tracer argument");
+
+        return this->tracer.at(tracer_name);
+    }
+
     inline double& Rates::get_ref( opt m ) {
         return const_cast< double& >(
                 static_cast< const Rates* >( this )->get_ref( m )
                 );
+    }
+
+    inline double& Rates::get_ref( opt m, const std::string& tracer_name ) {
+        if (m == opt::tracer) this->tracer.emplace(tracer_name, 0.0);
+        return this->tracer.at(tracer_name);
     }
 
     void Rates::init_json(Json::JsonObject& json_data) const {
@@ -510,7 +558,6 @@ namespace Opm {
             json_data.add_item("gas", this->get(opt::gas));
 
     }
-
 
     bool inline Rates::flowing() const {
         return ((this->wat != 0) ||
@@ -544,6 +591,13 @@ namespace Opm {
             buffer.write(this->well_potential_gas);
             buffer.write(this->brine);
             buffer.write(this->alq);
+            //tracer:
+            unsigned int size = this->tracer.size();
+            buffer.write(size);
+            for (const auto& [name, rate] : this->tracer) {
+                buffer.write(name);
+                buffer.write(rate);
+            }
     }
 
     template <class MessageBufferType>
@@ -647,6 +701,16 @@ namespace Opm {
             buffer.read(this->well_potential_gas);
             buffer.read(this->brine);
             buffer.read(this->alq);
+            //tracer:
+            unsigned int size;
+            buffer.read(size);
+            for (size_t i = 0; i < size; ++i) {
+                std::string tracer_name;
+                buffer.read(tracer_name);
+                double tracer_rate;
+                buffer.read(tracer_rate);
+                this->tracer.emplace(tracer_name, tracer_rate);
+            }
     }
 
    template <class MessageBufferType>

@@ -80,12 +80,12 @@ BOOST_AUTO_TEST_CASE(TracerConfigTest) {
     auto it = tc.begin();
     BOOST_CHECK_EQUAL(it->name, "SEA");
     BOOST_CHECK_EQUAL(it->phase, Phase::WATER);
-    BOOST_CHECK(it->concentration.empty());
-    BOOST_CHECK_EQUAL(it->tvdpf.numColumns(), 2U);
+    BOOST_CHECK(it->free_concentration.empty());
+    BOOST_CHECK_EQUAL(it->free_tvdp.numColumns(), 2U);
 
     ++it;
     BOOST_CHECK_EQUAL(it->name, "OCE");
     BOOST_CHECK_EQUAL(it->phase, Phase::GAS);
-    BOOST_CHECK_EQUAL(it->concentration.size(), 3U);
-    BOOST_CHECK_EQUAL(it->tvdpf.numColumns(), 0U);
+    BOOST_CHECK_EQUAL(it->free_concentration.size(), 3U);
+    BOOST_CHECK_EQUAL(it->free_tvdp.numColumns(), 0U);
 }

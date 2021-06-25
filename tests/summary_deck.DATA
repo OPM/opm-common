@@ -26,6 +26,9 @@ WELLDIMS
    6      2       3      2
 /
 
+TRACERS
+ 1* 1 /
+
 OIL
 GAS
 WATER
@@ -60,6 +63,11 @@ PERMY
 PERMZ
 1000*10 /
 
+PROPS
+TRACER
+  'SEA' 'WAT'/
+/
+
 REGIONS
 
 FIPNUM
@@ -74,6 +82,10 @@ FIPNUM
    50*9  50*19
    50*10 50*20
 / 
+
+SOLUTION
+TBLKFSEA
+ 1000*0.1/
 
 SUMMARY
 DATE
@@ -99,7 +111,7 @@ FOPRF
 FOPRS
 FCPR
 FSPR
---FTPRSEA
+FTPRSEA
 -- Injection Rates
 FVIR
 FWIR
@@ -129,6 +141,7 @@ FOPTS
 FVPRT
 FCPT
 FSPT
+FTPTSEA
 -- Injection Cummulatives
 FVIT
 FWIT
@@ -480,6 +493,10 @@ GPR
 -- Production Rates
 WWPR
 /
+WTPRSEA
+ W_1 W_2 /
+WTPCSEA
+ W_1 W_2 /
 WWPRH
 /
 WOPR
@@ -561,6 +578,9 @@ WSIT
 WNIT
  W_3
 /
+-- Tracers
+WTIRSEA
+/
 
 -- Production Cummulatives
 WWPT
@@ -585,12 +605,9 @@ WOPTF
 /
 WOPTS
 /
-
 -- Tracers
---WTPRSEA
---/
---WTPTSEA
---/
+WTPTSEA
+/
 -- Injection Cummulatives
 WWIT
   W_3
@@ -607,6 +624,11 @@ WGORH
 WGLR
 /
 WGLRH
+/
+-- Tracers
+WTITSEA
+/
+WTICSEA
 /
 
 
