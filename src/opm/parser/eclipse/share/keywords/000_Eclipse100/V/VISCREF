@@ -19,7 +19,7 @@
       "name": "REFERENCE_RS",
       "value_type": "DOUBLE",
       "dimension": "GasDissolutionFactor"
-    };
+    },
     {
       "item": 3,
       "name": "API_GRAVITY",
