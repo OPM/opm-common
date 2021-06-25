@@ -13,6 +13,7 @@
     {
       "name": "MODEL",
       "value_type": "STRING"
+      "default": "TAB"
     }
   ]
 }
