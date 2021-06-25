@@ -25,8 +25,10 @@
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/ERsm.hpp>
-#include <opm/output/eclipse/RestartIO.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
+
+#include <opm/output/eclipse/RestartIO.hpp>
 
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/ErrorMacros.hpp>
@@ -878,14 +880,14 @@ void ECLRegressionTest::results_rst()
     }
 
     if (foundRst1 && foundRst2) {
-        ERst rst1(fileName1);
+        auto rst1 = std::make_shared<ERst>(fileName1);
         std::cout << "\nLoading restart file " << fileName1 << "  .... done" << std::endl;
 
-        ERst rst2(fileName2);
+        auto rst2 = std::make_shared<ERst>(fileName2);
         std::cout << "Loading restart file " << fileName2 << "  .... done\n" << std::endl;
 
-        std::vector<int> seqnums1 = rst1.listOfReportStepNumbers();
-        std::vector<int> seqnums2 = rst2.listOfReportStepNumbers();
+        std::vector<int> seqnums1 = rst1->listOfReportStepNumbers();
+        std::vector<int> seqnums2 = rst2->listOfReportStepNumbers();
 
         deviations.clear();
 
@@ -942,11 +944,11 @@ void ECLRegressionTest::results_rst()
 
             std::string reference = "Restart, sequence "+std::to_string(seqn);
 
-            rst1.loadReportStepNumber(seqn);
-            rst2.loadReportStepNumber(seqn);
+            rst1->loadReportStepNumber(seqn);
+            rst2->loadReportStepNumber(seqn);
 
-            auto arrays1 = rst1.listOfRstArrays(seqn);
-            auto arrays2 = rst2.listOfRstArrays(seqn);
+            auto arrays1 = rst1->listOfRstArrays(seqn);
+            auto arrays2 = rst2->listOfRstArrays(seqn);
 
             std::vector<std::string> keywords1;
             std::vector<eclArrType> arrayType1;
@@ -994,8 +996,12 @@ void ECLRegressionTest::results_rst()
                 }
 
                 {
-                    const auto& rst_state1 = Opm::RestartIO::RstState::load(rst1, seqn);
-                    const auto& rst_state2 = Opm::RestartIO::RstState::load(rst2, seqn);
+                    auto view1 = std::make_shared<RestartFileView>(rst1, seqn);
+                    auto view2 = std::make_shared<RestartFileView>(rst2, seqn);
+
+                    const auto rst_state1 = Opm::RestartIO::RstState::load(std::move(view1));
+                    const auto rst_state2 = Opm::RestartIO::RstState::load(std::move(view2));
+
                     rst_cmp(rst_state1, rst_state2);
                 }
 
@@ -1025,16 +1031,16 @@ void ECLRegressionTest::results_rst()
                         std::cout << "Comparing " << keywords1[i] << " ... ";
 
                         if (arrayType1[i] == INTE) {
-                            auto vect1 = rst1.getRestartData<int>(keywords1[i], seqn, 0);
-                            auto vect2 = rst2.getRestartData<int>(keywords2[ind2], seqn, 0);
+                            auto vect1 = rst1->getRestartData<int>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2->getRestartData<int>(keywords2[ind2], seqn, 0);
                             compareVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == REAL) {
-                            auto vect1 = rst1.getRestartData<float>(keywords1[i], seqn, 0);
-                            auto vect2 = rst2.getRestartData<float>(keywords2[ind2], seqn, 0);
+                            auto vect1 = rst1->getRestartData<float>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2->getRestartData<float>(keywords2[ind2], seqn, 0);
                             compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == DOUB) {
-                            auto vect1 = rst1.getRestartData<double>(keywords1[i], seqn, 0);
-                            auto vect2 = rst2.getRestartData<double>(keywords2[ind2], seqn, 0);
+                            auto vect1 = rst1->getRestartData<double>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2->getRestartData<double>(keywords2[ind2], seqn, 0);
 
                             // hack in order to not test doubhead[1], dependent on simulation results
                             // All ohter items in DOUBHEAD are tested with strict tolerances
@@ -1043,12 +1049,12 @@ void ECLRegressionTest::results_rst()
                             }
                             compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == LOGI) {
-                            auto vect1 = rst1.getRestartData<bool>(keywords1[i], seqn, 0);
-                            auto vect2 = rst2.getRestartData<bool>(keywords2[ind2], seqn, 0);
+                            auto vect1 = rst1->getRestartData<bool>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2->getRestartData<bool>(keywords2[ind2], seqn, 0);
                             compareVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == CHAR) {
-                            auto vect1 = rst1.getRestartData<std::string>(keywords1[i], seqn, 0);
-                            auto vect2 = rst2.getRestartData<std::string>(keywords2[ind2], seqn, 0);
+                            auto vect1 = rst1->getRestartData<std::string>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2->getRestartData<std::string>(keywords2[ind2], seqn, 0);
                             compareVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == MESS) {
                             // shold not be any associated data
@@ -1060,9 +1066,14 @@ void ECLRegressionTest::results_rst()
                         std::cout << " done." << std::endl;
                     }
                 }
+
                 {
-                    const auto& rst_state1 = Opm::RestartIO::RstState::load(rst1, seqn);
-                    const auto& rst_state2 = Opm::RestartIO::RstState::load(rst2, seqn);
+                    auto view1 = std::make_shared<RestartFileView>(rst1, seqn);
+                    auto view2 = std::make_shared<RestartFileView>(rst2, seqn);
+
+                    const auto rst_state1 = Opm::RestartIO::RstState::load(std::move(view1));
+                    const auto rst_state2 = Opm::RestartIO::RstState::load(std::move(view2));
+
                     rst_cmp(rst_state1, rst_state2);
                 }
             }

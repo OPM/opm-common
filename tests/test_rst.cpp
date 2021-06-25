@@ -21,28 +21,31 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
 #include <vector>
 
 #include <opm/io/eclipse/OutputStream.hpp>
-#include <opm/common/utility/TimeService.hpp>
-#include <opm/parser/eclipse/Python/Python.hpp>
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
+
+#include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/output/data/Wells.hpp>
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
@@ -50,8 +53,8 @@
 #include <opm/io/eclipse/rst/segment.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
-#include <tests/WorkArea.cpp>
 
+#include <tests/WorkArea.cpp>
 
 namespace {
     Opm::Deck first_sim()
@@ -195,18 +198,17 @@ struct SimulationCase
     explicit SimulationCase(const Opm::Deck& deck)
         : es    { deck }
         , grid  { deck }
-        , python{ std::make_shared<Opm::Python>() }
-        , sched { deck, es, python}
+        , sched { deck, es, std::make_shared<Opm::Python>() }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
 };
 
 // =====================================================================
+
 BOOST_AUTO_TEST_CASE(group_test) {
     const auto simCase = SimulationCase{first_sim()};
     const auto& units = simCase.es.getUnits();
@@ -343,8 +345,10 @@ BOOST_AUTO_TEST_CASE(State_test) {
             rstFile.write("XGRP", xgrp);
         }
 
-        Opm::EclIO::ERst rst_file("TEST_UDQRST.UNRST");
-        auto state = Opm::RestartIO::RstState::load(rst_file, rptStep);
+        auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST_UDQRST.UNRST");
+        auto rstView = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), rptStep);
+
+        auto state = Opm::RestartIO::RstState::load(std::move(rstView));
 
         const auto& well = state.get_well("OP_3");
         BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);

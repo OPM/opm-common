@@ -22,8 +22,10 @@
 
 #include <opm/msim/msim.hpp>
 
-#include <stdexcept>
+#include <memory>
 #include <iostream>
+#include <stdexcept>
+#include <utility>
 
 #include <opm/common/utility/FileSystem.hpp>
 
@@ -31,6 +33,7 @@
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/ERsm.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/output/data/Wells.hpp>
@@ -145,18 +148,19 @@ BOOST_AUTO_TEST_CASE(RUN) {
         }
 
         {
-            auto rst = EclIO::ERst("SPE1CASE1.UNRST");
+            auto rst = std::make_shared<EclIO::ERst>("SPE1CASE1.UNRST");
 
-            for (const auto& step : rst.listOfReportStepNumbers()) {
-                const auto& dh    = rst.getRestartData<double>("DOUBHEAD", step, 0);
-                const auto& press = rst.getRestartData<float>("PRESSURE", step, 0);
+            for (const auto& step : rst->listOfReportStepNumbers()) {
+                const auto& dh    = rst->getRestartData<double>("DOUBHEAD", step, 0);
+                const auto& press = rst->getRestartData<float>("PRESSURE", step, 0);
 
                 // DOUBHEAD[0] is elapsed time in days since start of simulation.
                 BOOST_CHECK_CLOSE( press[0], dh[0] * 86400, 1e-3 );
             }
 
             const int report_step = 50;
-            const auto& rst_state = Opm::RestartIO::RstState::load(rst, report_step);
+            auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst), report_step);
+            const auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view));
             Schedule sched_rst(deck, state, python, {}, &rst_state);
             const auto& rfti_well = sched_rst.getWell("RFTI", report_step);
             const auto& rftp_well = sched_rst.getWell("RFTP", report_step);

@@ -42,6 +42,12 @@ namespace {
     };
 
     template<>
+    struct ArrayType<bool>
+    {
+        static Opm::EclIO::eclArrType T;
+    };
+
+    template<>
     struct ArrayType<float>
     {
         static Opm::EclIO::eclArrType T;
@@ -60,6 +66,7 @@ namespace {
     };
 
     Opm::EclIO::eclArrType ArrayType<int>::T         = ::Opm::EclIO::eclArrType::INTE;
+    Opm::EclIO::eclArrType ArrayType<bool>::T        = ::Opm::EclIO::eclArrType::LOGI;
     Opm::EclIO::eclArrType ArrayType<float>::T       = ::Opm::EclIO::eclArrType::REAL;
     Opm::EclIO::eclArrType ArrayType<double>::T      = ::Opm::EclIO::eclArrType::DOUB;
     Opm::EclIO::eclArrType ArrayType<std::string>::T = ::Opm::EclIO::eclArrType::CHAR;
@@ -242,12 +249,16 @@ Opm::EclIO::RestartFileView::getKeyword(const std::string& vector,
 namespace Opm { namespace EclIO {
 
 template bool RestartFileView::hasKeyword<int>        (const std::string&) const;
+template bool RestartFileView::hasKeyword<bool>       (const std::string&) const;
 template bool RestartFileView::hasKeyword<float>      (const std::string&) const;
 template bool RestartFileView::hasKeyword<double>     (const std::string&) const;
 template bool RestartFileView::hasKeyword<std::string>(const std::string&) const;
 
 template const std::vector<int>&
 RestartFileView::getKeyword<int>(const std::string&, const int) const;
+
+template const std::vector<bool>&
+RestartFileView::getKeyword<bool>(const std::string&, const int) const;
 
 template const std::vector<float>&
 RestartFileView::getKeyword<float>(const std::string&, const int) const;
