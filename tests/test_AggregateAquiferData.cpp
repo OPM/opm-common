@@ -552,13 +552,12 @@ AQUANCON
             aquifer.initPressure = aquct.initial_pressure.value();
             aquifer.datumDepth = aquct.datum_depth;
 
-            aquifer.type = Opm::data::AquiferType::CarterTracy;
-            aquifer.aquCT = std::make_shared<Opm::data::CarterTracyData>();
+            auto* aquCT = aquifer.typeData.create<Opm::data::AquiferType::CarterTracy>();
 
-            aquifer.aquCT->timeConstant = aquct.timeConstant();
-            aquifer.aquCT->influxConstant = aquct.influxConstant();
-            aquifer.aquCT->waterDensity = aquct.waterDensity();
-            aquifer.aquCT->waterViscosity = aquct.waterViscosity();
+            aquCT->timeConstant = aquct.timeConstant();
+            aquCT->influxConstant = aquct.influxConstant();
+            aquCT->waterDensity = aquct.waterDensity();
+            aquCT->waterViscosity = aquct.waterViscosity();
         }
 
         for (const auto& aqufetp : aquConfig.fetp()) {
@@ -568,12 +567,40 @@ AQUANCON
             aquifer.initPressure = aqufetp.initial_pressure.value();
             aquifer.datumDepth = aqufetp.datum_depth;
 
-            aquifer.type = Opm::data::AquiferType::Fetkovich;
-            aquifer.aquFet = std::make_shared<Opm::data::FetkovichData>();
+            auto* aquFet = aquifer.typeData.create<Opm::data::AquiferType::Fetkovich>();
 
-            aquifer.aquFet->initVolume = aqufetp.initial_watvolume;
-            aquifer.aquFet->prodIndex = aqufetp.prod_index;
-            aquifer.aquFet->timeConstant = aqufetp.timeConstant();
+            aquFet->initVolume = aqufetp.initial_watvolume;
+            aquFet->prodIndex = aqufetp.prod_index;
+            aquFet->timeConstant = aqufetp.timeConstant();
+        }
+
+        return aquiferValues;
+    }
+
+    Opm::data::Aquifers numericAquiferValues(const Opm::AquiferConfig& aquConfig)
+    {
+        const auto equilibratedAquiferCellPressure = 300.0*pressureUnit();
+
+        auto aquiferValues = Opm::data::Aquifers{};
+
+        for (const auto& [aquiferID, aquNum] : aquConfig.numericalAquifers().aquifers()) {
+            const auto numCells = aquNum.numCells();
+
+            auto& aquifer = aquiferValues[aquiferID];
+            aquifer.aquiferID = static_cast<int>(aquiferID);
+
+            auto* aquNumData = aquifer.typeData.create<Opm::data::AquiferType::Numerical>();
+            aquNumData->initPressure.reserve(numCells);
+
+            for (auto cellIndex = 0*numCells; cellIndex < numCells; ++cellIndex) {
+                const auto* aqCell = aquNum.getCellPrt(cellIndex);
+
+                const auto p0 = aqCell->init_pressure.has_value()
+                    ? aqCell->init_pressure.value()
+                    : equilibratedAquiferCellPressure;
+
+                aquNumData->initPressure.push_back(p0);
+            }
         }
 
         return aquiferValues;
@@ -946,7 +973,8 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Numeric_Aquifers)
         BOOST_CHECK_EQUAL(aquiferData.getNumericAquiferDoublePrecData().size(), 4u * 13);
     }
 
-    aquiferData.captureDynamicdAquiferData(aqConfig, aquiferValues(aqConfig),
+    aquiferData.captureDynamicdAquiferData(aqConfig,
+                                           numericAquiferValues(aqConfig),
                                            aqunum_sim_state(),
                                            Opm::UnitSystem::newMETRIC());
 
@@ -975,7 +1003,7 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Numeric_Aquifers)
         const auto expect = std::vector<double> {
              15.0e3, 5.0e3, 0.3,   30.0, 2700.0, 285.0,   1.0, 1.0, 1.0,   pv[0], 234.567, 3456.789, 123.456, //  0..12 (record 0)
             160.0e3, 6.0e3, 0.4,  400.0, 2705.0, 295.0,   1.0, 1.0, 1.0,   pv[1],   0.0  ,    0.0  ,   0.0  , // 13..25 (record 1)
-            150.0e3, 7.0e3, 0.5, 5000.0, 2710.0,   0.0,   1.0, 1.0, 1.0,   pv[2],   0.0  ,    0.0  ,   0.0  , // 26..38 (record 2)
+            150.0e3, 7.0e3, 0.5, 5000.0, 2710.0, 300.0,   1.0, 1.0, 1.0,   pv[2],   0.0  ,    0.0  ,   0.0  , // 26..38 (record 2)
             140.0e3, 9.0e3, 0.3,  300.0, 2715.0, 250.0,   1.0, 1.0, 1.0,   pv[3], 222.333,  333.444, 121.212, // 39..51 (record 3)
         };
 

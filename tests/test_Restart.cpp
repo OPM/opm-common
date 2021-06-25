@@ -1149,14 +1149,14 @@ struct MessageBuffer
 Opm::data::AquiferData getFetkovichAquifer(const int aquiferID = 1)
 {
     auto aquifer = Opm::data::AquiferData {
-        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5, Opm::data::AquiferType::Fetkovich
+        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5
     };
 
-    aquifer.aquFet = std::make_shared<Opm::data::FetkovichData>();
+    auto* aquFet = aquifer.typeData.create<Opm::data::AquiferType::Fetkovich>();
 
-    aquifer.aquFet->initVolume = 1.23;
-    aquifer.aquFet->prodIndex = 45.67;
-    aquifer.aquFet->timeConstant = 890.123;
+    aquFet->initVolume = 1.23;
+    aquFet->prodIndex = 45.67;
+    aquFet->timeConstant = 890.123;
 
     return aquifer;
 }
@@ -1164,17 +1164,33 @@ Opm::data::AquiferData getFetkovichAquifer(const int aquiferID = 1)
 Opm::data::AquiferData getCarterTracyAquifer(const int aquiferID = 5)
 {
     auto aquifer = Opm::data::AquiferData {
-        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5, Opm::data::AquiferType::CarterTracy
+        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5
     };
 
-    aquifer.aquCT = std::make_shared<Opm::data::CarterTracyData>();
+    auto* aquCT = aquifer.typeData.create<Opm::data::AquiferType::CarterTracy>();
 
-    aquifer.aquCT->timeConstant = 987.65;
-    aquifer.aquCT->influxConstant = 43.21;
-    aquifer.aquCT->waterDensity = 1014.5;
-    aquifer.aquCT->waterViscosity = 0.00318;
-    aquifer.aquCT->dimensionless_time = 42.0;
-    aquifer.aquCT->dimensionless_pressure = 2.34;
+    aquCT->timeConstant = 987.65;
+    aquCT->influxConstant = 43.21;
+    aquCT->waterDensity = 1014.5;
+    aquCT->waterViscosity = 0.00318;
+    aquCT->dimensionless_time = 42.0;
+    aquCT->dimensionless_pressure = 2.34;
+
+    return aquifer;
+}
+
+Opm::data::AquiferData getNumericalAquifer(const int aquiferID = 2)
+{
+    auto aquifer = Opm::data::AquiferData {
+        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5
+    };
+
+    auto* aquNum = aquifer.typeData.create<Opm::data::AquiferType::Numerical>();
+
+    aquNum->initPressure.push_back(1.234);
+    aquNum->initPressure.push_back(2.345);
+    aquNum->initPressure.push_back(3.4);
+    aquNum->initPressure.push_back(9.876);
 
     return aquifer;
 }
@@ -1184,11 +1200,14 @@ BOOST_AUTO_TEST_CASE(ReadWrite_CarterTracy_Data)
 {
     const auto src = getCarterTracyAquifer(1729);
 
+    BOOST_CHECK_MESSAGE(src.typeData.is<Opm::data::AquiferType::CarterTracy>(),
+                        "Carter Tracy aquifer must be represented as AquiferType::CarterTracy");
+
     MessageBuffer buffer;
-    buffer.write(src);
+    src.write(buffer);
 
     auto dest = Opm::data::AquiferData{};
-    buffer.read(dest);
+    dest.read(buffer);
 
     BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Carter-Tracy aquifer object must be equal to source object");
 }
@@ -1197,11 +1216,30 @@ BOOST_AUTO_TEST_CASE(ReadWrite_Fetkovich_Data)
 {
     const auto src = getFetkovichAquifer(42);
 
+    BOOST_CHECK_MESSAGE(src.typeData.is<Opm::data::AquiferType::Fetkovich>(),
+                        "Fetkovich aquifer must be represented as AquiferType::Fetkovich");
+
     MessageBuffer buffer;
-    buffer.write(src);
+    src.write(buffer);
 
     auto dest = Opm::data::AquiferData{};
-    buffer.read(dest);
+    dest.read(buffer);
 
     BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Fetkovich object must be equal to source object");
+}
+
+BOOST_AUTO_TEST_CASE(ReadWrite_NumericalAquifer_Data)
+{
+    const auto src = getNumericalAquifer(11);
+
+    BOOST_CHECK_MESSAGE(src.typeData.is<Opm::data::AquiferType::Numerical>(),
+                        "Numeric aquifer must be represented as AquiferType::Numerical");
+
+    MessageBuffer buffer;
+    src.write(buffer);
+
+    auto dest = Opm::data::AquiferData{};
+    dest.read(buffer);
+
+    BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Numerical aquifer object must be equal to source object");
 }

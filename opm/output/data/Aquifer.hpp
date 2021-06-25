@@ -15,21 +15,22 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_OUTPUT_AQUIFER_HPP
 #define OPM_OUTPUT_AQUIFER_HPP
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace Opm { namespace data {
 
-    /**
-     * Small struct that keeps track of data for output to restart/summary
-     * files.
-     */
     enum class AquiferType
     {
         Fetkovich, CarterTracy, Numerical,
@@ -73,6 +74,201 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer);
     };
 
+    struct NumericAquiferData
+    {
+        std::vector<double> initPressure{};
+
+        bool operator==(const NumericAquiferData& other) const;
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
+    };
+
+    namespace detail {
+        template <AquiferType>
+        struct TypeMap;
+
+        template <> struct TypeMap<AquiferType::CarterTracy>
+        {
+            using Alternative = CarterTracyData;
+        };
+
+        template <> struct TypeMap<AquiferType::Fetkovich>
+        {
+            using Alternative = FetkovichData;
+        };
+
+        template <> struct TypeMap<AquiferType::Numerical>
+        {
+            using Alternative = NumericAquiferData;
+        };
+
+        template <AquiferType t>
+        using TypeMap_t = typename TypeMap<t>::Alternative;
+    } // namespace detail
+
+    class TypeSpecificData
+    {
+    private:
+        template <typename T>
+        bool is() const
+        {
+            return std::holds_alternative<T>(this->options_);
+        }
+
+        template <typename T>
+        const T* get() const
+        {
+            return this->template is<T>()
+                ? &std::get<T>(this->options_)
+                : nullptr;
+        }
+
+        template <typename T>
+        T* get()
+        {
+            return this->template is<T>()
+                ? &std::get<T>(this->options_)
+                : nullptr;
+        }
+
+    public:
+        TypeSpecificData() = default;
+
+        TypeSpecificData(const TypeSpecificData&) = default;
+        TypeSpecificData(TypeSpecificData&&) = default;
+
+        TypeSpecificData& operator=(const TypeSpecificData&) = default;
+        TypeSpecificData& operator=(TypeSpecificData&&) = default;
+
+        bool operator==(const TypeSpecificData& that) const
+        {
+            return std::visit(Equal{}, this->options_, that.options_);
+        }
+
+        template <AquiferType t>
+        auto* create()
+        {
+            return &this->options_.emplace<detail::TypeMap_t<t>>();
+        }
+
+        template <AquiferType t>
+        bool is() const
+        {
+            return this->template is<detail::TypeMap_t<t>>();
+        }
+
+        template <AquiferType t>
+        auto const* get() const
+        {
+            return this->template get<detail::TypeMap_t<t>>();
+        }
+
+        template <AquiferType t>
+        auto* getMutable()
+        {
+            return this->template get<detail::TypeMap_t<t>>();
+        }
+
+        template <typename MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            buffer.write(this->options_.index());
+            std::visit(Write<MessageBufferType>{buffer}, this->options_);
+        }
+
+        template <typename MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            auto type = 0 * this->options_.index();
+            buffer.read(type);
+
+            if (type < std::variant_size_v<Types>) {
+                this->create(type);
+
+                std::visit(Read<MessageBufferType>{buffer}, this->options_);
+            }
+        }
+
+    private:
+        using Types = std::variant<std::monostate,
+                                   CarterTracyData,
+                                   FetkovichData,
+                                   NumericAquiferData>;
+
+        struct Equal
+        {
+            template <typename T1, typename T2>
+            bool operator()(const T1&, const T2&) const
+            {
+                return false;
+            }
+
+            template <typename T>
+            bool operator()(const T& e1, const T& e2) const
+            {
+                return e1 == e2;
+            }
+
+            bool operator()(const std::monostate&,
+                            const std::monostate&) const
+            {
+                return true;
+            }
+        };
+
+        template <typename MessageBufferType>
+        class Read
+        {
+        public:
+            explicit Read(MessageBufferType& buffer)
+                : buffer_{ buffer }
+            {}
+
+            template <typename T>
+            void operator()(T& alternative)
+            {
+                return alternative.read(this->buffer_);
+            }
+
+            void operator()(std::monostate&)
+            {}
+
+        private:
+            MessageBufferType& buffer_;
+        };
+
+        template <typename MessageBufferType>
+        class Write
+        {
+        public:
+            explicit Write(MessageBufferType& buffer)
+                : buffer_{ buffer }
+            {}
+
+            template <typename T>
+            void operator()(const T& alternative) const
+            {
+                return alternative.write(this->buffer_);
+            }
+
+            void operator()(const std::monostate&) const
+            {}
+
+        private:
+            MessageBufferType& buffer_;
+        };
+
+        Types options_{};
+
+        void create(const std::size_t option);
+    };
+
     struct AquiferData
     {
         int aquiferID = 0;         //< One-based ID, range 1..NANAQ
@@ -82,9 +278,7 @@ namespace Opm { namespace data {
         double initPressure = 0.0; //< Aquifer's initial pressure
         double datumDepth = 0.0;   //< Aquifer's pressure reference depth
 
-        AquiferType type;
-        std::shared_ptr<FetkovichData> aquFet{};
-        std::shared_ptr<CarterTracyData> aquCT{};
+        TypeSpecificData typeData{};
 
         double get(const std::string& key) const;
 
@@ -97,17 +291,22 @@ namespace Opm { namespace data {
         // MessageBufferType API should be similar to Dune::MessageBufferIF
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+    private:
+        using GetSummaryValue = double (AquiferData::*)() const;
+        using SummaryValueDispatchTable = std::unordered_map<std::string, GetSummaryValue>;
+
+        static SummaryValueDispatchTable summaryValueDispatchTable_;
+
+        double aquiferFlowRate() const;
+        double aquiferPressure() const;
+        double aquiferTotalProduction() const;
+        double carterTracyDimensionlessTime() const;
+        double carterTracyDimensionlessPressure() const;
     };
 
     // TODO: not sure what extension we will need
     using Aquifers = std::map<int, AquiferData>;
-
-    inline bool FetkovichData::operator==(const FetkovichData& other) const
-    {
-        return (this->initVolume == other.initVolume)
-            && (this->prodIndex == other.prodIndex)
-            && (this->timeConstant == other.timeConstant);
-    }
 
     template <class MessageBufferType>
     void FetkovichData::write(MessageBufferType& buffer) const
@@ -123,16 +322,6 @@ namespace Opm { namespace data {
         buffer.read(this->initVolume);
         buffer.read(this->prodIndex);
         buffer.read(this->timeConstant);
-    }
-
-    inline bool CarterTracyData::operator==(const CarterTracyData& other) const
-    {
-        return (this->timeConstant == other.timeConstant)
-            && (this->influxConstant == other.influxConstant)
-            && (this->waterDensity == other.waterDensity)
-            && (this->waterViscosity == other.waterViscosity)
-            && (this->dimensionless_time == other.dimensionless_time)
-            && (this->dimensionless_pressure == other.dimensionless_pressure);
     }
 
     template <class MessageBufferType>
@@ -157,55 +346,26 @@ namespace Opm { namespace data {
         buffer.read(this->dimensionless_pressure);
     }
 
-    inline double AquiferData::get(const std::string& key) const
+    template <class MessageBufferType>
+    void NumericAquiferData::write(MessageBufferType& buffer) const
     {
-        if ((key == "AAQR") || (key == "ANQR")) {
-            return this->fluxRate;
-        }
-        else if ((key == "AAQT") || (key == "ANQT")) {
-            return this->volume;
-        }
-        else if ((key == "AAQP") || (key == "ANQP")) {
-            return this->pressure;
-        }
-        else if ((key == "AAQTD") && (this->aquCT != nullptr)) {
-            return this->aquCT->dimensionless_time;
-        }
-        else if ((key == "AAQPD") && (this->aquCT != nullptr)) {
-            return this->aquCT->dimensionless_pressure;
-        }
+        buffer.write(this->initPressure.size());
 
-        return 0.0;
+        for (const auto& pressure : this->initPressure) {
+            buffer.write(pressure);
+        }
     }
 
-    inline bool AquiferData::operator==(const AquiferData& other) const
+    template <class MessageBufferType>
+    void NumericAquiferData::read(MessageBufferType& buffer)
     {
-        const auto equal_structure =
-            (this->aquiferID == other.aquiferID) &&
-            (this->pressure == other.pressure) &&
-            (this->fluxRate == other.fluxRate) &&
-            (this->volume == other.volume) &&
-            (this->initPressure == other.initPressure) &&
-            (this->datumDepth == other.datumDepth) &&
-            (this->type == other.type) &&
-            ((this->aquFet == nullptr) == (other.aquFet == nullptr)) &&
-            ((this->aquCT == nullptr) == (other.aquCT == nullptr)) &&
-            ((this->aquFet == nullptr) != (this->aquCT == nullptr));
+        decltype(this->initPressure.size()) size{};
+        buffer.read(size);
 
-        if (! equal_structure) {
-            return false;
+        this->initPressure.resize(size, 0.0);
+        for (auto& pressure : this->initPressure) {
+            buffer.read(pressure);
         }
-
-        auto equalSub = true;
-        if (this->aquFet != nullptr) {
-            equalSub = *this->aquFet == *other.aquFet;
-        }
-
-        if (equalSub && (this->aquCT != nullptr)) {
-            equalSub = *this->aquCT == *other.aquCT;
-        }
-
-        return equalSub;
     }
 
     template <class MessageBufferType>
@@ -218,15 +378,7 @@ namespace Opm { namespace data {
         buffer.write(this->initPressure);
         buffer.write(this->datumDepth);
 
-        const int aqu = (this->aquFet != nullptr) + 2*(this->aquCT != nullptr);
-        buffer.write(aqu);
-
-        if (this->aquFet != nullptr) {
-            this->aquFet->write(buffer);
-        }
-        else if (this->aquCT != nullptr) {
-            this->aquCT->write(buffer);
-        }
+        this->typeData.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -239,26 +391,7 @@ namespace Opm { namespace data {
         buffer.read(this->initPressure);
         buffer.read(this->datumDepth);
 
-        int aqu;
-        buffer.read(aqu);
-        if (aqu == 1) {
-            this->type = AquiferType::Fetkovich;
-
-            if (this->aquFet == nullptr) {
-                this->aquFet = std::make_shared<FetkovichData>();
-            }
-
-            this->aquFet->read(buffer);
-        }
-        else if (aqu == 2) {
-            this->type = AquiferType::CarterTracy;
-
-            if (this->aquCT == nullptr) {
-                this->aquCT = std::make_shared<CarterTracyData>();
-            }
-
-            this->aquCT->read(buffer);
-        }
+        this->typeData.read(buffer);
     }
 }} // Opm::data
 

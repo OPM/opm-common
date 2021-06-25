@@ -46,6 +46,7 @@
 #include <cstddef>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
@@ -91,7 +92,7 @@ namespace {
 
             for (auto cellIndex = 0*numCells; cellIndex < numCells; ++cellIndex) {
                 const auto* aqCell = aquifer.getCellPrt(cellIndex);
-                aquiferOp(static_cast<int>(aquiferID), cellIndex == 0*numCells, *aqCell);
+                aquiferOp(static_cast<int>(aquiferID), cellIndex, *aqCell);
             }
         }
     }
@@ -289,8 +290,12 @@ namespace {
                 saaq[Ix::CTThickness] = cvrt(M::length, aquifer.thickness);
                 saaq[Ix::CTAngle] = cvrt(M::identity, aquifer.angle_fraction);
 
-                saaq[Ix::CTWatMassDensity] = cvrt(M::density, aquData.aquCT->waterDensity);
-                saaq[Ix::CTWatViscosity] = cvrt(M::viscosity, aquData.aquCT->waterViscosity);
+                if (const auto* aquCT = aquData.typeData.get<Opm::data::AquiferType::CarterTracy>();
+                    aquCT != nullptr)
+                {
+                    saaq[Ix::CTWatMassDensity] = cvrt(M::density, aquCT->waterDensity);
+                    saaq[Ix::CTWatViscosity] = cvrt(M::viscosity, aquCT->waterViscosity);
+                }
             }
         } // CarterTracy
 
@@ -319,9 +324,14 @@ namespace {
                 saaq[Ix::InitPressure] = cvrt(M::pressure, aquData.initPressure);
                 saaq[Ix::DatumDepth] = cvrt(M::length, aquifer.datum_depth);
 
-                saaq[Ix::FetTimeConstant] = (aquData.aquFet != nullptr)
-                    ? cvrt(M::time, aquData.aquFet->timeConstant)
-                    : cvrt(M::time, aquifer.timeConstant());
+                if (const auto* aquFet = aquData.typeData.get<Opm::data::AquiferType::Fetkovich>();
+                    aquFet != nullptr)
+                {
+                    saaq[Ix::FetTimeConstant] = cvrt(M::time, aquFet->timeConstant);
+                }
+                else {
+                    saaq[Ix::FetTimeConstant] = cvrt(M::time, aquifer.timeConstant());
+                }
             }
         } // Fetkovich
     } // SinglePrecAnalyticAquifer
@@ -407,8 +417,10 @@ namespace {
                 Common::dynamicContrib(std::forward<SummaryVariable>(summaryVariable),
                                        tot_influx, usys, xaaq);
 
-                const auto Tc   = aquData.aquCT->timeConstant;
-                const auto beta = aquData.aquCT->influxConstant;
+                const auto* aquCT = aquData.typeData.get<Opm::data::AquiferType::CarterTracy>();
+
+                const auto Tc   = aquCT->timeConstant;
+                const auto beta = aquCT->influxConstant;
 
                 // Note: *to_si()* here since this is a *reciprocal* time constant
                 xaaq[Ix::CTRecipTimeConst] = usys.to_si(M::time, 1.0 / Tc);
@@ -450,6 +462,8 @@ namespace {
 
         template <typename SummaryVariable, typename RAqnArray>
         void dynamicContrib(const Opm::NumericalAquiferCell& aqCell,
+                            const Opm::data::AquiferData*    aqData,
+                            const std::size_t                cellIndex,
                             SummaryVariable&&                summaryVariable,
                             const Opm::UnitSystem&           usys,
                             RAqnArray&                       raqn)
@@ -463,7 +477,14 @@ namespace {
             raqn[Ix::Permeability] = usys.from_si(M::permeability, aqCell.permeability);
             raqn[Ix::Depth] = usys.from_si(M::length, aqCell.depth);
 
-            if (aqCell.init_pressure.has_value()) {
+            const auto* aquNum = (aqData != nullptr)
+                ? aqData->typeData.get<Opm::data::AquiferType::Numerical>()
+                : nullptr;
+
+            if (aquNum != nullptr) {
+                raqn[Ix::Pressure] = usys.from_si(M::pressure, aquNum->initPressure[cellIndex]);
+            }
+            else if (aqCell.init_pressure.has_value()) {
                 raqn[Ix::Pressure] = usys.from_si(M::pressure, aqCell.init_pressure.value());
             }
 
@@ -555,7 +576,9 @@ captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
         IntegerAnalyticAquifer::Fetkovich::staticContrib(aquifer, nActiveConn, iaaq);
 
         auto xaqPos = aquData.find(aquifer.aquiferID);
-        if ((xaqPos != aquData.end()) && (xaqPos->second.aquFet != nullptr)) {
+        if ((xaqPos != aquData.end()) &&
+            xaqPos->second.typeData.is<data::AquiferType::Fetkovich>())
+        {
             const auto& aquFetPData = xaqPos->second;
 
             auto saaq = this->singleprecAnalyticAq_[aquIndex];
@@ -581,7 +604,9 @@ captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
         IntegerAnalyticAquifer::CarterTracy::staticContrib(aquifer, nActiveConn, iaaq);
 
         auto xaqPos = aquData.find(aquifer.aquiferID);
-        if ((xaqPos != aquData.end()) && (xaqPos->second.aquCT != nullptr)) {
+        if ((xaqPos != aquData.end()) &&
+            xaqPos->second.typeData.is<data::AquiferType::CarterTracy>())
+        {
             const auto& aquCTData = xaqPos->second;
 
             auto saaq = this->singleprecAnalyticAq_[aquIndex];
@@ -600,17 +625,24 @@ captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
         }
     });
 
-    numericAquiferLoop(aqConfig, [this, &summaryState, &usys]
-        (const int aquiferID, const bool isNewID, const NumericalAquiferCell& aqCell)
+    numericAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
+        (const int aquiferID, const std::size_t cellIndex, const NumericalAquiferCell& aqCell)
     {
         auto iaqn = this->integerNumericAq_[aqCell.record_id];
         IntegerNumericAquifer::staticContrib(aqCell, aquiferID, iaqn);
+
+        const auto isNewID = cellIndex == std::size_t{0};
+        auto aquNum = aquData.find(aquiferID);
+        const auto* aquiferData = (aquNum != aquData.end())
+            ? &aquNum->second
+            : nullptr;
 
         auto raqn = this->doubleprecNumericAq_[aqCell.record_id];
         auto sumVar = [&summaryState, aquiferID, isNewID](const std::string& vector)
         {
             return !isNewID ? 0.0 : getSummaryVariable(summaryState, vector, aquiferID);
         };
-        DoublePrecNumericAquifer::dynamicContrib(aqCell, sumVar, usys, raqn);
+        DoublePrecNumericAquifer::dynamicContrib(aqCell, aquiferData, cellIndex,
+                                                 sumVar, usys, raqn);
     });
 }
