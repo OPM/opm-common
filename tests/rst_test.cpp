@@ -16,15 +16,21 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <cstdlib>
 #include <iostream>
+#include <memory>
+#include <optional>
+#include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -70,12 +76,21 @@ std::pair<Opm::EclipseState, Opm::Schedule> load_schedule(std::shared_ptr<const 
     if (init_config.restartRequested()) {
         report_step = init_config.getRestartStep();
         const auto& rst_filename = state.getIOConfig().getRestartFileName( init_config.getRestartRootName(), report_step, false );
-        Opm::EclIO::ERst rst_file(rst_filename);
+        auto rst_file = std::make_shared<Opm::EclIO::ERst>(rst_filename);
+        auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), report_step);
 
-        const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
-        return {state, Opm::Schedule(deck, state, python, {}, &rst)};
+        const auto rst = Opm::RestartIO::RstState::load(std::move(rst_view));
+        return {
+            std::piecewise_construct,
+            std::forward_as_tuple(state),
+            std::forward_as_tuple(deck, state, python, std::nullopt, &rst)
+        };
     } else
-        return {state, Opm::Schedule(deck, state, python)};
+        return {
+            std::piecewise_construct,
+            std::forward_as_tuple(state),
+            std::forward_as_tuple(deck, state, python)
+        };
 }
 
 std::pair<Opm::EclipseState, Opm::Schedule> load_schedule(std::shared_ptr<const Opm::Python> python, const std::string& fname) {

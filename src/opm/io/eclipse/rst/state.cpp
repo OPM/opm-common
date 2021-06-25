@@ -18,8 +18,10 @@
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <numeric>
 
+#include <opm/io/eclipse/RestartFileView.hpp>
 
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
@@ -35,8 +37,7 @@
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
-namespace Opm {
-namespace RestartIO {
+namespace Opm { namespace RestartIO {
 
 RstState::RstState(const ::Opm::UnitSystem& unit_system_,
                    const std::vector<int>& intehead,
@@ -242,37 +243,36 @@ const RstWell& RstState::get_well(const std::string& wname) const {
     return *well_iter;
 }
 
-RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
-    rst_file.loadReportStepNumber(report_step);
-    const auto& intehead = rst_file.getRestartData<int>("INTEHEAD", report_step, 0);
-    const auto& logihead = rst_file.getRestartData<bool>("LOGIHEAD", report_step, 0);
-    const auto& doubhead = rst_file.getRestartData<double>("DOUBHEAD", report_step, 0);
+RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView) {
+    const auto& intehead = rstView->getKeyword<int>("INTEHEAD");
+    const auto& logihead = rstView->getKeyword<bool>("LOGIHEAD");
+    const auto& doubhead = rstView->getKeyword<double>("DOUBHEAD");
 
     auto unit_id = intehead[VI::intehead::UNIT];
     ::Opm::UnitSystem unit_system(unit_id);
 
     RstState state(unit_system, intehead, logihead, doubhead);
     if (state.header.ngroup > 0) {
-        const auto& zgrp = rst_file.getRestartData<std::string>("ZGRP", report_step, 0);
-        const auto& igrp = rst_file.getRestartData<int>("IGRP", report_step, 0);
-        const auto& sgrp = rst_file.getRestartData<float>("SGRP", report_step, 0);
-        const auto& xgrp = rst_file.getRestartData<double>("XGRP", report_step, 0);
+        const auto& zgrp = rstView->getKeyword<std::string>("ZGRP");
+        const auto& igrp = rstView->getKeyword<int>("IGRP");
+        const auto& sgrp = rstView->getKeyword<float>("SGRP");
+        const auto& xgrp = rstView->getKeyword<double>("XGRP");
         state.add_groups(zgrp, igrp, sgrp, xgrp);
     }
 
     if (state.header.num_wells > 0) {
-        const auto& zwel = rst_file.getRestartData<std::string>("ZWEL", report_step, 0);
-        const auto& iwel = rst_file.getRestartData<int>("IWEL", report_step, 0);
-        const auto& swel = rst_file.getRestartData<float>("SWEL", report_step, 0);
-        const auto& xwel = rst_file.getRestartData<double>("XWEL", report_step, 0);
+        const auto& zwel = rstView->getKeyword<std::string>("ZWEL");
+        const auto& iwel = rstView->getKeyword<int>("IWEL");
+        const auto& swel = rstView->getKeyword<float>("SWEL");
+        const auto& xwel = rstView->getKeyword<double>("XWEL");
 
-        const auto& icon = rst_file.getRestartData<int>("ICON", report_step, 0);
-        const auto& scon = rst_file.getRestartData<float>("SCON", report_step, 0);
-        const auto& xcon = rst_file.getRestartData<double>("XCON", report_step, 0);
+        const auto& icon = rstView->getKeyword<int>("ICON");
+        const auto& scon = rstView->getKeyword<float>("SCON");
+        const auto& xcon = rstView->getKeyword<double>("XCON");
 
-        if (rst_file.hasKey("ISEG")) {
-            const auto& iseg = rst_file.getRestartData<int>("ISEG", report_step, 0);
-            const auto& rseg = rst_file.getRestartData<double>("RSEG", report_step, 0);
+        if (rstView->hasKeyword<int>("ISEG")) {
+            const auto& iseg = rstView->getKeyword<int>("ISEG");
+            const auto& rseg = rstView->getKeyword<double>("RSEG");
 
             state.add_msw(zwel, iwel, swel, xwel,
                           icon, scon, xcon,
@@ -283,20 +283,18 @@ RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
     }
 
     if (state.header.num_udq() > 0) {
-        const auto& iudq = rst_file.getRestartData<int>("IUDQ", report_step, 0);
-        const auto& zudn = rst_file.getRestartData<std::string>("ZUDN", report_step, 0);
-        const auto& zudl = rst_file.getRestartData<std::string>("ZUDL", report_step, 0);
+        const auto& iudq = rstView->getKeyword<int>("IUDQ");
+        const auto& zudn = rstView->getKeyword<std::string>("ZUDN");
+        const auto& zudl = rstView->getKeyword<std::string>("ZUDL");
 
-        const auto& dudw = state.header.nwell_udq  > 0 ? rst_file.getRestartData<double>("DUDW", report_step, 0) : std::vector<double>{};
-        const auto& dudg = state.header.ngroup_udq > 0 ? rst_file.getRestartData<double>("DUDG", report_step, 0) : std::vector<double>{};
-        const auto& dudf = state.header.nfield_udq > 0 ? rst_file.getRestartData<double>("DUDF", report_step, 0) : std::vector<double>{};
+        const auto& dudw = state.header.nwell_udq  > 0 ? rstView->getKeyword<double>("DUDW") : std::vector<double>{};
+        const auto& dudg = state.header.ngroup_udq > 0 ? rstView->getKeyword<double>("DUDG") : std::vector<double>{};
+        const auto& dudf = state.header.nfield_udq > 0 ? rstView->getKeyword<double>("DUDF") : std::vector<double>{};
 
         state.add_udqs(iudq, zudn, zudl, dudw, dudg, dudf);
     }
+
     return state;
 }
 
-}
-}
-
-
+}} // namespace Opm::RestartIO

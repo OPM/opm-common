@@ -36,6 +36,11 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <utility>
 
 using namespace Opm;
 
@@ -71,8 +76,9 @@ void compare_wells(const RestartIO::RstWell& rst_well, const Well& sched_well) {
 BOOST_AUTO_TEST_CASE(LoadRST) {
     Parser parser;
     auto deck = parser.parseFile("SPE1CASE2.DATA");
-    EclIO::ERst rst_file("SPE1CASE2.X0060");
-    auto rst_state = RestartIO::RstState::load(rst_file, 60);
+    auto rst_file = std::make_shared<EclIO::ERst>("SPE1CASE2.X0060");
+    auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), 60);
+    auto rst_state = RestartIO::RstState::load(std::move(rst_view));
     BOOST_REQUIRE_THROW( rst_state.get_well("NO_SUCH_WELL"), std::out_of_range);
     auto python = std::make_shared<Python>();
     EclipseState ecl_state(deck);
@@ -95,8 +101,9 @@ BOOST_AUTO_TEST_CASE(LoadRestartSim) {
     Schedule sched(deck, ecl_state, python);
 
     auto restart_deck = parser.parseFile("SPE1CASE2_RESTART.DATA");
-    EclIO::ERst rst_file("SPE1CASE2.X0060");
-    auto rst_state = RestartIO::RstState::load(rst_file, 60);
+    auto rst_file = std::make_shared<EclIO::ERst>("SPE1CASE2.X0060");
+    auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), 60);
+    auto rst_state = RestartIO::RstState::load(std::move(rst_view));
     EclipseState ecl_state_restart(restart_deck);
     Schedule restart_sched(restart_deck, ecl_state_restart, python, {}, &rst_state);
 

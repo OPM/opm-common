@@ -20,7 +20,10 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
+#include <utility>
+
 #include <fmt/format.h>
 
 #define BOOST_TEST_MODULE ScheduleTests
@@ -32,6 +35,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
@@ -3605,9 +3609,10 @@ BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
     const auto& init_config = es.getInitConfig();
     auto report_step = init_config.getRestartStep();
     const auto& rst_filename = es.getIOConfig().getRestartFileName( init_config.getRestartRootName(), report_step, false );
-    Opm::EclIO::ERst rst_file(rst_filename);
-    const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
-    const auto sched = Schedule{ deck, es, python , {}, &rst};
+    auto rst_file = std::make_shared<Opm::EclIO::ERst>(rst_filename);
+    auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), report_step);
+    const auto rst = Opm::RestartIO::RstState::load(std::move(rst_view));
+    const auto sched = Schedule{ deck, es, python , {}, &rst };
     BOOST_CHECK_NO_THROW( sched[3].vfpprod(5) );
 
     for (std::size_t index = 0; index < sched.size(); index++) {

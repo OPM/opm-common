@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/output/data/Wells.hpp>
@@ -724,8 +725,9 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     }
 
     {
-        Opm::EclIO::ERst rst_file("TEST_UDQRST.UNRST");
-        auto rst_state = Opm::RestartIO::RstState::load(rst_file, 1);
+        auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST_UDQRST.UNRST");
+        auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), 1);
+        auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view));
         BOOST_CHECK_EQUAL(rst_state.header.nwell_udq, 4);
         BOOST_CHECK_EQUAL(rst_state.header.ngroup_udq, 1);
         BOOST_CHECK_EQUAL(rst_state.header.nfield_udq, 39);

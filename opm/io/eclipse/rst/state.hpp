@@ -19,29 +19,33 @@
 #ifndef RST_STATE
 #define RST_STATE
 
+#include <memory>
 #include <string>
 #include <vector>
 
-#include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/udq.hpp>
+
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 
 
-namespace Opm {
+namespace Opm { namespace EclIO {
+    class RestartFileView;
+}} // namespace Opm::EclIO
 
-namespace RestartIO {
+namespace Opm { namespace RestartIO {
+
 struct RstState {
     RstState(const ::Opm::UnitSystem& unit_system,
              const std::vector<int>& intehead,
              const std::vector<bool>& logihead,
              const std::vector<double>& doubhead);
 
-    static RstState load(EclIO::ERst& rst_file, int report_step);
+    static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView);
 
     const RstWell& get_well(const std::string& wname) const;
 
@@ -87,10 +91,7 @@ private:
                   const std::vector<double>& dudf);
 
 };
-}
-}
 
-
-
+}} // namespace Opm::RestartIO
 
 #endif
