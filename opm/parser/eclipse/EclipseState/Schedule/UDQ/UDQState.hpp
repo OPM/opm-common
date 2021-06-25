@@ -52,7 +52,9 @@ private:
     void add(const std::string& udq_key, const UDQSet& result);
     double get_wg_var(const std::string& well, const std::string& key, UDQVarType var_type) const;
     double undef_value;
-    std::unordered_map<std::string, UDQSet> values;
+    std::unordered_map<std::string, double> scalar_values;
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> well_values;
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values;
     std::unordered_map<std::string, std::size_t> assignments;
     std::unordered_map<std::string, std::size_t> defines;
 };
