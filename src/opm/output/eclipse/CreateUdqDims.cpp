@@ -26,6 +26,9 @@
 
 #include <vector>
 
+// #####################################################################
+// Public Interface (createUdqDims()) Below Separator
+// ---------------------------------------------------------------------
 std::vector<int>
 Opm::RestartIO::Helpers::
 createUdqDims(const Schedule&     		sched,
