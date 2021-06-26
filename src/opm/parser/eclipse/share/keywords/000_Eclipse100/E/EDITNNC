@@ -74,7 +74,7 @@
       "item": 13,
       "name": "FACE_FLOW21",
       "value_type": "STRING",
-      "comment": Item is used in the commercial simulator’s Vertical Equilibrium option"
+      "comment": "Item is used in the commercial simulator’s Vertical Equilibrium option"
     },
     {
       "item": 14,

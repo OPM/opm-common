@@ -27,12 +27,13 @@
       "value_type": "DOUBLE",
       "default": 1e-20,
       "dimension": "FoamSurfactantConcentration"
-    };
+    },
+    {
       "item": 4,
       "name": "MIN_WAT_SAT",
       "value_type": "DOUBLE",
       "default": 1e-6,
-      "dimension": "1"
+      "dimension": "1",
       "comment": "This item is ECLIPSE300 specific"
     }
   ]
