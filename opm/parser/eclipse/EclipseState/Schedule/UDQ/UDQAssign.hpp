@@ -22,6 +22,7 @@
 #define UDQASSIGN_HPP_
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
@@ -40,20 +41,50 @@ public:
       swapped with a UDQ DEFINE statement.
     */
     struct AssignRecord {
-        std::vector<std::string> selector;
+        std::vector<std::string> input_selector;
+        std::unordered_set<std::string> rst_selector;
         double value;
         std::size_t report_step;
 
+        AssignRecord() = default;
+
+        AssignRecord(const std::vector<std::string>& selector, double value_arg, std::size_t report_step_arg)
+            : input_selector(selector)
+            , value(value_arg)
+            , report_step(report_step_arg)
+        {}
+
+        AssignRecord(const std::unordered_set<std::string>& selector, double value_arg, std::size_t report_step_arg)
+            : rst_selector(selector)
+            , value(value_arg)
+            , report_step(report_step_arg)
+        {}
+
+        void eval(UDQSet& values) const {
+            if (this->input_selector.empty() && this->rst_selector.empty())
+                values.assign( this->value );
+            else {
+                if (this->rst_selector.empty())
+                    values.assign(this->input_selector[0], this->value);
+                else {
+                    for (const auto& wgname : this->rst_selector)
+                        values.assign(wgname, this->value);
+                }
+            }
+        }
+
         bool operator==(const AssignRecord& data) const {
-            return selector == data.selector &&
-                report_step == data.report_step &&
-                      value == data.value;
+            return input_selector == data.input_selector &&
+                   rst_selector == data.rst_selector &&
+                   report_step == data.report_step &&
+                   value == data.value;
         }
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(selector);
+            serializer(input_selector);
+            serializer(rst_selector);
             serializer(value);
             serializer(report_step);
         }
@@ -61,12 +92,14 @@ public:
 
     UDQAssign();
     UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value, std::size_t report_step);
+    UDQAssign(const std::string& keyword, const std::unordered_set<std::string>& selector, double value, std::size_t report_step);
 
     static UDQAssign serializeObject();
 
     const std::string& keyword() const;
     UDQVarType var_type() const;
     void add_record(const std::vector<std::string>& selector, double value, std::size_t report_step);
+    void add_record(const std::unordered_set<std::string>& rst_selector, double value, std::size_t report_step);
     UDQSet eval(const std::vector<std::string>& wells) const;
     UDQSet eval() const;
     std::size_t report_step() const;
