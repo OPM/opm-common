@@ -12,7 +12,8 @@
     },
     {
       "name": "MODEL",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "default": "TAB"
     }
   ]
 }
