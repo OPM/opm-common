@@ -174,11 +174,7 @@ void GuideRate::group_compute(const std::string& wgname,
                     };
                 }
 
-                const auto& grv = iter->second->curr;
-                const auto time_diff = sim_time - grv.sim_time;
-                if (config.model().update_delay() > time_diff) {
-                    return;
-                }
+                if (!this->guide_rates_expired && this->values.at(wgname)->curr.value > 0) return;
             }
         }
 
@@ -257,13 +253,11 @@ void GuideRate::well_compute(const std::string& wgname,
             return;
         }
 
-        auto iter = this->values.find(wgname);
-        if (iter != this->values.end()) {
-            const auto& grv = iter->second->curr;
-            const auto time_diff = sim_time - grv.sim_time;
-            if (config.model().update_delay() > time_diff) {
-                return;
-            }
+        // Newly opened wells without calculated guide rates always need to update guide rates
+        // With a non-zero guide rate value basically mean the well exisits in GuideRate already, aka, NOT new well
+        if (!this->guide_rates_expired &&
+            (this->values.count(wgname) > 0 && this->values.at(wgname)->curr.value > 0) ) {
+            return;
         }
 
         const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
@@ -300,9 +294,7 @@ void GuideRate::assign_grvalue(const std::string&    wgname,
         // We've advanced in time since we previously calculated/stored this
         // guiderate value.  Push current value into the past and prepare to
         // capture new value.
-        using std::swap;
-
-        swap(v->prev, v->curr);
+        std::swap(v->prev, v->curr);
     }
 
     v->curr = std::move(value);
@@ -332,6 +324,29 @@ double GuideRate::get_grvalue_result(const GRValState& gr) const
     return (gr.curr.sim_time < 0.0)
         ? 0.0
         : std::max(gr.curr.value, 0.0);
+}
+
+
+void GuideRate::updateGuideRateExpiration(double sim_time, size_t report_step)
+{
+    const auto& config = this->schedule[report_step].guide_rate();
+
+    if (!config.has_model()) {
+        this->guide_rates_expired = false;
+        return;
+    }
+
+    // getting the last update time
+    double last_update_time = std::numeric_limits<double>::max();
+    for ([[maybe_unused]] const auto& [wgname, value] : this->values) {
+        const double update_time = value->curr.sim_time;
+        if (value->curr.value > 0 && update_time < last_update_time) {
+            last_update_time = update_time;
+        }
+    }
+
+    const double update_delay = config.model().update_delay();
+    this->guide_rates_expired = (sim_time >= (last_update_time + update_delay));
 }
 
 }
