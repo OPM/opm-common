@@ -493,6 +493,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE2.X0060
           tests/PYACTION.DATA
           tests/0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA
+          tests/MOD4_TEST_IGRP-DATA.DATA
           tests/2_WLIFT_MODEL5_NOINC.DATA
           tests/TEST_NETWORK_ALL.DATA
           tests/TEST_WLIST.DATA
