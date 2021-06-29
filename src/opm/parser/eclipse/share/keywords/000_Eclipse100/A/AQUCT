@@ -82,13 +82,15 @@
       "name": "INI_SALT",
       "value_type": "DOUBLE",
       "default": 0,
-      "dimension": "Salinity"
+      "dimension": "Salinity",
+      "comment": "Not supported"
     },
     {
       "item": 13,
       "name": "TEMP_AQUIFER",
       "value_type": "DOUBLE",
-      "dimension": "Temperature"
+      "dimension": "Temperature",
+      "comment": "Not supported"
     }
   ]
 }

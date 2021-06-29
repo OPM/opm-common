@@ -6,22 +6,28 @@
   "size": 1,
   "items": [
     {
+      "item": 1,
       "name": "ROOTNAME",
       "value_type": "STRING",
       "default": "BASE"
     },
     {
+      "item": 2,
       "name": "REPORTNUMBER",
       "value_type": "INT"
     },
     {
+      "item": 3,
       "name": "SAVEFILE",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "comment": "Not supported"
     },
     {
+      "item": 4,
       "name": "SAVEFILE_FORMAT",
       "value_type": "STRING",
-      "default": "UNFORMATTED"
+      "default": "UNFORMATTED",
+      "comment": "Not supported"
     }
   ]
 }

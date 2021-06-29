@@ -66,13 +66,15 @@
       "item": 12,
       "name": "VEFRAC",
       "value_type": "DOUBLE",
-      "default": 1
+      "default": 1,
+      "comment": "Not supported"
     },
     {
       "item": 13,
       "name": "VEFRACP",
       "value_type": "DOUBLE",
-      "default": 1
+      "default": 1,
+      "comment": "Not supported"
     }
   ]
 }
