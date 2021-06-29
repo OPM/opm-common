@@ -112,7 +112,6 @@ int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const
     return level;
 }
 
-
 void groupCurrentlyProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep, bool& controllable)
 {
     using wellCtrlMode   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
