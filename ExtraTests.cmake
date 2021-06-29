@@ -18,13 +18,13 @@ set(_testdir ${PROJECT_SOURCE_DIR}/tests/parser/data)
 opm_add_test(ParserTests
              SOURCES tests/parser/ParserTests.cpp
              LIBRARIES ${TEST_LIBS}
-             TEST_ARGS ${_testdir}/)
+             TEST_ARGS -- ${_testdir}/)
 list(APPEND EXTRA_TESTS ParserTests)
 
 opm_add_test(ParserIncludeTests
              SOURCES tests/parser/ParserIncludeTests.cpp
              LIBRARIES ${TEST_LIBS}
-             TEST_ARGS ${_testdir}/parser/)
+             TEST_ARGS -- ${_testdir}/parser/)
 target_compile_definitions(ParserIncludeTests PRIVATE
                            -DHAVE_CASE_SENSITIVE_FILESYSTEM=${HAVE_CASE_SENSITIVE_FILESYSTEM})
 list(APPEND EXTRA_TESTS ParserIncludeTests)
@@ -32,13 +32,13 @@ list(APPEND EXTRA_TESTS ParserIncludeTests)
 opm_add_test(PvtxTableTests
              SOURCES tests/parser/PvtxTableTests.cpp
              LIBRARIES ${TEST_LIBS}
-             TEST_ARGS ${_testdir}/integration_tests/)
+             TEST_ARGS -- ${_testdir}/integration_tests/)
 list(APPEND EXTRA_TESTS PvtxTableTests)
 
 opm_add_test(EclipseStateTests
              SOURCES tests/parser/EclipseStateTests.cpp
              LIBRARIES ${TEST_LIBS}
-             TEST_ARGS ${_testdir}/integration_tests/)
+             TEST_ARGS -- ${_testdir}/integration_tests/)
 list(APPEND EXTRA_TESTS EclipseStateTests)
 
 foreach (test BoxTest
@@ -55,7 +55,7 @@ foreach (test BoxTest
   opm_add_test(${test}
                SOURCES tests/parser/integration/${test}.cpp
                LIBRARIES ${TEST_LIBS}
-               TEST_ARGS ${_testdir}/integration_tests/)
+               TEST_ARGS -- ${_testdir}/integration_tests/)
   list(APPEND EXTRA_TESTS ${test})
 endforeach ()
 
