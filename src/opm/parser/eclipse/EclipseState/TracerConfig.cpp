@@ -78,6 +78,10 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                 //else
                 //    inv_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
                 unit_system.getDimension(UnitSystem::measure::liquid_surface_volume); //hush unused-warning ...
+
+                // Convert unit names to upper-case
+                std::transform(unit_string.begin(), unit_string.end(), unit_string.begin(),
+                    [](unsigned char c){ return std::toupper(c); });
             }
 
             std::string tracer_field = "TBLKF" + name;
@@ -164,8 +168,9 @@ std::string TracerConfig::get_unit_string(const UnitSystem& unit_system, const s
                 std::string unit_string(tracer.unit_string);
                 if (tracer.unit_string != "") {
                     if (tracer_kw[3] == 'R') {
-                       unit_string += "/";
-                       unit_string += unit_system.name(Opm::UnitSystem::measure::time);
+                       std::string rateName = unit_system.name(Opm::UnitSystem::measure::rate);
+                       std::size_t found = rateName.find('/');
+                       unit_string += rateName.substr(found);
                     }
                     else if (tracer_kw[3] == 'T') {
                     }
