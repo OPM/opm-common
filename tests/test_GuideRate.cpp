@@ -203,6 +203,7 @@ BOOST_AUTO_TEST_CASE(P1_First)
     const auto stm  = 0.0;
     const auto rpt  = size_t{1};
 
+    cse.gr.updateGuideRateExpiration(stm, rpt);
     cse.gr.compute("P1", rpt, stm, wopp, wgpp, wwpp);
 
     const auto orat = 2.0;
@@ -246,6 +247,7 @@ BOOST_AUTO_TEST_CASE(P2_Second)
         const auto stm  = 0.0;
         const auto rpt  = size_t{1};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P2", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -256,6 +258,7 @@ BOOST_AUTO_TEST_CASE(P2_Second)
         const auto stm  = 10.0*Opm::unit::second; // Before recalculation delay
         const auto rpt  = size_t{1};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P2", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -295,6 +298,7 @@ BOOST_AUTO_TEST_CASE(P2_Second)
         const auto stm  = 10.0*Opm::unit::day; // After recalculation delay
         const auto rpt  = size_t{3};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P2", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -336,6 +340,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
         const auto stm  = 0.0;
         const auto rpt  = size_t{1};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -346,6 +351,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
         const auto stm  = 10.0*Opm::unit::day;
         const auto rpt  = size_t{3};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -356,6 +362,7 @@ BOOST_AUTO_TEST_CASE(P_Third)
         const auto stm  = 20.0*Opm::unit::day;
         const auto rpt  = size_t{4};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -403,6 +410,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
         const auto stm  = 0.0;
         const auto rpt  = size_t{1};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -413,6 +421,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
         const auto stm  = 10.0*Opm::unit::day;
         const auto rpt  = size_t{3};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -423,6 +432,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
         const auto stm  = 20.0*Opm::unit::day;
         const auto rpt  = size_t{4};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -470,6 +480,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
         const auto stm  = 0.0;
         const auto rpt  = size_t{1};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -480,6 +491,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
         const auto stm  = 10.0*Opm::unit::day;
         const auto rpt  = size_t{3};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 
@@ -490,6 +502,7 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
         const auto stm  = 20.0*Opm::unit::day;
         const auto rpt  = size_t{4};
 
+        cse.gr.updateGuideRateExpiration(stm, rpt);
         cse.gr.compute("P", rpt, stm, wopp, wgpp, wwpp);
     }
 

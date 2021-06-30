@@ -92,7 +92,7 @@ struct GRValState {
 
 public:
     GuideRate(const Schedule& schedule);
-    void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     void compute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
     double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
     double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
@@ -101,6 +101,8 @@ public:
     bool has(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
     void init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value);
+
+    void updateGuideRateExpiration(double sim_time, size_t report_step);
 
 private:
     void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
@@ -128,6 +130,7 @@ private:
     std::unordered_map<std::string, GRValPtr> values;
     std::unordered_map<pair, double, pair_hash> injection_group_values;
     std::unordered_map<std::string, RateVector > potentials;
+    bool guide_rates_expired {false};
     const Schedule& schedule;
 };
 
