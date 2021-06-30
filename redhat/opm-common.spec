@@ -14,8 +14,7 @@ Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRequires:  git doxygen bc openmpi-devel mpich-devel
 %{?!el8:BuildRequires: devtoolset-8-toolchain}
-%{?el8:BuildRequires: boost-devel}
-%{?!el8:BuildRequires: boost148-devel}
+BuildRequires: boost-devel
 BuildRequires: cmake3
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
@@ -110,7 +109,7 @@ This package contains the documentation files for opm-common
 %build
 mkdir serial
 cd serial
-cmake3 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{!?el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran} %{?!el8:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
+cmake3 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{!?el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran} ..
 make %{?_smp_mflags}
 make test
 cd ..
@@ -119,7 +118,7 @@ mkdir openmpi
 cd openmpi
 %{?el6:module load openmpi-x86_64}
 %{?!el6:module load mpi/openmpi-x86_64}
-cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran} %{?!el8:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran} ..
 make %{?_smp_mflags}
 make test
 cd ..
@@ -130,7 +129,7 @@ cd mpich
 %{?el6:module load mpich-x86_64}
 %{?!el6:module rm mpi/openmpi-x86_64}
 %{?!el6:module load mpi/mpich-x86_64}
-cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran} %{?!el8:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran} ..
 make %{?_smp_mflags}
 make test
 
@@ -148,6 +147,7 @@ rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/opmpack.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/summary.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/compareECL.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/convertECL.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/doc/opm-common/*
 cd ..
 
 cd mpich
@@ -159,6 +159,7 @@ rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/opmpack.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/summary.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/compareECL.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/convertECL.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/doc/opm-common/*
 
 %clean
 rm -rf %{buildroot}
