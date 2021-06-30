@@ -100,6 +100,10 @@ struct SummaryConfigContext {
         "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
     };
 
+    const std::vector<std::string> NMESSAGE_keywords = {
+        "MSUMBUG", "MSUMCOMM", "MSUMERR", "MSUMMESS", "MSUMPROB", "MSUMWARN"
+    };
+
     const std::vector<std::string> DATE_keywords = {
          "DAY", "MONTH", "YEAR"
     };
@@ -112,6 +116,7 @@ struct SummaryConfigContext {
       be included.
     */
     const std::map<std::string, std::vector<std::string>> meta_keywords = {{"PERFORMA", PERFORMA_keywords},
+                                                                           {"NMESSAGE", NMESSAGE_keywords},
                                                                            {"DATE", DATE_keywords},
                                                                            {"ALL", ALL_keywords},
                                                                            {"FMWSET", FMWSET_keywords},

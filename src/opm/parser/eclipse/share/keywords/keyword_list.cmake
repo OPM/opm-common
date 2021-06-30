@@ -522,6 +522,7 @@ set( keywords
      000_Eclipse100/N/NINEPOIN
      000_Eclipse100/N/NMATOPTS
      000_Eclipse100/N/NMATRIX
+     000_Eclipse100/N/NMESSAGE
      000_Eclipse100/N/NNC
      000_Eclipse100/N/NNEWTF
      000_Eclipse100/N/NOCASC
