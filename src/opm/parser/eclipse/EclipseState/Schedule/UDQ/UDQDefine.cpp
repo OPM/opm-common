@@ -187,7 +187,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
                 continue;
             }
 
-            const std::vector<std::string> splitters = {"TU*[]", "(", ")", "[", "]", ",", "+", "-", "/", "*", "==", "!=", "^", ">=", "<=", ">", "<"};
+            const std::vector<std::string> splitters = {" ", "TU*[]", "(", ")", "[", "]", ",", "+", "-", "/", "*", "==", "!=", "^", ">=", "<=", ">", "<"};
             size_t offset = 0;
             while (offset < item.size()) {
                 auto token = next_token(item, offset, splitters);
