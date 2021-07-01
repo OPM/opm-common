@@ -29,6 +29,16 @@ WellMatcher::WellMatcher(const NameOrder& well_order) :
 {
 }
 
+WellMatcher::WellMatcher(std::initializer_list<std::string> wells) :
+    m_well_order(wells)
+{
+}
+
+WellMatcher::WellMatcher(const std::vector<std::string>& wells) :
+    m_well_order(wells)
+{
+}
+
 WellMatcher::WellMatcher(const NameOrder& well_order, const WListManager &wlm) :
     m_well_order(well_order),
     m_wlm(wlm)

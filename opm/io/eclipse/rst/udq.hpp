@@ -22,7 +22,9 @@
 #include <cstddef>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
@@ -33,7 +35,25 @@ namespace RestartIO {
 
 struct RstHeader;
 
-struct RstUDQ {
+class RstUDQ {
+public:
+    struct RstDefine {
+        RstDefine(const std::string& expression_arg, UDQUpdate status_arg);
+
+        std::string expression;
+        UDQUpdate status;
+        std::vector<std::pair<std::string, double>> values;
+        std::optional<double> field_value;
+    };
+
+    struct RstAssign {
+        void update_value(const std::string& name, double new_value);
+
+        std::optional<double> value;
+        std::unordered_set<std::string> selector;
+    };
+
+
     RstUDQ(const std::string& name_arg,
            const std::string& unit_arg,
            const std::string& define_arg,
@@ -42,19 +62,22 @@ struct RstUDQ {
     RstUDQ(const std::string& name_arg,
            const std::string& unit_arg);
 
-    void add_well_value(const std::string& wname, double value);
-    void add_group_value(const std::string& wname, double value);
-    void add_field_value(double value);
+    void add_value(double value);
+    void add_value(const std::string& wgname, double value);
+
+    bool is_define() const;
+    double assign_value() const;
+    const std::unordered_set<std::string>& assign_selector() const;
+    const std::string& expression() const;
+    const std::vector<std::pair<std::string, double>>& values() const;
+    std::optional<double> field_value() const;
 
     std::string name;
     std::string unit;
     UDQVarType var_type;
 
-    std::optional<std::string> define;
-    UDQUpdate status;
-    std::vector<std::pair<std::string, double>> well_values;
-    std::vector<std::pair<std::string, double>> group_values;
-    double field_value;
+private:
+    std::variant<std::monostate, RstDefine, RstAssign> data;
 };
 
 

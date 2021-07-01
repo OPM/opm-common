@@ -28,11 +28,18 @@
 
 
 namespace Opm {
+
+namespace RestartIO {
+    class RstState;
+}
+
 class UDQState {
 public:
     UDQState(double undefined);
 
     bool has(const std::string& key) const;
+    void load_rst(const RestartIO::RstState& rst_state);
+
     bool has_well_var(const std::string& well, const std::string& key) const;
     bool has_group_var(const std::string& group, const std::string& key) const;
 

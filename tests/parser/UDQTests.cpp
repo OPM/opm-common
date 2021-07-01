@@ -1488,7 +1488,7 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK_EQUAL( usage.IUAD_size(), 0U );
 
     UDAValue uda1("WUX");
-    conf.add_assign(uda1.get<std::string>(), {}, 100, 0);
+    conf.add_assign(uda1.get<std::string>(), std::vector<std::string>{}, 100, 0);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
     BOOST_CHECK_EQUAL( usage.IUAD_size(), 1U);

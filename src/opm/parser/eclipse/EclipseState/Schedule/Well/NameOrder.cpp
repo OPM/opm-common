@@ -35,6 +35,11 @@ NameOrder::NameOrder(const std::vector<std::string>& names) {
         this->add(w);
 }
 
+NameOrder::NameOrder(std::initializer_list<std::string> names) {
+    for (const auto& w : names)
+        this->add(w);
+}
+
 bool NameOrder::has(const std::string& wname) const {
     return (this->m_index_map.count(wname) != 0);
 }

@@ -19,6 +19,7 @@
 #ifndef WELL_ORDER_HPP
 #define WELL_ORDER_HPP
 
+#include <initializer_list>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -36,6 +37,7 @@ using Map = std::unordered_map<std::string, std::size_t>;
 class NameOrder {
 public:
     NameOrder() = default;
+    explicit NameOrder(std::initializer_list<std::string> names);
     explicit NameOrder(const std::vector<std::string>& names);
     void add(const std::string& name);
     std::vector<std::string> sort(std::vector<std::string> names) const;
