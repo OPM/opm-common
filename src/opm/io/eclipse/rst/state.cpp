@@ -35,6 +35,31 @@
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
 
+namespace {
+    std::string
+    udq_define(const std::vector<std::string>& zudl,
+               const std::size_t               udq_index)
+    {
+        auto zudl_begin = zudl.begin();
+        auto zudl_end = zudl.begin();
+        std::advance( zudl_begin, (udq_index + 0) * Opm::UDQDims::entriesPerZUDL() );
+        std::advance( zudl_end  , (udq_index + 1) * Opm::UDQDims::entriesPerZUDL() );
+
+        auto define = std::accumulate(zudl_begin, zudl_end, std::string{}, std::plus<>());
+        if (!define.empty() && (define[0] == '~')) {
+            define[0] = '-';
+        }
+
+        return define;
+    }
+
+    Opm::UDQUpdate udq_update(const std::vector<int>& iudq,
+                              const std::size_t       udq_index)
+    {
+        return Opm::UDQ::updateType(iudq[udq_index * Opm::UDQDims::entriesPerIUDQ()]);
+    }
+}
+
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace Opm { namespace RestartIO {
@@ -186,27 +211,15 @@ void RstState::add_udqs(const std::vector<int>& iudq,
                         const std::vector<double>& dudg,
                         const std::vector<double>& dudf) {
 
-    for (auto udq_index = 0; udq_index < this->header.num_udq(); udq_index++) {
-        const auto& name = zudn[udq_index * UDQDims::entriesPerZUDN()];
-        const auto& unit = zudn[udq_index * UDQDims::entriesPerZUDN() + 1];
+    for (auto udq_index = 0*this->header.num_udq(); udq_index < this->header.num_udq(); ++udq_index) {
+        const auto& name = zudn[udq_index*UDQDims::entriesPerZUDN() + 0];
+        const auto& unit = zudn[udq_index*UDQDims::entriesPerZUDN() + 1];
 
-        auto zudl_begin = zudl.begin();
-        auto zudl_end = zudl.begin();
-        std::advance( zudl_begin, udq_index * UDQDims::entriesPerZUDL() );
-        std::advance( zudl_end, (udq_index + 1) * UDQDims::entriesPerZUDL() );
-        auto udq_define = std::accumulate(zudl_begin, zudl_end, std::string{}, std::plus<std::string>());
-        if (udq_define.empty())
-            this->udqs.emplace_back(name, unit);
-        else {
-            auto status_int = iudq[udq_index * UDQDims::entriesPerIUDQ()];
-            auto status = UDQ::updateType(status_int);
-            if (udq_define[0] == '~')
-                udq_define[0] = '-';
+        const auto define = udq_define(zudl, udq_index);
+        auto& udq = define.empty()
+            ? this->udqs.emplace_back(name, unit)
+            : this->udqs.emplace_back(name, unit, define, udq_update(iudq, udq_index));
 
-            this->udqs.emplace_back(name, unit, udq_define, status);
-        }
-
-        auto& udq = this->udqs.back();
         if (udq.var_type == UDQVarType::WELL_VAR) {
             for (std::size_t well_index = 0; well_index < this->wells.size(); well_index++) {
                 auto well_value = dudw[ udq_index * this->header.max_wells_in_field + well_index];
