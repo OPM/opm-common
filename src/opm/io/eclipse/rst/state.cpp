@@ -209,7 +209,11 @@ void RstState::add_udqs(const std::vector<int>& iudq,
                         const std::vector<std::string>& zudl,
                         const std::vector<double>& dudw,
                         const std::vector<double>& dudg,
-                        const std::vector<double>& dudf) {
+                        const std::vector<double>& dudf)
+{
+    auto well_var  = 0*this->header.num_wells;
+    auto group_var = 0*this->header.ngroup;
+    auto field_var = 0*this->header.num_udq();
 
     for (auto udq_index = 0*this->header.num_udq(); udq_index < this->header.num_udq(); ++udq_index) {
         const auto& name = zudn[udq_index*UDQDims::entriesPerZUDN() + 0];
@@ -222,30 +226,36 @@ void RstState::add_udqs(const std::vector<int>& iudq,
 
         if (udq.var_type == UDQVarType::WELL_VAR) {
             for (std::size_t well_index = 0; well_index < this->wells.size(); well_index++) {
-                auto well_value = dudw[ udq_index * this->header.max_wells_in_field + well_index];
+                auto well_value = dudw[ well_var * this->header.max_wells_in_field + well_index ];
                 if (well_value == UDQ::restart_default)
                     continue;
 
                 const auto& well_name = this->wells[well_index].name;
                 udq.add_value(well_name, well_value);
             }
+
+            ++well_var;
         }
 
         if (udq.var_type == UDQVarType::GROUP_VAR) {
             for (std::size_t group_index = 0; group_index < this->groups.size(); group_index++) {
-                auto group_value = dudg[ udq_index * this->header.ngroup + group_index];
+                auto group_value = dudg[ group_var * this->header.max_groups_in_field + group_index ];
                 if (group_value == UDQ::restart_default)
                     continue;
 
                 const auto& group_name = this->groups[group_index].name;
                 udq.add_value(group_name, group_value);
             }
+
+            ++group_var;
         }
 
         if (udq.var_type == UDQVarType::FIELD_VAR) {
-            auto field_value = dudf[ udq_index ];
+            auto field_value = dudf[ field_var ];
             if (field_value != UDQ::restart_default)
                 udq.add_value(field_value);
+
+            ++field_var;
         }
     }
 }
