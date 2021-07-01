@@ -43,10 +43,16 @@ namespace Opm {
     class KeywordLocation;
     class WellMatcher;
 
+    namespace RestartIO {
+        class RstState;
+    }
+
+
     class UDQConfig {
     public:
         UDQConfig() = default;
         explicit UDQConfig(const UDQParams& params);
+        UDQConfig(const UDQParams& params, const RestartIO::RstState& rst_state);
 
         static UDQConfig serializeObject();
 
@@ -58,6 +64,7 @@ namespace Opm {
         void add_unit(const std::string& keyword, const std::string& unit);
         void add_update(const std::string& keyword, std::size_t report_step, const KeywordLocation& location, const std::vector<std::string>& data);
         void add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value, std::size_t report_step);
+        void add_assign(const std::string& quantity, const std::unordered_set<std::string>& selector, double value, std::size_t report_step);
         void add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression, std::size_t report_step);
 
         void eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const;
