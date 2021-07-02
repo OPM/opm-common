@@ -79,10 +79,9 @@ public:
     bool all_steps_available();
 
 private:
-    filesystem::path inputFileName, lodFileName;
+    filesystem::path inputFileName;
     int nI, nJ, nK, nSpecFiles;
-    bool fromSingleRun, lodEnabeled;
-    uint64_t lod_offset, lod_arr_size;
+    bool fromSingleRun;
     size_t nVect, nTstep;
 
     std::vector<bool> formattedFiles;
@@ -138,8 +137,6 @@ private:
     std::vector<std::tuple <std::string, uint64_t>> getListOfArrays(std::string filename, bool formatted);
     std::vector<int> makeKeywPosVector(int speInd) const;
     std::string read_string_from_disk(std::fstream& fileH, uint64_t size) const;
-    void inspect_lodsmry();
-    void Load_from_lodsmry(const std::vector<int>& keywIndVect) const;
 
     int read_ministep_formatted(std::fstream& fileH);
 };

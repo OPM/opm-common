@@ -45,11 +45,14 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/common/utility/FileSystem.hpp>
+
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/io/eclipse/ESmryOutput.hpp>
 
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
@@ -1015,7 +1018,7 @@ inline quantity temperature( const fn_args& args ) {
 
     const auto p = args.wells.find(args.schedule_wells.front()->name());
     if ((p == args.wells.end()) ||
-        (p->second.dynamicStatus == Opm::Well::Status::SHUT) || 
+        (p->second.dynamicStatus == Opm::Well::Status::SHUT) ||
         (p->second.current_control.isProducer == injection))
     {
         return zero;
@@ -3184,7 +3187,9 @@ public:
                                    const SummaryConfig& sumcfg,
                                    const EclipseGrid&   grid,
                                    const Schedule&      sched,
-                                   const std::string&   basename);
+                                   const std::string&   basename,
+                                   const bool writeEsmry
+                                  );
 
     SummaryImplementation(const SummaryImplementation& rhs) = delete;
     SummaryImplementation(SummaryImplementation&& rhs) = default;
@@ -3203,7 +3208,7 @@ public:
               const data::Aquifers&              aquifer_values,
               SummaryState&                      st) const;
 
-    void internal_store(const SummaryState& st, const int report_step);
+    void internal_store(const SummaryState& st, const int report_step, bool isSubstep);
     void write();
     PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 
@@ -3212,6 +3217,7 @@ private:
     {
         int id{0};
         int seq{-1};
+        bool isSubstep{false};
         std::vector<float> params{};
     };
 
@@ -3239,10 +3245,13 @@ private:
     SummaryOutputParameters                  outputParameters_{};
     std::unordered_map<std::string, EvalPtr> extra_parameters{};
     std::vector<std::string> valueKeys_{};
+    std::vector<std::string> valueUnits_{};
     std::vector<MiniStep>    unwritten_{};
 
     std::unique_ptr<Opm::EclIO::OutputStream::SummarySpecification> smspec_{};
     std::unique_ptr<Opm::EclIO::EclOutput> stream_{};
+
+    std::unique_ptr<Opm::EclIO::ESmryOutput> esmry_;
 
     void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
 
@@ -3256,7 +3265,7 @@ private:
 
     void configureUDQ(const SummaryConfig& summary_config, const Schedule& sched);
 
-    MiniStep& getNextMiniStep(const int report_step);
+    MiniStep& getNextMiniStep(const int report_step, bool isSubstep);
     const MiniStep& lastUnwritten() const;
 
     void write(const MiniStep& ms);
@@ -3270,7 +3279,9 @@ SummaryImplementation(const EclipseState&  es,
                       const SummaryConfig& sumcfg,
                       const EclipseGrid&   grid,
                       const Schedule&      sched,
-                      const std::string&   basename)
+                      const std::string&   basename,
+                      const bool writeEsmry
+                     )
     : grid_          (std::cref(grid))
     , es_            (std::cref(es))
     , sched_         (std::cref(sched))
@@ -3296,12 +3307,23 @@ SummaryImplementation(const EclipseState&  es,
 
     for (const auto& config_node : sumcfg.keywords("WBP*"))
         this->wbp_wells.insert( config_node.namedEntity() );
+
+    std::string esmryFileName = EclIO::OutputStream::outputFileName(this->rset_, "ESMRY");
+
+    if (Opm::filesystem::exists(esmryFileName))
+        Opm::filesystem::remove(esmryFileName);
+
+    if ((writeEsmry) and (es.cfg().io().getFMTOUT()==false))
+        this->esmry_ = std::make_unique<Opm::EclIO::ESmryOutput>(this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
+
+    if ((writeEsmry) and (es.cfg().io().getFMTOUT()))
+        OpmLog::warning("ESMRY only supported for unformatted output.  Request ignored.");
 }
 
 void Opm::out::Summary::SummaryImplementation::
-internal_store(const SummaryState& st, const int report_step)
+internal_store(const SummaryState& st, const int report_step, bool isSubstep)
 {
-    auto& ms = this->getNextMiniStep(report_step);
+    auto& ms = this->getNextMiniStep(report_step, isSubstep);
 
     const auto nParam = this->valueKeys_.size();
 
@@ -3386,6 +3408,8 @@ void Opm::out::Summary::SummaryImplementation::write()
         // No unwritten data.  Nothing to do so return early.
         return;
 
+
+
     this->createSMSpecIfNecessary();
 
     if (this->prevReportStepID_ < this->lastUnwritten().seq) {
@@ -3397,6 +3421,12 @@ void Opm::out::Summary::SummaryImplementation::write()
 
     // Eagerly output last set of parameters to permanent storage.
     this->stream_->flushStream();
+
+    if (this->esmry_ != nullptr){
+        for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i){
+            this->esmry_->write(this->unwritten_[i].params, !this->unwritten_[i].isSubstep);
+        }
+    }
 
     // Reset "unwritten" counter to reflect the fact that we've
     // output all stored ministeps.
@@ -3441,6 +3471,9 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
         const std::string& unit_string = es.getUnits().name(UnitSystem::measure::time);
         auto eval = std::make_unique<Evaluator::Time>(this->valueKeys_.back());
 
+        valueUnits_.push_back(unit_string);
+
+
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, unit_string, std::move(eval));
     }
@@ -3450,6 +3483,8 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Day>(this->valueKeys_.back());
+        valueUnits_.push_back("");
+
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
@@ -3459,6 +3494,8 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Month>(this->valueKeys_.back());
+        valueUnits_.push_back("");
+
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
@@ -3468,6 +3505,7 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Year>(this->valueKeys_.back());
+        valueUnits_.push_back("");
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
@@ -3478,6 +3516,7 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
         makeKey(kw);
 
         auto eval = std::make_unique<Evaluator::Years>(this->valueKeys_.back());
+        valueUnits_.push_back("");
 
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, kw, std::move(eval));
@@ -3502,6 +3541,7 @@ configureSummaryInput(const SummaryConfig& sumcfg,
         // This keyword has a known evaluation method.
 
         this->valueKeys_.push_back(std::move(prmDescr.uniquekey));
+        this->valueUnits_.push_back(prmDescr.unit);
 
         this->outputParameters_
             .makeParameter(node.keyword(),
@@ -3698,7 +3738,7 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
 }
 
 Opm::out::Summary::SummaryImplementation::MiniStep&
-Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step)
+Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step, bool isSubstep)
 {
     if (this->numUnwritten_ == this->unwritten_.size())
         this->unwritten_.emplace_back();
@@ -3710,6 +3750,7 @@ Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step)
 
     ms.id  = this->miniStepID_ - 1;  // MINISTEP IDs start at zero.
     ms.seq = report_step;
+    ms.isSubstep = isSubstep;
 
     ms.params.resize(this->valueKeys_.size(), 0.0f);
 
@@ -3766,8 +3807,10 @@ Summary::Summary(const EclipseState&  es,
                  const SummaryConfig& sumcfg,
                  const EclipseGrid&   grid,
                  const Schedule&      sched,
-                 const std::string&   basename)
-    : pImpl_(new SummaryImplementation(es, sumcfg, grid, sched, basename))
+                 const std::string&   basename,
+                 const bool& writeEsmry
+                )
+    : pImpl_(new SummaryImplementation(es, sumcfg, grid, sched, basename, writeEsmry))
 {}
 
 void Summary::eval(SummaryState&                      st,
@@ -3806,9 +3849,9 @@ Summary::wbp_calculators(std::size_t report_step) const
     return this->pImpl_->wbp_calculators(report_step);
 }
 
-void Summary::add_timestep(const SummaryState& st, const int report_step)
+void Summary::add_timestep(const SummaryState& st, const int report_step, bool isSubstep)
 {
-    this->pImpl_->internal_store(st, report_step);
+    this->pImpl_->internal_store(st, report_step, isSubstep);
 }
 
 void Summary::write() const
