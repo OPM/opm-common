@@ -63,6 +63,10 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 
+
+// tskille: tmp
+
+#include <iostream>
 namespace {
 
 inline std::string uppercase( std::string x ) {
@@ -235,7 +239,10 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
     */
     if (report_step > 0) {
         this->impl->summary.add_timestep( st,
-                                          report_step);
+                                          report_step,
+                                          isSubstep
+                                        );
+
         this->impl->summary.write();
     }
 

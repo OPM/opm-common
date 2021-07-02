@@ -61,7 +61,7 @@ public:
 
     ~Summary();
 
-    void add_timestep(const SummaryState& st, const int report_step);
+    void add_timestep(const SummaryState& st, const int report_step, bool isSubstep);
 
     void eval(SummaryState&                      summary_state,
               const int                          report_step,

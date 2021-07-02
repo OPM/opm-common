@@ -24,6 +24,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
+#include <opm/io/hdf5/Hdf5Util.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -1053,6 +1054,195 @@ bool ESmry::make_lodsmry_file()
 
         return true;
     }
+}
+
+bool ESmry::make_h5smry_file() const
+{
+    if (!fromSingleRun)
+        OPM_THROW(std::invalid_argument, "creating h5smry file only possible when loadBaseRunData=false");
+
+    Opm::filesystem::path path = inputFileName.parent_path();
+    Opm::filesystem::path rootName = inputFileName.stem();
+    Opm::filesystem::path smryDataFile;
+
+    smryDataFile = path / rootName += ".H5SMRY";
+
+    hid_t file_id = H5Fcreate(smryDataFile.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    std::vector<int> version = {0};
+    Opm::Hdf5IO::write_1d_hdf5(file_id, "VERSION", version );
+
+    Opm::TimeStampUTC ts( std::chrono::system_clock::to_time_t( startdat ));
+
+    std::vector<int> start_date_vect = {ts.day(), ts.month(), ts.year(),
+        ts.hour(), ts.minutes(), ts.seconds(), 0 };
+
+    Opm::Hdf5IO::write_1d_hdf5<int>(file_id, "START_DATE", start_date_vect );
+
+    Opm::Hdf5IO::write_1d_hdf5(file_id, "KEYS", keyword );
+
+    std::vector<std::string> units;
+    units.reserve(keyword.size());
+
+    for (auto key: keyword) {
+        auto it = kwunits.find(key);
+        units.push_back(it->second);
+    }
+
+    Opm::Hdf5IO::write_1d_hdf5(file_id, "UNITS", units );
+
+    std::vector<int> is_rstep;
+    is_rstep.reserve(timeStepList.size());
+
+    for (size_t i = 0; i < timeStepList.size(); i++)
+        if(std::find(seqIndex.begin(), seqIndex.end(), i) != seqIndex.end())
+            is_rstep.push_back(1);
+        else
+            is_rstep.push_back(0);
+
+    Opm::Hdf5IO::write_1d_hdf5(file_id, "RSTEP",  is_rstep );
+
+    this->LoadData();
+
+    Opm::Hdf5IO::write_2d_hdf5(file_id, "SMRYDATA",  vectorData );
+
+    H5Fclose(file_id);
+
+    return true;
+}
+
+
+bool ESmry::make_h5_eclrun_file() const
+{
+    if (!fromSingleRun)
+        OPM_THROW(std::invalid_argument, "creating h5smry file only possible when loadBaseRunData=false");
+
+    Opm::filesystem::path path = inputFileName.parent_path();
+    Opm::filesystem::path rootName = inputFileName.stem();
+    Opm::filesystem::path smryDataFile;
+    Opm::filesystem::path smspecFile;
+
+    smryDataFile = path / rootName += ".h5";
+    smspecFile = path / rootName += ".SMSPEC";
+
+    std::cout << smspecFile << std::endl;
+    Opm::EclIO::EclFile smspec(smspecFile);
+
+    auto keyw_smspec = smspec.get<std::string>("KEYWORDS");
+    auto wgname_smspec = smspec.get<std::string>("WGNAMES");
+    auto units_smspec = smspec.get<std::string>("UNITS");
+    auto nums_smspec = smspec.get<int>("NUMS");
+
+
+    std::vector<std::string> input_keywords;
+    input_keywords.reserve(keyw_smspec.size());
+
+    for (size_t n =0; n < keyw_smspec.size();n++){
+        auto key = makeKeyString(keyw_smspec[n], wgname_smspec[n], nums_smspec[n]);
+
+        if (key.size()==0)
+            key = ":+:+:+:+";
+
+        input_keywords.push_back(key);
+    }
+
+    std::vector<std::string> input_keywords_sorted = input_keywords;
+    std::sort (input_keywords_sorted.begin(), input_keywords_sorted.end());
+
+    std::vector<std::string> data_set_smry_key;
+    std::vector<std::string> data_set_names;
+    std::vector<int> data_set_index;
+
+    data_set_names.reserve(input_keywords_sorted.size());
+    data_set_index.reserve(input_keywords_sorted.size());
+
+    for (size_t n = 0; n < input_keywords_sorted.size(); n++){
+
+        if (input_keywords_sorted[n] !=":+:+:+:+") {
+
+            std::vector<std::string>::iterator it = std::find(data_set_names.begin(), data_set_names.end(), input_keywords_sorted[n]);
+
+            if (it == data_set_names.end()){
+
+                it = std::find(input_keywords.begin(), input_keywords.end(), input_keywords_sorted[n]);
+
+                int ind = std::distance(input_keywords.begin(), it);
+
+                data_set_names.push_back(input_keywords_sorted[n]);
+                data_set_index.push_back(ind);
+            }
+        }
+    }
+
+    hid_t fapl_id = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+
+    hid_t file_id = H5Fcreate(smryDataFile.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
+
+
+    std::vector<std::string> dset_name_list;
+    dset_name_list.reserve(keyword.size());
+
+    Opm::TimeStampUTC ts( std::chrono::system_clock::to_time_t( startdat ));
+
+    std::vector<int> start_date_vect = {ts.day(), ts.month(), ts.year(),
+        ts.hour(), ts.minutes(), ts.seconds(), 0 };
+
+    if (H5Gcreate2(file_id, "/general", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) < 0)
+        throw std::runtime_error("Failed creating sub group general in h5smry file");
+
+    std::vector<int> version = {1, 7};
+
+    std::string name = rootName.string() + ".SMSPEC";
+
+    Opm::Hdf5IO::write_str_variable(file_id, "/general/name", name);
+    Opm::Hdf5IO::write_1d_hdf5(file_id, "/general/start_date",  start_date_vect);
+
+    auto time_data = get("TIME");
+
+    Opm::Hdf5IO::write_1d_hdf5<float>(file_id, "/general/time",  time_data);
+    Opm::Hdf5IO::write_1d_hdf5<int>(file_id, "/general/version",  version);
+
+    if (H5Gcreate2(file_id, "/summary_vectors", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) < 0)
+        throw std::runtime_error("Failed creating sub group /summary_vectors in h5smry file");
+
+    this->LoadData();
+
+    std::set<std::string> sub_groups;
+
+    for (size_t n = 0; n < data_set_names.size(); n++) {
+
+        int ind = data_set_index[n];
+        std::string keyw = keyw_smspec[ind];
+        auto smry_data = get(data_set_names[n]);
+
+        std::string group_name = std::string("/summary_vectors/") + keyw;
+
+
+        if (sub_groups.find(keyw) == sub_groups.end()) {
+
+            if (H5Gcreate2(file_id, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) < 0)
+                throw std::runtime_error("Failed creating sub group " + group_name + " in h5smry file");
+
+            sub_groups.insert(keyw);
+        }
+
+        group_name = group_name + std::string("/") + std::to_string(ind);
+
+        std::string array_name = group_name + std::string("/values");
+
+        if (H5Gcreate2(file_id, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) < 0)
+                throw std::runtime_error("Failed creating sub group " + group_name + " in h5smry file");
+
+        Opm::Hdf5IO::write_1d_hdf5<float>(file_id, array_name,  smry_data);
+
+        dset_name_list.push_back(array_name);
+    }
+
+
+    H5Fclose(file_id);
+
+    return true;
 }
 
 

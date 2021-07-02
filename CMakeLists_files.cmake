@@ -279,6 +279,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/ESmry_write_rsm.cpp
           src/opm/io/eclipse/OutputStream.cpp
+          src/opm/io/eclipse/LODSmryOutput.cpp
           src/opm/io/eclipse/RestartFileView.cpp
           src/opm/io/eclipse/SummaryNode.cpp
           src/opm/io/eclipse/rst/connection.cpp
@@ -288,6 +289,9 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/rst/segment.cpp
           src/opm/io/eclipse/rst/state.cpp
           src/opm/io/eclipse/rst/well.cpp
+          src/opm/io/hdf5/Hdf5Util.cpp
+          src/opm/io/hdf5/H5Smry.cpp
+          src/opm/io/hdf5/H5SmryOutput.cpp
           src/opm/output/eclipse/ActiveIndexByColumns.cpp
           src/opm/output/eclipse/AggregateActionxData.cpp
           src/opm/output/eclipse/AggregateAquiferData.cpp
@@ -542,6 +546,8 @@ if(ENABLE_ECL_INPUT)
     examples/opmhash.cpp
     examples/wellgraph.cpp
     examples/make_lodsmry.cpp
+    examples/make_h5.cpp
+    examples/read_sim.cpp
   )
 endif()
 
@@ -850,6 +856,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ESmry.hpp
         opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
+        opm/io/eclipse/LODSmryOutput.hpp
         opm/io/eclipse/RestartFileView.hpp
         opm/io/eclipse/SummaryNode.hpp
         opm/io/eclipse/rst/connection.hpp
@@ -859,6 +866,9 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/rst/state.hpp
         opm/io/eclipse/rst/udq.hpp
         opm/io/eclipse/rst/well.hpp
+        opm/io/hdf5/Hdf5Util.hpp
+        opm/io/hdf5/H5Smry.hpp
+        opm/io/hdf5/H5SmryOutput.hpp
         opm/output/data/Aquifer.hpp
         opm/output/data/Cells.hpp
         opm/output/data/GuideRateValue.hpp

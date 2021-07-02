@@ -59,6 +59,8 @@ public:
     void LoadData() const;
 
     bool make_lodsmry_file();
+    bool make_h5smry_file() const;
+    bool make_h5_eclrun_file() const;
 
     time_point startdate() const { return startdat; }
 
