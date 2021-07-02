@@ -352,7 +352,7 @@ private:
         Scalar M_CO2 = CO2::molarMass();
         Scalar M_H2O = H2O::molarMass();
 
-        const LhsEval& tempC = temperature - 273.15;        /* tempC : temperature in °C */
+        const LhsEval& tempC = temperature - 273.15;        /* tempC : temperature in Â°C */
         const LhsEval& rho_pure = H2O::liquidDensity(temperature, pl, extrapolate);
         // calculate the mole fraction of CO2 in the liquid. note that xlH2O is available
         // as a function parameter, but in the case of a pure gas phase the value of M_T
