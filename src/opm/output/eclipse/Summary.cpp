@@ -2945,6 +2945,11 @@ namespace Evaluator {
 
         const auto prm = this->paramFunction_(args);
 
+        std::string unit_string_tracer = this->es_.tracer().get_unit_string(this->es_.getUnits(), this->node_->keyword);
+        if (unit_string_tracer != "") { //Non-default unit for tracer amount.
+            return unit_string_tracer;
+        }
+
         return this->es_.getUnits().name(prm.unit);
     }
 

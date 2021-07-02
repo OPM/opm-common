@@ -56,15 +56,33 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
         for (const auto& record : keyword) {
             const auto& name = record.getItem<TR::NAME>().get<std::string>(0);
             Phase phase = phase_from_string(record.getItem<TR::FLUID>().get<std::string>(0));
-            double inv_volume = 1.0; // TODO: Proper scaling of c input must also take into account item 3 from kw TRACER.
-                                     //       For now we assume this to be defaulted, leading to unit scaling (vol/vol).
-            if (!record.getItem<TR::UNIT>().defaultApplied(0))
-                throw std::runtime_error("Non-default unit not supported, tracer " + name);
-            //if (phase == Phase::GAS)
-            //    inv_volume = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
-            //else
-            //    inv_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
-            unit_system.getDimension(UnitSystem::measure::liquid_surface_volume); //hush unused-warning ...
+            double inv_volume = 1.0; // Default scaling (vol/vol).
+            std::string unit_string = "";
+            if (!record.getItem<TR::UNIT>().defaultApplied(0)) {
+                unit_string = record.getItem<TR::UNIT>().get<std::string>(0);
+                logger(keyword.location().format("Non-default tracer unit [" + unit_string + "] from {keyword} in {file} line {line}"));
+                // Non-default tracer units can be "anything".  For now we just keep it as a "tag", and make no
+                // attempts to relate it to physical quantities recognized by the simulator.
+                //   We also leave the denominator of the concentration fraction as it is, and do not convert it to
+                // simulator-internal volume. Thus concentrations will be _wrong_ in simulator units but _correct_
+                // in io-units during computations. Since the passive tracers curently considered have no physical impact,
+                // this should be ok. TODO: However, for tracers where correct quantity matters (e.g. chemical reactions)
+                // proper scaling also for non-default tracer units will be needed.
+
+                // Correct unit names for non-default tracer units are generated in the method 'get_unit_string' below,
+                // and is output by "hijacking" the normal unit-name generating procedure.
+
+                // Towards "proper" scaling:
+                //if (phase == Phase::GAS)
+                //    inv_volume = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
+                //else
+                //    inv_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
+                unit_system.getDimension(UnitSystem::measure::liquid_surface_volume); //hush unused-warning ...
+
+                // Convert unit names to upper-case
+                std::transform(unit_string.begin(), unit_string.end(), unit_string.begin(),
+                    [](unsigned char c){ return std::toupper(c); });
+            }
 
             std::string tracer_field = "TBLKF" + name;
             if (deck.hasKeyword(tracer_field)) {
@@ -84,11 +102,11 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                     for (auto& c : solution_concentration)
                         c *= inv_volume;
 
-                    this->tracers.emplace_back(name, phase, std::move(free_concentration), std::move(solution_concentration)) ;
+                    this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration), std::move(solution_concentration)) ;
                     continue;
                 }
 
-                this->tracers.emplace_back(name, phase, std::move(free_concentration)) ;
+                this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration)) ;
                 continue;
             }
 
@@ -104,12 +122,12 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                     const auto& deck_item_solution = tracer_keyword_solution.getRecord(0).getItem(0);
                     logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
-                    this->tracers.emplace_back(name, phase, TracerVdTable(deck_item, inv_volume),
+                    this->tracers.emplace_back(name, unit_string, phase, TracerVdTable(deck_item, inv_volume),
                                                             TracerVdTable(deck_item_solution, inv_volume)) ;
                     continue;
                 }
 
-                this->tracers.emplace_back(name, phase, TracerVdTable(deck_item, inv_volume));
+                this->tracers.emplace_back(name, unit_string, phase, TracerVdTable(deck_item, inv_volume));
                 continue;
             }
 
@@ -121,7 +139,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 TracerConfig TracerConfig::serializeObject()
 {
     TracerConfig result;
-    result.tracers = {{"test", Phase::OIL, {1.0}}};
+    result.tracers = {{"test", "", Phase::OIL, {1.0}}};
 
     return result;
 }
@@ -140,6 +158,38 @@ const std::vector<TracerConfig::TracerEntry>::const_iterator TracerConfig::end()
 
 bool TracerConfig::operator==(const TracerConfig& other) const {
     return this->tracers == other.tracers;
+}
+
+std::string TracerConfig::get_unit_string(const UnitSystem& unit_system, const std::string & tracer_kw) const {
+    if (tracer_kw.length() > 4 ) {
+        std::string tracer_name = tracer_kw.substr(4);
+        for (const auto& tracer : tracers) {
+            if (tracer.name == tracer_name) {
+                std::string unit_string(tracer.unit_string);
+                if (tracer.unit_string != "") {
+                    if (tracer_kw[3] == 'R') {
+                       std::string rateName = unit_system.name(Opm::UnitSystem::measure::rate);
+                       std::size_t found = rateName.find('/');
+                       unit_string += rateName.substr(found);
+                    }
+                    else if (tracer_kw[3] == 'T') {
+                    }
+                    else if (tracer_kw[3] == 'C') {
+                        unit_string += "/";
+                        if (tracer.phase == Phase::GAS )
+                            unit_string += unit_system.name(Opm::UnitSystem::measure::gas_surface_volume);
+                        else /* OIL or WAT */
+                            unit_string += unit_system.name(Opm::UnitSystem::measure::liquid_surface_volume);
+                    }
+                    else {
+                        throw std::runtime_error("Tracer summary kw not recognized: " + tracer_kw);
+                    }
+                }
+                return unit_string;
+            }
+        }
+    }
+    return std::string("");
 }
 
 }

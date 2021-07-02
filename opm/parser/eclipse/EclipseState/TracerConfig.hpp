@@ -32,6 +32,7 @@ class TracerConfig {
 public:
     struct TracerEntry {
         std::string name;
+        std::string unit_string;
         Phase phase = Phase::OIL;
         std::vector<double> free_concentration;
         std::vector<double> solution_concentration;
@@ -39,28 +40,35 @@ public:
         TracerVdTable solution_tvdp;
 
         TracerEntry() = default;
-        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> free_concentration_)
+        TracerEntry(const std::string& name_, const std::string& unit_string_,
+                    Phase phase_, std::vector<double> free_concentration_)
             : name(name_)
+            , unit_string(unit_string_)
             , phase(phase_)
             , free_concentration(std::move(free_concentration_))
         {}
 
-        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> free_concentration_, 
-                                                            std::vector<double> solution_concentration_)
+        TracerEntry(const std::string& name_, const std::string& unit_string_,
+                    Phase phase_, std::vector<double> free_concentration_, std::vector<double> solution_concentration_)
             : name(name_)
+            , unit_string(unit_string_)
             , phase(phase_)
             , free_concentration(std::move(free_concentration_))
             , solution_concentration(std::move(solution_concentration_))
         {}
 
-        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable free_tvdp_)
+        TracerEntry(const std::string& name_, const std::string& unit_string_,
+                    Phase phase_, TracerVdTable free_tvdp_)
             : name(name_)
+            , unit_string(unit_string_)
             , phase(phase_)
             , free_tvdp(std::move(free_tvdp_))
         {}
 
-        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable free_tvdp_, TracerVdTable solution_tvdp_)
+        TracerEntry(const std::string& name_, const std::string& unit_string_,
+                    Phase phase_, TracerVdTable free_tvdp_, TracerVdTable solution_tvdp_)
             : name(name_)
+            , unit_string(unit_string_)
             , phase(phase_)
             , free_tvdp(std::move(free_tvdp_))
             , solution_tvdp(std::move(solution_tvdp_))
@@ -68,6 +76,7 @@ public:
 
         bool operator==(const TracerEntry& data) const {
             return this->name == data.name &&
+                   this->unit_string == data.unit_string &&
                    this->phase == data.phase &&
                    this->free_concentration == data.free_concentration &&
                    this->solution_concentration == data.solution_concentration &&
@@ -79,6 +88,7 @@ public:
         void serializeOp(Serializer& serializer)
         {
             serializer(name);
+            serializer(unit_string);
             serializer(phase);
             serializer(free_concentration);
             serializer(solution_concentration);
@@ -104,6 +114,8 @@ public:
     }
 
     bool operator==(const TracerConfig& data) const;
+
+    std::string get_unit_string(const UnitSystem& unit_system, const std::string & tracer_kw) const;
 
 private:
     std::vector<TracerEntry> tracers;
