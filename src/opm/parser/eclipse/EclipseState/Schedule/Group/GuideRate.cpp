@@ -148,8 +148,10 @@ void GuideRate::group_compute(const std::string& wgname,
     const auto& config = this->schedule[report_step].guide_rate();
     const auto& group = config.production_group(wgname);
     if (group.guide_rate > 0.0) {
+        auto gr_target = GuideRateModel::convert_target(group.target);
         const auto& model = config.has_model() ? config.model() : GuideRateModel{};
-        this->assign_grvalue(wgname, model, sim_time, group.guide_rate, {oil_pot, gas_pot, wat_pot});
+        // \Note: the model here might have a `NONE` guide rate type, we have to use the one from the group
+        this->assign_grvalue(wgname, model, sim_time, group.guide_rate, gr_target, {oil_pot, gas_pot, wat_pot});
     }
     else {
         auto iter = this->values.find(wgname);
@@ -186,7 +188,8 @@ void GuideRate::group_compute(const std::string& wgname,
             }
 
             const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
-            this->assign_grvalue(wgname, config.model(), sim_time, guide_rate, {oil_pot, gas_pot, wat_pot});
+            const auto model_target = config.model().target();
+            this->assign_grvalue(wgname, config.model(), sim_time, guide_rate, model_target, {oil_pot, gas_pot, wat_pot});
         }
     }
 }
@@ -220,13 +223,13 @@ void GuideRate::well_compute(const std::string& wgname,
                              double             wat_pot)
 {
     const auto& config = this->schedule[report_step].guide_rate();
-
     // guide rates specified with WGRUPCON
     if (config.has_well(wgname)) {
         const auto& well = config.well(wgname);
         if (well.guide_rate > 0.0) {
             const auto& model = config.has_model() ? config.model() : GuideRateModel{};
-            this->assign_grvalue(wgname, model, sim_time, well.guide_rate, {oil_pot, gas_pot, wat_pot});
+            const auto well_target = GuideRateModel::convert_target(well.target);
+            this->assign_grvalue(wgname, model, sim_time, well.guide_rate, well_target, {oil_pot, gas_pot, wat_pot});
         }
     }
     else if (config.has_model()) { // GUIDERAT
@@ -250,7 +253,8 @@ void GuideRate::well_compute(const std::string& wgname,
         }
 
         const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
-        this->assign_grvalue(wgname, config.model(), sim_time, guide_rate, {oil_pot, gas_pot, wat_pot});
+        const auto model_target = config.model().target();
+        this->assign_grvalue(wgname, config.model(), sim_time, guide_rate, model_target, {oil_pot, gas_pot, wat_pot});
     }
     // If neither WGRUPCON nor GUIDERAT is specified potentials are used
 }
@@ -271,7 +275,7 @@ double GuideRate::eval_group_resvinj() const
 }
 
 void GuideRate::assign_grvalue(const std::string& wgname, const GuideRateModel& model, double sim_time, double value,
-                               const RateVector& rates)
+                               const GuideRateModel::Target target, const RateVector& rates)
 {
     // TODO: with current way,  assign_grvalue is given too much content to take care of
     // It is possible, we can create another function do all the processing and make the function assign_grvalue
@@ -303,8 +307,8 @@ void GuideRate::assign_grvalue(const std::string& wgname, const GuideRateModel& 
         new_gr_value = damping_factor * new_gr_value + (1 - damping_factor) * prev_gr_value;
     }
 
-    const auto guide_rates = GuideRate::rateVectorFromGuideRate(new_gr_value, model.target(), rates);
-    v->curr = {sim_time, guide_rates, model.target()};
+    const auto guide_rates = GuideRate::rateVectorFromGuideRate(new_gr_value, target, rates);
+    v->curr = {sim_time, guide_rates, target};
 }
 
 

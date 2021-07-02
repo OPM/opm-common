@@ -128,7 +128,7 @@ private:
     double eval_group_resvinj() const;
 
     void assign_grvalue(const std::string& wgname, const GuideRateModel& model, double sim_time, double value,
-                        const RateVector& rates);
+                        GuideRateModel::Target target, const RateVector& rates);
     double get_grvalue_result(const GRValState& gr) const;
 
     static RateVector rateVectorFromGuideRate(double guide_rate, GuideRateModel::Target target, const RateVector& rates);
