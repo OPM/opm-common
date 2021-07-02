@@ -1056,6 +1056,7 @@ bool ESmry::make_lodsmry_file()
 }
 
 
+
 std::vector<std::string> ESmry::checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const {
 
     std::vector<std::string> fileList;

@@ -60,7 +60,10 @@ public:
     EclipseIO( const EclipseState& es,
                EclipseGrid grid,
                const Schedule& schedule,
-               const SummaryConfig& summary_config);
+               const SummaryConfig& summary_config,
+               const std::string& basename = "",
+               const bool writeLodsmry = false
+             );
 
 
 

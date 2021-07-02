@@ -84,6 +84,8 @@ public:
     void flushStream();
 
     void set_ix() { ix_standard = true; }
+    uint64_t file_pos() { return ofileH.tellp(); };
+
 
     friend class OutputStream::Restart;
     friend class OutputStream::SummarySpecification;

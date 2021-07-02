@@ -63,6 +63,10 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 
+
+// tskille: tmp
+
+#include <iostream>
 namespace {
 
 inline std::string uppercase( std::string x ) {
@@ -102,7 +106,7 @@ void ensure_directory_exists( const Opm::filesystem::path& odir )
 namespace Opm {
 class EclipseIO::Impl {
     public:
-    Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
+    Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& , const std::string& baseName, const bool& writeLodsmry);
         void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const std::vector<NNCdata>& nnc) const;
         void writeEGRIDFile( const std::vector<NNCdata>& nnc );
         std::pair<bool, bool> wantRFTOutput( const int report_step, const bool isSubstep ) const;
@@ -121,14 +125,16 @@ class EclipseIO::Impl {
 EclipseIO::Impl::Impl( const EclipseState& eclipseState,
                        EclipseGrid grid_,
                        const Schedule& schedule_,
-                       const SummaryConfig& summary_config)
+                       const SummaryConfig& summary_config,
+                       const std::string& base_name,
+                       const bool& writeLodsmry)
     : es( eclipseState )
     , grid( std::move( grid_ ) )
     , schedule( schedule_ )
     , outputDir( eclipseState.getIOConfig().getOutputDir() )
     , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
     , summaryConfig( summary_config )
-    , summary( eclipseState, summaryConfig, grid , schedule )
+    , summary( eclipseState, summaryConfig, grid , schedule, base_name, writeLodsmry )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
 {
     const auto& aqConfig = this->es.aquifer();
@@ -235,7 +241,10 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
     */
     if (report_step > 0) {
         this->impl->summary.add_timestep( st,
-                                          report_step);
+                                          report_step,
+                                          isSubstep
+                                        );
+
         this->impl->summary.write();
     }
 
@@ -322,8 +331,11 @@ RestartValue EclipseIO::loadRestart(Action::State& action_state, SummaryState& s
 EclipseIO::EclipseIO( const EclipseState& es,
                       EclipseGrid grid,
                       const Schedule& schedule,
-                      const SummaryConfig& summary_config)
-    : impl( new Impl( es, std::move( grid ), schedule , summary_config) )
+                      const SummaryConfig& summary_config,
+                      const std::string& baseName,
+                      const bool writeLodsmry
+                    )
+    : impl( new Impl( es, std::move( grid ), schedule , summary_config, baseName, writeLodsmry) )
 {
     if( !this->impl->output_enabled )
         return;
