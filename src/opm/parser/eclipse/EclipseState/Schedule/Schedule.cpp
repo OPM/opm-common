@@ -1390,6 +1390,7 @@ namespace {
                 this->updateGuideRateModel(guide_rate_model, report_step);
             }
         }
+        this->snapshots.back().udq.update( UDQConfig(this->m_static.m_runspec.udqParams(), rst_state) );
     }
 
     std::shared_ptr<const Python> Schedule::python() const
