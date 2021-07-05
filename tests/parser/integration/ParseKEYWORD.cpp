@@ -149,13 +149,7 @@ BOOST_AUTO_TEST_CASE( EQUIL ) {
     BOOST_CHECK_EQUAL( 3U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
-    BOOST_CHECK_EQUAL( 9U , rec1.size() );
-
-    const auto& rec2 = kw1.getRecord(1);
-    BOOST_CHECK_EQUAL( 9U , rec2.size() );
-
     const auto& rec3 = kw1.getRecord(2);
-    BOOST_CHECK_EQUAL( 9U , rec3.size() );
 
     const auto& item1       = rec1.getItem("OWC");
     const auto& item1_index = rec1.getItem(2);
