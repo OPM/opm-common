@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
@@ -254,7 +255,7 @@ namespace Opm
         void filterConnections(const ActiveGridCells& grid);
         std::size_t size() const;
 
-        bool write_rst_file(std::size_t report_step, bool log=true) const;
+        bool write_rst_file(std::size_t report_step) const;
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
 
         std::unordered_set<std::string> applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
@@ -290,6 +291,7 @@ namespace Opm
             m_sched_deck.serializeOp(serializer);
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
+            restart_output.serializeOp(serializer);
 
             pack_unpack<PAvg, Serializer>(serializer);
             pack_unpack<WellTestConfig, Serializer>(serializer);
@@ -453,6 +455,7 @@ namespace Opm
         ScheduleDeck m_sched_deck;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
+        WriteRestartFileEvents restart_output;
 
         void load_rst(const RestartIO::RstState& rst,
                       const EclipseGrid& grid,
@@ -507,6 +510,8 @@ namespace Opm
 
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
+
+        bool must_write_rst_file(std::size_t report_step) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {}, std::unordered_set<std::string> * affected_wells = nullptr);

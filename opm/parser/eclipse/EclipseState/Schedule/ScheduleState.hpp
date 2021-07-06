@@ -21,6 +21,7 @@
 #define SCHEDULE_TSTEP_HPP
 
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -318,7 +319,7 @@ namespace Opm {
         Well::ProducerCMode whistctl() const;
         void update_whistctl(Well::ProducerCMode whistctl);
 
-        bool rst_file(const RSTConfig& rst_config) const;
+        bool rst_file(const RSTConfig& rst_config, const time_point& previous_restart_output_time) const;
         void update_date(const time_point& prev_time);
         void handleSAVE();
 

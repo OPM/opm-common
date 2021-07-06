@@ -248,8 +248,8 @@ DATES
   5 'SEP' 2020 /          ( 7)
   1 'OCT' 2020 /          ( 8)
   1 'NOV' 2020 /          ( 9)
-  1 'DEC' 2020 /          (10)
-  5 'JAN' 2021 / -- WRITE (11)
+  1 'DEC' 2020 / -- WRITE (10)
+  5 'JAN' 2021 /          (11)
   1 'FEB' 2021 /          (12)
  17 'MAY' 2021 /          (13)
   6 'JLY' 2021 / -- WRITE (14)
@@ -263,12 +263,12 @@ END
 
     auto sched = make_schedule(input, false);
 
-    for (const std::size_t stepID : { 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 18 }) {
+    for (const std::size_t stepID : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 16, 18 }) {
         BOOST_CHECK_MESSAGE(! sched.write_rst_file(stepID),
                             "Must not write restart information for excluded step " << stepID);
     }
 
-    for (const std::size_t stepID : { 0, 1, 11, 14, 17 }) {
+    for (const std::size_t stepID : { 0, 10, 14, 17 }) {
         BOOST_CHECK_MESSAGE(sched.write_rst_file(stepID),
                             "Must write restart information for included step " << stepID);
     }
@@ -1108,17 +1108,17 @@ RPTRST
 BASIC=4 FREQ=2
 /
 DATES
- 22 MAY 1981 /
- 23 MAY 1981 /
- 24 MAY 1981 /
- 23 MAY 1982 /
- 24 MAY 1982 /
- 24 MAY 1983 / -- write
- 25 MAY 1984 /
- 26 MAY 1984 /
- 26 MAY 1985 / -- write
- 27 MAY 1985 /
- 1 JAN 1986 /
+ 22 MAY 1981 / --  1
+ 23 MAY 1981 / --  2
+ 24 MAY 1981 / --  3
+ 23 MAY 1982 / --  4
+ 24 MAY 1982 / --  5
+ 24 MAY 1983 / --  6 write
+ 25 MAY 1984 / --  7
+ 26 MAY 1984 / --  8
+ 26 MAY 1985 / --  9 write
+ 27 MAY 1985 / -- 10
+  1 JAN 1986 / -- 11
 /
 )";
     auto sched = make_schedule(data);
@@ -1129,15 +1129,19 @@ DATES
      *
      * FREQ=2
      */
-    for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11  } )
-        BOOST_CHECK( !sched.write_rst_file( ts ) );
+    for (const std::size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11 } )
+        BOOST_CHECK_MESSAGE( !sched.write_rst_file( ts ),
+                             "Must NOT write restart file for excluded step " << ts);
 
-    for( size_t ts : { 6, 9 } )
-        BOOST_CHECK( sched.write_rst_file( ts ) );
+    for (const std::size_t ts : { 6, 9 } )
+        BOOST_CHECK_MESSAGE( sched.write_rst_file( ts ),
+                             "Must write restart file for included step " << ts);
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
     const std::string data =  R"(
+START
+1 MAY 1981 /
 SCHEDULE
 RPTRST
 BASIC=5 FREQ=2
@@ -1152,19 +1156,174 @@ DATES
   2 JAN 1982 / -- 7
   1 FEB 1982 / -- 8
   1 MAR 1982 / -- 9  Write
-  1 APR 1983 / --10
-  2 JUN 1983 / --11
+  1 APR 1983 / --10  Write
+ 16 APR 1983 / --11
+ 30 APR 1983 / --12
+  1 MAY 1983 / --13
+ 17 MAY 1983 / --14
+ 31 MAY 1983 / --15
+  2 JUN 1983 / --16  Write
+ 10 JUN 1983 / --17
+ 23 JUN 1983 / --18
+ 30 JUN 1983 / --19
+ 21 JUL 1983 / --20
+ 31 JUL 1983 / --21
+  5 AUG 1983 / --22  Write
+ 22 AUG 1983 / --23
 /
 )";
 
     auto sched = make_schedule(data);
     /* BASIC=5, restart file is written at the first report step of each month.
      */
-    for( size_t ts : { 1, 2, 3, 4, 7, 8, 10, 11 } )
-        BOOST_CHECK( !sched.write_rst_file( ts ) );
+    for (std::size_t ts : { 0, 1, 2, 3, 4, 7, 8, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 23 }) {
+        BOOST_CHECK_MESSAGE( !sched.write_rst_file(ts),
+                             "Must not write restart file for excluded step " << ts );
+    }
 
-    for( size_t ts : { 5, 6, 9} )
-        BOOST_CHECK_MESSAGE( sched.write_rst_file( ts ) , "Restart file expected for step: " << ts);
+    for (std::size_t ts : { 5, 6, 9, 10, 16, 22 }) {
+        BOOST_CHECK_MESSAGE( sched.write_rst_file(ts),
+                             "Restart file expected for step: " << ts );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(BASIC_EQ_5_FREQ_EQ_6)
+{
+    const auto deckStr =  std::string { R"(RUNSPEC
+DIMENS
+1 1 1/
+
+START
+ 1 JAN 2000 /
+
+GRID
+DX
+1 /
+DY
+1 /
+DZ
+1 /
+TOPS
+0 /
+
+SOLUTION
+
+RPTRST
+BASIC=5 FREQ=6 /
+
+SCHEDULE
+DATES
+  2 JAN 2000 / --  1
+  3 JAN 2000 / --  2
+  9 JAN 2000 / --  3
+  6 FEB 2000 / --  4
+ 11 AUG 2000 / --  5 Write
+  3 SEP 2000 / --  6
+ 24 SEP 2000 / --  7
+ 22 DEC 2000 / --  8
+ 31 DEC 2000 / --  9
+  1 JAN 2001 / -- 10
+  2 JAN 2001 / -- 11
+ 30 JAN 2001 / -- 12
+ 31 JAN 2001 / -- 13
+  1 FEB 2001 / -- 14 Write
+  2 FEB 2001 / -- 15
+ 28 FEB 2001 / -- 16
+  1 MAR 2001 / -- 17
+  2 MAR 2001 / -- 18
+  3 MAR 2001 / -- 19
+ 31 MAR 2001 / -- 20
+  1 APR 2001 / -- 21
+ 30 APR 2001 / -- 22
+  1 MAY 2001 / -- 23
+ 31 MAY 2001 / -- 24
+  1 JUN 2001 / -- 25
+ 30 JUN 2001 / -- 26
+  1 JLY 2001 / -- 27
+  2 JLY 2001 / -- 28
+ 30 JLY 2001 / -- 29
+ 31 JLY 2001 / -- 30
+  1 AUG 2001 / -- 31 Write
+ 31 AUG 2001 / -- 32
+ 10 SEP 2001 / -- 33
+ 17 OCT 2001 / -- 34
+  7 NOV 2001 / -- 35
+  8 NOV 2001 / -- 36
+ 27 NOV 2001 / -- 37
+ 29 NOV 2001 / -- 38
+ 30 NOV 2001 / -- 39
+  6 DEC 2001 / -- 40
+  7 DEC 2001 / -- 41
+ 30 DEC 2001 / -- 42
+ 31 DEC 2001 / -- 43
+  1 JAN 2002 / -- 44
+  2 JAN 2002 / -- 45
+ 31 JAN 2002 / -- 46
+  1 FEB 2002 / -- 47 Write
+  2 FEB 2002 / -- 48
+ 19 JUN 2002 / -- 49
+ 19 JLY 2002 / -- 50
+ 31 JLY 2002 / -- 51
+  1 AUG 2002 / -- 52 Write
+/
+END
+)" };
+
+    auto sched = make_schedule(deckStr, false);
+
+    BOOST_CHECK_MESSAGE( sched.write_rst_file( 0), "Must write restart file at report step 0");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 1), "Must NOT write restart file at report step 1");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 2), "Must NOT write restart file at report step 2");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 3), "Must NOT write restart file at report step 3");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 4), "Must NOT write restart file at report step 4");
+    BOOST_CHECK_MESSAGE( sched.write_rst_file( 5), "Must write restart file at report step 5");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 6), "Must NOT write restart file at report step 6");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 7), "Must NOT write restart file at report step 7");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 8), "Must NOT write restart file at report step 8");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file( 9), "Must NOT write restart file at report step 9");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(10), "Must NOT write restart file at report step 10");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(11), "Must NOT write restart file at report step 11");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(12), "Must NOT write restart file at report step 12");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(13), "Must NOT write restart file at report step 13");
+    BOOST_CHECK_MESSAGE( sched.write_rst_file(14), "Must write restart file at report step 14");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(15), "Must NOT write restart file at report step 15");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(16), "Must NOT write restart file at report step 16");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(17), "Must NOT write restart file at report step 17");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(18), "Must NOT write restart file at report step 18");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(19), "Must NOT write restart file at report step 19");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(20), "Must NOT write restart file at report step 20");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(21), "Must NOT write restart file at report step 21");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(22), "Must NOT write restart file at report step 22");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(23), "Must NOT write restart file at report step 23");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(24), "Must NOT write restart file at report step 24");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(25), "Must NOT write restart file at report step 25");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(26), "Must NOT write restart file at report step 26");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(27), "Must NOT write restart file at report step 27");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(28), "Must NOT write restart file at report step 28");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(29), "Must NOT write restart file at report step 29");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(30), "Must NOT write restart file at report step 30");
+    BOOST_CHECK_MESSAGE( sched.write_rst_file(31), "Must write restart file at report step 31");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(32), "Must NOT write restart file at report step 32");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(33), "Must NOT write restart file at report step 33");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(34), "Must NOT write restart file at report step 34");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(35), "Must NOT write restart file at report step 35");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(36), "Must NOT write restart file at report step 36");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(37), "Must NOT write restart file at report step 37");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(38), "Must NOT write restart file at report step 38");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(39), "Must NOT write restart file at report step 39");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(40), "Must NOT write restart file at report step 40");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(41), "Must NOT write restart file at report step 41");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(42), "Must NOT write restart file at report step 42");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(43), "Must NOT write restart file at report step 43");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(44), "Must NOT write restart file at report step 44");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(45), "Must NOT write restart file at report step 45");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(46), "Must NOT write restart file at report step 46");
+    BOOST_CHECK_MESSAGE( sched.write_rst_file(47), "Must write restart file at report step 47");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(48), "Must NOT write restart file at report step 48");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(49), "Must NOT write restart file at report step 49");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(50), "Must NOT write restart file at report step 50");
+    BOOST_CHECK_MESSAGE(!sched.write_rst_file(51), "Must NOT write restart file at report step 51");
+    BOOST_CHECK_MESSAGE( sched.write_rst_file(52), "Must write restart file at report step 52");
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_0) {
