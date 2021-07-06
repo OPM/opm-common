@@ -15,15 +15,17 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #define BOOST_TEST_MODULE IOCONFIG_INTEGRATION_TEST
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <tuple>
+#include <ctime>
 #include <map>
+#include <tuple>
 #include <vector>
+
 #include <boost/date_time.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
@@ -35,101 +37,105 @@
 
 using namespace Opm;
 
-inline std::string path_prefix() {
+namespace {
+
+std::string path_prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
 
-inline void verifyRestartConfig( const Schedule& sched, std::map<int, boost::gregorian::date>& rptConfig) {
+void verifyRestartConfig( const Schedule& sched, std::map<int, boost::gregorian::date>& rptConfig) {
     auto last = *rptConfig.rbegin();
     for (int step = 0; step <= last.first; step++) {
         if (rptConfig.count(step) == 1) {
             BOOST_CHECK( sched.write_rst_file(step) );
 
-            auto report_date = rptConfig.at(step);
-            std::time_t t = sched.simTime(step);
-            boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
-            boost::posix_time::ptime report_date_ptime(report_date);
-            boost::posix_time::time_duration::sec_type duration = (report_date_ptime - epoch).total_seconds();
+            const auto report_date = rptConfig.at(step);
+            const std::time_t t = sched.simTime(step);
+            const boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
+            const boost::posix_time::ptime report_date_ptime(report_date);
+            const boost::posix_time::time_duration::sec_type duration = (report_date_ptime - epoch).total_seconds();
 
             BOOST_CHECK_EQUAL( duration , t );
         } else
-            BOOST_CHECK(! sched.write_rst_file(step) );
+            BOOST_CHECK_MESSAGE(! sched.write_rst_file(step),
+                                "Must not write restart file for report step " << step);
     }
 }
 
-BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
-    std::map<int, boost::gregorian::date> rptConfig;
-    rptConfig.emplace(0 , boost::gregorian::date( 1997,11,6));
-    rptConfig.emplace(1 , boost::gregorian::date( 1997,11,14));
-    rptConfig.emplace(2 , boost::gregorian::date( 1997,12,1));
-    rptConfig.emplace(3 , boost::gregorian::date( 1997,12,17));
-    rptConfig.emplace(4 , boost::gregorian::date( 1998,1,1));
-    rptConfig.emplace(5 , boost::gregorian::date( 1998,2,1));
-    rptConfig.emplace(10 , boost::gregorian::date( 1998,4,23));
-    rptConfig.emplace(19 , boost::gregorian::date( 1998,7,16));
-    rptConfig.emplace(27 , boost::gregorian::date( 1998,10,13));
-    rptConfig.emplace(33 , boost::gregorian::date( 1999,1,4));
-    rptConfig.emplace(44 , boost::gregorian::date( 1999,5,1));
-    rptConfig.emplace(53 , boost::gregorian::date( 1999,7,15));
-    rptConfig.emplace(62 , boost::gregorian::date( 1999,10,3));
-    rptConfig.emplace(72 , boost::gregorian::date( 2000,2,1));
-    rptConfig.emplace(77 , boost::gregorian::date( 2000,5,1));
-    rptConfig.emplace(83 , boost::gregorian::date( 2000,8,1));
-    rptConfig.emplace(95 , boost::gregorian::date( 2000,11,1));
-    rptConfig.emplace(98 , boost::gregorian::date( 2001,2,1));
-    rptConfig.emplace(101 , boost::gregorian::date( 2001,5,1));
-    rptConfig.emplace(109 , boost::gregorian::date( 2001,7,2));
-    rptConfig.emplace(112 , boost::gregorian::date( 2001,7,16));
-    rptConfig.emplace(113 , boost::gregorian::date( 2001,7,30));
-    rptConfig.emplace(114 , boost::gregorian::date( 2001,8,1));
-    rptConfig.emplace(115 , boost::gregorian::date( 2001,8,10));
-    rptConfig.emplace(116 , boost::gregorian::date( 2001,8,16));
-    rptConfig.emplace(117 , boost::gregorian::date( 2001,9,1));
-    rptConfig.emplace(118 , boost::gregorian::date( 2001,9,10));
-    rptConfig.emplace(119 , boost::gregorian::date( 2001,10,1));
-    rptConfig.emplace(120 , boost::gregorian::date( 2001,11,1));
-    rptConfig.emplace(124 , boost::gregorian::date( 2002,2,1));
-    rptConfig.emplace(129 , boost::gregorian::date( 2002,5,1));
-    rptConfig.emplace(132 , boost::gregorian::date( 2002,7,8));
-    rptConfig.emplace(141 , boost::gregorian::date( 2002,10,7));
-    rptConfig.emplace(148 , boost::gregorian::date( 2003,1,2));
-    rptConfig.emplace(157 , boost::gregorian::date( 2003,5,1));
-    rptConfig.emplace(161 , boost::gregorian::date( 2003,7,10));
-    rptConfig.emplace(164 , boost::gregorian::date( 2003,8,12));
-    rptConfig.emplace(165 , boost::gregorian::date( 2003,9,1));
-    rptConfig.emplace(166 , boost::gregorian::date( 2003,9,2));
-    rptConfig.emplace(167 , boost::gregorian::date( 2003,9,10));
-    rptConfig.emplace(168 , boost::gregorian::date( 2003,9,12));
-    rptConfig.emplace(169 , boost::gregorian::date( 2003,9,13));
-    rptConfig.emplace(170 , boost::gregorian::date( 2003,9,16));
-    rptConfig.emplace(171 , boost::gregorian::date( 2003,10,1));
-    rptConfig.emplace(172 , boost::gregorian::date( 2003,10,23));
-    rptConfig.emplace(180 , boost::gregorian::date( 2004,1,19));
-    rptConfig.emplace(185 , boost::gregorian::date( 2004,5,1));
-    rptConfig.emplace(188 , boost::gregorian::date( 2004,7,3));
-    rptConfig.emplace(192 , boost::gregorian::date( 2004,8,16));
-    rptConfig.emplace(193 , boost::gregorian::date( 2004,9,1));
-    rptConfig.emplace(194 , boost::gregorian::date( 2004,9,20));
-    rptConfig.emplace(195 , boost::gregorian::date( 2004,10,1));
-    rptConfig.emplace(196 , boost::gregorian::date( 2004,11,1));
-    rptConfig.emplace(199 , boost::gregorian::date( 2005,1,12));
-    rptConfig.emplace(206 , boost::gregorian::date( 2005,4,24));
-    rptConfig.emplace(212 , boost::gregorian::date( 2005,7,10));
-    rptConfig.emplace(221 , boost::gregorian::date( 2005,11,1));
-    rptConfig.emplace(226 , boost::gregorian::date( 2006,1,18));
-    rptConfig.emplace(231 , boost::gregorian::date( 2006,4,25));
-    rptConfig.emplace(235 , boost::gregorian::date( 2006,8,1));
-    rptConfig.emplace(237 , boost::gregorian::date( 2006,8,16));
-    rptConfig.emplace(238 , boost::gregorian::date( 2006,9,1));
-    rptConfig.emplace(239 , boost::gregorian::date( 2006,9,14));
-    rptConfig.emplace(240 , boost::gregorian::date( 2006,10,1));
-    rptConfig.emplace(241 , boost::gregorian::date( 2006,10,10));
+}
 
-    auto python = std::make_shared<Python>();
-    Parser parser;
-    auto deck = parser.parseFile( path_prefix() + "IOConfig/RPTRST_DECK.DATA");
-    EclipseState state(deck);
-    Schedule schedule(deck, state, python);
+BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
+    std::map<int, boost::gregorian::date> rptConfig{};
+
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  0), std::forward_as_tuple(1997,11, 6));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  1), std::forward_as_tuple(1997,11,14));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  2), std::forward_as_tuple(1997,12, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  3), std::forward_as_tuple(1997,12,17));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  4), std::forward_as_tuple(1998, 1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  5), std::forward_as_tuple(1998, 2, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 10), std::forward_as_tuple(1998, 4,23));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 19), std::forward_as_tuple(1998, 7,16));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 27), std::forward_as_tuple(1998,10,13));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 33), std::forward_as_tuple(1999, 1, 4));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 44), std::forward_as_tuple(1999, 5, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 53), std::forward_as_tuple(1999, 7,15));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 62), std::forward_as_tuple(1999,10, 3));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 72), std::forward_as_tuple(2000, 2, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 77), std::forward_as_tuple(2000, 5, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 83), std::forward_as_tuple(2000, 8, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 95), std::forward_as_tuple(2000,11, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 98), std::forward_as_tuple(2001, 2, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(101), std::forward_as_tuple(2001, 5, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(109), std::forward_as_tuple(2001, 7, 2));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(112), std::forward_as_tuple(2001, 7,16));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(113), std::forward_as_tuple(2001, 7,30));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(114), std::forward_as_tuple(2001, 8, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(115), std::forward_as_tuple(2001, 8,10));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(116), std::forward_as_tuple(2001, 8,16));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(117), std::forward_as_tuple(2001, 9, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(118), std::forward_as_tuple(2001, 9,10));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(119), std::forward_as_tuple(2001,10, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(120), std::forward_as_tuple(2001,11, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(124), std::forward_as_tuple(2002, 2, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(129), std::forward_as_tuple(2002, 5, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(132), std::forward_as_tuple(2002, 7, 8));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(141), std::forward_as_tuple(2002,10, 7));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(148), std::forward_as_tuple(2003, 1, 2));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(157), std::forward_as_tuple(2003, 5, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(161), std::forward_as_tuple(2003, 7,10));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(164), std::forward_as_tuple(2003, 8,12));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(165), std::forward_as_tuple(2003, 9, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(166), std::forward_as_tuple(2003, 9, 2));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(167), std::forward_as_tuple(2003, 9,10));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(168), std::forward_as_tuple(2003, 9,12));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(169), std::forward_as_tuple(2003, 9,13));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(170), std::forward_as_tuple(2003, 9,16));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(171), std::forward_as_tuple(2003,10, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(172), std::forward_as_tuple(2003,10,23));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(180), std::forward_as_tuple(2004, 1,19));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(185), std::forward_as_tuple(2004, 5, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(188), std::forward_as_tuple(2004, 7, 3));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(192), std::forward_as_tuple(2004, 8,16));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(193), std::forward_as_tuple(2004, 9, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(194), std::forward_as_tuple(2004, 9,20));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(195), std::forward_as_tuple(2004,10, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(196), std::forward_as_tuple(2004,11, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(199), std::forward_as_tuple(2005, 1,12));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(206), std::forward_as_tuple(2005, 4,24));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(212), std::forward_as_tuple(2005, 7,10));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(221), std::forward_as_tuple(2005,11, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(226), std::forward_as_tuple(2006, 1,18));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(231), std::forward_as_tuple(2006, 4,25));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(235), std::forward_as_tuple(2006, 8, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(237), std::forward_as_tuple(2006, 8,16));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(238), std::forward_as_tuple(2006, 9, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(239), std::forward_as_tuple(2006, 9,14));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(240), std::forward_as_tuple(2006,10, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(241), std::forward_as_tuple(2006,10,10));
+
+    const auto deck = Parser{}.parseFile( path_prefix() + "IOConfig/RPTRST_DECK.DATA");
+    const EclipseState state(deck);
+    const Schedule schedule(deck, state, std::make_shared<Python>());
 
     verifyRestartConfig(schedule, rptConfig);
 }
@@ -138,100 +144,102 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
 
 
 BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
-    std::map<int, boost::gregorian::date> rptConfig;
+    std::map<int, boost::gregorian::date> rptConfig{};
 
-    rptConfig.emplace(0  , boost::gregorian::date(2000,1,1));
-    rptConfig.emplace(8  , boost::gregorian::date(2000,7,1));
-    rptConfig.emplace(27 , boost::gregorian::date(2001,1,1));
-    rptConfig.emplace(45 , boost::gregorian::date(2001,7,1));
-    rptConfig.emplace(50 , boost::gregorian::date(2001,8,24));
-    rptConfig.emplace(61 , boost::gregorian::date(2002,1,1));
-    rptConfig.emplace(79 , boost::gregorian::date(2002,7,1));
-    rptConfig.emplace(89 , boost::gregorian::date(2003,1,1));
-    rptConfig.emplace(99 , boost::gregorian::date(2003,7,1));
-    rptConfig.emplace(109, boost::gregorian::date(2004,1,1));
-    rptConfig.emplace(128, boost::gregorian::date(2004,7,1));
-    rptConfig.emplace(136, boost::gregorian::date(2005,1,1));
-    rptConfig.emplace(146, boost::gregorian::date(2005,7,1));
-    rptConfig.emplace(158, boost::gregorian::date(2006,1,1));
-    rptConfig.emplace(164, boost::gregorian::date(2006,7,1));
-    rptConfig.emplace(170, boost::gregorian::date(2007,1,1));
-    rptConfig.emplace(178, boost::gregorian::date(2007,7,1));
-    rptConfig.emplace(184, boost::gregorian::date(2008,1,1));
-    rptConfig.emplace(192, boost::gregorian::date(2008,7,1));
-    rptConfig.emplace(198, boost::gregorian::date(2009,1,1));
-    rptConfig.emplace(204, boost::gregorian::date(2009,7,1));
-    rptConfig.emplace(210, boost::gregorian::date(2010,1,1));
-    rptConfig.emplace(216, boost::gregorian::date(2010,7,1));
-    rptConfig.emplace(222, boost::gregorian::date(2011,1,1));
-    rptConfig.emplace(228, boost::gregorian::date(2011,7,1));
-    rptConfig.emplace(234, boost::gregorian::date(2012,1,1));
-    rptConfig.emplace(240, boost::gregorian::date(2012,7,1));
-    rptConfig.emplace(246, boost::gregorian::date(2013,1,1));
-    rptConfig.emplace(251, boost::gregorian::date(2013,5,2));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  0), std::forward_as_tuple(2000,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  8), std::forward_as_tuple(2000,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 27), std::forward_as_tuple(2001,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 45), std::forward_as_tuple(2001,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 50), std::forward_as_tuple(2001,8,24));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 61), std::forward_as_tuple(2002,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 79), std::forward_as_tuple(2002,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 89), std::forward_as_tuple(2003,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 99), std::forward_as_tuple(2003,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(109), std::forward_as_tuple(2004,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(128), std::forward_as_tuple(2004,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(136), std::forward_as_tuple(2005,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(146), std::forward_as_tuple(2005,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(158), std::forward_as_tuple(2006,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(164), std::forward_as_tuple(2006,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(170), std::forward_as_tuple(2007,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(178), std::forward_as_tuple(2007,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(184), std::forward_as_tuple(2008,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(192), std::forward_as_tuple(2008,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(198), std::forward_as_tuple(2009,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(204), std::forward_as_tuple(2009,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(210), std::forward_as_tuple(2010,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(216), std::forward_as_tuple(2010,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(222), std::forward_as_tuple(2011,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(228), std::forward_as_tuple(2011,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(234), std::forward_as_tuple(2012,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(240), std::forward_as_tuple(2012,7, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(246), std::forward_as_tuple(2013,1, 1));
+    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(251), std::forward_as_tuple(2013,5, 2));
 
 
-    auto python = std::make_shared<Python>();
-    Parser parser;
-    auto deck = parser.parseFile(path_prefix() + "IOConfig/RPT_TEST2.DATA");
-    EclipseState state( deck);
-    Schedule schedule(deck, state, python);
+    const auto deck = Parser{}.parseFile(path_prefix() + "IOConfig/RPT_TEST2.DATA");
+    const EclipseState state( deck);
+    const Schedule schedule(deck, state, std::make_shared<Python>());
     verifyRestartConfig(schedule, rptConfig);
 
-    auto keywords0 = schedule.rst_keywords(0);
-    std::map<std::string, int> expected0 = {{"BG", 1},
-                                           {"BO", 1},
-                                           {"BW", 1},
-                                           {"KRG", 1},
-                                           {"KRO", 1},
-                                           {"KRW", 1},
-                                           {"VOIL", 1},
-                                           {"VGAS", 1},
-                                           {"VWAT", 1},
-                                           {"DEN", 1},
-                                           {"RVSAT", 1},
-                                           {"RSSAT", 1},
-                                           {"PBPD", 1},
-                                           {"NORST", 1}};
+    const auto keywords0 = schedule.rst_keywords(0);
+    const std::map<std::string, int> expected0 = {
+        {"BG", 1},
+        {"BO", 1},
+        {"BW", 1},
+        {"KRG", 1},
+        {"KRO", 1},
+        {"KRW", 1},
+        {"VOIL", 1},
+        {"VGAS", 1},
+        {"VWAT", 1},
+        {"DEN", 1},
+        {"RVSAT", 1},
+        {"RSSAT", 1},
+        {"PBPD", 1},
+        {"NORST", 1},
+    };
+
     for (const auto& [kw, num] : expected0)
         BOOST_CHECK_EQUAL( keywords0.at(kw), num );
 
-    auto keywords1 = schedule.rst_keywords(1);
-    std::map<std::string, int> expected1 = {{"BG", 1},
-                                            {"BO", 1},
-                                            {"BW", 1},
-                                            {"KRG", 1},
-                                            {"KRO", 1},
-                                            {"KRW", 1},
-                                            {"VOIL", 1},
-                                            {"VGAS", 1},
-                                            {"VWAT", 1},
-                                            {"DEN", 1},
-                                            {"RVSAT", 1},
-                                            {"RSSAT", 1},
-                                            {"PBPD", 1},
-                                            {"NORST", 1},
-                                            {"FIP", 3},
-                                            {"WELSPECS", 1},
-                                            {"WELLS", 0},
-                                            {"NEWTON", 1},
-                                            {"SUMMARY", 1},
-                                            {"CPU", 1},
-                                            {"CONV", 10}};
+    const auto keywords1 = schedule.rst_keywords(1);
+    const std::map<std::string, int> expected1 = {
+        {"BG", 1},
+        {"BO", 1},
+        {"BW", 1},
+        {"KRG", 1},
+        {"KRO", 1},
+        {"KRW", 1},
+        {"VOIL", 1},
+        {"VGAS", 1},
+        {"VWAT", 1},
+        {"DEN", 1},
+        {"RVSAT", 1},
+        {"RSSAT", 1},
+        {"PBPD", 1},
+        {"NORST", 1},
+        {"FIP", 3},
+        {"WELSPECS", 1},
+        {"WELLS", 0},
+        {"NEWTON", 1},
+        {"SUMMARY", 1},
+        {"CPU", 1},
+        {"CONV", 10},
+    };
 
     for (const auto& [kw, num] : expected1)
         BOOST_CHECK_EQUAL( keywords1.at(kw), num );
 
     BOOST_CHECK_EQUAL(expected1.size(), keywords1.size());
 
-    auto keywords10 = schedule.rst_keywords(10);
+    const auto keywords10 = schedule.rst_keywords(10);
     BOOST_CHECK( keywords10 == keywords1 );
 }
 
 
 
 BOOST_AUTO_TEST_CASE( SPE9END ) {
-    Parser parser;
-    auto deck = parser.parseFile(path_prefix() + "IOConfig/SPE9_END.DATA");
+    const auto deck = Parser{}.parseFile(path_prefix() + "IOConfig/SPE9_END.DATA");
     BOOST_CHECK_NO_THROW( EclipseState state( deck) );
 }

@@ -15,14 +15,11 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-
+*/
 
 #define BOOST_TEST_MODULE RestartConfigTests
 
 #include <boost/test/unit_test.hpp>
-
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -31,7 +28,14 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <cstddef>
+#include <map>
+#include <string>
+#include <vector>
 
+using namespace Opm;
+
+namespace {
 
 std::vector<std::string> filter_keywords(const std::map<std::string, int>& keywords) {
     std::vector<std::string> kwlist;
@@ -44,11 +48,13 @@ std::vector<std::string> filter_keywords(const std::map<std::string, int>& keywo
 
         kwlist.push_back(kw);
     }
+
     return kwlist;
 }
 
-const std::string grid = R"(
-RUNSPEC
+std::string grid()
+{
+    return { R"(RUNSPEC
 DIMENS
  10 10 10 /
 START
@@ -70,19 +76,20 @@ DEPTHZ
 
 PORO
   1000*0.25 /
-)";
-
-using namespace Opm;
+)" };
+}
 
 Schedule make_schedule(std::string sched_input, bool add_grid = true) {
     if (add_grid)
-        sched_input = grid + sched_input;
+        sched_input = grid() + sched_input;
 
-    Parser parser;
-    auto deck = parser.parseString( sched_input );
+    auto deck = Parser{}.parseString( sched_input );
     EclipseState es(deck);
     return Schedule(deck, es);
 }
+
+} // namespace Anonymous
+
 BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
     const std::string deckData  = R"(
 SCHEDULE
@@ -99,13 +106,12 @@ DATES             -- 3
 /
 )";
 
-
     auto sched = make_schedule(deckData);
 
-    BOOST_CHECK_EQUAL(false, sched.write_rst_file(0));
-    BOOST_CHECK_EQUAL(false, sched.write_rst_file(1));
-    BOOST_CHECK_EQUAL(true,  sched.write_rst_file(2));
-    BOOST_CHECK_EQUAL(false, sched.write_rst_file(3));
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(0), "Must NOT write restart output on step 0");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(1), "Must NOT write restart output on step 1");
+    BOOST_CHECK_MESSAGE(  sched.write_rst_file(2), "Must write restart output on step 2");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(3), "Must NOT write restart output on step 3");
 }
 
 
@@ -135,12 +141,11 @@ DATES             -- 3
 
     auto sched = make_schedule(deckData);
 
-    BOOST_CHECK_EQUAL(true  ,  sched.write_rst_file(0));
-    BOOST_CHECK_EQUAL(false ,  sched.write_rst_file(1));
-    BOOST_CHECK_EQUAL(false ,  sched.write_rst_file(2));
-    BOOST_CHECK_EQUAL(false ,  sched.write_rst_file(3));
+    BOOST_CHECK_MESSAGE(  sched.write_rst_file(0), "Must write restart file for report step 0");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(1), "Must NOT write restart file for report step 1");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(2), "Must NOT write restart file for report step 2");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(3), "Must NOT write restart file for report step 3");
 }
-
 
 
 BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
@@ -197,8 +202,8 @@ RESTART=1
     auto sched1 = make_schedule(deckData);
     auto sched2 = make_schedule(deckData2);
 
-    BOOST_CHECK_EQUAL(true, sched1.write_rst_file(0));
-    BOOST_CHECK_EQUAL(true, sched2.write_rst_file(0));
+    BOOST_CHECK_MESSAGE(sched1.write_rst_file(0), "SCHED1 must write restart file for report step 0");
+    BOOST_CHECK_MESSAGE(sched2.write_rst_file(0), "SCHED2 must write restart file for report step 0");
 }
 
 
@@ -268,35 +273,37 @@ END
                             "Must write restart information for included step " << stepID);
     }
 
-    std::vector<std::tuple<bool, bool, TimeStampUTC>> expected = {{true , true , TimeStampUTC(2020,  6,  6)},    //  0
-                                                                  {true , false, TimeStampUTC(2020,  7,  7)},    //  1
-                                                                  {false, false, TimeStampUTC(2020,  7, 10)},    //  2
-                                                                  {false, false, TimeStampUTC(2020,  7, 20)},    //  3
-                                                                  {false, false, TimeStampUTC(2020,  7, 30)},    //  4
-                                                                  {true , false, TimeStampUTC(2020,  8,  5)},    //  5
-                                                                  {false, false, TimeStampUTC(2020,  8, 20)},    //  6
-                                                                  {true , false, TimeStampUTC(2020,  9,  5)},    //  7
-                                                                  {true , false, TimeStampUTC(2020, 10,  1)},    //  8
-                                                                  {true , false, TimeStampUTC(2020, 11,  1)},    //  9
-                                                                  {true , false, TimeStampUTC(2020, 12,  1)},    // 10
-                                                                  {true , true , TimeStampUTC(2021,  1,  5)},    // 11
-                                                                  {true , false, TimeStampUTC(2021,  2,  1)},    // 12
-                                                                  {true , false, TimeStampUTC(2021,  5, 17)},    // 13
-                                                                  {true , false, TimeStampUTC(2021,  7,  6)},    // 14
-                                                                  {true , false, TimeStampUTC(2021, 12,  1)},    // 15
-                                                                  {false, false, TimeStampUTC(2021, 12, 31)},    // 16
-                                                                  {true,  true , TimeStampUTC(2022,  1, 21)},    // 17
-                                                                  {false, false, TimeStampUTC(2022,  1, 31)}};   // 18
+    const auto expected = std::vector<std::tuple<bool, bool, TimeStampUTC>> {
+        {true , true , TimeStampUTC(2020,  6,  6)},    //  0
+        {true , false, TimeStampUTC(2020,  7,  7)},    //  1
+        {false, false, TimeStampUTC(2020,  7, 10)},    //  2
+        {false, false, TimeStampUTC(2020,  7, 20)},    //  3
+        {false, false, TimeStampUTC(2020,  7, 30)},    //  4
+        {true , false, TimeStampUTC(2020,  8,  5)},    //  5
+        {false, false, TimeStampUTC(2020,  8, 20)},    //  6
+        {true , false, TimeStampUTC(2020,  9,  5)},    //  7
+        {true , false, TimeStampUTC(2020, 10,  1)},    //  8
+        {true , false, TimeStampUTC(2020, 11,  1)},    //  9
+        {true , false, TimeStampUTC(2020, 12,  1)},    // 10
+        {true , true , TimeStampUTC(2021,  1,  5)},    // 11
+        {true , false, TimeStampUTC(2021,  2,  1)},    // 12
+        {true , false, TimeStampUTC(2021,  5, 17)},    // 13
+        {true , false, TimeStampUTC(2021,  7,  6)},    // 14
+        {true , false, TimeStampUTC(2021, 12,  1)},    // 15
+        {false, false, TimeStampUTC(2021, 12, 31)},    // 16
+        {true,  true , TimeStampUTC(2022,  1, 21)},    // 17
+        {false, false, TimeStampUTC(2022,  1, 31)},    // 18
+    };
 
-    for (std::size_t index = 0; index < sched.size(); index++) {
+    for (std::size_t index = 0; index < sched.size(); ++index) {
         const auto& state = sched[index];
         const auto& [first_in_month, first_in_year, ts] = expected[index];
 
-        printf("index: %ld \n", index);
         BOOST_CHECK_EQUAL( state.month_num(), ts.month() - 1);
         BOOST_CHECK_EQUAL( state.first_in_month(), first_in_month );
-        BOOST_CHECK_EQUAL( state.first_in_year(), first_in_year);
-        BOOST_CHECK( ts == TimeStampUTC( TimeService::to_time_t(state.start_time() )));
+        BOOST_CHECK_EQUAL( state.first_in_year(), first_in_year );
+        BOOST_CHECK_MESSAGE( ts == TimeStampUTC( TimeService::to_time_t(state.start_time() )),
+                             "Time stamp does not match expected");
     }
 }
 
@@ -398,11 +405,13 @@ END
 
     auto sched = make_schedule(input, false);
 
-    for (std::size_t step = 0; step < sched.size(); step++) {
+    for (std::size_t step = 0; step < sched.size(); ++step) {
         if (step == 0 || step == 38 || step == 51)
-            BOOST_CHECK_MESSAGE( sched.write_rst_file(step), "Restart file expected for step: " << step );
+            BOOST_CHECK_MESSAGE( sched.write_rst_file(step),
+                                 "Restart file expected for step: " << step );
         else
-            BOOST_CHECK_MESSAGE( !sched.write_rst_file(step), "Should *not* have restart file for step: " << step );
+            BOOST_CHECK_MESSAGE( !sched.write_rst_file(step),
+                                 "Should *not* have restart file for step: " << step);
     }
 }
 
@@ -458,16 +467,19 @@ RESTART=0
 
     auto sched = make_schedule(deckData1, false);
 
-    BOOST_CHECK(  sched.write_rst_file( 0 ) );
-    // By comparision with Eclipse it turns out that we should write a restart
+    BOOST_CHECK_MESSAGE( sched.write_rst_file( 0 ),
+                         "Must write restart for report step 0" );
+
+    // By comparison with ECLIPSE it turns out that we should write a restart
     // file for report step 1, there is clearly a bug in the old RPTRST
     // implementation which has been unnoticed for years. While reimplementing
     // the schedule implementation to use a snapshots based approach the test is
     // switched to require a restart file for report step 0 - and temporarily
     // disabled.
-    // BOOST_CHECK( sched.write_rst_file( 1 ) );
-    BOOST_CHECK(  sched.write_rst_file( 2 ) );
-    BOOST_CHECK( !sched.write_rst_file( 3 ) );
+    //
+    // BOOST_CHECK_MESSAGE( sched.write_rst_file( 1 ), "Must write restart for report step 1" );
+    BOOST_CHECK_MESSAGE(  sched.write_rst_file( 2 ), "Must write restart for report step 2" );
+    BOOST_CHECK_MESSAGE( !sched.write_rst_file( 3 ), "Must NOT write restart for report step 3" );
 
     const auto& kw_list1 = filter_keywords(sched.rst_keywords(1));
     const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
@@ -479,150 +491,6 @@ RESTART=0
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 }
-
-
-const std::string& deckStr =  R"(
-RUNSPEC
-
-DIMENS
- 10 10 10 /
-GRID
-
-DXV
-  10*1 /
-
-DYV
-  10*1 /
-
-DZV
-  10*1 /
-
-DEPTH
-  121*1 /
-
-PORO
-  1000*0.25 /
-
-GRIDFILE
- 0 1 /
-
-START
- 21 MAY 1981 /
-
-SCHEDULE
-DATES
- 22 MAY 1981 /              -- timestep 1
- 23 MAY 1981 /              -- timestep 2
- 24 MAY 1981 /              -- timestep 3
- 25 MAY 1981 /              -- timestep 4
- 26 MAY 1981 /              -- timestep 5
- 1 JAN 1982 /               -- timestep 6
- 1 JAN 1982 13:55:44 /      -- timestep 7
- 3 JAN 1982 14:56:45.123 /  -- timestep 8
- 4 JAN 1982 14:56:45.123 /  -- timestep 9
- 5 JAN 1982 14:56:45.123 /  -- timestep 10
- 6 JAN 1982 14:56:45.123 /  -- timestep 11
- 7 JAN 1982 14:56:45.123 /  -- timestep 12
- 8 JAN 1982 14:56:45.123 /  -- timestep 13
- 9 JAN 1982 14:56:45.123 /  -- timestep 14
- 10 JAN 1982 14:56:45.123 / -- timestep 15
- 11 JAN 1982 14:56:45.123 / -- timestep 16
- 1 JAN 1983 /               -- timestep 17
- 2 JAN 1983 /               -- timestep 18
- 3 JAN 1983 /               -- timestep 19
- 1 JAN 1984 /               -- timestep 20
- 2 JAN 1984 /               -- timestep 21
- 1 JAN 1985 /               -- timestep 22
- 3 JAN 1986 14:56:45.123 /  -- timestep 23
- 4 JAN 1986 14:56:45.123 /  -- timestep 24
- 5 JAN 1986 14:56:45.123 /  -- timestep 25
- 1 JAN 1987 /               -- timestep 26
- 1 JAN 1988 /               -- timestep 27
- 2 JAN 1988 /               -- timestep 28
- 3 JAN 1988 /               -- timestep 29
- 1 JAN 1989 /               -- timestep 30
- 2 JAN 1989 /               -- timestep 31
- 2 JAN 1990 /               -- timestep 32
- 2 JAN 1991 /               -- timestep 33
- 3 JAN 1991 /               -- timestep 34
- 4 JAN 1991 /               -- timestep 35
- 1 JAN 1992 /               -- timestep 36
- 1 FEB 1992 /               -- timestep 37
- 1 MAR 1992 /               -- timestep 38
- 2 MAR 1992 /               -- timestep 39
- 3 MAR 1992 /               -- timestep 40
- 4 MAR 1992 /               -- timestep 41
- 1 APR 1992 /               -- timestep 42
- 2 APR 1992 /               -- timestep 43
- 1 MAY 1992 /               -- timestep 44
- 2 MAY 1992 /               -- timestep 45
- 3 MAY 1992 /               -- timestep 46
- 3 JUN 1992 /               -- timestep 47
- 3 JUL 1992 /               -- timestep 48
- 3 AUG 1992 /               -- timestep 49
- 4 AUG 1992 /               -- timestep 50
- 5 AUG 1992 /               -- timestep 51
- 6 AUG 1992 /               -- timestep 52
- 7 AUG 1992 /               -- timestep 53
- 8 AUG 1992 /               -- timestep 54
- 9 AUG 1992 /               -- timestep 55
- 10 AUG 1992 /              -- timestep 56
- 11 AUG 1992 /              -- timestep 57
- 12 AUG 1992 /              -- timestep 58
- 13 AUG 1992 /              -- timestep 59
- 14 AUG 1992 /              -- timestep 60
- 15 AUG 1992 /              -- timestep 61
-/
-)";
-
-const std::string deckStr_RFT = R"(
-RUNSPEC
-OIL
-GAS
-WATER
-DIMENS
- 10 10 10 /
-GRID
-DXV
-10*0.25 /
-DYV
-10*0.25 /
-DZV
-10*0.25 /
-TOPS
-100*0.25 /
-
-"START             -- 0
-1 NOV 1979 /
-SCHEDULE
-DATES             -- 1
- 1 DES 1979/
-/
-WELSPECS
-    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
- 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
- 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-DATES             -- 2
- 10  OKT 2008 /
-/
-WRFT
-/
-WELOPEN
- 'OP_1' OPEN /
- 'OP_2' OPEN /
-/
-DATES             -- 3
- 10  NOV 2008 /
-/
-)";
-
-
 
 BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
     const char* data = R"(
@@ -1193,10 +1061,10 @@ DATES
 )";
 
     auto sched = make_schedule(data);
-    const size_t freq = 3;
+    const std::size_t freq = 3;
 
     /* BASIC=3, restart files are created every nth report time, n=3 */
-    for( size_t ts = 1; ts < 12; ++ts )
+    for (std::size_t ts = 1; ts < 12; ++ts)
         BOOST_CHECK_EQUAL( ts % freq == 0, sched.write_rst_file( ts ) );
 }
 
@@ -1226,10 +1094,10 @@ DATES
 
     /* BASIC=4, restart file is written at the first report step of each year.
      */
-    for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 9, 10, 11 } )
-        BOOST_CHECK( !sched.write_rst_file( ts ) );
+    for (std::size_t ts : { 1, 2, 3, 4, 5, 7, 8, 9, 10, 11 })
+        BOOST_CHECK(!sched.write_rst_file( ts ) );
 
-    for( size_t ts : { 6, 12 } )
+    for (std::size_t ts : { 6, 12 })
         BOOST_CHECK( sched.write_rst_file( ts ) );
 }
 
@@ -1323,7 +1191,7 @@ DATES
     auto sched = make_schedule(data);
     /* RESTART=0, no restart file is written
      */
-    for( size_t ts = 0; ts < 11; ++ts )
+    for (std::size_t ts = 0; ts < 11; ++ts)
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
@@ -1375,7 +1243,7 @@ DATES
     /* RESTART=0, no restart file is written
      */
     auto sched = make_schedule(data, false);
-    for( size_t ts = 0; ts < 11; ++ts )
+    for (std::size_t ts = 0; ts < 11; ++ts)
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
@@ -1406,10 +1274,10 @@ DATES
 )";
 
     auto sched = make_schedule(data);
-    for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11  } )
+    for (std::size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11 })
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 
-    for( size_t ts : { 6, 9 } )
+    for (std::size_t ts : { 6, 9 })
         BOOST_CHECK( sched.write_rst_file( ts ) );
 }
 
@@ -1440,9 +1308,10 @@ DATES
 )";
 
     auto sched = make_schedule(data);
-    BOOST_CHECK( sched.write_rst_file( 1 ) );
-    for( size_t ts = 2; ts < 11; ++ts )
-        BOOST_CHECK( !sched.write_rst_file( ts ) );
+    BOOST_CHECK_MESSAGE( sched.write_rst_file( 1 ), "Must write restart for report step 1" );
+    for (std::size_t ts = 2; ts < 11; ++ts)
+        BOOST_CHECK_MESSAGE( !sched.write_rst_file( ts ),
+                             "Must NOT write restart for report step " << ts );
 }
 
 BOOST_AUTO_TEST_CASE(RESTART_SAVE) {
@@ -1469,16 +1338,18 @@ TSTEP
  1 /
 )";
     auto sched = make_schedule(data);
-    for( size_t ts = 1; ts < 11; ++ts )
-        BOOST_CHECK( !sched.write_rst_file(ts));
-    BOOST_CHECK( sched.write_rst_file( 12 ) );
+    for (std::size_t ts = 1; ts < 11; ++ts)
+        BOOST_CHECK_MESSAGE( !sched.write_rst_file(ts),
+                             "Must NOT write restart for report step " << ts);
 
+    BOOST_CHECK_MESSAGE( sched.write_rst_file( 12 ),
+                         "Must write restart for report step 12");
 }
 
 
 BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER2) {
 
-    const std::string deckData1 = R"(
+    const auto deckData1 = std::string { R"(
 RUNSPEC
 START             -- 0
 19 JUN 2007 /
@@ -1527,7 +1398,7 @@ RESTART=0
 DATES       -- 4
 1 MAR 2010 /
 /
-)";
+)" };
 
     auto sched = make_schedule(deckData1, false);
 
@@ -1536,7 +1407,6 @@ DATES       -- 4
     BOOST_CHECK(  sched.write_rst_file( 1 ) );
     BOOST_CHECK(  sched.write_rst_file( 2 ) );
     BOOST_CHECK( !sched.write_rst_file( 3 ) );
-
 
     const auto& kw_list1 = filter_keywords(sched.rst_keywords(1));
     const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
@@ -1548,4 +1418,3 @@ DATES       -- 4
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
 }
-
