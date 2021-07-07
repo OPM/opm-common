@@ -139,6 +139,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WriteRestartFileEvents.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.cpp
@@ -415,6 +416,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/WellTracerTests.cpp
     tests/parser/WellTests.cpp
     tests/parser/WLIST.cpp
+    tests/parser/WriteRestartFileEventsTests.cpp
     tests/parser/WTEST.cpp)
 endif()
 if(ENABLE_ECL_OUTPUT)
@@ -785,6 +787,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp
        opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WriteRestartFileEvents.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GPMaint.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp
