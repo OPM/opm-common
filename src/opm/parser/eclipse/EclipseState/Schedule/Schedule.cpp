@@ -132,10 +132,15 @@ namespace {
         m_static( python, restart_info(rst), deck, runspec, output_interval, parseContext, errors ),
         m_sched_deck(deck, m_static.m_restart_info)
     {
+        this->restart_output.resize(this->m_sched_deck.size());
+        this->restart_output.clearRemainingEvents(0);
+
         if (rst) {
             auto restart_step = this->m_static.m_restart_info.second;
             this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, nullptr, &grid, &fp, "");
             this->load_rst(*rst, grid, fp);
+            if (! this->restart_output.writeRestartFile(restart_step))
+                this->restart_output.addRestartOutput(restart_step);
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp, "");
         } else
             this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp, "");
@@ -232,6 +237,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         result.m_static = ScheduleStatic::serializeObject();
         result.snapshots = { ScheduleState::serializeObject() };
         result.m_sched_deck = ScheduleDeck::serializeObject();
+        result.restart_output = WriteRestartFileEvents::serializeObject();
 
         return result;
     }
@@ -463,6 +469,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             }
 
             checkIfAllConnectionsIsShut(report_step);
+
+            if (this->must_write_rst_file(report_step)) {
+                this->restart_output.addRestartOutput(report_step);
+            }
         }
     }
 
@@ -1241,16 +1251,30 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
     }
 
-    bool Schedule::write_rst_file(std::size_t report_step, bool ) const {
+    bool Schedule::write_rst_file(const std::size_t report_step) const
+    {
+        return this->restart_output.writeRestartFile(report_step);
+    }
+
+    bool Schedule::must_write_rst_file(const std::size_t report_step) const
+    {
         if (this->m_static.output_interval.has_value())
             return this->m_static.output_interval.value() % report_step;
 
         if (report_step == 0)
             return this->m_static.rst_config.write_rst_file.value();
 
+        const auto previous_restart_output_step =
+            this->restart_output.lastRestartEventBefore(report_step);
+
+        // Previous output event time or start of simulation if no previous
+        // event recorded
+        const auto previous_output = previous_restart_output_step.has_value()
+            ? this->snapshots[previous_restart_output_step.value()].start_time()
+            : this->snapshots[0].start_time();
+
         const auto& rst_config = this->snapshots[report_step - 1].rst_config();
-        const auto& state = this->snapshots[report_step];
-        return state.rst_file(rst_config);
+        return this->snapshots[report_step].rst_file(rst_config, previous_output);
     }
 
 
@@ -1265,7 +1289,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     bool Schedule::operator==(const Schedule& data) const {
         return this->m_static == data.m_static &&
                this->m_sched_deck == data.m_sched_deck &&
-               this->snapshots == data.snapshots;
+               this->snapshots == data.snapshots &&
+               this->restart_output == data.restart_output;
      }
 
 

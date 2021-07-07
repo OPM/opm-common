@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 
+#include <stdexcept>
 
 namespace Opm {
 
@@ -317,31 +318,32 @@ const WellGroupEvents& ScheduleState::wellgroup_events() const {
 
 */
 
-bool ScheduleState::rst_file(const RSTConfig& rst) const {
+bool ScheduleState::rst_file(const RSTConfig&  rst,
+                             const time_point& previous_restart_output_time) const
+{
     if (rst.save)
         return true;
 
     if (rst.write_rst_file.has_value())
         return rst.write_rst_file.value();
 
-    auto freq = rst.freq.value_or(1);
-    auto basic = rst.basic.value();
+    const auto freq = rst.freq.value_or(1);
+    const auto basic = rst.basic.value();
 
     if (basic == 3)
         return (this->sim_step() % freq) == 0;
 
-    if (basic == 4) {
-        if (!this->first_in_year())
-            return false;
+    const auto [year_diff, month_diff] =
+        date_diff(this->m_start_time, previous_restart_output_time);
 
-        return (this->m_year_num % freq) == 0;
+    if (basic == 4) {
+        return this->first_in_year()
+            && (year_diff >= static_cast<std::size_t>(freq));
     }
 
     if (basic == 5) {
-        if (!this->first_in_month())
-            return false;
-
-        return (this->m_month_num % freq) == 0;
+        return this->first_in_month()
+            && (month_diff >= static_cast<std::size_t>(freq));
     }
 
     throw std::logic_error(fmt::format("Unsupported BASIC={} value", basic));
