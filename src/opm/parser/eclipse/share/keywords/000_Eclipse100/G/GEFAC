@@ -16,7 +16,8 @@
     {
       "name": "TRANSFER_EXT_NET",
       "value_type": "STRING",
-      "default": "YES"
+      "default": "YES",
+      "comment": "Not supported"
     }
   ]
 }
