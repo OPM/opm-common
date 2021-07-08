@@ -15,9 +15,11 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+
+#include <opm/io/eclipse/rst/aquifer.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
@@ -41,6 +43,29 @@
 #include <cstddef>
 #include <utility>
 #include <vector>
+
+namespace {
+    Opm::AquiferCT::AQUCT_data
+    makeAquifer(const Opm::RestartIO::RstAquifer::CarterTracy& rst_aquifer)
+    {
+        auto aquifer = Opm::AquiferCT::AQUCT_data{};
+
+        aquifer.aquiferID  = rst_aquifer.aquiferID;
+        aquifer.inftableID = rst_aquifer.inftableID;
+        aquifer.pvttableID = rst_aquifer.pvttableID;
+
+        aquifer.porosity         = rst_aquifer.porosity;
+        aquifer.datum_depth      = rst_aquifer.datum_depth;
+        aquifer.total_compr      = rst_aquifer.total_compr;
+        aquifer.inner_radius     = rst_aquifer.inner_radius;
+        aquifer.permeability     = rst_aquifer.permeability;
+        aquifer.thickness        = rst_aquifer.thickness;
+        aquifer.angle_fraction   = rst_aquifer.angle_fraction;
+        aquifer.initial_pressure = rst_aquifer.initial_pressure;
+
+        return aquifer;
+    }
+}
 
 namespace Opm {
 
@@ -198,6 +223,30 @@ AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
 AquiferCT::AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data) :
     m_aquct(data)
 {}
+
+void AquiferCT::loadFromRestart(const RestartIO::RstAquifer& rst,
+                                const TableManager&          tables)
+{
+    this->m_aquct.clear();
+
+    const auto& rst_aquifers = rst.carterTracy();
+    if (! rst_aquifers.empty()) {
+        this->m_aquct.reserve(rst_aquifers.size());
+    }
+
+    for (const auto& rst_aquifer : rst_aquifers) {
+        this->m_aquct.push_back(makeAquifer(rst_aquifer));
+
+        auto& new_aquifer = this->m_aquct.back();
+        new_aquifer.finishInitialisation(tables);
+
+        // Assign 'private:' members in AQUCT_data.
+        new_aquifer.time_constant_   = rst_aquifer.time_constant;
+        new_aquifer.influx_constant_ = rst_aquifer.influx_constant;
+        new_aquifer.water_density_   = rst_aquifer.water_density;
+        new_aquifer.water_viscosity_ = rst_aquifer.water_viscosity;
+    }
+}
 
 AquiferCT AquiferCT::serializeObject()
 {
