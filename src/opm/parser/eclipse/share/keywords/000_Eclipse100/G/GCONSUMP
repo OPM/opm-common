@@ -11,16 +11,20 @@
     {
       "name": "GAS_CONSUMP_RATE",
       "value_type": "UDA",
+      "default": 0,
       "dimension": "GasSurfaceVolume/Time"
     },
     {
       "name": "GAS_IMPORT_RATE",
       "value_type": "UDA",
-      "dimension": "GasSurfaceVolume/Time"
+      "default": 0,
+      "dimension": "GasSurfaceVolume/Time",
+      "comment": "Not supported"
     },
     {
       "name": "NETWORK_NODE",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "comment": "Not supported"
     }
   ]
 }

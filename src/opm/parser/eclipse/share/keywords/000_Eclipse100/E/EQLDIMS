@@ -23,12 +23,14 @@
     {
       "name": "NTTRVD",
       "value_type": "INT",
-      "default": 1
+      "default": 1,
+      "comment": "Not supported"
     },
     {
       "name": "NSTRVD",
       "value_type": "INT",
-      "default": 20
+      "default": 20,
+      "comment": "Not supported"
     }
   ]
 }

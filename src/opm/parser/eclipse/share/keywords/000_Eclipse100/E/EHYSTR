@@ -9,7 +9,8 @@
       "item": 1,
       "name": "curvature_caplillary_pressure_hyst",
       "value_type": "DOUBLE",
-      "default": 0.1
+      "default": 0.1,
+      "comment": "Not used"
     },
     {
       "item": 2,
@@ -22,13 +23,15 @@
       "item": 3,
       "name": "curvature_param_killough_wetting",
       "value_type": "DOUBLE",
-      "default": 1
+      "default": 1,
+      "comment": "Not used"
     },
     {
       "item": 4,
       "name": "mod_param_trapped",
       "value_type": "DOUBLE",
-      "default": 0.1
+      "default": 0.1,
+      "comment": "Not used"
     },
     {
       "item": 5,
@@ -40,19 +43,22 @@
       "item": 6,
       "name": "shape_cap_press_flag",
       "value_type": "STRING",
-      "default": "RETR"
+      "default": "RETR",
+      "comment": "Not used"
     },
     {
       "item": 7,
       "name": "init_fluid_mob_flag",
       "value_type": "STRING",
-      "default": "DRAIN"
+      "default": "DRAIN",
+      "comment": "Not used"
     },
     {
       "item": 8,
       "name": "wetting_phase_flag",
       "value_type": "STRING",
-      "default": "OIL"
+      "default": "OIL",
+      "comment": "Not used"
     },
     {
       "item": 9,
@@ -86,7 +92,8 @@
       "item": 13,
       "name": "FLAG_SOMETHING",
       "value_type": "INT",
-      "default": 0
+      "default": 0,
+      "comment": "Not used"
     }
   ]
 }

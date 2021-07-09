@@ -44,25 +44,29 @@
       "item": 8,
       "name": "SAT_TABLE12",
       "value_type": "INT",
-      "default_value": 0
+      "default_value": 0,
+      "comment": "Not used"
     },
     {
       "item": 9,
       "name": "SAT_TABLE21",
       "value_type": "INT",
-      "default_value": 0
+      "default_value": 0,
+      "comment": "Not used"
     },
     {
       "item": 10,
       "name": "PRESS_TABLE12",
       "value_type": "INT",
-      "default_value": 0
+      "default_value": 0,
+      "comment": "Not used"
     },
     {
       "item": 11,
       "name": "PRESS_TABLE21",
       "value_type": "INT",
-      "default_value": 0
+      "default_value": 0,
+      "comment": "Not used"
     },
     {
       "item": 12,
@@ -80,7 +84,8 @@
       "item": 14,
       "name": "DIFFM",
       "value_type": "DOUBLE",
-      "default_value": 1
+      "default_value": 0,
+      "comment": "Not used"
     }
   ]
 }

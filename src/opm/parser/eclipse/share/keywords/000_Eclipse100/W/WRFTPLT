@@ -21,7 +21,8 @@
     {
       "name": "OUTPUT_SEGMENT",
       "value_type": "STRING",
-      "default": "NO"
+      "default": "NO",
+      "comment": "Not supported"
     }
   ]
 }
