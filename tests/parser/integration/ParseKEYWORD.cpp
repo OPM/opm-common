@@ -1303,10 +1303,10 @@ BOOST_AUTO_TEST_CASE( WCHONHIST ) {
     BOOST_CHECK_EQUAL( 3U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
-    BOOST_CHECK_EQUAL( 11U , rec1.size() );
+    BOOST_CHECK_EQUAL( 12U , rec1.size() );
 
     const auto& rec3 = kw1.getRecord(2);
-    BOOST_CHECK_EQUAL( 11U , rec3.size() );
+    BOOST_CHECK_EQUAL( 12U , rec3.size() );
 
     const auto& item1       = rec1.getItem("WELL");
     const auto& item1_index = rec1.getItem(0);
