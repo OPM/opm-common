@@ -44,7 +44,7 @@ namespace Opm {
     class WellMatcher;
 
     namespace RestartIO {
-        class RstState;
+        struct RstState;
     }
 
 

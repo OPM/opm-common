@@ -47,7 +47,7 @@ public:
     };
 
     struct RstAssign {
-        void update_value(const std::string& name, double new_value);
+        void update_value(const std::string& name_arg, double new_value);
 
         std::optional<double> value;
         std::unordered_set<std::string> selector;
