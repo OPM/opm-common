@@ -25,6 +25,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -414,4 +415,248 @@ BOOST_AUTO_TEST_CASE(TestUnits) {
     BOOST_CHECK_THROW( smry.get_unit("NO_SUCH_KEY"), std::out_of_range);
     BOOST_CHECK_EQUAL( smry.get_unit("TIME"), "DAYS");
     BOOST_CHECK_EQUAL( smry.get_unit("WOPR:PROD"), "STB/DAY");
+}
+
+BOOST_AUTO_TEST_CASE(Test_all_available) {
+
+    std::cout << "all good \n";
+
+    std::vector<std::string> keywords = {"TIME ", "YEARS", "FGOR", "FOPR",
+        "WBHP" , "WBHP", "WOPR", "WWIR"};
+
+    std::vector<std::string> wgnames = {":+:+:+:+", ":+:+:+:+", ":+:+:+:+",
+        ":+:+:+:+", "INJ1", "PROD1", "PROD1", "INJ1"};
+
+    std::vector<std::string> units = { "DAYS", "YEARS", "SM3/SM3", "SM3/DAY",
+        "BARSA", "BARSA", "SM3/DAY", "SM3/DAY"};
+
+    std::vector<int> nums (8, 0);
+
+    {
+        Opm::EclIO::EclOutput smspec1("TMP1.SMSPEC", false);
+        smspec1.write<int>("INTEHEAD", {1,100});
+        std::vector<std::string> restart (9,"");
+        smspec1.write("RESTART", restart);
+        smspec1.write<int>("DIMENS", {8, 13, 22, 11, 0, 0});
+        smspec1.write("KEYWORDS", keywords);
+        smspec1.write("WGNAMES", wgnames);
+        smspec1.write("NUMS", nums);
+        smspec1.write("UNITS", units);
+        smspec1.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
+     };
+
+    {
+        Opm::EclIO::EclOutput smspec1("TMP1.UNSMRY", false);
+
+        smspec1.write<int>("SEQHDR", {1});
+        smspec1.write<int>("MINISTEP", {0});
+        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("SEQHDR", {2});
+        smspec1.write<int>("MINISTEP", {1});
+        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {2});
+        smspec1.write<float>("PARAMS", {3,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {3});
+        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {4});
+        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
+     };
+
+     Opm::EclIO::ESmry smry1("TMP1.SMSPEC");
+
+     BOOST_CHECK_EQUAL( smry1.all_steps_available(), true);
+
+    {
+        Opm::EclIO::EclOutput smspec1("TMP1.UNSMRY", false);
+
+        smspec1.write<int>("SEQHDR", {1});
+        smspec1.write<int>("MINISTEP", {0});
+        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("SEQHDR", {1});
+        smspec1.write<int>("MINISTEP", {1});
+        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {3});
+        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {4});
+        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
+     };
+
+     Opm::EclIO::ESmry smry2("TMP1.SMSPEC");
+
+     BOOST_CHECK_EQUAL( smry2.all_steps_available(), false);
+
+     if (Opm::filesystem::exists("TMP1.SMSPEC"))
+         Opm::filesystem::remove("TMP1.SMSPEC");
+
+     if (Opm::filesystem::exists("TMP1.UNSMRY"))
+         Opm::filesystem::remove("TMP1.UNSMRY");
+
+}
+
+BOOST_AUTO_TEST_CASE(Test_all_available_w_restart) {
+
+    std::vector<std::string> keywords = {"TIME ", "YEARS", "FGOR", "FOPR",
+        "WBHP" , "WBHP", "WOPR", "WWIR"};
+
+    std::vector<std::string> wgnames = {":+:+:+:+", ":+:+:+:+", ":+:+:+:+",
+        ":+:+:+:+", "INJ1", "PROD1", "PROD1", "INJ1"};
+
+    std::vector<std::string> units = { "DAYS", "YEARS", "SM3/SM3", "SM3/DAY",
+        "BARSA", "BARSA", "SM3/DAY", "SM3/DAY"};
+
+    std::vector<int> nums (8, 0);
+
+    {
+        Opm::EclIO::EclOutput smspec1("BASE1.SMSPEC", false);
+        smspec1.write<int>("INTEHEAD", {1,100});
+        std::vector<std::string> restart (9,"");
+        smspec1.write("RESTART", restart);
+        smspec1.write<int>("DIMENS", {8, 13, 22, 11, 0, 0});
+        smspec1.write("KEYWORDS", keywords);
+        smspec1.write("WGNAMES", wgnames);
+        smspec1.write("NUMS", nums);
+        smspec1.write("UNITS", units);
+        smspec1.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
+    };
+
+    {
+        Opm::EclIO::EclOutput smspec1("RST2.SMSPEC", false);
+        smspec1.write<int>("INTEHEAD", {1,100});
+        std::vector<std::string> restart (9,"");
+        restart[0]="BASE1";
+
+        smspec1.write("RESTART", restart);
+        smspec1.write<int>("DIMENS", {8, 13, 22, 11, 0, 2});
+        smspec1.write("KEYWORDS", keywords);
+        smspec1.write("WGNAMES", wgnames);
+        smspec1.write("NUMS", nums);
+        smspec1.write("UNITS", units);
+        smspec1.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
+    };
+
+    {
+        Opm::EclIO::EclOutput smspec1("BASE1.UNSMRY", false);
+
+        smspec1.write<int>("SEQHDR", {1});
+        smspec1.write<int>("MINISTEP", {0});
+        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("SEQHDR", {2});
+        smspec1.write<int>("MINISTEP", {1});
+        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {2});
+        smspec1.write<float>("PARAMS", {3,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {3});
+        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {4});
+        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
+    };
+
+    {
+        Opm::EclIO::EclOutput smspec1("RST2.UNSMRY", false);
+
+        smspec1.write<int>("SEQHDR", {3});
+        smspec1.write<int>("MINISTEP", {0});
+        smspec1.write<float>("PARAMS", {2.1,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("SEQHDR", {4});
+        smspec1.write<int>("MINISTEP", {1});
+        smspec1.write<float>("PARAMS", {2.2,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {2});
+        smspec1.write<float>("PARAMS", {2.3,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {3});
+        smspec1.write<float>("PARAMS", {2.4,0,0,0,0,0,0,0});
+    };
+
+     // all ministeps avaliable
+
+    Opm::EclIO::ESmry smry1("RST2.SMSPEC", true);
+
+    BOOST_CHECK_EQUAL( smry1.all_steps_available(), true);
+
+    {
+        Opm::EclIO::EclOutput smspec1("BASE1.UNSMRY", false);
+
+        smspec1.write<int>("SEQHDR", {1});
+        smspec1.write<int>("MINISTEP", {0});
+        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("SEQHDR", {2});
+        smspec1.write<int>("MINISTEP", {1});
+        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {3});
+        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {4});
+        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
+    };
+
+    // all mini steps 2 in base run missing
+
+    BOOST_CHECK_EQUAL( smry1.all_steps_available(), false);
+
+    {
+        Opm::EclIO::EclOutput smspec1("BASE1.UNSMRY", false);
+
+        smspec1.write<int>("SEQHDR", {1});
+        smspec1.write<int>("MINISTEP", {0});
+        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("SEQHDR", {2});
+        smspec1.write<int>("MINISTEP", {1});
+        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {2});
+        smspec1.write<float>("PARAMS", {3,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {3});
+        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {4});
+        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
+    };
+
+    {
+        Opm::EclIO::EclOutput smspec1("RST2.UNSMRY", false);
+
+        smspec1.write<int>("SEQHDR", {3});
+        smspec1.write<int>("MINISTEP", {0});
+        smspec1.write<float>("PARAMS", {2.1,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("SEQHDR", {4});
+        smspec1.write<int>("MINISTEP", {1});
+        smspec1.write<float>("PARAMS", {2.2,0,0,0,0,0,0,0});
+
+        smspec1.write<int>("MINISTEP", {3});
+        smspec1.write<float>("PARAMS", {2.4,0,0,0,0,0,0,0});
+    };
+
+    // all mini steps 2 in restart run missing
+
+    BOOST_CHECK_EQUAL( smry1.all_steps_available(), false);
+
+    if (Opm::filesystem::exists("BASE1.SMSPEC"))
+        Opm::filesystem::remove("BASE1.SMSPEC");
+
+    if (Opm::filesystem::exists("BASE1.UNSMRY"))
+        Opm::filesystem::remove("BASE1.UNSMRY");
+
+    if (Opm::filesystem::exists("RST2.SMSPEC"))
+        Opm::filesystem::remove("RST2.SMSPEC");
+
+    if (Opm::filesystem::exists("RST2.UNSMRY"))
+        Opm::filesystem::remove("RST2.UNSMRY");
 }

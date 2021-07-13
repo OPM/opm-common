@@ -440,6 +440,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                     dataFileIndex++;
                 }
 
+                TimeStepEntry mst1 = std::make_tuple(specInd, dataFileIndex, std::get<3>(arraySourceList[i-1]));
+                miniStepList.push_back(mst1);
+
                 TimeStepEntry t1 = std::make_tuple(specInd, dataFileIndex, std::get<3>(arraySourceList[i]));
                 timeStepList.push_back(t1);
 
@@ -470,6 +473,89 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             nTstep = timeStepList.size();
         }
     }
+
+}
+
+bool ESmry::all_steps_available()
+{
+    auto specInd = std::get<0>(miniStepList[0]);
+    auto dataFileIndex = std::get<1>(miniStepList[0]);
+    uint64_t stepFilePos = std::get<2>(miniStepList[0]);
+
+    std::fstream fileH;
+
+    if (formattedFiles[specInd])
+        fileH.open(dataFileList[dataFileIndex], std::ios::in);
+    else
+        fileH.open(dataFileList[dataFileIndex], std::ios::in |  std::ios::binary);
+
+    fileH.seekg (stepFilePos , fileH.beg);
+
+    int ministep_value;
+
+    if (formattedFiles[specInd]) {
+        ministep_value = read_ministep_formatted(fileH);
+    } else {
+        std::function<int(int)> f = Opm::EclIO::flipEndianInt;
+        auto ministep_vect = readBinaryArray<int,int>(fileH, 1, Opm::EclIO::INTE, f, sizeOfInte);
+        ministep_value = ministep_vect[0];
+    }
+
+    int prev_value = ministep_value;
+
+    for (size_t n = 1; n < miniStepList.size(); n++) {
+
+        if (dataFileIndex != std::get<1>(miniStepList[n])) {
+            fileH.close();
+            specInd = std::get<0>(miniStepList[n]);
+            dataFileIndex = std::get<1>(miniStepList[n]);
+
+            if (formattedFiles[specInd])
+                fileH.open(dataFileList[dataFileIndex], std::ios::in );
+            else
+                fileH.open(dataFileList[dataFileIndex], std::ios::in |  std::ios::binary);
+        }
+
+        stepFilePos = std::get<2>(miniStepList[n]);
+
+        fileH.seekg (stepFilePos , fileH.beg);
+
+        if (formattedFiles[specInd]) {
+            ministep_value = read_ministep_formatted(fileH);
+        } else {
+            std::function<int(int)> f = Opm::EclIO::flipEndianInt;
+            auto ministep_vect = readBinaryArray<int,int>(fileH, 1, Opm::EclIO::INTE, f, sizeOfInte);
+            ministep_value = ministep_vect[0];
+        }
+
+        if ((ministep_value - prev_value) > 1){
+            fileH.close();
+            return false;
+        }
+
+        prev_value = ministep_value;
+    }
+
+    fileH.close();
+
+    return true;
+}
+
+int ESmry::read_ministep_formatted(std::fstream& fileH)
+{
+    char* buffer;
+    size_t size = sizeOnDiskFormatted(1, Opm::EclIO::INTE, 4)+1;
+    buffer = new char [size];
+    fileH.read (buffer, size);
+
+    std::string fileStr = std::string(buffer, size);
+
+    auto ministep_vect = readFormattedInteArray(fileStr, 1, 0);
+    int ministep_value = ministep_vect[0];
+
+    delete[] buffer;
+
+    return ministep_value;
 }
 
 void ESmry::inspect_lodsmry()

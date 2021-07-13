@@ -76,6 +76,8 @@ public:
     void write_rsm(std::ostream&) const;
     void write_rsm_file(std::optional<filesystem::path> = std::nullopt) const;
 
+    bool all_steps_available();
+
 private:
     filesystem::path inputFileName, lodFileName;
     int nI, nJ, nK, nSpecFiles;
@@ -88,6 +90,7 @@ private:
     mutable std::vector<std::vector<float>> vectorData;
     mutable std::vector<bool> vectorLoaded;
     std::vector<TimeStepEntry> timeStepList;
+    std::vector<TimeStepEntry> miniStepList;
     std::vector<std::map<int, int>> arrayPos;
     std::vector<std::string> keyword;
     std::map<std::string, int> keyword_index;
@@ -137,6 +140,8 @@ private:
     std::string read_string_from_disk(std::fstream& fileH, uint64_t size) const;
     void inspect_lodsmry();
     void Load_from_lodsmry(const std::vector<int>& keywIndVect) const;
+
+    int read_ministep_formatted(std::fstream& fileH);
 };
 
 }} // namespace Opm::EclIO
