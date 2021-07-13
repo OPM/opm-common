@@ -550,19 +550,15 @@ bool ESmry::all_steps_available()
 
 int ESmry::read_ministep_formatted(std::fstream& fileH)
 {
-    char* buffer;
-    size_t size = sizeOnDiskFormatted(1, Opm::EclIO::INTE, 4)+1;
-    buffer = new char [size];
-    fileH.read (buffer, size);
+    const std::size_t size = sizeOnDiskFormatted(1, Opm::EclIO::INTE, 4)+1;
+    auto buffer = std::vector<char>(size);
+    fileH.read (buffer.data(), size);
 
-    std::string fileStr = std::string(buffer, size);
+    const auto fileStr = std::string(buffer.data(), size);
 
-    auto ministep_vect = readFormattedInteArray(fileStr, 1, 0);
-    int ministep_value = ministep_vect[0];
+    const auto ministep_vect = readFormattedInteArray(fileStr, 1, 0);
 
-    delete[] buffer;
-
-    return ministep_value;
+    return ministep_vect[0];
 }
 
 void ESmry::inspect_lodsmry()
@@ -650,13 +646,10 @@ void ESmry::inspect_lodsmry()
 
 std::string ESmry::read_string_from_disk(std::fstream& fileH, uint64_t size) const
 {
-    char* buffer;
-    buffer = new char [size];
-    fileH.read (buffer, size);
-    std::string fileStr = std::string(buffer, size);
-    delete[] buffer;
+    std::vector<char> buffer(size);
+    fileH.read (buffer.data(), size);
 
-    return fileStr;
+    return { buffer.data(), size };
 }
 
 void ESmry::Load_from_lodsmry(const std::vector<int>& keywIndVect) const
@@ -785,15 +778,10 @@ void ESmry::LoadData(const std::vector<std::string>& vectList) const
 
                         fileH.seekg (elementPos, fileH.beg);
 
-                        char* buffer;
-                        size_t size = columnWidthReal;
-                        buffer = new char [size];
-                        fileH.read (buffer, size);
-                        double dtmpv = std::stod(std::string(buffer, size));
-                        vectorData[ind].push_back(static_cast<float>(dtmpv));
-
-                        delete[] buffer;
-
+                        const std::size_t size = columnWidthReal;
+                        std::vector<char> buffer(size);
+                        fileH.read (buffer.data(), size);
+                        vectorData[ind].push_back(std::strtof(buffer.data(), nullptr));
                     }
                     else {
                         const std::uint64_t nFullBlocks = static_cast<std::uint64_t>(paramPos/(MaxBlockSizeReal / sizeOfReal));
@@ -884,34 +872,29 @@ void ESmry::LoadData() const
             fileH.seekg (stepFilePos, fileH.beg);
 
             if (formattedFiles[specInd]) {
+                const std::size_t size = sizeOnDiskFormatted(nParamsSpecFile[specInd], Opm::EclIO::REAL, sizeOfReal) + 1;
+                std::vector<char> buffer(size);
+                fileH.read (buffer.data(), size);
 
-                char* buffer;
-                size_t size = sizeOnDiskFormatted(nParamsSpecFile[specInd], Opm::EclIO::REAL, sizeOfReal) + 1;
-                buffer = new char [size];
-                fileH.read (buffer, size);
+                const auto fileStr = std::string_view(buffer.data(), size);
+                std::size_t p = 0;
+                std::int64_t p1= 0;
 
-                std::string fileStr = std::string(buffer, size);
-                size_t p = 0;
-                int64_t p1= 0;
-
-                for (int i=0; i< nParamsSpecFile[specInd]; i++) {
+                for (int i=0; i< nParamsSpecFile[specInd]; ++i, ++p) {
                     p1 = fileStr.find_first_not_of(' ',p1);
-                    int64_t p2 = fileStr.find_first_of(' ', p1);
+                    const std::int64_t p2 = fileStr.find_first_of(' ', p1);
 
-                    if ((keywpos[p] > -1) && (!vectorLoaded[keywpos[p]])) {
-                        double dtmpv = std::stod(fileStr.substr(p1, p2-p1));
-                        vectorData[keywpos[p]].push_back(static_cast<float>(dtmpv));
+                    if ((keywpos[p] > -1) && !vectorLoaded[keywpos[p]]) {
+                        const auto dtmpv = std::strtof(fileStr.substr(p1, p2-p1).data(), nullptr);
+                        vectorData[keywpos[p]].push_back(dtmpv);
                     }
 
                     p1 = fileStr.find_first_not_of(' ',p2);
-                    p++;
                 }
-
-                delete[] buffer;
-
-            } else {
-                int64_t rest = static_cast<int64_t>(nParamsSpecFile[specInd]);
-                size_t p = 0;
+            }
+            else {
+                std::int64_t rest = static_cast<int64_t>(nParamsSpecFile[specInd]);
+                std::size_t p = 0;
 
                 while (rest > 0) {
                     int dhead;
@@ -922,14 +905,12 @@ void ESmry::LoadData() const
                     if ((num > maxNumberOfElements) || (num < 0))
                         OPM_THROW(std::runtime_error, "??Error reading binary data, inconsistent header data or incorrect number of elements");
 
-                    for (int i = 0; i < num; i++) {
+                    for (int i = 0; i < num; ++i, ++p) {
                         float value;
                         fileH.read(reinterpret_cast<char*>(&value), sizeOfReal);
 
                         if ((keywpos[p] > -1) && !vectorLoaded[keywpos[p]])
                             vectorData[keywpos[p]].push_back(Opm::EclIO::flipEndianFloat(value));
-
-                        p++;
                     }
 
                     rest -= num;
