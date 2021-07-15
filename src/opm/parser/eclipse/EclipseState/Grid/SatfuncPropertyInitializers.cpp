@@ -84,8 +84,8 @@ namespace {
         const auto oil    = ph.active(::Opm::Phase::OIL);
         const auto gas    = ph.active(::Opm::Phase::GAS);
 
-        const auto threeP = gas && oil && wat;
-        const auto twoP = (!gas && oil && wat) || (gas && oil && !wat) ;
+        const auto threeP = (gas + oil + wat) == 3;
+        const auto twoP = (gas + oil + wat) == 2;
 
         if (! (twoP || threeP)) {
             // Single-phase run.  No family identified or needed.
