@@ -35,6 +35,7 @@ namespace Opm { namespace EclIO {
 
 using ArrSourceEntry = std::tuple<std::string, std::string, int, uint64_t>;
 using TimeStepEntry = std::tuple<int, int, uint64_t>;
+using RstEntry = std::tuple<std::string, int>;
 
 class ESmry
 {
@@ -58,7 +59,7 @@ public:
     void LoadData(const std::vector<std::string>& vectList) const;
     void LoadData() const;
 
-    bool make_lodsmry_file();
+    bool make_esmry_file();
 
     time_point startdate() const { return startdat; }
 
@@ -79,7 +80,10 @@ public:
     bool all_steps_available();
 
 private:
+
     filesystem::path inputFileName;
+    RstEntry restart_info;
+
     int nI, nJ, nK, nSpecFiles;
     bool fromSingleRun;
     size_t nVect, nTstep;
@@ -98,6 +102,7 @@ private:
     std::vector<std::vector<std::string>> keywordListSpecFile;
 
     std::vector<int> seqIndex;
+    std::vector<int> mini_steps;
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
 
@@ -138,6 +143,7 @@ private:
     std::vector<int> makeKeywPosVector(int speInd) const;
     std::string read_string_from_disk(std::fstream& fileH, uint64_t size) const;
 
+    void read_ministeps_from_disk();
     int read_ministep_formatted(std::fstream& fileH);
 };
 

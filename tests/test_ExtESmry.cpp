@@ -19,6 +19,7 @@
 #include "config.h"
 
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/ExtESmry.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
@@ -37,6 +38,7 @@
 #include <tuple>
 
 using Opm::EclIO::ESmry;
+using Opm::EclIO::ExtESmry;
 
 template<typename InputIterator1, typename InputIterator2>
 bool
@@ -147,64 +149,73 @@ std::vector<float> getFrom(const std::vector<float> &ref_vect,int from){
     return vect;
 }
 
-BOOST_AUTO_TEST_CASE(TestESmry_1) {
+BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
+
+    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1.ESMRY");
+
+    ESmry smry1("SPE1CASE1.SMSPEC");
+
+    smry1.make_esmry_file();
+
+    ExtESmry esmry1("SPE1CASE1.ESMRY");
+
+    auto ntsteps = esmry1.numberOfTimeSteps();
+    BOOST_CHECK_EQUAL(ntsteps, 123);
 
     std::vector <float> time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref, fgor_ref, bpr_111_ref, bpr_10103_ref;
 
     getRefSmryVect(time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref,fgor_ref, bpr_111_ref, bpr_10103_ref);
 
-    ESmry smry1("SPE1CASE1.SMSPEC");
-    smry1.LoadData();
+    auto time = esmry1.get("TIME");
 
     std::vector<float> smryVect = smry1.get("TIME");
-    BOOST_CHECK_EQUAL(smryVect==time_ref, true);
-    const auto dates = smry1.dates();
+    BOOST_CHECK_EQUAL(smryVect == time_ref, true);
+
+    const auto dates = esmry1.dates();
+
     for (std::size_t index = 0; index < dates.size(); index++) {
         auto diff = dates[index]- smry1.startdate();
         auto diff_seconds = std::chrono::duration_cast<std::chrono::seconds>(diff).count();
         BOOST_CHECK_CLOSE(diff_seconds, 24*3600 * smryVect[index], 1e-6);
     }
 
+    smryVect = esmry1.get("WGPR:PROD");
 
-
-    smryVect = smry1.get("WGPR:PROD");
-
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], wgpr_prod_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("WBHP:PROD");
+    smryVect = esmry1.get("WBHP:PROD");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], wbhp_prod_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("WBHP:INJ");
+    smryVect = esmry1.get("WBHP:INJ");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], wbhp_inj_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("FGOR");
+    smryVect = esmry1.get("FGOR");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], fgor_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("BPR:1,1,1");
+    smryVect = esmry1.get("BPR:1,1,1");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_111_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("BPR:10,10,3");
+    smryVect = esmry1.get("BPR:10,10,3");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_10103_ref[i], 0.01);
-    }
+
+    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1.ESMRY");
 }
 
-BOOST_AUTO_TEST_CASE(TestESmry_2) {
+
+BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
 
     // using a syntetic restart file.
     //
@@ -230,57 +241,79 @@ BOOST_AUTO_TEST_CASE(TestESmry_2) {
     // defaulting second argument, loadBaseRunData. Only data from the restarted run
     // will be loaded. No data from base run (SPE1CASE1 in this case)
 
-    ESmry smry1("SPE1CASE1_RST60.SMSPEC");    // equivalent to  smry1("SPE1CASE1_RST60.SMSPEC",false)
-    smry1.LoadData();
+    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
-    std::vector<float> smryVect = smry1.get("TIME");
+    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
+
+    ESmry smry1("SPE1CASE1.SMSPEC");
+    ESmry smry2("SPE1CASE1_RST60.SMSPEC");
+
+    smry1.make_esmry_file();
+    smry2.make_esmry_file();
+
+    ExtESmry esmry1("SPE1CASE1_RST60.ESMRY");
+
+    BOOST_CHECK_EQUAL(esmry1.all_steps_available(), true);
+
+    auto ntsteps = esmry1.numberOfTimeSteps();
+    BOOST_CHECK_EQUAL(ntsteps, 60);
+
+    BOOST_CHECK_THROW( esmry1.get_unit("NO_SUCH_KEY"), std::invalid_argument);
+    BOOST_CHECK_EQUAL( esmry1.get_unit("TIME"), "DAYS");
+    BOOST_CHECK_EQUAL( esmry1.get_unit("WOPR:PROD"), "STB/DAY");
+
+    std::vector<float> smryVect = esmry1.get("TIME");
     std::vector<float> time_ref_rst60 = getFrom(time_ref,63);
 
     BOOST_CHECK_EQUAL(smryVect==time_ref_rst60, true);
 
-    smryVect = smry1.get("WGPR:PROD");
+    smryVect = esmry1.get("WGPR:PROD");
     std::vector<float> ref_rst60 = getFrom(wgpr_prod_ref,63);
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
-    }
 
-    smryVect = smry1.get("WBHP:PROD");
+    smryVect = esmry1.get("WBHP:PROD");
     ref_rst60 = getFrom(wbhp_prod_ref,63);
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
-    }
 
-    smryVect = smry1.get("WBHP:INJ");
+
+    smryVect = esmry1.get("WBHP:INJ");
     ref_rst60 = getFrom(wbhp_inj_ref,63);
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
-    }
 
-    smryVect = smry1.get("FGOR");
+    smryVect = esmry1.get("FGOR");
     ref_rst60 = getFrom(fgor_ref,63);
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
-    }
 
-    smryVect = smry1.get("BPR:1,1,1");
+    smryVect = esmry1.get("BPR:1,1,1");
     ref_rst60 = getFrom(bpr_111_ref,63);
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
-    }
 
-    smryVect = smry1.get("BPR:10,10,3");
+    smryVect = esmry1.get("BPR:10,10,3");
     ref_rst60 = getFrom(bpr_10103_ref,63);
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
-    }
 
+    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1.ESMRY");
+
+    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
 }
+
+
 
 BOOST_AUTO_TEST_CASE(TestESmry_3) {
 
@@ -308,358 +341,61 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
     // second argument, loadBaseRunData = true. Both data from restarted run and base run loaded
     // vectors should be equal to reference vectors (from SPE1CASE1)
 
-    ESmry smry1("SPE1CASE1_RST60.SMSPEC",true);
-    smry1.LoadData();
+    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
-    std::vector<float> smryVect = smry1.get("TIME");
+    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
+
+    ESmry smry1("SPE1CASE1.SMSPEC");
+    ESmry smry2("SPE1CASE1_RST60.SMSPEC");
+
+    smry1.make_esmry_file();
+    smry2.make_esmry_file();
+
+    ExtESmry esmry1("SPE1CASE1_RST60.ESMRY", true);
+
+    auto ntsteps = esmry1.numberOfTimeSteps();
+    BOOST_CHECK_EQUAL(ntsteps, 123);
+
+    std::vector<float> smryVect = esmry1.get("TIME");
     BOOST_CHECK_EQUAL(smryVect==time_ref, true);
 
-    smryVect = smry1.get("WGPR:PROD");
-    for (unsigned int i=0;i< smryVect.size();i++){
+    smryVect = esmry1.get("WGPR:PROD");
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], wgpr_prod_ref[i], 0.01);
-    }
 
 
-    smryVect = smry1.get("WBHP:PROD");
+    smryVect = esmry1.get("WBHP:PROD");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], wbhp_prod_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("WBHP:INJ");
+    smryVect = esmry1.get("WBHP:INJ");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], wbhp_inj_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("FGOR");
+    smryVect = esmry1.get("FGOR");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], fgor_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("BPR:1,1,1");
+    smryVect = esmry1.get("BPR:1,1,1");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_111_ref[i], 0.01);
-    }
 
-    smryVect = smry1.get("BPR:10,10,3");
+    smryVect = esmry1.get("BPR:10,10,3");
 
-    for (unsigned int i=0;i< smryVect.size();i++){
+    for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_10103_ref[i], 0.01);
-    }
-}
 
-BOOST_AUTO_TEST_CASE(TestESmry_4) {
+    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
-    std::vector<float> time_ref = {31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396, 424, 455, 485, 516, 546, 577, 608, 638, 669, 699, 730, 761, 789, 820, 850, 881, 911, 942, 973, 1003, 1034, 1064, 1095, 1126, 1154, 1185, 1215, 1246, 1276, 1307, 1338, 1368, 1399, 1429, 1460, 1491, 1519, 1550, 1580, 1611, 1641, 1672, 1703, 1733, 1764, 1794, 1825, 1856, 1884, 1915, 1945, 1976, 2006, 2037, 2068, 2098, 2129, 2159, 2190, 2221, 2249, 2280, 2310, 2341, 2371, 2402, 2433, 2463, 2494, 2524, 2555, 2586, 2614, 2645, 2675, 2706, 2736, 2767, 2798, 2828, 2859, 2889, 2920, 2951, 2979, 3010, 3040, 3071, 3101, 3132, 3163, 3193, 3224, 3254, 3285, 3316, 3344, 3375, 3405, 3436, 3466, 3497, 3528, 3558, 3589, 3619, 3650};
-
-    ESmry smry1("SPE1CASE1.SMSPEC");
-    smry1.LoadData();
-
-    std::vector<float> smryVect = smry1.get("TIME");
-    std::vector<float> smryVect_rstep = smry1.get_at_rstep("TIME");
-
-    BOOST_CHECK_EQUAL(smryVect==time_ref, false);
-    BOOST_CHECK_EQUAL(smryVect_rstep==time_ref, true);
-
-}
-
-
-BOOST_AUTO_TEST_CASE(TestESmry_5) {
-
-    // file MODEL1_IX.SMSPEC and MODEL1_IX.UNSMRY are output from comercial simulator ix with
-    // BASE_MODEL_1.DATA in opm-tests
-
-    // array WGNAME (of type CHAR) in Eclipse and Flow smspec files, is replaced with
-    // array NAMES (of type C0NN) in IX smspec files
-
-    ESmry smry1("MODEL1_IX.SMSPEC");
-    smry1.LoadData();
-
-    std::vector<float> report_timesteps = {31.0, 60.0, 91.0, 121.0, 152.0, 182.0, 213.0, 244.0, 274.0, 305.0, 335.0, 364.0};
-
-    std::vector<float> qoil_p2 = { 1160.149902, 1199.301147, 1199.304932, 1199.147583, 1199.120239, 1199.040405, 1198.917725,
-                                   1198.765381, 1198.627930, 1198.406616, 1198.143555, 1197.853760 };
-
-
-    std::vector<float> timeVect = smry1.get_at_rstep("TIME");
-    std::vector<float> wopr_prod2 = smry1.get_at_rstep("WOPR:PROD-2");
-
-    for (size_t n = 0; n < timeVect.size() ; n ++)
-        BOOST_CHECK_CLOSE(timeVect[n], report_timesteps[n], 1e-6);
-
-    for (size_t n = 0; n < wopr_prod2.size() ; n ++)
-        BOOST_CHECK_CLOSE(wopr_prod2[n], qoil_p2[n], 1e-6);
-}
-
-
-
-namespace fs = Opm::filesystem;
-BOOST_AUTO_TEST_CASE(TestCreateRSM) {
-    ESmry smry1("SPE1CASE1.SMSPEC");
-    smry1.LoadData();
-
-    smry1.write_rsm_file();
-    BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
-
-    smry1.write_rsm_file("TEST.RSM");
-    BOOST_CHECK(fs::exists("TEST.RSM"));
-}
-
-BOOST_AUTO_TEST_CASE(TestUnits) {
-    ESmry smry("SPE1CASE1.SMSPEC");
-    smry.LoadData();
-
-    BOOST_CHECK_THROW( smry.get_unit("NO_SUCH_KEY"), std::out_of_range);
-    BOOST_CHECK_EQUAL( smry.get_unit("TIME"), "DAYS");
-    BOOST_CHECK_EQUAL( smry.get_unit("WOPR:PROD"), "STB/DAY");
-}
-
-BOOST_AUTO_TEST_CASE(Test_all_available) {
-
-    std::vector<std::string> keywords = {"TIME ", "YEARS", "FGOR", "FOPR",
-        "WBHP" , "WBHP", "WOPR", "WWIR"};
-
-    std::vector<std::string> wgnames = {":+:+:+:+", ":+:+:+:+", ":+:+:+:+",
-        ":+:+:+:+", "INJ1", "PROD1", "PROD1", "INJ1"};
-
-    std::vector<std::string> units = { "DAYS", "YEARS", "SM3/SM3", "SM3/DAY",
-        "BARSA", "BARSA", "SM3/DAY", "SM3/DAY"};
-
-    std::vector<int> nums (8, 0);
-
-    {
-        Opm::EclIO::EclOutput smspec1("TMP1.SMSPEC", false);
-        smspec1.write<int>("INTEHEAD", {1,100});
-        std::vector<std::string> restart (9,"");
-        smspec1.write("RESTART", restart);
-        smspec1.write<int>("DIMENS", {8, 13, 22, 11, 0, 0});
-        smspec1.write("KEYWORDS", keywords);
-        smspec1.write("WGNAMES", wgnames);
-        smspec1.write("NUMS", nums);
-        smspec1.write("UNITS", units);
-        smspec1.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
-     };
-
-    {
-        Opm::EclIO::EclOutput smspec1("TMP1.UNSMRY", false);
-
-        smspec1.write<int>("SEQHDR", {1});
-        smspec1.write<int>("MINISTEP", {0});
-        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("SEQHDR", {2});
-        smspec1.write<int>("MINISTEP", {1});
-        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {2});
-        smspec1.write<float>("PARAMS", {3,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {3});
-        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {4});
-        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
-     };
-
-     Opm::EclIO::ESmry smry1("TMP1.SMSPEC");
-
-     BOOST_CHECK_EQUAL( smry1.all_steps_available(), true);
-
-    {
-        Opm::EclIO::EclOutput smspec1("TMP1.UNSMRY", false);
-
-        smspec1.write<int>("SEQHDR", {1});
-        smspec1.write<int>("MINISTEP", {0});
-        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("SEQHDR", {1});
-        smspec1.write<int>("MINISTEP", {1});
-        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {3});
-        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {4});
-        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
-     };
-
-     Opm::EclIO::ESmry smry2("TMP1.SMSPEC");
-
-     BOOST_CHECK_EQUAL( smry2.all_steps_available(), false);
-
-     if (Opm::filesystem::exists("TMP1.SMSPEC"))
-         Opm::filesystem::remove("TMP1.SMSPEC");
-
-     if (Opm::filesystem::exists("TMP1.UNSMRY"))
-         Opm::filesystem::remove("TMP1.UNSMRY");
-
-}
-
-BOOST_AUTO_TEST_CASE(Test_all_available_w_restart) {
-
-    std::vector<std::string> keywords = {"TIME ", "YEARS", "FGOR", "FOPR",
-        "WBHP" , "WBHP", "WOPR", "WWIR"};
-
-    std::vector<std::string> wgnames = {":+:+:+:+", ":+:+:+:+", ":+:+:+:+",
-        ":+:+:+:+", "INJ1", "PROD1", "PROD1", "INJ1"};
-
-    std::vector<std::string> units = { "DAYS", "YEARS", "SM3/SM3", "SM3/DAY",
-        "BARSA", "BARSA", "SM3/DAY", "SM3/DAY"};
-
-    std::vector<int> nums (8, 0);
-
-    {
-        Opm::EclIO::EclOutput smspec1("BASE1.SMSPEC", false);
-        smspec1.write<int>("INTEHEAD", {1,100});
-        std::vector<std::string> restart (9,"");
-        smspec1.write("RESTART", restart);
-        smspec1.write<int>("DIMENS", {8, 13, 22, 11, 0, 0});
-        smspec1.write("KEYWORDS", keywords);
-        smspec1.write("WGNAMES", wgnames);
-        smspec1.write("NUMS", nums);
-        smspec1.write("UNITS", units);
-        smspec1.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
-    };
-
-    {
-        Opm::EclIO::EclOutput smspec1("RST2.SMSPEC", false);
-        smspec1.write<int>("INTEHEAD", {1,100});
-        std::vector<std::string> restart (9,"");
-        restart[0]="BASE1";
-
-        smspec1.write("RESTART", restart);
-        smspec1.write<int>("DIMENS", {8, 13, 22, 11, 0, 2});
-        smspec1.write("KEYWORDS", keywords);
-        smspec1.write("WGNAMES", wgnames);
-        smspec1.write("NUMS", nums);
-        smspec1.write("UNITS", units);
-        smspec1.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
-    };
-
-    {
-        Opm::EclIO::EclOutput smspec1("BASE1.UNSMRY", false);
-
-        smspec1.write<int>("SEQHDR", {1});
-        smspec1.write<int>("MINISTEP", {0});
-        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("SEQHDR", {2});
-        smspec1.write<int>("MINISTEP", {1});
-        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {2});
-        smspec1.write<float>("PARAMS", {3,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {3});
-        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {4});
-        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
-    };
-
-    {
-        Opm::EclIO::EclOutput smspec1("RST2.UNSMRY", false);
-
-        smspec1.write<int>("SEQHDR", {3});
-        smspec1.write<int>("MINISTEP", {0});
-        smspec1.write<float>("PARAMS", {2.1,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("SEQHDR", {4});
-        smspec1.write<int>("MINISTEP", {1});
-        smspec1.write<float>("PARAMS", {2.2,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {2});
-        smspec1.write<float>("PARAMS", {2.3,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {3});
-        smspec1.write<float>("PARAMS", {2.4,0,0,0,0,0,0,0});
-    };
-
-     // all ministeps avaliable
-
-    Opm::EclIO::ESmry smry1("RST2.SMSPEC", true);
-
-    BOOST_CHECK_EQUAL( smry1.all_steps_available(), true);
-
-    {
-        Opm::EclIO::EclOutput smspec1("BASE1.UNSMRY", false);
-
-        smspec1.write<int>("SEQHDR", {1});
-        smspec1.write<int>("MINISTEP", {0});
-        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("SEQHDR", {2});
-        smspec1.write<int>("MINISTEP", {1});
-        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {3});
-        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {4});
-        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
-    };
-
-    // all mini steps 2 in base run missing
-
-    Opm::EclIO::ESmry smry2("RST2.SMSPEC", true);
-    BOOST_CHECK_EQUAL( smry2.all_steps_available(), false);
-
-    {
-        Opm::EclIO::EclOutput smspec1("BASE1.UNSMRY", false);
-
-        smspec1.write<int>("SEQHDR", {1});
-        smspec1.write<int>("MINISTEP", {0});
-        smspec1.write<float>("PARAMS", {1,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("SEQHDR", {2});
-        smspec1.write<int>("MINISTEP", {1});
-        smspec1.write<float>("PARAMS", {2,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {2});
-        smspec1.write<float>("PARAMS", {3,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {3});
-        smspec1.write<float>("PARAMS", {4,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {4});
-        smspec1.write<float>("PARAMS", {5,0,0,0,0,0,0,0});
-    };
-
-    {
-        Opm::EclIO::EclOutput smspec1("RST2.UNSMRY", false);
-
-        smspec1.write<int>("SEQHDR", {3});
-        smspec1.write<int>("MINISTEP", {0});
-        smspec1.write<float>("PARAMS", {2.1,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("SEQHDR", {4});
-        smspec1.write<int>("MINISTEP", {1});
-        smspec1.write<float>("PARAMS", {2.2,0,0,0,0,0,0,0});
-
-        smspec1.write<int>("MINISTEP", {3});
-        smspec1.write<float>("PARAMS", {2.4,0,0,0,0,0,0,0});
-    };
-
-    // all mini steps 2 in restart run missing
-
-    Opm::EclIO::ESmry smry3("RST2.SMSPEC", true);
-
-    BOOST_CHECK_EQUAL( smry3.all_steps_available(), false);
-
-    if (Opm::filesystem::exists("BASE1.SMSPEC"))
-        Opm::filesystem::remove("BASE1.SMSPEC");
-
-    if (Opm::filesystem::exists("BASE1.UNSMRY"))
-        Opm::filesystem::remove("BASE1.UNSMRY");
-
-    if (Opm::filesystem::exists("RST2.SMSPEC"))
-        Opm::filesystem::remove("RST2.SMSPEC");
-
-    if (Opm::filesystem::exists("RST2.UNSMRY"))
-        Opm::filesystem::remove("RST2.UNSMRY");
+    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
+        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
 }
 
 
