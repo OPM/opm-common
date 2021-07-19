@@ -341,19 +341,20 @@ namespace {
         // loop over high level operators to find operator with lowest precedence and highest index
 
         int curPrec  = 100;
-        int tmpPrec = 100;
         std::size_t indLowestPrecOper = 0;
-        for (std::size_t ind = 0; ind < expr.highestLevOperators.size(); ind++) {
+        for (std::size_t ind = 0; ind < expr.highestLevOperators.size(); ++ind) {
             if ((expr.highestLevOperators[ind].type() != Opm::UDQTokenType::ecl_expr) &&
                 (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::comp_expr) &&
-                (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::number)) {
-                tmpPrec = opFuncPrec(expr.highestLevOperators[ind].type());
+                (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::number))
+            {
+                const int tmpPrec = opFuncPrec(expr.highestLevOperators[ind].type());
                 if (tmpPrec <= curPrec) {
                     curPrec = tmpPrec;
                     indLowestPrecOper = ind;
                 }
             }
         }
+
         //
         // if lowest precedence operator is the first token (and not equal to change sign)
         // NOTE: also for the case with outer () removed
@@ -399,6 +400,7 @@ namespace {
                 }
             }
         }
+
         return def_type;
     }
 

@@ -30,7 +30,7 @@
 namespace Opm {
 
 namespace RestartIO {
-    class RstState;
+    struct RstState;
 }
 
 class UDQState {

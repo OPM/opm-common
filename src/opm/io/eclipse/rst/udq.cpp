@@ -29,10 +29,10 @@ RstUDQ::RstDefine::RstDefine(const std::string& expression_arg, UDQUpdate status
 {}
 
 
-void RstUDQ::RstAssign::update_value(const std::string& name, double new_value) {
+void RstUDQ::RstAssign::update_value(const std::string& name_arg, double new_value) {
     auto current_value = this->value.value_or(new_value);
     if (current_value != new_value)
-        throw std::logic_error(fmt::format("Internal error: the UDQ {} changes value {} -> {} during restart load", name, current_value, new_value));
+        throw std::logic_error(fmt::format("Internal error: the UDQ {} changes value {} -> {} during restart load", name_arg, current_value, new_value));
 
     this->value = new_value;
 }
