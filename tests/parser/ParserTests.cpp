@@ -58,14 +58,12 @@ std::string prefix() {
 }
 
 ParserKeyword createDynamicSized(const std::string& kw) {
-    ParserKeyword pkw(kw);
-    pkw.setSizeType(SLASH_TERMINATED);
+    ParserKeyword pkw(kw, KeywordSize(SLASH_TERMINATED));
     return pkw;
 }
 
 ParserKeyword createFixedSized(const std::string& kw , size_t size) {
-    ParserKeyword pkw(kw);
-    pkw.setFixedSize( size );
+    ParserKeyword pkw(kw, KeywordSize(size));
     return pkw;
 }
 
@@ -73,9 +71,7 @@ ParserKeyword createTable(const std::string& name,
                           const std::string& sizeKeyword,
                           const std::string& sizeItem,
                           bool isTableCollection) {
-    ParserKeyword pkw(name);
-    pkw.initSizeKeyword(sizeKeyword , sizeItem, 0);
-    pkw.setTableCollection(isTableCollection);
+    ParserKeyword pkw(name, KeywordSize{sizeKeyword, sizeItem, isTableCollection, 0});
     return pkw;
 }
 
@@ -1334,8 +1330,8 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
     const auto& parserKeyword = createTable(keyword, "EQUILDIMS" , "NTEQUIL" , false);
     const auto& keyword_size = parserKeyword.getKeywordSize();
     BOOST_CHECK_EQUAL(OTHER_KEYWORD_IN_DECK , parserKeyword.getSizeType() );
-    BOOST_CHECK_EQUAL("EQUILDIMS", keyword_size.keyword );
-    BOOST_CHECK_EQUAL("NTEQUIL" , keyword_size.item );
+    BOOST_CHECK_EQUAL("EQUILDIMS", keyword_size.keyword() );
+    BOOST_CHECK_EQUAL("NTEQUIL" , keyword_size.item() );
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_validDeckName) {
@@ -1469,8 +1465,8 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
     BOOST_CHECK_EQUAL( false , parserKeyword.hasFixedSize() );
     BOOST_CHECK_EQUAL(OTHER_KEYWORD_IN_DECK , parserKeyword.getSizeType());
-    BOOST_CHECK_EQUAL("Bjarne", keyword_size.keyword);
-    BOOST_CHECK_EQUAL("BjarneIgjen" , keyword_size.item );
+    BOOST_CHECK_EQUAL("Bjarne", keyword_size.keyword());
+    BOOST_CHECK_EQUAL("BjarneIgjen" , keyword_size.item() );
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingName_throws) {
@@ -1623,8 +1619,8 @@ BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
 
     auto keyword_size = parserKeyword.getKeywordSize();
     BOOST_CHECK_EQUAL( parserKeyword.getSizeType() , OTHER_KEYWORD_IN_DECK);
-    BOOST_CHECK_EQUAL("TABDIMS", keyword_size.keyword );
-    BOOST_CHECK_EQUAL("NTPVT" , keyword_size.item);
+    BOOST_CHECK_EQUAL("TABDIMS", keyword_size.keyword() );
+    BOOST_CHECK_EQUAL("NTPVT" , keyword_size.item());
 }
 
 BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
@@ -1811,14 +1807,6 @@ BOOST_AUTO_TEST_CASE(GetDoubleRecordKeywordFromParser) {
 
 
 
-BOOST_AUTO_TEST_CASE(Create1Arg) {
-    ParserKeyword kw("GRID");
-    BOOST_CHECK_EQUAL( false , kw.hasDimension() );
-    BOOST_CHECK( kw.hasFixedSize() );
-    BOOST_CHECK_EQUAL( kw.getFixedSize( ) , 0 );
-
-    BOOST_CHECK_THROW( kw.getRecord( 0 ) , std::invalid_argument );
-}
 
 BOOST_AUTO_TEST_CASE(TestKeywordSizeEnum2String) {
     BOOST_CHECK_EQUAL( "SLASH_TERMINATED" , ParserKeywordSizeEnum2String(SLASH_TERMINATED));
@@ -2443,3 +2431,84 @@ BOOST_AUTO_TEST_CASE(parseSections) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ParserKeywordSize) {
+    // Default size: SLASH_TERMINATED and no special attributes
+    {
+        KeywordSize kw_size;
+
+        BOOST_CHECK(!kw_size.table_collection());
+        BOOST_CHECK(kw_size.size_type() == SLASH_TERMINATED);
+
+        auto min_size = kw_size.min_size();
+        BOOST_CHECK(!min_size.has_value());
+
+        auto max_size = kw_size.max_size();
+        BOOST_CHECK(!max_size.has_value());
+        BOOST_CHECK(!kw_size.code());
+    }
+
+    // Given from item in other keyword and no special attributes
+    {
+        KeywordSize kw_size("TABDIMS", "NTSFUN");
+
+        BOOST_CHECK(kw_size.size_type() == OTHER_KEYWORD_IN_DECK);
+
+        auto min_size = kw_size.min_size();
+        BOOST_CHECK(!min_size.has_value());
+
+        auto max_size = kw_size.max_size();
+        BOOST_CHECK(max_size.has_value());
+        BOOST_CHECK(max_size.value().index() == 1);
+        auto [kw, item] = std::get<1>(max_size.value());
+        BOOST_CHECK_EQUAL(kw, "TABDIMS");
+        BOOST_CHECK_EQUAL(item, "NTSFUN");
+
+        BOOST_CHECK_EQUAL(kw_size.size_shift(), 0);
+        BOOST_CHECK(!kw_size.table_collection());
+        BOOST_CHECK(!kw_size.code());
+    }
+
+    // Given from item in other keyword - with size shift.
+    {
+        KeywordSize kw_size("TABDIMS", "NTSFUN", false, 1);
+
+        BOOST_CHECK(kw_size.size_type() == OTHER_KEYWORD_IN_DECK);
+        BOOST_CHECK_EQUAL(kw_size.size_shift(), 1);
+        BOOST_CHECK(!kw_size.table_collection());
+    }
+
+    // Given from item in other keyword - table collection
+    {
+        KeywordSize kw_size("TABDIMS", "NTSFUN", true, 0);
+
+        BOOST_CHECK(kw_size.size_type() == OTHER_KEYWORD_IN_DECK);
+        BOOST_CHECK_EQUAL(kw_size.size_shift(), 0);
+        BOOST_CHECK(kw_size.table_collection());
+    }
+
+    // Specified fixed number
+    {
+        KeywordSize kw_size(4);
+
+        BOOST_CHECK(kw_size.size_type() == FIXED);
+        BOOST_CHECK_EQUAL(kw_size.size_shift(), 0);
+        BOOST_CHECK(!kw_size.table_collection());
+        BOOST_CHECK(!kw_size.code());
+
+        auto min_size = kw_size.min_size();
+        BOOST_CHECK(!min_size.has_value());
+    }
+
+    // Specified fixed code
+    {
+        KeywordSize kw_size(4, true);
+
+        BOOST_CHECK(kw_size.size_type() == FIXED_CODE);
+        BOOST_CHECK_EQUAL(kw_size.size_shift(), 0);
+        BOOST_CHECK(!kw_size.table_collection());
+        BOOST_CHECK(kw_size.code());
+
+        auto min_size = kw_size.min_size();
+        BOOST_CHECK(!min_size.has_value());
+    }
+}

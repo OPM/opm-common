@@ -696,10 +696,10 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
     const auto& deck = parserState.deck;
     auto size_type = parserKeyword.isTableCollection() ? Raw::TABLE_COLLECTION : Raw::FIXED;
 
-    if( deck.hasKeyword(keyword_size.keyword ) ) {
-        const auto& sizeDefinitionKeyword = deck.getKeyword(keyword_size.keyword);
+    if( deck.hasKeyword(keyword_size.keyword() ) ) {
+        const auto& sizeDefinitionKeyword = deck.getKeyword(keyword_size.keyword());
         const auto& record = sizeDefinitionKeyword.getRecord(0);
-        auto targetSize = record.getItem( keyword_size.item ).get< int >( 0 ) + keyword_size.shift;
+        auto targetSize = record.getItem( keyword_size.item() ).get< int >( 0 ) + keyword_size.size_shift();
         if (parserKeyword.isAlternatingKeyword())
             targetSize *= std::distance( parserKeyword.begin(), parserKeyword.end() );
 
@@ -713,17 +713,17 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
 
     std::string msg_fmt = fmt::format("Problem with {{keyword}} - missing {0}\n"
                                       "In {{file}} line {{line}}\n"
-                                      "For the keyword {{keyword}} we expect to read the number of records from keyword {0}, {0} was not found", keyword_size.keyword);
+                                      "For the keyword {{keyword}} we expect to read the number of records from keyword {0}, {0} was not found", keyword_size.keyword());
     parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD ,
                                          msg_fmt,
                                          KeywordLocation{keywordString, parserState.current_path().string(), parserState.line()},
                                          parserState.errors );
 
-    const auto& keyword = parser.getKeyword( keyword_size.keyword );
+    const auto& keyword = parser.getKeyword( keyword_size.keyword() );
     const auto& record = keyword.getRecord(0);
-    const auto& int_item = record.get( keyword_size.item);
+    const auto& int_item = record.get( keyword_size.item());
 
-    const auto targetSize = int_item.getDefault< int >( ) + keyword_size.shift;
+    const auto targetSize = int_item.getDefault< int >( ) + keyword_size.size_shift();
     return new RawKeyword( keywordString,
                            parserState.current_path().string(),
                            parserState.line(),

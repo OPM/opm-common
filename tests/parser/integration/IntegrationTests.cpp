@@ -42,14 +42,12 @@ inline std::string pathprefix() {
 namespace {
 
 ParserKeyword createFixedSized(const std::string& kw , size_t size) {
-    ParserKeyword pkw(kw);
-    pkw.setFixedSize( size );
+    ParserKeyword pkw(kw, KeywordSize(size));
     return pkw;
 }
 
 ParserKeyword createDynamicSized(const std::string& kw) {
-    ParserKeyword  pkw( kw );
-    pkw.setSizeType(SLASH_TERMINATED);
+    ParserKeyword  pkw( kw, KeywordSize(SLASH_TERMINATED) );
     return pkw;
 }
 
