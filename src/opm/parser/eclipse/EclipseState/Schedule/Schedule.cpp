@@ -93,16 +93,10 @@ namespace {
         return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
     }
 
-    std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst) {
-        if (!rst)
-            return std::make_pair(std::time_t{0}, std::size_t{0});
-        else
-            return rst->header.restart_info();
-    }
 }
 
     ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
-                                   const std::pair<std::time_t, std::size_t>& restart_info,
+                                   const ScheduleRestartInfo& restart_info,
                                    const Deck& deck,
                                    const Runspec& runspec,
                                    const std::optional<int>& output_interval_,
@@ -110,7 +104,7 @@ namespace {
                                    ErrorGuard& errors) :
         m_python_handle(python_handle),
         m_input_path(deck.getInputPath()),
-        m_restart_info(restart_info),
+        rst_info(restart_info),
         m_deck_message_limits( deck ),
         m_unit_system( deck.getActiveUnitSystem() ),
         m_runspec( runspec ),
@@ -129,14 +123,14 @@ namespace {
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst)
     try :
-        m_static( python, restart_info(rst), deck, runspec, output_interval, parseContext, errors ),
-        m_sched_deck(deck, m_static.m_restart_info)
+        m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
+        m_sched_deck(deck, m_static.rst_info )
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
 
         if (rst) {
-            auto restart_step = this->m_static.m_restart_info.second;
+            auto restart_step = this->m_static.rst_info.report_step;
             this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, nullptr, &grid, &fp, "");
             this->load_rst(*rst, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
@@ -372,16 +366,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                these keywords will be assigned to report step 0.
         */
 
-        auto restart_skip = load_start < this->m_static.m_restart_info.second;
+        auto restart_skip = load_start < this->m_static.rst_info.report_step;
         ScheduleLogger logger(restart_skip);
         {
             const auto& location = this->m_sched_deck.location();
             current_file = location.filename;
             logger.info(fmt::format("{0}\n{0}Processing dynamic information from\n{0}{1} line {2}", prefix, current_file, location.lineno));
-            if (restart_skip) {
-                auto [restart_time, restart_offset] = this->m_static.m_restart_info;
-                logger.info(fmt::format("{}This is a restarted run - skipping until report step {} at {}", prefix, restart_offset, Schedule::formatDate(restart_time)));
-            }
+            if (restart_skip)
+                logger.info(fmt::format("{}This is a restarted run - skipping until report step {} at {}", prefix, this->m_static.rst_info.report_step, Schedule::formatDate(this->m_static.rst_info.time)));
+
             logger(fmt::format("{}Initializing report step {}/{} at {} {} {} line {}",
                                prefix,
                                load_start + 1,
