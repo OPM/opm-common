@@ -502,6 +502,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/TEST_WLIST.DATA
           tests/act1.py
           tests/MSW.DATA
+          tests/MSW_2WELSEGS.DATA
           tests/EXIT_TEST.DATA
           tests/action_syntax_error.py
           tests/action_missing_run.py
