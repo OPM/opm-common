@@ -26,8 +26,11 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/io/eclipse/rst/state.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 namespace Opm {
 
@@ -83,6 +86,49 @@ namespace Opm {
     };
 
 
+    struct ScheduleRestartInfo {
+        std::time_t time{0};
+        std::size_t report_step{0};
+        bool skiprest{false};
+
+        ScheduleRestartInfo() = default;
+
+        ScheduleRestartInfo(const RestartIO::RstState * rst, const Deck& deck) {
+            if (rst) {
+                const auto& [t,r] = rst->header.restart_info();
+                this->time = t;
+                this->report_step = r;
+                this->skiprest = deck.hasKeyword<ParserKeywords::SKIPREST>();
+            }
+        }
+
+
+        bool operator==(const ScheduleRestartInfo& other) const {
+            return this->time == other.time &&
+                   this->report_step == other.report_step &&
+                   this->skiprest == other.skiprest;
+        }
+
+
+        static ScheduleRestartInfo serializeObject() {
+            ScheduleRestartInfo rst_info;
+            rst_info.report_step = 12345;
+            rst_info.skiprest = false;
+            return rst_info;
+        }
+
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->time);
+            serializer(this->report_step);
+            serializer(this->skiprest);
+        }
+    };
+
+
+
 
     /*
       The purpose of the ScheduleDeck class is to serve as a container holding
@@ -95,7 +141,7 @@ namespace Opm {
 
     class ScheduleDeck {
     public:
-        explicit ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart);
+        explicit ScheduleDeck(const Deck& deck, const ScheduleRestartInfo& rst_info);
         ScheduleDeck();
         void add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);
@@ -114,6 +160,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer) {
             serializer(m_restart_time);
             serializer(m_restart_offset);
+            serializer(skiprest);
             serializer.vector(m_blocks);
             m_location.serializeOp(serializer);
         }
@@ -121,6 +168,7 @@ namespace Opm {
     private:
         time_point m_restart_time;
         std::size_t m_restart_offset;
+        bool skiprest;
         KeywordLocation m_location;
         std::vector<ScheduleBlock> m_blocks;
     };

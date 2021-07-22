@@ -181,7 +181,7 @@ std::size_t ScheduleDeck::restart_offset() const {
 }
 
 
-ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) {
+ScheduleDeck::ScheduleDeck(const Deck& deck, const ScheduleRestartInfo& rst_info) {
     const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
     time_point start_time;
     if (deck.hasKeyword("START")) {
@@ -197,10 +197,10 @@ ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::s
         start_time = TimeService::from_time_t( mkdate(1983, 1, 1) );
     }
 
-    const auto& [restart_time, restart_offset] = restart;
-    this->m_restart_time = TimeService::from_time_t(restart_time);
-    this->m_restart_offset = restart_offset;
-    if (restart_offset > 0) {
+    this->m_restart_time = TimeService::from_time_t(rst_info.time);
+    this->m_restart_offset = rst_info.report_step;
+    this->skiprest = rst_info.skiprest;
+    if (this->m_restart_offset > 0) {
         for (std::size_t it = 0; it < this->m_restart_offset; it++) {
             this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
             if (it < this->m_restart_offset - 1)
