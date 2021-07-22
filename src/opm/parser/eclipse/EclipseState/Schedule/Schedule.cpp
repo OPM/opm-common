@@ -146,6 +146,7 @@ namespace {
             this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp, "");
     }
     catch (const OpmInputError& opm_error) {
+        OpmLog::error(opm_error.what());
         throw;
     }
     catch (const std::exception& std_error) {
