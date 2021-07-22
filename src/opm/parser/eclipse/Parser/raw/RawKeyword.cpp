@@ -43,11 +43,12 @@ namespace {
 }
 
 
-    RawKeyword::RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType, std::size_t size_arg) :
-        m_name(keyword_name(name)),
-        m_location(name, filename, lineNR),
-        raw_string_keyword(raw_string),
-        m_sizeType(sizeType)
+    RawKeyword::RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType, const std::optional<std::size_t>& min_size, std::size_t size_arg)
+        : m_name(keyword_name(name))
+        , m_location(name, filename, lineNR)
+        , raw_string_keyword(raw_string)
+        , m_sizeType(sizeType)
+        , m_min_size(min_size.value_or(size_arg))
     {
         if (this->m_sizeType == Raw::FIXED) {
             this->m_fixedSize = size_arg;
@@ -76,7 +77,7 @@ namespace {
 
 
     RawKeyword::RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType) :
-        RawKeyword(name, filename, lineNR, raw_string, sizeType, sizeType == Raw::CODE ? 1 : 0)
+        RawKeyword(name, filename, lineNR, raw_string, sizeType, {}, sizeType == Raw::CODE ? 1 : 0)
     {
         if (this->m_sizeType == Raw::FIXED || this->m_sizeType == Raw::TABLE_COLLECTION)
             throw std::logic_error("Internal error - wrong constructor has been used. Keyword: " + name + " at " + filename + ":" + std::to_string(lineNR));
@@ -104,6 +105,12 @@ namespace {
             if (m_currentNumTables == m_numTables)
                 m_isFinished = true;
         }
+
+        if (this->m_sizeType == Raw::FIXED) {
+            if (this->m_records.size() >= this->m_min_size)
+                this->m_isFinished = true;
+        }
+
 
         if( m_sizeType == Raw::UNKNOWN)
             m_isFinished = true;
@@ -167,6 +174,19 @@ namespace {
 
     std::size_t RawKeyword::size() const {
         return this->m_records.size();
+    }
+
+
+    bool RawKeyword::can_complete() const {
+        if (this->m_sizeType == Raw::UNKNOWN)
+            return true;
+
+        if (this->m_min_size < this->m_fixedSize) {
+            if (this->m_records.size() >= this->m_min_size)
+                return true;
+        }
+
+        return false;
     }
 
 }

@@ -689,6 +689,7 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
                                parserState.line(),
                                raw_string_keyword,
                                size_type,
+                               parserKeyword.min_size(),
                                parserKeyword.getFixedSize());
     }
 
@@ -708,6 +709,7 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
                                parserState.line(),
                                raw_string_keyword,
                                size_type,
+                               parserKeyword.min_size(),
                                targetSize);
     }
 
@@ -729,6 +731,7 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
                            parserState.line(),
                            raw_string_keyword,
                            size_type,
+                           parserKeyword.min_size(),
                            targetSize);
 }
 
@@ -867,7 +870,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                 continue;
             }
 
-            if (rawKeyword->getSizeType() == Raw::UNKNOWN) {
+            if (rawKeyword->can_complete()) {
                 /*
                   When we are spinning through a keyword of size type UNKNOWN it
                   is essential to recognize a string as the next keyword. The
@@ -923,7 +926,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
     }
 
     if (rawKeyword) {
-        if (rawKeyword->getSizeType() == Raw::UNKNOWN)
+        if (rawKeyword->can_complete())
             rawKeyword->terminateKeyword();
 
         if (!rawKeyword->isFinished())

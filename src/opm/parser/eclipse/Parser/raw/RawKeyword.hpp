@@ -20,10 +20,11 @@
 #ifndef RAWKEYWORD_HPP
 #define RAWKEYWORD_HPP
 
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
-#include <cstddef>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
@@ -36,7 +37,7 @@ namespace Opm {
     class RawKeyword {
     public:
         RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType);
-        RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType, std::size_t size_arg);
+        RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType, const std::optional<std::size_t>& min_size, std::size_t size_arg);
         bool terminateKeyword();
         bool addRecord(RawRecord record);
 
@@ -49,9 +50,9 @@ namespace Opm {
         const RawRecord& getFirstRecord( ) const;
 
         bool isFinished() const;
-        bool unKnownSize() const;
         bool rawStringKeyword() const;
         const KeywordLocation& location() const;
+        bool can_complete() const;
 
         using const_iterator = std::vector< RawRecord >::const_iterator;
         using iterator = std::vector< RawRecord >::iterator;
@@ -67,9 +68,10 @@ namespace Opm {
         bool raw_string_keyword;
         Raw::KeywordSizeEnum m_sizeType;
 
-        size_t m_fixedSize = 0;
-        size_t m_numTables = 0;
-        size_t m_currentNumTables = 0;
+        std::size_t m_min_size = 0;
+        std::size_t m_fixedSize = 0;
+        std::size_t m_numTables = 0;
+        std::size_t m_currentNumTables = 0;
         bool m_isTempFinished = false;
         bool m_isFinished = false;
 

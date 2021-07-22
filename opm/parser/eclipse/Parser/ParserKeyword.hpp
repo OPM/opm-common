@@ -49,13 +49,16 @@ namespace Opm {
     */
     class KeywordSize {
     public:
+        KeywordSize();
         KeywordSize(const std::string& in_keyword, const std::string& in_item, int in_shift);
         KeywordSize(const std::string& in_keyword, const std::string& in_item);
         KeywordSize(const std::string& in_keyword, const std::string& in_item, bool table_collection, int in_shift);
-        KeywordSize();
-        KeywordSize(ParserKeywordSizeEnum size_type);
-        KeywordSize(std::size_t fixed_size);
+
+        KeywordSize(std::size_t min_size, const std::string& in_keyword, const std::string& in_item, bool table_collection, int in_shift);
+        explicit KeywordSize(ParserKeywordSizeEnum size_type);
+        explicit KeywordSize(std::size_t fixed_size);
         KeywordSize(std::size_t fixed_size, bool code);
+        KeywordSize(std::size_t min_size, std::size_t fixed_size, bool code);
 
         bool table_collection() const;
         ParserKeywordSizeEnum size_type() const;
@@ -64,6 +67,7 @@ namespace Opm {
         const std::string& keyword() const;
         const std::string& item() const;
         std::optional<std::size_t> min_size() const;
+        void min_size(int s);
         const std::optional<std::variant<std::size_t, std::pair<std::string, std::string>>>& max_size() const;
         std::string construct() const;
 
@@ -101,6 +105,7 @@ namespace Opm {
         std::vector< ParserRecord >::const_iterator end() const;
         const std::string className() const;
         const std::string& getName() const;
+        std::optional<std::size_t> min_size() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
         bool isTableCollection() const;

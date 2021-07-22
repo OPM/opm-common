@@ -1627,7 +1627,7 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     auto tabdimsKeyword = createFixedSized("TEST" , 1);
     ParserRecord record;
     ParserItem item("ITEM", INT);
-    RawKeyword rawkeyword( tabdimsKeyword.getName() , "FILE" , 10U , false, Raw::FIXED, 1);
+    RawKeyword rawkeyword( tabdimsKeyword.getName() , "FILE" , 10U , false, Raw::FIXED, {}, 1);
     ParseContext parseContext;
     ErrorGuard errors;
     UnitSystem unit_system;

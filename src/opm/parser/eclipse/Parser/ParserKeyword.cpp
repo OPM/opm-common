@@ -55,6 +55,12 @@ KeywordSize::KeywordSize(const std::string& in_keyword, const std::string& in_it
 {
 }
 
+KeywordSize::KeywordSize(std::size_t in_min_size, const std::string& in_keyword, const std::string& in_item, bool table_collection, int in_shift)
+    : KeywordSize(in_keyword, in_item, table_collection, in_shift)
+{
+    this->min_size(in_min_size);
+}
+
 KeywordSize::KeywordSize()
     : KeywordSize(SLASH_TERMINATED)
 {
@@ -85,6 +91,12 @@ KeywordSize::KeywordSize(std::size_t fixed_size, bool code)
     , m_max_size(fixed_size)
     , is_code(code)
 {
+}
+
+KeywordSize::KeywordSize(std::size_t in_min_size, std::size_t fixed_size, bool code)
+    : KeywordSize(fixed_size, code)
+{
+    this->min_size(in_min_size);
 }
 
 bool
@@ -146,22 +158,29 @@ KeywordSize::max_size() const
     return this->m_max_size;
 }
 
+void KeywordSize::min_size(int s) {
+    this->m_min_size = s;
+}
+
 std::string
 KeywordSize::construct() const
 {
-    if (this->m_size_type == SLASH_TERMINATED)
-        return "KeywordSize()";
-
-    if (this->m_size_type == UNKNOWN || this->m_size_type == DOUBLE_SLASH_TERMINATED)
+    if (this->m_size_type == UNKNOWN || this->m_size_type == DOUBLE_SLASH_TERMINATED || this->m_size_type == SLASH_TERMINATED)
         return fmt::format("KeywordSize({})", ParserKeywordSizeEnum2String(this->m_size_type));
 
-    if (this->m_size_type == FIXED || this->m_size_type == FIXED_CODE)
-        return fmt::format("KeywordSize({}, {})", std::get<std::size_t>(this->m_max_size.value()), this->is_code);
+    if (this->m_size_type == FIXED || this->m_size_type == FIXED_CODE) {
+        if (this->min_size().has_value())
+            return fmt::format("KeywordSize({}, {}, {})", this->min_size().value(), std::get<std::size_t>(this->m_max_size.value()), this->is_code);
+        else
+            return fmt::format("KeywordSize({}, {})", std::get<std::size_t>(this->m_max_size.value()), this->is_code);
+    }
 
     if (this->m_size_type == OTHER_KEYWORD_IN_DECK) {
         const auto& [size_kw, size_item] = std::get<1>(this->m_max_size.value());
-        return fmt::format(
-            "KeywordSize(\"{}\", \"{}\", {}, {})", size_kw, size_item, this->is_table_collection, this->shift);
+        if (this->min_size().has_value())
+            return fmt::format("KeywordSize({}, \"{}\", \"{}\", {}, {})", this->min_size().value(), size_kw, size_item, this->is_table_collection, this->shift);
+        else
+            return fmt::format("KeywordSize(\"{}\", \"{}\", {}, {})", size_kw, size_item, this->is_table_collection, this->shift);
     }
 
     throw std::logic_error("No string serialization known?");
@@ -227,7 +246,6 @@ KeywordSize::construct() const
                 this->keyword_size = KeywordSize( sizeObject.as_int() );
             else
                 initSizeKeyword(false, sizeObject);
-
             return;
         }
 
@@ -292,6 +310,11 @@ KeywordSize::construct() const
             clearDeckNames();
 
         initSize(jsonConfig);
+        if (jsonConfig.has_item("min_size")) {
+            auto min_size = jsonConfig.get_int("min_size");
+            this->keyword_size.min_size(min_size);
+        }
+
         initDeckNames(jsonConfig);
         initSectionNames(jsonConfig);
         initMatchRegex(jsonConfig);
@@ -728,6 +751,10 @@ void set_dimensions( ParserItem& item,
             keyword.setFixedSize( );
 
         return keyword;
+    }
+
+    std::optional<std::size_t> ParserKeyword::min_size() const {
+        return this->keyword_size.min_size();
     }
 
     size_t ParserKeyword::getFixedSize() const {
