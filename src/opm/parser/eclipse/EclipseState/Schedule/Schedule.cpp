@@ -125,7 +125,7 @@ namespace {
                         const Runspec &runspec,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
-                        [[maybe_unused]] std::shared_ptr<const Python> python,
+                        std::shared_ptr<const Python> python,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst)
     try :
