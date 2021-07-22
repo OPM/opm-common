@@ -258,9 +258,12 @@ void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, Sc
             context.rst_skip = false;
 
         if (t > this->m_restart_time) {
-            TimeStampUTC ts(TimeService::to_time_t(this->m_restart_time));
-            auto reason = fmt::format("Have scanned past restart data: {:4d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
-            throw OpmInputError(reason, location);
+            if (this->skiprest) {
+                TimeStampUTC ts(TimeService::to_time_t(this->m_restart_time));
+                auto reason = fmt::format("Have scanned past restart data: {:4d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
+                throw OpmInputError(reason, location);
+            }
+            context.rst_skip = false;
         }
     }
     this->m_blocks.back().end_time(t);
