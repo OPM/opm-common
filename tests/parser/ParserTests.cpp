@@ -2294,7 +2294,12 @@ ROCK
 3600.00 .40E-05 /
 3000 0 /
 
+SAVE
+  FORMATTED /
+
 SCHEDULE
+SAVE
+
 UDT
 -- here comes a comment
 -- and another comment
@@ -2327,6 +2332,7 @@ BOOST_CHECK_EQUAL( record.getItem(5).get<double>(0), 0.9 );
 BOOST_CHECK( !deck.hasKeyword("LANGMUIR") );
  const auto& tracerkm = deck.getKeyword<ParserKeywords::TRACERKM>();
 BOOST_CHECK_EQUAL(tracerkm.size(), 5);
+ BOOST_CHECK_EQUAL(deck.count<ParserKeywords::SAVE>(), 2);
 }
 
 
