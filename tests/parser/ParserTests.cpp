@@ -2280,7 +2280,7 @@ BOOST_AUTO_TEST_CASE(ParseSpecialKeywords) {
     const auto deck_string = std::string { R"(RUNSPEC
 FIELD
 TABDIMS
-    2 /
+    2 3 /
 PROPS
 
 ADSORP
