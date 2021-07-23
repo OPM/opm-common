@@ -149,6 +149,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         this->initFaults(deck);
     }
     catch (const OpmInputError& opm_error) {
+        OpmLog::error(opm_error.what());
         throw;
     }
     catch (const std::exception& std_error) {
