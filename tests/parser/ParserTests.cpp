@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
@@ -2280,8 +2281,20 @@ BOOST_AUTO_TEST_CASE(ParseSpecialKeywords) {
     const auto deck_string = std::string { R"(RUNSPEC
 FIELD
 TABDIMS
-    2 /
+    2 3 /
 PROPS
+
+PARTTRAC
+   * 3 /
+
+TRACERKM
+   PT1 STANDARD  /
+   A O G /
+   1 2 3
+   4 5 6 /
+   1 2 3
+   4 5 6 /
+/
 
 ADSORP
 POLYMER /
@@ -2324,6 +2337,8 @@ BOOST_CHECK_EQUAL( kw.size(), 2 );
 auto record = kw.getRecord(1);
 BOOST_CHECK_EQUAL( record.getItem(5).get<double>(0), 0.9 );
 BOOST_CHECK( !deck.hasKeyword("LANGMUIR") );
+ const auto& tracerkm = deck.getKeyword<ParserKeywords::TRACERKM>();
+BOOST_CHECK_EQUAL(tracerkm.size(), 5);
 }
 
 

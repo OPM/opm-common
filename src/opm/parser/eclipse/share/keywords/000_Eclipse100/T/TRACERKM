@@ -6,7 +6,7 @@
   "requires" : [
       "PARTTRAC"
   ],
-  "size": "UNKNOWN",
+    "size": {"keyword" : "PARTTRAC", "item" : "NKPTMX", "shift" : 2},
   "records": [
     [
       {
