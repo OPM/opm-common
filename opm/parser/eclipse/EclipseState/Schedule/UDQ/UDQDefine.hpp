@@ -21,10 +21,11 @@
 #ifndef UDQ_DEFINE_HPP
 #define UDQ_DEFINE_HPP
 
-#include <string>
-#include <vector>
+#include <optional>
 #include <set>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
@@ -101,7 +102,7 @@ private:
     KeywordLocation m_location;
     std::size_t m_report_step;
     UDQUpdate m_update_status;
-    std::string string_data;
+    mutable std::optional<std::string> string_data;
 };
 }
 

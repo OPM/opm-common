@@ -372,6 +372,26 @@ std::string typeName(UDQVarType var_type) {
     }
 }
 
+bool trailingSpace(UDQTokenType token_type) {
+    if (binaryFunc(token_type))
+        return true;
+
+    if (cmpFunc(token_type))
+        return true;
+
+    return false;
+}
+
+bool leadingSpace(UDQTokenType token_type) {
+    if (binaryFunc(token_type))
+        return true;
+
+    if (cmpFunc(token_type))
+        return true;
+
+    return false;
+}
+
 namespace {
     template <typename Value>
     Value lookup_control_map_value(const std::map<UDAControl, Value>& map, const UDAControl control)

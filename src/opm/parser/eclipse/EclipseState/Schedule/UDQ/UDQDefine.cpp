@@ -198,12 +198,6 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
     }
     this->m_tokens = make_tokens(string_tokens);
     this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, this->m_location, this->m_tokens, parseContext, errors) );
-    this->string_data = "";
-    for (std::size_t index = 0; index < deck_data.size(); index++) {
-        this->string_data += deck_data[index];
-        if (index != deck_data.size() - 1)
-            this->string_data += " ";
-    }
 }
 
 void UDQDefine::update_status(UDQUpdate update, std::size_t report_step) {
@@ -328,7 +322,33 @@ const std::string& UDQDefine::keyword() const {
 }
 
 const std::string& UDQDefine::input_string() const {
-    return this->string_data;
+    if (!this->string_data.has_value()) {
+        std::string s;
+        /*
+          A string representation equivalent to the input string is assembled by
+          joining tokens and sprinkle with ' ' at semi random locations. The
+          main use of this function is to output the definition string in form
+          usable for the restart file.
+        */
+
+        for (std::size_t token_index = 0; token_index < this->m_tokens.size(); token_index++) {
+            const auto& token = this->m_tokens[token_index];
+            if (UDQ::leadingSpace(token.type()))
+                s += " ";
+
+            s += token.str();
+            if (token_index == (this->m_tokens.size() - 1))
+                continue;
+
+            if (UDQ::trailingSpace(token.type())) {
+                s += " ";
+                continue;
+            }
+        }
+        this->string_data = s;
+
+    }
+    return this->string_data.value();
 }
 
 std::set<UDQTokenType> UDQDefine::func_tokens() const {
