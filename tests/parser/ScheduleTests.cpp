@@ -4298,6 +4298,11 @@ BOOST_AUTO_TEST_CASE(WELL_STATUS) {
 START
 7 OCT 2020 /
 
+RUNSPEC
+
+DEBUGF
+  WELLS=1  INIT=DETAILED /
+
 DIMENS
   10 10 3 /
 
@@ -4332,6 +4337,9 @@ WCONPROD
 TSTEP -- 1
   10 /
 
+DEBUGF
+/
+
 WELPI
   'P1'  200.0 /
 /
@@ -4350,8 +4358,12 @@ WELOPEN
    'P1' OPEN /
 /
 
+DEBUGF
+  WELLS=DETAILED INIT=ON /
+
 TSTEP -- 6,7,8
   10 10 10/
+
 
 END
 
@@ -4397,6 +4409,23 @@ END
     //    const auto& well = sched.getWell("P1", 5);
     //    BOOST_CHECK( well.getStatus() ==  Well::Status::OPEN);
     //}
+
+
+    {
+        const auto& dbg_config = sched[0].debug_config();
+        BOOST_CHECK(dbg_config(DebugConfig::Topic::INIT));
+        BOOST_CHECK(dbg_config[DebugConfig::Topic::WELLS] == DebugConfig::Verbosity::NORMAL);
+    }
+    {
+        const auto& dbg_config = sched[1].debug_config();
+        BOOST_CHECK(!dbg_config(DebugConfig::Topic::INIT));
+        BOOST_CHECK(dbg_config[DebugConfig::Topic::WELLS] == DebugConfig::Verbosity::SILENT);
+    }
+    {
+        const auto& dbg_config = sched[5].debug_config();
+        BOOST_CHECK(dbg_config[DebugConfig::Topic::INIT] == DebugConfig::Verbosity::NORMAL);
+        BOOST_CHECK(dbg_config(DebugConfig::Topic::WELLS));
+    }
 }
 
 bool compare_dates(const time_point& t, int year, int month, int day) {

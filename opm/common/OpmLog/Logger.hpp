@@ -26,6 +26,8 @@
 #include <memory>
 #include <string>
 
+#include <opm/common/utility/DebugConfig.hpp>
+
 namespace Opm {
 
     class LogBackend;
@@ -36,6 +38,8 @@ public:
     Logger();
     void addMessage(int64_t messageType , const std::string& message) const;
     void addTaggedMessage(int64_t messageType, const std::string& tag, const std::string& message) const;
+    void debug(DebugConfig::Topic topic, DebugConfig::Verbosity verbosity, const std::string& message) const;
+
 
     static bool enabledDefaultMessageType( int64_t messageType);
     bool enabledMessageType( int64_t messageType) const;
@@ -46,6 +50,8 @@ public:
     bool hasBackend(const std::string& name);
     bool removeBackend(const std::string& name);
     void removeAllBackends();
+    void updateDebugConfig(const DebugConfig& debug_config);
+
 
     template <class BackendType>
     std::shared_ptr<BackendType> getBackend(const std::string& name) const {
@@ -75,6 +81,7 @@ private:
 
     int64_t m_globalMask;
     int64_t m_enabledTypes;
+    DebugConfig debug_config;
     std::map<std::string , std::shared_ptr<LogBackend> > m_backends;
 };
 

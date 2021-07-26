@@ -237,6 +237,12 @@ namespace {
             this->snapshots.back().wells.update( std::move(well) );
     }
 
+    void Schedule::handleDEBUGF(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto debug_config = this->snapshots.back().debug_config();
+        Runspec::update_debug_config(debug_config, handlerContext.keyword);
+        this->snapshots.back().debug_config.update( std::move(debug_config) );
+    }
+
     void Schedule::handleDRSDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
@@ -1975,6 +1981,7 @@ namespace {
             { "COMPLUMP", &Schedule::handleCOMPLUMP },
             { "COMPORD" , &Schedule::handleCOMPORD  },
             { "COMPSEGS", &Schedule::handleCOMPSEGS },
+            { "DEBUGF"  , &Schedule::handleDEBUGF   },
             { "DRSDT"   , &Schedule::handleDRSDT    },
             { "DRSDTCON", &Schedule::handleDRSDTCON },
             { "DRSDTR"  , &Schedule::handleDRSDTR   },
