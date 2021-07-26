@@ -1375,6 +1375,12 @@ namespace {
 
             this->addWell(well);
             this->addWellToGroup(well.groupName(), well.name(), report_step);
+
+
+            if (rst_well.name == "PROD3") {
+                auto msg = fmt::format("RST PROD3  current thp:{}   target thp:{}", rst_well.thp, rst_well.thp_target);
+                OpmLog::info(msg);
+            }
         }
         this->snapshots[report_step + 1].update_tuning(rst_state.tuning);
         // Originally at report_step + 1

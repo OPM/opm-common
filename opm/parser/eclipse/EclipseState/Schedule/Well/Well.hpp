@@ -339,6 +339,28 @@ public:
             return (this->controls & static_cast<int>(cmode_arg)) != 0;
         }
 
+        double limit(ProducerCMode cmode_arg) const {
+            switch (cmode_arg) {
+            case ProducerCMode::ORAT:
+                return this->oil_rate;
+            case ProducerCMode::WRAT:
+                return this->water_rate;
+            case ProducerCMode::GRAT:
+                return this->gas_rate;
+            case ProducerCMode::LRAT:
+                return this->liquid_rate;
+            case ProducerCMode::RESV:
+                return this->resv_rate;
+            case ProducerCMode::BHP:
+                return this->bhp_limit;
+            case ProducerCMode::THP:
+                return this->thp_limit;
+            default:
+                throw std::logic_error("Unknown limit?");
+            }
+        }
+
+
     private:
         int controls;
     };
