@@ -496,26 +496,28 @@ void injectionGroup(const Opm::Schedule&     sched,
                     //a higher level group control is active constraint
                     if ((deck_cmode != Opm::Group::InjectionCMode::FLD) && (deck_cmode != Opm::Group::InjectionCMode::NONE)) {
                         iGrp[nwgmax + IGroup::WInjHighLevCtrl] = cgroup->insert_index();
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::FLD) && (guide_rate_def != Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = cgroup->insert_index();
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available &&
-                               (guide_rate_def != Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = cgroup->insert_index();
-                        //group is directly under higher level controlGroup
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::FLD) && (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available &&
-                               (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
+                    } else {
+                        if (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE) {
+                            if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
+                                iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
+                            } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available) {
+                                iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
+                            }
+                        } else {
+                            if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
+                                iGrp[nwgmax + IGroup::WInjHighLevCtrl] = cgroup->insert_index();
+                            } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available) {
+                                iGrp[nwgmax + IGroup::WInjHighLevCtrl] = cgroup->insert_index();
+                            }
+                        }
                     }
                 }
             } else {
-                if (active_cmode == Opm::Group::InjectionCMode::NONE) {
+                if ((active_cmode == Opm::Group::InjectionCMode::NONE) && (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
                     //group is directly under higher level controlGroup
-                    if ((deck_cmode == Opm::Group::InjectionCMode::FLD) && (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
+                    if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
                         iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available &&
-                               (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
+                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available) {
                         iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
                     }
                 }
@@ -564,30 +566,33 @@ void injectionGroup(const Opm::Schedule&     sched,
                     //a higher level group control is active constraint
                     if ((deck_cmode != Opm::Group::InjectionCMode::FLD) && (deck_cmode != Opm::Group::InjectionCMode::NONE)) {
                         iGrp[nwgmax + IGroup::GInjHighLevCtrl] = cgroup->insert_index();
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::FLD) && (guide_rate_def != Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::GInjHighLevCtrl] = cgroup->insert_index();
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available &&
-                               (guide_rate_def != Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::GInjHighLevCtrl] = cgroup->insert_index();
-                        //group is directly under higher level controlGroup
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::FLD) && (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 1;
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available &&
-                               (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 1;
+                    } else {
+                        if (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE) {
+                            if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
+                                iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 1;
+                            } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available) {
+                                iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 1;
+                            }
+                        } else {
+                            if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
+                                iGrp[nwgmax + IGroup::GInjHighLevCtrl] = cgroup->insert_index();
+                            } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available) {
+                                iGrp[nwgmax + IGroup::GInjHighLevCtrl] = cgroup->insert_index();
+                            }
+                        }
                     }
                 }
             } else {
-                if (active_cmode == Opm::Group::InjectionCMode::NONE) {
+                if ((active_cmode == Opm::Group::InjectionCMode::NONE) && (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
                     //group is directly under higher level controlGroup
-                    if ((deck_cmode == Opm::Group::InjectionCMode::FLD) && (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
+                    if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
                         iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 1;
-                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available &&
-                               (guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE)) {
+                    } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available) {
                         iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 1;
                     }
                 }
             }
+
 
             iGrp[nwgmax + IGroup::GConInjeGInjCMode] = Opm::Group::InjectionCMode2Int(deck_cmode);
             if (cgroup && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
