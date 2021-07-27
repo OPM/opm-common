@@ -473,7 +473,6 @@ void injectionGroup(const Opm::Schedule&     sched,
         if (is_field) {
             //set value for the group's availability for higher level control for injection
             iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 0;
-            iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 0;
         } else {
 
             const auto& injection_controls = group.injectionControls(Opm::Phase::WATER, sumState);
@@ -535,7 +534,6 @@ void injectionGroup(const Opm::Schedule&     sched,
         if (is_field) {
             //set value for the group's availability for higher level control for injection
             iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 0;
-            iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 0;
         } else {
 
             const auto& injection_controls = group.injectionControls(Opm::Phase::GAS, sumState);
