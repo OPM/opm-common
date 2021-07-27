@@ -332,7 +332,6 @@ namespace {
                     if (string_value.size() > 0)
                         guide_rate_str = string_value;
                 }
-
             }
 
             for (const auto& group_name : group_names) {
@@ -349,7 +348,7 @@ namespace {
 
                 {
                     // FLD overrides item 8 (is_free i.e if FLD the group is available for higher up groups)
-                    const bool availableForGroupControl = (is_free || controlMode == Group::InjectionCMode::FLD)&& !is_field;
+                    const bool availableForGroupControl = (is_free || controlMode == Group::InjectionCMode::FLD) && !is_field;
                     auto new_group = this->snapshots.back().groups.get(group_name);
                     Group::GroupInjectionProperties injection{group_name};
                     injection.phase = phase;

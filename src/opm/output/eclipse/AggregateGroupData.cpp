@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -36,6 +37,7 @@
 #include <exception>
 #include <string>
 #include <stdexcept>
+#include <fmt/format.h>
 
 #define ENABLE_GCNTL_DEBUG_OUTPUT 0
 
@@ -467,6 +469,13 @@ std::tuple<int, int, int> injectionGroup(const Opm::Schedule&     sched,
                                      ? injection_controls.cmode : Opm::Group::InjectionCMode::NONE;
             const auto& cgroup = injectionControlGroup(sched, sumState, group, group_key, simStep);
             const auto& group_control_available = group.injectionGroupControlAvailable(phase);
+
+            Opm::OpmLog::info(fmt::format("Restart:: hasInjectionControl(Water): {}   injection_controls.cmode: {}  group.injectionGroupControlAvailable(Water): {}",
+                                    group.hasInjectionControl(Opm::Phase::WATER),
+                                    static_cast<int>(injection_controls.cmode),
+                                    group.injectionGroupControlAvailable(Opm::Phase::WATER)));
+
+
 
             // group is available for higher level control, but is currently constrained by own limits
             high_level_ctrl = -1;

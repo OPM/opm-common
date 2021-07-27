@@ -362,6 +362,7 @@ public:
 
 
     private:
+    public:
         int controls;
     };
 

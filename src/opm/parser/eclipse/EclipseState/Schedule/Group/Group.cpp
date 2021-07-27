@@ -20,6 +20,7 @@
 #include <utility>
 
 #include <fmt/format.h>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
@@ -422,8 +423,10 @@ bool Group::injectionGroupControlAvailable(const Phase phase) const {
         return false;
 
     auto inj_iter = this->injection_properties.find(phase);
-    if (inj_iter == this->injection_properties.end())
+    if (inj_iter == this->injection_properties.end()) {
+        OpmLog::info("GroupControlAvailable: end() -> true");
         return true;
+    }
 
     return inj_iter->second.available_group_control;
 }
