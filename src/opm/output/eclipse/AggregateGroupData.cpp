@@ -477,16 +477,12 @@ void injectionGroup(const Opm::Schedule&     sched,
         } else {
 
             const auto& injection_controls = group.injectionControls(Opm::Phase::WATER, sumState);
-            Opm::Group::InjectionCMode active_cmode = Opm::Group::InjectionCMode::NONE;
-            const auto cur_inj_ctrl = (group.name() == "FIELD") ? sumState.get("FMCTW", -1) :
-                                      sumState.get_group_var(group.name(), "GMCTW", -1);
-            if (cur_inj_ctrl >= 0)
-                active_cmode = Opm::Group::InjectionCModeFromInt(static_cast<int>(cur_inj_ctrl));
-
+            const auto& guide_rate_def = injection_controls.guide_rate_def;
+            const auto& cur_inj_ctrl = group.name() == "FIELD" ? static_cast<int>(sumState.get("FMCTW", -1)) : static_cast<int>(sumState.get_group_var(group.name(), "GMCTW", -1));
+            Opm::Group::InjectionCMode active_cmode = Opm::Group::InjectionCModeFromInt(cur_inj_ctrl);
             const auto& deck_cmode = (group.hasInjectionControl(Opm::Phase::WATER))
                                      ? injection_controls.cmode : Opm::Group::InjectionCMode::NONE;
             const auto& cgroup = injectionControlGroup(sched, sumState, group, "GMCTW", simStep);
-            const auto& guide_rate_def = injection_controls.guide_rate_def;
 
             // group is available for higher level control, but is currently constrained by own limits
             iGrp[nwgmax + IGroup::WInjHighLevCtrl] = -1;
@@ -525,7 +521,7 @@ void injectionGroup(const Opm::Schedule&     sched,
                 iGrp[nwgmax + IGroup::WInjActiveCMode]
                     = (guide_rate_def != Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
             } else {
-                iGrp[nwgmax + IGroup::WInjActiveCMode] = static_cast<int>(cur_inj_ctrl);
+                iGrp[nwgmax + IGroup::WInjActiveCMode] = cur_inj_ctrl;
             }
         }
     }
@@ -543,16 +539,12 @@ void injectionGroup(const Opm::Schedule&     sched,
         } else {
 
             const auto& injection_controls = group.injectionControls(Opm::Phase::GAS, sumState);
-            Opm::Group::InjectionCMode active_cmode = Opm::Group::InjectionCMode::NONE;
-            const auto cur_inj_ctrl = (group.name() == "FIELD") ? sumState.get("FMCTG", -1) :
-                                      sumState.get_group_var(group.name(), "GMCTG", -1);
-            if (cur_inj_ctrl >= 0)
-                active_cmode = Opm::Group::InjectionCModeFromInt(static_cast<int>(cur_inj_ctrl));
-
+            const auto& guide_rate_def = injection_controls.guide_rate_def;
+            const auto& cur_inj_ctrl = group.name() == "FIELD" ? static_cast<int>(sumState.get("FMCTG", -1)) : static_cast<int>(sumState.get_group_var(group.name(), "GMCTG", -1));
+            Opm::Group::InjectionCMode active_cmode = Opm::Group::InjectionCModeFromInt(cur_inj_ctrl);
             const auto& deck_cmode = (group.hasInjectionControl(Opm::Phase::GAS))
                                      ? injection_controls.cmode : Opm::Group::InjectionCMode::NONE;
             const auto& cgroup = injectionControlGroup(sched, sumState, group, "GMCTG", simStep);
-            const auto& guide_rate_def = injection_controls.guide_rate_def;
 
             // group is available for higher level control, but is currently constrained by own limits
             iGrp[nwgmax + IGroup::GInjHighLevCtrl] = -1;
@@ -591,7 +583,7 @@ void injectionGroup(const Opm::Schedule&     sched,
                 iGrp[nwgmax + IGroup::GInjActiveCMode]
                     = (guide_rate_def != Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
             } else {
-                iGrp[nwgmax + IGroup::GInjActiveCMode] = static_cast<int>(cur_inj_ctrl);
+                iGrp[nwgmax + IGroup::GInjActiveCMode] = cur_inj_ctrl;
             }
         }
     } else {
