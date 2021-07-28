@@ -31,9 +31,10 @@ namespace Opm {
 
     ThresholdPressure::ThresholdPressure(bool restart,
                                          const Deck& deck,
-                                         const FieldPropsManager& fp) : 
-        m_active(false),
-        m_restart(restart)
+                                         const FieldPropsManager& fp)
+        : m_active(false)
+        , m_restart(restart)
+        , m_irreversible(false)
     {
 
         if( !DeckSection::hasRUNSPEC( deck ) || (!DeckSection::hasSOLUTION( deck ) && !DeckSection::hasGRID( deck )) )
@@ -55,7 +56,7 @@ namespace Opm {
 
                 const auto& opt = item.get< std::string >( 0 );
                 if( opt == "IRREVERS" )
-                    throw std::runtime_error("Cannot use IRREVERS version of THPRES option, not implemented");
+                    this->m_irreversible = true;
 
                 if( opt == "THPRES" )
                     m_active = true;
@@ -132,13 +133,14 @@ namespace Opm {
         ThresholdPressure result;
         result.m_active = false;
         result.m_restart = true;
+        result.m_irreversible = true;
         result.m_thresholdPressureTable = {{true, 1.0}, {false, 2.0}};
         result.m_pressureTable = {{{1,2},{false,3.0}},{{2,3},{true,4.0}}};
         return result;
     }
 
     bool ThresholdPressure::hasRegionBarrier(int r1 , int r2) const {
-        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        std::pair<int,int> indexPair = this->makeIndex(r1,r2);
         if (m_pressureTable.find( indexPair ) == m_pressureTable.end())
             return false;
         else
@@ -147,7 +149,7 @@ namespace Opm {
 
 
     double ThresholdPressure::getThresholdPressure(int r1 , int r2) const {
-        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        std::pair<int,int> indexPair = this->makeIndex(r1,r2);
         auto iter = m_pressureTable.find( indexPair );
         if (iter == m_pressureTable.end())
             return 0.0;
@@ -169,7 +171,10 @@ namespace Opm {
     }
 
 
-    std::pair<int,int> ThresholdPressure::makeIndex(int r1 , int r2) {
+    std::pair<int,int> ThresholdPressure::makeIndex(int r1 , int r2) const {
+        if (this->m_irreversible)
+            return std::make_pair(r1,r2);
+
         if (r1 < r2)
             return std::make_pair(r1,r2);
         else
@@ -177,7 +182,7 @@ namespace Opm {
     }
 
     void ThresholdPressure::addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair) {
-        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        std::pair<int,int> indexPair = this->makeIndex(r1,r2);
         m_pressureTable[indexPair] = valuePair;
     }
 
