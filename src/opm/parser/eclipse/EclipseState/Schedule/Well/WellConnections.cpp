@@ -568,7 +568,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             this->orderMSW();
         else if (this->m_ordering == Connection::Order::TRACK)
             this->orderTRACK();
-
+        else if (this->m_ordering == Connection::Order::DEPTH)
+            this->orderDEPTH();
     }
 
 
@@ -629,6 +630,14 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         }
         assert(closest != std::numeric_limits<size_t>::max());
         return closest;
+    }
+
+    void WellConnections::orderDEPTH() {
+        std::sort(this->m_connections.begin(), this->m_connections.end(), [](const Opm::Connection& conn1, const Opm::Connection& conn2)
+                  {
+                      return conn1.depth() < conn2.depth();
+                  });
+
     }
 
     bool WellConnections::operator==( const WellConnections& rhs ) const {

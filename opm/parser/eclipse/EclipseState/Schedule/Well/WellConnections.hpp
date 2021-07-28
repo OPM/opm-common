@@ -167,6 +167,7 @@ namespace Opm {
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
         void orderTRACK();
         void orderMSW();
+        void orderDEPTH();
 
         Connection::Order m_ordering = Connection::Order::TRACK;
         int headI, headJ;

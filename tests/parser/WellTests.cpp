@@ -113,6 +113,56 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
         BOOST_CHECK_EQUAL( expected[k], output_connections[k]->getK());
 }
 
+BOOST_AUTO_TEST_CASE(WellCOMPDATtestDEPTH) {
+    Opm::Parser parser;
+    std::string input  = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPORD
+ OP_1 DEPTH /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+)";
+
+
+    auto deck = parser.parseString(input);
+    auto python = std::make_shared<Python>();
+    Opm::EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    Opm::Runspec runspec (deck);
+    Opm::Schedule schedule(deck, grid , fp, runspec, python);
+    const auto& op_1 = schedule.getWell("OP_1", 2);
+
+    const auto& completions = op_1.getConnections();
+    BOOST_CHECK_EQUAL(9U, completions.size());
+
+    //Verify TRACK completion ordering
+    for (size_t k = 0; k < completions.size() - 1; ++k) {
+        BOOST_CHECK(completions[k].depth() <= completions[k+1].depth());
+    }
+
+    // Output / input ordering
+    const auto& output_connections = completions.output(grid);
+    std::vector<int> expected = {0,2,3,4,5,6,7,8,1};
+    for (size_t k = 0; k < completions.size(); ++k)
+        BOOST_CHECK_EQUAL( expected[k], output_connections[k]->getK());
+}
+
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     Opm::Parser parser;
