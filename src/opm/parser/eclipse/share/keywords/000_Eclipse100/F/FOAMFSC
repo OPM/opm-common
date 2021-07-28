@@ -3,6 +3,7 @@
   "sections": [
     "PROPS"
   ],
+  "requires" : ["FOAMROCK"],
   "size": {
     "keyword": "TABDIMS",
     "item": "NTSFUN"

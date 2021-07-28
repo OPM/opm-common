@@ -82,15 +82,16 @@ PROPS
 FOAMOPTS
 GAS TAB /
 
+FOAMROCK
+1 2000 /
+2 1800 /
+2 2400 /
+
 FOAMFSC
 1 2 0.3 /
 4 5 /
 6 /
 
-FOAMROCK
-1 2000 /
-2 1800 /
-2 2400 /
 
 REGIONS
 SWAT
@@ -194,7 +195,6 @@ BOOST_AUTO_TEST_CASE(FoamConfigTest) {
 }
 
 BOOST_AUTO_TEST_CASE(FoamConfigFailureTest) {
-    auto deck = createFailingDeck();
-    BOOST_CHECK_THROW(EclipseState state(deck), std::runtime_error);
+    BOOST_CHECK_THROW( createFailingDeck(), std::exception );
 }
 

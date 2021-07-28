@@ -147,10 +147,6 @@ FoamConfig::FoamConfig(const Deck& deck)
         }
     }
     if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
-        if (!deck.hasKeyword<ParserKeywords::FOAMROCK>()) {
-            throw std::runtime_error("FOAMFSC present but no FOAMROCK keyword found.");
-        }
-        // We have both FOAMFSC and FOAMROCK.
         const auto& kw_foamfsc = deck.getKeyword<ParserKeywords::FOAMFSC>();
         const auto& kw_foamrock = deck.getKeyword<ParserKeywords::FOAMROCK>();
         if (kw_foamfsc.size() != kw_foamrock.size()) {
