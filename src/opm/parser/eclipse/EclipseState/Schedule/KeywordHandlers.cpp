@@ -203,16 +203,8 @@ namespace {
       The COMPORD keyword is handled together with the WELSPECS keyword in the
       handleWELSPECS function.
     */
-    void Schedule::handleCOMPORD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : handlerContext.keyword) {
-            const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
-            if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
-                std::string msg_fmt = "Problem with {keyword}\n"
-                                      "In {file} line {line}\n"
-                                      "Only 'TRACK' and 'INPUT' order are supported";
-                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE ,msg_fmt , handlerContext.keyword.location(), errors );
-            }
-        }
+    void Schedule::handleCOMPORD(const HandlerContext& , const ParseContext& , ErrorGuard& )
+    {
     }
 
     void Schedule::handleCOMPSEGS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {

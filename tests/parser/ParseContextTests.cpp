@@ -387,44 +387,6 @@ BOOST_AUTO_TEST_CASE(TestRandomSlash) {
 
 
 
-BOOST_AUTO_TEST_CASE(TestCOMPORD) {
-    const char * deckString =
-        "START\n"
-        " 10 'JAN' 2000 /\n"
-        "RUNSPEC\n"
-        "DIMENS\n"
-        "  10 10 10 / \n"
-        "GRID\n"
-        "DX\n"
-        "1000*0.25 /\n"
-        "DY\n"
-        "1000*0.25 /\n"
-        "DZ\n"
-        "1000*0.25 /\n"
-        "TOPS\n"
-        "100*0.25 /\n"
-        "SCHEDULE\n"
-        "COMPORD\n"
-        "  '*'  'DEPTH' /\n"
-        "/\n";
-
-    ParseContext parseContext;
-    ErrorGuard errors;
-    Parser parser(true);
-    auto deck = parser.parseString( deckString , parseContext, errors );
-
-    EclipseGrid grid( deck );
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec(deck);
-    auto python = std::make_shared<Python>();
-
-    parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( Schedule( deck , grid , fp, runspec, parseContext, errors, python ));
-
-    parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( Schedule( deck,  grid , fp, runspec , parseContext, errors, python), OpmInputError );
-}
 
 
 BOOST_AUTO_TEST_CASE(TestInvalidKey) {
@@ -479,7 +441,6 @@ BOOST_AUTO_TEST_CASE( test_constructor_with_values) {
     BOOST_CHECK_EQUAL( parseContext.get(ParseContext::PARSE_RANDOM_SLASH) , InputError::IGNORE );
     BOOST_CHECK_EQUAL( parseContext.get(ParseContext::PARSE_RANDOM_TEXT) , InputError::THROW_EXCEPTION );
     BOOST_CHECK_EQUAL( parseContext.get(ParseContext::UNSUPPORTED_INITIAL_THPRES) , InputError::WARN );
-    BOOST_CHECK_EQUAL( parseContext.get(ParseContext::UNSUPPORTED_COMPORD_TYPE) , InputError::WARN );
 }
 
 
@@ -508,7 +469,6 @@ BOOST_AUTO_TEST_CASE(test_1arg_constructor) {
     setenv("OPM_ERRORS_IGNORE", "PARSE_RANDOM_SLASH", 1);
     {
         ParseContext ctx(InputError::WARN);
-        BOOST_CHECK_EQUAL(ctx.get(ParseContext::UNSUPPORTED_COMPORD_TYPE), InputError::WARN);
         BOOST_CHECK_EQUAL(ctx.get(ParseContext::PARSE_RANDOM_SLASH), InputError::IGNORE);
     }
 }

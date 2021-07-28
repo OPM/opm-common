@@ -246,10 +246,6 @@ class KeywordLocation;
         */
         const static std::string UNSUPPORTED_SCHEDULE_GEO_MODIFIER;
 
-        /*
-          In the COMPORD implementation only the 'TRACK' input mode is supported.
-        */
-        const static std::string UNSUPPORTED_COMPORD_TYPE;
 
         /*
           If the third item in the THPRES keyword is defaulted the
