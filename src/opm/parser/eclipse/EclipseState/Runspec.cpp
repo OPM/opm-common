@@ -24,8 +24,10 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/H.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
@@ -327,7 +329,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         if (!deck.hasKeyword("SATOPTS"))
             return;
 
-        const auto& satoptsItem = deck.getKeyword("SATOPTS").getRecord(0).getItem(0);
+        const auto& satoptsItem = deck.getKeyword<ParserKeywords::EHYSTR>().getRecord(0).getItem(0);
         for (unsigned i = 0; i < satoptsItem.data_size(); ++i) {
             std::string satoptsValue = satoptsItem.get< std::string >(0);
             std::transform(satoptsValue.begin(),
@@ -340,13 +342,13 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         }
 
         // check for the (deprecated) HYST keyword
-        if (deck.hasKeyword("HYST"))
+        if (deck.hasKeyword<ParserKeywords::HYST>())
             activeHyst = true;
 
         if (!activeHyst)
 	      return;
 
-        if (!deck.hasKeyword("EHYSTR"))
+        if (!deck.hasKeyword<ParserKeywords::EHYSTR>())
             throw std::runtime_error("Enabling hysteresis via the HYST parameter for SATOPTS requires the "
                                      "presence of the EHYSTR keyword");
 	    /*!
@@ -358,8 +360,8 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
 	* 1: use the Carlson model for relative permeability hysteresis of the non-wetting
 	*    phase and the imbibition curve for the relperm of the wetting phase
 	*/
-        const auto& ehystrKeyword = deck.getKeyword("EHYSTR");
-        if (deck.hasKeyword("NOHYKR"))
+        const auto& ehystrKeyword = deck.getKeyword<ParserKeywords::EHYSTR>();
+        if (deck.hasKeyword<ParserKeywords::NOHYKR>())
             krHystMod = -1;
         else {
             krHystMod = ehystrKeyword.getRecord(0).getItem("relative_perm_hyst").get<int>(0);
