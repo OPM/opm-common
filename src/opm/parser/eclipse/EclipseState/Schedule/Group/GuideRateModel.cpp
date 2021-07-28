@@ -63,9 +63,6 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
 
     if (this->F > 3 || this->F < -3)
         throw std::invalid_argument("Invalid value for F must be in interval [-3,3]");
-
-    if (this->m_target == Target::COMB)
-        throw std::logic_error("Sorry - the 'COMB' mode is not supported");
 }
 
 GuideRateModel GuideRateModel::serializeObject()
@@ -146,6 +143,9 @@ double GuideRateModel::pot(Target target, double oil_pot, double gas_pot, double
 double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) const {
     if (this->default_model)
         throw std::invalid_argument("The default GuideRateModel can not be evaluated - must enter GUIDERAT information explicitly.");
+
+    if (this->m_target == Target::COMB)
+        throw std::logic_error("Sorry the COMB target model is not supported");
 
     double pot = this->pot(oil_pot, gas_pot, wat_pot);
     if (pot == 0)
