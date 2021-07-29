@@ -332,7 +332,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         if (!egridfile.hasKey("GRIDUNIT")) {
-            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, ZCORN not found");
+            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, GRIDUNIT not found");
         }
 
         const std::vector<std::string>& gridunit = egridfile.get<std::string>("GRIDUNIT");
