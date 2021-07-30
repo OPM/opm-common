@@ -820,6 +820,13 @@ namespace {
         this->snapshots.back().rst_config.update(std::move(rst_config));
     }
 
+
+    void Schedule::handleSUMTHIN(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto value = handlerContext.keyword.getRecord(0).getItem(0).getSIDouble(0);
+        this->snapshots.back().update_sumthin( value );
+    }
+
+
     void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto numrecords = handlerContext.keyword.size();
         auto tuning = this->snapshots.back().tuning();
@@ -2014,6 +2021,7 @@ namespace {
             { "RPTRST"  , &Schedule::handleRPTRST   },
             { "RPTSCHED", &Schedule::handleRPTSCHED },
             { "SAVE"    , &Schedule::handleSAVE     },
+            { "SUMTHIN" , &Schedule::handleSUMTHIN  },
             { "TUNING"  , &Schedule::handleTUNING   },
             { "UDQ"     , &Schedule::handleUDQ      },
             { "VAPPARS" , &Schedule::handleVAPPARS  },

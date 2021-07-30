@@ -149,6 +149,9 @@ WCONHIST
      'BAN'      'OPEN'      'RESV'      0.000      0.000      0.000  5* /
 /
 
+SUMTHIN
+  1 /
+
 WTEST
    'ALLOW'   1   'PE' /
 /
@@ -169,6 +172,10 @@ WCONHIST
 DATES             -- 2
  10  JUL 2007 /
 /
+
+SUMTHIN
+  10 /
+
 
 WELSPECS
      'I1'         'OP'   20   51  3.92       'OIL'  3*  NO /
@@ -4463,7 +4470,7 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
         ScheduleDeck sched_deck( deck, {0,0} );
         BOOST_CHECK_EQUAL( sched_deck.size(), 6 );
 
-        std::vector<std::string> first_kw = {"WELSPECS", "WTEST", "WELSPECS", "WCONINJH", "WELOPEN", "WCONINJH"};
+        std::vector<std::string> first_kw = {"WELSPECS", "WTEST", "SUMTHIN", "WCONINJH", "WELOPEN", "WCONINJH"};
         std::vector<std::string> last_kw = {"WTEST", "WCONHIST", "WCONPROD", "WCONINJH", "WELOPEN", "WCONINJH"};
         std::vector<std::array<int,3>> start_time = {{2007, 5, 10},
                                                      {2007, 6, 10},
