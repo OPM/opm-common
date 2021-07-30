@@ -229,14 +229,24 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
     const auto& schedule = this->impl->schedule;
     const auto& ioConfig = es.cfg().io();
 
-    /*
-      Summary data is written unconditionally for every timestep except for the
-      very intial report_step==0 call, which is only garbage.
-    */
     if (report_step > 0) {
-        this->impl->summary.add_timestep( st,
-                                          report_step);
-        this->impl->summary.write();
+        bool write_summary = false;
+        if (!isSubstep)
+            write_summary = true;
+
+        const auto& sumthin = schedule[report_step].sumthin();
+        if (sumthin.has_value()) {
+            auto time_since_last = secs_elapsed - this->last_output;
+            if (time_since_last >= sumthin.value())
+                write_summary = true;
+        } else
+            write_summary = true;
+
+        if (write_summary) {
+            this->impl->summary.add_timestep( st, report_step);
+            this->impl->summary.write();
+        }
+        this->last_output = secs_elapsed;
     }
 
     bool final_step { report_step == static_cast<int>(this->impl->schedule.size()) - 1 };
