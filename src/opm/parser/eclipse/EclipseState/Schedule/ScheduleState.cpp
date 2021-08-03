@@ -197,6 +197,18 @@ void ScheduleState::update_whistctl(Well::ProducerCMode whistctl) {
     this->m_whistctl_mode = whistctl;
 }
 
+const std::optional<double>& ScheduleState::sumthin() const {
+    return this->m_sumthin;
+}
+
+void ScheduleState::update_sumthin(double sumthin) {
+    if (sumthin == 0)
+        this->m_sumthin = std::nullopt;
+    else
+        this->m_sumthin = sumthin;
+}
+
+
 bool ScheduleState::operator==(const ScheduleState& other) const {
 
     return this->m_start_time == other.m_start_time &&
@@ -230,7 +242,8 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->wells == other.wells &&
            this->groups == other.groups &&
            this->vfpprod == other.vfpprod &&
-           this->vfpinj == other.vfpinj;
+           this->vfpinj == other.vfpinj &&
+           this->m_sumthin == other.m_sumthin;
 }
 
 

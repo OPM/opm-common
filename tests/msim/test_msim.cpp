@@ -169,3 +169,54 @@ BOOST_AUTO_TEST_CASE(RUN) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(RUN_SUMTHIN) {
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    Deck deck = parser.parseFile("SPE1CASE1_SUMTHIN.DATA");
+    EclipseState state(deck);
+    Schedule schedule(deck, state, python);
+    SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
+    msim msim(state);
+
+    msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
+    msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
+    msim.well_rate("RFTI", data::Rates::opt::wat, inj_rfti);
+    msim.well_rate("INJ",  data::Rates::opt::gas, inj_inj);
+    msim.solution("PRESSURE", pressure);
+    {
+        const WorkArea work_area("test_msim");
+        EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
+
+        msim.run(schedule, io, false);
+
+        {
+            const auto  smry  = EclIO::ESmry("SPE1CASE1_SUMTHIN");
+            const auto& time  = smry.get("TIME");
+            const auto& dates = smry.dates();
+            auto report_date = TimeStampUTC(2016, 1, 1);
+            bool report_found = false;
+
+            /*
+              Verify that:
+
+               1. The step length is more than 10 days for the first year
+               2. The step length is more than 20 days for the second year
+               3. That the exact report date halfways is found
+            */
+
+            for (std::size_t time_index = 0; time_index < time.size() - 1; time_index++) {
+                auto step_length = time[time_index + 1] - time[time_index];
+                if (time[time_index + 1] < 365)
+                    BOOST_CHECK(step_length >= 10);
+                else
+                    BOOST_CHECK(step_length >= 20);
+
+                auto ts = TimeStampUTC( std::chrono::system_clock::to_time_t( dates[time_index]) );
+                if (ts == report_date)
+                    report_found = true;
+            }
+            BOOST_CHECK(report_found);
+        }
+    }
+}
