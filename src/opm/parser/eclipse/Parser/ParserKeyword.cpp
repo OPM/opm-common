@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <fmt/format.h>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -36,43 +37,166 @@
 #include "raw/RawRecord.hpp"
 
 namespace Opm {
+KeywordSize::KeywordSize(const std::string& in_keyword, const std::string& in_item, int in_shift)
+    : KeywordSize(in_keyword, in_item, false, in_shift)
+{
+}
 
-    void ParserKeyword::setSizeType( ParserKeywordSizeEnum sizeType ) {
-        m_keywordSizeType = sizeType;
-        if (sizeType == FIXED_CODE)
-            this->m_fixedSize = 1;
+KeywordSize::KeywordSize(const std::string& in_keyword, const std::string& in_item)
+    : KeywordSize(in_keyword, in_item, false, 0)
+{
+}
+
+KeywordSize::KeywordSize(const std::string& in_keyword, const std::string& in_item, bool table_collection, int in_shift)
+    : shift(in_shift)
+    , is_table_collection(table_collection)
+    , m_size_type(OTHER_KEYWORD_IN_DECK)
+    , m_max_size(std::make_pair(in_keyword, in_item))
+{
+}
+
+KeywordSize::KeywordSize(std::size_t in_min_size, const std::string& in_keyword, const std::string& in_item, bool table_collection, int in_shift)
+    : KeywordSize(in_keyword, in_item, table_collection, in_shift)
+{
+    this->min_size(in_min_size);
+}
+
+KeywordSize::KeywordSize()
+    : KeywordSize(SLASH_TERMINATED)
+{
+}
+
+KeywordSize::KeywordSize(ParserKeywordSizeEnum size_type)
+    : m_size_type(size_type)
+{
+    if (size_type == SLASH_TERMINATED)
+        return;
+
+    if (size_type == UNKNOWN)
+        return;
+
+    if (size_type == DOUBLE_SLASH_TERMINATED)
+        return;
+
+    throw std::logic_error("This constructor only allows size type UNKNOWN and SLASH_TERMINATED");
+}
+
+KeywordSize::KeywordSize(std::size_t fixed_size)
+    : KeywordSize(fixed_size, false)
+{
+}
+
+KeywordSize::KeywordSize(std::size_t fixed_size, bool code)
+    : m_size_type(code ? FIXED_CODE : FIXED)
+    , m_max_size(fixed_size)
+    , is_code(code)
+{
+}
+
+KeywordSize::KeywordSize(std::size_t in_min_size, std::size_t fixed_size, bool code)
+    : KeywordSize(fixed_size, code)
+{
+    this->min_size(in_min_size);
+}
+
+bool
+KeywordSize::operator==(const KeywordSize&) const
+{
+    return true;
+}
+
+bool
+KeywordSize::operator!=(const KeywordSize& other) const
+{
+    return !(*this == other);
+}
+
+bool
+KeywordSize::table_collection() const
+{
+    return this->is_table_collection;
+}
+
+ParserKeywordSizeEnum
+KeywordSize::size_type() const
+{
+    return this->m_size_type;
+}
+
+bool
+KeywordSize::code() const
+{
+    return this->is_code;
+}
+
+int
+KeywordSize::size_shift() const
+{
+    return this->shift;
+}
+
+const std::string&
+KeywordSize::keyword() const
+{
+    return std::get<1>(this->m_max_size.value()).first;
+}
+
+const std::string&
+KeywordSize::item() const
+{
+    return std::get<1>(this->m_max_size.value()).second;
+}
+
+std::optional<std::size_t> KeywordSize::min_size() const
+{
+    return this->m_min_size;
+}
+
+const std::optional<std::variant<std::size_t, std::pair<std::string, std::string>>>&
+KeywordSize::max_size() const
+{
+    return this->m_max_size;
+}
+
+void KeywordSize::min_size(int s) {
+    this->m_min_size = s;
+}
+
+std::string
+KeywordSize::construct() const
+{
+    if (this->m_size_type == UNKNOWN || this->m_size_type == DOUBLE_SLASH_TERMINATED || this->m_size_type == SLASH_TERMINATED)
+        return fmt::format("KeywordSize({})", ParserKeywordSizeEnum2String(this->m_size_type));
+
+    if (this->m_size_type == FIXED || this->m_size_type == FIXED_CODE) {
+        if (this->min_size().has_value())
+            return fmt::format("KeywordSize({}, {}, {})", this->min_size().value(), std::get<std::size_t>(this->m_max_size.value()), this->is_code);
+        else
+            return fmt::format("KeywordSize({}, {})", std::get<std::size_t>(this->m_max_size.value()), this->is_code);
     }
 
-    void ParserKeyword::setFixedSize( size_t keywordSize) {
-        m_keywordSizeType = FIXED;
-        m_fixedSize = keywordSize;
+    if (this->m_size_type == OTHER_KEYWORD_IN_DECK) {
+        const auto& [size_kw, size_item] = std::get<1>(this->m_max_size.value());
+        if (this->min_size().has_value())
+            return fmt::format("KeywordSize({}, \"{}\", \"{}\", {}, {})", this->min_size().value(), size_kw, size_item, this->is_table_collection, this->shift);
+        else
+            return fmt::format("KeywordSize(\"{}\", \"{}\", {}, {})", size_kw, size_item, this->is_table_collection, this->shift);
     }
 
-    void ParserKeyword::setTableCollection(bool _isTableCollection) {
-        m_isTableCollection = _isTableCollection;
-    }
+    throw std::logic_error("No string serialization known?");
+}
 
 
-    void ParserKeyword::commonInit(const std::string& name, ParserKeywordSizeEnum sizeType) {
-        m_isTableCollection = false;
-        m_name = name;
-        m_keywordSizeType = sizeType;
-        m_Description = "";
-        m_fixedSize = 0;
-
-        m_deckNames.insert(m_name);
-    }
-
-    ParserKeyword::ParserKeyword(const std::string& name) {
-        commonInit(name, FIXED);
-    }
-
-
-    ParserKeyword::ParserKeyword(const std::string& name, const std::string& sizeKeyword, const std::string& sizeItem, int size_shift, bool _isTableCollection)
+    ParserKeyword::ParserKeyword(const std::string& name)
+        : ParserKeyword(name, KeywordSize{})
     {
-        commonInit( name , OTHER_KEYWORD_IN_DECK);
-        m_isTableCollection = _isTableCollection;
-        initSizeKeyword(sizeKeyword, sizeItem, size_shift);
+    }
+
+    ParserKeyword::ParserKeyword(const std::string& name, KeywordSize kw_size)
+        : m_name(name)
+        , keyword_size(std::move(kw_size))
+    {
+        this->m_deckNames.insert(m_name);
     }
 
     void ParserKeyword::clearDeckNames() {
@@ -93,7 +217,7 @@ namespace Opm {
 
 
     bool ParserKeyword::isTableCollection() const {
-        return m_isTableCollection;
+        return this->keyword_size.table_collection();
     }
 
     std::string ParserKeyword::getDescription() const {
@@ -118,12 +242,10 @@ namespace Opm {
         if (jsonConfig.has_item("size")) {
             Json::JsonObject sizeObject = jsonConfig.get_item("size");
 
-            if (sizeObject.is_number()) {
-                m_fixedSize = (size_t) sizeObject.as_int();
-                m_keywordSizeType = FIXED;
-            } else
-                initSizeKeyword(sizeObject);
-
+            if (sizeObject.is_number())
+                this->keyword_size = KeywordSize( sizeObject.as_int() );
+            else
+                initSizeKeyword(false, sizeObject);
             return;
         }
 
@@ -134,27 +256,34 @@ namespace Opm {
               throw std::invalid_argument(
                   "The num_tables key must point to a {} object");
 
-            initSizeKeyword(numTablesObject);
-            m_isTableCollection = true;
-
+            initSizeKeyword(true, numTablesObject);
             return;
         }
 
         if (jsonConfig.has_item("records_set")) {
-           m_keywordSizeType = DOUBLE_SLASH_TERMINATED;
+           this->keyword_size = KeywordSize(DOUBLE_SLASH_TERMINATED);
            return;
+        }
+
+        if (jsonConfig.has_item("code")) {
+            this->keyword_size = KeywordSize(1, true);
+            return;
+        }
+
+        if (jsonConfig.has_item("data")) {
+            this->keyword_size = KeywordSize(1);
+            return;
         }
 
         if (jsonConfig.has_item("items") || jsonConfig.has_item("records")) {
             // The number of records is undetermined - the keyword will be '/'
             // terminated.
-            m_keywordSizeType = SLASH_TERMINATED;
+            this->keyword_size = KeywordSize(SLASH_TERMINATED);
             return;
-        } else {
-            m_keywordSizeType = FIXED;
-            m_fixedSize = 0;
         }
 
+        // No data associated with this keyword - like e.g. section headers
+        this->keyword_size = KeywordSize(0);
     }
 
 
@@ -170,13 +299,9 @@ namespace Opm {
     }
 
 
-    ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
-
-      if (jsonConfig.has_item("name")) {
-            ParserKeywordSizeEnum sizeType = UNKNOWN;
-            commonInit(jsonConfig.get_string("name"), sizeType);
-        } else
-            throw std::invalid_argument("Json object is missing the 'name' property");
+    ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) :
+        ParserKeyword(jsonConfig.get_string("name"))
+    {
 
         if (jsonConfig.has_item("deck_names") || jsonConfig.has_item("deck_name_regex") )
             // if either the deck names or the regular expression for deck names are
@@ -185,6 +310,11 @@ namespace Opm {
             clearDeckNames();
 
         initSize(jsonConfig);
+        if (jsonConfig.has_item("min_size")) {
+            auto min_size = jsonConfig.get_int("min_size");
+            this->keyword_size.min_size(min_size);
+        }
+
         initDeckNames(jsonConfig);
         initSectionNames(jsonConfig);
         initMatchRegex(jsonConfig);
@@ -197,7 +327,7 @@ namespace Opm {
             initRequiredKeywords(jsonConfig.get_item("requires"));
         }
 
-        if (jsonConfig.has_item("items") && (jsonConfig.has_item("records") || 
+        if (jsonConfig.has_item("items") && (jsonConfig.has_item("records") ||
                                              jsonConfig.has_item("alternating_records") ||
                                              jsonConfig.has_item("records_set") ))
             throw std::invalid_argument("Fatal error in " + getName() + " configuration. Can NOT have both records: and items:");
@@ -263,12 +393,11 @@ namespace Opm {
         }
     }
 
-    void ParserKeyword::initSizeKeyword(const std::string& sizeKeyword, const std::string& sizeItem, int size_shift) {
-        keyword_size = KeywordSize(sizeKeyword, sizeItem, size_shift); 
-        m_keywordSizeType = OTHER_KEYWORD_IN_DECK;
+    void ParserKeyword::initSizeKeyword(const std::string& sizeKeyword, const std::string& sizeItem, bool table_collection, int size_shift) {
+        this->keyword_size = KeywordSize(sizeKeyword, sizeItem, table_collection, size_shift);
     }
 
-    void ParserKeyword::initSizeKeyword(const Json::JsonObject& sizeObject) {
+    void ParserKeyword::initSizeKeyword(bool table_collection, const Json::JsonObject& sizeObject) {
         if (sizeObject.is_object()) {
             std::string sizeKeyword = sizeObject.get_string("keyword");
             std::string sizeItem = sizeObject.get_string("item");
@@ -276,9 +405,10 @@ namespace Opm {
             if (sizeObject.has_item("shift"))
                 size_shift = sizeObject.get_int("shift");
 
-            initSizeKeyword(sizeKeyword, sizeItem, size_shift);
+            this->keyword_size = KeywordSize{sizeKeyword, sizeItem, table_collection, size_shift};
         } else {
-            m_keywordSizeType = ParserKeywordSizeEnumFromString( sizeObject.as_string() );
+            auto size_type = ParserKeywordSizeEnumFromString( sizeObject.as_string() );
+            this->keyword_size = KeywordSize(size_type);
         }
     }
 
@@ -408,9 +538,6 @@ void set_dimensions( ParserItem& item,
 }
 
     void ParserKeyword::initCode(const Json::JsonObject& jsonConfig) {
-        this->m_fixedSize = 1U;
-        this->m_keywordSizeType = FIXED_CODE;
-
         const Json::JsonObject codeConfig = jsonConfig.get_item("code");
         if (!codeConfig.has_item("end"))
             throw std::invalid_argument("The end: is missing from the code block");
@@ -428,9 +555,6 @@ void set_dimensions( ParserItem& item,
 
 
     void ParserKeyword::initData(const Json::JsonObject& jsonConfig) {
-        this->m_fixedSize = 1U;
-        this->m_keywordSizeType = FIXED;
-
         const Json::JsonObject dataConfig = jsonConfig.get_item("data");
         if (!dataConfig.has_item("value_type") )
             throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
@@ -525,10 +649,14 @@ void set_dimensions( ParserItem& item,
 
 
     void ParserKeyword::addDataRecord( ParserRecord record) {
-        if ((m_keywordSizeType == FIXED) && (m_fixedSize == 1U))
-            addRecord( std::move( record ) );
-        else
+        if (this->keyword_size.size_type() != FIXED)
             throw std::invalid_argument("When calling addDataRecord() for keyword " + getName() + ", it must be configured with fixed size == 1.");
+
+        auto max_size = std::get<std::size_t>(this->keyword_size.max_size().value());
+        if (max_size != 1)
+            throw std::invalid_argument("When calling addDataRecord() for keyword " + getName() + ", it must be configured with fixed size == 1.");
+
+        this->addRecord(std::move(record));
     }
 
 
@@ -613,29 +741,36 @@ void set_dimensions( ParserItem& item,
         if (this->hasFixedSize( ))
             keyword.setFixedSize( );
 
-        if (this->m_keywordSizeType == OTHER_KEYWORD_IN_DECK) {
-            if (!m_isTableCollection)
+        const auto& kw_size = this->keyword_size;
+        if (kw_size.size_type() == OTHER_KEYWORD_IN_DECK) {
+            if (!kw_size.table_collection())
                 keyword.setFixedSize( );
         }
 
-        if (this->m_keywordSizeType == UNKNOWN)
+        if (kw_size.size_type() == UNKNOWN)
             keyword.setFixedSize( );
 
         return keyword;
     }
 
+    std::optional<std::size_t> ParserKeyword::min_size() const {
+        return this->keyword_size.min_size();
+    }
+
     size_t ParserKeyword::getFixedSize() const {
         if (!hasFixedSize())
             throw std::logic_error("The parser keyword "+getName()+" does not have a fixed size!");
-        return m_fixedSize;
+        const auto& max_size = this->keyword_size.max_size();
+        return std::get<std::size_t>(max_size.value());
     }
 
     bool ParserKeyword::hasFixedSize() const {
-        return (this->m_keywordSizeType == FIXED || this->m_keywordSizeType == FIXED_CODE);
+        auto size_type = this->keyword_size.size_type();
+        return (size_type == FIXED || size_type == FIXED_CODE);
     }
 
     enum ParserKeywordSizeEnum ParserKeyword::getSizeType() const {
-        return m_keywordSizeType;
+        return this->keyword_size.size_type();
     }
 
     bool ParserKeyword::rawStringKeyword() const {
@@ -653,7 +788,7 @@ void set_dimensions( ParserItem& item,
     }
 
     bool ParserKeyword::isCodeKeyword() const {
-        return (this->m_keywordSizeType == FIXED_CODE);
+        return this->keyword_size.code();
     }
 
     bool ParserKeyword::isAlternatingKeyword() const {
@@ -744,28 +879,30 @@ void set_dimensions( ParserItem& item,
         const std::string lhs = "keyword";
         const std::string indent = "  ";
 
-        ss << className() << "::" << className() << "( ) : ParserKeyword(\"" << m_name << "\")" << '\n' << "{" << '\n';
-        {
-            const std::string sizeString(ParserKeywordSizeEnum2String(m_keywordSizeType));
-            ss << indent;
-            switch (m_keywordSizeType) {
-            case SLASH_TERMINATED:
-            case FIXED_CODE:
-            case DOUBLE_SLASH_TERMINATED:
-            case UNKNOWN:
-                ss << "setSizeType(" << sizeString << ");" << '\n';
-                break;
-            case FIXED:
-                ss << "setFixedSize( (size_t) " << m_fixedSize << ");" << '\n';
-                break;
-            case OTHER_KEYWORD_IN_DECK:
-                ss << "setSizeType(" << sizeString << ");" << '\n';
-                ss << indent << "initSizeKeyword(\"" << keyword_size.keyword << "\",\"" << keyword_size.item << "\"," << keyword_size.shift << ");" << '\n';
-                if (m_isTableCollection)
-                    ss << indent << "setTableCollection( true );" << '\n';
-                break;
-            }
-        }
+        ss << fmt::format("{0}::{0}() : ParserKeyword(\"{1}\", {2}) {{\n",
+                          this->className(),
+                          this->m_name,
+                          this->keyword_size.construct());
+
+        //{
+        //    const std::string sizeString(ParserKeywordSizeEnum2String(m_keywordSizeType));
+        //    ss << indent;
+        //    switch (m_keywordSizeType) {
+        //    case SLASH_TERMINATED:
+        //    case FIXED_CODE:
+        //    case DOUBLE_SLASH_TERMINATED:
+        //    case UNKNOWN:
+        //        ss << "setSizeType(" << sizeString << ");" << '\n';
+        //        break;
+        //    case FIXED:
+        //        ss << "setFixedSize( (size_t) " << m_fixedSize << ");" << '\n';
+        //        break;
+        //    case OTHER_KEYWORD_IN_DECK:
+        //        ss << "setSizeType(" << sizeString << ");" << '\n';
+        //        ss << indent << "initSizeKeyword(\"" << keyword_size.keyword << "\",\"" << keyword_size.item << "\"," << fmt::format("{}", this->isTableCollection()) << "," << keyword_size.shift << ");" << '\n';
+        //        break;
+        //    }
+        //}
 
         // add the valid sections for the keyword
         for (auto sectionNameIt = m_validSectionNames.begin();
@@ -813,7 +950,7 @@ void set_dimensions( ParserItem& item,
         if (hasMatchRegex())
             ss << indent << "setMatchRegex(\"" << m_matchRegexString << "\");" << '\n';
 
-        if (this->m_keywordSizeType == FIXED_CODE)
+        if (this->keyword_size.code())
             ss << indent << "setCodeEnd(\"" << this->code_end << "\");" << '\n';
 
         {
@@ -856,6 +993,10 @@ void set_dimensions( ParserItem& item,
             }
         }
         ss << '\n';
+
+        const auto& kw_size = this->getKeywordSize();
+        std::cout << kw_size.construct() << std::endl;
+
         return ss.str();
     }
 
@@ -869,26 +1010,28 @@ void set_dimensions( ParserItem& item,
         if(    m_name              != rhs.m_name
             || this->code_end      != rhs.code_end
             || m_matchRegexString  != rhs.m_matchRegexString
-            || m_keywordSizeType   != rhs.m_keywordSizeType
             || isCodeKeyword()     != rhs.isCodeKeyword()
-            || isDataKeyword()     != rhs.isDataKeyword()
-            || m_isTableCollection != rhs.m_isTableCollection )
+            || isDataKeyword()     != rhs.isDataKeyword())
           return false;
 
+        return true;
 
-        switch( m_keywordSizeType ) {
-            case FIXED:
-                if( m_fixedSize != rhs.m_fixedSize )
-                    return false;
-                break;
+        //switch( m_keywordSizeType ) {
+        //    case FIXED:
+        //        if( m_fixedSize != rhs.m_fixedSize )
+        //            return false;
+        //        break;
 
-            case OTHER_KEYWORD_IN_DECK:
-                if (this->keyword_size != rhs.keyword_size)
-                    return false;
-                break;
-            default:
-                break;
-        }
+        //    case OTHER_KEYWORD_IN_DECK:
+        //        if (this->keyword_size != rhs.keyword_size)
+        //            return false;
+        //        break;
+        //    default:
+        //        break;
+        //}
+
+        if (this->keyword_size != rhs.keyword_size)
+            return false;
 
         return this->m_records.size() == rhs.m_records.size()
             && std::equal( this->begin(), this->end(), rhs.begin() );

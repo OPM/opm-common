@@ -64,19 +64,25 @@ CECON
 BOOST_AUTO_TEST_CASE( COORDSYS ) {
     const std::string input = R"(
 RUNSPEC
-    NUMRES
-        1 /
+
+BRINE
+
+NUMRES
+    1 /
 GRID
-    COORDSYS
-        1 1141 /
-    COORDSYS
-        1 1141 'COMP' 'JOIN' 1 2 /
-    COORDSYS
-        1 1141 'COMP' 'JOIN' /
-    COORDSYS
-        1 1141 'INCOMP' /
+COORDSYS
+    1 1141 /
+COORDSYS
+    1 1141 'COMP' 'JOIN' 1 2 /
+COORDSYS
+    1 1141 'COMP' 'JOIN' /
+COORDSYS
+    1 1141 'INCOMP' /
 )";
-    Parser().parseString( input );
+    const auto& deck = Parser().parseString( input );
+
+    const auto& brine = deck.getKeyword("BRINE");
+    BOOST_CHECK_EQUAL(brine.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE( DENSITY ) {
@@ -1477,6 +1483,9 @@ RUNSPEC
 OIL
 GAS
 
+BRINE
+NACL KCL /
+
 TABDIMS
  1 2 /
 
@@ -1503,11 +1512,21 @@ SGOF
     0.9 0.5 0.1 8.0
     1.0 1.0 0.1 9.0 /
 )";
+    Parser parser;
 
-    auto deck = Parser{}.parseString(input);
+    const auto& keyword = parser.getParserKeywordFromDeckName("BRINE");
+    BOOST_CHECK_EQUAL(keyword.getFixedSize(), 1);
+    BOOST_CHECK_EQUAL(keyword.min_size().value(), 0);
+
+
+    auto deck = parser.parseString(input);
     const auto& pvtwsalt = deck.getKeyword("PVTWSALT");
     BOOST_CHECK_EQUAL(pvtwsalt.size(), 4);
 
     const auto& sgof = deck.getKeyword("SGOF");
     BOOST_CHECK_EQUAL(sgof.size(), 1);
+
+    const auto& brine = deck.getKeyword("BRINE");
+    const auto& salts = brine.getRecord(0).getItem(0);
+    BOOST_CHECK_EQUAL( salts.data_size(), 2);
 }
