@@ -181,7 +181,7 @@ std::size_t ScheduleDeck::restart_offset() const {
 }
 
 
-ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) {
+ScheduleDeck::ScheduleDeck(const Deck& deck, const ScheduleRestartInfo& rst_info) {
     const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
     time_point start_time;
     if (deck.hasKeyword("START")) {
@@ -197,10 +197,10 @@ ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::s
         start_time = TimeService::from_time_t( mkdate(1983, 1, 1) );
     }
 
-    const auto& [restart_time, restart_offset] = restart;
-    this->m_restart_time = TimeService::from_time_t(restart_time);
-    this->m_restart_offset = restart_offset;
-    if (restart_offset > 0) {
+    this->m_restart_time = TimeService::from_time_t(rst_info.time);
+    this->m_restart_offset = rst_info.report_step;
+    this->skiprest = rst_info.skiprest;
+    if (this->m_restart_offset > 0) {
         for (std::size_t it = 0; it < this->m_restart_offset; it++) {
             this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
             if (it < this->m_restart_offset - 1)
@@ -258,9 +258,12 @@ void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, Sc
             context.rst_skip = false;
 
         if (t > this->m_restart_time) {
-            TimeStampUTC ts(TimeService::to_time_t(this->m_restart_time));
-            auto reason = fmt::format("Have scanned past restart data: {:4d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
-            throw OpmInputError(reason, location);
+            if (this->skiprest) {
+                TimeStampUTC ts(TimeService::to_time_t(this->m_restart_time));
+                auto reason = fmt::format("Have scanned past restart data: {:4d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
+                throw OpmInputError(reason, location);
+            }
+            context.rst_skip = false;
         }
     }
     this->m_blocks.back().end_time(t);

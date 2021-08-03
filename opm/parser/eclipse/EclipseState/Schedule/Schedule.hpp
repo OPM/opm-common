@@ -63,7 +63,7 @@ namespace Opm
     struct ScheduleStatic {
         std::shared_ptr<const Python> m_python_handle;
         std::string m_input_path;
-        std::pair<std::time_t, std::size_t> m_restart_info;
+        ScheduleRestartInfo rst_info;
         MessageLimits m_deck_message_limits;
         UnitSystem m_unit_system;
         Runspec m_runspec;
@@ -77,7 +77,7 @@ namespace Opm
         {}
 
         ScheduleStatic(std::shared_ptr<const Python> python_handle,
-                       const std::pair<std::time_t, std::size_t>& restart_info,
+                       const ScheduleRestartInfo& restart_info,
                        const Deck& deck,
                        const Runspec& runspec,
                        const std::optional<int>& output_interval_,
@@ -88,10 +88,11 @@ namespace Opm
         void serializeOp(Serializer& serializer)
         {
             m_deck_message_limits.serializeOp(serializer);
-            serializer(this->m_restart_info);
+            this->rst_info.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             m_unit_system.serializeOp(serializer);
             serializer(this->m_input_path);
+            rst_info.serializeOp(serializer);
             rst_config.serializeOp(serializer);
             serializer(this->output_interval);
         }
@@ -105,7 +106,7 @@ namespace Opm
             st.m_unit_system = UnitSystem::newFIELD();
             st.m_input_path = "Some/funny/path";
             st.rst_config = RSTConfig::serializeObject();
-            st.m_restart_info = std::make_pair(0, 0);
+            st.rst_info = ScheduleRestartInfo::serializeObject();
             return st;
         }
 
@@ -114,7 +115,7 @@ namespace Opm
                    this->m_deck_message_limits == other.m_deck_message_limits &&
                    this->m_unit_system == other.m_unit_system &&
                    this->rst_config == other.rst_config &&
-                   this->m_restart_info == other.m_restart_info &&
+                   this->rst_info == other.rst_info &&
                    this->m_runspec == other.m_runspec;
         }
     };
