@@ -952,8 +952,15 @@ namespace {
                 if(record.getItem("VFP_TABLE").defaultApplied(0))
                     table_nr = properties->VFPTableNumber;
 
-                if (table_nr != 0)
-                    alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
+                if (table_nr != 0) {
+                    const auto& vfpprod = this->snapshots.back().vfpprod;
+                    if (vfpprod.has(table_nr))
+                        alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
+                    else {
+                        std::string reason = fmt::format("Problem with well:{} VFP table: {} not defined", well_name, table_nr);
+                        throw OpmInputError(reason, handlerContext.keyword.location());
+                    }
+                }
                 properties->handleWCONHIST(alq_type, this->m_static.m_unit_system, record);
 
                 if (switching_from_injector) {
@@ -1022,8 +1029,15 @@ namespace {
                 if(record.getItem("VFP_TABLE").defaultApplied(0))
                     table_nr = properties->VFPTableNumber;
 
-                if (table_nr != 0)
-                    alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
+                if (table_nr != 0) {
+                    const auto& vfpprod = this->snapshots.back().vfpprod;
+                    if (vfpprod.has(table_nr))
+                        alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
+                    else {
+                        std::string reason = fmt::format("Problem with well:{} VFP table: {} not defined", well_name, table_nr);
+                        throw OpmInputError(reason, handlerContext.keyword.location());
+                    }
+                }
                 properties->handleWCONPROD(alq_type, this->m_static.m_unit_system, well_name, record);
 
                 if (switching_from_injector) {
