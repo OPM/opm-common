@@ -69,6 +69,7 @@ namespace Opm {
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
         explicit WellSegments(const DeckKeyword& keyword);
+        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
         static WellSegments serializeObject();
 
@@ -119,7 +120,16 @@ namespace Opm {
         void processINC(double depth_top, double length_top);
         void process(LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
-        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
+        void addSegment(int segment_number,
+                        int branch,
+                        int outlet_segment,
+                        double length,
+                        double depth,
+                        double internal_diameter,
+                        double roughness,
+                        double cross_area,
+                         double volume,
+                        bool data_ready);
         const Segment& topSegment() const;
 
         // components of the pressure drop to be included

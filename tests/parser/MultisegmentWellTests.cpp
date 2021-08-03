@@ -651,3 +651,15 @@ BOOST_AUTO_TEST_CASE(Branches) {
     std::set<int> expected = {1,2,3,4,5};
     BOOST_CHECK( expected == segments.branches() );
 }
+
+BOOST_AUTO_TEST_CASE(MULTIPLE_WELSEGS) {
+    const auto& sched1 = make_schedule("MSW.DATA");
+    const auto& sched2 = make_schedule("MSW_2WELSEGS.DATA");
+
+    const auto& well1 = sched1.getWell("PROD01", 0);
+    const auto& segments1 = well1.getSegments();
+    const auto& well2 = sched2.getWell("PROD01", 0);
+    const auto& segments2 = well2.getSegments();
+
+    BOOST_CHECK(segments1 == segments2);
+}

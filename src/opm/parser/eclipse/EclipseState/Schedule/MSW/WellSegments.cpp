@@ -115,16 +115,35 @@ namespace Opm {
     void WellSegments::addSegment( const Segment& new_segment ) {
        // decide whether to push_back or insert
        const int segment_number = new_segment.segmentNumber();
-
        const int segment_index = segmentNumberToIndex(segment_number);
 
        if (segment_index < 0) { // it is a new segment
-           segment_number_to_index[segment_number] = size();
+           segment_number_to_index[segment_number] = this->size();
            m_segments.push_back(new_segment);
-       } else { // the segment already exists
+       } else
            m_segments[segment_index] = new_segment;
-       }
    }
+
+   void WellSegments::addSegment(int segment_number,
+                                  int branch,
+                                  int outlet_segment,
+                                  double length,
+                                  double depth,
+                                  double internal_diameter,
+                                  double roughness,
+                                  double cross_area,
+                                  double volume,
+                                  bool data_ready) {
+
+       Segment segment(segment_number, branch, outlet_segment, length, depth, internal_diameter, roughness, cross_area, volume, data_ready);
+       const int segment_index = this->segmentNumberToIndex(segment_number);
+       if (segment_index < 0) {
+           segment_number_to_index[segment_number] = this->size();
+           this->m_segments.push_back( std::move(segment) );
+       } else
+           this->m_segments[segment_index] = std::move(segment);
+   }
+
 
     void WellSegments::loadWELSEGS( const DeckKeyword& welsegsKeyword ) {
 
@@ -141,40 +160,34 @@ namespace Opm {
 
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
-        if (length_depth_type == LengthDepth::INC) {
-            m_segments.emplace_back( 1, 1, 0, 0., 0.,
-                                     invalid_value, invalid_value, invalid_value,
-                                     volume_top, false);
+        if (length_depth_type == LengthDepth::INC)
+            this->addSegment( 1, 1, 0, 0., 0.,
+                              invalid_value, invalid_value, invalid_value,
+                              volume_top, false);
 
-        } else if (length_depth_type == LengthDepth::ABS) {
-            m_segments.emplace_back( 1, 1, 0, length_top, depth_top,
-                                     invalid_value, invalid_value, invalid_value,
-                                     volume_top, true);
-        }
+        else if (length_depth_type == LengthDepth::ABS)
+            this->addSegment( 1, 1, 0, length_top, depth_top,
+                              invalid_value, invalid_value, invalid_value,
+                              volume_top, true);
 
         // read all the information out from the DECK first then process to get all the required information
         for (size_t recordIndex = 1; recordIndex < welsegsKeyword.size(); ++recordIndex) {
             const auto& record = welsegsKeyword.getRecord(recordIndex);
             const int segment1 = record.getItem("SEGMENT1").get< int >(0);
             const int segment2 = record.getItem("SEGMENT2").get< int >(0);
-            if ((segment1 < 2) || (segment2 < segment1)) {
+            if ((segment1 < 2) || (segment2 < segment1))
                 throw std::logic_error("illegal segment number input is found in WELSEGS!\n");
-            }
 
-            // how to handle the logical relations between lateral branches and parent branches.
-            // so far, the branch number has not been used.
             const int branch = record.getItem("BRANCH").get< int >(0);
-            if ((branch < 1)) {
+            if ((branch < 1))
                 throw std::logic_error("illegal branch number input is found in WELSEGS!\n");
-            }
-            const int outlet_segment_readin = record.getItem("JOIN_SEGMENT").get< int >(0);
-            double diameter = record.getItem("DIAMETER").getSIDouble(0);
-            const auto& itemArea = record.getItem("AREA");
-            double area;
-            if (itemArea.hasValue(0)) {
-                area = itemArea.getSIDouble(0);
-            } else {
-                area = M_PI * diameter * diameter / 4.0;
+
+            const double diameter = record.getItem("DIAMETER").getSIDouble(0);
+            double area = M_PI * diameter * diameter / 4.0;
+            {
+                const auto& itemArea = record.getItem("AREA");
+                if (itemArea.hasValue(0))
+                    area = itemArea.getSIDouble(0);
             }
 
             // if the values are incremental values, then we can just use the values
@@ -185,48 +198,37 @@ namespace Opm {
             // naming following the definition from the current keyword for the moment
             const double depth_change = record.getItem("DEPTH_CHANGE").getSIDouble(0);
 
-            const auto& itemVolume = record.getItem("VOLUME");
-            double volume;
-            if (itemVolume.hasValue(0)) {
-                volume = itemVolume.getSIDouble(0);
-            } else if (length_depth_type == LengthDepth::INC) {
-                volume = area * segment_length;
-            } else {
-                volume = invalid_value; // A * L, while L is not determined yet
+            double volume = invalid_value;
+            {
+                const auto& itemVolume = record.getItem("VOLUME");
+                if (itemVolume.hasValue(0))
+                    volume = itemVolume.getSIDouble(0);
+                else if (length_depth_type == LengthDepth::INC)
+                    volume = area * segment_length;
             }
 
             const double roughness = record.getItem("ROUGHNESS").getSIDouble(0);
 
-            for (int i = segment1; i <= segment2; ++i) {
+            for (int segment_number = segment1; segment_number <= segment2; ++segment_number) {
                 // for the first or the only segment in the range is the one specified in the WELSEGS
                 // from the second segment in the range, the outlet segment is the previous segment in the range
                 int outlet_segment;
-                if (i == segment1) {
-                    outlet_segment = outlet_segment_readin;
-                } else {
-                    outlet_segment = i - 1;
-                }
+                if (segment_number == segment1)
+                    outlet_segment = record.getItem("JOIN_SEGMENT").get< int >(0);
+                else
+                    outlet_segment = segment_number - 1;
 
                 if (length_depth_type == LengthDepth::INC) {
-                    m_segments.emplace_back( i, branch, outlet_segment, segment_length, depth_change,
-                                             diameter, roughness, area, volume, false);
-                } else if (i == segment2) {
-                    m_segments.emplace_back( i, branch, outlet_segment, segment_length, depth_change,
-                                             diameter, roughness, area, volume, true);
+                    this->addSegment( segment_number, branch, outlet_segment, segment_length, depth_change,
+                                      diameter, roughness, area, volume, false);
+                } else if (segment_number == segment2) {
+                    this->addSegment( segment_number, branch, outlet_segment, segment_length, depth_change,
+                                      diameter, roughness, area, volume, true);
                 } else {
-                    m_segments.emplace_back( i, branch, outlet_segment, invalid_value, invalid_value,
-                                             diameter, roughness, area, volume, false);
+                    this->addSegment( segment_number, branch, outlet_segment, invalid_value, invalid_value,
+                                      diameter, roughness, area, volume, false);
                 }
             }
-        }
-
-        for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment) {
-            const int segment_number = m_segments[i_segment].segmentNumber();
-            const int index = segmentNumberToIndex(segment_number);
-            if (index >= 0) { // found in the existing m_segments already
-                throw std::logic_error("Segments with same segment number are found!\n");
-            }
-            segment_number_to_index[segment_number] = i_segment;
         }
 
         for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment) {

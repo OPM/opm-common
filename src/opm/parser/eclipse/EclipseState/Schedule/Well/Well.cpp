@@ -1089,10 +1089,12 @@ void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg) {
 
 
 bool Well::handleWELSEGS(const DeckKeyword& keyword) {
-    if( this->segments )
-        throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
-
-    this->updateSegments( std::make_shared<WellSegments>(keyword) );
+    if (this->segments) {
+        auto new_segments = std::make_shared<WellSegments>( *this->segments );
+        new_segments->loadWELSEGS(keyword);
+        this->updateSegments(std::move(new_segments));
+    } else
+        this->updateSegments( std::make_shared<WellSegments>(keyword) );
     return true;
 }
 
