@@ -716,6 +716,39 @@ namespace {
         }
 
         template <class XWellArray>
+        void assignCumulatives(const std::string&         well,
+                               const ::Opm::SummaryState& smry,
+                               XWellArray&                xWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+            auto get = [&smry, &well](const std::string& vector)
+            {
+                return smry.get_well_var(well, vector, 0);
+            };
+
+            /*
+              Since a well can change between producer and injector in the
+              lifetime of the field we output both production and injection
+              cumulatives.
+            */
+
+            xWell[Ix::OilPrTotal]  = get("WOPT");
+            xWell[Ix::WatPrTotal]  = get("WWPT");
+            xWell[Ix::GasPrTotal]  = get("WGPT");
+            xWell[Ix::VoidPrTotal] = get("WVPT");
+
+            xWell[Ix::HistOilPrTotal] = get("WOPTH");
+            xWell[Ix::HistWatPrTotal] = get("WWPTH");
+            xWell[Ix::HistGasPrTotal] = get("WGPTH");
+
+            xWell[Ix::WatInjTotal]     = get("WWIT");
+            xWell[Ix::GasInjTotal]     = get("WGIT");
+            xWell[Ix::VoidInjTotal]    = get("WVIT");
+            xWell[Ix::HistWatInjTotal] = get("WWITH");
+            xWell[Ix::HistGasInjTotal] = get("WGITH");
+        }
+        template <class XWellArray>
         void assignProducer(const std::string&         well,
                             const ::Opm::SummaryState& smry,
                             XWellArray&                xWell)
@@ -740,11 +773,6 @@ namespace {
             xWell[Ix::WatCut]  = get("WWCT");
             xWell[Ix::GORatio] = get("WGOR");
 
-            xWell[Ix::OilPrTotal]  = get("WOPT");
-            xWell[Ix::WatPrTotal]  = get("WWPT");
-            xWell[Ix::GasPrTotal]  = get("WGPT");
-            xWell[Ix::VoidPrTotal] = get("WVPT");
-
             // Not fully characterised.
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
@@ -754,9 +782,6 @@ namespace {
             xWell[Ix::GasPrGuideRate]  = xWell[Ix::GasPrGuideRate_2]  = get("WGPGR");
             xWell[Ix::VoidPrGuideRate] = xWell[Ix::VoidPrGuideRate_2] = get("WVPGR");
 
-            xWell[Ix::HistOilPrTotal] = get("WOPTH");
-            xWell[Ix::HistWatPrTotal] = get("WWPTH");
-            xWell[Ix::HistGasPrTotal] = get("WGPTH");
         }
 
         template <class GetSummaryVector, class XWellArray>
@@ -767,14 +792,6 @@ namespace {
 
             xWell[Ix::TubHeadPr] = get("WTHP");
             xWell[Ix::FlowBHP] = get("WBHP");
-
-            // Note: Assign both water and gas cumulatives to support
-            // case of well alternating between injecting water and gas.
-            xWell[Ix::WatInjTotal]     = get("WWIT");
-            xWell[Ix::GasInjTotal]     = get("WGIT");
-            xWell[Ix::VoidInjTotal]    = get("WVIT");
-            xWell[Ix::HistWatInjTotal] = get("WWITH");
-            xWell[Ix::HistGasInjTotal] = get("WGITH");
         }
 
         template <class XWellArray>
@@ -886,6 +903,7 @@ namespace {
                     break;
                 }
             }
+            assignCumulatives(well.name(), smry, xWell);
         }
     } // XWell
 
