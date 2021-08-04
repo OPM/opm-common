@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 
@@ -132,25 +133,19 @@ FoamConfig::FoamConfig(const Deck& deck)
         // setup for foam at this point, so we detect and deal with it here even though we
         // do not store any data related to it.
         const auto& kw_foamopts = deck.getKeyword<ParserKeywords::FOAMOPTS>();
-        transport_phase_ = get_phase(kw_foamopts.getRecord(0).getItem(0).get<std::string>(0));
-        std::string mobModel = kw_foamopts.getRecord(0).getItem(1).get<std::string>(0);
-        if (mobModel.empty()) {
-            if (transport_phase_ == Phase::GAS) {
-                mobility_model_ = MobilityModel::TAB;
-            } else if (transport_phase_ == Phase::WATER) {
-                mobility_model_ = MobilityModel::FUNC;
-            }
-        } else if (mobModel == "TAB") {
-            mobility_model_ = MobilityModel::TAB;
-        } else if (mobModel == "FUNC") {
-            mobility_model_ = MobilityModel::FUNC;
+        this->transport_phase_ = get_phase(kw_foamopts.getRecord(0).getItem(0).get<std::string>(0));
+        if (!(this->transport_phase_ == Phase::GAS || this->transport_phase_ == Phase::WATER))
+            throw OpmInputError("Only WATER and GAS phases are allowed for foam transport", kw_foamopts.location());
+
+        this->mobility_model_ = MobilityModel::TAB;
+        if (this->transport_phase_ == Phase::WATER) {
+            auto mobModel = kw_foamopts.getRecord(0).getItem(1).get<std::string>(0);
+            if (mobModel == "FUNC")
+                this->mobility_model_ = MobilityModel::FUNC;
         }
     }
+
     if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
-        if (!deck.hasKeyword<ParserKeywords::FOAMROCK>()) {
-            throw std::runtime_error("FOAMFSC present but no FOAMROCK keyword found.");
-        }
-        // We have both FOAMFSC and FOAMROCK.
         const auto& kw_foamfsc = deck.getKeyword<ParserKeywords::FOAMFSC>();
         const auto& kw_foamrock = deck.getKeyword<ParserKeywords::FOAMROCK>();
         if (kw_foamfsc.size() != kw_foamrock.size()) {
