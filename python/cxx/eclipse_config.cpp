@@ -35,6 +35,7 @@ void python::common::export_EclipseConfig(py::module& module)
         .def("hasThresholdPressure", &SimulationConfig::useThresholdPressure )
         .def("useCPR",               &SimulationConfig::useCPR )
         .def("hasDISGAS",            &SimulationConfig::hasDISGAS )
-        .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL );
+        .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL )
+        .def("hasVAPWAT",            &SimulationConfig::hasVAPWAT );
 }
 
