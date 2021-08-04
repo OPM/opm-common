@@ -224,16 +224,13 @@ void EclFile::loadData(const std::string& name)
 
                 inFile.seekg(ifStreamPos[arrIndex]);
 
-                char* buffer;
                 size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
-                buffer = new char [size];
-                inFile.read (buffer, size);
+                std::vector<char> buffer(size);
+                inFile.read (buffer.data(), size);
 
-                std::string fileStr = std::string(buffer, size);
+                std::string fileStr = std::string(buffer.data(), size);
 
                 loadFormattedArray(fileStr, arrIndex, 0);
-
-                delete[] buffer;
             }
         }
 
@@ -269,16 +266,13 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
 
             inFile.seekg(ifStreamPos[ind]);
 
-            char* buffer;
             size_t size = sizeOnDiskFormatted(array_size[ind], array_type[ind], array_element_size[ind])+1;
-            buffer = new char [size];
-            inFile.read (buffer, size);
+            std::vector<char> buffer(size);
+            inFile.read (buffer.data(), size);
 
-            std::string fileStr = std::string(buffer, size);
+            std::string fileStr = std::string(buffer.data(), size);
 
             loadFormattedArray(fileStr, ind, 0);
-
-            delete[] buffer;
         }
 
     } else {
@@ -307,16 +301,13 @@ void EclFile::loadData(int arrIndex)
 
             inFile.seekg(ifStreamPos[arrIndex]);
 
-            char* buffer;
             size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
-            buffer = new char [size];
-            inFile.read (buffer, size);
+            std::vector<char> buffer(size);
+            inFile.read (buffer.data(), size);
 
-            std::string fileStr = std::string(buffer, size);
+            std::string fileStr = std::string(buffer.data(), size);
 
             loadFormattedArray(fileStr, arrIndex, 0);
-
-            delete[] buffer;
 
 
     } else {
@@ -421,17 +412,15 @@ std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) cons
 
     inFile.seekg(ifStreamPos[arrIndex]);
 
-    char* buffer;
     size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
 
-    buffer = new char [size];
-    inFile.read (buffer, size);
+    std::vector<char> buffer(size);
+    inFile.read (buffer.data(), size);
 
-    std::string fileStr = std::string(buffer, size);
+    std::string fileStr = std::string(buffer.data(), size);
 
     std::vector<std::string> real_vect_str;
     real_vect_str = readFormattedRealRawStrings(fileStr, array_size[arrIndex], 0);
-    delete buffer;
 
     return real_vect_str;
 }
