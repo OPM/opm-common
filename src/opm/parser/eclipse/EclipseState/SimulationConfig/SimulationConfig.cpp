@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 
@@ -53,7 +54,8 @@ namespace Opm {
         m_VAPOIL(false),
         m_VAPWAT(false),
         m_isThermal(false),
-        m_diffuse(false)
+        m_diffuse(false),
+        m_PRECSALT(false)
     {
     }
 
@@ -68,7 +70,8 @@ namespace Opm {
         m_VAPOIL(false),
         m_VAPWAT(false),
         m_isThermal(false),
-        m_diffuse(false)
+        m_diffuse(false),
+        m_PRECSALT(false)
     {
         if (DeckSection::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
@@ -93,6 +96,9 @@ namespace Opm {
             }
             this->m_isThermal = runspec.hasKeyword<ParserKeywords::THERMAL>()
                 || runspec.hasKeyword<ParserKeywords::TEMP>();
+            if (runspec.hasKeyword<ParserKeywords::PRECSALT>()) {
+                m_PRECSALT = true;
+            }
         }
     }
 
@@ -108,6 +114,7 @@ namespace Opm {
         result.m_VAPWAT = false;
         result.m_isThermal = true;
         result.m_diffuse = true;
+        result.m_PRECSALT = true;
 
         return result;
     }
@@ -152,6 +159,10 @@ namespace Opm {
         return this->m_diffuse;
     }
 
+    bool SimulationConfig::hasPRECSALT() const {
+        return m_PRECSALT;
+    }
+
     bool SimulationConfig::operator==(const SimulationConfig& data) const {
         return this->getThresholdPressure() == data.getThresholdPressure() &&
                this->bcconfig() == data.bcconfig() &&
@@ -161,7 +172,8 @@ namespace Opm {
                this->hasVAPOIL() == data.hasVAPOIL() &&
                this->hasVAPWAT() == data.hasVAPWAT() &&
                this->isThermal() == data.isThermal() &&
-               this->isDiffusive() == data.isDiffusive();
+               this->isDiffusive() == data.isDiffusive() &&
+               this->hasPRECSALT() == data.hasPRECSALT();
     }
 
     bool SimulationConfig::rst_cmp(const SimulationConfig& full_config, const SimulationConfig& rst_config) {
@@ -173,7 +185,8 @@ namespace Opm {
                full_config.hasVAPOIL() == rst_config.hasVAPOIL() &&
                full_config.hasVAPWAT() == rst_config.hasVAPWAT() &&
                full_config.isThermal() == rst_config.isThermal() &&
-               full_config.isDiffusive() == rst_config.isDiffusive();
+               full_config.isDiffusive() == rst_config.isDiffusive() &&
+               full_config.hasPRECSALT() == rst_config.hasPRECSALT();
     }
 
 

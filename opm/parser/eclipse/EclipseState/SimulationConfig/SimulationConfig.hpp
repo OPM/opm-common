@@ -50,6 +50,7 @@ namespace Opm {
         bool hasVAPWAT() const;
         bool isThermal() const;
         bool isDiffusive() const;
+        bool hasPRECSALT() const;
 
         bool operator==(const SimulationConfig& data) const;
         static bool rst_cmp(const SimulationConfig& full_config, const SimulationConfig& rst_config);
@@ -66,6 +67,7 @@ namespace Opm {
             serializer(m_VAPWAT);
             serializer(m_isThermal);
             serializer(m_diffuse);
+            serializer(m_PRECSALT);
         }
 
     private:
@@ -78,6 +80,7 @@ namespace Opm {
         bool m_VAPWAT;
         bool m_isThermal;
         bool m_diffuse;
+        bool m_PRECSALT;
     };
 
 } //namespace Opm
