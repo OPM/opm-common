@@ -51,6 +51,7 @@ namespace Opm {
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
+        m_VAPWAT(false),
         m_isThermal(false),
         m_diffuse(false)
     {
@@ -65,6 +66,7 @@ namespace Opm {
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
+        m_VAPWAT(false),
         m_isThermal(false),
         m_diffuse(false)
     {
@@ -83,6 +85,9 @@ namespace Opm {
             if (runspec.hasKeyword<ParserKeywords::VAPOIL>()) {
                 m_VAPOIL = true;
             }
+            if (runspec.hasKeyword<ParserKeywords::VAPWAT>()) {
+                m_VAPWAT = true;
+            }
             if (runspec.hasKeyword<ParserKeywords::DIFFUSE>()) {
                 m_diffuse = true;
             }
@@ -100,6 +105,7 @@ namespace Opm {
         result.m_useCPR = false;
         result.m_DISGAS = true;
         result.m_VAPOIL = false;
+        result.m_VAPWAT = false;
         result.m_isThermal = true;
         result.m_diffuse = true;
 
@@ -134,6 +140,10 @@ namespace Opm {
         return m_VAPOIL;
     }
 
+    bool SimulationConfig::hasVAPWAT() const {
+        return m_VAPWAT;
+    }
+
     bool SimulationConfig::isThermal() const {
         return this->m_isThermal;
     }
@@ -149,6 +159,7 @@ namespace Opm {
                this->useCPR() == data.useCPR() &&
                this->hasDISGAS() == data.hasDISGAS() &&
                this->hasVAPOIL() == data.hasVAPOIL() &&
+               this->hasVAPWAT() == data.hasVAPWAT() &&
                this->isThermal() == data.isThermal() &&
                this->isDiffusive() == data.isDiffusive();
     }
@@ -160,6 +171,7 @@ namespace Opm {
                full_config.useCPR() == rst_config.useCPR() &&
                full_config.hasDISGAS() == rst_config.hasDISGAS() &&
                full_config.hasVAPOIL() == rst_config.hasVAPOIL() &&
+               full_config.hasVAPWAT() == rst_config.hasVAPWAT() &&
                full_config.isThermal() == rst_config.isThermal() &&
                full_config.isDiffusive() == rst_config.isDiffusive();
     }

@@ -47,6 +47,7 @@ namespace Opm {
         bool useCPR() const;
         bool hasDISGAS() const;
         bool hasVAPOIL() const;
+        bool hasVAPWAT() const;
         bool isThermal() const;
         bool isDiffusive() const;
 
@@ -62,6 +63,7 @@ namespace Opm {
             serializer(m_useCPR);
             serializer(m_DISGAS);
             serializer(m_VAPOIL);
+            serializer(m_VAPWAT);
             serializer(m_isThermal);
             serializer(m_diffuse);
         }
@@ -73,6 +75,7 @@ namespace Opm {
         bool m_useCPR;
         bool m_DISGAS;
         bool m_VAPOIL;
+        bool m_VAPWAT;
         bool m_isThermal;
         bool m_diffuse;
     };

@@ -36,5 +36,6 @@ void python::common::export_EclipseConfig(py::module& module)
         .def("useCPR",               &SimulationConfig::useCPR )
         .def("hasDISGAS",            &SimulationConfig::hasDISGAS )
         .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL );
+        .def("hasVAPWAT",            &SimulationConfig::hasVAPWAT );
 }
 
