@@ -3,8 +3,16 @@
   "sections": [
     "PROPS"
   ],
-  "data": {
-    "value_type": "DOUBLE",
-    "dimension": "Density"
-  }
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTPVT"
+  },
+  "items": [
+    {
+      "name": "SALT_SOLUBILITY",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": "Density"
+    }
+  ]
 }

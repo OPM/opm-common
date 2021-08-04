@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/StandardCond.hpp>
@@ -97,6 +98,7 @@ namespace Opm {
         const TableContainer& getPdvdTables() const;
         const TableContainer& getSaltvdTables() const;
         const TableContainer& getSaltpvdTables() const;
+        const TableContainer& getSaltsolTables() const;
         const TableContainer& getPermfactTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
@@ -149,6 +151,7 @@ namespace Opm {
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
         const std::vector<RwgsaltTable>& getRwgSaltTables() const;
+        const std::vector<SaltSolubilityTable>& getSaltSolubilityTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
         const std::vector<SolventDensityTable>& getSolventDensityTables() const;
 
@@ -218,6 +221,7 @@ namespace Opm {
             m_watdentTable.serializeOp(serializer);
             serializer.vector(m_pvtwsaltTables);
             serializer.vector(m_rwgsaltTables);
+            serializer.vector(m_saltsolTables);
             serializer.vector(m_bdensityTables);
             serializer.vector(m_sdensityTables);
             serializer.map(m_plymwinjTables);
@@ -291,6 +295,9 @@ namespace Opm {
         void initRwgsaltTables(const Deck& deck,  std::vector<TableType>& rwgtables );
 
         template <class TableType>
+        void initSaltsolTables(const Deck& deck, std::vector<TableType>& saltsoltables);
+        
+        template <class TableType>
         void initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables );
 
         void initSolventTables(const Deck& deck, std::vector<SolventDensityTable>& solventtables);
@@ -357,6 +364,7 @@ namespace Opm {
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
         std::vector<RwgsaltTable> m_rwgsaltTables;
+        std::vector<SaltSolubilityTable> m_saltsolTables;
         std::vector<BrineDensityTable> m_bdensityTables;
         std::vector<SolventDensityTable> m_sdensityTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;

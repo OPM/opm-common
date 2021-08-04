@@ -85,6 +85,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PermfactTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -230,6 +231,9 @@ DensityTable make_density_table(const GravityTable& gravity) {
         if ( deck.hasKeyword( "RWGSALT") )
             initRwgsaltTables(deck, m_rwgsaltTables );
 
+        if ( deck.hasKeyword( "SALTSOL") )
+            initSaltsolTables(deck, m_saltsolTables );
+
         if ( deck.hasKeyword( "BDENSITY") )
             initBrineTables(deck, m_bdensityTables );
 
@@ -298,6 +302,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         result.m_watdentTable = WatdentTable::serializeObject();
         result.m_pvtwsaltTables = {PvtwsaltTable::serializeObject()};
         result.m_rwgsaltTables = {RwgsaltTable::serializeObject()};
+        result.m_saltsolTables = {SaltSolubilityTable::serializeObject()};
         result.m_bdensityTables = {BrineDensityTable::serializeObject()};
         result.m_sdensityTables = {SolventDensityTable::serializeObject()};
         result.m_plymwinjTables = {{1, Opm::PlymwinjTable::serializeObject()}};
@@ -932,6 +937,10 @@ DensityTable make_density_table(const GravityTable& gravity) {
         return getTables("SALTPVD");
     }
 
+   const TableContainer& TableManager::getSaltsolTables() const {
+        return getTables("SALTSOL");
+    }
+    
     const TableContainer& TableManager::getPermfactTables() const {
         return getTables("PERMFACT");
     }
@@ -1076,6 +1085,10 @@ DensityTable make_density_table(const GravityTable& gravity) {
 
     const std::vector<RwgsaltTable>& TableManager::getRwgSaltTables() const {
         return this->m_rwgsaltTables;
+    }
+
+    const std::vector<SaltSolubilityTable>& TableManager::getSaltSolubilityTables() const {
+        return this->m_saltsolTables;
     }
 
     const std::vector<BrineDensityTable>& TableManager::getBrineDensityTables() const {
@@ -1236,6 +1249,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
                m_rwgsaltTables == data.m_rwgsaltTables &&
+               m_saltsolTables == data.m_saltsolTables &&
                m_bdensityTables == data.m_bdensityTables &&
                m_sdensityTables == data.m_sdensityTables &&
                m_plymwinjTables == data.m_plymwinjTables &&
@@ -1474,6 +1488,19 @@ DensityTable make_density_table(const GravityTable& gravity) {
             ++regionIdx;
         }
         assert(regionIdx == numTables);
+    }
+
+    template <class TableType>
+    void TableManager::initSaltsolTables(const Deck& deck,  std::vector<TableType>& saltsoltables) {
+        size_t numTables = m_tabdims.getNumPVTTables();
+        saltsoltables.resize(numTables);
+
+        const auto& keyword = deck.getKeyword("SALTSOL");
+        size_t numEntries = keyword.size();
+        assert(numEntries == numTables);
+        for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+            saltsoltables[lineIdx].init(keyword.getRecord(lineIdx));
+        }
     }
 
 
