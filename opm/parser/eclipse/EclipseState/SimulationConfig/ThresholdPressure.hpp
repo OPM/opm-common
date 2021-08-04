@@ -39,7 +39,11 @@ namespace Opm {
                           const Deck& deck,
                           const FieldPropsManager& fp);
 
-        ThresholdPressure() { m_active = m_restart = false; }
+        ThresholdPressure()
+            : m_active(false)
+            , m_restart(false)
+            , m_irreversible(false)
+        {}
 
         //! \brief Returns an instance for serialization tests.
         static ThresholdPressure serializeObject();
@@ -82,6 +86,7 @@ namespace Opm {
         {
             serializer(m_active);
             serializer(m_restart);
+            serializer(m_irreversible);
             serializer(m_thresholdPressureTable);
             serializer(m_pressureTable);
         }
@@ -89,7 +94,8 @@ namespace Opm {
     private:
         bool m_active;
         bool m_restart;
-        static std::pair<int,int> makeIndex(int r1 , int r2);
+        bool m_irreversible;
+        std::pair<int,int> makeIndex(int r1 , int r2) const;
         void addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair);
         void addBarrier(int r1 , int r2);
         void addBarrier(int r1 , int r2 , double p);
