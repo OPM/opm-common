@@ -17,42 +17,42 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef OPM_PARSER_SALTSOLUBILITY_TABLE_HPP
-#define	OPM_PARSER_SALTSOLUBILITY_TABLE_HPP
+#define OPM_PARSER_SALTSOLUBILITY_TABLE_HPP
 
 namespace Opm {
 
-    class DeckItem;
+class DeckItem;
 
-    class SaltSolubilityTable {
-    public:
-        static SaltSolubilityTable serializeObject();
+class SaltSolubilityTable {
+public:
+    static SaltSolubilityTable serializeObject();
 
-        void init(const Opm::DeckRecord& record);
-        const std::vector<double>& getSaltSolubilityColumn() const;
+    void init(const Opm::DeckRecord& record);
+    const std::vector<double>& getSaltSolubilityColumn() const;
 
-        bool operator==(const SaltSolubilityTable& data) const;
+    bool operator==(const SaltSolubilityTable& data) const;
 
-        std::vector<double>::const_iterator begin() const {
-            return m_tableValues.begin();
-        }
+    std::vector<double>::const_iterator begin() const {
+        return m_tableValues.begin();
+    }
 
-        std::vector<double>::const_iterator end() const {
-            return m_tableValues.end();
-        }
+    std::vector<double>::const_iterator end() const {
+        return m_tableValues.end();
+    }
 
-        std::size_t size() const {
-            return this->m_tableValues.size();
-        }
+    std::size_t size() const {
+        return this->m_tableValues.size();
+    }
 
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(m_tableValues);
-        }
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_tableValues);
+    }
 
-    private:
-        std::vector<double> m_tableValues;
-    };
+private:
+    std::vector<double> m_tableValues;
+};
 }
 
 #endif
