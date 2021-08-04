@@ -1,4 +1,5 @@
 /*
+
   Copyright 2014 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -31,6 +32,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
@@ -42,6 +44,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -62,6 +65,30 @@
 
 namespace Opm {
 
+namespace {
+
+
+std::optional<UnitSystem> make_grid_units(const std::string& grid_unit) {
+    if (grid_unit == "METRES")
+        return UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+
+    if (grid_unit == "FEET")
+        return UnitSystem(UnitSystem::UnitType::UNIT_TYPE_FIELD);
+
+    if (grid_unit == "CM")
+        return UnitSystem(UnitSystem::UnitType::UNIT_TYPE_LAB);
+
+    return std::nullopt;
+}
+
+void apply_GRIDUNIT(const UnitSystem& deck_units, const UnitSystem& grid_units, std::vector<double>& data)
+{
+    double scale_factor = grid_units.getDimension(UnitSystem::measure::length).getSIScaling() / deck_units.getDimension(UnitSystem::measure::length).getSIScaling();
+    for (auto& v : data)
+        v *= scale_factor;
+}
+
+}
 
 EclipseGrid::EclipseGrid(const std::array<int, 3>& dims ,
                          const std::vector<double>& coord ,
@@ -258,6 +285,33 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             }
         }
     }
+
+    /*
+      The GRIDUNIT handling is simplified compared to the full specification:
+
+        1. The optional second item 'MAP' is ignored.
+
+        2. In Eclipse the action of the GRIDUNIT keyword only applies to
+           keywords in the same file as the GRIDUNIT keyword itself is in; in
+           our implementation we apply the GRIDUNIT transformation if the deck
+           contains the GRIDUNUT keyword - irrespective of exactly where it is
+           located in the deck.
+    */
+
+    if (deck.hasKeyword<ParserKeywords::GRIDUNIT>()) {
+        const auto& kw = deck.getKeyword<ParserKeywords::GRIDUNIT>(0);
+        const auto& length_unit = trim_copy(kw.getRecord(0).getItem(0).get<std::string>(0));
+        auto grid_units = make_grid_units(length_unit);
+        if (!grid_units.has_value())
+            throw OpmInputError(fmt::format("Invalid length specifier: [{}]", length_unit), kw.location());
+
+        if (grid_units.value() != deck.getActiveUnitSystem()) {
+            apply_GRIDUNIT(deck.getActiveUnitSystem(), grid_units.value(), this->m_zcorn);
+            apply_GRIDUNIT(deck.getActiveUnitSystem(), grid_units.value(), this->m_coord);
+            if (this->m_rv.has_value())
+                apply_GRIDUNIT(deck.getActiveUnitSystem(), grid_units.value(), this->m_rv.value());
+        }
+    }
 }
 
 
@@ -332,7 +386,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         if (!egridfile.hasKey("GRIDUNIT")) {
-            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, ZCORN not found");
+            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, GRIDUNIT not found");
         }
 
         const std::vector<std::string>& gridunit = egridfile.get<std::string>("GRIDUNIT");
@@ -1102,7 +1156,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 actnum = actnumVector.data();
                 OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN, COORD and ACTNUM"));
             } else
-	      OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN and COORD"));
+                OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN and COORD"));
+
 
             initCornerPointGrid( coord , zcorn, actnum);
         }

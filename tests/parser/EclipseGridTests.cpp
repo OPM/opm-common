@@ -2948,3 +2948,31 @@ BOOST_AUTO_TEST_CASE(MAPAXES_MAPUNITS) {
 
 }
 
+BOOST_AUTO_TEST_CASE(GRIDUNITS)
+{
+    const std::string deck_data = R"(
+RUNSPEC
+FIELD
+DIMENS
+ 10 10 10 /
+GRID
+GRIDUNIT
+  METRES /
+DX
+1000*1.0 /
+DYV
+10*1.0/
+DZ
+1000*1.0 /
+TOPS
+100*1.0 /
+EDIT
+)";
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString( deck_data ) ;
+    Opm::EclipseGrid grid(deck);
+    BOOST_CHECK_CLOSE(grid.getCellVolume(0), 1.0, 1e-6);
+}
+
+
