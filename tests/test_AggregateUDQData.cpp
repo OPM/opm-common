@@ -646,22 +646,22 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         const auto& zUdl = udqData.getZUDL();
 
         auto start = 0*udqDims[5];
-        BOOST_CHECK_EQUAL(zUdl[start + 0].c_str() ,   "(WOPR PR"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 1].c_str() ,   "OD1 - 17"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 2].c_str() ,   "0) * 0.6"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 3].c_str() ,   "0       "); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 0].c_str() ,   "(WOPR 'P"); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 1].c_str() ,   "ROD1' - "); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 2].c_str() ,   "170) * 0"); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 3].c_str() ,   ".6      "); // udq NO. 1
 
         start = 3*udqDims[5];
-        BOOST_CHECK_EQUAL(zUdl[start + 0].c_str() ,   "(GOPR GR"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 1].c_str() ,   "P1 - 449"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 2].c_str() ,   ") * 0.77"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 3].c_str() ,   "        "); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 0].c_str() ,   "(GOPR 'G"); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 1].c_str() ,   "RP1' - 4"); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 2].c_str() ,   "49) * 0."); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 3].c_str() ,   "77      "); // udq NO. 1
 
         start = 4*udqDims[5];
-        BOOST_CHECK_EQUAL(zUdl[start + 0].c_str() ,   "(WLPR PR"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 1].c_str() ,   "OD2 - 30"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 2].c_str() ,   "0) * 0.8"); // udq NO. 1
-        BOOST_CHECK_EQUAL(zUdl[start + 3].c_str() ,   "0       "); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 0].c_str() ,   "(WLPR 'P"); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 1].c_str() ,   "ROD2' - "); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 2].c_str() ,   "300) * 0"); // udq NO. 1
+        BOOST_CHECK_EQUAL(zUdl[start + 3].c_str() ,   ".8      "); // udq NO. 1
 
         start = 5*udqDims[5];
         BOOST_CHECK_EQUAL(zUdl[start + 0].c_str() ,   "(FLPR - "); // udq NO. 1
@@ -761,9 +761,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         }
 
 
-        BOOST_CHECK_EQUAL(rst_state.udqs[0].expression(), "(WOPR PROD1 - 170) * 0.60");
-
-
         const auto& udq_params = es.runspec().udqParams();
         const auto& input_config = sched[1].udq();
         Opm::UDQConfig rst_config(udq_params, rst_state);
@@ -779,7 +776,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         rst_udq_state.load_rst(rst_state);
         for (const auto& input_def : input_config.definitions()) {
             const auto& rst_def = rst_config.define( input_def.keyword() );
-
             auto input_eval = input_def.eval(input_context);
             auto rst_eval   = rst_def.eval(rst_context);
 

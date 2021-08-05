@@ -16,11 +16,20 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fmt/format.h>
 #include <numeric>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
 
 namespace Opm {
+
+namespace {
+std::string format_double(double d) {
+    return fmt::format("{:g}", d);
+}
+}
+
+
 
 UDQToken::UDQToken(const std::string& string_token, UDQTokenType token_type_) :
     token_type(token_type_)
@@ -56,10 +65,13 @@ std::string UDQToken::str() const {
         if (this->m_selector.empty())
             return std::get<std::string>(this->m_value);
 
-        return std::get<std::string>(this->m_value) + std::string{" "} + std::accumulate(this->m_selector.begin(), this->m_selector.end(), std::string{},
-                                                                                         [](const std::string& s1, const std::string& s2) { return s1 + " " + s2; });
+        std::string quoted_selector;
+        for (const auto& s : this->m_selector)
+            quoted_selector += " '" + s + "'";
+
+        return std::get<std::string>(this->m_value) + quoted_selector;
     } else
-        return std::to_string(std::get<double>(this->m_value));
+        return format_double(std::get<double>(this->m_value));
 }
 
 
