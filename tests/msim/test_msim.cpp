@@ -22,6 +22,7 @@
 
 #include <opm/msim/msim.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <iostream>
 #include <stdexcept>
@@ -188,35 +189,53 @@ BOOST_AUTO_TEST_CASE(RUN_SUMTHIN) {
         const WorkArea work_area("test_msim");
         EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
 
+        // TSTEP = N*7
         msim.run(schedule, io, false);
+
+        // clang-format off
+        const auto expect_smry_time = std::vector<double> {
+            // SUMTHIN = 10
+              7.0,  21.0,  35.0,  49.0,  63.0,  77.0,  91.0, 105.0,
+            119.0, 133.0, 147.0, 161.0, 175.0, 189.0, 203.0, 217.0,
+            231.0, 245.0, 259.0, 273.0, 287.0, 301.0, 315.0, 329.0,
+            343.0, 357.0,
+            365.0, // Report step.  365 - 357 = 8 (< 10)
+
+            // SUMTHIN = 20
+            379.0, // Note: Interval since time = 357, 379 - 365 = 14 (< 20)
+            400.0, 421.0, 442.0, 463.0, 484.0, 505.0, 526.0, 547.0,
+            568.0, 589.0, 610.0, 631.0, 652.0, 673.0, 694.0, 715.0,
+            731.0, // Report step.  731 - 715 = 16 (< 20)
+        };
+        // clang-format on
 
         {
             const auto  smry  = EclIO::ESmry("SPE1CASE1_SUMTHIN");
             const auto& time  = smry.get("TIME");
             const auto& dates = smry.dates();
-            auto report_date = TimeStampUTC(2016, 1, 1);
-            bool report_found = false;
+            const auto report_date = TimeStampUTC(2016, 1, 1);
 
             /*
               Verify that:
 
-               1. The step length is more than 10 days for the first year
-               2. The step length is more than 20 days for the second year
-               3. That the exact report date halfways is found
+               1. Summary output happens at expected times.
+               2. The exact report date halfway through the run is present.
             */
 
-            for (std::size_t time_index = 0; time_index < time.size() - 1; time_index++) {
-                auto step_length = time[time_index + 1] - time[time_index];
-                if (time[time_index + 1] < 365)
-                    BOOST_CHECK(step_length >= 10);
-                else
-                    BOOST_CHECK(step_length >= 20);
-
-                auto ts = TimeStampUTC( std::chrono::system_clock::to_time_t( dates[time_index]) );
-                if (ts == report_date)
-                    report_found = true;
+            const auto nstep = expect_smry_time.size();
+            BOOST_REQUIRE_EQUAL(time.size(), nstep);
+            for (auto step = 0*nstep; step < nstep; ++step) {
+                BOOST_CHECK_CLOSE(time[step], expect_smry_time[step], 1.0e-10);
             }
-            BOOST_CHECK(report_found);
+
+            const auto report_found =
+                std::any_of(dates.begin(), dates.begin() + nstep - 1,
+                    [&report_date](const auto date)
+                {
+                    return report_date == TimeStampUTC(std::chrono::system_clock::to_time_t(date));
+                });
+
+            BOOST_CHECK_MESSAGE(report_found, "Expected report date missing");
         }
     }
 }

@@ -70,6 +70,7 @@
 #include <functional>
 #include <initializer_list>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <regex>
@@ -3228,7 +3229,9 @@ private:
     Opm::EclIO::OutputStream::Formatted fmt_;
     Opm::EclIO::OutputStream::Unified   unif_;
 
-    int miniStepID_{0};
+    mutable int miniStepID_{0};
+    mutable double prevEvalTime_{std::numeric_limits<double>::lowest()};
+
     int prevCreate_{-1};
     int prevReportStepID_{-1};
     std::vector<MiniStep>::size_type numUnwritten_{0};
@@ -3335,7 +3338,7 @@ void
 Opm::out::Summary::SummaryImplementation::
 eval(const int                          sim_step,
      const double                       secs_elapsed,
-     const data::Wells&             well_solution,
+     const data::Wells&                 well_solution,
      const data::GroupAndNetworkValues& grp_nwrk_solution,
      GlobalProcessParameters&           single_values,
      const Inplace&                     initial_inplace,
@@ -3369,6 +3372,11 @@ eval(const int                          sim_step,
     }
 
     st.update_elapsed(duration);
+
+    if (secs_elapsed > this->prevEvalTime_) {
+        this->prevEvalTime_ = secs_elapsed;
+        ++this->miniStepID_;
+    }
 }
 
 void Opm::out::Summary::SummaryImplementation::write()
@@ -3700,7 +3708,7 @@ Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step)
 
     auto& ms = this->unwritten_[this->numUnwritten_++];
 
-    ms.id  = this->miniStepID_++;  // MINSTEP IDs start at zero.
+    ms.id  = this->miniStepID_ - 1;  // MINISTEP IDs start at zero.
     ms.seq = report_step;
 
     ms.params.resize(this->valueKeys_.size(), 0.0f);

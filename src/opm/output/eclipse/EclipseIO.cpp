@@ -54,6 +54,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cctype>
+#include <limits>
 #include <memory>     // unique_ptr
 #include <optional>
 #include <stdexcept>
@@ -107,6 +108,12 @@ class EclipseIO::Impl {
         void writeEGRIDFile( const std::vector<NNCdata>& nnc );
         std::pair<bool, bool> wantRFTOutput( const int report_step, const bool isSubstep ) const;
 
+        bool wantSummaryOutput(const int    report_step,
+                               const bool   isSubstep,
+                               const double secs_elapsed) const;
+
+        void recordSummaryOutput(const double secs_elapsed);
+
         const EclipseState& es;
         EclipseGrid grid;
         const Schedule& schedule;
@@ -116,6 +123,13 @@ class EclipseIO::Impl {
         out::Summary summary;
         bool output_enabled;
         std::optional<RestartIO::Helpers::AggregateAquiferData> aquiferData{std::nullopt};
+
+private:
+    mutable bool sumthin_active_{false};
+    mutable bool sumthin_triggered_{false};
+    double last_sumthin_output_{std::numeric_limits<double>::lowest()};
+
+    bool checkAndRecordIfSumthinTriggered(const int report_step, const double secs_elapsed) const;
 };
 
 EclipseIO::Impl::Impl( const EclipseState& eclipseState,
@@ -187,6 +201,36 @@ EclipseIO::Impl::wantRFTOutput( const int  report_step,
     return std::make_pair(step >= first_rft_out, step > first_rft_out);
 }
 
+bool EclipseIO::Impl::wantSummaryOutput(const int    report_step,
+                                        const bool   isSubstep,
+                                        const double secs_elapsed) const
+{
+    // Check this condition first because the end of a SUMTHIN interval
+    // might coincide with a report step.  In that case we also need to
+    // reset the interval starting point even if the primary reason for
+    // generating summary output is the report step.
+    this->checkAndRecordIfSumthinTriggered(report_step, secs_elapsed);
+
+    return !isSubstep || !this->sumthin_active_ || this->sumthin_triggered_;
+}
+
+void EclipseIO::Impl::recordSummaryOutput(const double secs_elapsed)
+{
+    if (this->sumthin_triggered_)
+        this->last_sumthin_output_ = secs_elapsed;
+}
+
+bool EclipseIO::Impl::checkAndRecordIfSumthinTriggered(const int    report_step,
+                                                       const double secs_elapsed) const
+{
+    const auto& sumthin = this->schedule[report_step - 1].sumthin();
+
+    this->sumthin_active_ = sumthin.has_value(); // True if SUMTHIN value strictly positive.
+
+    return this->sumthin_triggered_ = this->sumthin_active_
+        && ! (secs_elapsed < this->last_sumthin_output_ + sumthin.value());
+}
+
 /*
 int_data: Writes key(string) and integers vector to INIT file as eclipse keywords
 - Key: Max 8 chars.
@@ -229,27 +273,16 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
     const auto& schedule = this->impl->schedule;
     const auto& ioConfig = es.cfg().io();
 
-    if (report_step > 0) {
-        bool write_summary = false;
-        if (!isSubstep)
-            write_summary = true;
+    if ((report_step > 0) &&
+        this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed))
+    {
+        this->impl->summary.add_timestep(st, report_step);
+        this->impl->summary.write();
 
-        const auto& sumthin = schedule[report_step].sumthin();
-        if (sumthin.has_value()) {
-            auto time_since_last = secs_elapsed - this->last_output;
-            if (time_since_last >= sumthin.value())
-                write_summary = true;
-        } else
-            write_summary = true;
-
-        if (write_summary) {
-            this->impl->summary.add_timestep( st, report_step);
-            this->impl->summary.write();
-        }
-        this->last_output = secs_elapsed;
+        this->impl->recordSummaryOutput(secs_elapsed);
     }
 
-    bool final_step { report_step == static_cast<int>(this->impl->schedule.size()) - 1 };
+    const bool final_step { report_step == static_cast<int>(schedule.size()) - 1 };
 
     if (final_step && !isSubstep && this->impl->summaryConfig.createRunSummary()) {
         Opm::filesystem::path outputDir { this->impl->outputDir } ;
@@ -297,7 +330,6 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
         RftIO::write(report_step, secs_elapsed, es.getUnits(),
                      grid, schedule, value.wells, rftFile);
     }
-
 
     if (!isSubstep) {
         for (const auto& report : schedule[report_step].rpt_config.get()) {
