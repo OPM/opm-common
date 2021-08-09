@@ -239,3 +239,77 @@ BOOST_AUTO_TEST_CASE(RUN_SUMTHIN) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(RUN_RPTONLY) {
+    const Deck deck = Parser{}.parseFile("SPE1CASE1_RPTONLY.DATA");
+    const EclipseState state(deck);
+    Schedule schedule(deck, state, std::make_shared<Python>());
+    const SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
+
+    msim msim(state);
+
+    msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
+    msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
+    msim.well_rate("RFTI", data::Rates::opt::wat, inj_rfti);
+    msim.well_rate("INJ",  data::Rates::opt::gas, inj_inj);
+    msim.solution("PRESSURE", pressure);
+    {
+        const WorkArea work_area("test_msim");
+        EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
+
+        // TSTEP = N*7
+        msim.run(schedule, io, false);
+
+        // clang-format off
+        const auto expect_smry_time = std::vector<double> {
+            // RPTONLY
+             31.0, // 2015-02-01
+             59.0, // 2015-03-01
+             90.0, // 2015-04-01
+            120.0, // 2015-05-01
+            151.0, // 2015-06-01
+            181.0, // 2015-07-01
+            212.0, // 2015-08-01
+            243.0, // 2015-09-01
+            273.0, // 2015-10-01
+            304.0, // 2015-11-01
+            334.0, // 2015-12-01
+            365.0, // 2016-01-01
+
+            // RPTONLYO (turn off 'RPTONLY')
+            // => summary output every timestep (DT = 7 days)
+            372.0, 379.0, 386.0, 393.0, 400.0, 407.0, 414.0,
+            421.0, 428.0, 435.0, 442.0, 449.0, 456.0,
+        };
+        // clang-format on
+
+        {
+            const auto  smry  = EclIO::ESmry("SPE1CASE1_RPTONLY");
+            const auto& time  = smry.get("TIME");
+            const auto& dates = smry.dates();
+            const auto report_date = TimeStampUTC(2016, 1, 1);
+
+            /*
+              Verify that:
+
+               1. Summary output happens at expected times.
+               2. The exact report date 2016-01-01 is present.
+            */
+
+            const auto nstep = expect_smry_time.size();
+            BOOST_REQUIRE_EQUAL(time.size(), nstep);
+            for (auto step = 0*nstep; step < nstep; ++step) {
+                BOOST_CHECK_CLOSE(time[step], expect_smry_time[step], 1.0e-10);
+            }
+
+            const auto report_found =
+                std::any_of(dates.begin(), dates.begin() + nstep - 1,
+                    [&report_date](const auto date)
+                {
+                    return report_date == TimeStampUTC(std::chrono::system_clock::to_time_t(date));
+                });
+
+            BOOST_CHECK_MESSAGE(report_found, "Expected report date missing");
+        }
+    }
+}

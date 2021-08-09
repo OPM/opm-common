@@ -325,6 +325,10 @@ namespace Opm {
 
         const std::optional<double>& sumthin() const;
         void update_sumthin(double sumthin);
+
+        bool rptonly() const;
+        void rptonly(const bool only);
+
         /*********************************************************************/
 
         ptr_member<GConSale> gconsale;
@@ -461,6 +465,7 @@ namespace Opm {
             serializer(m_first_in_month);
             serializer(m_save_step);
             serializer(m_sumthin);
+            serializer(this->m_rptonly);
             m_tuning.serializeOp(serializer);
             m_nupcol.serializeOp(serializer);
             m_oilvap.serializeOp(serializer);
@@ -493,6 +498,7 @@ namespace Opm {
         MessageLimits m_message_limits;
         Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
         std::optional<double> m_sumthin;
+        bool m_rptonly{false};
     };
 }
 

@@ -603,6 +603,8 @@ namespace Opm
         void handleMXUNSUPP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNODEPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNUPCOL   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTONLY  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTONLYO (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleRPTRST   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleRPTSCHED (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleTUNING   (const HandlerContext&, const ParseContext&, ErrorGuard&);

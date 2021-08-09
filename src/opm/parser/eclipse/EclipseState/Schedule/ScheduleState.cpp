@@ -208,6 +208,15 @@ void ScheduleState::update_sumthin(double sumthin) {
         this->m_sumthin = sumthin;
 }
 
+bool ScheduleState::rptonly() const
+{
+    return this->m_rptonly;
+}
+
+void ScheduleState::rptonly(const bool only)
+{
+    this->m_rptonly = only;
+}
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
 
@@ -243,7 +252,8 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->groups == other.groups &&
            this->vfpprod == other.vfpprod &&
            this->vfpinj == other.vfpinj &&
-           this->m_sumthin == other.m_sumthin;
+           this->m_sumthin == other.m_sumthin &&
+           this->m_rptonly == other.m_rptonly;
 }
 
 
@@ -264,6 +274,9 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_message_limits = MessageLimits::serializeObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
     ts.target_wellpi = {{"WELL1", 1000}, {"WELL2", 2000}};
+
+    ts.m_sumthin = 12.345;
+    ts.m_rptonly = true;
 
     ts.pavg.update( PAvg::serializeObject() );
     ts.wtest_config.update( WellTestConfig::serializeObject() );

@@ -130,7 +130,9 @@ private:
     mutable bool sumthin_triggered_{false};
     double last_sumthin_output_{std::numeric_limits<double>::lowest()};
 
-    bool checkAndRecordIfSumthinTriggered(const int report_step, const double secs_elapsed) const;
+    bool checkAndRecordIfSumthinTriggered(const int report_step,
+                                          const double secs_elapsed) const;
+    bool summaryAtRptOnly(const int report_step) const;
 };
 
 EclipseIO::Impl::Impl( const EclipseState& eclipseState,
@@ -214,7 +216,9 @@ bool EclipseIO::Impl::wantSummaryOutput(const int    report_step,
     // generating summary output is the report step.
     this->checkAndRecordIfSumthinTriggered(report_step, secs_elapsed);
 
-    return !isSubstep || !this->sumthin_active_ || this->sumthin_triggered_;
+    return !isSubstep
+        || (!this->summaryAtRptOnly(report_step)
+            && (!this->sumthin_active_ || this->sumthin_triggered_));
 }
 
 void EclipseIO::Impl::recordSummaryOutput(const double secs_elapsed)
@@ -232,6 +236,11 @@ bool EclipseIO::Impl::checkAndRecordIfSumthinTriggered(const int    report_step,
 
     return this->sumthin_triggered_ = this->sumthin_active_
         && ! (secs_elapsed < this->last_sumthin_output_ + sumthin.value());
+}
+
+bool EclipseIO::Impl::summaryAtRptOnly(const int report_step) const
+{
+    return this->schedule[report_step - 1].rptonly();
 }
 
 /*
