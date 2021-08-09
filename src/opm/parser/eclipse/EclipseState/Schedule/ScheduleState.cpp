@@ -202,8 +202,8 @@ const std::optional<double>& ScheduleState::sumthin() const {
 }
 
 void ScheduleState::update_sumthin(double sumthin) {
-    if (sumthin == 0)
-        this->m_sumthin = std::nullopt;
+    if (! (sumthin > 0.0))
+        this->m_sumthin.reset();
     else
         this->m_sumthin = sumthin;
 }

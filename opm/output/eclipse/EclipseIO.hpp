@@ -232,7 +232,6 @@ public:
 private:
     class Impl;
     std::unique_ptr< Impl > impl;
-    double last_output{0};
 };
 
 } // namespace Opm
