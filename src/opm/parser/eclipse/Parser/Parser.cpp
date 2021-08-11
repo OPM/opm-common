@@ -839,7 +839,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
                     if (deck_name == "UDT") {
                         skipUDT(parserState, parser);
-                        return NULL;
+                        return nullptr;
                     }
                     parserState.lastSizeType = parserKeyword->getSizeType();
                     parserState.lastKeyWord = deck_name;
