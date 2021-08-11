@@ -1042,10 +1042,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
                     if (deck_keyword.name() == ParserKeywords::IMPORT::keywordName) {
                         bool formatted = deck_keyword.getRecord(0).getItem(1).get<std::string>(0)[0] == 'F';
-                        auto import_file = Opm::filesystem::path(deck_keyword.getRecord(0).getItem(0).get<std::string>(0));
-
-                        if (import_file.is_relative())
-                            import_file = parserState.rootPath / import_file;
+                        Opm::filesystem::path import_file = parserState.getIncludeFilePath(deck_keyword.getRecord(0).getItem(0).get<std::string>(0));
 
                         ImportContainer import(parser, parserState.deck.getActiveUnitSystem(), import_file.string(), formatted, parserState.deck.size());
                         for (auto kw : import)

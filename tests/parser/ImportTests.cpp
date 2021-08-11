@@ -81,6 +81,10 @@ BOOST_AUTO_TEST_CASE(ImportDeck) {
     const std::string deck_string = R"(
 RUNSPEC
 
+PATHS
+'IMPPATH' 'import' /
+/
+
 DIMENS
    10 10 10 /
 
@@ -90,7 +94,7 @@ IMPORT
    'import/GRID' /
 
 IMPORT
-   'import/PROPS' /
+   '$IMPPATH/PROPS' /
 )";
 
     WorkArea work;
