@@ -15,6 +15,10 @@
 
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <opm/parser/eclipse/Deck/ImportContainer.hpp>
+
+#include <stdexcept>
 #include <unordered_set>
 
 #include <fmt/format.h>
@@ -22,7 +26,6 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
-#include <opm/parser/eclipse/Deck/ImportContainer.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 namespace Opm {
@@ -48,8 +51,7 @@ ImportContainer::ImportContainer(const Parser& parser, const UnitSystem& unit_sy
         if (parser_item.dataType() == type_tag::fdouble) {
             if (data_type == EclIO::REAL) {
                 auto& float_data = ecl_file.get<float>(kw_index);
-                std::vector<double> double_data;
-                std::copy(float_data.begin(), float_data.end(), std::back_inserter(double_data));
+                std::vector<double> double_data{ float_data.begin(), float_data.end() };
                 this->keywords.emplace_back(parser_kw, double_data, unit_system, unit_system);
             } else if (data_type == EclIO::DOUB) {
                 auto& double_data = ecl_file.get<double>(kw_index);
