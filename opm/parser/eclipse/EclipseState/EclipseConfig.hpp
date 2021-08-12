@@ -31,7 +31,7 @@ namespace Opm {
     {
     public:
         EclipseConfig() = default;
-        EclipseConfig(const Deck& deck);
+        explicit EclipseConfig(const Deck& deck);
         EclipseConfig(const InitConfig& initConfig, const IOConfig& io_conf);
 
         static EclipseConfig serializeObject();

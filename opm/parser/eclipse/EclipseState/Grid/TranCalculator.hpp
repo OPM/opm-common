@@ -53,7 +53,7 @@ public:
     };
 
 
-    TranCalculator(const std::string& name_arg) :
+    explicit TranCalculator(const std::string& name_arg) :
         m_name(name_arg)
     {}
 

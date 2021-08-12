@@ -34,7 +34,7 @@ namespace Opm {
 class UDQFunction {
 public:
     UDQFunction() : func_type(UDQTokenType::error) {}
-    UDQFunction(const std::string& name);
+    explicit UDQFunction(const std::string& name);
     UDQFunction(const std::string& name, UDQTokenType funcType);
     virtual ~UDQFunction() = default;
     const std::string& name() const;
