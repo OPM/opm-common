@@ -42,16 +42,16 @@ RstUDQ::RstUDQ(const std::string& name_arg, const std::string& unit_arg, const s
     : name(name_arg)
     , unit(unit_arg)
     , var_type(UDQ::varType(name_arg))
+    , data(RstDefine{define_arg,update_arg})
 {
-    this->data = RstDefine{define_arg, update_arg};
 }
 
 RstUDQ::RstUDQ(const std::string& name_arg, const std::string& unit_arg)
     : name(name_arg)
     , unit(unit_arg)
     , var_type(UDQ::varType(name_arg))
+    , data(RstAssign{})
 {
-    this->data = RstAssign{};
 }
 
 
