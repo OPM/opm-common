@@ -461,9 +461,9 @@ void RSTConfig::handleRPTSCHED(const DeckKeyword& keyword, const ParseContext& p
 }
 
 
-RSTConfig::RSTConfig(const SOLUTIONSection& solution_section, const ParseContext& parseContext, ErrorGuard& errors)
+RSTConfig::RSTConfig(const SOLUTIONSection& solution_section, const ParseContext& parseContext, ErrorGuard& errors) :
+      write_rst_file(false)
 {
-    this->write_rst_file = false;
     if (solution_section.hasKeyword<ParserKeywords::RPTRST>()) {
         const auto& keyword = solution_section.getKeyword<ParserKeywords::RPTRST>();
         this->handleRPTRST(keyword, parseContext, errors);

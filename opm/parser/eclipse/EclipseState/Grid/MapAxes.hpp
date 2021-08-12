@@ -44,8 +44,8 @@ public:
     MapAxes();
     MapAxes(double X1, double Y1, double X2, double Y2, double X3, double Y3);
     MapAxes(const std::string& mapunits, double X1, double Y1, double X2, double Y2, double X3, double Y3);
-    MapAxes(EclIO::EclFile& egridfile);
-    MapAxes(const Deck& deck);
+    explicit MapAxes(EclIO::EclFile& egridfile);
+    explicit MapAxes(const Deck& deck);
 
     void transform(double& x, double& y) const;
     void inv_transform(double& x, double& y) const;

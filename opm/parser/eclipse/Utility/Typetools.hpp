@@ -39,8 +39,8 @@ public:
 
     static std::vector<std::string> strings(const std::vector<RawString>& raw_strings) {
         std::vector<std::string> std_strings;
-        for (const auto& rstring : raw_strings)
-            std_strings.push_back( rstring );
+        std_strings.reserve(raw_strings.size());
+        std::copy(raw_strings.begin(), raw_strings.end(), std::back_inserter(std_strings));
         return std_strings;
     }
 

@@ -60,7 +60,7 @@ namespace Opm {
             {}
         };
 
-        Box(const EclipseGrid& grid);
+        explicit Box(const EclipseGrid& grid);
         Box(const EclipseGrid& grid , int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
         void update(const DeckRecord& deckRecord);
         void reset();

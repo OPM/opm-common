@@ -59,7 +59,7 @@ public:
         double rate;
 
         BCFace() = default;
-        BCFace(const DeckRecord& record);
+        explicit BCFace(const DeckRecord& record);
 
         static BCFace serializeObject();
 
