@@ -27,9 +27,12 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
-#include <fmt/core.h>
+
 #include <stddef.h>
+
+#include <fmt/core.h>
 
 namespace Opm {
 
@@ -115,6 +118,51 @@ double GuideRate::get(const std::string& name, const Phase& phase) const
         throw std::logic_error {message};
     }
     return iter->second;
+}
+
+double GuideRate::getSI(const std::string&          well,
+                        const Well::GuideRateTarget target,
+                        const RateVector&           rates) const
+{
+    return this->getSI(well, GuideRateModel::convert_target(target), rates);
+}
+
+double GuideRate::getSI(const std::string&               group,
+                        const Group::GuideRateProdTarget target,
+                        const RateVector&                rates) const
+{
+    return this->getSI(group, GuideRateModel::convert_target(target), rates);
+}
+
+double GuideRate::getSI(const std::string&           wgname,
+                        const GuideRateModel::Target target,
+                        const RateVector&            rates) const
+{
+    using M = UnitSystem::measure;
+
+    const auto gr = this->get(wgname, target, rates);
+
+    switch (target) {
+    case GuideRateModel::Target::OIL:
+    case GuideRateModel::Target::WAT:
+    case GuideRateModel::Target::LIQ:
+        return this->schedule.getUnits().to_si(M::liquid_surface_rate, gr);
+
+    case GuideRateModel::Target::GAS:
+        return this->schedule.getUnits().to_si(M::gas_surface_rate, gr);
+
+    case GuideRateModel::Target::RES:
+        return this->schedule.getUnits().to_si(M::rate, gr);
+
+    case GuideRateModel::Target::NONE:
+    case GuideRateModel::Target::COMB:
+        return gr;
+    }
+
+    throw std::invalid_argument {
+        fmt::format("Unsupported Guiderate Target '{}'",
+                    static_cast<std::underlying_type_t<GuideRateModel::Target>>(target))
+    };
 }
 
 bool GuideRate::has(const std::string& name) const

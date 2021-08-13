@@ -98,6 +98,11 @@ public:
     double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
     double get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
     double get(const std::string& group, const Phase& phase) const;
+
+    double getSI(const std::string& well, const Well::GuideRateTarget target, const RateVector& rates) const;
+    double getSI(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
+    double getSI(const std::string& wgname, const GuideRateModel::Target target, const RateVector& rates) const;
+
     bool has(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
     void init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value);
