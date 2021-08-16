@@ -55,7 +55,7 @@ namespace Opm {
         };
 
         EclipseState() = default;
-        EclipseState(const Deck& deck);
+        explicit EclipseState(const Deck& deck);
         virtual ~EclipseState() = default;
 
         const IOConfig& getIOConfig() const;

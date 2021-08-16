@@ -269,7 +269,7 @@ AQUTAB
             ct.finishInitialisation(waterProperties());
         }
 
-        return { properties };
+        return Opm::AquiferCT(properties);
     }
 
     void connectFetkovic(AquiferConnections& aquancon)
@@ -329,7 +329,7 @@ AQUTAB
             fetp.finishInitialisation(waterProperties());
         }
 
-        return { properties };
+        return Opm::Aquifetp(properties);
     }
 
     Opm::AquiferConfig createAquiferConfig()
@@ -339,7 +339,7 @@ AQUTAB
         connectFetkovic(aquancon);
 
         return {
-            createFetkovich(), createCarterTracy(), aquancon.getAllConnections()
+            createFetkovich(), createCarterTracy(), Opm::Aquancon(aquancon.getAllConnections())
         };
     }
 

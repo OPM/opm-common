@@ -96,7 +96,7 @@ class Aquifetp {
 
     Aquifetp() = default;
     Aquifetp(const TableManager& tables, const Deck& deck);
-    Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data);
+    explicit Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data);
 
     static Aquifetp serializeObject();
 

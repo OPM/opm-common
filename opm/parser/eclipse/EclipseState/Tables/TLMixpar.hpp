@@ -56,7 +56,7 @@ class TLMixpar {
 public:
 
     TLMixpar() = default;
-    TLMixpar(const Deck& deck);
+    explicit TLMixpar(const Deck& deck);
     static TLMixpar serializeObject();
     std::size_t size() const;
     bool empty() const;

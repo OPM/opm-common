@@ -61,7 +61,7 @@ private:
     std::array<double, 2> unit_x;
     std::array<double, 2> unit_y;
     std::vector<float> m_input;
-    double inv_norm;
+    double inv_norm = 1.0;
     std::optional<std::string> map_units;
 };
 

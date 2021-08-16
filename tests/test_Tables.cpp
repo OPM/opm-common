@@ -172,7 +172,7 @@ END
                         Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck};
+                    return Opm::EclipseState{deck};
                 }
 
                 std::vector<double> expect_SGFN()
@@ -324,7 +324,7 @@ END
                         Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck};
+                    return Opm::EclipseState{deck};
                 }
 
                 std::vector<double> expect_SOFN()
@@ -495,7 +495,7 @@ END
                     Opm::Parser{}.parseString(input)
                 };
 
-                return {deck};
+                return Opm::EclipseState{deck};
             }
 
             std::vector<double> expect_SGFN()
@@ -652,7 +652,7 @@ END
                         Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck};
+                    return Opm::EclipseState{deck};
                 }
 
                 std::vector<double> expect_SGFN()
@@ -823,7 +823,7 @@ END
                         Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck};
+                    return Opm::EclipseState{deck};
                 }
 
                 std::vector<double> expect_SOFN()
@@ -1007,7 +1007,7 @@ END
                     Opm::Parser{}.parseString(input)
                 };
 
-                return {deck};
+                return Opm::EclipseState{deck};
             }
 
             std::vector<double> expect_SGFN()
@@ -1494,7 +1494,7 @@ namespace {
     Opm::EclipseState parse(const std::string& rspec,
                             const std::string& props)
     {
-        return {
+        return Opm::EclipseState{
             Opm::Parser{}.parseString(rspec + R"(GRID
 INIT
 

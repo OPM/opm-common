@@ -81,7 +81,7 @@ Value::Value(double value) :
     is_scalar(true)
 { }
 
-Value::Value(const std::string& wname, double value) {
+Value::Value(const std::string& wname, double value) : scalar_value(0.0) {
     this->add_well(wname, value);
 }
 

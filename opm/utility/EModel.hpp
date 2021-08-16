@@ -55,10 +55,10 @@ public:
     void resetFilter();
 
     template <typename T>
-    void addFilter(std::string param1, std::string opperator, T num);
+    void addFilter(const std::string& param1, const std::string& opperator, T num);
 
     template <typename T>
-    void addFilter(std::string param1, std::string opperator, T num1, T num2);
+    void addFilter(const std::string& param1, const std::string& opperator, T num1, T num2);
 
     void setDepthfwl(const std::vector<float>& fwl);
 
@@ -116,13 +116,13 @@ private:
     const std::vector<float>& getSolutionFloat(const std::string& name);
 
     template <typename T>
-    const std::vector<T>& get_filter_param(std::string param1);
+    const std::vector<T>& get_filter_param(const std::string& param1);
 
     template <typename T>
-    void updateActiveFilter(const std::vector<T>& paramVect, const std::string opperator, T value);
+    void updateActiveFilter(const std::vector<T>& paramVect, const std::string& opperator, T value);
 
     template <typename T>
-    void updateActiveFilter(const std::vector<T>& paramVect, const std::string opperator, T value1, T value2);
+    void updateActiveFilter(const std::vector<T>& paramVect, const std::string& opperator, T value1, T value2);
 
 };
 

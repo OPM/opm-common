@@ -232,7 +232,7 @@ namespace Opm {
                                  const std::vector<double>& zcorn ,
                                  const int * actnum);
 
-        bool keywInputBeforeGdfile(const Deck& deck, const std::string keyword) const;
+        bool keywInputBeforeGdfile(const Deck& deck, const std::string& keyword) const;
 
         void initCylindricalGrid(const Deck&);
         void initSpiderwebGrid(const Deck&);
