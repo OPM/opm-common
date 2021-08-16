@@ -435,7 +435,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         zcorn_fixed = mapper.fixupZCORN( m_zcorn );
     }
 
-    bool EclipseGrid::keywInputBeforeGdfile(const Deck& deck, const std::string keyword) const {
+    bool EclipseGrid::keywInputBeforeGdfile(const Deck& deck, const std::string& keyword) const {
 
         std::vector<std::string> keywordList;
         keywordList.reserve(deck.size());

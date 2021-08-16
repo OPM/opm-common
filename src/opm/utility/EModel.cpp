@@ -261,7 +261,7 @@ void EModel::resetFilter()
 
 
 template <typename T>
-void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::string opperator, T value)
+void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::string& opperator, T value)
 {
     if ((opperator == "eq") || (opperator == "==")){
        for (size_t i = 0; i < paramVect.size(); i++)
@@ -287,7 +287,7 @@ void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::stri
 }
 
 template <typename T>
-void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::string opperator, T value1, T value2)
+void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::string& opperator, T value1, T value2)
 {
     if ((opperator == "in") || (opperator == "between")) {
         for (size_t i = 0; i < paramVect.size(); i++)
@@ -302,7 +302,7 @@ void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::stri
 }
 
 template <typename T>
-const std::vector<T>& EModel::get_filter_param(std::string param)
+const std::vector<T>& EModel::get_filter_param(const std::string& param)
 {
     if constexpr (std::is_same<T, int>::value){
         if ((param == "I") || (param == "ROW"))
@@ -335,21 +335,21 @@ const std::vector<T>& EModel::get_filter_param(std::string param)
 
 
 template <>
-void EModel::addFilter<int>(std::string param1, std::string opperator, int num)
+void EModel::addFilter<int>(const std::string& param1, const std::string& opperator, int num)
 {
     std::vector<int> paramVect = get_filter_param<int>(param1);
     updateActiveFilter(paramVect, opperator, num);
 }
 
 template <>
-void EModel::addFilter<int>(std::string param1, std::string opperator, int num1, int num2)
+void EModel::addFilter<int>(const std::string& param1, const std::string& opperator, int num1, int num2)
 {
     std::vector<int> paramVect = get_filter_param<int>(param1);;
     updateActiveFilter(paramVect, opperator, num1, num2);
 }
 
 template <>
-void EModel::addFilter<float>(std::string param1, std::string opperator, float num)
+void EModel::addFilter<float>(const std::string& param1, const std::string& opperator, float num)
 {
     std::vector<float> paramVect = get_filter_param<float>(param1);
     updateActiveFilter(paramVect, opperator, num);
@@ -357,7 +357,7 @@ void EModel::addFilter<float>(std::string param1, std::string opperator, float n
 
 
 template <>
-void EModel::addFilter<float>(std::string param1, std::string opperator, float num1, float num2)
+void EModel::addFilter<float>(const std::string& param1, const std::string& opperator, float num1, float num2)
 {
     std::vector<float> paramVect = get_filter_param<float>(param1);
     updateActiveFilter(paramVect, opperator, num1, num2);
