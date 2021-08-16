@@ -39,7 +39,7 @@ static void printHelp() {
     std::cout << "\nThis program create one or more lodsmry files, designed for effective load on the demand.   \n"
               << "These files are created with input from the smspec and unsmry file. \n"
               << "\nIn addition, the program takes these options (which must be given before the arguments):\n\n"
-              << "-f if LODSMRY file exist, this will be replaced. Default behaviour is that existing file is kept.\n"
+              << "-f if ESMRY file exist, this will be replaced. Default behaviour is that existing file is kept.\n"
               << "-n Maximum number of threads to be used if mulitple files should be created.\n"
               << "-h Print help and exit.\n\n";
 }
@@ -89,21 +89,21 @@ int main(int argc, char **argv) {
     for (int f = argOffset; f < argc; f ++){
         Opm::filesystem::path inputFileName = argv[f];
 
-        Opm::filesystem::path lodFileName = inputFileName.parent_path() / inputFileName.stem();
-        lodFileName = lodFileName += ".LODSMRY";
+        Opm::filesystem::path esmryFileName = inputFileName.parent_path() / inputFileName.stem();
+        esmryFileName = esmryFileName += ".ESMRY";
 
-        if (Opm::EclIO::fileExists(lodFileName) && (force))
-            remove (lodFileName);
+        if (Opm::EclIO::fileExists(esmryFileName) && (force))
+            remove (esmryFileName);
 
         Opm::EclIO::ESmry smryFile(argv[f]);
-        if (!smryFile.make_lodsmry_file()){
+        if (!smryFile.make_esmry_file()){
             std::cout << "\n! Warning, smspec already have one lod file, existing kept use option -f to replace this" << std::endl;
         }
     }
 
     auto lap1 = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds1 = lap1-lap0;
-    std::cout << "\nruntime for creating " << (argc-argOffset) << " LODSMRY files: " << elapsed_seconds1.count() << " seconds\n" << std::endl;
+    std::cout << "\nruntime for creating " << (argc-argOffset) << " ESMRY files: " << elapsed_seconds1.count() << " seconds\n" << std::endl;
 
     return 0;
 }

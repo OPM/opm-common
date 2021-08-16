@@ -25,6 +25,12 @@
 #include <sstream>
 
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/ExtESmry.hpp>
+
+enum smryFileType {
+     SMSPEC, ESMRY
+};
+
 
 static void printHelp() {
 
@@ -89,11 +95,34 @@ int main(int argc, char **argv) {
 
     int argOffset = optind;
 
+    std::unique_ptr<Opm::EclIO::ESmry> esmry;
+    std::unique_ptr<Opm::EclIO::ExtESmry> ext_esmry;
+
     std::string filename = argv[argOffset];
-    Opm::EclIO::ESmry smryFile(filename);
+    Opm::filesystem::path inputFileName(filename);
+
+    if (inputFileName.extension()=="")
+        inputFileName+=".SMSPEC";
+
+    smryFileType filetype;
+
+    if (inputFileName.extension()==".SMSPEC"){
+        filetype = SMSPEC;
+        esmry = std::make_unique<Opm::EclIO::ESmry>(inputFileName);
+    } else if (inputFileName.extension()==".ESMRY"){
+        filetype = ESMRY;
+        ext_esmry = std::make_unique<Opm::EclIO::ExtESmry>(inputFileName);
+    } else
+        throw std::runtime_error("invalid input file for summary");
+
 
     if (listKeys){
-        auto list = smryFile.keywordList();
+        std::vector<std::string> list;
+
+        switch(filetype) {
+            case SMSPEC: list = esmry->keywordList(); break;
+            case ESMRY: list = ext_esmry->keywordList(); break;
+        }
 
         for (size_t n = 0; n < list.size(); n++){
             std::cout << std::setw(20) << list[n];
@@ -110,10 +139,31 @@ int main(int argc, char **argv) {
 
     std::vector<std::string> smryList;
     for (int i=0; i<argc - argOffset-1; i++) {
-        if (smryFile.hasKey(argv[i+argOffset+1])) {
+
+        bool hasKey;
+
+        switch(filetype) {
+        case SMSPEC:
+            hasKey = esmry->hasKey(argv[i+argOffset+1]);
+            break;
+        case ESMRY:
+            hasKey = ext_esmry->hasKey(argv[i+argOffset+1]);
+            break;
+        }
+
+        if (hasKey) {
             smryList.push_back(argv[i+argOffset+1]);
         } else {
-            auto list = smryFile.keywordList(argv[i+argOffset+1]);
+            std::vector<std::string> list;
+
+            switch(filetype) {
+            case SMSPEC:
+                list = esmry->keywordList(argv[i+argOffset+1]);
+                break;
+            case ESMRY:
+                list = ext_esmry->keywordList(argv[i+argOffset+1]);
+                break;
+            }
 
             if (list.size()==0) {
                 std::string message = "Key " + std::string(argv[i+argOffset+1]) + " not found in summary file " + filename;
@@ -138,9 +188,18 @@ int main(int argc, char **argv) {
     for (auto name : smryList)
         width.push_back(name.size());
 
-
     for (auto key : smryList) {
-        std::vector<float> vect = reportStepsOnly ? smryFile.get_at_rstep(key) : smryFile.get(key);
+        std::vector<float> vect;
+
+        switch(filetype) {
+        case SMSPEC:
+            vect = reportStepsOnly ? esmry->get_at_rstep(key) : esmry->get(key);
+            break;
+        case ESMRY:
+            vect = reportStepsOnly ? ext_esmry->get_at_rstep(key) : ext_esmry->get(key);
+            break;
+        }
+
         smryData.push_back(vect);
     }
 

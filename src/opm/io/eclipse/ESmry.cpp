@@ -193,6 +193,24 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         keywordListSpecFile.push_back(combindKeyList);
         getRstString(restartArray, pathRstFile, rstRootN);
 
+        if (rstRootN.string() != ""){
+
+            auto abs_rst_file = Opm::filesystem::canonical(pathRstFile) / rstRootN;
+            Opm::filesystem::path rel_path;
+
+            if (inputFileName.parent_path().string() == "")
+                rel_path = Opm::filesystem::proximate(abs_rst_file);
+            else
+                rel_path =  Opm::filesystem::proximate(abs_rst_file, inputFileName.parent_path());
+
+            if (abs_rst_file.string().size() < rel_path.string().size())
+                restart_info = std::make_tuple(abs_rst_file.string(), dimens[5]);
+            else
+                restart_info = std::make_tuple(rel_path.string(), dimens[5]);
+        }
+        else
+            restart_info = std::make_tuple("", 0);
+
         smryArray.push_back({smspec_file.string(), dimens[5]});
     }
 
@@ -335,8 +353,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         vectorLoaded.push_back(false);
     }
 
-    // inspecting time step data, unified summary or multiple summary files both formatted or binary.
-    // this also include base run data if loadBaseRunData=true and restart runs exists.
 
     int dataFileIndex = -1;
 
@@ -460,14 +476,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         nTstep = timeStepList.size();
     }
-
 }
 
-bool ESmry::all_steps_available()
+void ESmry::read_ministeps_from_disk()
 {
     auto specInd = std::get<0>(miniStepList[0]);
     auto dataFileIndex = std::get<1>(miniStepList[0]);
-    uint64_t stepFilePos = std::get<2>(miniStepList[0]);
+    uint64_t stepFilePos;
 
     std::fstream fileH;
 
@@ -476,21 +491,9 @@ bool ESmry::all_steps_available()
     else
         fileH.open(dataFileList[dataFileIndex], std::ios::in |  std::ios::binary);
 
-    fileH.seekg (stepFilePos , fileH.beg);
-
     int ministep_value;
 
-    if (formattedFiles[specInd]) {
-        ministep_value = read_ministep_formatted(fileH);
-    } else {
-        std::function<int(int)> f = Opm::EclIO::flipEndianInt;
-        auto ministep_vect = readBinaryArray<int,int>(fileH, 1, Opm::EclIO::INTE, f, sizeOfInte);
-        ministep_value = ministep_vect[0];
-    }
-
-    int prev_value = ministep_value;
-
-    for (size_t n = 1; n < miniStepList.size(); n++) {
+    for (size_t n = 0; n < miniStepList.size(); n++) {
 
         if (dataFileIndex != std::get<1>(miniStepList[n])) {
             fileH.close();
@@ -515,15 +518,20 @@ bool ESmry::all_steps_available()
             ministep_value = ministep_vect[0];
         }
 
-        if ((ministep_value - prev_value) > 1){
-            fileH.close();
-            return false;
-        }
-
-        prev_value = ministep_value;
+        mini_steps.push_back(ministep_value);
     }
 
     fileH.close();
+}
+
+bool ESmry::all_steps_available()
+{
+    if (mini_steps.size() == 0)
+        this->read_ministeps_from_disk();
+
+    for (size_t n = 1; n < mini_steps.size(); n++)
+        if ((mini_steps[n] - mini_steps[n-1]) > 1)
+            return false;
 
     return true;
 }
@@ -879,23 +887,23 @@ ESmry::getListOfArrays(std::string filename, bool formatted)
     return resultVect;
 }
 
-bool ESmry::make_lodsmry_file()
+bool ESmry::make_esmry_file()
 {
     // check that loadBaseRunData is not set, this function only works for single smspec files
     // function will not replace existing lodsmry files (since this is already loaded by this class)
     // if lodsmry file exist, this function will return false and do nothing.
 
     if (!fromSingleRun)
-        OPM_THROW(std::invalid_argument, "creating lodsmry file only possible when loadBaseRunData=false");
+        OPM_THROW(std::invalid_argument, "creating esmry file only possible when loadBaseRunData=false");
+
+    if (mini_steps.size() == 0)
+        this->read_ministeps_from_disk();
 
     Opm::filesystem::path path = inputFileName.parent_path();
     Opm::filesystem::path rootName = inputFileName.stem();
     Opm::filesystem::path smryDataFile;
 
-    if (formattedFiles[0])
-        smryDataFile = path / rootName += ".FLODSMRY";
-    else
-        smryDataFile = path / rootName += ".LODSMRY";
+    smryDataFile = path / rootName += ".ESMRY";
 
     if (Opm::EclIO::fileExists(smryDataFile))
     {
@@ -903,53 +911,43 @@ bool ESmry::make_lodsmry_file()
 
     } else {
 
-        std::vector<std::string> keycheck;
-        keycheck.reserve(keyword.size());
-
-        std::string str1;
-        std::string str2;
-        std::string str3;
-
-        for (auto key : keyword){
-
-            str2="";
-            str3="";
-
-            if (key.size() > 24)
-                str1 = key.substr(0,24);
-            else
-                str1 = key;
-
-            if (str1.size() > 8){
-                str2 = str1.substr(8);
-                str1 = str1.substr(0,8);
-            }
-
-            if (str2.size() > 8){
-                str3 = str2.substr(8);
-                str2 = str2.substr(0,8);
-            }
-
-            keycheck.push_back(str1);
-            keycheck.push_back(str2);
-            keycheck.push_back(str3);
-        }
-
-        std::vector<bool> is_rstep;
+        std::vector<int> is_rstep;
         is_rstep.reserve(timeStepList.size());
 
         for (size_t i = 0; i < timeStepList.size(); i++)
             if(std::find(seqIndex.begin(), seqIndex.end(), i) != seqIndex.end())
-                is_rstep.push_back(true);
+                is_rstep.push_back(1);
             else
-                is_rstep.push_back(false);
+                is_rstep.push_back(0);
 
         this->LoadData();
 
         {
-            Opm::EclIO::EclOutput outFile(smryDataFile, formattedFiles[0], std::ios::out);
-            outFile.write<std::string>("KEYCHECK", keycheck);
-            outFile.write<bool>("RSTEP", is_rstep);
+            Opm::TimeStampUTC ts( std::chrono::system_clock::to_time_t( startdat ));
+
+            std::vector<int> start_date_vect = {ts.day(), ts.month(), ts.year(), ts.hour(),
+                                                ts.minutes(), ts.seconds(), 0 };
+
+            std::vector<std::string> units;
+            units.reserve(keyword.size());
+
+            for (auto key : keyword)
+                units.push_back(kwunits.at(key));
+
+            Opm::EclIO::EclOutput outFile(smryDataFile, false, std::ios::out);
+
+            outFile.write<int>("START", start_date_vect);
+
+            if (std::get<0>(restart_info) != ""){
+                auto rst_file = std::get<0>(restart_info);
+                outFile.write<std::string>("RESTART", {rst_file});
+                outFile.write<int>("RSTNUM", {std::get<1>(restart_info)});
+            }
+
+            outFile.write("KEYCHECK", keyword);
+            outFile.write("UNITS", units);
+            outFile.write<int>("RSTEP", is_rstep);
+            outFile.write<int>("TSTEP", mini_steps);
 
             for (size_t n = 0; n < vectorData.size(); n++ ) {
                 const std::string vect_name = fmt::format("V{}", n);

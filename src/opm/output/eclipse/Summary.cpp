@@ -52,7 +52,7 @@
 
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
-#include <opm/io/eclipse/ESmryOutput.hpp>
+#include <opm/io/eclipse/ExtSmryOutput.hpp>
 
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
@@ -3251,7 +3251,7 @@ private:
     std::unique_ptr<Opm::EclIO::OutputStream::SummarySpecification> smspec_{};
     std::unique_ptr<Opm::EclIO::EclOutput> stream_{};
 
-    std::unique_ptr<Opm::EclIO::ESmryOutput> esmry_;
+    std::unique_ptr<Opm::EclIO::ExtSmryOutput> esmry_;
 
     void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
 
@@ -3314,7 +3314,7 @@ SummaryImplementation(const EclipseState&  es,
         Opm::filesystem::remove(esmryFileName);
 
     if ((writeEsmry) and (es.cfg().io().getFMTOUT()==false))
-        this->esmry_ = std::make_unique<Opm::EclIO::ESmryOutput>(this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
+        this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>(this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
 
     if ((writeEsmry) and (es.cfg().io().getFMTOUT()))
         OpmLog::warning("ESMRY only supported for unformatted output.  Request ignored.");

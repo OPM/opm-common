@@ -18,7 +18,7 @@
 
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
-#include <opm/io/eclipse/ESmryOutput.hpp>
+#include <opm/io/eclipse/ExtSmryOutput.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -32,7 +32,7 @@
 namespace Opm { namespace EclIO {
 
 
-ESmryOutput::ESmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
+ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
                  const EclipseState& es, const time_t start_time)
 {
     m_nVect = valueKeys.size();
@@ -71,7 +71,7 @@ ESmryOutput::ESmryOutput(const std::vector<std::string>& valueKeys, const std::v
 }
 
 
-void ESmryOutput::write(const std::vector<float>& ts_data, int report_step)
+void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step)
 {
 
     if (ts_data.size() != static_cast<size_t>(m_nVect))
@@ -116,7 +116,7 @@ void ESmryOutput::write(const std::vector<float>& ts_data, int report_step)
 }
 
 
-std::vector<std::string> ESmryOutput::make_modified_keys(const std::vector<std::string> valueKeys, const GridDims& dims)
+std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std::string> valueKeys, const GridDims& dims)
 {
     std::vector<std::string> mod_keys;
     mod_keys.reserve(valueKeys.size());
@@ -164,7 +164,7 @@ std::vector<std::string> ESmryOutput::make_modified_keys(const std::vector<std::
 
 }
 
-std::array<int, 3> ESmryOutput::ijk_from_global_index(const GridDims& dims, int globInd) const
+std::array<int, 3> ExtSmryOutput::ijk_from_global_index(const GridDims& dims, int globInd) const
 {
 
     if (globInd < 0 || static_cast<size_t>(globInd) >= dims[0] * dims[1] * dims[2])

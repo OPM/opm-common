@@ -16,8 +16,8 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#ifndef OPM_IO_ESMRYOUTPUT_HPP
-#define OPM_IO_ESMRYOUTPUT_HPP
+#ifndef OPM_IO_ExtSmryOutput_HPP
+#define OPM_IO_ExtSmryOutput_HPP
 
 #include <string>
 
@@ -33,11 +33,11 @@ class EclipseState;
 namespace Opm { namespace EclIO {
 
 
-class ESmryOutput
+class ExtSmryOutput
 {
 
 public:
-    ESmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
+    ExtSmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
                  const EclipseState& es, const time_t start_time);
 
     void write(const std::vector<float>& ts_data, int report_step);
@@ -65,4 +65,4 @@ private:
 
 }} // namespace Opm::EclIO
 
-#endif // OPM_IO_ESMRYOUTPUT_HPP
+#endif // OPM_IO_ExtSmryOutput_HPP

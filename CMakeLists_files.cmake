@@ -278,9 +278,10 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ERst.cpp
           src/opm/io/eclipse/ERsm.cpp
           src/opm/io/eclipse/ESmry.cpp
+          src/opm/io/eclipse/ExtESmry.cpp
           src/opm/io/eclipse/ESmry_write_rsm.cpp
           src/opm/io/eclipse/OutputStream.cpp
-          src/opm/io/eclipse/ESmryOutput.cpp
+          src/opm/io/eclipse/ExtSmryOutput.cpp
           src/opm/io/eclipse/RestartFileView.cpp
           src/opm/io/eclipse/SummaryNode.cpp
           src/opm/io/eclipse/rst/connection.cpp
@@ -546,7 +547,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmpack.cpp
     examples/opmhash.cpp
     examples/wellgraph.cpp
-    examples/make_lodsmry.cpp
+    examples/make_ext_smry.cpp
   )
 endif()
 
@@ -559,7 +560,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
-    examples/make_lodsmry.cpp
+    examples/make_esmry.cpp
   )
 endif()
 
@@ -854,9 +855,10 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ERst.hpp
         opm/io/eclipse/ERsm.hpp
         opm/io/eclipse/ESmry.hpp
+        opm/io/eclipse/ExtESmry.hpp
         opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
-        opm/io/eclipse/ESmryOutput.hpp
+        opm/io/eclipse/ExtSmryOutput.hpp
         opm/io/eclipse/RestartFileView.hpp
         opm/io/eclipse/SummaryNode.hpp
         opm/io/eclipse/rst/connection.hpp
