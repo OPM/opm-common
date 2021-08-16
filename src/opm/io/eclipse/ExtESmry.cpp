@@ -412,11 +412,10 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 
                 m_vectorData[keyIndexVect[n]].insert(m_vectorData[keyIndexVect[n]].end(), smry_data.begin(), smry_data.begin() + to_ind + 1);
             }
-
-            fileH.close();
-
-            ind--;
         }
+
+        fileH.close();
+        ind--;
     }
 
     for (auto kind : keyIndexVect)
