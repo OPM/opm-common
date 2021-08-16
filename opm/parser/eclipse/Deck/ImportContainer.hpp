@@ -17,8 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef IMPORT_CONTAINER_HPP
 #define IMPORT_CONTAINER_HPP
 
+#include <cstddef>
+#include <string>
 #include <vector>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -27,6 +30,7 @@
 namespace Opm {
 
 class Parser;
+class UnitSystem;
 
 class ImportContainer {
 public:
@@ -40,3 +44,5 @@ private:
 
 
 }
+
+#endif // IMPORT_CONTAINER_HPP
