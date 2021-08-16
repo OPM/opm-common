@@ -85,7 +85,7 @@ namespace Opm {
 
             Aquancon() = default;
             Aquancon(const EclipseGrid& grid, const Deck& deck);
-            Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data);
+            explicit Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data);
 
             static Aquancon serializeObject();
 
