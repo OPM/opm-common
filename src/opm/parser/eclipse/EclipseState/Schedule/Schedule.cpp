@@ -290,7 +290,9 @@ namespace {
 
 class ScheduleLogger {
 public:
-    explicit ScheduleLogger(bool restart_skip)
+    ScheduleLogger(bool restart_skip, const std::string& prefix_, const KeywordLocation& location)
+        : prefix(prefix_)
+        , current_file(location.filename)
     {
         if (restart_skip)
             this->log_function = &OpmLog::note;
@@ -303,17 +305,24 @@ public:
     }
 
     void info(const std::string& msg) {
-        OpmLog::info(msg);
+        OpmLog::info(this->prefix + msg);
     }
 
-    void complete_step(const std::string& prefix, const std::string& msg) {
+    void info(const std::vector<std::string>& msg_list) {
+        for (const auto& msg : msg_list)
+            this->info(msg);
+    }
+
+    void complete_step(const std::string& msg) {
         this->step_count += 1;
         if (this->step_count == this->max_print) {
-            this->log_function(prefix + msg);
-            OpmLog::info(prefix + "Report limit reached, see PRT-file for remaining Schedule initialization.\n" + prefix);
+            this->log_function(msg);
+            this->info(std::vector<std::string>{"Report limit reached, see PRT-file for remaining Schedule initialization.", ""});
             this->log_function = &OpmLog::note;
-        } else
-            this->log_function( prefix + msg + "\n" + prefix);
+        } else {
+            this->log_function( msg );
+            this->log_function( "" );
+        }
     };
 
     void restart() {
@@ -321,10 +330,20 @@ public:
         this->log_function = &OpmLog::info;
     }
 
+    void location(const KeywordLocation& location) {
+        if (this->current_file == location.filename)
+            return;
+
+        this->operator()( fmt::format("Reading from: {} line {}", location.filename, location.lineno) );
+        this->current_file = location.filename;
+    }
+
 
 private:
     std::size_t step_count = 0;
     std::size_t max_print  = 5;
+    std::string prefix;
+    std::string current_file;
     void (*log_function)(const std::string&);
 };
 
@@ -342,7 +361,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->m_static.m_unit_system.name(UnitSystem::measure::time);
         auto deck_time = [this](double seconds) { return this->m_static.m_unit_system.from_si(UnitSystem::measure::time, seconds); };
-        std::string current_file;
         /*
           The keywords in the skiprest_whitelist set are loaded from the
           SCHEDULE section even though the SKIPREST keyword is in action. The
@@ -367,17 +385,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         */
 
         auto restart_skip = load_start < this->m_static.rst_info.report_step;
-        ScheduleLogger logger(restart_skip);
+        ScheduleLogger logger(restart_skip, prefix, this->m_sched_deck.location());
         {
             const auto& location = this->m_sched_deck.location();
-            current_file = location.filename;
-            logger.info(fmt::format("{0}\n{0}Processing dynamic information from\n{0}{1} line {2}", prefix, current_file, location.lineno));
+            logger.info({"", "Processing dynamic information from", fmt::format("{} line {}", location.filename, location.lineno)});
             if (restart_skip)
-                logger.info(fmt::format("{}This is a restarted run - skipping until report step {} at {}", prefix, this->m_static.rst_info.report_step, Schedule::formatDate(this->m_static.rst_info.time)));
+                logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", this->m_static.rst_info.report_step, Schedule::formatDate(this->m_static.rst_info.time)));
 
-            logger(fmt::format("{}Initializing report step {}/{} at {} {} {} line {}",
-                               prefix,
-                               load_start + 1,
+            logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
+                               load_start,
                                this->m_sched_deck.size() - 1,
                                Schedule::formatDate(this->getStartTime()),
                                deck_time(this->m_sched_deck.seconds(load_start)),
@@ -393,22 +409,23 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
                 const auto& days = deck_time(this->stepLength(report_step - 1));
                 const auto& days_total = deck_time(this->seconds(report_step - 1));
-                logger.complete_step(prefix, fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
-                                                         report_step,
-                                                         days,
-                                                         time_unit,
-                                                         start_date,
-                                                         days_total));
+                logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
+                                                 report_step,
+                                                 days,
+                                                 time_unit,
+                                                 start_date,
+                                                 days_total));
 
-                if (report_step < (load_end - 1))
-                    logger(fmt::format("{}Initializing report step {}/{} at {} ({} {}) - line {}",
-                                       prefix,
+                if (report_step < (load_end - 1)) {
+                    logger.location(block.location());
+                    logger(fmt::format("Initializing report step {}/{} at {} ({} {}) line {}",
                                        report_step + 1,
                                        this->m_sched_deck.size() - 1,
                                        start_date,
                                        days_total,
                                        time_unit,
                                        block.location().lineno));
+                }
             }
             this->create_next(block);
 
@@ -418,10 +435,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
                 const auto& keyword = block[keyword_index];
                 const auto& location = keyword.location();
-                if (location.filename != current_file) {
-                    logger(fmt::format("{}Reading from: {} line {}", prefix, location.filename, location.lineno));
-                    current_file = location.filename;
-                }
+                logger.location(keyword.location());
 
                 if (keyword.name() == "ACTIONX") {
                     Action::ActionX action(keyword, std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
@@ -447,7 +461,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     continue;
                 }
 
-                logger(fmt::format("{}Processing keyword {} at line {}", prefix, location.keyword, location.lineno));
+                logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
                 this->handleKeyword(report_step,
                                     block,
                                     keyword,
