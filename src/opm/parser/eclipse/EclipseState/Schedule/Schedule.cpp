@@ -1333,6 +1333,8 @@ namespace {
                 this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_INJECTION_UPDATE );
                 this->snapshots.back().wellgroup_events().addEvent(rst_group.name, ScheduleEvents::GROUP_INJECTION_UPDATE);
             }
+
+            OpmLog::info(fmt::format("Adding group {} from restart file", rst_group.name));
         }
 
         for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
@@ -1375,6 +1377,8 @@ namespace {
 
             this->addWell(well);
             this->addWellToGroup(well.groupName(), well.name(), report_step);
+
+            OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
         }
         this->snapshots[report_step + 1].update_tuning(rst_state.tuning);
         // Originally at report_step + 1
