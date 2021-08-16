@@ -210,6 +210,10 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
     for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_10103_ref[i], 0.01);
 
+    ExtESmry esmry2("SPE1CASE1.ESMRY");
+    esmry2.loadData();
+
+
     if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
         Opm::filesystem::remove("SPE1CASE1.ESMRY");
 }
