@@ -42,9 +42,11 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <string>
+#include <fmt/format.h>
 #include <iostream>
 #include <sstream>
+#include <string>
+
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateGroupData
@@ -817,11 +819,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         }
         cnt_udq += 1;
     }
-    if (cnt_udq != nudq) {
-        std::stringstream str;
-        str << "Inconsistent total number of udqs: " << cnt_udq << " and sum of well, group and field udqs: " << nudq;
-        OpmLog::error(str.str());
-    }
+    if (cnt_udq != nudq)
+        OpmLog::error(fmt::format("Inconsistent total number of udqs: {} and sum of well, group and field udqs: {}", cnt_udq, nudq));
 
 
     auto udq_active = sched[simStep].udq_active.get();
@@ -839,11 +838,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
                 cnt_iuad += 1;
             }
         }
-        if (cnt_iuad != inteHead[VI::intehead::NO_IUADS]) {
-            std::stringstream str;
-            str << "Inconsistent number of iuad's: " << cnt_iuad << " number of iuad's from intehead " << inteHead[VI::intehead::NO_IUADS];
-            OpmLog::error(str.str());
-        }
+        if (cnt_iuad != inteHead[VI::intehead::NO_IUADS])
+            OpmLog::error(fmt::format("Inconsistent number of iuad's: {} number of iuads from intehead {}", cnt_iuad, inteHead[VI::intehead::NO_IUADS]));
 
         const auto& iuap_records = udq_active.get_iuap();
         int cnt_iuap = 0;
@@ -854,11 +850,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             iUap::staticContrib(wg_no, i_uap);
             cnt_iuap += 1;
         }
-        if (cnt_iuap != inteHead[VI::intehead::NO_IUAPS]) {
-            std::stringstream str;
-            str << "Inconsistent number of iuap's: " << cnt_iuap << " number of iuap's from intehead " << inteHead[VI::intehead::NO_IUAPS];
-            OpmLog::error(str.str());
-        }
+        if (cnt_iuap != inteHead[VI::intehead::NO_IUAPS])
+            OpmLog::error(fmt::format("Inconsistent number of iuap's: {} number of iuap's from intehead {}", cnt_iuap, inteHead[VI::intehead::NO_IUAPS]));
 
         Opm::RestartIO::Helpers::igphData igph_dat;
         int cnt_igph = 0;
@@ -868,11 +861,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
                 iGph::staticContrib(igph[index], i_igph);
                 cnt_igph += 1;
         }
-        if (cnt_igph != inteHead[VI::intehead::NGMAXZ]) {
-            std::stringstream str;
-            str << "Inconsistent number of igph's: " << cnt_igph << " number of igph's from intehead " << inteHead[VI::intehead::NGMAXZ];
-            OpmLog::error(str.str());
-        }
+        if (cnt_igph != inteHead[VI::intehead::NGMAXZ])
+            OpmLog::error(fmt::format("Inconsistent number of igph's: {} number of igph's from intehead {}", cnt_igph, inteHead[VI::intehead::NGMAXZ]));
     }
 
     std::size_t i_wudq = 0;
@@ -888,11 +878,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             cnt_dudw += 1;
         }
     }
-    if (cnt_dudw != inteHead[VI::intehead::NO_WELL_UDQS]) {
-        std::stringstream str;
-        str << "Inconsistent number of dudw's: " << cnt_dudw << " number of dudw's from intehead " << inteHead[VI::intehead::NO_WELL_UDQS];
-        OpmLog::error(str.str());
-    }
+    if (cnt_dudw != inteHead[VI::intehead::NO_WELL_UDQS])
+        OpmLog::error(fmt::format("Inconsistent number of dudw's: {} number of dudw's from intehead {}", cnt_dudw, inteHead[VI::intehead::NO_WELL_UDQS]));
 
     std::size_t i_gudq = 0;
     const auto curGroups = sched.restart_groups(simStep);
@@ -907,11 +894,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             cnt_dudg += 1;
         }
     }
-    if (cnt_dudg != inteHead[VI::intehead::NO_GROUP_UDQS]) {
-        std::stringstream str;
-        str << "Inconsistent number of dudg's: " << cnt_dudg << " number of dudg's from intehead " << inteHead[VI::intehead::NO_GROUP_UDQS];
-        OpmLog::error(str.str());
-    }
+    if (cnt_dudg != inteHead[VI::intehead::NO_GROUP_UDQS])
+        OpmLog::error(fmt::format("Inconsistent number of dudg's: {} number of dudg's from intehead {}", cnt_dudg, inteHead[VI::intehead::NO_GROUP_UDQS]));
 
     std::size_t i_fudq = 0;
     int cnt_dudf = 0;
@@ -924,11 +908,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             cnt_dudf += 1;
         }
     }
-    if (cnt_dudf != inteHead[VI::intehead::NO_FIELD_UDQS]) {
-        std::stringstream str;
-        str << "Inconsistent number of dudf's: " << cnt_dudf << " number of dudf's from intehead " << inteHead[VI::intehead::NO_FIELD_UDQS];
-        OpmLog::error(str.str());
-    }
+    if (cnt_dudf != inteHead[VI::intehead::NO_FIELD_UDQS])
+        OpmLog::error(fmt::format("Inconsistent number of dudf's: {} number of dudf's from intehead {}", cnt_dudf, inteHead[VI::intehead::NO_FIELD_UDQS]));
 
 
 }
