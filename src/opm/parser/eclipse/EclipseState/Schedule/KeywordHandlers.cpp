@@ -789,6 +789,14 @@ namespace {
         this->snapshots.back().update_nupcol(nupcol);
     }
 
+    void Schedule::handleRPTONLY(const HandlerContext&, const ParseContext&, ErrorGuard&) {
+        this->snapshots.back().rptonly(true);
+    }
+
+    void Schedule::handleRPTONLYO(const HandlerContext&, const ParseContext&, ErrorGuard&) {
+        this->snapshots.back().rptonly(false);
+    }
+
     void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         this->snapshots.back().rpt_config.update( RPTConfig(handlerContext.keyword ));
         auto rst_config = this->snapshots.back().rst_config();
@@ -2024,6 +2032,8 @@ namespace {
             { "MULTZ-"  , &Schedule::handleMXUNSUPP },
             { "NODEPROP", &Schedule::handleNODEPROP },
             { "NUPCOL"  , &Schedule::handleNUPCOL   },
+            { "RPTONLY" , &Schedule::handleRPTONLY  },
+            { "RPTONLYO", &Schedule::handleRPTONLYO },
             { "RPTRST"  , &Schedule::handleRPTRST   },
             { "RPTSCHED", &Schedule::handleRPTSCHED },
             { "SAVE"    , &Schedule::handleSAVE     },
