@@ -202,15 +202,20 @@ ScheduleDeck::ScheduleDeck(const Deck& deck, const ScheduleRestartInfo& rst_info
     this->skiprest = rst_info.skiprest;
     if (this->m_restart_offset > 0) {
         for (std::size_t it = 0; it < this->m_restart_offset; it++) {
-            this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
-            if (it < this->m_restart_offset - 1)
-                this->m_blocks.back().end_time(start_time);
+            if (it == 0)
+                this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
+            else
+                this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
+            this->m_blocks.back().end_time(start_time);
+        }
+        if (!this->skiprest) {
+            this->m_blocks.back().end_time(this->m_restart_time);
+            this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, this->m_restart_time);
         }
     } else
         this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
 
-
-    ScheduleDeckContext context(this->m_restart_offset > 0, start_time);
+    ScheduleDeckContext context(this->skiprest, this->m_blocks.back().start_time());
     for( const auto& keyword : SCHEDULESection(deck)) {
         if (keyword.name() == "DATES") {
             for (size_t recordIndex = 0; recordIndex < keyword.size(); recordIndex++) {

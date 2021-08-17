@@ -495,6 +495,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/include_swof.txt
           tests/include_grid_3x5x4.grdecl
           tests/SPE1CASE2.DATA
+          tests/SPE1CASE2_RESTART.DATA
           tests/SPE1CASE2_RESTART_SKIPREST.DATA
           tests/SPE1CASE2.X0060
           tests/PYACTION.DATA
