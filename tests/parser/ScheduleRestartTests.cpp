@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(LoadRestartSim) {
     EclipseState ecl_state(deck);
     Schedule sched(deck, ecl_state, python);
 
-    auto restart_deck = parser.parseFile("SPE1CASE2_RESTART.DATA");
+    auto restart_deck = parser.parseFile("SPE1CASE2_RESTART_SKIPREST.DATA");
     auto rst_file = std::make_shared<EclIO::ERst>("SPE1CASE2.X0060");
     auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), 60);
     auto rst_state = RestartIO::RstState::load(std::move(rst_view));
