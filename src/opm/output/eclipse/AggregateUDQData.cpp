@@ -823,7 +823,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         OpmLog::error(fmt::format("Inconsistent total number of udqs: {} and sum of well, group and field udqs: {}", cnt_udq, nudq));
 
 
-    auto udq_active = sched[simStep].udq_active.get();
+    const auto& udq_active = sched[simStep].udq_active.get();
     if (udq_active) {
         const auto& udq_records = udq_active.get_iuad();
         int cnt_iuad = 0;
