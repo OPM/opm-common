@@ -1171,6 +1171,57 @@ namespace {
         return soln;
     }
 
+    Opm::data::GroupAndNetworkValues
+    restore_grp_nwrk(const Opm::Schedule&                         schedule,
+                     const Opm::UnitSystem&                       usys,
+                     std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+    {
+        using M = Opm::UnitSystem::measure;
+        using xIx = VI::XGroup::index;
+        using GRVI = Opm::data::GuideRateValue::Item;
+
+        auto xg_nwrk = Opm::data::GroupAndNetworkValues{};
+
+        const auto& intehead  = rst_view->intehead();
+        const auto  sim_step  = rst_view->simStep();
+        const auto  nwgmax    = intehead[VI::NWGMAX];
+        const auto  groupData = GroupVectors{ intehead, rst_view };
+
+        for (const auto& gname : schedule.groupNames(sim_step)) {
+            const auto& group = schedule.getGroup(gname, sim_step);
+            const auto group_index = (gname == "FIELD")
+                ? groupData.maxGroups() : group.insert_index() - 1;
+
+            const auto igrp = groupData.igrp(group_index);
+            const auto xgrp = groupData.xgrp(group_index);
+
+            auto& gr_data = xg_nwrk.groupData[gname];
+
+            gr_data.currentControl
+                .set(Opm::Group::ProductionCModeFromInt(igrp[nwgmax + VI::IGroup::index::ProdActiveCMode]),
+                     Opm::Group::InjectionCModeFromInt (igrp[nwgmax + VI::IGroup::index::GInjActiveCMode]),
+                     Opm::Group::InjectionCModeFromInt (igrp[nwgmax + VI::IGroup::index::WInjActiveCMode]));
+
+            if (igrp[nwgmax + VI::IGroup::GuideRateDef] != VI::IGroup::Value::None) {
+                gr_data.guideRates.production
+                    .set(GRVI::Oil,   usys.to_si(M::liquid_surface_rate, xgrp[xIx::OilPrGuideRate]))
+                    .set(GRVI::Gas,   usys.to_si(M::gas_surface_rate,    xgrp[xIx::GasPrGuideRate]))
+                    .set(GRVI::Water, usys.to_si(M::liquid_surface_rate, xgrp[xIx::WatPrGuideRate]))
+                    .set(GRVI::ResV,  usys.to_si(M::rate,                xgrp[xIx::VoidPrGuideRate]));
+
+                gr_data.guideRates.injection
+                    .set(GRVI::Oil,   usys.to_si(M::liquid_surface_rate, xgrp[xIx::OilInjGuideRate]))
+                    .set(GRVI::Gas,   usys.to_si(M::gas_surface_rate,    xgrp[xIx::GasInjGuideRate]))
+                    .set(GRVI::Water, usys.to_si(M::liquid_surface_rate, xgrp[xIx::WatInjGuideRate]));
+            }
+
+            const auto node_pressure = -1.0;
+            xg_nwrk.nodeData[gname].pressure = node_pressure;
+        }
+
+        return xg_nwrk;
+    }
+
     Opm::data::AquiferType
     determineAquiferType(const AquiferVectors::Window<int>& iaaq)
     {
@@ -1442,13 +1493,14 @@ namespace Opm { namespace RestartIO  {
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_opm(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule,  rst_view);
-        data::GroupAndNetworkValues xg_nwrk;
+
+        auto xgrp_nwrk = restore_grp_nwrk(schedule, es.getUnits(), rst_view);
 
         auto aquifers = hasAnalyticAquifers(*rst_view)
             ? restore_aquifers(es, rst_view) : data::Aquifers{};
 
         auto rst_value = RestartValue {
-            std::move(xr), std::move(xw), std::move(xg_nwrk), std::move(aquifers)
+            std::move(xr), std::move(xw), std::move(xgrp_nwrk), std::move(aquifers)
         };
 
         if (! extra_keys.empty()) {
