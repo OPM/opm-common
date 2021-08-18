@@ -89,7 +89,7 @@ Opm::SummaryState sim_state()
     state.update("SWFR:WINJ:3",  23.);
     state.update("SWFR:WINJ:4",  24.);
 
-    state.update("WBHP:WINJ",  234.);
+    state.update_well_var("WINJ", "WBHP",  234.);
     return state;
 }
 Opm::data::Wells wr()
