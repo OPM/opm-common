@@ -745,7 +745,6 @@ namespace {
                 const auto& conn0 = well.getConnections();
                 const auto& welConns = Opm::WellConnections(conn0, grid);
                 const auto& wname     = well.name();
-                const auto wPKey = "WBHP:"  + wname;
                 const auto& wRatesIt =  wr.find(wname);
                 //
                 //Do not calculate well segment rates for shut wells
@@ -790,7 +789,7 @@ namespace {
                     temp_w = sSFR.swfr[0]*0.1;
                     temp_g = sSFR.sgfr[0]*gfactor;
                     //Item 12 Segment pressure - use well flow bhp
-                    rSeg[iS + Ix::Pressure] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
+                    rSeg[iS + Ix::Pressure] = smry.get_well_var(wname, "WBHP", 0);
                 }
                 else {
                     // Note: Segment flow rates and pressure from 'smry' have correct
@@ -846,7 +845,7 @@ namespace {
                         temp_w = sSFR.swfr[segIndex]*0.1;
                         temp_g = sSFR.sgfr[segIndex]*gfactor;
                         //Item 12 Segment pressure - use well flow bhp
-                        rSeg[iS +  Ix::Pressure] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
+                        rSeg[iS +  Ix::Pressure] = smry.get_well_var(wname, "WBHP", 0);
                     }
                     else {
                         // Note: Segment flow rates and pressure from 'smry' have correct
