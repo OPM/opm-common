@@ -1171,6 +1171,57 @@ namespace {
         return soln;
     }
 
+    Opm::data::GroupAndNetworkValues
+    restore_grp_nwrk(const Opm::Schedule&                         schedule,
+                     const Opm::UnitSystem&                       usys,
+                     std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+    {
+        using M = Opm::UnitSystem::measure;
+        using xIx = VI::XGroup::index;
+        using GRVI = Opm::data::GuideRateValue::Item;
+
+        auto xg_nwrk = Opm::data::GroupAndNetworkValues{};
+
+        const auto& intehead  = rst_view->intehead();
+        const auto  sim_step  = rst_view->simStep();
+        const auto  nwgmax    = intehead[VI::NWGMAX];
+        const auto  groupData = GroupVectors{ intehead, rst_view };
+
+        for (const auto& gname : schedule.groupNames(sim_step)) {
+            const auto& group = schedule.getGroup(gname, sim_step);
+            const auto group_index = (gname == "FIELD")
+                ? groupData.maxGroups() : group.insert_index() - 1;
+
+            const auto igrp = groupData.igrp(group_index);
+            const auto xgrp = groupData.xgrp(group_index);
+
+            auto& gr_data = xg_nwrk.groupData[gname];
+
+            gr_data.currentControl
+                .set(Opm::Group::ProductionCModeFromInt(igrp[nwgmax + VI::IGroup::index::ProdActiveCMode]),
+                     Opm::Group::InjectionCModeFromInt (igrp[nwgmax + VI::IGroup::index::GInjActiveCMode]),
+                     Opm::Group::InjectionCModeFromInt (igrp[nwgmax + VI::IGroup::index::WInjActiveCMode]));
+
+            if (igrp[nwgmax + VI::IGroup::GuideRateDef] != VI::IGroup::Value::None) {
+                gr_data.guideRates.production
+                    .set(GRVI::Oil,   usys.to_si(M::liquid_surface_rate, xgrp[xIx::OilPrGuideRate]))
+                    .set(GRVI::Gas,   usys.to_si(M::gas_surface_rate,    xgrp[xIx::GasPrGuideRate]))
+                    .set(GRVI::Water, usys.to_si(M::liquid_surface_rate, xgrp[xIx::WatPrGuideRate]))
+                    .set(GRVI::ResV,  usys.to_si(M::rate,                xgrp[xIx::VoidPrGuideRate]));
+
+                gr_data.guideRates.injection
+                    .set(GRVI::Oil,   usys.to_si(M::liquid_surface_rate, xgrp[xIx::OilInjGuideRate]))
+                    .set(GRVI::Gas,   usys.to_si(M::gas_surface_rate,    xgrp[xIx::GasInjGuideRate]))
+                    .set(GRVI::Water, usys.to_si(M::liquid_surface_rate, xgrp[xIx::WatInjGuideRate]));
+            }
+
+            const auto node_pressure = -1.0;
+            xg_nwrk.nodeData[gname].pressure = node_pressure;
+        }
+
+        return xg_nwrk;
+    }
+
     Opm::data::AquiferType
     determineAquiferType(const AquiferVectors::Window<int>& iaaq)
     {
@@ -1292,44 +1343,39 @@ namespace {
     {
         if (! groupData.hasDefinedValues()) {
             // Result set does not provide group information.
-            // No wells?  In any case, nothing to do here.
+            // No groups?  In any case, nothing to do here.
             return;
         }
 
+        const auto isField = group == "FIELD";
         const auto xgrp = groupData.xgrp(groupID);
 
+        auto update = [isField, &group, &smry]
+            (const std::string& vector, const double value) -> void
+        {
+            if (isField) {
+                smry.update('F' + vector, value);
+            }
+            else {
+                smry.update_group_var(group, 'G' + vector, value);
+            }
+        };
+
         // No unit conversion here.  Smry expects output units.
-        if (group == "FIELD") {
-            smry.update("FOPT", xgrp[VI::XGroup::index::OilPrTotal]);
-            smry.update("FWPT", xgrp[VI::XGroup::index::WatPrTotal]);
-            smry.update("FGPT", xgrp[VI::XGroup::index::GasPrTotal]);
-            smry.update("FVPT", xgrp[VI::XGroup::index::VoidPrTotal]);
+        update("OPT", xgrp[VI::XGroup::index::OilPrTotal]);
+        update("WPT", xgrp[VI::XGroup::index::WatPrTotal]);
+        update("GPT", xgrp[VI::XGroup::index::GasPrTotal]);
+        update("VPT", xgrp[VI::XGroup::index::VoidPrTotal]);
 
-            smry.update("FWIT", xgrp[VI::XGroup::index::WatInjTotal]);
-            smry.update("FGIT", xgrp[VI::XGroup::index::GasInjTotal]);
-            smry.update("FVIT", xgrp[VI::XGroup::index::VoidInjTotal]);
+        update("WIT", xgrp[VI::XGroup::index::WatInjTotal]);
+        update("GIT", xgrp[VI::XGroup::index::GasInjTotal]);
+        update("VIT", xgrp[VI::XGroup::index::VoidInjTotal]);
 
-            smry.update("FOPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
-            smry.update("FWPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);
-            smry.update("FGPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
-            smry.update("FWITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
-            smry.update("FGITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
-        } else {
-            smry.update_group_var(group, "GOPT", xgrp[VI::XGroup::index::OilPrTotal]);
-            smry.update_group_var(group, "GWPT", xgrp[VI::XGroup::index::WatPrTotal]);
-            smry.update_group_var(group, "GGPT", xgrp[VI::XGroup::index::GasPrTotal]);
-            smry.update_group_var(group, "GVPT", xgrp[VI::XGroup::index::VoidPrTotal]);
-
-            smry.update_group_var(group, "GWIT", xgrp[VI::XGroup::index::WatInjTotal]);
-            smry.update_group_var(group, "GGIT", xgrp[VI::XGroup::index::GasInjTotal]);
-            smry.update_group_var(group, "GVIT", xgrp[VI::XGroup::index::VoidInjTotal]);
-
-            smry.update_group_var(group, "GOPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
-            smry.update_group_var(group, "GWPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);
-            smry.update_group_var(group, "GGPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
-            smry.update_group_var(group, "GWITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
-            smry.update_group_var(group, "GGITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
-        }
+        update("OPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
+        update("WPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);
+        update("GPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
+        update("WITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
+        update("GITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
     void restore_udq(::Opm::SummaryState&                         smry,
@@ -1447,13 +1493,14 @@ namespace Opm { namespace RestartIO  {
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_opm(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule,  rst_view);
-        data::GroupAndNetworkValues xg_nwrk;
+
+        auto xgrp_nwrk = restore_grp_nwrk(schedule, es.getUnits(), rst_view);
 
         auto aquifers = hasAnalyticAquifers(*rst_view)
             ? restore_aquifers(es, rst_view) : data::Aquifers{};
 
         auto rst_value = RestartValue {
-            std::move(xr), std::move(xw), std::move(xg_nwrk), std::move(aquifers)
+            std::move(xr), std::move(xw), std::move(xgrp_nwrk), std::move(aquifers)
         };
 
         if (! extra_keys.empty()) {
@@ -1462,6 +1509,7 @@ namespace Opm { namespace RestartIO  {
 
         restore_udq(summary_state, schedule, rst_view);
         restore_cumulative(summary_state, schedule, std::move(rst_view));
+
         return rst_value;
     }
 
