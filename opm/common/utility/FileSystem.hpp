@@ -34,8 +34,11 @@ namespace Opm
 #if __cplusplus < 201703L || \
     (defined(__GNUC__) && __GNUC__ < 8 && !defined(__clang__))
     namespace filesystem = std::experimental::filesystem;
+    filesystem::path proximate(const filesystem::path& p,
+                               const filesystem::path& base = filesystem::current_path());
 #else
     namespace filesystem = std::filesystem;
+    using filesystem::proximate;
 #endif
 
     // A poor man's filesystem::unique_path

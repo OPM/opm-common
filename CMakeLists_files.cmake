@@ -335,6 +335,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_cubic.cpp
+      tests/test_FileSystem.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp

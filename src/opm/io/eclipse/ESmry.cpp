@@ -198,10 +198,10 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             auto abs_rst_file = Opm::filesystem::canonical(pathRstFile) / rstRootN;
             Opm::filesystem::path rel_path;
 
-            if (inputFileName.parent_path().string() == "")
-                rel_path = Opm::filesystem::proximate(abs_rst_file);
+            if (inputFileName.parent_path().string().empty())
+                rel_path = Opm::proximate(abs_rst_file);
             else
-                rel_path =  Opm::filesystem::proximate(abs_rst_file, inputFileName.parent_path());
+                rel_path =  Opm::proximate(abs_rst_file, inputFileName.parent_path());
 
             if (abs_rst_file.string().size() < rel_path.string().size())
                 restart_info = std::make_tuple(abs_rst_file.string(), dimens[5]);
