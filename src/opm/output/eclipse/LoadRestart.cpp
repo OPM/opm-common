@@ -1292,44 +1292,39 @@ namespace {
     {
         if (! groupData.hasDefinedValues()) {
             // Result set does not provide group information.
-            // No wells?  In any case, nothing to do here.
+            // No groups?  In any case, nothing to do here.
             return;
         }
 
+        const auto isField = group == "FIELD";
         const auto xgrp = groupData.xgrp(groupID);
 
+        auto update = [isField, &group, &smry]
+            (const std::string& vector, const double value) -> void
+        {
+            if (isField) {
+                smry.update('F' + vector, value);
+            }
+            else {
+                smry.update_group_var(group, 'G' + vector, value);
+            }
+        };
+
         // No unit conversion here.  Smry expects output units.
-        if (group == "FIELD") {
-            smry.update("FOPT", xgrp[VI::XGroup::index::OilPrTotal]);
-            smry.update("FWPT", xgrp[VI::XGroup::index::WatPrTotal]);
-            smry.update("FGPT", xgrp[VI::XGroup::index::GasPrTotal]);
-            smry.update("FVPT", xgrp[VI::XGroup::index::VoidPrTotal]);
+        update("OPT", xgrp[VI::XGroup::index::OilPrTotal]);
+        update("WPT", xgrp[VI::XGroup::index::WatPrTotal]);
+        update("GPT", xgrp[VI::XGroup::index::GasPrTotal]);
+        update("VPT", xgrp[VI::XGroup::index::VoidPrTotal]);
 
-            smry.update("FWIT", xgrp[VI::XGroup::index::WatInjTotal]);
-            smry.update("FGIT", xgrp[VI::XGroup::index::GasInjTotal]);
-            smry.update("FVIT", xgrp[VI::XGroup::index::VoidInjTotal]);
+        update("WIT", xgrp[VI::XGroup::index::WatInjTotal]);
+        update("GIT", xgrp[VI::XGroup::index::GasInjTotal]);
+        update("VIT", xgrp[VI::XGroup::index::VoidInjTotal]);
 
-            smry.update("FOPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
-            smry.update("FWPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);
-            smry.update("FGPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
-            smry.update("FWITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
-            smry.update("FGITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
-        } else {
-            smry.update_group_var(group, "GOPT", xgrp[VI::XGroup::index::OilPrTotal]);
-            smry.update_group_var(group, "GWPT", xgrp[VI::XGroup::index::WatPrTotal]);
-            smry.update_group_var(group, "GGPT", xgrp[VI::XGroup::index::GasPrTotal]);
-            smry.update_group_var(group, "GVPT", xgrp[VI::XGroup::index::VoidPrTotal]);
-
-            smry.update_group_var(group, "GWIT", xgrp[VI::XGroup::index::WatInjTotal]);
-            smry.update_group_var(group, "GGIT", xgrp[VI::XGroup::index::GasInjTotal]);
-            smry.update_group_var(group, "GVIT", xgrp[VI::XGroup::index::VoidInjTotal]);
-
-            smry.update_group_var(group, "GOPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
-            smry.update_group_var(group, "GWPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);
-            smry.update_group_var(group, "GGPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
-            smry.update_group_var(group, "GWITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
-            smry.update_group_var(group, "GGITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
-        }
+        update("OPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
+        update("WPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);
+        update("GPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
+        update("WITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
+        update("GITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
     void restore_udq(::Opm::SummaryState&                         smry,
@@ -1462,6 +1457,7 @@ namespace Opm { namespace RestartIO  {
 
         restore_udq(summary_state, schedule, rst_view);
         restore_cumulative(summary_state, schedule, std::move(rst_view));
+
         return rst_value;
     }
 
