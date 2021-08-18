@@ -202,15 +202,20 @@ ScheduleDeck::ScheduleDeck(const Deck& deck, const ScheduleRestartInfo& rst_info
     this->skiprest = rst_info.skiprest;
     if (this->m_restart_offset > 0) {
         for (std::size_t it = 0; it < this->m_restart_offset; it++) {
-            this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
-            if (it < this->m_restart_offset - 1)
-                this->m_blocks.back().end_time(start_time);
+            if (it == 0)
+                this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
+            else
+                this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
+            this->m_blocks.back().end_time(start_time);
+        }
+        if (!this->skiprest) {
+            this->m_blocks.back().end_time(this->m_restart_time);
+            this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, this->m_restart_time);
         }
     } else
         this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
 
-
-    ScheduleDeckContext context(this->m_restart_offset > 0, start_time);
+    ScheduleDeckContext context(this->skiprest, this->m_blocks.back().start_time());
     for( const auto& keyword : SCHEDULESection(deck)) {
         if (keyword.name() == "DATES") {
             for (size_t recordIndex = 0; recordIndex < keyword.size(); recordIndex++) {
@@ -259,8 +264,11 @@ void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, Sc
 
         if (t > this->m_restart_time) {
             if (this->skiprest) {
-                TimeStampUTC ts(TimeService::to_time_t(this->m_restart_time));
-                auto reason = fmt::format("Have scanned past restart data: {:4d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
+                TimeStampUTC rst(TimeService::to_time_t(this->m_restart_time));
+                TimeStampUTC current(TimeService::to_time_t(t));
+                auto reason = fmt::format("At date: {:4d}-{:02d}-{:02d} - scanned past restart data: {:4d}-{:02d}-{:02d}",
+                                          current.year(), current.month(), current.day(),
+                                          rst.year(), rst.month(), rst.day());
                 throw OpmInputError(reason, location);
             }
             context.rst_skip = false;

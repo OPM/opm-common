@@ -497,6 +497,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/include_grid_3x5x4.grdecl
           tests/SPE1CASE2.DATA
           tests/SPE1CASE2_RESTART.DATA
+          tests/SPE1CASE2_RESTART_SKIPREST.DATA
           tests/SPE1CASE2.X0060
           tests/PYACTION.DATA
           tests/0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA
