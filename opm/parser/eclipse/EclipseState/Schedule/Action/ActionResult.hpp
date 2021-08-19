@@ -20,10 +20,10 @@
 #ifndef ACTION_RESULT_HPP
 #define ACTION_RESULT_HPP
 
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include <memory>
 
 namespace Opm {
 namespace Action {
@@ -91,7 +91,6 @@ public:
     explicit Result(bool result_arg);
     Result(bool result_arg, const std::vector<std::string>& wells);
     Result(bool result_arg, const WellSet& wells);
-    Result(const Result& src);
 
     explicit operator bool() const;
     std::vector<std::string> wells() const;
@@ -101,19 +100,12 @@ public:
     void add_well(const std::string& well);
 
     Result& operator|=(const Result& other);
-    Result& operator=(const Result& src);
     Result& operator&=(const Result& other);
 
 private:
     void assign(bool value);
     bool result;
-    /*
-      The set of matching wells is implemented with pointer semantics to be able
-      to differentiate between an empty set of wells - like all the wells with
-      WWCT > 1, and a result set which does not have well information at all -
-      e.g. FOPR > 0.
-    */
-    std::unique_ptr<WellSet> matching_wells;
+    std::optional<WellSet> matching_wells;
 };
 
 }
