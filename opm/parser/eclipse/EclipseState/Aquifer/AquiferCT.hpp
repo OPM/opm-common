@@ -36,6 +36,10 @@ namespace Opm {
     class TableManager;
 }
 
+namespace Opm { namespace RestartIO {
+    class RstAquifer;
+}} // Opm::RestartIO
+
 namespace Opm {
 
     class AquiferCT {
@@ -43,6 +47,8 @@ namespace Opm {
 
         struct AQUCT_data
         {
+            friend class AquiferCT;
+
             AQUCT_data() = default;
             AQUCT_data(const DeckRecord& record, const TableManager& tables);
             AQUCT_data(const int aqID,
@@ -116,6 +122,9 @@ namespace Opm {
         AquiferCT() = default;
         AquiferCT(const TableManager& tables, const Deck& deck);
         AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data);
+
+        void loadFromRestart(const RestartIO::RstAquifer& rst,
+                             const TableManager&          tables);
 
         static AquiferCT serializeObject();
 

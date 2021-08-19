@@ -47,6 +47,8 @@ public:
     std::size_t simStep() const;
     int reportStep() const;
 
+    int occurrenceCount(const std::string& vector) const;
+
     template <typename ElmType>
     bool hasKeyword(const std::string& vector) const;
 
@@ -55,6 +57,8 @@ public:
     getKeyword(const std::string& vector, const int occurrence = 0) const;
 
     const std::vector<int>& intehead() const;
+    const std::vector<bool>& logihead() const;
+    const std::vector<double>& doubhead() const;
 
 private:
     class Implementation;

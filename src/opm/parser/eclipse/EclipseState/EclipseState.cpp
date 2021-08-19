@@ -26,6 +26,8 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/io/eclipse/rst/aquifer.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -45,7 +47,6 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-
 
 namespace Opm {
 
@@ -264,6 +265,11 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
     const TracerConfig& EclipseState::tracer() const {
         return this->tracer_config;
+    }
+
+    void EclipseState::loadRestartAquifers(const RestartIO::RstAquifer& aquifers) {
+        if (aquifers.hasAnalyticAquifers())
+            this->aquifer_config.loadFromRestart(aquifers, this->m_tables);
     }
 
     void EclipseState::initTransMult() {

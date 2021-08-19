@@ -96,6 +96,11 @@ public:
         return this->report_step_;
     }
 
+    int occurrenceCount(const std::string& vector) const
+    {
+        return this->rst_file_->occurrence_count(vector, this->report_step_);
+    }
+
     template <typename ElmType>
     bool hasKeyword(const std::string& vector) const
     {
@@ -125,6 +130,32 @@ public:
         }
 
         return this->getKeyword<int>(ihkw, 0);
+    }
+
+    const std::vector<bool>& logihead()
+    {
+        const auto lhkw = std::string { "LOGIHEAD" };
+
+        if (! this->hasKeyword<bool>(lhkw)) {
+            throw std::domain_error {
+                "Purported Restart File Does not Have Logical Header"
+            };
+        }
+
+        return this->getKeyword<bool>(lhkw, 0);
+    }
+
+    const std::vector<double>& doubhead()
+    {
+        const auto dhkw = std::string { "DOUBHEAD" };
+
+        if (! this->hasKeyword<double>(dhkw)) {
+            throw std::domain_error {
+                "Purported Restart File Does not Have Double Header"
+            };
+        }
+
+        return this->getKeyword<double>(dhkw, 0);
     }
 
 private:
@@ -165,7 +196,6 @@ Implementation(std::shared_ptr<ERst> restart_file,
         const auto& type = std::get<1>(vector);
 
         switch (type) {
-        case ::Opm::EclIO::eclArrType::LOGI:
         case ::Opm::EclIO::eclArrType::MESS:
             // Currently ignored
             continue;
@@ -225,9 +255,24 @@ int Opm::EclIO::RestartFileView::reportStep() const
     return this->pImpl_->reportStep();
 }
 
+int Opm::EclIO::RestartFileView::occurrenceCount(const std::string& vector) const
+{
+    return this->pImpl_->occurrenceCount(vector);
+}
+
 const std::vector<int>& Opm::EclIO::RestartFileView::intehead() const
 {
     return this->pImpl_->intehead();
+}
+
+const std::vector<bool>& Opm::EclIO::RestartFileView::logihead() const
+{
+    return this->pImpl_->logihead();
+}
+
+const std::vector<double>& Opm::EclIO::RestartFileView::doubhead() const
+{
+    return this->pImpl_->doubhead();
 }
 
 template <typename ElmType>
