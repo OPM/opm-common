@@ -28,6 +28,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
 
@@ -81,9 +82,30 @@ private:
 };
 
 
-}
-}
 
+class RstUDQActive {
+
+    struct RstRecord {
+        RstRecord(UDAControl c, std::size_t i, std::size_t u1, std::size_t u2);
+
+
+        UDAControl control;
+        std::size_t input_index;
+        std::size_t use_count;
+        std::size_t wg_offset;
+    };
+
+
+public:
+    RstUDQActive() = default;
+    RstUDQActive(const std::vector<int>& iuad, const std::vector<int>& iuap, const std::vector<int>& igph);
+
+    std::vector<RstRecord> iuad;
+    std::vector<int> wg_index;
+    std::vector<Phase> ig_phase;
+};
+}
+}
 
 
 

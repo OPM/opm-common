@@ -318,6 +318,13 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         const auto& dudf = state.header.nfield_udq > 0 ? rstView->getKeyword<double>("DUDF") : std::vector<double>{};
 
         state.add_udqs(iudq, zudn, zudl, dudw, dudg, dudf);
+
+        if (rstView->hasKeyword<int>("IUAD")) {
+            const auto& iuad = rstView->getKeyword<int>("IUAD");
+            const auto& iuap = rstView->getKeyword<int>("IUAP");
+            const auto& igph = rstView->getKeyword<int>("IGPH");
+            state.udq_active = RstUDQActive(iuad, iuap, igph);
+        }
     }
 
     return state;

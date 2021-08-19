@@ -1428,6 +1428,13 @@ namespace {
             }
         }
         this->snapshots.back().udq.update( UDQConfig(this->m_static.m_runspec.udqParams(), rst_state) );
+        for (const auto& [control, value, wgname] : UDQActive::load_rst( this->m_static.m_unit_system, this->snapshots.back().udq(), rst_state, this->wellNames(report_step), this->groupNames(report_step))) {
+            if (UDQ::well_control(control)) {
+                auto& well = this->getWell(wgname, report_step);
+            } else {
+                auto& group = this->getGroup(wgname, report_step);
+            }
+        }
     }
 
     std::shared_ptr<const Python> Schedule::python() const

@@ -22,17 +22,48 @@
 #define UDQ_USAGE_HPP
 
 #include <cstdlib>
+#include <optional>
 #include <string>
 #include <vector>
 
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
 
 class UDAValue;
 class UDQConfig;
+class UnitSystem;
+
+namespace RestartIO {
+    struct RstState;
+}
+
 class UDQActive {
 public:
+
+    struct RstRecord {
+
+        RstRecord(UDAControl control_arg, UDAValue value_arg, std::string wgname_arg)
+            : control(control_arg)
+            , value(value_arg)
+            , wgname(wgname_arg)
+        {};
+
+        RstRecord(UDAControl control_arg, UDAValue value_arg, std::string wgname_arg, Phase phase)
+            : RstRecord(control_arg, value_arg, wgname_arg)
+        {
+            this->ig_phase = phase;
+        };
+
+        UDAControl control;
+        UDAValue value;
+        std::string wgname;
+        std::optional<Phase> ig_phase;
+    };
+
+
 
     class OutputRecord{
     public:
@@ -131,7 +162,12 @@ public:
     };
 
     static UDQActive serializeObject();
-
+    UDQActive() = default;
+    static std::vector<RstRecord> load_rst(const UnitSystem& units,
+                                           const UDQConfig& udq_config,
+                                           const RestartIO::RstState& rst_state,
+                                           const std::vector<std::string>& well_names,
+                                           const std::vector<std::string>& group_names);
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
     explicit operator bool() const;
     const std::vector<OutputRecord>& iuad() const;
