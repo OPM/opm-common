@@ -931,29 +931,17 @@ namespace {
             };
         }
 
-        std::vector<std::pair<std::string, Opm::Action::Result>>
-        act_res_stat(const Opm::Schedule& sched, const Opm::Action::State& action_state, const Opm::SummaryState&  smry, const std::size_t sim_step) {
-            std::vector<std::pair<std::string, Opm::Action::Result>> results;
-            const auto& acts = sched[sim_step].actions.get();
-            Opm::Action::Context context(smry, sched[sim_step].wlist_manager.get());
-            auto sim_time = sched.simTime(sim_step);
-            for (const auto& action : acts.pending(action_state, sim_time)) {
-                auto result = action->eval(context);
-                if (result)
-                    results.emplace_back( action->name(), std::move(result) );
-            }
-            return results;
-        }
-
         template <class ZWellArray>
-        void staticContrib(const Opm::Well& well, const std::vector<std::pair<std::string, Opm::Action::Result>>& actResStat, ZWellArray& zWell)
+        void staticContrib(const Opm::Well& well, const Opm::Action::Actions& actions, const Opm::Action::State& action_state, ZWellArray& zWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
             zWell[Ix::WellName] = well.name();
             //loop over actions to assign action name for relevant wells
-            for (const auto& [action_name, action_result] : actResStat) {
-                if (action_result.has_well(well.name())) {
-                    zWell[Ix::ActionX] = action_name;
+            for (const auto& action : actions) {
+                const auto& result = action_state.result(action.name());
+                if (result.has_value()) {
+                    if (result->has_well(well.name()))
+                        zWell[Ix::ActionX] = action.name();
                 }
             }
         }
@@ -1021,14 +1009,12 @@ captureDeclaredWellData(const Schedule&   sched,
     });
 
     {
-        const auto actResStat = ZWell::act_res_stat(sched, action_state, smry, sim_step);
-
         // Static contributions to ZWEL array.
-        wellLoop(wells, sched, sim_step, [&actResStat, this]
+        wellLoop(wells, sched, sim_step, [&sim_step, &action_state, &sched, this]
             (const Well& well, const std::size_t wellID) -> void
         {
             auto zw = this->zWell_[wellID];
-            ZWell::staticContrib(well, actResStat, zw);
+            ZWell::staticContrib(well, sched[sim_step].actions(), action_state, zw);
         });
     }
 }
