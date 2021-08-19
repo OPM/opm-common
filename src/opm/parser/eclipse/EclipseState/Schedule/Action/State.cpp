@@ -46,13 +46,24 @@ std::time_t State::run_time(const ActionX& action) const {
 }
 
 
-void State::add_run(const ActionX& action, std::time_t run_time) {
+void State::add_run(const ActionX& action, std::time_t run_time, Result result) {
     const auto& id  = this->make_id(action);
     auto count_iter = this->run_state.find(id);
     if (count_iter == this->run_state.end())
         this->run_state.insert( std::make_pair(id, run_time) );
     else
         count_iter->second.add_run(run_time);
+
+    this->last_result.insert_or_assign(action.name(), std::move(result));
+}
+
+
+std::optional<Result> State::result(const std::string& action) const {
+    auto iter = this->last_result.find(action);
+    if (iter == this->last_result.end())
+        return std::nullopt;
+
+    return iter->second;
 }
 
 }
