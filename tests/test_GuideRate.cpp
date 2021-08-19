@@ -206,32 +206,28 @@ BOOST_AUTO_TEST_CASE(P1_First)
     cse.gr.updateGuideRateExpiration(stm, rpt);
     cse.gr.compute("P1", rpt, stm, wopp, wgpp, wwpp);
 
-    const auto orat = 2.0;
-    const auto grat = 4.0;      // == 2 * orat
-    const auto wrat = 1.0;      // == orat / 2
-
     const auto expect_gr_oil = 1.0 / (0.5 + 0.1/1.0); // wopp / (0.5 + wwpp/wopp)
 
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P1", Opm::Well::GuideRateTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P1", Opm::Well::GuideRateTarget::OIL);
 
         BOOST_CHECK_CLOSE(grval, expect_gr_oil, 1.0e-5);
     }
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P1", Opm::Well::GuideRateTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P1", Opm::Well::GuideRateTarget::GAS);
 
-        const auto expect = (grat / orat) * expect_gr_oil;
+        const auto expect = (wgpp / wopp) * expect_gr_oil;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P1", Opm::Well::GuideRateTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P1", Opm::Well::GuideRateTarget::WAT);
 
-        const auto expect = (wrat / orat) * expect_gr_oil;
+        const auto expect = (wwpp / wopp) * expect_gr_oil;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 }
@@ -262,32 +258,31 @@ BOOST_AUTO_TEST_CASE(P2_Second)
         cse.gr.compute("P2", rpt, stm, wopp, wgpp, wwpp);
     }
 
-    const auto orat = 2.0;
-    const auto grat = 4.0;      // == 2 * orat
-    const auto wrat = 1.0;      // == orat / 2
-
     const auto expect_gr_oil_1 = 1.0 / (0.5 + 0.1/1.0); // wopp_1 / (0.5 + wwpp_1/wopp_1)
 
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::OIL, { orat, grat, wrat });
-
+        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::OIL);
         BOOST_CHECK_CLOSE(grval, expect_gr_oil_1, 1.0e-5);
     }
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::GAS);
+        const auto wopp = 1.0;
+        const auto wgpp = 5.0;
 
-        const auto expect = (grat / orat) * expect_gr_oil_1;
+        const auto expect = (wgpp / wopp) * expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::WAT);
+        const auto wopp = 1.0;
+        const auto wwpp = 0.1;
 
-        const auto expect = (wrat / orat) * expect_gr_oil_1;
+        const auto expect = (wwpp / wopp) * expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
@@ -306,7 +301,7 @@ BOOST_AUTO_TEST_CASE(P2_Second)
 
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::OIL);
 
         const auto expect = 0.5*expect_gr_oil_2 + 0.5*expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -314,17 +309,21 @@ BOOST_AUTO_TEST_CASE(P2_Second)
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::GAS);
+        const auto wopp = 10.0;
+        const auto wgpp = 50.0;
 
-        const auto expect = (grat / orat) * (0.5*expect_gr_oil_2 + 0.5*expect_gr_oil_1);
+        const auto expect = (wgpp / wopp) * (0.5*expect_gr_oil_2 + 0.5*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P2", Opm::Well::GuideRateTarget::WAT);
+        const auto wopp = 10.0;
+        const auto wwpp = 1.0;
 
-        const auto expect = (wrat / orat) * (0.5*expect_gr_oil_2 + 0.5*expect_gr_oil_1);
+        const auto expect = (wwpp / wopp) * (0.5*expect_gr_oil_2 + 0.5*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 }
@@ -370,13 +369,9 @@ BOOST_AUTO_TEST_CASE(P_Third)
     const auto expect_gr_oil_2 = 10.0 / (0.5 +  1.0/10.0); // wopp_2 / (0.5 + wwpp_2/wopp_2)
     const auto expect_gr_oil_3 = 20.0 / (0.5 + 10.0/20.0); // wopp_3 / (0.5 + wwpp_3/wopp_3)
 
-    const auto orat = 2.0;
-    const auto grat = 4.0;      // == 2 * orat
-    const auto wrat = 1.0;      // == orat / 2
-
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL);
 
         const auto expect = 0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -384,17 +379,21 @@ BOOST_AUTO_TEST_CASE(P_Third)
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS);
+        const auto wopp = 20.0;
+        const auto wgpp = 100.0;
 
-        const auto expect = (grat / orat) * (0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1);
+        const auto expect = (wgpp / wopp) * (0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT);
+        const auto wopp = 20.0;
+        const auto wwpp = 10.0;
 
-        const auto expect = (wrat / orat) * (0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1);
+        const auto expect = (wwpp / wopp) * (0.5*expect_gr_oil_3 + 0.5*0.5*expect_gr_oil_2 + 0.5*0.5*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 }
@@ -440,13 +439,9 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
     const auto expect_gr_oil_2 = 10.0 / (0.5 +  1.0/10.0); // wopp_2 / (0.5 + wwpp_2/wopp_2)
     const auto expect_gr_oil_3 = 20.0 / (0.5 + 10.0/20.0); // wopp_3 / (0.5 + wwpp_3/wopp_3)
 
-    const auto orat = 2.0;
-    const auto grat = 4.0;      // == 2 * orat
-    const auto wrat = 1.0;      // == orat / 2
-
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL);
 
         const auto expect = 0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -454,17 +449,21 @@ BOOST_AUTO_TEST_CASE(P_Third_df01)
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS);
+        const auto wopp = 20.0;
+        const auto wgpp = 100.0;
 
-        const auto expect = (grat / orat) * (0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1);
+        const auto expect = (wgpp / wopp) * (0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT);
+        const auto wopp = 20.0;
+        const auto wwpp = 10.0;
 
-        const auto expect = (wrat / orat) * (0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1);
+        const auto expect = (wwpp / wopp) * (0.1*expect_gr_oil_3 + 0.1*0.9*expect_gr_oil_2 + 0.9*0.9*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 }
@@ -510,13 +509,9 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
     const auto expect_gr_oil_2 = 10.0 / (0.5 +  1.0/10.0); // wopp_2 / (0.5 + wwpp_2/wopp_2)
     const auto expect_gr_oil_3 = 20.0 / (0.5 + 10.0/20.0); // wopp_3 / (0.5 + wwpp_3/wopp_3)
 
-    const auto orat = 2.0;
-    const auto grat = 4.0;      // == 2 * orat
-    const auto wrat = 1.0;      // == orat / 2
-
     // GR_{oil}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::OIL);
 
         const auto expect = 0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
@@ -524,17 +519,21 @@ BOOST_AUTO_TEST_CASE(P_Third_df09)
 
     // GR_{gas}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::GAS);
+        const auto wopp = 20.0;
+        const auto wgpp = 100.0;
 
-        const auto expect = (grat / orat) * (0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1);
+        const auto expect = (wgpp / wopp) * (0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
     // GR_{water}
     {
-        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT, { orat, grat, wrat });
+        const auto grval = cse.gr.get("P", Opm::Group::GuideRateProdTarget::WAT);
+        const auto wopp = 20.0;
+        const auto wwpp = 10.0;
 
-        const auto expect = (wrat / orat) * (0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1);
+        const auto expect = (wwpp / wopp) * (0.9*expect_gr_oil_3 + 0.9*0.1*expect_gr_oil_2 + 0.1*0.1*expect_gr_oil_1);
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
 
