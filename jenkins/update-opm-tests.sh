@@ -37,14 +37,14 @@ do
     prnumber=${rev//[!0-9]/}
     BRANCH_NAME="${BRANCH_NAME}_${repo}_$prnumber"
     test -n "$REASON" && REASON+="        "
-    REASON+="https://github.com/OPM/$repo/pull/$prnumber\n"
+    REASON+="PR https://github.com/OPM/$repo/pull/$prnumber\n"
   fi
 done
 
 # Do the commit
 export REASON
 export BRANCH_NAME
-$WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_TESTS_ROOT
+$WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_TESTS_ROOT $WORKSPACE/$configuration/build-opm-simulators $WORKSPACE/$configuration/install/bin/convertECL
 if test $? -eq 5
 then
   echo "No tests failed - no data to update. Exiting"
