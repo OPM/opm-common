@@ -80,6 +80,7 @@ public:
 
     WellSet& intersect(const WellSet& other);
     WellSet& add(const WellSet& other);
+    bool operator==(const WellSet& other) const;
 private:
     std::unordered_set<std::string> well_set;
 };
@@ -101,6 +102,7 @@ public:
 
     Result& operator|=(const Result& other);
     Result& operator&=(const Result& other);
+    bool operator==(const Result& other) const;
 
 private:
     void assign(bool value);

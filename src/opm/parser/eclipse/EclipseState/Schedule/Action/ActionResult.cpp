@@ -81,6 +81,11 @@ Result& Result::operator&=(const Result& other) {
     return *this;
 }
 
+bool Result::operator==(const Result& other) const {
+    return this->result == other.result &&
+           this->matching_wells == other.matching_wells;
+}
+
 void Result::assign(bool value) {
     this->result = value;
 }
@@ -143,6 +148,11 @@ WellSet& WellSet::add(const WellSet& other) {
 
 bool WellSet::contains(const std::string& well) const {
     return (this->well_set.find(well) != this->well_set.end());
+}
+
+
+bool WellSet::operator==(const WellSet& other) const {
+    return this->well_set == other.well_set;
 }
 
 }
