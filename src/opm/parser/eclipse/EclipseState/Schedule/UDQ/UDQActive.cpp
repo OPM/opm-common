@@ -139,7 +139,7 @@ const std::vector<UDQActive::OutputRecord>& UDQActive::iuad() const {
                 this->output_data.emplace_back(input_record.udq, input_record.input_index, 0, input_record.wgname, input_record.control);
         }
 
-        if (!output_data.empty()) {
+        if (!this->output_data.empty()) {
             for (std::size_t index = 1; index < output_data.size(); index++) {
                 const auto& prev_record = this->output_data[index - 1];
                 this->output_data[index].use_index = prev_record.use_index + prev_record.use_count;
