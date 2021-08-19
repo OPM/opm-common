@@ -23,6 +23,8 @@
 #include <ctime>
 #include <map>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
+
 namespace Opm {
 namespace Action {
 
@@ -30,9 +32,9 @@ class ActionX;
 class State {
 
 struct RunState {
-    RunState(std::time_t sim_time) :
-        run_count(1),
-        last_run(sim_time)
+    RunState(std::time_t sim_time)
+        : run_count(1)
+        , last_run(sim_time)
     {}
 
     void add_run(std::time_t sim_time) {
@@ -40,17 +42,20 @@ struct RunState {
         this->run_count += 1;
     }
 
-
     std::size_t run_count;
     std::time_t last_run;
 };
 
 public:
-    void add_run(const ActionX& action, std::time_t sim_time);
+    void add_run(const ActionX& action, std::time_t sim_time, Result result);
     std::size_t run_count(const ActionX& action) const;
     std::time_t run_time(const ActionX& action) const;
+    std::optional<Result> result(const std::string& action) const;
 private:
-    std::map<std::pair<std::string, std::size_t>, RunState> run_state;
+    using action_id = std::pair<std::string, std::size_t>;
+    static action_id make_id(const ActionX& action);
+    std::map<action_id, RunState> run_state;
+    std::map<std::string, Result> last_result;
 };
 
 

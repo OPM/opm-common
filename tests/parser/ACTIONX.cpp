@@ -873,28 +873,41 @@ BOOST_AUTO_TEST_CASE(ActionState) {
     Action::State st;
     Action::ActionX action1("NAME", 100, 100, 100); action1.update_id(100);
     Action::ActionX action2("NAME", 100, 100, 100); action1.update_id(200);
+    Action::Result res1(true, {"W1"});
+    Action::Result res2(true, {"W2"});
+    Action::Result res3(true, {"W3"});
 
     BOOST_CHECK_EQUAL(0U, st.run_count(action1));
     BOOST_CHECK_THROW( st.run_time(action1), std::out_of_range);
 
-    st.add_run(action1, 100);
+    st.add_run(action1, 100, res1);
     BOOST_CHECK_EQUAL(1U, st.run_count(action1));
     BOOST_CHECK_EQUAL(100, st.run_time(action1));
+    auto r1 = st.result("NAME");
+    BOOST_CHECK(r1.value() == res1);
 
-    st.add_run(action1, 1000);
+    st.add_run(action1, 1000, res2);
     BOOST_CHECK_EQUAL(2U, st.run_count(action1));
     BOOST_CHECK_EQUAL(1000, st.run_time(action1));
+    auto r2 = st.result("NAME");
+    BOOST_CHECK(r2.value() == res2);
 
     BOOST_CHECK_EQUAL(0U, st.run_count(action2));
     BOOST_CHECK_THROW( st.run_time(action2), std::out_of_range);
 
-    st.add_run(action2, 100);
+    st.add_run(action2, 100, res3);
     BOOST_CHECK_EQUAL(1U, st.run_count(action2));
     BOOST_CHECK_EQUAL(100, st.run_time(action2));
+    auto r3 = st.result("NAME");
+    BOOST_CHECK(r3.value() == res3);
 
-    st.add_run(action2, 1000);
+    st.add_run(action2, 1000, res1);
     BOOST_CHECK_EQUAL(2U, st.run_count(action2));
     BOOST_CHECK_EQUAL(1000, st.run_time(action2));
+
+
+    auto res = st.result("NAME-HIDDEN");
+    BOOST_CHECK(!res.has_value());
 }
 
 BOOST_AUTO_TEST_CASE(ActionID) {
@@ -944,7 +957,7 @@ ENDACTIO
     BOOST_CHECK(action1.id() != action2.id());
 
     Action::State st;
-    st.add_run(action1, 1000);
+    st.add_run(action1, 1000, Action::Result{true});
     BOOST_CHECK_EQUAL( st.run_count(action1), 1U);
     BOOST_CHECK_EQUAL( st.run_count(action2), 0U);
 }

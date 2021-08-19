@@ -30,24 +30,18 @@ Result::Result(bool result_arg) :
     result(result_arg)
 {}
 
-Result::Result(bool result_arg, const std::vector<std::string>& wells) :
-    result(result_arg)
+Result::Result(bool result_arg, const std::vector<std::string>& wells)
+    : result(result_arg)
+    , matching_wells(wells)
 {
-    this->matching_wells.reset( new WellSet(wells) );
 }
 
-Result::Result(bool result_arg, const WellSet& wells) :
-    result(result_arg)
+Result::Result(bool result_arg, const WellSet& wells)
+    : result(result_arg)
+    , matching_wells(wells)
 {
-    this->matching_wells.reset( new WellSet(wells) );
 }
 
-Result::Result(const Result& src)
-{
-    this->result = src.result;
-    if (src.matching_wells)
-        this->matching_wells.reset( new WellSet(*src.matching_wells) );
-}
 
 Result::operator bool() const {
     return this->result;
@@ -57,7 +51,7 @@ std::vector<std::string> Result::wells() const {
     if (!this->result)
         throw std::logic_error("Programming error: trying to check wells in ActionResult which is false");
 
-    if (this->matching_wells)
+    if (this->matching_wells.has_value())
         return this->matching_wells->wells();
     else
         return {};
@@ -66,11 +60,11 @@ std::vector<std::string> Result::wells() const {
 Result& Result::operator|=(const Result& other) {
     this->result = this->result || other.result;
 
-    if (other.matching_wells) {
-        if (this->matching_wells)
-            this->matching_wells->add( *other.matching_wells );
+    if (other.matching_wells.has_value()) {
+        if (this->matching_wells.has_value())
+            this->matching_wells->add( other.matching_wells.value() );
         else
-            this->matching_wells.reset( new WellSet(*other.matching_wells) );
+            this->matching_wells = other.matching_wells.value();
     }
     return *this;
 }
@@ -78,21 +72,18 @@ Result& Result::operator|=(const Result& other) {
 Result& Result::operator&=(const Result& other) {
     this->result = this->result && other.result;
 
-    if (other.matching_wells) {
-        if (this->matching_wells)
-            this->matching_wells->intersect( *other.matching_wells );
+    if (other.matching_wells.has_value()) {
+        if (this->matching_wells.has_value())
+            this->matching_wells->intersect( other.matching_wells.value() );
         else
-            this->matching_wells.reset( new WellSet(*other.matching_wells) );
+            this->matching_wells = other.matching_wells.value();
     }
     return *this;
 }
 
-Result& Result::operator=(const Result& src)
-{
-    this->result = src.result;
-    if (src.matching_wells) this->matching_wells.reset( new WellSet(*src.matching_wells) );
-
-    return *this;
+bool Result::operator==(const Result& other) const {
+    return this->result == other.result &&
+           this->matching_wells == other.matching_wells;
 }
 
 void Result::assign(bool value) {
@@ -100,8 +91,8 @@ void Result::assign(bool value) {
 }
 
 void Result::add_well(const std::string& well) {
-    if (!this->matching_wells)
-        this->matching_wells.reset( new WellSet() );
+    if (!this->matching_wells.has_value())
+        this->matching_wells = WellSet{};
     this->matching_wells->add(well);
 }
 
@@ -109,7 +100,7 @@ bool Result::has_well(const std::string& well) const {
     if (!this->result)
         throw std::logic_error("Programming error: trying to check wells in ActionResult which is false");
 
-    if (!this->matching_wells)
+    if (!this->matching_wells.has_value())
         return false;
 
     return this->matching_wells->contains(well);
@@ -157,6 +148,11 @@ WellSet& WellSet::add(const WellSet& other) {
 
 bool WellSet::contains(const std::string& well) const {
     return (this->well_set.find(well) != this->well_set.end());
+}
+
+
+bool WellSet::operator==(const WellSet& other) const {
+    return this->well_set == other.well_set;
 }
 
 }
