@@ -36,16 +36,6 @@ UDQActive UDQActive::serializeObject()
     return result;
 }
 
-std::size_t UDQActive::IUAD_size() const {
-    const auto& output = this->get_iuad();
-    return output.size();
-}
-
-std::size_t UDQActive::IUAP_size() const {
-    const auto& output = this->get_iuap();
-    return output.size();
-}
-
 UDQActive::operator bool() const {
     return this->input_data.size() > 0;
 }

@@ -134,8 +134,6 @@ public:
     static UDQActive serializeObject();
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
-    std::size_t IUAD_size() const;
-    std::size_t IUAP_size() const;
     explicit operator bool() const;
     const std::vector<Record>& get_iuad() const;
     std::vector<InputRecord> get_iuap() const;
