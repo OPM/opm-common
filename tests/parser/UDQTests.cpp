@@ -1485,18 +1485,18 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     UDQActive usage;
     UDQParams params;
     UDQConfig conf(params);
-    BOOST_CHECK_EQUAL( usage.get_iuad().size(), 0U );
+    BOOST_CHECK_EQUAL( usage.iuad().size(), 0U );
 
     UDAValue uda1("WUX");
     conf.add_assign(uda1.get<std::string>(), std::vector<std::string>{}, 100, 0);
 
-    const auto& iuad = usage.get_iuad();
+    const auto& iuad = usage.iuad();
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
-    BOOST_CHECK_EQUAL( usage.get_iuad().size(), 1U);
+    BOOST_CHECK_EQUAL( usage.iuad().size(), 1U);
     BOOST_CHECK_EQUAL( iuad[0].use_count, 1U);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_GRAT);
-    BOOST_CHECK_EQUAL( usage.get_iuad().size(), 2U);
+    BOOST_CHECK_EQUAL( usage.iuad().size(), 2U);
     BOOST_CHECK_EQUAL( iuad[1].use_count, 1U);
 
     const auto& rec = iuad[0];
@@ -1504,7 +1504,7 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
 
 
-    for (std::size_t index = 0; index < usage.get_iuad().size(); index++) {
+    for (std::size_t index = 0; index < usage.iuad().size(); index++) {
         const auto& record = iuad[index];
         BOOST_CHECK_EQUAL(record.input_index, 0U);
 
@@ -1579,7 +1579,7 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
     auto schedule = make_schedule(deck_string);
     {
         const auto& udq_active = schedule[1].udq_active.get();
-        const auto& active = udq_active.get_iuad();
+        const auto& active = udq_active.iuad();
         BOOST_CHECK_EQUAL(active.size(), 6U);
 
         BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
@@ -1662,7 +1662,7 @@ WCONPROD
         const auto& udq_active = schedule[0].udq_active.get();
         BOOST_CHECK(udq_active);
 
-        const auto& iuad = udq_active.get_iuad();
+        const auto& iuad = udq_active.iuad();
         BOOST_CHECK_EQUAL(iuad.size(), 2U);
         const auto& record0 = iuad[0];
         BOOST_CHECK_EQUAL( record0.uad_code, 300004);
@@ -1683,7 +1683,7 @@ WCONPROD
         //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
         const auto& udq_active = schedule[1].udq_active.get();
         BOOST_CHECK(udq_active);
-        const auto& iuad = udq_active.get_iuad();
+        const auto& iuad = udq_active.iuad();
         BOOST_CHECK_EQUAL(iuad.size(), 4U);
 
         const auto& record0 = iuad[0];
@@ -1717,7 +1717,7 @@ WCONPROD
         //  - The PROD1 well does not use UDQ
         const auto& udq_active = schedule[2].udq_active.get();
         BOOST_CHECK(udq_active);
-        const auto& iuad = udq_active.get_iuad();
+        const auto& iuad = udq_active.iuad();
         BOOST_CHECK_EQUAL(iuad.size(), 2U);
 
         const auto& record0 = iuad[0];

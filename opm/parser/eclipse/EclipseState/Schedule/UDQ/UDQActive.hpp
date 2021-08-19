@@ -135,8 +135,8 @@ public:
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
     explicit operator bool() const;
-    const std::vector<Record>& get_iuad() const;
-    std::vector<InputRecord> get_iuap() const;
+    const std::vector<Record>& iuad() const;
+    std::vector<InputRecord> iuap() const;
 
     bool operator==(const UDQActive& data) const;
 

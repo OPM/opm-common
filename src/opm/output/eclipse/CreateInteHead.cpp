@@ -172,7 +172,7 @@ namespace {
         }
 
         const auto& udqAct = sched[simStep].udq_active.get();
-        const auto& iuad = udqAct.get_iuad();
+        const auto& iuad = udqAct.iuad();
 
         return std::count_if(iuad.begin(), iuad.end(), [](const Opm::UDQActive::Record rec) {
             return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD) || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
@@ -188,7 +188,7 @@ namespace {
         }
 
         const auto& udqAct = sched[simStep].udq_active.get();
-        const auto& iuap = udqAct.get_iuap();
+        const auto& iuap = udqAct.iuap();
 
         return std::count_if(iuap.begin(), iuap.end(), [](const Opm::UDQActive::InputRecord rec) {
             return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD) || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))

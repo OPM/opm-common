@@ -825,7 +825,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
 
     const auto& udq_active = sched[simStep].udq_active.get();
     if (udq_active) {
-        const auto& udq_records = udq_active.get_iuad();
+        const auto& udq_records = udq_active.iuad();
         int cnt_iuad = 0;
         for (std::size_t index = 0; index < udq_records.size(); index++) {
             const auto& record = udq_records[index];
@@ -841,7 +841,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         if (cnt_iuad != inteHead[VI::intehead::NO_IUADS])
             OpmLog::error(fmt::format("Inconsistent number of iuad's: {} number of iuads from intehead {}", cnt_iuad, inteHead[VI::intehead::NO_IUADS]));
 
-        const auto& iuap_records = udq_active.get_iuap();
+        const auto& iuap_records = udq_active.iuap();
         int cnt_iuap = 0;
         const auto iuap_vect = iuap_data(sched, simStep,iuap_records);
         for (std::size_t index = 0; index < iuap_vect.size(); index++) {

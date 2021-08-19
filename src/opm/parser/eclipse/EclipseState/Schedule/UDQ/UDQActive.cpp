@@ -121,7 +121,7 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
 }
 
 
-const std::vector<UDQActive::Record>& UDQActive::get_iuad() const {
+const std::vector<UDQActive::Record>& UDQActive::iuad() const {
     if (this->output_data.empty()) {
         for (const auto& input_record : this->input_data) {
             const auto& udq = input_record.udq;
@@ -150,7 +150,7 @@ const std::vector<UDQActive::Record>& UDQActive::get_iuad() const {
     return this->output_data;
 }
 
-std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
+std::vector<UDQActive::InputRecord> UDQActive::iuap() const {
     std::vector<UDQActive::InputRecord> iuap_data;
     auto input_rcpy = this->input_data;
     while (!input_rcpy.empty()) {
