@@ -1547,30 +1547,30 @@ BOOST_AUTO_TEST_CASE(UDQControl_Keyword)
 
 BOOST_AUTO_TEST_CASE(UDAControl_IUAD_0)
 {
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_ORAT), 300004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_GRAT), 500004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_WRAT), 400004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_LRAT), 600004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_RESV), 999999);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_BHP),  999999);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_THP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_ORAT), 300004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_GRAT), 500004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_WRAT), 400004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_LRAT), 600004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_RESV), 999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_BHP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_THP),  999999);
 
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_RATE), 400003);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_RESV), 500003);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_BHP),  999999);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_THP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_RATE), 400003);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_RESV), 500003);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_BHP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_THP),  999999);
 
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_OIL_TARGET),     200019);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_WATER_TARGET),   300019);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_GAS_TARGET),     400019);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_LIQUID_TARGET),  500019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_OIL_TARGET),     200019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_WATER_TARGET),   300019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_GAS_TARGET),     400019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_LIQUID_TARGET),  500019);
 
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_SURFACE_MAX_RATE),       300017);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_RESV_MAX_RATE),          400017);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_TARGET_REINJ_FRACTION),  500017);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_TARGET_VOID_FRACTION),   600017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_SURFACE_MAX_RATE),       300017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_RESV_MAX_RATE),          400017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_TARGET_REINJ_FRACTION),  500017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_TARGET_VOID_FRACTION),   600017);
 
-    BOOST_CHECK_THROW(UDQ::uadCode(static_cast<UDAControl>(1729)),
+    BOOST_CHECK_THROW(UDQ::udaCode(static_cast<UDAControl>(1729)),
                       std::logic_error);
 }
 
@@ -1665,13 +1665,13 @@ WCONPROD
         const auto& iuad = udq_active.iuad();
         BOOST_CHECK_EQUAL(iuad.size(), 2U);
         const auto& record0 = iuad[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record0.uda_code, 300004);
         BOOST_CHECK_EQUAL( record0.input_index, 2U);
         BOOST_CHECK_EQUAL( record0.use_count, 2U);
         BOOST_CHECK_EQUAL( record0.use_index, 0U);
 
         const auto& record1 = iuad[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record1.uda_code, 600004);
         BOOST_CHECK_EQUAL( record1.input_index, 3U);
         BOOST_CHECK_EQUAL( record1.use_count, 2U);
         BOOST_CHECK_EQUAL( record1.use_index, 2U);
@@ -1687,25 +1687,25 @@ WCONPROD
         BOOST_CHECK_EQUAL(iuad.size(), 4U);
 
         const auto& record0 = iuad[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record0.uda_code, 300004);
         BOOST_CHECK_EQUAL( record0.input_index, 2U);
         BOOST_CHECK_EQUAL( record0.use_count, 1U);
         BOOST_CHECK_EQUAL( record0.use_index, 0U);
 
         const auto& record1 = iuad[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record1.uda_code, 600004);
         BOOST_CHECK_EQUAL( record1.input_index, 3U);
         BOOST_CHECK_EQUAL( record1.use_count, 1U);
         BOOST_CHECK_EQUAL( record1.use_index, 1U);
 
         const auto& record2 = iuad[2];
-        BOOST_CHECK_EQUAL( record2.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record2.uda_code, 300004);
         BOOST_CHECK_EQUAL( record2.input_index, 4U);
         BOOST_CHECK_EQUAL( record2.use_count, 1U);
         BOOST_CHECK_EQUAL( record2.use_index, 2U);
 
         const auto& record3 = iuad[3];
-        BOOST_CHECK_EQUAL( record3.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record3.uda_code, 600004);
         BOOST_CHECK_EQUAL( record3.input_index, 5U);
         BOOST_CHECK_EQUAL( record3.use_count, 1U);
         BOOST_CHECK_EQUAL( record3.use_index, 3U);
@@ -1721,13 +1721,13 @@ WCONPROD
         BOOST_CHECK_EQUAL(iuad.size(), 2U);
 
         const auto& record0 = iuad[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record0.uda_code, 300004);
         BOOST_CHECK_EQUAL( record0.input_index, 4U);
         BOOST_CHECK_EQUAL( record0.use_count, 1U);
         BOOST_CHECK_EQUAL( record0.use_index, 0U);
 
         const auto& record1 = iuad[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record1.uda_code, 600004);
         BOOST_CHECK_EQUAL( record1.input_index, 5U);
         BOOST_CHECK_EQUAL( record1.use_count, 1U);
         BOOST_CHECK_EQUAL( record1.use_index, 1U);

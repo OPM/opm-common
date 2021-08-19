@@ -457,7 +457,7 @@ namespace {
         template <class IUADArray>
         void staticContrib(const Opm::UDQActive::OutputRecord& udq_record, IUADArray& iUad, int use_cnt_diff)
         {
-            iUad[0] = udq_record.uad_code;
+            iUad[0] = udq_record.uda_code;
             iUad[1] = udq_record.input_index + 1;
 
             // entry 3  - unknown meaning - value = 1
@@ -843,7 +843,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
 
         const auto& iuap_records = udq_active.iuap();
         int cnt_iuap = 0;
-        const auto iuap_vect = iuap_data(sched, simStep,iuap_records);
+        const auto iuap_vect = iuap_data(sched, simStep, iuap_records);
         for (std::size_t index = 0; index < iuap_vect.size(); index++) {
             const auto& wg_no = iuap_vect[index];
             auto i_uap = this->iUAP_[index];

@@ -436,9 +436,9 @@ UDAKeyword keyword(UDAControl control)
     return lookup_control_map_value(c2k, control);
 }
 
-int uadCode(UDAControl control)
+int udaCode(UDAControl control)
 {
-    static const auto c2uad = std::map<UDAControl, int> {
+    static const auto c2uda = std::map<UDAControl, int> {
         {UDAControl::WCONPROD_ORAT,  300004},
         {UDAControl::WCONPROD_GRAT,  500004},
         {UDAControl::WCONPROD_WRAT,  400004},
@@ -466,7 +466,7 @@ int uadCode(UDAControl control)
         {UDAControl::GCONINJE_TARGET_VOID_FRACTION,  600017}, // Voidage replacement fraction
     };
 
-    return lookup_control_map_value(c2uad, control);
+    return lookup_control_map_value(c2uda, control);
 }
 
 }} // Opm::UDQ

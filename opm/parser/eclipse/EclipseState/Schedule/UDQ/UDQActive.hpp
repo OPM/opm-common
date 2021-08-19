@@ -39,7 +39,7 @@ public:
         OutputRecord() :
             input_index(0),
             control(UDAControl::WCONPROD_ORAT),
-            uad_code(0),
+            uda_code(0),
             use_count(1)
         {}
 
@@ -48,7 +48,7 @@ public:
             input_index(input_index_arg),
             use_index(use_index_arg),
             control(control_arg),
-            uad_code(UDQ::uadCode(control_arg)),
+            uda_code(UDQ::udaCode(control_arg)),
             use_count(1),
             wgname(wgname_arg)
         {}
@@ -59,7 +59,7 @@ public:
                 (this->use_index == other.use_index) &&
                 (this->wgname == other.wgname) &&
                 (this->control == other.control) &&
-                (this->uad_code == other.uad_code) &&
+                (this->uda_code == other.uda_code) &&
                 (this->use_count == other.use_count))
                 return true;
             return false;
@@ -77,7 +77,7 @@ public:
             serializer(use_index);
             serializer(wgname);
             serializer(control);
-            serializer(uad_code);
+            serializer(uda_code);
             serializer(use_count);
         }
 
@@ -85,7 +85,7 @@ public:
         std::size_t input_index;
         std::size_t use_index = 0;
         UDAControl  control;
-        int uad_code;
+        int uda_code;
         std::string wg_name() const;
         std::size_t use_count;
     private:
