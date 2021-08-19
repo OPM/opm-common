@@ -24,7 +24,6 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
@@ -145,8 +144,6 @@ public:
     {
         serializer.vector(input_data);
         serializer.vector(output_data);
-        serializer(udq_keys);
-        serializer(wg_keys);
     }
 
 private:
@@ -158,8 +155,6 @@ private:
 
     std::vector<InputRecord> input_data;
     std::vector<OutputRecord> mutable output_data;
-    std::unordered_map<std::string, std::size_t> udq_keys;
-    std::unordered_map<std::string, std::size_t> wg_keys;
 };
 
 }

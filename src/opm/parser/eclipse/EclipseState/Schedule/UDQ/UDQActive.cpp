@@ -30,8 +30,6 @@ UDQActive UDQActive::serializeObject()
     UDQActive result;
     result.input_data = {{1, "test1", "test2", UDAControl::WCONPROD_ORAT}};
     result.output_data = {{"test1", 1, 2, "test2", UDAControl::WCONPROD_ORAT}};
-    result.udq_keys = {{"test1", 1}};
-    result.wg_keys = {{"test2", 2}};
 
     return result;
 }
@@ -177,9 +175,7 @@ std::vector<UDQActive::InputRecord> UDQActive::iuap() const {
 
 bool UDQActive::operator==(const UDQActive& data) const {
     return this->input_data == data.input_data &&
-           this->output_data == data.output_data &&
-           this->udq_keys == data.udq_keys &&
-           this->wg_keys == data.wg_keys;
+           this->output_data == data.output_data;
 }
 
 
