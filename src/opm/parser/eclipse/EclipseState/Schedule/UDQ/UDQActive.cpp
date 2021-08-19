@@ -184,10 +184,6 @@ std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
     return iuap_data;
 }
 
-UDQActive::Record UDQActive::operator[](std::size_t index) const {
-    const auto& output_record = this->get_iuad()[index];
-    return output_record;
-}
 
 bool UDQActive::operator==(const UDQActive& data) const {
     return this->input_data == data.input_data &&

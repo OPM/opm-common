@@ -137,7 +137,6 @@ public:
     std::size_t IUAD_size() const;
     std::size_t IUAP_size() const;
     explicit operator bool() const;
-    Record operator[](std::size_t index) const;
     const std::vector<Record>& get_iuad() const;
     std::vector<InputRecord> get_iuap() const;
 
