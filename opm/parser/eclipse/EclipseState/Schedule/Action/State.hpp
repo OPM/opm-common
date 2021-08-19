@@ -30,16 +30,15 @@ class ActionX;
 class State {
 
 struct RunState {
-    RunState(std::time_t sim_time) :
-        run_count(1),
-        last_run(sim_time)
+    RunState(std::time_t sim_time)
+        : run_count(1)
+        , last_run(sim_time)
     {}
 
     void add_run(std::time_t sim_time) {
         this->last_run = sim_time;
         this->run_count += 1;
     }
-
 
     std::size_t run_count;
     std::time_t last_run;
@@ -50,7 +49,9 @@ public:
     std::size_t run_count(const ActionX& action) const;
     std::time_t run_time(const ActionX& action) const;
 private:
-    std::map<std::pair<std::string, std::size_t>, RunState> run_state;
+    using action_id = std::pair<std::string, std::size_t>;
+    static action_id make_id(const ActionX& action);
+    std::map<action_id, RunState> run_state;
 };
 
 
