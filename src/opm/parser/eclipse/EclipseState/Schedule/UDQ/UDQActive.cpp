@@ -41,7 +41,7 @@ UDQActive::operator bool() const {
 }
 
 
-std::string UDQActive::Record::wg_name()  const {
+std::string UDQActive::OutputRecord::wg_name()  const {
     return this->wgname;
 }
 
@@ -121,7 +121,7 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
 }
 
 
-const std::vector<UDQActive::Record>& UDQActive::iuad() const {
+const std::vector<UDQActive::OutputRecord>& UDQActive::iuad() const {
     if (this->output_data.empty()) {
         for (const auto& input_record : this->input_data) {
             const auto& udq = input_record.udq;

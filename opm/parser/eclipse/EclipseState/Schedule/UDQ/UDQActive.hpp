@@ -35,16 +35,16 @@ class UDQConfig;
 class UDQActive {
 public:
 
-    class Record{
+    class OutputRecord{
     public:
-        Record() :
+        OutputRecord() :
             input_index(0),
             control(UDAControl::WCONPROD_ORAT),
             uad_code(0),
             use_count(1)
         {}
 
-        Record(const std::string& udq_arg, std::size_t input_index_arg, std::size_t use_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
+        OutputRecord(const std::string& udq_arg, std::size_t input_index_arg, std::size_t use_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
             udq(udq_arg),
             input_index(input_index_arg),
             use_index(use_index_arg),
@@ -54,7 +54,7 @@ public:
             wgname(wgname_arg)
         {}
 
-        bool operator==(const Record& other) const  {
+        bool operator==(const OutputRecord& other) const  {
             if ((this->udq == other.udq) &&
                 (this->input_index == other.input_index) &&
                 (this->use_index == other.use_index) &&
@@ -66,7 +66,7 @@ public:
             return false;
         }
 
-        bool operator!=(const Record& other) const  {
+        bool operator!=(const OutputRecord& other) const  {
             return !(*this == other);
         }
 
@@ -135,7 +135,7 @@ public:
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
     explicit operator bool() const;
-    const std::vector<Record>& iuad() const;
+    const std::vector<OutputRecord>& iuad() const;
     std::vector<InputRecord> iuap() const;
 
     bool operator==(const UDQActive& data) const;
@@ -157,7 +157,7 @@ private:
     int drop(const std::string& wgname, UDAControl control);
 
     std::vector<InputRecord> input_data;
-    std::vector<Record> mutable output_data;
+    std::vector<OutputRecord> mutable output_data;
     std::unordered_map<std::string, std::size_t> udq_keys;
     std::unordered_map<std::string, std::size_t> wg_keys;
 };

@@ -174,7 +174,7 @@ namespace {
         const auto& udqAct = sched[simStep].udq_active.get();
         const auto& iuad = udqAct.iuad();
 
-        return std::count_if(iuad.begin(), iuad.end(), [](const Opm::UDQActive::Record rec) {
+        return std::count_if(iuad.begin(), iuad.end(), [](const Opm::UDQActive::OutputRecord rec) {
             return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD) || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
             && (rec.wg_name() == "FIELD"))); });
     }

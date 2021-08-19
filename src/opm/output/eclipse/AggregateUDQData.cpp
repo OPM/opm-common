@@ -455,7 +455,7 @@ namespace {
         }
 
         template <class IUADArray>
-        void staticContrib(const Opm::UDQActive::Record& udq_record, IUADArray& iUad, int use_cnt_diff)
+        void staticContrib(const Opm::UDQActive::OutputRecord& udq_record, IUADArray& iUad, int use_cnt_diff)
         {
             iUad[0] = udq_record.uad_code;
             iUad[1] = udq_record.input_index + 1;
