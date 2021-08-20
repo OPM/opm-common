@@ -93,6 +93,8 @@ public:
     const UDQVarType& var_type() const;
     const std::string& unit() const;
     const UDQIndex index;
+
+    bool operator==(const UDQInput& other) const;
 private:
     std::variant<UDQDefine, UDQAssign> value;
     const std::string m_keyword;

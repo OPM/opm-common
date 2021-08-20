@@ -81,6 +81,12 @@ const UDQDefine& UDQInput::get<UDQDefine>() const {
 }
 
 
+bool UDQInput::operator==(const UDQInput& other) const {
+    return this->value == other.value &&
+           this->m_keyword == other.m_keyword &&
+           this->m_var_type == other.m_var_type &&
+           this->m_unit == other.m_unit;
+}
 
 
 }
