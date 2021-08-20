@@ -1485,26 +1485,27 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     UDQActive usage;
     UDQParams params;
     UDQConfig conf(params);
-    BOOST_CHECK_EQUAL( usage.IUAD_size(), 0U );
+    BOOST_CHECK_EQUAL( usage.iuad().size(), 0U );
 
     UDAValue uda1("WUX");
     conf.add_assign(uda1.get<std::string>(), std::vector<std::string>{}, 100, 0);
 
+    const auto& iuad = usage.iuad();
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
-    BOOST_CHECK_EQUAL( usage.IUAD_size(), 1U);
-    BOOST_CHECK_EQUAL( usage[0].use_count, 1U);
+    BOOST_CHECK_EQUAL( usage.iuad().size(), 1U);
+    BOOST_CHECK_EQUAL( iuad[0].use_count, 1U);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_GRAT);
-    BOOST_CHECK_EQUAL( usage.IUAD_size(), 2U);
-    BOOST_CHECK_EQUAL( usage[1].use_count, 1U);
+    BOOST_CHECK_EQUAL( usage.iuad().size(), 2U);
+    BOOST_CHECK_EQUAL( iuad[1].use_count, 1U);
 
-    const auto& rec = usage[0];
+    const auto& rec = iuad[0];
     BOOST_CHECK_EQUAL(rec.udq, "WUX");
     BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
 
 
-    for (std::size_t index = 0; index < usage.IUAD_size(); index++) {
-        const auto& record = usage[index];
+    for (std::size_t index = 0; index < usage.iuad().size(); index++) {
+        const auto& record = iuad[index];
         BOOST_CHECK_EQUAL(record.input_index, 0U);
 
         if (index == 0)
@@ -1546,30 +1547,30 @@ BOOST_AUTO_TEST_CASE(UDQControl_Keyword)
 
 BOOST_AUTO_TEST_CASE(UDAControl_IUAD_0)
 {
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_ORAT), 300004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_GRAT), 500004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_WRAT), 400004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_LRAT), 600004);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_RESV), 999999);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_BHP),  999999);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONPROD_THP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_ORAT), 300004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_GRAT), 500004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_WRAT), 400004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_LRAT), 600004);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_RESV), 999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_BHP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONPROD_THP),  999999);
 
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_RATE), 400003);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_RESV), 500003);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_BHP),  999999);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::WCONINJE_THP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_RATE), 400003);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_RESV), 500003);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_BHP),  999999);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WCONINJE_THP),  999999);
 
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_OIL_TARGET),     200019);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_WATER_TARGET),   300019);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_GAS_TARGET),     400019);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONPROD_LIQUID_TARGET),  500019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_OIL_TARGET),     200019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_WATER_TARGET),   300019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_GAS_TARGET),     400019);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONPROD_LIQUID_TARGET),  500019);
 
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_SURFACE_MAX_RATE),       300017);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_RESV_MAX_RATE),          400017);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_TARGET_REINJ_FRACTION),  500017);
-    BOOST_CHECK_EQUAL(UDQ::uadCode(UDAControl::GCONINJE_TARGET_VOID_FRACTION),   600017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_SURFACE_MAX_RATE),       300017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_RESV_MAX_RATE),          400017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_TARGET_REINJ_FRACTION),  500017);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_TARGET_VOID_FRACTION),   600017);
 
-    BOOST_CHECK_THROW(UDQ::uadCode(static_cast<UDAControl>(1729)),
+    BOOST_CHECK_THROW(UDQ::udaCode(static_cast<UDAControl>(1729)),
                       std::logic_error);
 }
 
@@ -1577,8 +1578,9 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
 #include "data/integration_tests/udq.data"
     auto schedule = make_schedule(deck_string);
     {
-        const auto& active = schedule[1].udq_active.get();
-        BOOST_CHECK_EQUAL(active.IUAD_size(), 6U);
+        const auto& udq_active = schedule[1].udq_active.get();
+        const auto& active = udq_active.iuad();
+        BOOST_CHECK_EQUAL(active.size(), 6U);
 
         BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
         BOOST_CHECK(active[1].control == UDAControl::WCONPROD_LRAT);
@@ -1659,16 +1661,17 @@ WCONPROD
     {
         const auto& udq_active = schedule[0].udq_active.get();
         BOOST_CHECK(udq_active);
-        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2U);
 
-        const auto& record0 = udq_active[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        const auto& iuad = udq_active.iuad();
+        BOOST_CHECK_EQUAL(iuad.size(), 2U);
+        const auto& record0 = iuad[0];
+        BOOST_CHECK_EQUAL( record0.uda_code, 300004);
         BOOST_CHECK_EQUAL( record0.input_index, 2U);
         BOOST_CHECK_EQUAL( record0.use_count, 2U);
         BOOST_CHECK_EQUAL( record0.use_index, 0U);
 
-        const auto& record1 = udq_active[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        const auto& record1 = iuad[1];
+        BOOST_CHECK_EQUAL( record1.uda_code, 600004);
         BOOST_CHECK_EQUAL( record1.input_index, 3U);
         BOOST_CHECK_EQUAL( record1.use_count, 2U);
         BOOST_CHECK_EQUAL( record1.use_index, 2U);
@@ -1680,28 +1683,29 @@ WCONPROD
         //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
         const auto& udq_active = schedule[1].udq_active.get();
         BOOST_CHECK(udq_active);
-        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 4U);
+        const auto& iuad = udq_active.iuad();
+        BOOST_CHECK_EQUAL(iuad.size(), 4U);
 
-        const auto& record0 = udq_active[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        const auto& record0 = iuad[0];
+        BOOST_CHECK_EQUAL( record0.uda_code, 300004);
         BOOST_CHECK_EQUAL( record0.input_index, 2U);
         BOOST_CHECK_EQUAL( record0.use_count, 1U);
         BOOST_CHECK_EQUAL( record0.use_index, 0U);
 
-        const auto& record1 = udq_active[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        const auto& record1 = iuad[1];
+        BOOST_CHECK_EQUAL( record1.uda_code, 600004);
         BOOST_CHECK_EQUAL( record1.input_index, 3U);
         BOOST_CHECK_EQUAL( record1.use_count, 1U);
         BOOST_CHECK_EQUAL( record1.use_index, 1U);
 
-        const auto& record2 = udq_active[2];
-        BOOST_CHECK_EQUAL( record2.uad_code, 300004);
+        const auto& record2 = iuad[2];
+        BOOST_CHECK_EQUAL( record2.uda_code, 300004);
         BOOST_CHECK_EQUAL( record2.input_index, 4U);
         BOOST_CHECK_EQUAL( record2.use_count, 1U);
         BOOST_CHECK_EQUAL( record2.use_index, 2U);
 
-        const auto& record3 = udq_active[3];
-        BOOST_CHECK_EQUAL( record3.uad_code, 600004);
+        const auto& record3 = iuad[3];
+        BOOST_CHECK_EQUAL( record3.uda_code, 600004);
         BOOST_CHECK_EQUAL( record3.input_index, 5U);
         BOOST_CHECK_EQUAL( record3.use_count, 1U);
         BOOST_CHECK_EQUAL( record3.use_index, 3U);
@@ -1713,16 +1717,17 @@ WCONPROD
         //  - The PROD1 well does not use UDQ
         const auto& udq_active = schedule[2].udq_active.get();
         BOOST_CHECK(udq_active);
-        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2U);
+        const auto& iuad = udq_active.iuad();
+        BOOST_CHECK_EQUAL(iuad.size(), 2U);
 
-        const auto& record0 = udq_active[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        const auto& record0 = iuad[0];
+        BOOST_CHECK_EQUAL( record0.uda_code, 300004);
         BOOST_CHECK_EQUAL( record0.input_index, 4U);
         BOOST_CHECK_EQUAL( record0.use_count, 1U);
         BOOST_CHECK_EQUAL( record0.use_index, 0U);
 
-        const auto& record1 = udq_active[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        const auto& record1 = iuad[1];
+        BOOST_CHECK_EQUAL( record1.uda_code, 600004);
         BOOST_CHECK_EQUAL( record1.input_index, 5U);
         BOOST_CHECK_EQUAL( record1.use_count, 1U);
         BOOST_CHECK_EQUAL( record1.use_index, 1U);
@@ -1736,6 +1741,10 @@ WCONPROD
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::ecl_expr), 1U);
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_sub), 1U);
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_mul), 1U);
+
+        BOOST_CHECK_THROW( udq_config[1000], std::exception );
+        BOOST_CHECK(udq_config[0] == udq_config["WUOPRL"]);
+        BOOST_CHECK(udq_config[2] == udq_config["WUOPRU"]);
     }
 }
 

@@ -30,20 +30,8 @@ UDQActive UDQActive::serializeObject()
     UDQActive result;
     result.input_data = {{1, "test1", "test2", UDAControl::WCONPROD_ORAT}};
     result.output_data = {{"test1", 1, 2, "test2", UDAControl::WCONPROD_ORAT}};
-    result.udq_keys = {{"test1", 1}};
-    result.wg_keys = {{"test2", 2}};
 
     return result;
-}
-
-std::size_t UDQActive::IUAD_size() const {
-    const auto& output = this->get_iuad();
-    return output.size();
-}
-
-std::size_t UDQActive::IUAP_size() const {
-    const auto& output = this->get_iuap();
-    return output.size();
 }
 
 UDQActive::operator bool() const {
@@ -51,7 +39,7 @@ UDQActive::operator bool() const {
 }
 
 
-std::string UDQActive::Record::wg_name()  const {
+std::string UDQActive::OutputRecord::wg_name()  const {
     return this->wgname;
 }
 
@@ -131,7 +119,7 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
 }
 
 
-const std::vector<UDQActive::Record>& UDQActive::get_iuad() const {
+const std::vector<UDQActive::OutputRecord>& UDQActive::iuad() const {
     if (this->output_data.empty()) {
         for (const auto& input_record : this->input_data) {
             const auto& udq = input_record.udq;
@@ -149,18 +137,18 @@ const std::vector<UDQActive::Record>& UDQActive::get_iuad() const {
                 this->output_data.emplace_back(input_record.udq, input_record.input_index, 0, input_record.wgname, input_record.control);
         }
 
-        if (!output_data.empty()) {
+        if (!this->output_data.empty()) {
             for (std::size_t index = 1; index < output_data.size(); index++) {
                 const auto& prev_record = this->output_data[index - 1];
                 this->output_data[index].use_index = prev_record.use_index + prev_record.use_count;
             }
         }
     }
-    
+
     return this->output_data;
 }
 
-std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
+std::vector<UDQActive::InputRecord> UDQActive::iuap() const {
     std::vector<UDQActive::InputRecord> iuap_data;
     auto input_rcpy = this->input_data;
     while (!input_rcpy.empty()) {
@@ -169,7 +157,7 @@ std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
         auto cur_rec = *inp_rec;
         iuap_data.push_back(*inp_rec);
         auto it = input_rcpy.erase(input_rcpy.begin());
-        //find and store active controls with same control and udq 
+        //find and store active controls with same control and udq
         //auto it = input_rcpy.begin();
         while (it != input_rcpy.end()) {
             if ((it->control == cur_rec.control) && (it->udq == cur_rec.udq)) {
@@ -184,16 +172,10 @@ std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
     return iuap_data;
 }
 
-UDQActive::Record UDQActive::operator[](std::size_t index) const {
-    const auto& output_record = this->get_iuad()[index];
-    return output_record;
-}   
 
 bool UDQActive::operator==(const UDQActive& data) const {
     return this->input_data == data.input_data &&
-           this->output_data == data.output_data &&
-           this->udq_keys == data.udq_keys &&
-           this->wg_keys == data.wg_keys;
+           this->output_data == data.output_data;
 }
 
 

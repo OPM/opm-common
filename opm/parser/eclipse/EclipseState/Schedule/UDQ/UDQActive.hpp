@@ -24,7 +24,6 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
@@ -35,38 +34,38 @@ class UDQConfig;
 class UDQActive {
 public:
 
-    class Record{
+    class OutputRecord{
     public:
-        Record() :
+        OutputRecord() :
             input_index(0),
             control(UDAControl::WCONPROD_ORAT),
-            uad_code(0),
+            uda_code(0),
             use_count(1)
         {}
 
-        Record(const std::string& udq_arg, std::size_t input_index_arg, std::size_t use_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
+        OutputRecord(const std::string& udq_arg, std::size_t input_index_arg, std::size_t use_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
             udq(udq_arg),
             input_index(input_index_arg),
             use_index(use_index_arg),
             control(control_arg),
-            uad_code(UDQ::uadCode(control_arg)),
+            uda_code(UDQ::udaCode(control_arg)),
             use_count(1),
             wgname(wgname_arg)
         {}
 
-        bool operator==(const Record& other) const  {
+        bool operator==(const OutputRecord& other) const  {
             if ((this->udq == other.udq) &&
                 (this->input_index == other.input_index) &&
                 (this->use_index == other.use_index) &&
                 (this->wgname == other.wgname) &&
                 (this->control == other.control) &&
-                (this->uad_code == other.uad_code) &&
+                (this->uda_code == other.uda_code) &&
                 (this->use_count == other.use_count))
                 return true;
             return false;
         }
 
-        bool operator!=(const Record& other) const  {
+        bool operator!=(const OutputRecord& other) const  {
             return !(*this == other);
         }
 
@@ -78,7 +77,7 @@ public:
             serializer(use_index);
             serializer(wgname);
             serializer(control);
-            serializer(uad_code);
+            serializer(uda_code);
             serializer(use_count);
         }
 
@@ -86,7 +85,7 @@ public:
         std::size_t input_index;
         std::size_t use_index = 0;
         UDAControl  control;
-        int uad_code;
+        int uda_code;
         std::string wg_name() const;
         std::size_t use_count;
     private:
@@ -134,12 +133,9 @@ public:
     static UDQActive serializeObject();
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
-    std::size_t IUAD_size() const;
-    std::size_t IUAP_size() const;
     explicit operator bool() const;
-    Record operator[](std::size_t index) const;
-    const std::vector<Record>& get_iuad() const;
-    std::vector<InputRecord> get_iuap() const;
+    const std::vector<OutputRecord>& iuad() const;
+    std::vector<InputRecord> iuap() const;
 
     bool operator==(const UDQActive& data) const;
 
@@ -148,8 +144,6 @@ public:
     {
         serializer.vector(input_data);
         serializer.vector(output_data);
-        serializer(udq_keys);
-        serializer(wg_keys);
     }
 
 private:
@@ -160,9 +154,7 @@ private:
     int drop(const std::string& wgname, UDAControl control);
 
     std::vector<InputRecord> input_data;
-    std::vector<Record> mutable output_data;
-    std::unordered_map<std::string, std::size_t> udq_keys;
-    std::unordered_map<std::string, std::size_t> wg_keys;
+    std::vector<OutputRecord> mutable output_data;
 };
 
 }

@@ -21,7 +21,11 @@
 #ifndef UDQINPUT__HPP_
 #define UDQINPUT__HPP_
 
+#include <variant>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 
 namespace Opm {
 
@@ -89,9 +93,10 @@ public:
     const UDQVarType& var_type() const;
     const std::string& unit() const;
     const UDQIndex index;
+
+    bool operator==(const UDQInput& other) const;
 private:
-    const UDQDefine * define;
-    const UDQAssign * assign;
+    std::variant<UDQDefine, UDQAssign> value;
     const std::string m_keyword;
     UDQVarType m_var_type;
     const std::string m_unit;

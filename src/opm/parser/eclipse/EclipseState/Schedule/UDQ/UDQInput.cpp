@@ -18,8 +18,6 @@
 */
 
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 
 namespace Opm {
@@ -27,8 +25,7 @@ namespace Opm {
 
 UDQInput::UDQInput(const UDQIndex& index_arg, const UDQDefine& udq_define, const std::string& unit_arg) :
     index(index_arg),
-    define(std::addressof(udq_define)),
-    assign(nullptr),
+    value(udq_define),
     m_keyword(udq_define.keyword()),
     m_var_type(udq_define.var_type()),
     m_unit(unit_arg)
@@ -37,8 +34,7 @@ UDQInput::UDQInput(const UDQIndex& index_arg, const UDQDefine& udq_define, const
 
 UDQInput::UDQInput(const UDQIndex& index_arg, const UDQAssign& udq_assign, const std::string& unit_arg):
     index(index_arg),
-    define(nullptr),
-    assign(std::addressof(udq_assign)),
+    value(udq_assign),
     m_keyword(udq_assign.keyword()),
     m_var_type(udq_assign.var_type()),
     m_unit(unit_arg)
@@ -58,23 +54,19 @@ const UDQVarType& UDQInput::var_type() const {
 
 template<>
 bool UDQInput::is<UDQAssign>() const {
-    if (this->assign)
-        return true;
-    return false;
+    return std::holds_alternative<UDQAssign>(this->value);
 }
 
 
 template<>
 bool UDQInput::is<UDQDefine>() const {
-    if (this->define)
-        return true;
-    return false;
+    return std::holds_alternative<UDQDefine>(this->value);
 }
 
 template<>
 const UDQAssign& UDQInput::get<UDQAssign>() const {
-    if (this->assign)
-        return *this->assign;
+    if (this->is<UDQAssign>())
+        return std::get<UDQAssign>(this->value);
 
     throw std::runtime_error("Invalid get");
 }
@@ -82,13 +74,19 @@ const UDQAssign& UDQInput::get<UDQAssign>() const {
 
 template<>
 const UDQDefine& UDQInput::get<UDQDefine>() const {
-    if (this->define)
-        return *this->define;
+    if (this->is<UDQDefine>())
+        return std::get<UDQDefine>(this->value);
 
     throw std::runtime_error("Invalid get");
 }
 
 
+bool UDQInput::operator==(const UDQInput& other) const {
+    return this->value == other.value &&
+           this->m_keyword == other.m_keyword &&
+           this->m_var_type == other.m_var_type &&
+           this->m_unit == other.m_unit;
+}
 
 
 }
