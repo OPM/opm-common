@@ -77,6 +77,14 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
                lgrname = lgr_names[nnchead[1] - 1];
         }
 
+        if (array_name[n] == "MAPUNITS"){
+            auto mapunits = this->get<std::string>(n);
+            m_mapunits = mapunits[0];
+        }
+
+        if (array_name[n] == "MAPAXES")
+            m_mapaxes = this->get<float>(n);
+
         if (lgrname == grid_name) {
             if (array_name[n] == "GRIDHEAD") {
                 auto gridhead = get<int>(n);
