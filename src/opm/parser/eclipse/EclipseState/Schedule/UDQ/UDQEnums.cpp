@@ -469,4 +469,42 @@ int udaCode(UDAControl control)
     return lookup_control_map_value(c2uda, control);
 }
 
+UDAControl udaControl(int uda_code) {
+    switch (uda_code) {
+    case 300004:
+        return UDAControl::WCONPROD_ORAT;
+    case 400004:
+        return UDAControl::WCONPROD_WRAT;
+    case 500004:
+        return UDAControl::WCONPROD_GRAT;
+    case 600004:
+        return UDAControl::WCONPROD_LRAT;
+    case 999999:
+        throw std::logic_error("UDA code 999999 is ambigous");
+    case 400003:
+        return UDAControl::WCONINJE_RATE;
+    case 500003:
+        return UDAControl::WCONINJE_RESV;
+    case 200019:
+        return UDAControl::GCONPROD_OIL_TARGET;
+    case 300019:
+        return UDAControl::GCONPROD_WATER_TARGET;
+    case 400019:
+        return UDAControl::GCONPROD_GAS_TARGET;
+    case 500019:
+        return UDAControl::GCONPROD_LIQUID_TARGET;
+    case 300017:
+        return UDAControl::GCONINJE_SURFACE_MAX_RATE;
+    case 400017:
+        return UDAControl::GCONINJE_RESV_MAX_RATE;
+    case 500017:
+        return UDAControl::GCONINJE_TARGET_REINJ_FRACTION;
+    case 600017:
+        return UDAControl::GCONINJE_TARGET_VOID_FRACTION;
+    default:
+        throw std::logic_error("Unknonw UDA integer control code");
+    }
+}
+
+
 }} // Opm::UDQ
