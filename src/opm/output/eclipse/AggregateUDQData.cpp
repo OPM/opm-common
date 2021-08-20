@@ -832,11 +832,12 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             auto i_uad = this->iUAD_[cnt_iuad];
             const auto& ctrl = record.control;
             const auto wg_key = Opm::UDQ::keyword(ctrl);
-            if (!(((wg_key == Opm::UDAKeyword::GCONPROD) || (wg_key == Opm::UDAKeyword::GCONINJE)) && (record.wg_name() == "FIELD"))) {
-                int use_count_diff = static_cast<int>(index) - cnt_iuad;
-                iUad::staticContrib(record, i_uad, use_count_diff);
-                cnt_iuad += 1;
-            }
+            if (((wg_key == Opm::UDAKeyword::GCONPROD) || (wg_key == Opm::UDAKeyword::GCONINJE)) && (record.wg_name() == "FIELD"))
+                continue;
+
+            auto use_count_diff = static_cast<int>(index) - cnt_iuad;
+            iUad::staticContrib(record, i_uad, use_count_diff);
+            cnt_iuad += 1;
         }
         if (cnt_iuad != inteHead[VI::intehead::NO_IUADS])
             OpmLog::error(fmt::format("Inconsistent number of iuad's: {} number of iuads from intehead {}", cnt_iuad, inteHead[VI::intehead::NO_IUADS]));
