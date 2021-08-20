@@ -1155,7 +1155,63 @@ BOOST_AUTO_TEST_CASE(group_group) {
     }
 }
 
+namespace {
+    data::Wells glir_alq_data()
+    {
+        auto wells = data::Wells{};
 
+        using opt = data::Rates::opt;
+        auto& b1h = wells["B-1H"];
+        auto& b2h = wells["B-2H"];
+        auto& b3h = wells["B-3H"];
+
+        b1h.rates.set(opt::alq, 1234.56*unit::cubic(unit::meter)/unit::day);
+        b2h.rates.set(opt::alq, 2345.67*unit::cubic(unit::meter)/unit::day);
+        b3h.rates.set(opt::alq, 3456.78*unit::cubic(unit::meter)/unit::day);
+
+        return wells;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GLIR_and_ALQ)
+{
+    const auto deck  = Parser{}.parseFile("2_WLIFT_MODEL5_NOINC.DATA");
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+    const auto cfg   = SummaryConfig { deck, sched, es.fieldProps(), es.aquifer() };
+    const auto name  = "glir_and_alq";
+
+    WorkArea ta{ "summary_test" };
+    ta.makeSubDir(name);
+
+    const auto wellData = glir_alq_data();
+
+    auto st = SummaryState { TimeService::now() };
+    auto writer = out::Summary{ es, cfg, es.getInputGrid(), sched, name };
+    writer.eval(st, 0, 0*day, wellData, {}, {}, {}, {}, {});
+    writer.add_timestep(st, 0, false);
+
+    writer.eval(st, 1, 1*day, wellData, {}, {}, {}, {}, {});
+    writer.add_timestep(st, 1, false);
+
+    writer.eval(st, 2, 2*day, wellData, {}, {}, {}, {}, {});
+    writer.add_timestep(st, 2, false);
+    writer.write();
+
+    auto res = readsum(name);
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE(1234.56, ecl_sum_get_well_var(resp, 1, "B-1H", "WGLIR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(2345.67, ecl_sum_get_well_var(resp, 1, "B-2H", "WGLIR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(3456.78, ecl_sum_get_well_var(resp, 1, "B-3H", "WGLIR"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(1234.56 + 2345.67 + 3456.78,
+                      ecl_sum_get_group_var(resp, 1, "B1", "GGLIR"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "B-1H", "WALQ"), 1.0e-5);
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "B-2H", "WALQ"), 1.0e-5);
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "B-3H", "WALQ"), 1.0e-5);
+}
 
 BOOST_AUTO_TEST_CASE(connection_kewords) {
     setup cfg( "test_summary_connection" );
