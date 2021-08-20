@@ -1741,6 +1741,10 @@ WCONPROD
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::ecl_expr), 1U);
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_sub), 1U);
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_mul), 1U);
+
+        BOOST_CHECK_THROW( udq_config[1000], std::exception );
+        BOOST_CHECK(udq_config[0] == udq_config["WUOPRL"]);
+        BOOST_CHECK(udq_config[2] == udq_config["WUOPRU"]);
     }
 }
 

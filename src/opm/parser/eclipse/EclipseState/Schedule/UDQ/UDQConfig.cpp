@@ -305,7 +305,7 @@ namespace Opm {
     }
 
 
-    const UDQInput UDQConfig::operator[](const std::string& keyword) const {
+    UDQInput UDQConfig::operator[](const std::string& keyword) const {
         const auto index_iter = this->input_index.find(keyword);
         if (index_iter == this->input_index.end())
             throw std::invalid_argument("Keyword: " + keyword + " not recognized as ASSIGN/DEFINE UDQ");
@@ -319,6 +319,32 @@ namespace Opm {
 
         if (index_iter->second.action == UDQAction::DEFINE)
             return UDQInput(this->input_index.at(keyword), this->m_definitions.at(keyword), u);
+
+        throw std::logic_error("Internal error - should not be here");
+    }
+
+    UDQInput UDQConfig::operator[](std::size_t insert_index) const {
+        auto index_iter = std::find_if(this->input_index.begin(), this->input_index.end(),
+                                       [&insert_index](const std::pair<std::string, UDQIndex>& name_index)
+                                       {
+                                           const auto& [_, index] = name_index;
+                                           (void)_;
+                                           return index.insert_index == insert_index;
+                                       });
+
+        if (index_iter == this->input_index.end())
+            throw std::invalid_argument("Insert index not recognized");
+
+        const auto& [keyword, index] = *index_iter;
+        std::string u;
+        if (this->has_unit(keyword))
+            u = this->unit(keyword);
+
+        if (index.action == UDQAction::ASSIGN)
+            return UDQInput(index, this->m_assignments.at(keyword), u);
+
+        if (index.action == UDQAction::DEFINE)
+            return UDQInput(index, this->m_definitions.at(keyword), u);
 
         throw std::logic_error("Internal error - should not be here");
     }

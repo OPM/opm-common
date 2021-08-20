@@ -79,7 +79,8 @@ namespace Opm {
         // from input().
         size_t size() const;
 
-        const UDQInput operator[](const std::string& keyword) const;
+        UDQInput operator[](const std::string& keyword) const;
+        UDQInput operator[](std::size_t insert_index) const;
 
         std::vector<UDQAssign> assignments() const;
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
