@@ -54,6 +54,8 @@ public:
     void loadData();
     void loadData(const std::vector<std::string>& stringVect);
 
+    time_point startdate() const { return m_startdat; }
+
     bool hasKey(const std::string& key) const;
 
     size_t numberOfTimeSteps() const { return m_nTstep; }

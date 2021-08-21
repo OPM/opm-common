@@ -29,7 +29,3 @@ from .libopmcommon_python import EclOutput
 from .libopmcommon_python import EModel
 from .libopmcommon_python import calc_cell_vol
 from .libopmcommon_python import SummaryState
-
-#from .schedule            import Well, Connection, Schedule
-#from .config     import EclipseConfig
-#from .parser     import parse, parse_string

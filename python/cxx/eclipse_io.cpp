@@ -2,15 +2,18 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <pybind11/chrono.h>
+#include <stdexcept>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/ExtESmry.hpp>
 #include <opm/io/eclipse/EGrid.hpp>
 #include <opm/io/eclipse/ERft.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
@@ -24,6 +27,100 @@ namespace {
 
 using npArray = std::tuple<py::array, Opm::EclIO::eclArrType>;
 using EclEntry = std::tuple<std::string, Opm::EclIO::eclArrType, int64_t>;
+
+class ESmryBind {
+
+public:
+
+    ESmryBind(const std::string& filename, bool loadBaseRunData)
+    {
+        filesystem::path m_inputFileName(filename);
+
+        if (m_inputFileName.extension() == ".SMSPEC"){
+            m_esmry = std::make_unique<Opm::EclIO::ESmry>(m_inputFileName, loadBaseRunData);
+        } else if (m_inputFileName.extension()==".ESMRY") {
+            m_ext_esmry = std::make_unique<Opm::EclIO::ExtESmry>(m_inputFileName, loadBaseRunData);
+        } else
+            throw std::invalid_argument("Input file should have extension .SMSPEC or .ESMRY");
+    }
+
+    bool hasKey(const std::string& key)
+    {
+        if (m_esmry != nullptr)
+            return m_esmry->hasKey(key);
+        else
+            return m_ext_esmry->hasKey(key);
+    }
+
+    void make_esmry_file()
+    {
+        if (m_esmry == nullptr)
+            throw std::invalid_argument("make_esmry_file only available for SMSPEC input files");
+
+        m_esmry->make_esmry_file();
+    }
+
+    size_t numberOfTimeSteps()
+    {
+        if (m_esmry != nullptr)
+            return m_esmry->numberOfTimeSteps();
+        else
+            return m_ext_esmry->numberOfTimeSteps();
+    }
+
+    py::array get_smry_vector(const std::string& key)
+    {
+        if (m_esmry != nullptr)
+            return convert::numpy_array( m_esmry->get(key) );
+        else
+            return convert::numpy_array( m_ext_esmry->get(key) );
+    }
+
+    py::array get_smry_vector_at_rsteps(const std::string& key)
+    {
+        if (m_esmry != nullptr)
+            return convert::numpy_array( m_esmry->get_at_rstep(key) );
+        else
+            return convert::numpy_array( m_ext_esmry->get_at_rstep(key) );
+    }
+
+    time_point smry_start_date()
+    {
+        time_point utc_chrono;
+
+        if (m_esmry != nullptr)
+            utc_chrono = m_esmry->startdate();
+        else
+            utc_chrono = m_ext_esmry->startdate();
+
+        auto utc_time_t   = std::chrono::system_clock::to_time_t( utc_chrono );
+        auto utc_ts       = Opm::TimeStampUTC( utc_time_t );
+        auto local_time_t = Opm::asLocalTimeT( utc_ts );
+        return TimeService::from_time_t( local_time_t );
+    }
+
+    const std::vector<std::string>& keywordList() const
+    {
+        if (m_esmry != nullptr)
+            return m_esmry->keywordList();
+        else
+            return m_ext_esmry->keywordList();
+    }
+
+    std::vector<std::string> keywordList(const std::string& pattern) const
+    {
+        if (m_esmry != nullptr)
+            return m_esmry->keywordList(pattern);
+        else
+            return m_ext_esmry->keywordList(pattern);
+    }
+
+private:
+    std::unique_ptr<Opm::EclIO::ESmry> m_esmry;
+    std::unique_ptr<Opm::EclIO::ExtESmry> m_ext_esmry;
+};
+
+
 
 class EclOutputBind {
 
@@ -166,18 +263,6 @@ npArray get_erst_vector(Opm::EclIO::ERst * file_ptr, const std::string& key, siz
 }
 
 
-py::array get_smry_vector(Opm::EclIO::ESmry * file_ptr, const std::string& key)
-{
-    return convert::numpy_array( file_ptr->get(key) );
-}
-
-
-py::array get_smry_vector_at_rsteps(Opm::EclIO::ESmry * file_ptr, const std::string& key)
-{
-    return convert::numpy_array( file_ptr->get_at_rstep(key) );
-}
-
-
 std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
 get_xyz_from_ijk(Opm::EclIO::EGrid * file_ptr,int i, int j, int k)
 {
@@ -291,14 +376,6 @@ npArray get_rft_vector_Index(Opm::EclIO::ERft * file_ptr,const std::string& name
      the pybind11 conversion.
 */
 
-time_point esmry_start_date(const Opm::EclIO::ESmry * esmry) {
-    auto utc_chrono   = esmry->startdate();
-    auto utc_time_t   = std::chrono::system_clock::to_time_t( utc_chrono );
-    auto utc_ts       = Opm::TimeStampUTC( utc_time_t );
-    auto local_time_t = Opm::asLocalTimeT( utc_ts );
-    return TimeService::from_time_t( local_time_t );
-}
-
 
 }
 
@@ -340,18 +417,19 @@ void python::common::export_IO(py::module& m) {
         .def("__get_data", &get_erst_by_index)
         .def("__get_data", &get_erst_vector);
 
-   py::class_<Opm::EclIO::ESmry>(m, "ESmry")
+   py::class_<ESmryBind>(m, "ESmry")
         .def(py::init<const std::string &, const bool>(), py::arg("filename"), py::arg("load_base_run") = false)
-        .def("__contains__", &Opm::EclIO::ESmry::hasKey)
-        .def("__len__", &Opm::EclIO::ESmry::numberOfTimeSteps)
-        .def("__get_all", &get_smry_vector)
-        .def("__get_at_rstep", &get_smry_vector_at_rsteps)
-        .def_property_readonly("start_date", &esmry_start_date)
+        .def("__contains__", &ESmryBind::hasKey)
+        .def("make_esmry_file", &ESmryBind::make_esmry_file)
+        .def("__len__", &ESmryBind::numberOfTimeSteps)
+        .def("__get_all", &ESmryBind::get_smry_vector)
+        .def("__get_at_rstep", &ESmryBind::get_smry_vector_at_rsteps)
+        .def_property_readonly("start_date", &ESmryBind::smry_start_date)
+        .def("keys", (const std::vector<std::string>& (ESmryBind::*) (void) const)
+            &ESmryBind::keywordList)
+        .def("keys", (std::vector<std::string> (ESmryBind::*) (const std::string&) const)
+            &ESmryBind::keywordList);
 
-        .def("keys", (const std::vector<std::string>& (Opm::EclIO::ESmry::*) (void) const)
-            &Opm::EclIO::ESmry::keywordList)
-        .def("keys", (std::vector<std::string> (Opm::EclIO::ESmry::*) (const std::string&) const)
-            &Opm::EclIO::ESmry::keywordList);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
         .def(py::init<const std::string &>())
