@@ -57,6 +57,7 @@ public:
     explicit AggregateActionxData(const std::vector<int>& actDims);
 
     void captureDeclaredActionxData(    const Opm::Schedule&      sched,
+                                        const Opm::UnitSystem&    units,
                                         const Opm::Action::State& action_state,
                                         const Opm::SummaryState&  st,
                                         const std::vector<int>&   actDims,

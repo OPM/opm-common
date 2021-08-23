@@ -113,6 +113,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     Opm::Action::State action_state;
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
+    const auto& usys = es.getUnits();
     const auto& ioConfig = es.getIOConfig();
     //const auto& restart = es.cfg().restart();
 
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
 
     const auto actDims = Opm::RestartIO::Helpers::createActionxDims(rspec, sched, rptStep);
     auto  actionxData = Opm::RestartIO::Helpers::AggregateActionxData(actDims);
-    actionxData.captureDeclaredActionxData(sched, action_state, st, actDims, rptStep);
+    actionxData.captureDeclaredActionxData(sched, usys, action_state, st, actDims, rptStep);
 
     {
         /*

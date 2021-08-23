@@ -682,7 +682,7 @@ AggregateActionxData(const std::vector<int>& actDims)
 void
 Opm::RestartIO::Helpers::AggregateActionxData::
 captureDeclaredActionxData( const Opm::Schedule&      sched,
-                            const UnitSystem& units,
+                            const Opm::UnitSystem& units,
                             const Opm::Action::State& action_state,
                             const Opm::SummaryState&  st,
                             const std::vector<int>&   actDims,
