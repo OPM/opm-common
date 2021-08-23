@@ -444,16 +444,13 @@ BOOST_AUTO_TEST_CASE(MANUAL4) {
     WListManager wlm;
     Action::Context context(st, wlm);
 
-    context.add("MNTH", 7);
-    context.add("DAY", 2);
-    context.add("YEAR", 2030);
-    context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( ast.eval(context) );
+    st.update("DAY", 2);
+    st.update("YEAR", 2030);
+    st.update_group_var("FIELD", "GWCT", 1);
+    st.update("MNTH", 7);
 
-    context.add("MNTH", 7);
-    context.add("DAY", 2);
-    context.add("YEAR", 2019);
-    context.add("GWCT", "FIELD", 1.0);
+    BOOST_CHECK( ast.eval(context) );
+    st.update("YEAR", 2019);
     BOOST_CHECK( !ast.eval(context) );
 }
 
