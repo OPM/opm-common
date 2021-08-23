@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -182,13 +183,16 @@ const std::map<cmp_enum, int> cmpToIndex = {
         }
 
         template <class SACTArray>
-        void staticContrib(const Opm::Action::ActionX& actx, SACTArray& sAct)
+        void staticContrib(const Opm::Action::ActionX& actx,
+                           const Opm::UnitSystem& units,
+                           SACTArray& sAct)
         {
+            using M  = ::Opm::UnitSystem::measure;
             sAct[0] = 0.;
             sAct[1] = 0.;
             sAct[2] = 0.;
             //item [3]:  Minimum time interval between action triggers.
-            sAct[3] = actx.min_wait();
+            sAct[3] = units.from_si(M::time, actx.min_wait());
             sAct[4] = 0.;
         }
 
@@ -678,6 +682,7 @@ AggregateActionxData(const std::vector<int>& actDims)
 void
 Opm::RestartIO::Helpers::AggregateActionxData::
 captureDeclaredActionxData( const Opm::Schedule&      sched,
+                            const UnitSystem& units,
                             const Opm::Action::State& action_state,
                             const Opm::SummaryState&  st,
                             const std::vector<int>&   actDims,
@@ -693,7 +698,7 @@ captureDeclaredActionxData( const Opm::Schedule&      sched,
 
         {
             auto s_act = this->sACT_[act_ind];
-            sACT::staticContrib(*actx_it, s_act);
+            sACT::staticContrib(*actx_it, units, s_act);
         }
 
         {
