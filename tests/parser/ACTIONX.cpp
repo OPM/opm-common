@@ -1337,6 +1337,16 @@ BOOST_AUTO_TEST_CASE(MatchingWellsSpecified1) {
     BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});
 }
 
+BOOST_AUTO_TEST_CASE(NumericalPrecision) {
+    Action::AST ast({"FU", "=", "1.00000001"});
+    auto st = SummaryState{ TimeService::now() };
+    Opm::WListManager wlm;
+
+    st.update("FU", 1.0);
+    Opm::Action::Context context(st, wlm);
+    auto result = ast.eval(context);
+    BOOST_CHECK(result);
+}
 
 BOOST_AUTO_TEST_CASE(MatchingWellsSpecified2) {
 

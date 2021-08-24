@@ -1,5 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 
+#include <cmath>
 #include <stdexcept>
 
 namespace Opm {
@@ -48,10 +49,12 @@ inline std::string tokenString(TokenType op) {
 #endif
 
 bool eval_cmp_scalar(double lhs, TokenType op, double rhs) {
+    const double epsilon = 1e-6;
+
     switch (op) {
 
     case TokenType::op_eq:
-        return lhs == rhs;
+        return std::abs(lhs - rhs) < epsilon;
 
     case TokenType::op_ge:
         return lhs >= rhs;
