@@ -8,45 +8,6 @@ namespace Action {
 
 namespace {
 
-#if 0
-inline std::string tokenString(TokenType op) {
-    switch (op) {
-
-    case TokenType::op_eq:
-        return "==";
-
-    case TokenType::op_ge:
-        return ">=";
-
-    case TokenType::op_le:
-        return "<=";
-
-    case TokenType::op_ne:
-        return "!=";
-
-    case TokenType::op_gt:
-        return ">";
-
-    case TokenType::op_lt:
-        return "<";
-
-    case TokenType::op_or:
-        return "OR";
-
-    case TokenType::op_and:
-        return "AND";
-
-    case TokenType::open_paren:
-        return "(";
-
-    case TokenType::close_paren:
-        return ")";
-
-    default:
-        return "????";
-    }
-}
-#endif
 
 bool eval_cmp_scalar(double lhs, TokenType op, double rhs) {
     const double epsilon = 1e-6;
