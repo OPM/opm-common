@@ -144,14 +144,13 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
 
     m_tstep_range.push_back(std::make_tuple(0, m_tstep_v.back().size() - 1));
 
-    int sim_ind = 0;
-
-    if ((loadBaseRunData) and (std::get<0>(rst_entry) !="")){
+    if ((loadBaseRunData) && (!std::get<0>(rst_entry).empty())) {
 
         auto restart = std::get<0>(rst_entry);
         auto rstNum = std::get<1>(rst_entry);
 
-        while (restart != ""){
+        int sim_ind = 0;
+        while (!restart.empty()){
             sim_ind++;
 
             rstRootN = Opm::filesystem::path(restart);
@@ -381,9 +380,7 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
             std::string key = stringVect[n];
 
             std::string arrName;
-            int64_t size;
             Opm::EclIO::eclArrType arrType;
-            int sizeOfElement;
 
             if ( m_keyword_index[ind].find(key) == m_keyword_index[ind].end() ) {
 
@@ -399,6 +396,8 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 
                 fileH.seekg (pos, fileH.beg);
 
+                int64_t size;
+                int sizeOfElement;
                 readBinaryHeader(fileH, arrName, size, arrType, sizeOfElement);
 
                 arrName = Opm::EclIO::trimr(arrName);
