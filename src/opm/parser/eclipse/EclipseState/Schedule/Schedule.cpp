@@ -301,7 +301,7 @@ public:
     }
 
     void operator()(const std::string& msg) {
-        this->log_function(msg);
+        this->log_function(this->prefix + msg);
     }
 
     void info(const std::string& msg) {
@@ -316,12 +316,12 @@ public:
     void complete_step(const std::string& msg) {
         this->step_count += 1;
         if (this->step_count == this->max_print) {
-            this->log_function(msg);
+            this->log_function(this->prefix + msg);
             this->info(std::vector<std::string>{"Report limit reached, see PRT-file for remaining Schedule initialization.", ""});
             this->log_function = &OpmLog::note;
         } else {
-            this->log_function( msg );
-            this->log_function( "" );
+            this->log_function( this->prefix + msg );
+            this->log_function( this->prefix );
         }
     };
 
