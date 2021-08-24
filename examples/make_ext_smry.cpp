@@ -48,7 +48,9 @@ static void printHelp() {
 int main(int argc, char **argv) {
 
     int c                          = 0;
-    int max_threads [[maybe_unused]] = -1;
+#ifdef _OPENMP
+    int max_threads = -1;
+#endif
     bool force                     = false;
 
     while ((c = getopt(argc, argv, "fn:h")) != -1) {
