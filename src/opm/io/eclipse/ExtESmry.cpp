@@ -360,7 +360,7 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 {
     std::vector<int> keyIndexVect;
 
-    for (auto key: stringVect)
+    for (const auto& key: stringVect)
         keyIndexVect.push_back(m_keyword_index[0].at(key));
 
     std::fstream fileH;
@@ -455,7 +455,7 @@ std::vector<std::string> ExtESmry::keywordList(const std::string& pattern) const
 {
     std::vector<std::string> list;
 
-    for (auto key : m_keyword)
+    for (const auto& key : m_keyword)
         if (fnmatch( pattern.c_str(), key.c_str(), 0 ) == 0 )
             list.push_back(key);
 

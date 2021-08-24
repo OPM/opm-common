@@ -116,7 +116,7 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step)
 }
 
 
-std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std::string> valueKeys, const GridDims& dims)
+std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std::string>& valueKeys, const GridDims& dims)
 {
     std::vector<std::string> mod_keys;
     mod_keys.reserve(valueKeys.size());
