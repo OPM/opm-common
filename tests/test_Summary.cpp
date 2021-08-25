@@ -2290,8 +2290,6 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP2"), 1U);
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP3"), 1U);
 
-    BOOST_CHECK_EQUAL(st.size(), 11U); // Size = 8 + 3 - where the the three are DAY, MNTH and YEAR
-
     // The well 'OP_2' which was indirectly added with the
     // st.update("WWCT:OP_2", 100) call is *not* counted as a well!
     BOOST_CHECK_EQUAL(st.num_wells(), 3U);
@@ -3935,29 +3933,5 @@ BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
 
 }
 
-BOOST_AUTO_TEST_CASE(SummaryState__TIME) {
-    struct tm ts;
-    ts.tm_year = 100;
-    ts.tm_mon = 1;
-    ts.tm_mday = 1;
-    ts.tm_hour = 0;
-    ts.tm_min = 0;
-    ts.tm_sec = 0;
-    auto start_time = timegm(&ts);
-    SummaryState st(TimeService::from_time_t(start_time));
-    BOOST_CHECK_EQUAL(st.get("YEAR"), 2000);
-    BOOST_CHECK_EQUAL(st.get("DAY"), 1);
-    BOOST_CHECK_EQUAL(st.get("MNTH"), 1);
-
-    // Next day
-    st.update_elapsed(100000);
-    BOOST_CHECK_EQUAL(st.get("YEAR"), 2000);
-    BOOST_CHECK_EQUAL(st.get("DAY"), 2);
-    BOOST_CHECK_EQUAL(st.get("MNTH"), 1);
-
-    // Well into 2001
-    st.update_elapsed(400 * 86400);
-    BOOST_CHECK_EQUAL(st.get("YEAR"), 2001);
-}
 
 BOOST_AUTO_TEST_SUITE_END()
