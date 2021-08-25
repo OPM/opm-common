@@ -3512,21 +3512,14 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
     const auto dfltwgname = std::string(":+:+:+:+");
     const auto dfltnum    = 0;
 
-    // XXX: Save keys might need/want to include a random component too.
-    auto makeKey = [this](const std::string& keyword) -> void
-    {
-        this->valueKeys_.push_back(
-            "SMSPEC.Internal." + keyword + ".Value.SAVE"
-        );
-    };
 
     // TIME
     {
-        const auto kw = std::string("TIME");
-        makeKey(kw);
+        std::string kw = "TIME";
+        this->valueKeys_.push_back(kw);
 
         const std::string& unit_string = es.getUnits().name(UnitSystem::measure::time);
-        auto eval = std::make_unique<Evaluator::Time>(this->valueKeys_.back());
+        auto eval = std::make_unique<Evaluator::Time>(kw);
 
         valueUnits_.push_back(unit_string);
 
@@ -3536,10 +3529,10 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
     }
 
     if (sumcfg.hasKeyword("DAY")) {
-        const auto kw = std::string("DAY");
-        makeKey(kw);
+        std::string kw = "DAY";
+        this->valueKeys_.push_back(kw);
 
-        auto eval = std::make_unique<Evaluator::Day>(this->valueKeys_.back());
+        auto eval = std::make_unique<Evaluator::Day>(kw);
         valueUnits_.push_back("");
 
         this->outputParameters_
@@ -3547,10 +3540,10 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
     }
 
     if (sumcfg.hasKeyword("MONTH")) {
-        const auto kw = std::string("MONTH");
-        makeKey(kw);
+        std::string kw = "MONTH";
+        this->valueKeys_.push_back(kw);
 
-        auto eval = std::make_unique<Evaluator::Month>(this->valueKeys_.back());
+        auto eval = std::make_unique<Evaluator::Month>(kw);
         valueUnits_.push_back("");
 
         this->outputParameters_
@@ -3558,10 +3551,10 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
     }
 
     if (sumcfg.hasKeyword("YEAR")) {
-        const auto kw = std::string("YEAR");
-        makeKey(kw);
+        std::string kw = "YEAR";
+        this->valueKeys_.push_back(kw);
 
-        auto eval = std::make_unique<Evaluator::Year>(this->valueKeys_.back());
+        auto eval = std::make_unique<Evaluator::Year>(kw);
         valueUnits_.push_back("");
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
@@ -3569,10 +3562,10 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
 
     // YEARS
     {
-        const auto kw = std::string("YEARS");
-        makeKey(kw);
+        std::string kw = "YEARS";
+        this->valueKeys_.push_back(kw);
 
-        auto eval = std::make_unique<Evaluator::Years>(this->valueKeys_.back());
+        auto eval = std::make_unique<Evaluator::Years>(kw);
         valueUnits_.push_back("");
 
         this->outputParameters_
