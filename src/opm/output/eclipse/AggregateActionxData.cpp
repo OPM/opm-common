@@ -149,8 +149,8 @@ const std::map<cmp_enum, int> cmpToIndex = {
             iAct[0] = 0;
             //item [1]: The number of lines of schedule data including ENDACTIO
             iAct[1] = actx.keyword_strings().size();
-            //item [2]: is the number of times an action has been triggered
-            iAct[2] = action_state.run_count(actx);
+            //item [2]: is the number of times an action has been triggered plus 1
+            iAct[2] = action_state.run_count(actx) + 1;
             //item [3]: is unknown, (=7)
             iAct[3] = 7;
             //item [4]: is unknown, (=0)
