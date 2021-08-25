@@ -122,14 +122,7 @@ std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std
     mod_keys.reserve(valueKeys.size());
 
     for (size_t n=0; n < valueKeys.size(); n++){
-
-        if (valueKeys[n].substr(0,15) == "SMSPEC.Internal"){
-            std::string mod_key = valueKeys[n].substr(16);
-            int p = mod_key.find_first_of(".");
-            mod_key=mod_key.substr(0,p);
-            mod_keys.push_back(mod_key);
-
-        } else if (valueKeys[n].substr(0,1) == "C"){
+        if (valueKeys[n].substr(0,1) == "C"){
             size_t p = valueKeys[n].find_first_of(":");
             p = valueKeys[n].find_first_of(":", p + 1);
 

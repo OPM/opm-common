@@ -113,16 +113,6 @@ namespace {
 
     void SummaryState::update_elapsed(double delta) {
         this->elapsed += delta;
-        std::time_t sim_time = std::chrono::system_clock::to_time_t( this->sim_start + std::chrono::microseconds(static_cast<std::size_t>(1000000*delta)));
-        struct tm ts;
-        gmtime_r(&sim_time, &ts);
-        int year = ts.tm_year + 1900;
-        int month = ts.tm_mon;
-        int day = ts.tm_mday;
-
-        this->update("YEAR", year);
-        this->update("MNTH", month);
-        this->update("DAY", day);
     }
 
 

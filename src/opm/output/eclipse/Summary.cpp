@@ -3310,6 +3310,7 @@ private:
 
     std::unique_ptr<Opm::EclIO::ExtSmryOutput> esmry_;
 
+    void configureTimeVector(const EclipseState& es, const std::string& kw);
     void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
 
     void configureSummaryInput(const SummaryConfig& sumcfg,
@@ -3320,7 +3321,7 @@ private:
                                             const Schedule&      sched,
                                             Evaluator::Factory&  evaluatorFactory);
 
-    void configureUDQ(const SummaryConfig& summary_config, const Schedule& sched);
+    void configureUDQ(const EclipseState& es, const SummaryConfig& summary_config, const Schedule& sched);
 
     MiniStep& getNextMiniStep(const int report_step, bool isSubstep);
     const MiniStep& lastUnwritten() const;
@@ -3360,7 +3361,7 @@ SummaryImplementation(const EclipseState&  es,
     this->configureSummaryInput(sumcfg, evaluatorFactory);
     this->configureRequiredRestartParameters(sumcfg, es.aquifer(),
                                              sched, evaluatorFactory);
-    this->configureUDQ(sumcfg, sched);
+    this->configureUDQ(es, sumcfg, sched);
 
     for (const auto& config_node : sumcfg.keywords("WBP*"))
         this->wbp_wells.insert( config_node.namedEntity() );
@@ -3507,26 +3508,15 @@ void Opm::out::Summary::SummaryImplementation::write(const MiniStep& ms)
 
 void
 Opm::out::Summary::SummaryImplementation::
-configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
-{
+configureTimeVector(const EclipseState& es, const std::string& kw) {
     const auto dfltwgname = std::string(":+:+:+:+");
     const auto dfltnum    = 0;
 
-    // XXX: Save keys might need/want to include a random component too.
-    auto makeKey = [this](const std::string& keyword) -> void
-    {
-        this->valueKeys_.push_back(
-            "SMSPEC.Internal." + keyword + ".Value.SAVE"
-        );
-    };
+    this->valueKeys_.push_back(kw);
 
-    // TIME
-    {
-        const auto kw = std::string("TIME");
-        makeKey(kw);
-
+    if (kw == "TIME") {
         const std::string& unit_string = es.getUnits().name(UnitSystem::measure::time);
-        auto eval = std::make_unique<Evaluator::Time>(this->valueKeys_.back());
+        auto eval = std::make_unique<Evaluator::Time>(kw);
 
         valueUnits_.push_back(unit_string);
 
@@ -3535,49 +3525,53 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
             .makeParameter(kw, dfltwgname, dfltnum, unit_string, std::move(eval));
     }
 
-    if (sumcfg.hasKeyword("DAY")) {
-        const auto kw = std::string("DAY");
-        makeKey(kw);
-
-        auto eval = std::make_unique<Evaluator::Day>(this->valueKeys_.back());
+    else if (kw == "DAY") {
+        auto eval = std::make_unique<Evaluator::Day>(kw);
         valueUnits_.push_back("");
 
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
 
-    if (sumcfg.hasKeyword("MONTH")) {
-        const auto kw = std::string("MONTH");
-        makeKey(kw);
-
-        auto eval = std::make_unique<Evaluator::Month>(this->valueKeys_.back());
+    else if (kw == "MONTH" || kw == "MNTH") {
+        auto eval = std::make_unique<Evaluator::Month>(kw);
         valueUnits_.push_back("");
 
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
 
-    if (sumcfg.hasKeyword("YEAR")) {
-        const auto kw = std::string("YEAR");
-        makeKey(kw);
-
-        auto eval = std::make_unique<Evaluator::Year>(this->valueKeys_.back());
+    else if (kw == "YEAR") {
+        auto eval = std::make_unique<Evaluator::Year>(kw);
         valueUnits_.push_back("");
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
 
-    // YEARS
-    {
-        const auto kw = std::string("YEARS");
-        makeKey(kw);
-
-        auto eval = std::make_unique<Evaluator::Years>(this->valueKeys_.back());
+    else if (kw == "YEARS") {
+        auto eval = std::make_unique<Evaluator::Years>(kw);
         valueUnits_.push_back("");
 
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, kw, std::move(eval));
     }
+}
+
+void
+Opm::out::Summary::SummaryImplementation::
+configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
+{
+    this->configureTimeVector(es, "TIME");
+    this->configureTimeVector(es, "YEARS");
+
+    if (sumcfg.hasKeyword("DAY"))
+        this->configureTimeVector(es, "DAY");
+
+    if (sumcfg.hasKeyword("MONTH"))
+        this->configureTimeVector(es, "MONTH");
+
+    if (sumcfg.hasKeyword("YEAR"))
+        this->configureTimeVector(es, "YEAR");
 }
 
 void
@@ -3689,7 +3683,8 @@ namespace {
     }
 }
 
-void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config,
+void Opm::out::Summary::SummaryImplementation::configureUDQ(const EclipseState& es,
+                                                            const SummaryConfig& summary_config,
                                                             const Schedule& sched)
 {
     const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH"};
@@ -3717,8 +3712,10 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
 
         // Time related vectors are special cased in the valueKeys_ vector
         // and must be checked explicitly.
-        if (time_vectors.count(node.keyword) > 0)
+        if (time_vectors.count(node.keyword) > 0) {
+            this->configureTimeVector(es, node.keyword);
             continue;
+        }
 
         // Handler already registered in the summary evaluator, in some
         // other way.
