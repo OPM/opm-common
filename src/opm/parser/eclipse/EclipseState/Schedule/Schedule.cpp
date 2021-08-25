@@ -1428,12 +1428,41 @@ namespace {
             }
         }
         this->snapshots.back().udq.update( UDQConfig(this->m_static.m_runspec.udqParams(), rst_state) );
-        for (const auto& [control, value, wgname] : UDQActive::load_rst( this->m_static.m_unit_system, this->snapshots.back().udq(), rst_state, this->wellNames(report_step), this->groupNames(report_step))) {
-            if (UDQ::well_control(control)) {
-                auto& well = this->getWell(wgname, report_step);
-            } else {
-                auto& group = this->getGroup(wgname, report_step);
+        const auto& uda_records = UDQActive::load_rst( this->m_static.m_unit_system, this->snapshots.back().udq(), rst_state, this->wellNames(report_step), this->groupNames(report_step));
+        if (!uda_records.empty()) {
+            const auto& udq_config = this->snapshots.back().udq();
+            auto udq_active = this->snapshots.back().udq_active();
+
+            for (const auto& [control, value, wgname, ig_phase] : uda_records) {
+                if (UDQ::well_control(control)) {
+                    auto& well = this->snapshots.back().wells.get(wgname);
+                    if (UDQ::injection_control(control)) {
+                        auto injection_properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
+                        injection_properties->update_uda(udq_config, udq_active, control, value);
+                        well.updateInjection(std::move(injection_properties));
+                    }
+
+                    if (UDQ::production_control(control)) {
+                        auto production_properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
+                        production_properties->update_uda(udq_config, udq_active, control, value);
+                        well.updateProduction(std::move(production_properties));
+                    }
+                } else {
+                    auto& group = this->snapshots.back().groups.get(wgname);
+                    if (UDQ::injection_control(control)) {
+                        auto injection_properties = group.injectionProperties(ig_phase.value());
+                        injection_properties.update_uda(udq_config, udq_active, control, value);
+                        group.updateInjection(injection_properties);
+                    }
+
+                    if (UDQ::production_control(control)) {
+                        auto production_properties = group.productionProperties();
+                        production_properties.update_uda(udq_config, udq_active, control, value);
+                        group.updateProduction(production_properties);
+                    }
+                }
             }
+            this->snapshots.back().udq_active.update( std::move(udq_active) );
         }
     }
 

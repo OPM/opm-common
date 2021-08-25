@@ -228,7 +228,7 @@ Group::GroupInjectionProperties::GroupInjectionProperties(std::string group_name
 Group::GroupInjectionProperties::GroupInjectionProperties(std::string group_name_arg,
                                                           const Phase phase_arg,
                                                           const UnitSystem& unit_system)
-    : group_name { std::move(group_name_arg) }
+    : name { std::move(group_name_arg) }
     , phase { phase_arg }
     , surface_max_rate { unit_system.getDimension((phase == Phase::WATER)
                                                   ? UnitSystem::measure::liquid_surface_rate
@@ -258,7 +258,7 @@ Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject
 
 bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties& other) const {
     return
-        this->group_name              == other.group_name &&
+        this->name                    == other.name &&
         this->phase                   == other.phase &&
         this->cmode                   == other.cmode &&
         this->surface_max_rate        == other.surface_max_rate &&
@@ -280,10 +280,10 @@ bool Group::GroupInjectionProperties::operator!=(const GroupInjectionProperties&
 bool Group::GroupInjectionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
     int update_count = 0;
 
-    update_count += active.update(udq_config, this->surface_max_rate, this->group_name, UDAControl::GCONINJE_SURFACE_MAX_RATE);
-    update_count += active.update(udq_config, this->resv_max_rate, this->group_name, UDAControl::GCONINJE_RESV_MAX_RATE);
-    update_count += active.update(udq_config, this->target_reinj_fraction, this->group_name, UDAControl::GCONINJE_TARGET_REINJ_FRACTION);
-    update_count += active.update(udq_config, this->target_void_fraction, this->group_name, UDAControl::GCONINJE_TARGET_VOID_FRACTION);
+    update_count += active.update(udq_config, this->surface_max_rate, this->name, UDAControl::GCONINJE_SURFACE_MAX_RATE);
+    update_count += active.update(udq_config, this->resv_max_rate, this->name, UDAControl::GCONINJE_RESV_MAX_RATE);
+    update_count += active.update(udq_config, this->target_reinj_fraction, this->name, UDAControl::GCONINJE_TARGET_REINJ_FRACTION);
+    update_count += active.update(udq_config, this->target_void_fraction, this->name, UDAControl::GCONINJE_TARGET_VOID_FRACTION);
 
     return (update_count > 0);
 }
@@ -302,6 +302,34 @@ bool Group::GroupInjectionProperties::uda_phase() const {
         return true;
 
     return false;
+}
+
+void Group::GroupInjectionProperties::update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value)
+{
+    switch (control) {
+    case UDAControl::GCONINJE_SURFACE_MAX_RATE:
+        this->surface_max_rate = value;
+        udq_active.update(udq_config, this->surface_max_rate, this->name, UDAControl::GCONINJE_SURFACE_MAX_RATE);
+        break;
+
+    case UDAControl::GCONINJE_RESV_MAX_RATE:
+        this->resv_max_rate = value;
+        udq_active.update(udq_config, this->resv_max_rate, this->name, UDAControl::GCONINJE_RESV_MAX_RATE);
+        break;
+
+    case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
+        this->target_reinj_fraction = value;
+        udq_active.update(udq_config, this->target_reinj_fraction, this->name, UDAControl::GCONINJE_TARGET_REINJ_FRACTION);
+        break;
+
+    case UDAControl::GCONINJE_TARGET_VOID_FRACTION:
+        this->target_void_fraction = value;
+        udq_active.update(udq_config, this->target_void_fraction, this->name, UDAControl::GCONINJE_TARGET_VOID_FRACTION);
+        break;
+
+    default:
+        throw std::logic_error("Invalid UDA control");
+    }
 }
 
 
@@ -362,6 +390,33 @@ bool Group::GroupProductionProperties::updateUDQActive(const UDQConfig& udq_conf
     update_count += active.update(udq_config, this->liquid_target, this->name, UDAControl::GCONPROD_LIQUID_TARGET);
 
     return (update_count > 0);
+}
+
+void Group::GroupProductionProperties::update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value) {
+    switch (control) {
+    case UDAControl::GCONPROD_OIL_TARGET:
+        this->oil_target = value;
+        udq_active.update(udq_config, this->oil_target, this->name, UDAControl::GCONPROD_OIL_TARGET);
+        break;
+
+    case UDAControl::GCONPROD_WATER_TARGET:
+        this->water_target = value;
+        udq_active.update(udq_config, this->water_target, this->name, UDAControl::GCONPROD_WATER_TARGET);
+        break;
+
+    case UDAControl::GCONPROD_GAS_TARGET:
+        this->gas_target = value;
+        udq_active.update(udq_config, this->gas_target, this->name, UDAControl::GCONPROD_GAS_TARGET);
+        break;
+
+    case UDAControl::GCONPROD_LIQUID_TARGET:
+        this->liquid_target = value;
+        udq_active.update(udq_config, this->liquid_target, this->name, UDAControl::GCONPROD_LIQUID_TARGET);
+        break;
+
+    default:
+        throw std::logic_error("Invalid UDA control");
+    }
 }
 
 

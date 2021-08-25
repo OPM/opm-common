@@ -501,6 +501,27 @@ bool well_control(UDAControl control) {
     return !group_control(control);
 }
 
+bool injection_control(UDAControl control) {
+    switch (control) {
+    case UDAControl::WCONINJE_RATE:
+    case UDAControl::WCONINJE_RESV:
+    case UDAControl::WCONINJE_BHP:
+    case UDAControl::WCONINJE_THP:
+    case UDAControl::GCONINJE_SURFACE_MAX_RATE:
+    case UDAControl::GCONINJE_RESV_MAX_RATE:
+    case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
+    case UDAControl::GCONINJE_TARGET_VOID_FRACTION:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool production_control(UDAControl control) {
+    return !injection_control(control);
+}
+
+
 UDAControl udaControl(int uda_code) {
     switch (uda_code) {
     case 300004:

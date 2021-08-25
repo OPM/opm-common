@@ -132,7 +132,7 @@ struct GroupInjectionProperties {
     explicit GroupInjectionProperties(std::string group_name_arg);
     GroupInjectionProperties(std::string group_name_arg, Phase phase, const UnitSystem& unit_system);
 
-    std::string group_name{};
+    std::string name{};
     Phase phase = Phase::WATER;
     InjectionCMode cmode = InjectionCMode::NONE;
     UDAValue surface_max_rate;
@@ -152,12 +152,12 @@ struct GroupInjectionProperties {
     bool operator!=(const GroupInjectionProperties& other) const;
     bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
     bool uda_phase() const;
-
+    void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(this->group_name);
+        serializer(this->name);
         serializer(phase);
         serializer(cmode);
         surface_max_rate.serializeOp(serializer);
@@ -209,6 +209,7 @@ struct GroupProductionProperties {
     bool operator==(const GroupProductionProperties& other) const;
     bool operator!=(const GroupProductionProperties& other) const;
     bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+    void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

@@ -308,4 +308,33 @@ namespace Opm {
         return (update_count > 0);
     }
 
+
+    void Well::WellInjectionProperties::update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value) {
+        switch (control) {
+        case UDAControl::WCONINJE_RATE:
+            this->surfaceInjectionRate = value;
+            udq_active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WCONINJE_RATE);
+            break;
+
+        case UDAControl::WCONINJE_RESV:
+            this->reservoirInjectionRate = value;
+            udq_active.update(udq_config, this->reservoirInjectionRate, this->name, UDAControl::WCONINJE_RESV);
+            break;
+
+        case UDAControl::WCONINJE_BHP:
+            this->BHPTarget = value;
+            udq_active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONINJE_BHP);
+            break;
+
+        case UDAControl::WCONINJE_THP:
+            this->BHPTarget = value;
+            udq_active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONINJE_THP);
+            break;
+
+        default:
+            throw std::logic_error("Invalid UDA control");
+        }
+    }
+
+
 }

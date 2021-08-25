@@ -292,6 +292,7 @@ public:
         void setBHPLimit(const double limit);
         InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+        void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -418,6 +419,7 @@ public:
         void clearControls();
         ProductionControls controls(const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+        void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
 
         void setBHPLimit(const double limit);
         int productionControls() const { return this->m_productionControls; }

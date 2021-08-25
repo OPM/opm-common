@@ -44,7 +44,7 @@ std::vector<UDQActive::RstRecord> UDQActive::load_rst(const UnitSystem& units,
             if (UDQ::well_control(record.control))
                 records.emplace_back(record.control, uda, well_names[wg_index]);
             else {
-                if (UDQ::production_control)
+                if (UDQ::production_control(record.control))
                     records.emplace_back(record.control, uda, group_names[wg_index]);
                 else
                     records.emplace_back(record.control, uda, group_names[wg_index], rst_active.ig_phase[wg_index]);

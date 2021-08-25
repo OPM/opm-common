@@ -191,7 +191,8 @@ namespace UDQ {
     bool leadingSpace(UDQTokenType token_type);
     bool group_control(UDAControl control);
     bool well_control(UDAControl control);
-
+    bool injection_control(UDAControl control);
+    bool production_control(UDAControl control);
 
     std::string typeName(UDQVarType var_type);
     UDAKeyword keyword(UDAControl control);
