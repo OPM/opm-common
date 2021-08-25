@@ -49,6 +49,9 @@ public:
         HydroCarbonPV = 9,
         PressureHydroCarbonPV = 10,
         DynamicPoreVolume = 11,
+        WaterResVolume = 12,
+        OilResVolume = 13,
+        GasResVolume = 14,
     };
 
     /*

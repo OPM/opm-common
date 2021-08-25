@@ -142,6 +142,9 @@ const std::vector<Inplace::Phase>& Inplace::phases() {
         Inplace::Phase::GasInLiquidPhase,
         Inplace::Phase::GasInGasPhase,
         Inplace::Phase::PoreVolume,
+        Inplace::Phase::WaterResVolume,
+        Inplace::Phase::OilResVolume,
+        Inplace::Phase::GasResVolume,
     };
 
     return phases_;
