@@ -73,7 +73,8 @@ Opm::SummaryState sum_state_TEST1()
         state.update("FWPR", 73.);
 
         state.update("FMWPR", 4);
-
+        state.update("MNTH", 1);
+        state.update("YEAR", 2020);
 
         return state;
 }
