@@ -79,8 +79,6 @@ ACTDIMS
 --
 -- ----------------------------------------------------
 -- Input and output files format
---FMTIN
---FMTOUT
 UNIFIN
 UNIFOUT
 
