@@ -141,6 +141,10 @@ const std::map<Phase, Group::GroupInjectionProperties>& Group::injectionProperti
     return this->injection_properties;
 }
 
+const Group::GroupInjectionProperties& Group::injectionProperties(Phase phase) const {
+    return this->injection_properties.at(phase);
+}
+
 int Group::getGroupNetVFPTable() const {
     return this->vfp_table;
 }
