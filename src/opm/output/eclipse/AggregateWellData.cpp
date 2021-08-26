@@ -146,9 +146,9 @@ namespace {
         int wellVFPTab(const Opm::Well& well, const Opm::SummaryState& st)
         {
             if (well.isInjector()) {
-                return well.injectionControls(st).vfp_table_number;
+                return well.injectionControls(st, true).vfp_table_number;
             }
-            return well.productionControls(st).vfp_table_number;
+            return well.productionControls(st, true).vfp_table_number;
         }
 
         bool wellControlDefined(const Opm::data::Well& xw)
@@ -529,7 +529,7 @@ namespace {
             assignDefaultSWell(sWell);
 
             if (well.isProducer()) {
-                const auto& pc = well.productionControls(smry);
+                const auto& pc = well.productionControls(smry, true);
                 const auto& predMode = well.predictionMode();
 
                 if (predMode) {
@@ -617,7 +617,7 @@ namespace {
                 }
             }
             else if (well.isInjector()) {
-                const auto& ic = well.injectionControls(smry);
+                const auto& ic = well.injectionControls(smry, true);
 
                 using IP = ::Opm::Well::InjectorCMode;
                 using IT = ::Opm::InjectorType;
@@ -711,8 +711,8 @@ namespace {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
             const auto bhpTarget = well.isInjector()
-                ? well.injectionControls(st).bhp_limit
-                : well.productionControls(st).bhp_limit;
+                ? well.injectionControls(st, true).bhp_limit
+                : well.productionControls(st, true).bhp_limit;
 
             xWell[Ix::BHPTarget] = units.from_si(M::pressure, bhpTarget);
         }
@@ -884,7 +884,7 @@ namespace {
             }
             else if (well.isInjector()) {
                 using IType = ::Opm::InjectorType;
-                const auto itype = well.injectionControls(smry).injector_type;
+                const auto itype = well.injectionControls(smry, true).injector_type;
 
                 switch (itype) {
                 case IType::OIL:

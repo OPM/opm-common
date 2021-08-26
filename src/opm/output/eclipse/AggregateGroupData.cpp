@@ -305,7 +305,7 @@ void productionGroup(const Opm::Schedule&     sched,
     namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
     gconprodCMode(group, nwgmax, iGrp);
     const bool is_field = group.name() == "FIELD";
-    const auto& production_controls = group.productionControls(sumState);
+    const auto& production_controls = group.productionControls(sumState, true);
     const auto& prod_guide_rate_def = production_controls.guide_rate_def;
     Opm::Group::ProductionCMode active_cmode = Opm::Group::ProductionCMode::NONE;
     auto cur_prod_ctrl = (group.name() == "FIELD") ? sumState.get("FMCTP", -1) :
@@ -459,7 +459,7 @@ std::tuple<int, int, int> injectionGroup(const Opm::Schedule&     sched,
             high_level_ctrl = 0;
         } else {
 
-            const auto& injection_controls = group.injectionControls(phase, sumState);
+            const auto& injection_controls = group.injectionControls(phase, sumState, true);
             const auto& guide_rate_def = injection_controls.guide_rate_def;
             const auto& cur_inj_ctrl = group.name() == "FIELD" ? static_cast<int>(sumState.get(field_key, -1)) : static_cast<int>(sumState.get_group_var(group.name(), group_key, -1));
             Opm::Group::InjectionCMode active_cmode = Opm::Group::InjectionCModeFromInt(cur_inj_ctrl);
@@ -754,7 +754,7 @@ void staticContrib(const Opm::Group&        group,
     };
 
     if (group.isProductionGroup()) {
-        const auto& prod_cntl = group.productionControls(sumState);
+        const auto& prod_cntl = group.productionControls(sumState, true);
 
         if (prod_cntl.oil_target > 0.) {
             sGrp[Isp::OilRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.oil_target);
@@ -783,7 +783,7 @@ void staticContrib(const Opm::Group&        group,
 
     if (group.isInjectionGroup()) {
         if (group.hasInjectionControl(Opm::Phase::GAS)) {
-            const auto& inj_cntl = group.injectionControls(Opm::Phase::GAS, sumState);
+            const auto& inj_cntl = group.injectionControls(Opm::Phase::GAS, sumState, true);
             if (inj_cntl.surface_max_rate > 0.) {
                 sGrp[Isi::gasSurfRateLimit] = sgprop(M::gas_surface_rate, inj_cntl.surface_max_rate);
                 sGrp[65] =  sGrp[Isi::gasSurfRateLimit];
@@ -803,7 +803,7 @@ void staticContrib(const Opm::Group&        group,
         }
 
         if (group.hasInjectionControl(Opm::Phase::WATER)) {
-            const auto& inj_cntl = group.injectionControls(Opm::Phase::WATER, sumState);
+            const auto& inj_cntl = group.injectionControls(Opm::Phase::WATER, sumState, true);
             if (inj_cntl.surface_max_rate > 0.) {
                 sGrp[Isi::waterSurfRateLimit] = sgprop(M::liquid_surface_rate, inj_cntl.surface_max_rate);
                 sGrp[61] =  sGrp[Isi::waterSurfRateLimit];
@@ -823,7 +823,7 @@ void staticContrib(const Opm::Group&        group,
         }
 
         if (group.hasInjectionControl(Opm::Phase::OIL)) {
-            const auto& inj_cntl = group.injectionControls(Opm::Phase::OIL, sumState);
+            const auto& inj_cntl = group.injectionControls(Opm::Phase::OIL, sumState, true);
             if (inj_cntl.surface_max_rate > 0.) {
                 sGrp[Isi::oilSurfRateLimit] = sgprop(M::liquid_surface_rate, inj_cntl.surface_max_rate);
                 sGrp[57] =  sGrp[Isi::oilSurfRateLimit];
