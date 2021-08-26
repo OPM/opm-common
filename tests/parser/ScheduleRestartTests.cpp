@@ -93,11 +93,11 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
     }
 }
 
-void compare_sched(const std::string& base_deck,
-                   const std::string& rst_deck,
-                   const std::string& rst_fname,
-                   std::size_t restart_step)
-{
+
+std::pair<Schedule, Schedule> load_schedule_pair(const std::string& base_deck,
+                                                 const std::string& rst_deck,
+                                                 const std::string& rst_fname,
+                                                 std::size_t restart_step) {
     Parser parser;
     auto python = std::make_shared<Python>();
     auto deck = parser.parseFile(base_deck);
@@ -110,6 +110,17 @@ void compare_sched(const std::string& base_deck,
     auto rst_state = RestartIO::RstState::load(std::move(rst_view));
     EclipseState ecl_state_restart(restart_deck);
     Schedule restart_sched(restart_deck, ecl_state_restart, python, {}, &rst_state);
+
+    return {sched, restart_sched};
+}
+
+
+void compare_sched(const std::string& base_deck,
+                   const std::string& rst_deck,
+                   const std::string& rst_fname,
+                   std::size_t restart_step)
+{
+    const auto& [sched, restart_sched] = load_schedule_pair(base_deck, rst_deck, rst_fname, restart_step);
 
     BOOST_CHECK_EQUAL(restart_sched.size(), sched.size());
     for (std::size_t report_step=restart_step; report_step < sched.size(); report_step++) {
