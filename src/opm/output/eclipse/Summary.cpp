@@ -2044,6 +2044,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
   {"FWIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
   {"FOIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
   {"FGIP"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FSIP"     , Opm::UnitSystem::measure::mass },
   {"FOIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
   {"FOIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
   {"FGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },

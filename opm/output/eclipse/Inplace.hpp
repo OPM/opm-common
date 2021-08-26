@@ -52,6 +52,7 @@ public:
         WaterResVolume = 12,
         OilResVolume = 13,
         GasResVolume = 14,
+        SALT = 15,
     };
 
     /*
