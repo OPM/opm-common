@@ -79,8 +79,6 @@ ACTDIMS
 --
 -- ----------------------------------------------------
 -- Input and output files format
-FMTIN
-FMTOUT
 UNIFIN
 UNIFOUT
 
@@ -330,6 +328,11 @@ WUPR3
 
 SCHEDULE
 
+TUNING
+1*  1. / 
+/
+/
+
 GRUPTREE
  'UPPER'     'TEST'  /
  'LOWER'     'TEST'  /
@@ -408,10 +411,10 @@ GUIDERAT
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT01 10 /
-WWPR 'OP*' > 17 OR /
+ACT01 10 0.345 /
+WWPR 'OP*' > 170000 OR /
 GMWPR 'TEST' > 14 AND /
-DAY > 3  /
+DAY > 1113.  /
 /
 WELOPEN
 '?' SHUT 0 0 0 2* /
@@ -419,7 +422,7 @@ WELOPEN
 ENDACTIO
 
 ACTIONX
-ACT02 11 /
+ACT02 11 0.567 /
 FMWPR > 25 AND /
 WGPR 'OPL02' > GGPR 'LOWER' AND /
 MNTH > NOV / 
@@ -438,10 +441,10 @@ DATES
 /
 
 ACTIONX
-ACT03 13 /
-WWPR 'OPU02' > WWPR 'OPU01' OR /
+ACT03 13 0.789 /
+WWPR 'OPU01' > WWPR 'OPU02' OR /
 GMWPR 'TEST' > 39 AND /
-YEAR > 2019  /
+YEAR > 2020  /
 /
 WELOPEN
 '?' SHUT 0 0 0 2* /
@@ -450,10 +453,10 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT01 10 /
+ACT01 10  0.543 /
 FMWPR > 45 AND /
 WUPR3 'OP*' > 46 OR /
-MNTH > OCT  /
+MNTH < MAY  /
 /
 WELOPEN
 '?' SHUT 0 0 0 2* /
@@ -468,7 +471,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT04 10 /
+ACT04 10 0.278 /
 FMWPR > 3 AND /
 ( WUPR3 'OP*' > 46 OR /
   WOPR 'OP*' > 32 ) AND /
@@ -484,7 +487,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT05 10 /
+ACT05 10 0.984 /
 FMWPR > 3 AND /
 ( WUPR3 'OP*' > 46 AND /
   WOPR 'OP*' > 32 ) AND /
@@ -500,7 +503,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT06 10 /
+ACT06 10 0.176 /
 FMWPR > 3 OR /
 ( WUPR3 'OP*' > 46 AND /
   WOPR 'OP*' > 32 ) AND /
@@ -516,7 +519,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT07 10 /
+ACT07 10 0.045 /
 FMWPR > 3 AND /
 ( WUPR3 'OP*' > 46 AND /
   WOPR 'OP*' > 32 ) OR /
@@ -532,7 +535,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT08 10 /
+ACT08 10 0.487 /
 ( FMWPR > 3            AND /
  WUPR3 'OP*' > 46 )   AND /
   WOPR 'OP*' > 32     AND /
@@ -550,7 +553,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT09 10 /
+ACT09 10  0.398  /
 ( FMWPR > 3           OR /
  WUPR3 'OP*' > 46 )   AND /
   WOPR 'OP*' > 32     AND /
@@ -568,7 +571,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT10 10 /
+ACT10 10 4.67 /
 ( FMWPR > 3           AND /
  WUPR3 'OP*' > 46 )   OR /
   WOPR 'OP*' > 32     AND /
@@ -586,7 +589,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT11 10 /
+ACT11 10 3.98 /
 ( FMWPR > 3            AND /
  WUPR3 'OP*' > 46 )   AND /
   WOPR 'OP*' > 32     OR /
@@ -604,7 +607,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT12 10 /
+ACT12 10  7.23  /
 ( FMWPR > 3            AND /
  WUPR3 'OP*' > 46 )   AND /
   WOPR 'OP*' > 32     AND /
@@ -622,7 +625,7 @@ ENDACTIO
 
 --start files/actionxprod.tmpl
 ACTIONX
-ACT13 10 /
+ACT13 10 8.32 /
 ( FMWPR > 3            AND /
  WUPR3 'OP*' > 46 )   AND /
   WOPR 'OP*' > 32     AND /
@@ -638,6 +641,21 @@ WELOPEN
 
 ENDACTIO
 
+ACTIONX
+ACT14 10  0.55 /
+   FMWPR > 1   /
+/
+
+WELOPEN
+'OPL0*' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+WELOPEN
+ 'OPU02' 'OPEN' 5* / 
+/
+
 
 WELOPEN
  'OPL01' 'OPEN' 5* / 
@@ -649,6 +667,10 @@ DATES
 
 
 WELOPEN
+ 'OPL02' 'OPEN' 5* / 
+/
+
+WELOPEN
  'WIL01' 'OPEN' 5* / 
 /
 
@@ -656,10 +678,6 @@ DATES
  1 'NOV' 2018 / 
 /
 END 
-
-WELOPEN
- 'OPL02' 'OPEN' 5* / 
-/
 
 
 
@@ -676,10 +694,6 @@ DATES
  1 'MAY' 2019 / 
 /
 
-
-WELOPEN
- 'OPU02' 'OPEN' 5* / 
-/
 
 DATES
  1 'JUN' 2019 / 

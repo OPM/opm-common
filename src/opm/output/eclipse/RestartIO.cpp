@@ -353,6 +353,7 @@ namespace {
                       const int                     sim_step,
                       const EclipseState&           es,
                       const Schedule&               schedule,
+                      const Opm::UnitSystem&        units,
                       const Action::State&          action_state,
                       const SummaryState&           sum_state,
                       EclIO::OutputStream::Restart& rstFile)
@@ -367,7 +368,7 @@ namespace {
         
         const auto actDims = Opm::RestartIO::Helpers::createActionxDims(es.runspec(), schedule, simStep);
         auto  actionxData = Opm::RestartIO::Helpers::AggregateActionxData(actDims);
-        actionxData.captureDeclaredActionxData(schedule, action_state, sum_state, actDims, simStep);
+        actionxData.captureDeclaredActionxData(schedule, units, action_state, sum_state, actDims, simStep);
         
         if (actDims[0] >= 1) {
             rstFile.write("IACT", actionxData.getIACT());
@@ -793,7 +794,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
                          sumState, inteHD, value.aquifer, aquiferData, rstFile);
     }
 
-    writeActionx(report_step, sim_step, es, schedule, action_state, sumState, rstFile);
+    writeActionx(report_step, sim_step, es, schedule, units, action_state, sumState, rstFile);
 
     writeSolution(value, schedule, udqState, report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);

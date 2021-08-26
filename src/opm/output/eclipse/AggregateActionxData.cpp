@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -142,24 +143,14 @@ const std::map<cmp_enum, int> cmpToIndex = {
         }
 
         template <class IACTArray>
-        void staticContrib(const Opm::Action::ActionX& actx, IACTArray& iAct)
+        void staticContrib(const Opm::Action::ActionX& actx, IACTArray& iAct, const Opm::Action::State& action_state)
         {
             //item [0]: is unknown, (=0)
             iAct[0] = 0;
             //item [1]: The number of lines of schedule data including ENDACTIO
             iAct[1] = actx.keyword_strings().size();
-            //item [2]: is = 1 for condition and previous condition = AND, and combinations OR/AND
-            //          is = 2 for all conditions and previous conditions = OR
-            //          This is not implemented yet - only use 1 for all cases
-            const auto& actx_cond = actx.conditions();
-            int i_temp = 2;
-            for (auto cond_it = actx_cond.begin(); cond_it < actx_cond.end(); cond_it++) {
-                const auto it_logic_17 = logicalToIndex_17.find(cond_it->logic);
-                if (it_logic_17 != logicalToIndex_17.end()) {
-                    if (it_logic_17->first == logic_enum::AND) i_temp = 1;
-                }
-            }
-            iAct[2] = i_temp;
+            //item [2]: is the number of times an action has been triggered plus 1
+            iAct[2] = action_state.run_count(actx) + 1;
             //item [3]: is unknown, (=7)
             iAct[3] = 7;
             //item [4]: is unknown, (=0)
@@ -192,12 +183,17 @@ const std::map<cmp_enum, int> cmpToIndex = {
         }
 
         template <class SACTArray>
-        void staticContrib(SACTArray& sAct)
+        void staticContrib(const Opm::Action::ActionX& actx,
+                           const Opm::UnitSystem& units,
+                           SACTArray& sAct)
         {
-            //item [0 - 4]: is unknown, (=0)
-            for (std::size_t ind = 0; ind < 5 ; ind++) {
-                sAct[ind] = 0;
-            }
+            using M  = ::Opm::UnitSystem::measure;
+            sAct[0] = 0.;
+            sAct[1] = 0.;
+            sAct[2] = 0.;
+            //item [3]:  Minimum time interval between action triggers.
+            sAct[3] = units.from_si(M::time, actx.min_wait());
+            sAct[4] = 0.;
         }
 
     } // sAct
@@ -686,6 +682,7 @@ AggregateActionxData(const std::vector<int>& actDims)
 void
 Opm::RestartIO::Helpers::AggregateActionxData::
 captureDeclaredActionxData( const Opm::Schedule&      sched,
+                            const Opm::UnitSystem& units,
                             const Opm::Action::State& action_state,
                             const Opm::SummaryState&  st,
                             const std::vector<int>&   actDims,
@@ -696,12 +693,12 @@ captureDeclaredActionxData( const Opm::Schedule&      sched,
     for (auto actx_it = acts.begin(); actx_it < acts.end(); actx_it++) {
         {
             auto i_act = this->iACT_[act_ind];
-            iACT::staticContrib(*actx_it, i_act);
+            iACT::staticContrib(*actx_it, i_act, action_state);
         }
 
         {
             auto s_act = this->sACT_[act_ind];
-            sACT::staticContrib(s_act);
+            sACT::staticContrib(*actx_it, units, s_act);
         }
 
         {
