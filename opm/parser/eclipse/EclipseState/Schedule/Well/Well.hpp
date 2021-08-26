@@ -216,14 +216,14 @@ public:
             controls(controls_arg)
         {}
 
-        double bhp_limit;
-        double thp_limit;
+        double bhp_limit{0};
+        double thp_limit{0};
 
 
         InjectorType injector_type;
         InjectorCMode cmode = InjectorCMode::CMODE_UNDEFINED;
-        double surface_rate;
-        double reservoir_rate;
+        double surface_rate{0};
+        double reservoir_rate{0};
         double temperature;
         int    vfp_table_number;
         bool   prediction_mode;
@@ -290,7 +290,7 @@ public:
         void resetDefaultHistoricalBHPLimit();
         void resetBHPLimit();
         void setBHPLimit(const double limit);
-        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
+        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default, bool restart) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
 
         template<class Serializer>
@@ -322,16 +322,16 @@ public:
         }
 
         ProducerCMode cmode = ProducerCMode::NONE;
-        double oil_rate;
-        double water_rate;
-        double gas_rate;
-        double liquid_rate;
-        double resv_rate;
-        double bhp_history;
-        double thp_history;
-        double bhp_limit;
-        double thp_limit;
-        double alq_value;
+        double oil_rate{0};
+        double water_rate{0};
+        double gas_rate{0};
+        double liquid_rate{0};
+        double resv_rate{0};
+        double bhp_history{0};
+        double thp_history{0};
+        double bhp_limit{0};
+        double thp_limit{0};
+        double alq_value{0};
         int    vfp_table_number;
         bool   prediction_mode;
 
@@ -399,7 +399,7 @@ public:
         void handleWELTARG( WELTARGCMode cmode, const UDAValue& new_arg, double SiFactorP);
         void resetDefaultBHPLimit();
         void clearControls();
-        ProductionControls controls(const SummaryState& st, double udq_default) const;
+        ProductionControls controls(const SummaryState& st, double udq_default, bool restart) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
 
         void setBHPLimit(const double limit);
@@ -588,8 +588,8 @@ public:
     bool handleWPIMULT(const DeckRecord& record);
 
     void filterConnections(const ActiveGridCells& grid);
-    ProductionControls productionControls(const SummaryState& st) const;
-    InjectionControls injectionControls(const SummaryState& st) const;
+    ProductionControls productionControls(const SummaryState& st, bool restart = false) const;
+    InjectionControls injectionControls(const SummaryState& st, bool restart = false) const;
     int vfp_table_number() const;
     int pvt_table_number() const;
     int fip_region_number() const;

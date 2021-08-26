@@ -512,15 +512,15 @@ bool Group::updateParent(const std::string& parent) {
     return false;
 }
 
-Group::ProductionControls Group::productionControls(const SummaryState& st) const {
+Group::ProductionControls Group::productionControls(const SummaryState& st, bool restart) const {
     Group::ProductionControls pc;
 
     pc.cmode = this->production_properties.cmode;
     pc.exceed_action = this->production_properties.exceed_action;
-    pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st, this->udq_undefined);
-    pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined);
-    pc.gas_target = UDA::eval_group_uda(this->production_properties.gas_target, this->m_name, st, this->udq_undefined);
-    pc.liquid_target = UDA::eval_group_uda(this->production_properties.liquid_target, this->m_name, st, this->udq_undefined);
+    pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st, this->udq_undefined, restart);
+    pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined, restart);
+    pc.gas_target = UDA::eval_group_uda(this->production_properties.gas_target, this->m_name, st, this->udq_undefined, restart);
+    pc.liquid_target = UDA::eval_group_uda(this->production_properties.liquid_target, this->m_name, st, this->udq_undefined, restart);
     pc.guide_rate = this->production_properties.guide_rate;
     pc.guide_rate_def = this->production_properties.guide_rate_def;
     pc.resv_target = this->production_properties.resv_target;
@@ -531,17 +531,17 @@ Group::ProductionControls Group::productionControls(const SummaryState& st) cons
 
 
 
-Group::InjectionControls Group::injectionControls(Phase phase, const SummaryState& st) const {
+Group::InjectionControls Group::injectionControls(Phase phase, const SummaryState& st, bool restart) const {
     Group::InjectionControls ic;
     const auto& inj = this->injection_properties.at(phase);
 
     ic.phase = inj.phase;
     ic.cmode = inj.cmode;
     ic.injection_controls = inj.injection_controls;
-    ic.surface_max_rate = UDA::eval_group_uda_rate(inj.surface_max_rate, this->m_name, st, this->udq_undefined, ic.phase, this->unit_system);
-    ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st, this->udq_undefined);
-    ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st, this->udq_undefined);
-    ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st, this->udq_undefined);
+    ic.surface_max_rate = UDA::eval_group_uda_rate(inj.surface_max_rate, this->m_name, st, this->udq_undefined, ic.phase, this->unit_system, restart);
+    ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st, this->udq_undefined, restart);
+    ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st, this->udq_undefined, restart);
+    ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st, this->udq_undefined, restart);
     ic.reinj_group = inj.reinj_group.value_or(this->m_name);
     ic.voidage_group = inj.voidage_group.value_or(this->m_name);
     ic.guide_rate = inj.guide_rate;

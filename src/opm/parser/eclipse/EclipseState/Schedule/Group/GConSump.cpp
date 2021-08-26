@@ -48,11 +48,11 @@ const GConSump::GCONSUMPGroup& GConSump::get(const std::string& name) const {
 
 
 const GConSump::GCONSUMPGroupProp GConSump::get(const std::string& name, const SummaryState& st) const {
-
+    bool restart = false;
     GCONSUMPGroupProp prop;
     const GConSump::GCONSUMPGroup& group = this->get(name);
-    prop.consumption_rate = UDA::eval_group_uda(group.consumption_rate, name, st, group.udq_undefined);
-    prop.import_rate = UDA::eval_group_uda(group.import_rate, name, st, group.udq_undefined);
+    prop.consumption_rate = UDA::eval_group_uda(group.consumption_rate, name, st, group.udq_undefined, restart);
+    prop.import_rate = UDA::eval_group_uda(group.import_rate, name, st, group.udq_undefined, restart);
     prop.network_node = group.network_node;
     return prop;
 }

@@ -28,9 +28,12 @@
 namespace Opm {
 namespace UDA {
 
-  double eval_well_uda(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default) {
+double eval_well_uda(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, bool restart) {
     if (value.is<double>())
         return value.getSI();
+
+    if (restart)
+        return 0;
 
     const std::string& string_var = value.get<std::string>();
     double output_value = udq_default;
@@ -41,22 +44,25 @@ namespace UDA {
         output_value = st.get(string_var);
 
     // We do not handle negative rates.
-    // If negative rates occur a very small positive value is used to avoid 0.0 
+    // If negative rates occur a very small positive value is used to avoid 0.0
     // since 0.0 means default which is no rate limit (a large positive value)
     output_value = std::max(value.epsilonLimit(), output_value);
     return value.get_dim().convertRawToSi(output_value);
 }
 
 
-double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, InjectorType wellType, const UnitSystem& unitSystem) {
-    double raw_rate = eval_well_uda(value, well, st, udq_default);
+double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, InjectorType wellType, const UnitSystem& unitSystem, bool restart) {
+    double raw_rate = eval_well_uda(value, well, st, udq_default, restart);
     return injection::rateToSI(raw_rate, wellType, unitSystem);
 }
 
 
-double eval_group_uda(const UDAValue& value, const std::string& group, const SummaryState& st, double udq_undefined) {
+double eval_group_uda(const UDAValue& value, const std::string& group, const SummaryState& st, double udq_undefined, bool restart) {
     if (value.is<double>())
         return value.getSI();
+
+    if (restart)
+        return 0;
 
     const std::string& string_var = value.get<std::string>();
     double output_value = udq_undefined;
@@ -74,8 +80,8 @@ double eval_group_uda(const UDAValue& value, const std::string& group, const Sum
 }
 
 
-double eval_group_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Phase phase, const UnitSystem& unitSystem) {
-    double raw_rate = eval_group_uda(value, name, st, udq_undefined);
+double eval_group_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Phase phase, const UnitSystem& unitSystem, bool restart) {
+    double raw_rate = eval_group_uda(value, name, st, udq_undefined, restart);
     return injection::rateToSI(raw_rate, phase, unitSystem);
 }
 

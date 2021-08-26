@@ -1304,18 +1304,18 @@ bool Well::wellNameInWellNamePattern(const std::string& wellName, const std::str
 }
 
 
-Well::ProductionControls Well::productionControls(const SummaryState& st) const {
+Well::ProductionControls Well::productionControls(const SummaryState& st, bool restart) const {
     if (this->isProducer()) {
-        auto controls = this->production->controls(st, this->udq_undefined);
+        auto controls = this->production->controls(st, this->udq_undefined, restart);
         controls.prediction_mode = this->predictionMode();
         return controls;
     } else
         throw std::logic_error("Trying to get production data from an injector");
 }
 
-Well::InjectionControls Well::injectionControls(const SummaryState& st) const {
+Well::InjectionControls Well::injectionControls(const SummaryState& st, bool restart) const {
     if (!this->isProducer()) {
-        auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined);
+        auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined, restart);
         controls.prediction_mode = this->predictionMode();
         return controls;
     } else

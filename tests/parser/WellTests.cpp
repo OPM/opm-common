@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 
     BOOST_CHECK(p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
 
-    const auto& controls = p.controls(st, 0);
+    const auto& controls = p.controls(st, 0, false);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
@@ -651,7 +651,7 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.controlMode == Opm::Well::ProducerCMode::WRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
-    const auto& controls = p.controls(st, 0);
+    const auto& controls = p.controls(st, 0, false);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
@@ -669,7 +669,7 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.controlMode == Opm::Well::ProducerCMode::GRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
-    const auto& controls = p.controls(st, 0);
+    const auto& controls = p.controls(st, 0, false);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.controlMode == Opm::Well::ProducerCMode::LRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
-    const auto& controls = p.controls(st, 0);
+    const auto& controls = p.controls(st, 0, false);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK(p.controlMode == Opm::Well::ProducerCMode::RESV);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
-    const auto& controls = p.controls(st, 0);
+    const auto& controls = p.controls(st, 0, false);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
@@ -727,7 +727,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
     BOOST_CHECK_EQUAL(p.ALQValue.get<double>(), 10.);
-    const auto& controls = p.controls(st, 0);
+    const auto& controls = p.controls(st, 0, false);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
@@ -746,7 +746,7 @@ BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
     BOOST_CHECK(p.controlMode == Opm::Well::ProducerCMode::BHP);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well::ProducerCMode::BHP));
-    const auto& controls = p.controls(st, 0);
+    const auto& controls = p.controls(st, 0, false);
     BOOST_CHECK_EQUAL(controls.bhp_limit, 5e7);
 }
 
@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     // Use a scalar FIELD variable - that should work; although it is a bit weird.
     st.update("FUX", 1);
     prod.OilRate = UDAValue("FUX");
-    BOOST_CHECK_EQUAL(1, prod.controls(st, 0).oil_rate);
+    BOOST_CHECK_EQUAL(1, prod.controls(st, 0, false).oil_rate);
 
 
     // Use the wellrate WUX for well OP1; the well is now added with
@@ -855,7 +855,7 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     // correct well value.
     prod.OilRate = UDAValue("WUX");
     st.update_well_var("OP1", "WUX", 10);
-    BOOST_CHECK_EQUAL(10, prod.controls(st, 0).oil_rate);
+    BOOST_CHECK_EQUAL(10, prod.controls(st, 0, false).oil_rate);
 }
 
 

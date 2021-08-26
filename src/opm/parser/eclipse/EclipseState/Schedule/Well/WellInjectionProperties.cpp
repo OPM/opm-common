@@ -276,14 +276,14 @@ namespace Opm {
     }
 
 
-     Well::InjectionControls Well::WellInjectionProperties::controls(const UnitSystem& unit_sys, const SummaryState& st, double udq_def) const {
+Well::InjectionControls Well::WellInjectionProperties::controls(const UnitSystem& unit_sys, const SummaryState& st, double udq_def, bool restart) const {
         InjectionControls controls(this->injectionControls);
 
-        controls.surface_rate = UDA::eval_well_uda_rate(this->surfaceInjectionRate, this->name, st, udq_def, this->injectorType, unit_sys);
-        controls.reservoir_rate = UDA::eval_well_uda(this->reservoirInjectionRate, this->name, st, udq_def);
+        controls.surface_rate = UDA::eval_well_uda_rate(this->surfaceInjectionRate, this->name, st, udq_def, this->injectorType, unit_sys, restart);
+        controls.reservoir_rate = UDA::eval_well_uda(this->reservoirInjectionRate, this->name, st, udq_def, restart);
         if (this->predictionMode) {
-            controls.bhp_limit = UDA::eval_well_uda(this->BHPTarget, this->name, st, udq_def);
-            controls.thp_limit = UDA::eval_well_uda(this->THPTarget, this->name, st, udq_def);
+            controls.bhp_limit = UDA::eval_well_uda(this->BHPTarget, this->name, st, udq_def, restart);
+            controls.thp_limit = UDA::eval_well_uda(this->THPTarget, this->name, st, udq_def, restart);
         } else {
             controls.bhp_limit = this->bhp_hist_limit;
             controls.thp_limit = this->thp_hist_limit;

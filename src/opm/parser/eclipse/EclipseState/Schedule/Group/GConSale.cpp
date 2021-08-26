@@ -48,12 +48,12 @@ const GConSale::GCONSALEGroup& GConSale::get(const std::string& name) const {
 }
 
 const GConSale::GCONSALEGroupProp GConSale::get(const std::string& name, const SummaryState& st) const {
-
+    bool restart = false;
     GCONSALEGroupProp prop;
     const GConSale::GCONSALEGroup& group = this->get(name);
-    prop.sales_target = UDA::eval_group_uda(group.sales_target, name, st, group.udq_undefined);
-    prop.max_sales_rate = UDA::eval_group_uda(group.max_sales_rate, name, st, group.udq_undefined);
-    prop.min_sales_rate = UDA::eval_group_uda(group.min_sales_rate, name, st, group.udq_undefined);
+    prop.sales_target = UDA::eval_group_uda(group.sales_target, name, st, group.udq_undefined, restart);
+    prop.max_sales_rate = UDA::eval_group_uda(group.max_sales_rate, name, st, group.udq_undefined, restart);
+    prop.min_sales_rate = UDA::eval_group_uda(group.min_sales_rate, name, st, group.udq_undefined, restart);
     prop.max_proc = group.max_proc;
     return prop;
 }

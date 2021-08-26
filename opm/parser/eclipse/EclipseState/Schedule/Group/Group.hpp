@@ -282,8 +282,8 @@ struct ProductionControls {
     const std::vector<std::string>& wells() const;
     const std::vector<std::string>& groups() const;
     bool wellgroup() const;
-    ProductionControls productionControls(const SummaryState& st) const;
-    InjectionControls injectionControls(Phase phase, const SummaryState& st) const;
+    ProductionControls productionControls(const SummaryState& st, bool restart = false) const;
+    InjectionControls injectionControls(Phase phase, const SummaryState& st, bool restart = false) const;
     bool hasInjectionControl(Phase phase) const;
     const GroupProductionProperties& productionProperties() const;
     const std::map<Phase , GroupInjectionProperties>& injectionProperties() const;

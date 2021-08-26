@@ -335,19 +335,19 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
     }
 
 
-    Well::ProductionControls Well::WellProductionProperties::controls(const SummaryState& st, double udq_undef) const {
+    Well::ProductionControls Well::WellProductionProperties::controls(const SummaryState& st, double udq_undef, bool restart) const {
         Well::ProductionControls controls(this->m_productionControls);
 
-        controls.oil_rate = UDA::eval_well_uda(this->OilRate, this->name, st, udq_undef);
-        controls.water_rate = UDA::eval_well_uda(this->WaterRate, this->name, st, udq_undef);
-        controls.gas_rate = UDA::eval_well_uda(this->GasRate, this->name, st, udq_undef);
-        controls.liquid_rate = UDA::eval_well_uda(this->LiquidRate, this->name, st, udq_undef);
-        controls.resv_rate = UDA::eval_well_uda(this->ResVRate, this->name, st, udq_undef);
-        controls.alq_value = UDA::eval_well_uda(this->ALQValue, this->name, st, udq_undef);
+        controls.oil_rate = UDA::eval_well_uda(this->OilRate, this->name, st, udq_undef, restart);
+        controls.water_rate = UDA::eval_well_uda(this->WaterRate, this->name, st, udq_undef, restart);
+        controls.gas_rate = UDA::eval_well_uda(this->GasRate, this->name, st, udq_undef, restart);
+        controls.liquid_rate = UDA::eval_well_uda(this->LiquidRate, this->name, st, udq_undef, restart);
+        controls.resv_rate = UDA::eval_well_uda(this->ResVRate, this->name, st, udq_undef, restart);
+        controls.alq_value = UDA::eval_well_uda(this->ALQValue, this->name, st, udq_undef, restart);
 
         if (this->predictionMode) {
-            controls.bhp_limit = UDA::eval_well_uda(this->BHPTarget, this->name, st, udq_undef);
-            controls.thp_limit = UDA::eval_well_uda(this->THPTarget, this->name, st, udq_undef);
+            controls.bhp_limit = UDA::eval_well_uda(this->BHPTarget, this->name, st, udq_undef, restart);
+            controls.thp_limit = UDA::eval_well_uda(this->THPTarget, this->name, st, udq_undef, restart);
         } else {
             controls.bhp_limit = this->bhp_hist_limit;
             controls.thp_limit = this->thp_hist_limit;

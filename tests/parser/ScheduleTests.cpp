@@ -896,7 +896,7 @@ WELTARG
 
     const auto& well_2 = schedule.getWell("OP_1", 2);
     const auto wpp_2 = well_2.getProductionProperties();
-    const auto prod_controls = wpp_2.controls(st, 0);
+    const auto prod_controls = wpp_2.controls(st, 0, false);
 
     BOOST_CHECK_EQUAL(prod_controls.oil_rate, 1300 * siFactorL);
     BOOST_CHECK_EQUAL(prod_controls.water_rate, 1400 * siFactorL);
@@ -968,7 +968,7 @@ WELTARG
     BOOST_CHECK( wpp_2.OilRate.is<std::string>() );
     BOOST_CHECK_EQUAL( wpp_2.OilRate.get<std::string>(), "WUORAT" );
     BOOST_CHECK_EQUAL( wpp_2.WaterRate.get<std::string>(), "WUWRAT" );
-    const auto prod_controls = wpp_2.controls(st, 0);
+    const auto prod_controls = wpp_2.controls(st, 0, false);
 
     BOOST_CHECK_EQUAL(prod_controls.oil_rate, 10 * siFactorL);
     BOOST_CHECK_EQUAL(prod_controls.water_rate, 20 * siFactorL);
@@ -1397,14 +1397,14 @@ WCONINJH
 
     // The BHP limit should not be effected by WCONHIST
     {
-        const auto& c1 = sched.getWell("P",1).getProductionProperties().controls(st, 0);
-        const auto& c2 = sched.getWell("P",2).getProductionProperties().controls(st, 0);
+        const auto& c1 = sched.getWell("P",1).getProductionProperties().controls(st, 0, false);
+        const auto& c2 = sched.getWell("P",2).getProductionProperties().controls(st, 0, false);
         BOOST_CHECK_EQUAL(c1.bhp_limit, 50 * 1e5); // 1
         BOOST_CHECK_EQUAL(c2.bhp_limit, 50 * 1e5); // 2
     }
     {
-        const auto& c1 = sched.getWell("I",1).getInjectionProperties().controls(unit_system, st, 0);
-        const auto& c2 = sched.getWell("I",2).getInjectionProperties().controls(unit_system, st, 0);
+        const auto& c1 = sched.getWell("I",1).getInjectionProperties().controls(unit_system, st, 0, false);
+        const auto& c2 = sched.getWell("I",2).getInjectionProperties().controls(unit_system, st, 0, false);
         BOOST_CHECK_EQUAL(c1.bhp_limit, 600 * 1e5); // 1
         BOOST_CHECK_EQUAL(c2.bhp_limit, 600 * 1e5); // 2
     }
@@ -1415,8 +1415,8 @@ WCONINJH
     BOOST_CHECK_EQUAL(sched.getWell("I", 3).getProductionProperties().hasProductionControl(Opm::Well::ProducerCMode::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell("I", 4).getInjectionProperties().hasInjectionControl(Opm::Well::InjectorCMode::BHP), true );
     {
-        const auto& c3 = sched.getWell("I",3).getInjectionProperties().controls(unit_system, st, 0);
-        const auto& c4 = sched.getWell("I",4).getInjectionProperties().controls(unit_system, st, 0);
+        const auto& c3 = sched.getWell("I",3).getInjectionProperties().controls(unit_system, st, 0, false);
+        const auto& c4 = sched.getWell("I",4).getInjectionProperties().controls(unit_system, st, 0, false);
         BOOST_CHECK_EQUAL(c3.bhp_limit, 0); // 1
         BOOST_CHECK_EQUAL(c4.bhp_limit, 6891.2 * 1e5); // 2
     }
