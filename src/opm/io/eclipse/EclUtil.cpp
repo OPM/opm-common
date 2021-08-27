@@ -436,16 +436,19 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t si
             OPM_THROW(std::runtime_error, "Error reading binary data, inconsistent header data or incorrect number of elements");
         }
 
-        for (int i = 0; i < num; i++) {
-            T2 value;
-
-            if constexpr (std::is_same_v<T2, std::string>) {
+        if constexpr (std::is_same_v<T2, std::string>) {
+            for (int i = 0; i < num; i++) {
+                T2 value;
                 value.resize(sizeOfElement) ;
                 fileH.read(&value[0], sizeOfElement);
-            } else
-                fileH.read(reinterpret_cast<char*>(&value), sizeOfElement);
+                arr.push_back(flip(value));
+            }
+        } else {
+            std::vector<T2> buf(num);
+            fileH.read(reinterpret_cast<char*>(buf.data()), buf.size()*sizeof(T2));
 
-            arr.push_back(flip(value));
+            for (size_t n=0; n < num; n++)
+                arr.push_back(flip(buf[n]));
         }
 
         rest -= num;

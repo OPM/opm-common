@@ -365,7 +365,7 @@ void EGrid::getCellCorners(int globindex, std::array<double,8>& X,
 }
 
 
-std::vector<std::array<float, 3>> EGrid::getXYZ_layer(int layer, std::array<int, 4>& box, bool bottom)
+std::vector<std::array<float, 3>> EGrid::getXYZ_layer(int layer, const std::array<int, 4>& box, bool bottom)
 {
    // layer is layer index, zero based. The box array is i and j range (i1,i2,j1,j2), also zero based
 
@@ -440,6 +440,7 @@ std::vector<std::array<float, 3>> EGrid::getXYZ_layer(int layer, bool bottom)
     return this->getXYZ_layer(layer, box, bottom);
 }
 
+
 std::vector<float> EGrid::get_zcorn_from_disk(int layer, bool bottom)
 {
     if (formatted)
@@ -490,24 +491,43 @@ std::vector<float> EGrid::get_zcorn_from_disk(int layer, bool bottom)
 
     fileH.seekg(start_pos, std::ios_base::beg);
 
-    float value;
-    int zcorn_to = zcorn_offset + nodes_pr_surf;
+    uint64_t zcorn_to = zcorn_offset + nodes_pr_surf;
 
-    for (int ind = zcorn_offset; ind < zcorn_to; ind++) {
+    int i1 = zcorn_offset / 1000 + 1;
+    uint64_t elemets = static_cast<uint64_t>(i1 * elements_pr_block - zcorn_offset);
 
-        if ((ind > 0) && ((ind % elements_pr_block) == 0))
-            fileH.seekg(static_cast<std::streamoff>(2*Opm::EclIO::sizeOfInte), std::ios_base::cur);
+    uint64_t next_block = elemets < zcorn_to ? elemets : zcorn_to - zcorn_offset + 1 ;
 
-        fileH.read(reinterpret_cast<char*>(&value), Opm::EclIO::sizeOfReal);
-        value = Opm::EclIO::flipEndianFloat(value);
+    uint64_t p1 = zcorn_offset;
 
-        zcorn_layer.push_back(value);
+    while (p1 < zcorn_to){
+
+        std::vector<float> buf(next_block);
+        fileH.read(reinterpret_cast<char*>(buf.data()), buf.size()*sizeof(float));
+
+        for (size_t n = 0; n < next_block; n++)
+            zcorn_layer.push_back(Opm::EclIO::flipEndianFloat(buf[n]));
+
+        p1 = p1 + next_block;
+
+        if (p1 < zcorn_to) {
+            int dtail;
+            fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
+            fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
+            dtail = Opm::EclIO::flipEndianInt(dtail);
+
+            next_block = static_cast<uint64_t>(dtail) / static_cast<uint64_t>(Opm::EclIO::sizeOfReal);
+
+            if ((p1 + next_block) > zcorn_to)
+                next_block = zcorn_to - p1;
+        }
     }
 
     fileH.close();
 
     return zcorn_layer;
 }
+
 
 void EGrid::getCellCorners(const std::array<int, 3>& ijk, const std::vector<float>& zcorn_layer,
                            std::array<double,4>& X, std::array<double,4>& Y, std::array<double,4>& Z)
