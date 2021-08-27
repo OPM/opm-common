@@ -69,7 +69,7 @@ struct SummaryConfigContext {
         "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
         "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
         "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
-        "FWIT",  "FWPR",  "FWPT",
+        "FWIT",  "FWPR",  "FWPT", "FSIP",
         "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
         "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
         "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT",
@@ -141,7 +141,8 @@ struct SummaryConfigContext {
          {"GIPG" , {"RGIPG", "FGIPG"}},
          {"WIP"  , {"RWIP" , "FWIP"}},
          {"SWAT" , {"BSWAT"}},
-         {"SGAS" , {"BSGAS"}}
+         {"SGAS" , {"BSGAS"}},
+         {"SALT" , {"FSIP"}}
     };
 
     using keyword_set = std::unordered_set<std::string>;
