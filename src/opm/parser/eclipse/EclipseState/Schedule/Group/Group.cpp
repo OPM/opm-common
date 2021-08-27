@@ -288,6 +288,23 @@ bool Group::GroupInjectionProperties::updateUDQActive(const UDQConfig& udq_confi
     return (update_count > 0);
 }
 
+bool Group::GroupInjectionProperties::uda_phase() const {
+    if (this->surface_max_rate.is<std::string>())
+        return true;
+
+    if (this->resv_max_rate.is<std::string>())
+        return true;
+
+    if (this->target_reinj_fraction.is<std::string>())
+        return true;
+
+    if (this->target_void_fraction.is<std::string>())
+        return true;
+
+    return false;
+}
+
+
 Group::GroupProductionProperties::GroupProductionProperties() :
     GroupProductionProperties(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "")
 {}
