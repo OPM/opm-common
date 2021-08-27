@@ -287,6 +287,7 @@ struct ProductionControls {
     bool hasInjectionControl(Phase phase) const;
     const GroupProductionProperties& productionProperties() const;
     const std::map<Phase , GroupInjectionProperties>& injectionProperties() const;
+    const GroupInjectionProperties& injectionProperties(Phase phase) const;
     const GroupType& getGroupType() const;
     ProductionCMode prod_cmode() const;
     InjectionCMode injection_cmode() const;
