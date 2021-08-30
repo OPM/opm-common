@@ -3620,6 +3620,9 @@ namespace {
     make_default_nodes(const std::string& keyword,
                        const Opm::Schedule& sched)
     {
+        if (Opm::TimeService::valid_month(keyword))
+            return {};
+
         auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
         auto category = Opm::parseKeywordCategory(keyword);
         auto type = Opm::parseKeywordType(keyword);
@@ -3737,9 +3740,6 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const EclipseState& 
         }
 
         if (node.is_user_defined())
-            continue;
-
-        if (TimeService::valid_month(node.keyword))
             continue;
 
         throw std::logic_error {
