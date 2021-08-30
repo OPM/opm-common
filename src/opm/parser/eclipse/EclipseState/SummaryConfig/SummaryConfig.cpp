@@ -979,14 +979,15 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
 
         const auto kw_whitelist = std::vector<const char*> {
-            "SOFR", "SGFR", "SWFR", "SPR", "SPRD", "SPRDH", "SPRDF", "SPRDA",
+            "SOFR", "SGFR", "SWFR", "SWCT",
+            "SPR", "SPRD", "SPRDH", "SPRDF", "SPRDA",
         };
 
         return std::any_of(kw_whitelist.begin(), kw_whitelist.end(),
-                           [&kw](const char* known) -> bool
-                           {
-                               return kw == known;
-                           });
+            [&kw](const char* known) -> bool
+            {
+                return kw == known;
+            });
     }
 
 
@@ -997,11 +998,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             ? well.getSegments().size() : 0;
     }
 
-    void makeSegmentNodes(const std::size_t               last_timestep,
-                          const int                       segID,
-                          const DeckKeyword&              keyword,
-                          const Well&                    well,
-                          SummaryConfig::keyword_list&    list)
+    void makeSegmentNodes(const std::size_t            last_timestep,
+                          const int                    segID,
+                          const DeckKeyword&           keyword,
+                          const Well&                  well,
+                          SummaryConfig::keyword_list& list)
     {
         if (!well.isMultiSegment())
             // Not an MSW.  Don't create summary vectors for segments.

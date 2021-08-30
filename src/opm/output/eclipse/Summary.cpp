@@ -2002,6 +2002,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SOFR", srate< rt::oil > },
     { "SWFR", srate< rt::wat > },
     { "SGFR", srate< rt::gas > },
+    { "SWCT", div(srate<rt::wat>, sum(srate<rt::wat>, srate<rt::oil>)) },
     { "SPR", segpress<Opm::data::SegmentPressures::Value::Pressure> },
     { "SPRD", segpress<Opm::data::SegmentPressures::Value::PDrop> },
     { "SPRDH", segpress<Opm::data::SegmentPressures::Value::PDropHydrostatic> },
