@@ -418,9 +418,9 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t si
         std::get<0>(sizeData) = elementSize;
     }
 
-    int sizeOfElement = std::get<0>(sizeData);
-    int maxBlockSize = std::get<1>(sizeData);
-    int maxNumberOfElements = maxBlockSize / sizeOfElement;
+    const int sizeOfElement = std::get<0>(sizeData);
+    const int maxBlockSize = std::get<1>(sizeData);
+    const int maxNumberOfElements = maxBlockSize / sizeOfElement;
 
     arr.reserve(size);
 
@@ -430,7 +430,7 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t si
         int dhead;
         fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
         dhead = Opm::EclIO::flipEndianInt(dhead);
-        int num = dhead / sizeOfElement;
+        const int num = dhead / sizeOfElement;
 
         if ((num > maxNumberOfElements) || (num < 0)) {
             OPM_THROW(std::runtime_error, "Error reading binary data, inconsistent header data or incorrect number of elements");
@@ -447,8 +447,8 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t si
             std::vector<T2> buf(num);
             fileH.read(reinterpret_cast<char*>(buf.data()), buf.size()*sizeof(T2));
 
-            for (size_t n=0; n < num; n++)
-                arr.push_back(flip(buf[n]));
+            for (const auto& value : buf)
+                arr.push_back(flip(value));
         }
 
         rest -= num;
