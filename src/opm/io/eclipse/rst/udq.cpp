@@ -19,6 +19,7 @@
 #include <fmt/format.h>
 
 #include <opm/io/eclipse/rst/udq.hpp>
+#include <opm/output/eclipse/UDQDims.hpp>
 
 namespace Opm {
 namespace RestartIO {
@@ -104,6 +105,42 @@ const std::vector<std::pair<std::string, double>>& RstUDQ::values() const {
 std::optional<double> RstUDQ::field_value() const {
     const auto& define = std::get<RstDefine>(this->data);
     return define.field_value;
+}
+
+RstUDQActive::RstRecord::RstRecord(UDAControl c, std::size_t i, std::size_t u1, std::size_t u2)
+    : control(c)
+    , input_index(i)
+    , use_count(u1)
+    , wg_offset(u2)
+{}
+
+RstUDQActive::RstUDQActive(const std::vector<int>& iuad_arg, const std::vector<int>& iuap, const std::vector<int>& igph)
+{
+    auto uda_size = UDQDims::entriesPerIUAD();
+    for (std::size_t iuad_index = 0; iuad_index < iuad_arg.size() / uda_size; iuad_index++) {
+        auto offset = iuad_index * uda_size;
+        this->iuad.emplace_back( UDQ::udaControl(iuad_arg[offset + 0]),
+                                 iuad_arg[offset + 1] - 1,
+                                 iuad_arg[offset + 3],
+                                 iuad_arg[offset + 4] - 1);
+    }
+
+    std::transform(iuap.begin(), iuap.end(), std::back_inserter(this->wg_index), [](const int& value) { return value - 1;});
+
+    for (const auto& int_phase : igph) {
+        Phase phase{Phase::OIL};
+
+        if (int_phase == 1)
+            phase = Phase::OIL;
+
+        if (int_phase == 2)
+            phase = Phase::WATER;
+
+        if (int_phase == 3)
+            phase = Phase::GAS;
+
+        this->ig_phase.push_back(phase);
+    };
 }
 
 }

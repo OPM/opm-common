@@ -469,6 +469,59 @@ int udaCode(UDAControl control)
     return lookup_control_map_value(c2uda, control);
 }
 
+bool group_control(UDAControl control) {
+    if (control == UDAControl::GCONPROD_OIL_TARGET)
+        return true;
+
+    if (control == UDAControl::GCONPROD_WATER_TARGET)
+        return true;
+
+    if (control == UDAControl::GCONPROD_GAS_TARGET)
+        return true;
+
+    if (control == UDAControl::GCONPROD_LIQUID_TARGET)
+        return true;
+
+    if (control == UDAControl::GCONINJE_SURFACE_MAX_RATE)
+        return true;
+
+    if (control == UDAControl::GCONINJE_RESV_MAX_RATE)
+        return true;
+
+    if (control == UDAControl::GCONINJE_TARGET_REINJ_FRACTION)
+        return true;
+
+    if (control == UDAControl::GCONINJE_TARGET_VOID_FRACTION)
+        return true;
+
+    return false;
+}
+
+bool well_control(UDAControl control) {
+    return !group_control(control);
+}
+
+bool injection_control(UDAControl control) {
+    switch (control) {
+    case UDAControl::WCONINJE_RATE:
+    case UDAControl::WCONINJE_RESV:
+    case UDAControl::WCONINJE_BHP:
+    case UDAControl::WCONINJE_THP:
+    case UDAControl::GCONINJE_SURFACE_MAX_RATE:
+    case UDAControl::GCONINJE_RESV_MAX_RATE:
+    case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
+    case UDAControl::GCONINJE_TARGET_VOID_FRACTION:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool production_control(UDAControl control) {
+    return !injection_control(control);
+}
+
+
 UDAControl udaControl(int uda_code) {
     switch (uda_code) {
     case 300004:

@@ -16,14 +16,43 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
 
-#include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <iostream>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
+
+std::vector<UDQActive::RstRecord> UDQActive::load_rst(const UnitSystem& units,
+                                                      const UDQConfig& udq_config,
+                                                      const RestartIO::RstState& rst_state,
+                                                      const std::vector<std::string>& well_names,
+                                                      const std::vector<std::string>& group_names)
+{
+    std::vector<RstRecord> records;
+    const auto& rst_active = rst_state.udq_active;
+
+    for (const auto& record : rst_active.iuad) {
+        const auto& udq_input = udq_config[record.input_index];
+        UDAValue uda(udq_input.keyword(), units.uda_dim(record.control));
+        for (std::size_t use_index = 0; use_index < record.use_count; use_index++) {
+            std::size_t wg_index = rst_active.wg_index[record.wg_offset + use_index];
+
+            if (UDQ::well_control(record.control))
+                records.emplace_back(record.control, uda, well_names[wg_index]);
+            else {
+                if (UDQ::production_control(record.control))
+                    records.emplace_back(record.control, uda, group_names[wg_index]);
+                else
+                    records.emplace_back(record.control, uda, group_names[wg_index], rst_active.ig_phase[wg_index]);
+            }
+        }
+    }
+    return records;
+}
 
 UDQActive UDQActive::serializeObject()
 {

@@ -189,11 +189,15 @@ namespace UDQ {
     bool setFunc(UDQTokenType token_type);
     bool trailingSpace(UDQTokenType token_type);
     bool leadingSpace(UDQTokenType token_type);
-
+    bool group_control(UDAControl control);
+    bool well_control(UDAControl control);
+    bool injection_control(UDAControl control);
+    bool production_control(UDAControl control);
 
     std::string typeName(UDQVarType var_type);
     UDAKeyword keyword(UDAControl control);
     int udaCode(UDAControl control);
+    UDAControl udaControl(int uda_code);
 
     constexpr double restart_default = -0.3E+21;
 } // UDQ

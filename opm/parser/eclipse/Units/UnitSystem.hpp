@@ -26,6 +26,8 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+
 
 namespace Opm {
 
@@ -97,7 +99,7 @@ namespace Opm {
         const Dimension& getNewDimension(const std::string& dimension);
         const Dimension& getDimension(const std::string& dimension) const;
         Dimension getDimension(measure m) const;
-
+        Dimension uda_dim(UDAControl control) const;
 
         bool hasDimension(const std::string& dimension) const;
         bool equal(const UnitSystem& other) const;

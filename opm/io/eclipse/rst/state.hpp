@@ -58,6 +58,7 @@ struct RstState {
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
     std::vector<RstUDQ> udqs;
+    RstUDQActive udq_active;
     Tuning tuning;
 
 private:

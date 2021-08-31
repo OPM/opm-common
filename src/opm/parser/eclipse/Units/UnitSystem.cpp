@@ -1308,6 +1308,42 @@ namespace {
     }
 
 
+    Dimension UnitSystem::uda_dim(UDAControl control) const {
+        switch (control) {
+        case UDAControl::WCONPROD_ORAT:
+        case UDAControl::WCONPROD_WRAT:
+        case UDAControl::WCONPROD_LRAT:
+        case UDAControl::GCONPROD_OIL_TARGET:
+        case UDAControl::GCONPROD_WATER_TARGET:
+        case UDAControl::GCONPROD_LIQUID_TARGET:
+            return this->getDimension(UnitSystem::measure::liquid_surface_rate);
+
+        case UDAControl::WCONINJE_RESV:
+        case UDAControl::WCONPROD_RESV:
+        case UDAControl::GCONINJE_RESV_MAX_RATE:
+            return this->getDimension(UnitSystem::measure::geometric_volume_rate);
+
+        case UDAControl::WCONPROD_GRAT:
+            return this->getDimension(UnitSystem::measure::gas_surface_rate);
+
+        case UDAControl::WCONPROD_BHP:
+        case UDAControl::WCONPROD_THP:
+        case UDAControl::WCONINJE_THP:
+        case UDAControl::WCONINJE_BHP:
+            return this->getDimension(UnitSystem::measure::pressure);
+
+        case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
+        case UDAControl::GCONINJE_TARGET_VOID_FRACTION:
+        case UDAControl::GCONINJE_SURFACE_MAX_RATE:
+        case UDAControl::WCONINJE_RATE:
+            return this->getDimension(UnitSystem::measure::identity);
+
+        default:
+            throw std::logic_error("No dimension");
+        }
+    }
+
+
     std::size_t UnitSystem::use_count() const {
         return this->m_use_count;
     }

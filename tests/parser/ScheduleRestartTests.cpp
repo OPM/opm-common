@@ -143,3 +143,31 @@ BOOST_AUTO_TEST_CASE(LoadRestartSim) {
     compare_sched("SPE1CASE2.DATA", "SPE1CASE2_RESTART_SKIPREST.DATA", "SPE1CASE2.X0060", 60);
     compare_sched("SPE1CASE2.DATA", "SPE1CASE2_RESTART.DATA", "SPE1CASE2.X0060", 60);
 }
+
+
+BOOST_AUTO_TEST_CASE(LoadUDQRestartSim) {
+    const auto& [sched, restart_sched] = load_schedule_pair("UDQ_WCONPROD.DATA", "UDQ_WCONPROD_RESTART.DATA", "UDQ_WCONPROD.X0006", 6);
+    std::size_t report_step = 10;
+    SummaryState st(TimeService::now());
+    st.update_well_var("OPL02", "WUOPRL", 1);
+    st.update_well_var("OPL02", "WULPRL", 11);
+    st.update_well_var("OPU02", "WUOPRU", 111);
+    st.update_well_var("OPU02", "WULPRU", 1111);
+
+    for (const auto& wname : sched.wellNames(report_step)) {
+        const auto& well = sched.getWell(wname, report_step);
+        const auto& rst_well = restart_sched.getWell(wname, report_step);
+
+        if (well.isProducer()) {
+            const auto& controls = well.productionControls(st);
+            auto rst_controls = rst_well.productionControls(st);
+            /*
+              The cmode in the base case is the cmode set by the input deck,
+              whereas the cmode in restart case is what cmode was active when
+              the restart file was written - these can deviate.
+            */
+            rst_controls.cmode = controls.cmode;
+            BOOST_CHECK( controls == rst_controls );
+        }
+    }
+}

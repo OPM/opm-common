@@ -38,6 +38,7 @@
 
 #include <opm/io/eclipse/OutputStream.hpp>
 
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 #include <exception>
@@ -186,6 +187,16 @@ struct SimulationCase
 
 BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
 
+bool udq_contains(const std::vector<Opm::UDQActive::RstRecord>& records, Opm::UDAControl control, const std::string& udq, const std::string wgname) {
+    auto find_iter = std::find_if(records.begin(),
+                                  records.end(),
+                                  [&control, &udq, &wgname] (const Opm::UDQActive::RstRecord& record) {
+                                      return record.control == control &&
+                                             record.wgname == wgname &&
+                                             record.value.get<std::string>() == udq;
+                                  });
+    return find_iter != records.end();
+}
 
 
 // test constructed UDQ restart data
@@ -761,8 +772,9 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         }
 
 
+        const std::size_t report_step = 1;
         const auto& udq_params = es.runspec().udqParams();
-        const auto& input_config = sched[1].udq();
+        const auto& input_config = sched[report_step].udq();
         Opm::UDQConfig rst_config(udq_params, rst_state);
         BOOST_CHECK_EQUAL(input_config.size(), rst_config.size());
         BOOST_CHECK_EQUAL(input_config.definitions().size(), rst_config.definitions().size());
@@ -790,6 +802,19 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
             BOOST_CHECK(input_eval == rst_eval);
         }
+
+
+        const auto& uda_records = Opm::UDQActive::load_rst(es.getUnits(),
+                                                           input_config,
+                                                           rst_state,
+                                                           sched.wellNames(report_step),
+                                                           sched.groupNames(report_step) );
+
+        BOOST_CHECK_EQUAL(uda_records.size(), 4);
+        BOOST_CHECK(udq_contains(uda_records, Opm::UDAControl::WCONPROD_ORAT, "WUOPRU", "PROD1"));
+        BOOST_CHECK(udq_contains(uda_records, Opm::UDAControl::WCONPROD_LRAT, "WULPRU", "PROD1"));
+        BOOST_CHECK(udq_contains(uda_records, Opm::UDAControl::WCONPROD_ORAT, "WUOPRU", "PROD2"));
+        BOOST_CHECK(udq_contains(uda_records, Opm::UDAControl::WCONPROD_LRAT, "WULPRU", "PROD2"));
     }
 }
 

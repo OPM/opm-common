@@ -375,4 +375,47 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         return (update_count > 0);
     }
 
+    void Well::WellProductionProperties::update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value) {
+        switch (control) {
+        case UDAControl::WCONPROD_ORAT:
+            this->OilRate = value;
+            udq_active.update(udq_config, this->OilRate, this->name, UDAControl::WCONPROD_ORAT);
+            break;
+
+        case UDAControl::WCONPROD_GRAT:
+            this->GasRate = value;
+            udq_active.update(udq_config, this->GasRate, this->name, UDAControl::WCONPROD_GRAT);
+            break;
+
+        case UDAControl::WCONPROD_WRAT:
+            this->WaterRate = value;
+            udq_active.update(udq_config, this->WaterRate, this->name, UDAControl::WCONPROD_WRAT);
+            break;
+
+        case UDAControl::WCONPROD_LRAT:
+            this->LiquidRate = value;
+            udq_active.update(udq_config, this->LiquidRate, this->name, UDAControl::WCONPROD_LRAT);
+            break;
+
+        case UDAControl::WCONPROD_RESV:
+            this->ResVRate = value;
+            udq_active.update(udq_config, this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
+            break;
+
+        case UDAControl::WCONPROD_BHP:
+            this->BHPTarget = value;
+            udq_active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONPROD_BHP);
+            break;
+
+        case UDAControl::WCONPROD_THP:
+            this->BHPTarget = value;
+            udq_active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONPROD_THP);
+            break;
+
+        default:
+            throw std::logic_error("Invalid UDA control");
+        }
+
+    }
+
 } // namespace Opm
