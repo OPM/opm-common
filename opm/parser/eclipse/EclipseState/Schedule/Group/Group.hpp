@@ -151,6 +151,8 @@ struct GroupInjectionProperties {
     bool operator==(const GroupInjectionProperties& other) const;
     bool operator!=(const GroupInjectionProperties& other) const;
     bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+    bool uda_phase() const;
+
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

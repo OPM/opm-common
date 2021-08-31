@@ -718,28 +718,35 @@ const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Sc
                                                                    const std::size_t simStep,
                                                                    const std::vector<int>& inteHead )
 {
+    auto update_phase = [](int& phase, int new_phase) {
+        if (phase != 0)
+            throw std::logic_error("Can not write restart files with UDA control on multiple phases in same group");
+
+        phase = new_phase;
+    };
+
     const auto curGroups = sched.restart_groups(simStep);
     std::vector<int> inj_phase(ngmaxz(inteHead), 0);
     for (std::size_t ind = 0; ind < curGroups.size(); ind++) {
         if (curGroups[ind] != nullptr) {
             const auto& group = *curGroups[ind];
             if (group.isInjectionGroup()) {
-                /*
-                  Initial code could only inject one phase for each group, then
-                  numerical value '3' was used for the gas phase, that can not
-                  be right?
-                */
-                int phase_sum = 0;
-                if (group.hasInjectionControl(Opm::Phase::OIL))
-                    phase_sum += 1;
-                if (group.hasInjectionControl(Opm::Phase::WATER))
-                    phase_sum += 2;
-                if (group.hasInjectionControl(Opm::Phase::GAS))
-                    phase_sum += 4;
+                int int_phase{0};
+
+                for (const auto& [phase, int_value] : std::vector<std::pair<Phase, int>>{{Opm::Phase::OIL, 1},
+                                                                                         {Opm::Phase::WATER, 2},
+                                                                                         {Opm::Phase::GAS, 3}}) {
+                    if (group.hasInjectionControl(phase)) {
+                        const auto& gas_props = group.injectionProperties(phase);
+                        if (gas_props.uda_phase())
+                            update_phase(int_phase, int_value);
+                    }
+                }
+
                 if (group.name() == "FIELD") {
-                    inj_phase[ngmaxz(inteHead) - 1] = phase_sum;
+                    inj_phase[ngmaxz(inteHead) - 1] = int_phase;
                 } else {
-                    inj_phase[group.insert_index()-1] = phase_sum;
+                    inj_phase[group.insert_index()-1] = int_phase;
                 }
             }
         }
