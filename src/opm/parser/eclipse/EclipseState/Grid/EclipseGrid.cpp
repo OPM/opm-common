@@ -1434,7 +1434,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                     const auto[i,j,k] = this->getIJK(global_index);
                     auto& r = *m_rv;
                     auto& t = *m_thetav;
-                    volume[active_index] = calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[4]);
+                    volume[active_index] = calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[0]);
                 } else
                     volume[active_index] = calculateCellVol(X, Y, Z);
             }
