@@ -476,7 +476,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 keyword_index++;
             }
 
-            checkIfAllConnectionsIsShut(report_step);
+            this->end_report(report_step);
 
             if (this->must_write_rst_file(report_step)) {
                 this->restart_output.addRestartOutput(report_step);
