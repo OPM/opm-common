@@ -131,13 +131,13 @@ namespace {
 
         if (rst) {
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, false, nullptr, &grid, &fp, "");
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, nullptr, &grid, &fp, "");
             this->load_rst(*rst, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp, "");
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, nullptr, &grid, &fp, "");
         } else
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, false, nullptr, &grid, &fp, "");
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, nullptr, &grid, &fp, "");
     }
     catch (const OpmInputError& opm_error) {
         OpmLog::error(opm_error.what());
@@ -260,7 +260,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const EclipseGrid* grid,
                                  const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
-                                 bool runtime,
+                                 bool actionx_mode,
                                  std::unordered_set<std::string> * affected_wells,
                                  const std::unordered_map<std::string, double> * target_wellpi) {
 
@@ -270,7 +270,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, currentStep, matching_wells, runtime , affected_wells, target_wellpi};
+        HandlerContext handlerContext { block, keyword, currentStep, matching_wells, actionx_mode, affected_wells, target_wellpi};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -352,7 +352,6 @@ private:
 void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_end,
                                       const ParseContext& parseContext ,
                                       ErrorGuard& errors,
-                                      bool runtime,
                                       const std::unordered_map<std::string, double> * target_wellpi,
                                       const EclipseGrid* grid,
                                       const FieldPropsManager* fp,
@@ -470,7 +469,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     grid,
                                     fp,
                                     {},
-                                    runtime,
+                                    false,
                                     nullptr,
                                     target_wellpi);
                 keyword_index++;
@@ -590,7 +589,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
      void Schedule::applyWELOPEN(const DeckKeyword& keyword,
                                  std::size_t currentStep,
-                                 bool runtime,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
                                  const std::vector<std::string>& matching_wells,
@@ -647,7 +645,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
               shut.
              */
             for (const auto& wname : well_names) {
-                if (!runtime) {
+                {
                     auto well = this->snapshots[currentStep].wells.get(wname);
                     this->snapshots[currentStep].wells.update( std::move(well) );
                 }
@@ -655,7 +653,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 const auto connection_status = Connection::StateFromString( status_str );
                 {
                     auto well = this->snapshots[currentStep].wells.get(wname);
-                    well.handleWELOPENConnections(record, connection_status, runtime);
+                    well.handleWELOPENConnections(record, connection_status);
                     this->snapshots[currentStep].wells.update( std::move(well) );
                 }
 
@@ -1145,6 +1143,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
     }
 
+    void Schedule::end_report(std::size_t report_step) {
+        this->checkIfAllConnectionsIsShut(report_step);
+    }
+
 
     void Schedule::filterConnections(const ActiveGridCells& grid) {
         for (auto& sched_state : this->snapshots) {
@@ -1215,6 +1217,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 &affected_wells,
                                 &target_wellpi);
         }
+        this->end_report(reportStep);
         if (!affected_wells.empty()) {
             this->snapshots.back().events().addEvent( ScheduleEvents::ACTIONX_WELL_EVENT );
             for (const auto& well: affected_wells)
@@ -1222,7 +1225,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         if (reportStep < this->m_sched_deck.size() - 1)
-            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, true, &target_wellpi, nullptr, nullptr, prefix);
+            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, &target_wellpi, nullptr, nullptr, prefix);
         OpmLog::info("\\----------------------------------------------------------------------");
 
         return affected_wells;

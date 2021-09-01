@@ -1392,7 +1392,7 @@ END
                         "P and Q must have the same internal connections pointers");
 
     auto connQ = std::make_shared<WellConnections>(wellP.getConnections());
-    wellQ.updateConnections(std::move(connQ), true, true);
+    wellQ.updateConnections(std::move(connQ), true);
     BOOST_CHECK_MESSAGE(! wellP.hasSameConnectionsPointers(wellQ),
                         "P and Q must NOT have the same internal connections pointers "
                         "after forcibly updating the connections structure");

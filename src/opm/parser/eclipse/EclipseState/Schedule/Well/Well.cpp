@@ -651,28 +651,17 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 }
 
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool runtime, bool force) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool force) {
     connections_arg->order(  );
     if (force || *this->connections != *connections_arg) {
         this->connections = connections_arg;
-
-        /*
-          During the parse process - i.e. runtime == false we can still have a
-          well which is open with all connections shut.
-        */
-
-        if (runtime) {
-            if (this->connections->allConnectionsShut())
-                this->updateStatus(Well::Status::SHUT);
-        }
-
         return true;
     }
     return false;
 }
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
-    bool update = this->updateConnections(connections_arg, false, false);
+    bool update = this->updateConnections(connections_arg, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
@@ -699,7 +688,7 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
     auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
                                                                      parseContext, errors);
 
-    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), false, false );
+    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), false );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
     return true;
 }
@@ -1001,7 +990,7 @@ int Well::fip_region_number() const {
 */
 
 
-bool Well::handleWELOPENConnections(const DeckRecord& record, Connection::State state_arg, bool runtime) {
+bool Well::handleWELOPENConnections(const DeckRecord& record, Connection::State state_arg) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -1021,7 +1010,7 @@ bool Well::handleWELOPENConnections(const DeckRecord& record, Connection::State 
 
         new_connections->add(c);
     }
-    return this->updateConnections(std::move(new_connections), runtime, false);
+    return this->updateConnections(std::move(new_connections), false);
 }
 
 
@@ -1051,7 +1040,7 @@ bool Well::handleCOMPLUMP(const DeckRecord& record) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections), false, false);
+    return this->updateConnections(std::move(new_connections), false);
 }
 
 
@@ -1078,7 +1067,7 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections), false, false);
+    return this->updateConnections(std::move(new_connections), false);
 }
 
 

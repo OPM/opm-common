@@ -298,7 +298,7 @@ namespace {
     }
 
     void Schedule::handleEXIT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        if (handlerContext.runtime)
+        if (handlerContext.actionx_mode)
             this->applyEXIT(handlerContext.keyword, handlerContext.currentStep);
     }
 
@@ -1222,11 +1222,11 @@ namespace {
     }
 
     void Schedule::handleWELOPEN (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        this->applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, handlerContext.runtime, parseContext, errors, handlerContext.matching_wells, handlerContext.affected_wells);
+        this->applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors, handlerContext.matching_wells, handlerContext.affected_wells);
     }
 
     void Schedule::handleWELPI(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        if (handlerContext.runtime)
+        if (handlerContext.actionx_mode)
             this->handleWELPIRuntime(handlerContext);
         else
             this->handleWELPI(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
@@ -1296,7 +1296,7 @@ namespace {
                 // Well::updateWellProductivityIndex() implicitly mutates
                 // internal state in the WellConnections class.
                 auto connections = std::make_shared<WellConnections>(well2.getConnections());
-                well2.updateConnections(std::move(connections), false, true);
+                well2.updateConnections(std::move(connections), true);
                 if (well2.updateWellProductivityIndex())
                     this->snapshots.back().wells.update( std::move(well2) );
 

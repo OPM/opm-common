@@ -486,7 +486,6 @@ namespace Opm
                                     std::size_t load_end,
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
-                                    bool runtime,
                                     const std::unordered_map<std::string, double> * target_wellpi,
                                     const EclipseGrid* grid,
                                     const FieldPropsManager* fp,
@@ -516,14 +515,14 @@ namespace Opm
         bool must_write_rst_file(std::size_t report_step) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
-        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {}, std::unordered_set<std::string> * affected_wells = nullptr);
+        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {}, std::unordered_set<std::string> * affected_wells = nullptr);
 
         struct HandlerContext {
             const ScheduleBlock& block;
             const DeckKeyword& keyword;
             const std::size_t currentStep;
             const std::vector<std::string>& matching_wells;
-            const bool runtime;
+            const bool actionx_mode;
             std::unordered_set<std::string> * affected_wells;
             const std::unordered_map<std::string, double> * target_wellpi;
             const EclipseGrid* grid_ptr;
@@ -533,14 +532,14 @@ namespace Opm
                            const DeckKeyword& keyword_,
                            const std::size_t currentStep_,
                            const std::vector<std::string>& matching_wells_,
-                           bool runtime_,
+                           bool actionx_mode_,
                            std::unordered_set<std::string> * affected_wells_,
                            const std::unordered_map<std::string, double> * target_wellpi_):
                 block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
                 matching_wells(matching_wells_),
-                runtime(runtime_),
+                actionx_mode(actionx_mode_),
                 affected_wells(affected_wells_),
                 target_wellpi(target_wellpi_),
                 grid_ptr(nullptr),
