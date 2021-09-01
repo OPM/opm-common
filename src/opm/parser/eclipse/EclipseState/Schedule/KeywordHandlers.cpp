@@ -632,7 +632,7 @@ namespace {
                 if (target_string == "NONE") {
                     new_group.set_gpmaint();
                 } else {
-                    GPMaint gpmaint(record);
+                    GPMaint gpmaint(handlerContext.currentStep, record);
                     new_group.set_gpmaint(std::move(gpmaint));
                 }
                 this->snapshots.back().groups.update( std::move(new_group) );

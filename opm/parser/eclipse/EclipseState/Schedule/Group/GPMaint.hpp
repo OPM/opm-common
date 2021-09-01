@@ -41,7 +41,7 @@ enum class FlowTarget {
 };
 
     GPMaint() = default;
-    explicit GPMaint(const DeckRecord& record);
+    GPMaint(std::size_t report_step, const DeckRecord& record);
     static GPMaint serializeObject();
 
     double pressure_target() const;
@@ -59,6 +59,7 @@ enum class FlowTarget {
         serializer(m_pressure_target);
         serializer(m_prop_constant);
         serializer(m_time_constant);
+        serializer(m_report_step);
     }
 
 private:
@@ -69,6 +70,7 @@ private:
     double m_pressure_target;
     double m_prop_constant;
     double m_time_constant;
+    std::size_t m_report_step;
 };
 }
 
