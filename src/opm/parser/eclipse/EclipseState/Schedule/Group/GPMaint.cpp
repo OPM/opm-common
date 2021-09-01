@@ -105,4 +105,16 @@ bool GPMaint::operator==(const GPMaint& other) const {
            this->m_report_step == other.m_report_step;
 }
 
+double GPMaint::rate(GPMaint::State& state, double current_rate, double error, double dt) const {
+    if (!state.report_step.has_value() || state.report_step.value() < this->m_report_step) {
+        state.report_step = this->m_report_step;
+        state.error_integral = 0;
+        state.initial_rate = current_rate;
+    }
+
+    auto new_rate = state.initial_rate + this->m_prop_constant * (error + state.error_integral / this->m_time_constant);
+    state.error_integral += error*dt;
+    return new_rate;
+}
+
 }

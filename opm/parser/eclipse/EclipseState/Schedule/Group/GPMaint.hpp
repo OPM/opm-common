@@ -40,6 +40,15 @@ enum class FlowTarget {
     SURF_GINJ = 6,
 };
 
+class State {
+friend class GPMaint;
+    std::optional<std::size_t> report_step;
+    double error_integral;
+    double initial_rate;
+};
+
+
+
     GPMaint() = default;
     GPMaint(std::size_t report_step, const DeckRecord& record);
     static GPMaint serializeObject();
@@ -47,6 +56,7 @@ enum class FlowTarget {
     double pressure_target() const;
     double prop_constant() const;
     double time_constant() const;
+    double rate(State& state, double current_rate, double error, double dt) const;
     std::optional<std::pair<std::string, int>> region() const;
     FlowTarget flow_target() const;
     bool operator==(const GPMaint& other) const;
