@@ -47,6 +47,18 @@ enum class FlowTarget {
     double pressure_target() const;
     double prop_constant() const;
     double time_constant() const;
+    double initial_rate() const {
+        return m_v0;
+    };
+    double cummulative_error() const {
+        return m_cum_error;
+    };
+    void update_cummulative_error(const double value){
+        m_cum_error += value;
+    }
+    void set_initial_rate(const double value) {
+      m_v0 = value;
+    };
     std::optional<std::pair<std::string, int>> region() const;
     FlowTarget flow_target() const;
     bool operator==(const GPMaint& other) const;
@@ -59,6 +71,8 @@ enum class FlowTarget {
         serializer(m_pressure_target);
         serializer(m_prop_constant);
         serializer(m_time_constant);
+        serializer(m_v0);
+        serializer(m_cum_error);
     }
 
 private:
@@ -69,6 +83,8 @@ private:
     double m_pressure_target;
     double m_prop_constant;
     double m_time_constant;
+    double m_v0;
+    double m_cum_error;
 };
 }
 

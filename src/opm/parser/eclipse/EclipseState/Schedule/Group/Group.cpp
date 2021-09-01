@@ -649,7 +649,7 @@ bool Group::has_control(Group::ProductionCMode control) const {
     return detail::has_control(production_properties.production_controls, control);
 }
 
-const std::optional<GPMaint>& Group::gpmaint() const {
+std::optional<GPMaint>& Group::gpmaint() {
     return this->m_gpmaint;
 }
 

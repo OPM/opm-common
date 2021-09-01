@@ -32,6 +32,8 @@ GPMaint::GPMaint(const DeckRecord& record)
     this->m_pressure_target = record.getItem<GP::PRESSURE_TARGET>().getSIDouble(0);
     this->m_prop_constant = record.getItem<GP::PROP_CONSTANT>().getSIDouble(0);
     this->m_time_constant = record.getItem<GP::TIME_CONSTANT>().getSIDouble(0);
+    this->m_cum_error = 0.0;
+    this->m_v0 = 0.0;
 }
 
 
