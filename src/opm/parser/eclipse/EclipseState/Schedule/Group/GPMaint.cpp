@@ -23,7 +23,7 @@
 
 namespace Opm {
 
-GPMaint::GPMaint(const DeckRecord& record)
+GPMaint::GPMaint(std::size_t report_step, const DeckRecord& record)
 {
     using GP = ParserKeywords::GPMAINT;
     this->m_flow_target = FlowTargetFromString( record.getItem<GP::FLOW_TARGET>().get<std::string>(0) );
@@ -32,6 +32,8 @@ GPMaint::GPMaint(const DeckRecord& record)
     this->m_pressure_target = record.getItem<GP::PRESSURE_TARGET>().getSIDouble(0);
     this->m_prop_constant = record.getItem<GP::PROP_CONSTANT>().getSIDouble(0);
     this->m_time_constant = record.getItem<GP::TIME_CONSTANT>().getSIDouble(0);
+
+    this->m_report_step = report_step;
 }
 
 
@@ -59,6 +61,7 @@ GPMaint GPMaint::serializeObject() {
     gpm.m_pressure_target = 100.0;
     gpm.m_prop_constant = 200.0;
     gpm.m_time_constant = 300.0;
+    gpm.m_report_step = 1234;
     return gpm;
 }
 
@@ -98,7 +101,20 @@ GPMaint::FlowTarget GPMaint::FlowTargetFromString(const std::string& string_valu
 bool GPMaint::operator==(const GPMaint& other) const {
     return this->m_flow_target == other.m_flow_target &&
            this->m_region_name == other.m_region_name &&
-           this->m_region_number == other.m_region_number;
+           this->m_region_number == other.m_region_number &&
+           this->m_report_step == other.m_report_step;
+}
+
+double GPMaint::rate(GPMaint::State& state, double current_rate, double error, double dt) const {
+    if (!state.report_step.has_value() || state.report_step.value() < this->m_report_step) {
+        state.report_step = this->m_report_step;
+        state.error_integral = 0;
+        state.initial_rate = current_rate;
+    }
+
+    auto new_rate = state.initial_rate + this->m_prop_constant * (error + state.error_integral / this->m_time_constant);
+    state.error_integral += error*dt;
+    return new_rate;
 }
 
 }

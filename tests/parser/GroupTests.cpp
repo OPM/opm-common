@@ -643,6 +643,16 @@ GPMAINT
 TSTEP
    10 /
 
+TSTEP
+  10 /
+
+GPMAINT
+  'PROD'  'WINJ'   2  1*  100  0.25  1.0 /
+/
+
+TSTEP
+ 10 /
+
 GPMAINT
   'PROD'  'NONE' /
 /
@@ -659,6 +669,12 @@ GCONPROD
 )";
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     const auto sched = create_schedule(input);
+    GPMaint::State gpm_state;
+    const auto T = 86400;
+    const auto K = 0.25 / (86400 * 1e5);
+    const double error = 100000;
+    const double dt = 100000;
+    const double current_rate = 65;
     {
         const auto& prod_group = sched.getGroup("PROD", 0);
         const auto& plat_group = sched.getGroup("PLAT-A", 0);
@@ -667,6 +683,19 @@ GCONPROD
         const auto& gpm_prod = prod_group.gpmaint();
         BOOST_CHECK( gpm_prod );
         BOOST_CHECK(gpm_prod->flow_target() == GPMaint::FlowTarget::RESV_WINJ);
+        {
+            auto rate1 = gpm_prod->rate(gpm_state, current_rate, error, dt);
+            BOOST_CHECK_EQUAL( rate1, current_rate + K * error );
+
+            auto rate2 = gpm_prod->rate(gpm_state, current_rate, error, dt);
+            BOOST_CHECK_EQUAL( rate2, (error + error*dt / T) * K + current_rate );
+
+            auto rate3 = gpm_prod->rate(gpm_state, current_rate, error, dt);
+            BOOST_CHECK_EQUAL( rate3, (error + 2*error*dt / T) * K + current_rate );
+        }
+
+
+
 
         auto [name, number] = *gpm_prod->region();
         BOOST_CHECK_EQUAL(number, 2);
@@ -680,6 +709,20 @@ GCONPROD
     }
     {
         const auto& prod_group = sched.getGroup("PROD", 1);
+        const auto& gpm_prod = prod_group.gpmaint();
+
+        auto rate4 = gpm_prod->rate(gpm_state, current_rate, error, dt);
+        BOOST_CHECK_EQUAL( rate4, (error + 3*error*dt / T) * K + current_rate );
+    }
+    {
+        const auto& prod_group = sched.getGroup("PROD", 2);
+        const auto& gpm_prod = prod_group.gpmaint();
+
+        auto rate1 = gpm_prod->rate(gpm_state, current_rate, error, dt);
+        BOOST_CHECK_EQUAL( rate1, current_rate + K*error);
+    }
+    {
+        const auto& prod_group = sched.getGroup("PROD", 4);
         const auto& gpm_prod = prod_group.gpmaint();
         BOOST_CHECK( !gpm_prod );
     }
