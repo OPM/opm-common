@@ -3189,8 +3189,8 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
                       10,
                       100);
 
-    BOOST_CHECK(  ws.updateConnections(c2, false, false) );
-    BOOST_CHECK( !ws.updateConnections(c2, false, false) );
+    BOOST_CHECK(  ws.updateConnections(c2, false) );
+    BOOST_CHECK( !ws.updateConnections(c2, false) );
 }
 
 
