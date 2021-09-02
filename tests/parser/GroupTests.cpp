@@ -638,6 +638,7 @@ GRUPTREE
 GPMAINT
   'PROD'  'WINJ'   2  1*  100  0.25  1.0 /
   'C1'    'GINJ'   0  1*  100  0.25  1.0 /
+  'F1'    'PROD'  1 1 1 1 1 /
 /
 
 TSTEP
@@ -679,6 +680,7 @@ GCONPROD
         const auto& prod_group = sched.getGroup("PROD", 0);
         const auto& plat_group = sched.getGroup("PLAT-A", 0);
         const auto& c1_group = sched.getGroup("C1", 0);
+        const auto& f1_group = sched.getGroup("F1", 0);
 
         const auto& gpm_prod = prod_group.gpmaint();
         BOOST_CHECK( gpm_prod );
@@ -694,8 +696,13 @@ GCONPROD
             BOOST_CHECK_EQUAL( rate3, (error + 2*error*dt / T) * K + current_rate );
         }
 
-
-
+        // This should be flagged as an injection group because the group is
+        // under GPMAINT control with WINJ target.
+        BOOST_CHECK( prod_group.isInjectionGroup() );
+        BOOST_CHECK( f1_group.isProductionGroup() );
+        BOOST_CHECK( prod_group.has_control(Phase::WATER, Group::InjectionCMode::RESV) );
+        BOOST_CHECK( !prod_group.has_control(Phase::GAS, Group::InjectionCMode::RESV) );
+        BOOST_CHECK( f1_group.has_control(Group::ProductionCMode::RESV) );
 
         auto [name, number] = *gpm_prod->region();
         BOOST_CHECK_EQUAL(number, 2);

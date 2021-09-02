@@ -302,6 +302,8 @@ struct ProductionControls {
     const std::optional<GPMaint>& gpmaint() const;
     void set_gpmaint(GPMaint gpmaint);
     void set_gpmaint();
+    bool has_gpmaint_control(Phase phase, InjectionCMode cmode) const;
+    bool has_gpmaint_control(ProductionCMode cmode) const;
 
     bool operator==(const Group& data) const;
     const std::optional<Phase>& topup_phase() const;
