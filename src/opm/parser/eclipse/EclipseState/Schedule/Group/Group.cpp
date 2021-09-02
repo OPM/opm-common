@@ -649,6 +649,14 @@ bool Group::has_control(Group::ProductionCMode control) const {
     return detail::has_control(production_properties.production_controls, control);
 }
 
+bool Group::has_control(Phase phase, Group::InjectionCMode control) const {
+    auto prop_iter = this->injection_properties.find(phase);
+    if (prop_iter == this->injection_properties.end())
+        return false;
+
+    return detail::has_control(prop_iter->second.injection_controls, control);
+}
+
 const std::optional<GPMaint>& Group::gpmaint() const {
     return this->m_gpmaint;
 }

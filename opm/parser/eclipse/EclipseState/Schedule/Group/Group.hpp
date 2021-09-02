@@ -296,7 +296,7 @@ struct ProductionControls {
     InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
     bool has_control(ProductionCMode control) const;
-    bool has_control(InjectionCMode control) const;
+    bool has_control(Phase phase, InjectionCMode control) const;
     bool productionGroupControlAvailable() const;
     bool injectionGroupControlAvailable(const Phase phase) const;
     const std::optional<GPMaint>& gpmaint() const;
