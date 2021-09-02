@@ -62,7 +62,11 @@ int main(int argc, char **argv) {
             printHelp();
             return 0;
         case 'n':
+#ifdef _OPENMP
             max_threads = atoi(optarg);
+#else
+            std::cerr << "OpenMP is disabled - using single thread only\n";
+#endif
             break;
         default:
             return EXIT_FAILURE;
