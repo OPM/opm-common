@@ -654,14 +654,6 @@ Group::ProductionCMode Group::prod_cmode() const {
     return this->production_properties.cmode;
 }
 
-bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {
-    return detail::has_control(this->production_controls, control);
-}
-
-bool Group::InjectionControls::has_control(InjectionCMode cmode_arg) const {
-    return detail::has_control(this->injection_controls, cmode_arg);
-}
-
 bool Group::has_control(Group::ProductionCMode control) const {
     if (detail::has_control(production_properties.production_controls, control))
         return true;

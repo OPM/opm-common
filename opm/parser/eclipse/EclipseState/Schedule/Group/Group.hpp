@@ -185,7 +185,6 @@ struct InjectionControls {
     std::string voidage_group;
     double guide_rate;
     GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
-    bool has_control(InjectionCMode control) const;
 };
 
 struct GroupProductionProperties {
@@ -241,7 +240,6 @@ struct ProductionControls {
     GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     int production_controls = 0;
-    bool has_control(ProductionCMode control) const;
 };
 
 
