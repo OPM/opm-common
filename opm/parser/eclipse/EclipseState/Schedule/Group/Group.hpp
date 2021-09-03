@@ -185,7 +185,6 @@ struct InjectionControls {
     std::string voidage_group;
     double guide_rate;
     GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
-    bool has_control(InjectionCMode control) const;
 };
 
 struct GroupProductionProperties {
@@ -241,7 +240,6 @@ struct ProductionControls {
     GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     int production_controls = 0;
-    bool has_control(ProductionCMode control) const;
 };
 
 
@@ -296,12 +294,14 @@ struct ProductionControls {
     InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
     bool has_control(ProductionCMode control) const;
-    bool has_control(InjectionCMode control) const;
+    bool has_control(Phase phase, InjectionCMode control) const;
     bool productionGroupControlAvailable() const;
     bool injectionGroupControlAvailable(const Phase phase) const;
     const std::optional<GPMaint>& gpmaint() const;
     void set_gpmaint(GPMaint gpmaint);
     void set_gpmaint();
+    bool has_gpmaint_control(Phase phase, InjectionCMode cmode) const;
+    bool has_gpmaint_control(ProductionCMode cmode) const;
 
     bool operator==(const Group& data) const;
     const std::optional<Phase>& topup_phase() const;

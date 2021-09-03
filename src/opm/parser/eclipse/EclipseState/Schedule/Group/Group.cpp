@@ -456,11 +456,28 @@ const Group::GroupType& Group::getGroupType() const {
 }
 
 bool Group::isProductionGroup() const {
-    return this->hasType(GroupType::PRODUCTION);
+    if (this->hasType(GroupType::PRODUCTION))
+        return true;
+
+    if (!this->m_gpmaint.has_value())
+        return false;
+
+    auto gpmaint_control = this->m_gpmaint->flow_target();
+    return (gpmaint_control == GPMaint::FlowTarget::RESV_PROD);
 }
 
 bool Group::isInjectionGroup() const {
-    return this->hasType(GroupType::INJECTION);
+    if (this->hasType(GroupType::INJECTION))
+        return true;
+
+    if (!this->m_gpmaint.has_value())
+        return false;
+
+    auto gpmaint_control = this->m_gpmaint->flow_target();
+    if (gpmaint_control == GPMaint::FlowTarget::RESV_PROD)
+        return false;
+
+    return true;
 }
 
 void Group::setProductionGroup() {
@@ -637,17 +654,23 @@ Group::ProductionCMode Group::prod_cmode() const {
     return this->production_properties.cmode;
 }
 
-bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {
-    return detail::has_control(this->production_controls, control);
-}
-
-bool Group::InjectionControls::has_control(InjectionCMode cmode_arg) const {
-    return detail::has_control(this->injection_controls, cmode_arg);
-}
-
 bool Group::has_control(Group::ProductionCMode control) const {
-    return detail::has_control(production_properties.production_controls, control);
+    if (detail::has_control(production_properties.production_controls, control))
+        return true;
+
+    return this->has_gpmaint_control(control);
 }
+
+
+bool Group::has_control(Phase phase, Group::InjectionCMode control) const {
+    auto prop_iter = this->injection_properties.find(phase);
+    if (prop_iter != this->injection_properties.end()) {
+        if (detail::has_control(prop_iter->second.injection_controls, control))
+            return true;
+    }
+    return this->has_gpmaint_control(phase, control);
+}
+
 
 const std::optional<GPMaint>& Group::gpmaint() const {
     return this->m_gpmaint;
@@ -661,6 +684,55 @@ void Group::set_gpmaint() {
     this->m_gpmaint = std::nullopt;
 }
 
+bool Group::has_gpmaint_control(Phase phase, InjectionCMode control) const {
+    if (!this->m_gpmaint.has_value())
+        return false;
+
+    auto gpmaint_control = this->m_gpmaint->flow_target();
+    if (phase == Phase::WATER) {
+        switch (control) {
+        case InjectionCMode::RATE:
+            return gpmaint_control == GPMaint::FlowTarget::SURF_WINJ;
+        case InjectionCMode::RESV:
+            return gpmaint_control == GPMaint::FlowTarget::RESV_WINJ;
+        default:
+            return false;
+        }
+    }
+
+    if (phase == Phase::GAS) {
+        switch (control) {
+        case InjectionCMode::RATE:
+            return gpmaint_control == GPMaint::FlowTarget::SURF_GINJ;
+        case InjectionCMode::RESV:
+            return gpmaint_control == GPMaint::FlowTarget::RESV_GINJ;
+        default:
+            return false;
+        }
+    }
+
+    if (phase == Phase::OIL) {
+        switch (control) {
+        case InjectionCMode::RATE:
+            return gpmaint_control == GPMaint::FlowTarget::SURF_OINJ;
+        case InjectionCMode::RESV:
+            return gpmaint_control == GPMaint::FlowTarget::RESV_OINJ;
+        default:
+            return false;
+        }
+    }
+
+    throw std::logic_error("What the fuck - broken phase?!");
+}
+
+bool Group::has_gpmaint_control(ProductionCMode control) const {
+    if (!this->m_gpmaint.has_value())
+        return false;
+
+    auto gpmaint_control = this->m_gpmaint->flow_target();
+    return (control == Group::ProductionCMode::RESV && gpmaint_control == GPMaint::FlowTarget::RESV_PROD);
+
+}
 
 const std::string Group::ExceedAction2String( ExceedAction enumValue ) {
     switch(enumValue) {
