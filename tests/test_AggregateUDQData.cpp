@@ -818,4 +818,74 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     }
 }
 
+// test constructed UDQ restart data
+BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
+{
+    const auto simCase = SimulationCase{first_sim("9_4C_WINJ_GINJ_UDQ_MSW-UDARATE_TEST_PACK.DATA")};
+
+    Opm::EclipseState es = simCase.es;
+    Opm::SummaryState st = sum_state();
+    Opm::UDQState     udq_state = make_udq_state();
+    Opm::Schedule     sched = simCase.sched;
+    Opm::EclipseGrid  grid = simCase.grid;
+    const auto& ioConfig = es.getIOConfig();
+
+    // Report Step 1: 2018-12-05
+    auto rptStep = std::size_t{1};
+    auto simStep = rptStep - 1;
+
+
+    double secs_elapsed = 3.1536E07;
+    auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep, simStep);
+
+    //set dummy value for next_step_size
+    double next_step_size= 0.1;
+    auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep,
+                secs_elapsed, next_step_size);
+
+    auto lh = Opm::RestartIO::Helpers::createLogiHead(es);
+
+    auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, simStep, ih);
+    auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
+    udqData.captureDeclaredUDQData(sched, simStep, udq_state, ih);
+
+
+    {
+        const auto& iGph = udqData.getIGPH();
+
+        auto start = 0*udqDims[1];
+        BOOST_CHECK_EQUAL(iGph[start + 0] ,  3); // (3 - gas injection)
+    }
+
+    // Report Step 4: 2018-12-20
+    rptStep = std::size_t{4};
+    simStep = rptStep - 1;
+
+    ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep, simStep);
+
+    //set dummy value for next_step_size
+    next_step_size= 0.1;
+    dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep,
+            secs_elapsed, next_step_size);
+
+    lh = Opm::RestartIO::Helpers::createLogiHead(es);
+
+    udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, simStep, ih);
+    udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
+    udqData.captureDeclaredUDQData(sched, simStep, udq_state, ih);
+
+
+    {
+        const auto& iGph = udqData.getIGPH();
+
+        auto start = 0*udqDims[1];
+        BOOST_CHECK_EQUAL(iGph[start + 0] ,  2); // (2 - water injection)
+    }
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()

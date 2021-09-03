@@ -488,6 +488,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/UDQ_BASE.DATA
           tests/UDQ_RESTART.DATA
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
+          tests/9_4C_WINJ_GINJ_UDQ_MSW-UDARATE_TEST_PACK.DATA
           tests/UDQ_ACTIONX_TEST1.DATA
           tests/UDQ_ACTIONX_TEST1_U.DATA
           tests/TEST_AGGREGATE_MSW.DATA
