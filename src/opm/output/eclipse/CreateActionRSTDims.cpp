@@ -43,7 +43,7 @@ namespace {
 // The number of actions (no of Actionx)
 std::size_t noOfActions(const Opm::Action::Actions& acts)
 {
-    std::size_t no_entries = acts.size();
+    std::size_t no_entries = acts.ecl_size();
     return no_entries;
 }
     
@@ -67,9 +67,9 @@ std::size_t entriesPerZACT()
 }
 
 // (The max number of characters in an action statement / (8 - chars pr string)) * (max over actions of number of lines pr ACTIONX)
-std::size_t entriesPerZLACT(const Opm::Runspec& rspec, const Opm::Action::Actions& acts)
+std::size_t entriesPerZLACT(const Opm::Actdims& actdims, const Opm::Action::Actions& acts)
 {
-    int max_char_pr_line = rspec.actdims().max_characters();
+    int max_char_pr_line = actdims.max_characters();
     std::size_t no_entries_pr_line = ((max_char_pr_line % 8) == 0) ? max_char_pr_line / 8 : (max_char_pr_line / 8) + 1;
     std::size_t no_entries = no_entries_pr_line * acts.max_input_lines();
 
@@ -77,33 +77,33 @@ std::size_t entriesPerZLACT(const Opm::Runspec& rspec, const Opm::Action::Action
 }
 
 // The max number of characters in an action statement * (max over actions of number of lines pr ACTIONX) / (8 - chars pr string)
-std::size_t entriesPerLine(const Opm::Runspec& rspec)
+std::size_t entriesPerLine(const Opm::Actdims& actdims)
 {
-    int max_char_pr_line = rspec.actdims().max_characters();
+    int max_char_pr_line = actdims.max_characters();
     std::size_t no_entries_pr_line = ((max_char_pr_line % 8) == 0) ? max_char_pr_line / 8 : (max_char_pr_line / 8) + 1;
 
     return no_entries_pr_line;
 }
 
 
-std::size_t entriesPerZACN(const Opm::Runspec& rspec)
+std::size_t entriesPerZACN(const Opm::Actdims& actdims)
 {
     //(Max number of conditions pr ACTIONX) * ((max no characters pr line = 104) / (8 - characters pr string)(104/8 = 13)
-    std::size_t no_entries = rspec.actdims().max_conditions() * 13;
+    std::size_t no_entries = actdims.max_conditions() * 13;
     return no_entries;
 }
 
-std::size_t entriesPerIACN(const Opm::Runspec& rspec)
+std::size_t entriesPerIACN(const Opm::Actdims& actdims)
 {
     //26*Max number of conditions pr ACTIONX 
-    std::size_t no_entries = 26 * rspec.actdims().max_conditions();
+    std::size_t no_entries = 26 * actdims.max_conditions();
     return no_entries;
 }
 
-std::size_t entriesPerSACN(const Opm::Runspec& rspec)
+std::size_t entriesPerSACN(const Opm::Actdims& actdims)
 {
     //16 
-    std::size_t no_entries = 16 * rspec.actdims().max_conditions();
+    std::size_t no_entries = 16 * actdims.max_conditions();
     return no_entries;
 }
 
@@ -117,23 +117,23 @@ std::size_t entriesPerSACN(const Opm::Runspec& rspec)
 
 std::vector<int>
 Opm::RestartIO::Helpers::
-createActionxDims(  const Runspec& rspec,
-                    const Schedule&     sched,
-                    const std::size_t       simStep)
+createActionRSTDims(const Schedule&     sched,
+                    const std::size_t   simStep)
 {
     const auto& acts = sched[simStep].actions.get();
-    std::vector<int> actDims(9);
+    const auto& actdims = sched.runspec().actdims();
+    std::vector<int> action_rst_dims(9);
     
     //No of Actionx keywords
-    actDims[0] = noOfActions(acts);
-    actDims[1] = entriesPerIACT();
-    actDims[2] = entriesPerSACT();
-    actDims[3] = entriesPerZACT();
-    actDims[4] = entriesPerZLACT(rspec, acts);
-    actDims[5] = entriesPerZACN(rspec);
-    actDims[6] = entriesPerIACN(rspec);
-    actDims[7] = entriesPerSACN(rspec);
-    actDims[8] = entriesPerLine(rspec);
+    action_rst_dims[0] = noOfActions(acts);
+    action_rst_dims[1] = entriesPerIACT();
+    action_rst_dims[2] = entriesPerSACT();
+    action_rst_dims[3] = entriesPerZACT();
+    action_rst_dims[4] = entriesPerZLACT(actdims, acts);
+    action_rst_dims[5] = entriesPerZACN(actdims);
+    action_rst_dims[6] = entriesPerIACN(actdims);
+    action_rst_dims[7] = entriesPerSACN(actdims);
+    action_rst_dims[8] = entriesPerLine(actdims);
     
-    return actDims;
+    return action_rst_dims;
 }

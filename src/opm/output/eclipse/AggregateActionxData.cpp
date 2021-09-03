@@ -667,27 +667,20 @@ const std::map<cmp_enum, int> cmpToIndex = {
 // =====================================================================
 
 Opm::RestartIO::Helpers::AggregateActionxData::
-AggregateActionxData(const std::vector<int>& actDims)
-    : iACT_ (iACT::allocate(actDims)),
-      sACT_ (sACT::allocate(actDims)),
-      zACT_ (zACT::allocate(actDims)),
-      zLACT_(zLACT::allocate(actDims)),
-      zACN_ (zACN::allocate(actDims)),
-      iACN_ (iACN::allocate(actDims)),
-      sACN_ (sACN::allocate(actDims))
-{}
-
-// ---------------------------------------------------------------------
-
-void
-Opm::RestartIO::Helpers::AggregateActionxData::
-captureDeclaredActionxData( const Opm::Schedule&      sched,
-                            const Opm::UnitSystem& units,
-                            const Opm::Action::State& action_state,
-                            const Opm::SummaryState&  st,
-                            const std::vector<int>&   actDims,
-                            const std::size_t         simStep)
+AggregateActionxData( const std::vector<int>&   rst_dims,
+                      const Opm::Schedule&      sched,
+                      const Opm::Action::State& action_state,
+                      const Opm::SummaryState&  st,
+                      const std::size_t         simStep)
+    : iACT_ (iACT::allocate(rst_dims))
+    , sACT_ (sACT::allocate(rst_dims))
+    , zACT_ (zACT::allocate(rst_dims))
+    , zLACT_(zLACT::allocate(rst_dims))
+    , zACN_ (zACN::allocate(rst_dims))
+    , iACN_ (iACN::allocate(rst_dims))
+    , sACN_ (sACN::allocate(rst_dims))
 {
+
     const auto& acts = sched[simStep].actions.get();
     std::size_t act_ind = 0;
     for (auto actx_it = acts.begin(); actx_it < acts.end(); actx_it++) {
@@ -698,7 +691,7 @@ captureDeclaredActionxData( const Opm::Schedule&      sched,
 
         {
             auto s_act = this->sACT_[act_ind];
-            sACT::staticContrib(*actx_it, units, s_act);
+            sACT::staticContrib(*actx_it, sched.getUnits(), s_act);
         }
 
         {
@@ -708,7 +701,7 @@ captureDeclaredActionxData( const Opm::Schedule&      sched,
 
         {
             auto z_lact = this->zLACT_[act_ind];
-            zLACT::staticContrib(*actx_it, actDims[8], z_lact);
+            zLACT::staticContrib(*actx_it, rst_dims[8], z_lact);
         }
 
         {
@@ -728,5 +721,18 @@ captureDeclaredActionxData( const Opm::Schedule&      sched,
 
         act_ind +=1;
     }
+}
+
+Opm::RestartIO::Helpers::AggregateActionxData::
+AggregateActionxData( const Opm::Schedule&      sched,
+                      const Opm::Action::State& action_state,
+                      const Opm::SummaryState&  st,
+                      const std::size_t         simStep)
+    : AggregateActionxData( Opm::RestartIO::Helpers::createActionRSTDims(sched, simStep),
+                            sched,
+                            action_state,
+                            st,
+                            simStep )
+{
 }
 

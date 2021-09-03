@@ -63,8 +63,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                   const std::vector<int>& inteHead);
 
     std::vector<int>
-    createActionxDims(  const Runspec&      rspec,
-                        const Schedule&     sched,
+    createActionRSTDims(const Schedule&     sched,
                         const std::size_t   simStep);
 
 }}} // Opm::RestartIO::Helpers

@@ -54,14 +54,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 class AggregateActionxData
 {
 public:
-    explicit AggregateActionxData(const std::vector<int>& actDims);
 
-    void captureDeclaredActionxData(    const Opm::Schedule&      sched,
-                                        const Opm::UnitSystem&    units,
-                                        const Opm::Action::State& action_state,
-                                        const Opm::SummaryState&  st,
-                                        const std::vector<int>&   actDims,
-                                        const std::size_t         simStep);
+    AggregateActionxData(const Opm::Schedule&      sched,
+                         const Opm::Action::State& action_state,
+                         const Opm::SummaryState&  st,
+                         const std::size_t         simStep);
 
     const std::vector<int>& getIACT() const
     {
@@ -100,6 +97,12 @@ public:
     }
 
 private:
+    AggregateActionxData( const std::vector<int>& rst_dims,
+                          const Opm::Schedule&      sched,
+                          const Opm::Action::State& action_state,
+                          const Opm::SummaryState&  st,
+                          const std::size_t         simStep);
+
     /// Aggregate 'IACT' array (Integer) for all ACTIONX data  (9 integers pr UDQ)
     WindowedArray<int> iACT_;
 

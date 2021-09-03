@@ -197,6 +197,7 @@ namespace Opm
         double stepLength(std::size_t timeStep) const;
         std::optional<int> exitStatus() const;
         const UnitSystem& getUnits() const { return this->m_static.m_unit_system; }
+        const Runspec& runspec() const { return this->m_static.m_runspec; }
 
         std::size_t numWells() const;
         std::size_t numWells(std::size_t timestep) const;

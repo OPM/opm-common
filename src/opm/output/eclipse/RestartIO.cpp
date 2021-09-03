@@ -351,34 +351,27 @@ namespace {
 
     void writeActionx(const int                     report_step,
                       const int                     sim_step,
-                      const EclipseState&           es,
                       const Schedule&               schedule,
-                      const Opm::UnitSystem&        units,
                       const Action::State&          action_state,
                       const SummaryState&           sum_state,
                       EclIO::OutputStream::Restart& rstFile)
     {
-        if (report_step == 0) {
-            // Initial condition.  No ACTION* data yet.
+        if (report_step == 0)
             return;
-        }
 
-        // write ACTIONX - data to restart file
+        if (schedule[sim_step].actions().ecl_size() == 0)
+            return;
+
         const std::size_t simStep = static_cast<size_t> (sim_step);
-        
-        const auto actDims = Opm::RestartIO::Helpers::createActionxDims(es.runspec(), schedule, simStep);
-        auto  actionxData = Opm::RestartIO::Helpers::AggregateActionxData(actDims);
-        actionxData.captureDeclaredActionxData(schedule, units, action_state, sum_state, actDims, simStep);
-        
-        if (actDims[0] >= 1) {
-            rstFile.write("IACT", actionxData.getIACT());
-            rstFile.write("SACT", actionxData.getSACT());
-            rstFile.write("ZACT", actionxData.getZACT());
-            rstFile.write("ZLACT", actionxData.getZLACT());
-            rstFile.write("ZACN", actionxData.getZACN());
-            rstFile.write("IACN", actionxData.getIACN());
-            rstFile.write("SACN", actionxData.getSACN());
-        }
+        Opm::RestartIO::Helpers::AggregateActionxData actionxData{schedule, action_state, sum_state, simStep};
+
+        rstFile.write("IACT", actionxData.getIACT());
+        rstFile.write("SACT", actionxData.getSACT());
+        rstFile.write("ZACT", actionxData.getZACT());
+        rstFile.write("ZLACT", actionxData.getZLACT());
+        rstFile.write("ZACN", actionxData.getZACN());
+        rstFile.write("IACN", actionxData.getIACN());
+        rstFile.write("SACN", actionxData.getSACN());
     }
 
     void writeWell(int                             sim_step,
@@ -794,7 +787,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
                          sumState, inteHD, value.aquifer, aquiferData, rstFile);
     }
 
-    writeActionx(report_step, sim_step, es, schedule, units, action_state, sumState, rstFile);
+    writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
 
     writeSolution(value, schedule, udqState, report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);
