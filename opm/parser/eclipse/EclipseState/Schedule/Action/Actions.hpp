@@ -45,7 +45,8 @@ public:
 
     static Actions serializeObject();
 
-    size_t size() const;
+    std::size_t py_size() const;
+    std::size_t ecl_size() const;
     int max_input_lines() const;
     bool empty() const;
     void add(const ActionX& action);

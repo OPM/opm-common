@@ -41,10 +41,13 @@ Actions Actions::serializeObject()
 }
 
 
-size_t Actions::size() const {
+std::size_t Actions::ecl_size() const {
     return this->actions.size();
 }
 
+std::size_t Actions::py_size() const {
+    return this->pyactions.size();
+}
 
 bool Actions::empty() const {
     return this->actions.empty() && this->pyactions.empty();
