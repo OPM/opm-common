@@ -179,12 +179,12 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::Action::Actions config;
     std::vector<std::string> matching_wells;
     auto python = std::make_shared<Opm::Python>();
-    BOOST_CHECK_EQUAL(config.size(), 0U);
+    BOOST_CHECK_EQUAL(config.ecl_size(), 0U);
     BOOST_CHECK(config.empty());
 
     Opm::Action::ActionX action1("NAME", 10, 100, 0);
     config.add(action1);
-    BOOST_CHECK_EQUAL(config.size(), 1U);
+    BOOST_CHECK_EQUAL(config.ecl_size(), 1U);
     BOOST_CHECK(!config.empty());
 
     double min_wait = 86400;
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     {
         Opm::Action::ActionX action("NAME", max_eval, min_wait, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action);
-        BOOST_CHECK_EQUAL(config.size(), 1U);
+        BOOST_CHECK_EQUAL(config.ecl_size(), 1U);
 
 
         Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
@@ -783,10 +783,10 @@ TSTEP
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec, python);
     const auto& actions0 = sched[0].actions.get();
-    BOOST_CHECK_EQUAL(actions0.size(), 0U);
+    BOOST_CHECK_EQUAL(actions0.ecl_size(), 0U);
 
     const auto& actions1 = sched[1].actions.get();
-    BOOST_CHECK_EQUAL(actions1.size(), 1U);
+    BOOST_CHECK_EQUAL(actions1.ecl_size(), 1U);
 
 
     const auto& act1 = actions1.get("B");
@@ -823,7 +823,7 @@ TSTEP
     /*****************************************************************/
 
     const auto& actions2 = sched[2].actions.get();
-    BOOST_CHECK_EQUAL(actions2.size(), 2U);
+    BOOST_CHECK_EQUAL(actions2.ecl_size(), 2U);
 
     const auto& actB = actions2.get("B");
     const auto& condB = actB.conditions();

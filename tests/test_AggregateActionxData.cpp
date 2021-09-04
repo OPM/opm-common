@@ -113,7 +113,6 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     Opm::Action::State action_state;
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
-    const auto& usys = es.getUnits();
     const auto& ioConfig = es.getIOConfig();
     //const auto& restart = es.cfg().restart();
 
@@ -146,10 +145,8 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
 
-    const auto actDims = Opm::RestartIO::Helpers::createActionxDims(rspec, sched, rptStep);
-    auto  actionxData = Opm::RestartIO::Helpers::AggregateActionxData(actDims);
-    actionxData.captureDeclaredActionxData(sched, usys, action_state, st, actDims, rptStep);
-
+    const auto actDims = Opm::RestartIO::Helpers::createActionRSTDims(sched, rptStep);
+    Opm::RestartIO::Helpers::AggregateActionxData actionxData{sched, action_state, st, rptStep};
     {
         /*
         Check of InteHEAD and DoubHEAD data for UDQ variables

@@ -302,7 +302,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/AggregateUDQData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
           src/opm/output/eclipse/AggregateWListData.cpp
-          src/opm/output/eclipse/CreateActionxDims.cpp
+          src/opm/output/eclipse/CreateActionRSTDims.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp

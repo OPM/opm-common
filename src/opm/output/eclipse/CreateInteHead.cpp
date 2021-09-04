@@ -353,7 +353,7 @@ namespace {
             return { 0, 0, 0, 0 };
         }
 
-        const auto& no_act = acts.size();
+        const auto& no_act = acts.ecl_size();
         const auto max_lines_pr_action = acts.max_input_lines();
         const auto max_cond_per_action = rspec.actdims().max_conditions();
         const auto max_characters_per_line = rspec.actdims().max_characters();
