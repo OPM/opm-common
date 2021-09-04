@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
     class EclipseGrid;
@@ -48,6 +49,7 @@ struct RstState {
              const ::Opm::EclipseGrid*               grid);
 
     static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView,
+                         const Runspec& runspec,
                          const ::Opm::EclipseGrid*               grid = nullptr);
 
     const RstWell& get_well(const std::string& wname) const;

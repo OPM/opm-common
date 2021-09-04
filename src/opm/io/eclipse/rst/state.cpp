@@ -274,6 +274,7 @@ const RstWell& RstState::get_well(const std::string& wname) const {
 }
 
 RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
+                        const Runspec&,
                         const ::Opm::EclipseGrid*               grid)
 {
     RstState state(rstView, grid);
