@@ -103,11 +103,6 @@ const std::map<std::string, int> rhsQuantityToIndex = {
 };
 
 using logic_enum = Opm::Action::Condition::Logical;
-const std::map<logic_enum, int> logicalToIndex_13 = {
-                                                    {logic_enum::AND,   1},
-                                                    {logic_enum::OR,    2},
-                                                    {logic_enum::END,   0},
-};
 
 const std::map<logic_enum, int> logicalToIndex_17 = {
                                                     {logic_enum::AND,   1},
@@ -406,18 +401,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     iAcn[ind + 12] = it_lhs_it->second;
                 }
 
-                /*item [13] - relates to operator
-                    OR   is 2
-                    AND is 1
-                */
-                const auto it_logic_13 = logicalToIndex_13.find(cond.logic);
-                if (it_logic_13 != logicalToIndex_13.end()) {
-                    iAcn[ind + 13] = it_logic_13->second;
-                }
-                else {
-                    std::cout << "Unknown Boolean operator type for condition: " << cond.lhs.quantity << std::endl;
-                    throw std::invalid_argument("Actionx: " + actx.name());
-                }
+                iAcn[ind + 13] = cond.logic_as_int();
 
                 /* item[15] is a parameter that indicates whether left_paren or right_paren is used in an expression
                  * = 0  : no open_paren or left_paren, or both open_paren and right_paren

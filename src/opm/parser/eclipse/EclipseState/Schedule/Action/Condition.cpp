@@ -170,6 +170,31 @@ bool Condition::close_paren() const {
     return !this->left_paren && this->right_paren;
 }
 
+Condition::Logical Condition::logic_from_int(int int_logic) {
+    if (int_logic == 0)
+        return Logical::END;
+
+    if (int_logic == 1)
+        return Logical::AND;
+
+    if (int_logic == 2)
+        return Logical::OR;
+
+    throw std::logic_error("Unknown integer value");
+}
+
+int Condition::logic_as_int() const {
+    switch (this->logic) {
+    case Logical::END:
+        return 0;
+    case Logical::AND:
+        return 1;
+    case Logical::OR:
+        return 2;
+    default:
+        throw std::logic_error("What the f...?");
+    }
+}
 
 }
 }
