@@ -80,21 +80,6 @@ namespace {
                                                     {cmp_enum::INVALID,       0},
     };
 
-    const std::map<std::string, double> monthToNo = {
-                                                           {"JAN",   1.},
-                                                           {"FEB",   2.},
-                                                           {"MAR",   3.},
-                                                           {"APR",   4.},
-                                                           {"MAY",   5.},
-                                                           {"JUN",   6.},
-                                                           {"JUL",   7.},
-                                                           {"AUG",   8.},
-                                                           {"SEP",   9.},
-                                                           {"OCT",  10.},
-                                                           {"NOV",  11.},
-                                                           {"DEC",  12.},
-    };
-
 
 const std::map<std::string, int> rhsQuantityToIndex = {
                                                 {"F",   1},
@@ -531,6 +516,7 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
                     //come here if constant value condition
                     double t_val = 0.;
                     if (lhsQtype == "M") {
+                       const auto& monthToNo = Opm::TimeService::eclipseMonthIndices();
                        const auto& it_mnth = monthToNo.find(z_data.rhs.quantity);
                        if (it_mnth != monthToNo.end()) {
                            t_val = it_mnth->second;
