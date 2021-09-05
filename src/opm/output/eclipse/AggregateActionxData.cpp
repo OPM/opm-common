@@ -299,10 +299,9 @@ const std::map<cmp_enum, int> cmpToIndex = {
             const auto& actx_cond = actx.conditions();
             for (auto z_data : actx_cond) {
                 // left hand quantity
-                if ((z_data.lhs.quantity.substr(0,1) != "D") &&
-                    (z_data.lhs.quantity.substr(0,1) != "M") &&
-                    (z_data.lhs.quantity.substr(0,1) != "Y"))
+                if (!z_data.lhs.date())
                     zAcn[ind + 0] = z_data.lhs.quantity;
+
                 // right hand quantity
                 if ((z_data.rhs.quantity.substr(0,1) == "W") ||
                     (z_data.rhs.quantity.substr(0,1) == "G") ||

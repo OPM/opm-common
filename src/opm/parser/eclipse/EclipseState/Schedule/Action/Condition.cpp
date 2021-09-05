@@ -84,6 +84,24 @@ void Quantity::add_arg(const std::string& arg) {
     this->args.push_back(strip_quotes(arg));
 }
 
+bool Quantity::date() const {
+    if (this->quantity == "DAY")
+        return true;
+
+    if (this->quantity == "MNTH")
+        return true;
+
+    if (this->quantity == "MONTH")
+        return true;
+
+    if (this->quantity == "YEAR")
+        return true;
+
+    return false;
+}
+
+
+
 Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocation& location) {
     std::size_t token_index = 0;
     if (tokens[0] == "(") {
