@@ -92,6 +92,9 @@ enum class Comparator {
 
     static Logical logic_from_int(int);
     int logic_as_int() const;
+    static Comparator comparator_from_int(int);
+    int comparator_as_int() const;
+
     bool open_paren() const;
     bool close_paren() const;
     bool operator==(const Condition& data) const;

@@ -196,5 +196,39 @@ int Condition::logic_as_int() const {
     }
 }
 
+Condition::Comparator Condition::comparator_from_int(int cmp_int) {
+    switch (cmp_int) {
+    case 1:
+        return Condition::Comparator::GREATER;
+    case 2:
+        return Condition::Comparator::LESS;
+    case 3:
+        return Condition::Comparator::GREATER_EQUAL;
+    case 4:
+        return Condition::Comparator::LESS_EQUAL;
+    case 5:
+        return Condition::Comparator::EQUAL;
+    default:
+        throw std::logic_error("What the f...?");
+    }
+}
+
+int Condition::comparator_as_int() const {
+    switch (this->cmp) {
+    case Condition::Comparator::GREATER:
+        return 1;
+    case Condition::Comparator::LESS:
+        return 2;
+    case Condition::Comparator::GREATER_EQUAL:
+        return 3;
+    case Condition::Comparator::LESS_EQUAL:
+        return 4;
+    case Condition::Comparator::EQUAL:
+        return 5;
+    default:
+        throw std::logic_error("What the f...?");
+    }
+}
+
 }
 }

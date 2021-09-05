@@ -111,15 +111,6 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
 };
 
 
-using cmp_enum = Opm::Action::Condition::Comparator;
-const std::map<cmp_enum, int> cmpToIndex = {
-                                                    {cmp_enum::GREATER,       1},
-                                                    {cmp_enum::LESS,          2},
-                                                    {cmp_enum::GREATER_EQUAL, 3},
-                                                    {cmp_enum::LESS_EQUAL,    4},
-                                                    {cmp_enum::EQUAL,         5},
-                                                    {cmp_enum::INVALID,       0},
-};
 
 
     namespace iACT {
@@ -414,22 +405,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 } else if (cond.close_paren()) {
                     iAcn[ind + ind_paren] = 2;
                 }
-
-                /*item [16] - related to the operator used in ACTIONX for defined quantities
-                    >     is  1
-                    <     is  2
-                    >=    is  3
-                    <=    is  4
-                    =     is  5
-                */
-                const auto it_cmp = cmpToIndex.find(cond.cmp);
-                if (it_cmp != cmpToIndex.end()) {
-                    iAcn[ind + 16] = it_cmp->second;
-                }
-                else {
-                    std::cout << "Unknown operator type for condition: " << cond.lhs.quantity << std::endl;
-                    throw std::invalid_argument("Actionx: " + actx.name());
-                }
+                iAcn[ind + 16] = cond.comparator_as_int();
                 //increment index according to no of items pr condition
                 ind += static_cast<std::size_t>(noEPZacn);
             }
