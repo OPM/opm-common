@@ -127,7 +127,7 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
 std::time_t RstHeader::sim_time() const {
     TimeStampUTC ts(this->year, this->month, this->mday);
     ts.hour(this->hour);
-    ts.minutes(this->minute); 
+    ts.minutes(this->minute);
     ts.microseconds(this->microsecond);
     return asTimeT(ts);
 }
