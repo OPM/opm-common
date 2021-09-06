@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
         auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST_UDQRST.UNRST");
         auto rstView = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), rptStep);
 
-        auto state = Opm::RestartIO::RstState::load(std::move(rstView));
+        auto state = Opm::RestartIO::RstState::load(std::move(rstView), simCase.es.runspec());
 
         const auto& well = state.get_well("OP_3");
         BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
