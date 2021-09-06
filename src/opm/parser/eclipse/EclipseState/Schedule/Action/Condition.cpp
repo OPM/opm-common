@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp>
 
 #include "ActionParser.hpp"
 
@@ -32,40 +33,40 @@ namespace Action {
 
 namespace {
 
-Condition::Comparator comparator(TokenType tt) {
+Comparator comparator(TokenType tt) {
     if (tt == TokenType::op_eq)
-        return Condition::Comparator::EQUAL;
+        return Comparator::EQUAL;
 
     if (tt == TokenType::op_gt)
-        return Condition::Comparator::GREATER;
+        return Comparator::GREATER;
 
     if (tt == TokenType::op_lt)
-        return Condition::Comparator::LESS;
+        return Comparator::LESS;
 
     if (tt == TokenType::op_le)
-        return Condition::Comparator::LESS_EQUAL;
+        return Comparator::LESS_EQUAL;
 
     if (tt == TokenType::op_ge)
-        return Condition::Comparator::GREATER_EQUAL;
+        return Comparator::GREATER_EQUAL;
 
-    return Condition::Comparator::INVALID;
+    return Comparator::INVALID;
 }
 
 
-std::string cmp2string(Condition::Comparator cmp) {
-    if (cmp == Condition::Comparator::EQUAL)
+std::string cmp2string(Comparator cmp) {
+    if (cmp == Comparator::EQUAL)
         return "=";
 
-    if (cmp == Condition::Comparator::GREATER)
+    if (cmp == Comparator::GREATER)
         return ">";
 
-    if (cmp == Condition::Comparator::LESS)
+    if (cmp == Comparator::LESS)
         return "<";
 
-    if (cmp == Condition::Comparator::LESS_EQUAL)
+    if (cmp == Comparator::LESS_EQUAL)
         return "<=";
 
-    if (cmp == Condition::Comparator::GREATER_EQUAL)
+    if (cmp == Comparator::GREATER_EQUAL)
         return ">=";
 
     throw std::logic_error("Bug in opm/flow - should not be here");
@@ -139,9 +140,9 @@ Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocati
 
         auto token_type = Parser::get_type(tokens[token_index]);
         if (token_type == TokenType::op_and)
-            this->logic = Condition::Logical::AND;
+            this->logic = Logical::AND;
         else if (token_type == TokenType::op_or)
-            this->logic = Condition::Logical::OR;
+            this->logic = Logical::OR;
         else if (token_type == TokenType::close_paren)
             this->right_paren = true;
         else
@@ -170,7 +171,7 @@ bool Condition::close_paren() const {
     return !this->left_paren && this->right_paren;
 }
 
-Condition::Logical Condition::logic_from_int(int int_logic) {
+Logical Condition::logic_from_int(int int_logic) {
     if (int_logic == 0)
         return Logical::END;
 
@@ -196,18 +197,18 @@ int Condition::logic_as_int() const {
     }
 }
 
-Condition::Comparator Condition::comparator_from_int(int cmp_int) {
+Comparator Condition::comparator_from_int(int cmp_int) {
     switch (cmp_int) {
     case 1:
-        return Condition::Comparator::GREATER;
+        return Comparator::GREATER;
     case 2:
-        return Condition::Comparator::LESS;
+        return Comparator::LESS;
     case 3:
-        return Condition::Comparator::GREATER_EQUAL;
+        return Comparator::GREATER_EQUAL;
     case 4:
-        return Condition::Comparator::LESS_EQUAL;
+        return Comparator::LESS_EQUAL;
     case 5:
-        return Condition::Comparator::EQUAL;
+        return Comparator::EQUAL;
     default:
         throw std::logic_error("What the f...?");
     }
@@ -215,15 +216,15 @@ Condition::Comparator Condition::comparator_from_int(int cmp_int) {
 
 int Condition::comparator_as_int() const {
     switch (this->cmp) {
-    case Condition::Comparator::GREATER:
+    case Comparator::GREATER:
         return 1;
-    case Condition::Comparator::LESS:
+    case Comparator::LESS:
         return 2;
-    case Condition::Comparator::GREATER_EQUAL:
+    case Comparator::GREATER_EQUAL:
         return 3;
-    case Condition::Comparator::LESS_EQUAL:
+    case Comparator::LESS_EQUAL:
         return 4;
-    case Condition::Comparator::EQUAL:
+    case Comparator::EQUAL:
         return 5;
     default:
         throw std::logic_error("What the f...?");

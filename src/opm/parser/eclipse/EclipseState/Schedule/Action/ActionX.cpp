@@ -102,8 +102,8 @@ ActionX ActionX::serializeObject()
     Condition cond;
     cond.lhs = quant;
     cond.rhs = quant;
-    cond.logic = Condition::Logical::AND;
-    cond.cmp = Condition::Comparator::GREATER_EQUAL;
+    cond.logic = Logical::AND;
+    cond.cmp = Comparator::GREATER_EQUAL;
     cond.cmp_string = "test3";
     result.m_conditions = {cond};
 

@@ -70,7 +70,7 @@ namespace {
                                                            {"Y",   0},
     };*/
 
-    using cmp_enum = Opm::Action::Condition::Comparator;
+    using cmp_enum = Opm::Action::Comparator;
     const std::map<cmp_enum, int> cmpToIacn_12 = {
                                                     {cmp_enum::GREATER,       0},
                                                     {cmp_enum::LESS,          1},
@@ -87,7 +87,7 @@ const std::map<std::string, int> rhsQuantityToIndex = {
                                                 {"G",   3},
 };
 
-using logic_enum = Opm::Action::Condition::Logical;
+using logic_enum = Opm::Action::Logical;
 
 const std::map<logic_enum, int> logicalToIndex_17 = {
                                                     {logic_enum::AND,   1},
@@ -425,7 +425,7 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
                         parenFirstCond = true;
                         insideParen = true;
                     }
-                    if (cond_it->logic == Opm::Action::Condition::Logical::AND) {
+                    if (cond_it->logic == Opm::Action::Logical::AND) {
                         allPrevLogicOp_AND = true;
                     }
                 } else {
@@ -449,9 +449,9 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
                     }
 
                     // update the previous logic-sequence
-                    if (parenFirstCond && cond_it->logic == Opm::Action::Condition::Logical::OR) {
+                    if (parenFirstCond && cond_it->logic == Opm::Action::Logical::OR) {
                         allPrevLogicOp_AND = false;
-                    } else if (!insideParen && cond_it->logic == Opm::Action::Condition::Logical::OR) {
+                    } else if (!insideParen && cond_it->logic == Opm::Action::Logical::OR) {
                         allPrevLogicOp_AND = false;
                     }
                 }
