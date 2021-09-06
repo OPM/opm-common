@@ -41,6 +41,7 @@ public:
     void add_arg(const std::string& arg);
     std::string quantity;
     std::vector<std::string> args;
+    bool date() const;
 
     bool operator==(const Quantity& data) const {
         return quantity == data.quantity &&
@@ -88,6 +89,11 @@ enum class Comparator {
     bool right_paren = false;
 
     std::string cmp_string;
+
+    static Logical logic_from_int(int);
+    int logic_as_int() const;
+    static Comparator comparator_from_int(int);
+    int comparator_as_int() const;
 
     bool open_paren() const;
     bool close_paren() const;

@@ -80,21 +80,6 @@ namespace {
                                                     {cmp_enum::INVALID,       0},
     };
 
-    const std::map<std::string, double> monthToNo = {
-                                                           {"JAN",   1.},
-                                                           {"FEB",   2.},
-                                                           {"MAR",   3.},
-                                                           {"APR",   4.},
-                                                           {"MAY",   5.},
-                                                           {"JUN",   6.},
-                                                           {"JUL",   7.},
-                                                           {"AUG",   8.},
-                                                           {"SEP",   9.},
-                                                           {"OCT",  10.},
-                                                           {"NOV",  11.},
-                                                           {"DEC",  12.},
-    };
-
 
 const std::map<std::string, int> rhsQuantityToIndex = {
                                                 {"F",   1},
@@ -103,11 +88,6 @@ const std::map<std::string, int> rhsQuantityToIndex = {
 };
 
 using logic_enum = Opm::Action::Condition::Logical;
-const std::map<logic_enum, int> logicalToIndex_13 = {
-                                                    {logic_enum::AND,   1},
-                                                    {logic_enum::OR,    2},
-                                                    {logic_enum::END,   0},
-};
 
 const std::map<logic_enum, int> logicalToIndex_17 = {
                                                     {logic_enum::AND,   1},
@@ -116,15 +96,6 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
 };
 
 
-using cmp_enum = Opm::Action::Condition::Comparator;
-const std::map<cmp_enum, int> cmpToIndex = {
-                                                    {cmp_enum::GREATER,       1},
-                                                    {cmp_enum::LESS,          2},
-                                                    {cmp_enum::GREATER_EQUAL, 3},
-                                                    {cmp_enum::LESS_EQUAL,    4},
-                                                    {cmp_enum::EQUAL,         5},
-                                                    {cmp_enum::INVALID,       0},
-};
 
 
     namespace iACT {
@@ -299,10 +270,9 @@ const std::map<cmp_enum, int> cmpToIndex = {
             const auto& actx_cond = actx.conditions();
             for (auto z_data : actx_cond) {
                 // left hand quantity
-                if ((z_data.lhs.quantity.substr(0,1) != "D") &&
-                    (z_data.lhs.quantity.substr(0,1) != "M") &&
-                    (z_data.lhs.quantity.substr(0,1) != "Y"))
+                if (!z_data.lhs.date())
                     zAcn[ind + 0] = z_data.lhs.quantity;
+
                 // right hand quantity
                 if ((z_data.rhs.quantity.substr(0,1) == "W") ||
                     (z_data.rhs.quantity.substr(0,1) == "G") ||
@@ -407,18 +377,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     iAcn[ind + 12] = it_lhs_it->second;
                 }
 
-                /*item [13] - relates to operator
-                    OR   is 2
-                    AND is 1
-                */
-                const auto it_logic_13 = logicalToIndex_13.find(cond.logic);
-                if (it_logic_13 != logicalToIndex_13.end()) {
-                    iAcn[ind + 13] = it_logic_13->second;
-                }
-                else {
-                    std::cout << "Unknown Boolean operator type for condition: " << cond.lhs.quantity << std::endl;
-                    throw std::invalid_argument("Actionx: " + actx.name());
-                }
+                iAcn[ind + 13] = cond.logic_as_int();
 
                 /* item[15] is a parameter that indicates whether left_paren or right_paren is used in an expression
                  * = 0  : no open_paren or left_paren, or both open_paren and right_paren
@@ -431,22 +390,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 } else if (cond.close_paren()) {
                     iAcn[ind + ind_paren] = 2;
                 }
-
-                /*item [16] - related to the operator used in ACTIONX for defined quantities
-                    >     is  1
-                    <     is  2
-                    >=    is  3
-                    <=    is  4
-                    =     is  5
-                */
-                const auto it_cmp = cmpToIndex.find(cond.cmp);
-                if (it_cmp != cmpToIndex.end()) {
-                    iAcn[ind + 16] = it_cmp->second;
-                }
-                else {
-                    std::cout << "Unknown operator type for condition: " << cond.lhs.quantity << std::endl;
-                    throw std::invalid_argument("Actionx: " + actx.name());
-                }
+                iAcn[ind + 16] = cond.comparator_as_int();
                 //increment index according to no of items pr condition
                 ind += static_cast<std::size_t>(noEPZacn);
             }
@@ -572,6 +516,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     //come here if constant value condition
                     double t_val = 0.;
                     if (lhsQtype == "M") {
+                       const auto& monthToNo = Opm::TimeService::eclipseMonthIndices();
                        const auto& it_mnth = monthToNo.find(z_data.rhs.quantity);
                        if (it_mnth != monthToNo.end()) {
                            t_val = it_mnth->second;
