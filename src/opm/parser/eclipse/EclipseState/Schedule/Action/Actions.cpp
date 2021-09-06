@@ -74,7 +74,7 @@ void Actions::add(const PyAction& pyaction) {
 }
 
 
-const ActionX& Actions::get(const std::string& name) const {
+const ActionX& Actions::operator[](const std::string& name) const {
     const auto iter = std::find_if( this->actions.begin(), this->actions.end(), [&name](const ActionX& action) { return action.name() == name; });
     if (iter == this->actions.end())
         throw std::range_error("No such action: " + name);
@@ -82,7 +82,7 @@ const ActionX& Actions::get(const std::string& name) const {
     return *iter;
 }
 
-const ActionX& Actions::get(std::size_t index) const {
+const ActionX& Actions::operator[](std::size_t index) const {
     return this->actions[index];
 }
 

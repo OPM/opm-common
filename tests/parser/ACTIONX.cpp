@@ -145,7 +145,7 @@ TSTEP
 
     Action::Result action_result(true);
     auto sim_time = TimeService::now();
-    const auto& action1 = sched[0].actions.get().get("ACTION");
+    const auto& action1 = sched[0].actions.get()["ACTION"];
     auto affected_wells = sched.applyAction(0, sim_time, action1, action_result, {});
     BOOST_CHECK_EQUAL( affected_wells.size(), 1);
     BOOST_CHECK_EQUAL( affected_wells.count("W1"), 1);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         Opm::Action::PyAction py_action2(python, "PYTHON2", Opm::Action::PyAction::RunCount::single, "act1.py");
         config.add(py_action2);
     }
-    const Opm::Action::ActionX& action2 = config.get("NAME");
+    const Opm::Action::ActionX& action2 = config["NAME"];
     Opm::Action::State action_state;
     // The action2 instance has an empty condition, so it will never evaluate to true.
     BOOST_CHECK(action2.ready(  action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
@@ -789,7 +789,7 @@ TSTEP
     BOOST_CHECK_EQUAL(actions1.ecl_size(), 1U);
 
 
-    const auto& act1 = actions1.get("B");
+    const auto& act1 = actions1["B"];
     const auto& strings = act1.keyword_strings();
     BOOST_CHECK_EQUAL(strings.size(), 4U);
     BOOST_CHECK_EQUAL(strings.back(), "ENDACTIO");
@@ -825,7 +825,7 @@ TSTEP
     const auto& actions2 = sched[2].actions.get();
     BOOST_CHECK_EQUAL(actions2.ecl_size(), 2U);
 
-    const auto& actB = actions2.get("B");
+    const auto& actB = actions2["B"];
     const auto& condB = actB.conditions();
     BOOST_CHECK_EQUAL(condB.size() , 1U);
     BOOST_CHECK_EQUAL(condB[0].lhs.quantity, "FWCT");
@@ -833,7 +833,7 @@ TSTEP
     BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
     BOOST_CHECK_EQUAL(condB[0].cmp_string, "<=");
 
-    const auto& actA = actions2.get("A");
+    const auto& actA = actions2["A"];
     const auto& condA = actA.conditions();
     BOOST_CHECK_EQUAL(condA.size() , 1U);
     BOOST_CHECK_EQUAL(condA[0].lhs.quantity, "WOPR");
@@ -951,8 +951,8 @@ ENDACTIO
 
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec, python);
-    const auto& action1 = sched[1].actions.get().get("A");
-    const auto& action2 = sched[2].actions.get().get("A");
+    const auto& action1 = sched[1].actions.get()["A"];
+    const auto& action2 = sched[2].actions.get()["A"];
 
     BOOST_CHECK(action1.id() != action2.id());
 
@@ -1007,7 +1007,7 @@ TSTEP
     auto unit_system =  UnitSystem::newMETRIC();
     const auto st = SummaryState{ TimeService::now() };
     Schedule sched = make_schedule(deck_string);
-    const auto& action1 = sched[0].actions.get().get("A");
+    const auto& action1 = sched[0].actions.get()["A"];
     {
         const auto& group = sched.getGroup("G1", 0);
         const auto& prod = group.productionControls(st);
@@ -1123,7 +1123,7 @@ TSTEP
 
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     auto sched = make_schedule(input);
-    const auto& action1 = sched[0].actions.get().get("A");
+    const auto& action1 = sched[0].actions.get()["A"];
     {
         const auto& glo = sched.glo(0);
         BOOST_CHECK(!glo.has_group("PLAT-A"));
@@ -1179,7 +1179,7 @@ TSTEP
 
     const auto st = SummaryState{ TimeService::now() };
     Schedule sched = make_schedule(deck_string);
-    const auto& action1 = sched[0].actions.get().get("A");
+    const auto& action1 = sched[0].actions.get()["A"];
     double CF0;
     {
         const auto& target_wellpi = sched[0].target_wellpi;
@@ -1237,7 +1237,7 @@ ENDACTIO
     Opm::Action::Context context(st, wlm);
 
     const auto& config = sched[0].actions.get();
-    const Opm::Action::ActionX& action = config.get("ACT1");
+    const Opm::Action::ActionX& action = config["ACT1"];
 
     /*
     FU1 < 10 |  FU2 < FU3 ||   FU2 > 1 |  FU2 < -1  | Result
@@ -1366,7 +1366,7 @@ ENDACTIO
 
     st.update_well_var("P1", "WBHP", 150);
     Opm::Action::Context context(st, wlm);
-    const auto& action = sched[0].actions.get().get("INJECTION");
+    const auto& action = sched[0].actions.get()["INJECTION"];
     auto result = action.eval(context);
     BOOST_CHECK(result);
     BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});

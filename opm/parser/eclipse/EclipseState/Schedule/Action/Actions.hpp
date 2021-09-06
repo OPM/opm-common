@@ -52,8 +52,8 @@ public:
     void add(const ActionX& action);
     void add(const PyAction& pyaction);
     bool ready(const State& state, std::time_t sim_time) const;
-    const ActionX& get(const std::string& name) const;
-    const ActionX& get(std::size_t index) const;
+    const ActionX& operator[](const std::string& name) const;
+    const ActionX& operator[](std::size_t index) const;
     std::vector<const ActionX *> pending(const State& state, std::time_t sim_time) const;
     std::vector<const PyAction *> pending_python() const;
 
