@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -48,23 +49,6 @@ std::size_t noOfActions(const Opm::Action::Actions& acts)
 }
     
     
-std::size_t entriesPerIACT()
-{
-    std::size_t no_entries = 9;
-    return no_entries;
-}
-
-std::size_t entriesPerSACT()
-{
-    std::size_t no_entries = 5;
-    return no_entries;
-}
-
-std::size_t entriesPerZACT()
-{
-    std::size_t no_entries = 4;
-    return no_entries;
-}
 
 // (The max number of characters in an action statement / (8 - chars pr string)) * (max over actions of number of lines pr ACTIONX)
 std::size_t entriesPerZLACT(const Opm::Actdims& actdims, const Opm::Action::Actions& acts)
@@ -86,26 +70,7 @@ std::size_t entriesPerLine(const Opm::Actdims& actdims)
 }
 
 
-std::size_t entriesPerZACN(const Opm::Actdims& actdims)
-{
-    //(Max number of conditions pr ACTIONX) * ((max no characters pr line = 104) / (8 - characters pr string)(104/8 = 13)
-    std::size_t no_entries = actdims.max_conditions() * 13;
-    return no_entries;
-}
 
-std::size_t entriesPerIACN(const Opm::Actdims& actdims)
-{
-    //26*Max number of conditions pr ACTIONX 
-    std::size_t no_entries = 26 * actdims.max_conditions();
-    return no_entries;
-}
-
-std::size_t entriesPerSACN(const Opm::Actdims& actdims)
-{
-    //16 
-    std::size_t no_entries = 16 * actdims.max_conditions();
-    return no_entries;
-}
 
 
 
@@ -115,6 +80,47 @@ std::size_t entriesPerSACN(const Opm::Actdims& actdims)
 // Public Interface (createUdqDims()) Below Separator
 // ---------------------------------------------------------------------
 
+std::size_t Opm::RestartIO::Helpers::entriesPerZACT()
+{
+    std::size_t no_entries = 4;
+    return no_entries;
+}
+
+std::size_t Opm::RestartIO::Helpers::entriesPerZACN(const Opm::Actdims& actdims)
+{
+    //(Max number of conditions pr ACTIONX) * ((max no characters pr line = 104) / (8 - characters pr string)(104/8 = 13)
+    std::size_t no_entries = actdims.max_conditions() * 13;
+    return no_entries;
+}
+
+std::size_t Opm::RestartIO::Helpers::entriesPerIACN(const Opm::Actdims& actdims)
+{
+    //26*Max number of conditions pr ACTIONX 
+    std::size_t no_entries = 26 * actdims.max_conditions();
+    return no_entries;
+}
+
+std::size_t Opm::RestartIO::Helpers::entriesPerSACN(const Opm::Actdims& actdims)
+{
+    //16 
+    std::size_t no_entries = 16 * actdims.max_conditions();
+    return no_entries;
+}
+
+std::size_t Opm::RestartIO::Helpers::entriesPerIACT()
+{
+    std::size_t no_entries = 9;
+    return no_entries;
+}
+
+std::size_t Opm::RestartIO::Helpers::entriesPerSACT()
+{
+    std::size_t no_entries = 5;
+    return no_entries;
+}
+
+
+
 std::vector<int>
 Opm::RestartIO::Helpers::
 createActionRSTDims(const Schedule&     sched,
@@ -123,7 +129,7 @@ createActionRSTDims(const Schedule&     sched,
     const auto& acts = sched[simStep].actions.get();
     const auto& actdims = sched.runspec().actdims();
     std::vector<int> action_rst_dims(9);
-    
+
     //No of Actionx keywords
     action_rst_dims[0] = noOfActions(acts);
     action_rst_dims[1] = entriesPerIACT();
@@ -134,6 +140,6 @@ createActionRSTDims(const Schedule&     sched,
     action_rst_dims[6] = entriesPerIACN(actdims);
     action_rst_dims[7] = entriesPerSACN(actdims);
     action_rst_dims[8] = entriesPerLine(actdims);
-    
+
     return action_rst_dims;
 }
