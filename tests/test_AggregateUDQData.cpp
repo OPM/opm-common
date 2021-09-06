@@ -828,7 +828,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     Opm::UDQState     udq_state = make_udq_state();
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
-    const auto& ioConfig = es.getIOConfig();
 
     // Report Step 1: 2018-12-05
     auto rptStep = std::size_t{1};
