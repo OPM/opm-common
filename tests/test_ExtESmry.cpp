@@ -218,7 +218,6 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
         Opm::filesystem::remove("SPE1CASE1.ESMRY");
 }
 
-
 BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
 
     // using a syntetic restart file.
@@ -248,14 +247,8 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
     if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
         Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
-    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
-
     ESmry smry1("SPE1CASE1.SMSPEC");
-    ESmry smry2("SPE1CASE1_RST60.SMSPEC");
-
     smry1.make_esmry_file();
-    smry2.make_esmry_file();
 
     ExtESmry esmry1("SPE1CASE1_RST60.ESMRY");
 
@@ -313,11 +306,7 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
     if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
         Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
-    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
 }
-
-
 
 BOOST_AUTO_TEST_CASE(TestESmry_3) {
 
@@ -348,14 +337,8 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
     if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
         Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
-    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
-
     ESmry smry1("SPE1CASE1.SMSPEC");
-    ESmry smry2("SPE1CASE1_RST60.SMSPEC");
-
     smry1.make_esmry_file();
-    smry2.make_esmry_file();
 
     ExtESmry esmry1("SPE1CASE1_RST60.ESMRY", true);
 
@@ -391,15 +374,11 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_111_ref[i], 0.01);
 
     smryVect = esmry1.get("BPR:10,10,3");
-
     for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_10103_ref[i], 0.01);
 
     if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
         Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
-    if (Opm::filesystem::exists("SPE1CASE1_RST60.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1_RST60.ESMRY");
 }
-
 

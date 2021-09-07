@@ -193,7 +193,10 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         keywordListSpecFile.push_back(combindKeyList);
         getRstString(restartArray, pathRstFile, rstRootN);
 
-        if (rstRootN.string() != ""){
+        if ((rstRootN.string() != "") && (loadBaseRunData)){
+
+            if (! Opm::filesystem::exists(pathRstFile))
+                OPM_THROW(std::runtime_error, "path to restart file not found, '" + pathRstFile.string() + "'");
 
             auto abs_rst_file = Opm::filesystem::canonical(pathRstFile) / rstRootN;
             Opm::filesystem::path rel_path;
