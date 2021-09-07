@@ -23,6 +23,7 @@
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/action.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
@@ -41,14 +42,6 @@
 
 namespace {
 
-// The number of actions (no of Actionx)
-std::size_t noOfActions(const Opm::Action::Actions& acts)
-{
-    std::size_t no_entries = acts.ecl_size();
-    return no_entries;
-}
-    
-    
 
 // (The max number of characters in an action statement / (8 - chars pr string)) * (max over actions of number of lines pr ACTIONX)
 std::size_t entriesPerZLACT(const Opm::Actdims& actdims, const Opm::Action::Actions& acts)
@@ -88,16 +81,12 @@ std::size_t Opm::RestartIO::Helpers::entriesPerZACT()
 
 std::size_t Opm::RestartIO::Helpers::entriesPerZACN(const Opm::Actdims& actdims)
 {
-    //(Max number of conditions pr ACTIONX) * ((max no characters pr line = 104) / (8 - characters pr string)(104/8 = 13)
-    std::size_t no_entries = actdims.max_conditions() * 13;
-    return no_entries;
+    return Opm::RestartIO::Helpers::VectorItems::ZACN::ConditionSize * actdims.max_conditions();
 }
 
 std::size_t Opm::RestartIO::Helpers::entriesPerIACN(const Opm::Actdims& actdims)
 {
-    //26*Max number of conditions pr ACTIONX 
-    std::size_t no_entries = 26 * actdims.max_conditions();
-    return no_entries;
+    return Opm::RestartIO::Helpers::VectorItems::IACN::ConditionSize * actdims.max_conditions();
 }
 
 std::size_t Opm::RestartIO::Helpers::entriesPerSACN(const Opm::Actdims& actdims)
@@ -126,12 +115,12 @@ Opm::RestartIO::Helpers::
 createActionRSTDims(const Schedule&     sched,
                     const std::size_t   simStep)
 {
-    const auto& acts = sched[simStep].actions.get();
+    const auto& acts = sched[simStep].actions();
     const auto& actdims = sched.runspec().actdims();
     std::vector<int> action_rst_dims(9);
 
     //No of Actionx keywords
-    action_rst_dims[0] = noOfActions(acts);
+    action_rst_dims[0] = acts.ecl_size();
     action_rst_dims[1] = entriesPerIACT();
     action_rst_dims[2] = entriesPerSACT();
     action_rst_dims[3] = entriesPerZACT();

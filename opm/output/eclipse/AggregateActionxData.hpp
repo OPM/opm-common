@@ -41,6 +41,7 @@ namespace Opm {
     class Schedule;
     class UDQInput;
     class UDQActive;
+    class Actdims;
 
     namespace Action {
         class State;
@@ -97,11 +98,13 @@ public:
     }
 
 private:
-    AggregateActionxData( const std::vector<int>& rst_dims,
-                          const Opm::Schedule&      sched,
-                          const Opm::Action::State& action_state,
-                          const Opm::SummaryState&  st,
-                          const std::size_t         simStep);
+    AggregateActionxData( const std::vector<int>&     rst_dims,
+                          std::size_t                 num_actions,
+                          const Opm::Actdims& actdims,
+                          const Opm::Schedule&        sched,
+                          const Opm::Action::State&   action_state,
+                          const Opm::SummaryState&    st,
+                          const std::size_t           simStep);
 
     /// Aggregate 'IACT' array (Integer) for all ACTIONX data  (9 integers pr UDQ)
     WindowedArray<int> iACT_;

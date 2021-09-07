@@ -42,6 +42,8 @@ public:
     std::string quantity;
     std::vector<std::string> args;
     bool date() const;
+    int int_type() const;
+
 
     bool operator==(const Quantity& data) const {
         return quantity == data.quantity &&
@@ -94,7 +96,7 @@ enum class Comparator {
     int logic_as_int() const;
     static Comparator comparator_from_int(int);
     int comparator_as_int() const;
-
+    int paren_as_int() const;
     bool open_paren() const;
     bool close_paren() const;
     bool operator==(const Condition& data) const;
