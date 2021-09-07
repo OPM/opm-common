@@ -144,7 +144,6 @@ class TestEclFile(unittest.TestCase):
         self.assertEqual(time0[0], 1.0)
 
         rst_smry1 = ESmry(test_path("data/SPE1CASE1_RST60.SMSPEC"))
-        rst_smry1.make_esmry_file()
 
         rst_ext_smry1 = ESmry(test_path("data/SPE1CASE1_RST60.ESMRY"))
 
