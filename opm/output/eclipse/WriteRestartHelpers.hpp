@@ -33,6 +33,7 @@ namespace Opm {
     class Well;
     class UnitSystem;
     class UDQActive;
+    class Actdims;
 
 } // Opm
 
@@ -61,6 +62,24 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     createUdqDims(const Schedule&     		sched,
                   const std::size_t       lookup_step,
                   const std::vector<int>& inteHead);
+
+    std::size_t
+    entriesPerSACT();
+
+    std::size_t
+    entriesPerIACT();
+
+    std::size_t
+    entriesPerZACT();
+
+    std::size_t
+    entriesPerZACN(const Opm::Actdims& actdims);
+
+    std::size_t
+    entriesPerIACN(const Opm::Actdims& actdims);
+
+    std::size_t
+    entriesPerSACN(const Opm::Actdims& actdims);
 
     std::vector<int>
     createActionRSTDims(const Schedule&     sched,

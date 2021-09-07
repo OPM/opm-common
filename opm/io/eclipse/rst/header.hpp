@@ -121,6 +121,7 @@ struct RstHeader {
     double udq_undefined;
     double udq_eps;
 
+    std::time_t sim_time() const;
     std::pair<std::time_t, std::size_t> restart_info() const;
     int num_udq() const;
 };

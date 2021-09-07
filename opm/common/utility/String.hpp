@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -102,6 +103,17 @@ inline std::vector<std::string> split_string(const std::string& input,
 
     return result;
 }
+
+inline std::string format_double(double d) {
+    double integral_part;
+    const double decimal_part = std::modf(d, &integral_part);
+
+    if (decimal_part == 0)
+        return std::to_string(static_cast<int>(d));
+    else
+        return std::to_string(d);
+}
+
 
 }
 

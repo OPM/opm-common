@@ -123,6 +123,15 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
 {
 }
 
+
+std::time_t RstHeader::sim_time() const {
+    TimeStampUTC ts(this->year, this->month, this->mday);
+    ts.hour(this->hour);
+    ts.minutes(this->minute); 
+    ts.microseconds(this->microsecond);
+    return asTimeT(ts);
+}
+
 std::pair<std::time_t, std::size_t> RstHeader::restart_info() const {
     return std::make_pair(asTimeT(TimeStampUTC(this->year, this->month, this->mday)),
                           std::size_t(this->report_step));

@@ -44,7 +44,22 @@ namespace {
         {"NOV", 11},
         {"DEC", 12},
         {"DES", 12}};
+
+    const std::unordered_map<int, std::string> month_names = {
+        {1, "JAN"},
+        {2, "FEB"},
+        {3, "MAR"},
+        {4, "APR"},
+        {5, "MAY"},
+        {6, "JUN"},
+        {7, "JUL"},
+        {8, "AUG"},
+        {9, "SEP"},
+        {10, "OCT"},
+        {11, "NOV"},
+        {12, "DEC"}};
 }
+
 
 
 const time_t system_clock_epoch = std::chrono::system_clock::to_time_t({});
@@ -88,6 +103,10 @@ std::time_t makeUTCTime(std::tm timePoint)
 
 const std::unordered_map<std::string , int>& eclipseMonthIndices() {
     return month_indices;
+}
+
+const std::unordered_map<int, std::string>& eclipseMonthNames() {
+    return month_names;
 }
 
 bool valid_month(const std::string& month_name) {
