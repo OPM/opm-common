@@ -998,7 +998,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
     }
 
     {
-        auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST_ACTIONX.UNRST");
+        auto rst_file = std::make_shared<Opm::EclIO::ERst>("UDQ_ACTIONX_TEST1.UNRST");
         auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), 3);
         auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), es.runspec(), simCase.parser);
         const auto& input_actions = sched[rptStep].actions();

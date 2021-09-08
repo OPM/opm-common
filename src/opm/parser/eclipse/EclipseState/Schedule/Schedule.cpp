@@ -1467,6 +1467,14 @@ namespace {
             }
             this->snapshots.back().udq_active.update( std::move(udq_active) );
         }
+
+
+        if (!rst_state.actions.empty()) {
+            auto actions = this->snapshots.back().actions();
+            for (const auto& rst_action : rst_state.actions)
+                actions.add( Action::ActionX(rst_action) );
+            this->snapshots.back().actions.update( std::move(actions) );
+        }
     }
 
     std::shared_ptr<const Python> Schedule::python() const
