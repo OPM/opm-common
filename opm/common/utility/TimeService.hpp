@@ -116,6 +116,8 @@ namespace Opm {
     TimeStampUTC operator+(const TimeStampUTC& lhs, std::chrono::duration<double> delta);
     std::time_t asTimeT(const TimeStampUTC& tp);
     std::time_t asLocalTimeT(const TimeStampUTC& tp);
+    time_point asTimePoint(const TimeStampUTC& tp);
+
 
 } // namespace Opm
 

@@ -225,4 +225,8 @@ Opm::TimeStampUTC Opm::operator+(const Opm::TimeStampUTC& lhs, std::chrono::dura
     return Opm::TimeStampUTC( Opm::TimeService::advance(Opm::asTimeT(lhs) , delta.count()) );
 }
 
+Opm::time_point Opm::asTimePoint(const TimeStampUTC& ts)
+{
+    return Opm::TimeService::from_time_t( Opm::asTimeT(ts) );
+}
 
