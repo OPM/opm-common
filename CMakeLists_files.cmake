@@ -489,6 +489,9 @@ if(ENABLE_ECL_OUTPUT)
           tests/SOFR_TEST.DATA
           tests/UDQ_BASE.DATA
           tests/UDQ_RESTART.DATA
+          tests/UDQ_ACTIONX.X0007
+          tests/UDQ_ACTIONX.DATA
+          tests/UDQ_ACTIONX_RESTART.DATA
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
           tests/9_4C_WINJ_GINJ_UDQ_MSW-UDARATE_TEST_PACK.DATA
           tests/UDQ_ACTIONX_TEST1.DATA
