@@ -814,10 +814,8 @@ namespace {
       We do not really handle the SAVE keyword, we just interpret it as: Write a
       normal restart file at this report step.
     */
-    void Schedule::handleSAVE(const HandlerContext&, const ParseContext&, ErrorGuard&) {
-        auto rst_config = this->snapshots.back().rst_config();
-        rst_config.save = true;
-        this->snapshots.back().rst_config.update(std::move(rst_config));
+    void Schedule::handleSAVE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        this->snapshots[handlerContext.currentStep].updateSAVE(true);
     }
 
 

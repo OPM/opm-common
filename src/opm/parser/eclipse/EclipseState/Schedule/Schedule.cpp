@@ -1264,7 +1264,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     bool Schedule::write_rst_file(const std::size_t report_step) const
     {
-        return this->restart_output.writeRestartFile(report_step);
+        return this->restart_output.writeRestartFile(report_step) || this->operator[](report_step).save();
     }
 
     bool Schedule::must_write_rst_file(const std::size_t report_step) const

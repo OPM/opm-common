@@ -1501,8 +1501,11 @@ TSTEP
         BOOST_CHECK_MESSAGE( !sched.write_rst_file(ts),
                              "Must NOT write restart for report step " << ts);
 
-    BOOST_CHECK_MESSAGE( sched.write_rst_file( 12 ),
-                         "Must write restart for report step 12");
+    BOOST_CHECK_MESSAGE( sched.write_rst_file(11),
+                         "Must write restart for report step 11");
+
+    BOOST_CHECK_MESSAGE( !sched.write_rst_file( 12 ),
+                         "Must NOT write restart for report step 12");
 }
 
 
