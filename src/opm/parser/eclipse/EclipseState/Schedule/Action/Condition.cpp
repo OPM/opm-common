@@ -19,6 +19,8 @@
 
 #include <string>
 
+
+#include <opm/output/eclipse/VectorItems/action.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
@@ -100,6 +102,29 @@ bool Quantity::date() const {
     return false;
 }
 
+int Quantity::int_type() const {
+    namespace QuantityType = Opm::RestartIO::Helpers::VectorItems::IACN::Value;
+    const auto& first_char = this->quantity[0];
+    if (first_char == 'W')
+        return QuantityType::Well;
+
+    if (first_char == 'F')
+        return QuantityType::Field;
+
+    if (first_char == 'G')
+        return QuantityType::Group;
+
+    if (first_char == 'D')
+        return QuantityType::Day;
+
+    if (first_char == 'M')
+        return QuantityType::Month;
+
+    if (first_char == 'Y')
+        return QuantityType::Year;
+
+    return QuantityType::Const;
+}
 
 
 Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocation& location) {
@@ -169,6 +194,18 @@ bool Condition::open_paren() const {
 bool Condition::close_paren() const {
     return !this->left_paren && this->right_paren;
 }
+
+int Condition::paren_as_int() const {
+    namespace ParenType = Opm::RestartIO::Helpers::VectorItems::IACN::Value;
+
+    if (this->open_paren())
+        return ParenType::Open;
+    else if (this->close_paren())
+        return ParenType::Close;
+
+    return ParenType::None;
+}
+
 
 Condition::Logical Condition::logic_from_int(int int_logic) {
     if (int_logic == 0)
