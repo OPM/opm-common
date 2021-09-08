@@ -17,14 +17,17 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <fmt/format.h>
 #include <string>
 
 
 #include <opm/output/eclipse/VectorItems/action.hpp>
+#include <opm/common/utility/String.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp>
+#include <opm/io/eclipse/rst/action.hpp>
 
 #include "ActionParser.hpp"
 
@@ -64,6 +67,18 @@ std::string strip_quotes(const std::string& s) {
 }
 
 }
+
+Quantity::Quantity(const RestartIO::RstAction::Quantity& rst_quantity)
+{
+    if (std::holds_alternative<std::string>(rst_quantity.quantity))
+        this->quantity = std::get<std::string>(rst_quantity.quantity);
+    else
+        this->quantity = format_double(std::get<double>(rst_quantity.quantity));
+
+    if (rst_quantity.wgname.has_value())
+        this->add_arg(rst_quantity.wgname.value());
+}
+
 
 void Quantity::add_arg(const std::string& arg) {
     this->args.push_back(strip_quotes(arg));
@@ -107,6 +122,17 @@ int Quantity::int_type() const {
         return QuantityType::Year;
 
     return QuantityType::Const;
+}
+
+
+Condition::Condition(const RestartIO::RstAction::Condition& rst_condition)
+    : lhs(rst_condition.lhs)
+    , rhs(rst_condition.rhs)
+    , logic(rst_condition.logic)
+    , cmp(rst_condition.cmp_op)
+    , left_paren(rst_condition.left_paren)
+    , right_paren(rst_condition.right_paren)
+{
 }
 
 

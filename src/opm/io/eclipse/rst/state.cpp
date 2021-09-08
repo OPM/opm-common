@@ -28,6 +28,7 @@
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/output/eclipse/UDQDims.hpp>
@@ -35,6 +36,8 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
 
 
 namespace {
@@ -60,6 +63,7 @@ namespace {
     {
         return Opm::UDQ::updateType(iudq[udq_index * Opm::UDQDims::entriesPerIUDQ()]);
     }
+
 }
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
@@ -261,6 +265,55 @@ void RstState::add_udqs(const std::vector<int>& iudq,
     }
 }
 
+std::string oper_string(Action::Logical logic) {
+    if (logic == Action::Logical::AND)
+        return "AND";
+
+    if (logic == Action::Logical::OR)
+        return "OR";
+
+    return "";
+}
+
+
+void RstState::add_actions(const Actdims& actdims,
+                           std::time_t sim_time,
+                           const std::vector<std::string>& zact,
+                           const std::vector<int>& iact,
+                           const std::vector<float>& sact,
+                           const std::vector<std::string>& zacn,
+                           const std::vector<int>& iacn,
+                           const std::vector<double>& sacn)
+{
+    auto zact_action_size = RestartIO::Helpers::entriesPerZACT();
+    auto iact_action_size = RestartIO::Helpers::entriesPerIACT();
+    auto sact_action_size = RestartIO::Helpers::entriesPerSACT();
+    auto zacn_action_size = RestartIO::Helpers::entriesPerZACN(actdims);
+    auto iacn_action_size = RestartIO::Helpers::entriesPerIACN(actdims);
+    auto sacn_action_size = RestartIO::Helpers::entriesPerSACN(actdims);
+
+    auto zacn_cond_size = 13;
+    auto iacn_cond_size = 26;
+    auto sacn_cond_size = 16;
+
+    for (std::size_t index=0; index < static_cast<std::size_t>(this->header.num_action); index++) {
+        std::vector<RstAction::Condition> conditions;
+        for (std::size_t icond = 0; icond < actdims.max_conditions(); icond++) {
+            const auto zacn_offset = index * zacn_action_size + icond * zacn_cond_size;
+            const auto iacn_offset = index * iacn_action_size + icond * iacn_cond_size;
+            const auto sacn_offset = index * sacn_action_size + icond * sacn_cond_size;
+
+            if (RstAction::Condition::valid(&zacn[zacn_offset], &iacn[iacn_offset]))
+                conditions.emplace_back(&zacn[zacn_offset], &iacn[iacn_offset], &sacn[sacn_offset]);
+        }
+
+        const auto& name = zact[index * zact_action_size + 0];
+        const auto& max_run = iact[index * iact_action_size + 5];
+        const auto& min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[index * sact_action_size + 3]);
+        this->actions.emplace_back(name, max_run, min_wait, sim_time, conditions );
+    }
+}
+
 
 const RstWell& RstState::get_well(const std::string& wname) const {
     const auto well_iter = std::find_if(this->wells.begin(),
@@ -275,7 +328,7 @@ const RstWell& RstState::get_well(const std::string& wname) const {
 }
 
 RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
-                        const Runspec&,
+                        const Runspec& runspec,
                         const Parser&,
                         const ::Opm::EclipseGrid*               grid)
 {
@@ -329,6 +382,17 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
             state.udq_active = RstUDQActive(iuad, iuap, igph);
         }
     }
+
+    if (state.header.num_action > 0) {
+        const auto& zact = rstView->getKeyword<std::string>("ZACT");
+        const auto& iact = rstView->getKeyword<int>("IACT");
+        const auto& sact = rstView->getKeyword<float>("SACT");
+        const auto& zacn = rstView->getKeyword<std::string>("ZACN");
+        const auto& iacn = rstView->getKeyword<int>("IACN");
+        const auto& sacn = rstView->getKeyword<double>("SACN");
+        state.add_actions(runspec.actdims(), state.header.sim_time(), zact, iact, sact, zacn, iacn, sacn);
+    }
+
 
     return state;
 }

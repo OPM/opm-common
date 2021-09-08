@@ -25,6 +25,7 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp>
+#include <opm/io/eclipse/rst/action.hpp>
 
 namespace Opm {
 
@@ -35,7 +36,9 @@ class Quantity {
 public:
     Quantity() = default;
 
-    Quantity(const std::string& arg) :
+    explicit Quantity(const RestartIO::RstAction::Quantity& rst_quantity);
+
+    explicit Quantity(const std::string& arg) :
         quantity(arg)
     {}
 
@@ -80,7 +83,6 @@ public:
 
     static Logical logic_from_int(int);
     int logic_as_int() const;
-    static Comparator comparator_from_int(int);
     int comparator_as_int() const;
     int paren_as_int() const;
     bool open_paren() const;

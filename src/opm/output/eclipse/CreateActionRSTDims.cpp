@@ -91,9 +91,7 @@ std::size_t Opm::RestartIO::Helpers::entriesPerIACN(const Opm::Actdims& actdims)
 
 std::size_t Opm::RestartIO::Helpers::entriesPerSACN(const Opm::Actdims& actdims)
 {
-    //16 
-    std::size_t no_entries = 16 * actdims.max_conditions();
-    return no_entries;
+    return Opm::RestartIO::Helpers::VectorItems::SACN::ConditionSize * actdims.max_conditions();
 }
 
 std::size_t Opm::RestartIO::Helpers::entriesPerIACT()

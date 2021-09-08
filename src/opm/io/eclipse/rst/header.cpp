@@ -90,6 +90,7 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
     nwell_udq(intehead[VI::intehead::NO_WELL_UDQS]),
     ngroup_udq(intehead[VI::intehead::NO_GROUP_UDQS]),
     nfield_udq(intehead[VI::intehead::NO_FIELD_UDQS]),
+    num_action(intehead[VI::intehead::NOOFACTIONS]),
     //
     e300_radial(logihead[VI::logihead::E300Radial]),
     e100_radial(logihead[VI::logihead::E100Radial]),

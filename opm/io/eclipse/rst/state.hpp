@@ -28,6 +28,7 @@
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/udq.hpp>
+#include <opm/io/eclipse/rst/action.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -37,6 +38,7 @@
 namespace Opm {
     class EclipseGrid;
     class Parser;
+    class Actdims;
 } // namespace Opm
 
 namespace Opm { namespace EclIO {
@@ -63,6 +65,7 @@ struct RstState {
     std::vector<RstGroup> groups;
     std::vector<RstUDQ> udqs;
     RstUDQActive udq_active;
+    std::vector<RstAction> actions;
     Tuning tuning;
 
 private:
@@ -98,6 +101,15 @@ private:
                   const std::vector<double>& dudw,
                   const std::vector<double>& dudg,
                   const std::vector<double>& dudf);
+
+    void add_actions(const Actdims& actdims,
+                     std::time_t sim_time,
+                     const std::vector<std::string>& zact,
+                     const std::vector<int>& iact,
+                     const std::vector<float>& sact,
+                     const std::vector<std::string>& zacn,
+                     const std::vector<int>& iacn,
+                     const std::vector<double>& sacn);
 
 };
 
