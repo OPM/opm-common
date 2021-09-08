@@ -67,6 +67,7 @@ namespace Opm {
         void add_assign(const std::string& quantity, const std::unordered_set<std::string>& selector, double value, std::size_t report_step);
         void add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression, std::size_t report_step);
 
+        void eval_assign(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const;
         void eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const;
         const UDQDefine& define(const std::string& key) const;
         const UDQAssign& assign(const std::string& key) const;
@@ -109,6 +110,8 @@ namespace Opm {
     private:
         void add_node(const std::string& quantity, UDQAction action);
         UDQAction action_type(const std::string& udq_key) const;
+        void eval_assign(std::size_t report_step, SummaryState& st, UDQState& udq_state, UDQContext& context) const;
+        void eval_define(std::size_t report_step, UDQState& udq_state, UDQContext& context) const;
 
 
         UDQParams udq_params;
