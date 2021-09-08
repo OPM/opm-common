@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
@@ -73,7 +74,7 @@ namespace {
                                                            {"Y",   0},
     };*/
 
-    using cmp_enum = Opm::Action::Condition::Comparator;
+    using cmp_enum = Opm::Action::Comparator;
     const std::map<cmp_enum, int> cmpToIacn_12 = {
                                                     {cmp_enum::GREATER,       0},
                                                     {cmp_enum::LESS,          1},
@@ -90,7 +91,7 @@ const std::map<std::string, int> rhsQuantityToIndex = {
                                                 {"G",   3},
 };
 
-using logic_enum = Opm::Action::Condition::Logical;
+using logic_enum = Opm::Action::Logical;
 
 const std::map<logic_enum, int> logicalToIndex_17 = {
                                                     {logic_enum::AND,   1},
@@ -331,7 +332,7 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
             int first_greater = 0;
             {
                 const auto& first_cond = actx_cond[0];
-                if (first_cond.cmp == Opm::Action::Condition::Comparator::LESS)
+                if (first_cond.cmp == Opm::Action::Comparator::LESS)
                     first_greater = 1;
             }
 
@@ -378,7 +379,7 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
                         parenFirstCond = true;
                         insideParen = true;
                     }
-                    if (cond_it->logic == Opm::Action::Condition::Logical::AND) {
+                    if (cond_it->logic == Opm::Action::Logical::AND) {
                         allPrevLogicOp_AND = true;
                     }
                 } else {
@@ -402,9 +403,9 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
                     }
 
                     // update the previous logic-sequence
-                    if (parenFirstCond && cond_it->logic == Opm::Action::Condition::Logical::OR) {
+                    if (parenFirstCond && cond_it->logic == Opm::Action::Logical::OR) {
                         allPrevLogicOp_AND = false;
-                    } else if (!insideParen && cond_it->logic == Opm::Action::Condition::Logical::OR) {
+                    } else if (!insideParen && cond_it->logic == Opm::Action::Logical::OR) {
                         allPrevLogicOp_AND = false;
                     }
                 }

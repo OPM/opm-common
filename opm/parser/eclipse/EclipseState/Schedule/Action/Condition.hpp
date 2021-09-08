@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp>
 
 namespace Opm {
 
@@ -63,23 +64,8 @@ public:
 class Condition {
 public:
 
-enum class Logical {
-    AND,
-    OR,
-    END
-};
-
-enum class Comparator {
-    EQUAL,
-    GREATER,
-    LESS,
-    GREATER_EQUAL,
-    LESS_EQUAL,
-    INVALID
-};
-
-
     Condition() = default;
+    explicit Condition(const RestartIO::RstAction::Condition& rst_condition);
     Condition(const std::vector<std::string>& tokens, const KeywordLocation& location);
 
 
