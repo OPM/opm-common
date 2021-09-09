@@ -39,6 +39,7 @@ namespace Opm {
     class EclipseGrid;
     class Parser;
     class Actdims;
+    class Parser;
 } // namespace Opm
 
 namespace Opm { namespace EclIO {
@@ -102,14 +103,16 @@ private:
                   const std::vector<double>& dudg,
                   const std::vector<double>& dudf);
 
-    void add_actions(const Actdims& actdims,
+    void add_actions(const Parser& parser,
+                     const Actdims& actdims,
                      std::time_t sim_time,
                      const std::vector<std::string>& zact,
                      const std::vector<int>& iact,
                      const std::vector<float>& sact,
                      const std::vector<std::string>& zacn,
                      const std::vector<int>& iacn,
-                     const std::vector<double>& sacn);
+                     const std::vector<double>& sacn,
+                     const std::vector<std::string>& zlact);
 
 };
 
