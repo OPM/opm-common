@@ -733,5 +733,7 @@ GCONPROD
         const auto& gpm_prod = prod_group.gpmaint();
         BOOST_CHECK( !gpm_prod );
     }
+
+    BOOST_CHECK(sched[0].has_gpmaint());
 }
 

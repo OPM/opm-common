@@ -337,6 +337,8 @@ namespace Opm {
         bool rptonly() const;
         void rptonly(const bool only);
 
+        bool has_gpmaint() const;
+
         /*********************************************************************/
 
         ptr_member<GConSale> gconsale;

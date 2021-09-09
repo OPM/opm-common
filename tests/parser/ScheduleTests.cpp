@@ -4579,6 +4579,8 @@ WCONPROD
     auto dim = sched.getUnits().getDimension(UnitSystem::measure::gas_surface_rate);
     const auto& controls2 = well2.productionControls(st);
     BOOST_CHECK_EQUAL(controls2.alq_value, dim.convertRawToSi(123));
+
+    BOOST_CHECK(!sched[0].has_gpmaint());
 }
 
 
