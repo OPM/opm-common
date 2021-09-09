@@ -1433,7 +1433,7 @@ UDQ
     BOOST_CHECK_EQUAL( input[4].get<UDQDefine>().keyword(), "FUOPR");
     BOOST_CHECK_EQUAL( input[6].get<UDQDefine>().keyword(), "FUOPRX");
 
-    BOOST_CHECK( udq.has_keyword("FUXXX") );
+    BOOST_CHECK( !udq.has_keyword("FUXXX") );
     const auto wubhp1 = udq["WUBHP1"];
     BOOST_CHECK( wubhp1.is<UDQAssign>() );
 }

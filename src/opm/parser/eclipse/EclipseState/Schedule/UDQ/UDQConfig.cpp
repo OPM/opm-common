@@ -286,13 +286,6 @@ namespace Opm {
         if (this->m_definitions.count(keyword) > 0)
             return true;
 
-        /*
-          That a keyword is mentioned with UNITS is enough to consider it
-          as a keyword which is present.
-        */
-        if (this->units.count(keyword) > 0)
-            return true;
-
         return false;
     }
 
