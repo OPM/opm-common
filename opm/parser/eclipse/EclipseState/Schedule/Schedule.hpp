@@ -78,6 +78,8 @@ namespace Opm
         Runspec m_runspec;
         RSTConfig rst_config;
         std::optional<int> output_interval;
+        double sumthin{-1.0};
+        bool rptonly{false};
 
         ScheduleStatic() = default;
 
