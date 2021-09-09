@@ -4618,3 +4618,146 @@ WCONPROD
 }
 
 
+BOOST_AUTO_TEST_CASE(SUMTHIN_IN_SUMMARY) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+START             -- 0
+10 MAI 2007 /
+
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+SUMMARY
+SUMTHIN
+10.0 /
+
+SCHEDULE
+WELSPECS
+     'W_1'  'OP'   30   37  3.33 'OIL'  7* /
+/
+DATES             -- 1, 2, 3
+  10  'JUN'  2007 /
+  10  JLY 2007 /
+  10  AUG 2007 /
+/
+SUMTHIN
+100.0 /
+WELSPECS
+     'WX2'        'OP'   30   37  3.33       'OIL'  7* /
+     'W_3'        'OP'   20   51  3.92       'OIL'  7* /
+/
+DATES             -- 4,5
+  10  SEP 2007 /
+  10  OCT 2007 /
+/
+SUMTHIN
+0.0 /
+DATES             -- 6,7
+  10  SEP 2007 /
+  10  OCT 2007 /
+/
+END
+)");
+
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<const Python>() };
+
+    BOOST_REQUIRE_MESSAGE(sched[0].sumthin().has_value(),
+                          R"("SUMTHIN" must be configured on report step 1)");
+
+    BOOST_CHECK_CLOSE(sched[0].sumthin().value(), 10.0 * 86'400.0, 1.0e-10);
+
+    BOOST_REQUIRE_MESSAGE(sched[1].sumthin().has_value(),
+                          R"("SUMTHIN" must be configured on report step 2)");
+
+    BOOST_CHECK_CLOSE(sched[1].sumthin().value(), 10.0 * 86'400.0, 1.0e-10);
+
+    BOOST_REQUIRE_MESSAGE(sched[2].sumthin().has_value(),
+                          R"("SUMTHIN" must be configured on report step 3)");
+
+    BOOST_CHECK_CLOSE(sched[2].sumthin().value(), 10.0 * 86'400.0, 1.0e-10);
+
+    BOOST_REQUIRE_MESSAGE(sched[3].sumthin().has_value(),
+                          R"("SUMTHIN" must be configured on report step 4)");
+
+    BOOST_CHECK_CLOSE(sched[3].sumthin().value(), 100.0 * 86'400.0, 1.0e-10);
+
+    BOOST_REQUIRE_MESSAGE(sched[4].sumthin().has_value(),
+                          R"("SUMTHIN" must be configured on report step 5)");
+
+    BOOST_CHECK_CLOSE(sched[4].sumthin().value(), 100.0 * 86'400.0, 1.0e-10);
+
+    BOOST_REQUIRE_MESSAGE(!sched[5].sumthin().has_value(),
+                          R"("SUMTHIN" must NOT be configured on report step 6)");
+
+    BOOST_CHECK_THROW(sched[5].sumthin().value(), std::bad_optional_access);
+
+    BOOST_REQUIRE_MESSAGE(!sched[6].sumthin().has_value(),
+                          R"("SUMTHIN" must NOT be configured on report step 7)");
+}
+
+BOOST_AUTO_TEST_CASE(RPTONLY_IN_SUMMARY) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+START             -- 0
+10 MAI 2007 /
+
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+SUMMARY
+RPTONLY
+
+SCHEDULE
+WELSPECS
+     'W_1'  'OP'   30   37  3.33 'OIL'  7* /
+/
+DATES             -- 1, 2
+  10  'JUN'  2007 /
+  10  JLY 2007 /
+/
+WELSPECS
+     'WX2'        'OP'   30   37  3.33       'OIL'  7* /
+     'W_3'        'OP'   20   51  3.92       'OIL'  7* /
+/
+RPTONLYO
+DATES             -- 3, 4
+  10  AUG 2007 /
+  10  SEP 2007 /
+/
+END
+)");
+
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<const Python>() };
+
+    BOOST_CHECK_MESSAGE(sched[0].rptonly(),
+                        R"("RPTONLY" must be configured on report step 1)");
+
+    BOOST_CHECK_MESSAGE(sched[1].rptonly(),
+                        R"("RPTONLY" must be configured on report step 2)");
+
+    BOOST_CHECK_MESSAGE(! sched[2].rptonly(),
+                        R"("RPTONLY" must NOT be configured on report step 3)");
+
+    BOOST_CHECK_MESSAGE(! sched[3].rptonly(),
+                        R"("RPTONLY" must NOT be configured on report step 4)");
+}
