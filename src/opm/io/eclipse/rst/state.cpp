@@ -29,6 +29,7 @@
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/output/eclipse/UDQDims.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
@@ -275,6 +276,7 @@ const RstWell& RstState::get_well(const std::string& wname) const {
 
 RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
                         const Runspec&,
+                        const Parser&,
                         const ::Opm::EclipseGrid*               grid)
 {
     RstState state(rstView, grid);

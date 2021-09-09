@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
 
             const int report_step = 50;
             auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst), report_step);
-            const auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), state.runspec());
+            const auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), state.runspec(), parser);
             Schedule sched_rst(deck, state, python, {}, &rst_state);
             const auto& rfti_well = sched_rst.getWell("RFTI", report_step);
             const auto& rftp_well = sched_rst.getWell("RFTP", report_step);
