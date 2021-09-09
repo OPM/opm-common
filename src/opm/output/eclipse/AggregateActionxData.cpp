@@ -46,6 +46,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <fmt/format.h>
 #include <iostream>
 #include <string>
 #include <ctime>
@@ -208,43 +209,37 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
          Opm::RestartIO::Helpers::WindowedArray<
             Opm::EclIO::PaddedOutputString<8>
         >
-        allocate(const std::vector<int>& actDims)
+         allocate(std::size_t num_actions, std::size_t max_input_lines, const Opm::Actdims& actdims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
                 Opm::EclIO::PaddedOutputString<8>
             >;
-            int nwin = std::max(actDims[0], 1);
-            int nitPrWin = std::max(actDims[4], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
+                WV::NumWindows{ num_actions },
+                WV::WindowSize{ actdims.line_size() * max_input_lines }
             };
         }
 
     template <class ZLACTArray>
-    void staticContrib(const Opm::Action::ActionX& actx, int noEPrZlact, ZLACTArray& zLact)
+    void staticContrib(const Opm::Action::ActionX& actx, const Opm::Actdims& actdims, ZLACTArray& zLact)
         {
-            std::size_t ind = 0;
+            std::size_t offset = 0;
             int l_sstr = 8;
-            int max_l_str = 128;
             // write out the schedule input lines
-            const auto& schedule_data = actx.keyword_strings();
-            for (auto z_data : schedule_data) {
-                z_data = Opm::ltrim_copy(z_data);
-                int n_sstr =  z_data.size()/l_sstr;
-                if (static_cast<int>(z_data.size()) > max_l_str) {
-                    std::cout << "Too long input data string (max 128 characters): " << z_data << std::endl;
-                    throw std::invalid_argument("Actionx: " + actx.name());
+            for (auto input_line : actx.keyword_strings()) {
+                input_line = Opm::trim_copy(input_line);
+                if (input_line.size() > Opm::RestartIO::Helpers::VectorItems::ZLACT::max_line_length)
+                    throw std::invalid_argument(fmt::format("Actionx line to long for action {}", actx.name()));
+
+                int n_sstr =  input_line.size()/l_sstr;
+                for (int i = 0; i < n_sstr; i++) {
+                    zLact[offset + i] = input_line.substr(i*l_sstr, l_sstr);
                 }
-                else {
-                    for (int i = 0; i < n_sstr; i++) {
-                        zLact[ind + i] = z_data.substr(i*l_sstr, l_sstr);
-                    }
-                    //add remainder of last non-zero string
-                    if ((z_data.size() % l_sstr) > 0)
-                        zLact[ind + n_sstr] = z_data.substr(n_sstr*l_sstr);
-                }
-                ind += static_cast<std::size_t>(noEPrZlact);
+                //add remainder of last non-zero string
+                if ((input_line.size() % l_sstr) > 0)
+                    zLact[offset + n_sstr] = input_line.substr(n_sstr*l_sstr);
+
+                offset += actdims.line_size();
             }
         }
     } // zLact
@@ -562,7 +557,7 @@ AggregateActionxData( const std::vector<int>&   rst_dims,
     : iACT_ (iACT::allocate(rst_dims))
     , sACT_ (sACT::allocate(rst_dims))
     , zACT_ (zACT::allocate(rst_dims))
-    , zLACT_(zLACT::allocate(rst_dims))
+    , zLACT_(zLACT::allocate(num_actions, sched[simStep].actions().max_input_lines(), actdims))
     , zACN_ (zACN::allocate(num_actions, actdims))
     , iACN_ (iACN::allocate(num_actions, actdims))
     , sACN_ (sACN::allocate(num_actions, actdims))
@@ -588,7 +583,7 @@ AggregateActionxData( const std::vector<int>&   rst_dims,
 
         {
             auto z_lact = this->zLACT_[act_ind];
-            zLACT::staticContrib(action, rst_dims[8], z_lact);
+            zLACT::staticContrib(action, actdims, z_lact);
         }
 
         {
