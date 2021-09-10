@@ -36,6 +36,7 @@
 
 namespace Opm {
     class EclipseGrid;
+    class Parser;
 } // namespace Opm
 
 namespace Opm { namespace EclIO {
@@ -50,6 +51,7 @@ struct RstState {
 
     static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView,
                          const Runspec& runspec,
+                         const Parser& parser,
                          const ::Opm::EclipseGrid*               grid = nullptr);
 
     const RstWell& get_well(const std::string& wname) const;

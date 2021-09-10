@@ -79,7 +79,7 @@ std::pair<Opm::EclipseState, Opm::Schedule> load_schedule(std::shared_ptr<const 
         auto rst_file = std::make_shared<Opm::EclIO::ERst>(rst_filename);
         auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), report_step);
 
-        const auto rst = Opm::RestartIO::RstState::load(std::move(rst_view), state.runspec());
+        const auto rst = Opm::RestartIO::RstState::load(std::move(rst_view), state.runspec(), parser);
         return {
             std::piecewise_construct,
             std::forward_as_tuple(state),

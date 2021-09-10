@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
     auto deck = parser.parseFile("SPE1CASE2.DATA");
     auto rst_file = std::make_shared<EclIO::ERst>("SPE1CASE2.X0060");
     auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), 60);
-    auto rst_state = RestartIO::RstState::load(std::move(rst_view), Runspec{});
+    auto rst_state = RestartIO::RstState::load(std::move(rst_view), Runspec{}, parser);
     BOOST_REQUIRE_THROW( rst_state.get_well("NO_SUCH_WELL"), std::out_of_range);
     auto python = std::make_shared<Python>();
     EclipseState ecl_state(deck);
@@ -107,7 +107,7 @@ std::pair<Schedule, Schedule> load_schedule_pair(const std::string& base_deck,
     auto restart_deck = parser.parseFile(rst_deck);
     auto rst_file = std::make_shared<EclIO::ERst>(rst_fname);
     auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), restart_step);
-    auto rst_state = RestartIO::RstState::load(std::move(rst_view), ecl_state.runspec());
+    auto rst_state = RestartIO::RstState::load(std::move(rst_view), ecl_state.runspec(), parser);
     EclipseState ecl_state_restart(restart_deck);
     Schedule restart_sched(restart_deck, ecl_state_restart, python, {}, &rst_state);
 
