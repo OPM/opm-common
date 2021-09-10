@@ -47,6 +47,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <ctime>
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers
@@ -157,6 +158,8 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
 
         template <class SACTArray>
         void staticContrib(const Opm::Action::ActionX& actx,
+                           const Opm::Action::State& state,
+                           std::time_t start_time,
                            const Opm::UnitSystem& units,
                            SACTArray& sAct)
         {
@@ -166,7 +169,8 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
             sAct[2] = 0.;
             //item [3]:  Minimum time interval between action triggers.
             sAct[3] = units.from_si(M::time, actx.min_wait());
-            sAct[4] = 0.;
+            //item [4]:  last time that the action was triggered
+            sAct[4] = units.from_si(M::time, state.run_time(actx) - start_time);
         }
 
     } // sAct
@@ -573,7 +577,7 @@ AggregateActionxData( const std::vector<int>&   rst_dims,
 
         {
             auto s_act = this->sACT_[act_ind];
-            sACT::staticContrib(action, sched.getUnits(), s_act);
+            sACT::staticContrib(action, action_state, sched.getStartTime(), sched.getUnits(), s_act);
         }
 
         {
