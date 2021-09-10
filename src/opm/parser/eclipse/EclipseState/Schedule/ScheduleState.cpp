@@ -376,4 +376,12 @@ bool ScheduleState::rst_file(const RSTConfig&  rst,
 }
 
 
+bool ScheduleState::has_gpmaint() const
+{
+    return std::any_of(this->groups.begin(), this->groups.end(), [](const auto& name_group) {
+            return name_group.second->gpmaint().has_value();
+    });
 }
+
+
+} // namespace Opm

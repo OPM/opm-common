@@ -246,6 +246,14 @@ namespace Opm {
                 return this->m_data.size();
             }
 
+            typename std::unordered_map<K, std::shared_ptr<T>>::const_iterator begin() const {
+                return this->m_data.begin();
+            }
+
+            typename std::unordered_map<K, std::shared_ptr<T>>::const_iterator end() const {
+                return this->m_data.end();
+            }
+
 
             static map_member<K,T> serializeObject() {
                 map_member<K,T> map_object;
@@ -328,6 +336,8 @@ namespace Opm {
 
         bool rptonly() const;
         void rptonly(const bool only);
+
+        bool has_gpmaint() const;
 
         /*********************************************************************/
 
