@@ -859,14 +859,16 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         if (iuap_vect.size() != static_cast<std::size_t>(inteHead[VI::intehead::NO_IUAPS]))
             OpmLog::error(fmt::format("Inconsistent number of iuap's: {} number of iuap's from intehead {}", iuap_vect.size(), inteHead[VI::intehead::NO_IUAPS]));
 
-        Opm::RestartIO::Helpers::igphData igph_dat;
-        auto igph = igph_dat.ig_phase(sched, simStep, inteHead);
-        for (std::size_t index = 0; index < igph.size(); index++) {
+        if (inteHead[VI::intehead::NO_IUADS] > 0) {
+            Opm::RestartIO::Helpers::igphData igph_dat;
+            auto igph = igph_dat.ig_phase(sched, simStep, inteHead);
+            for (std::size_t index = 0; index < igph.size(); index++) {
                 auto i_igph = this->iGPH_[index];
                 iGph::staticContrib(igph[index], i_igph);
+            }
+            if (igph.size() != static_cast<std::size_t>(inteHead[VI::intehead::NGMAXZ]))
+                OpmLog::error(fmt::format("Inconsistent number of igph's: {} number of igph's from intehead {}", igph.size(), inteHead[VI::intehead::NGMAXZ]));
         }
-        if (igph.size() != static_cast<std::size_t>(inteHead[VI::intehead::NGMAXZ]))
-            OpmLog::error(fmt::format("Inconsistent number of igph's: {} number of igph's from intehead {}", igph.size(), inteHead[VI::intehead::NGMAXZ]));
     }
 
     std::size_t i_wudq = 0;
