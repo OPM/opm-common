@@ -170,7 +170,7 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
             //item [3]:  Minimum time interval between action triggers.
             sAct[3] = units.from_si(M::time, actx.min_wait());
             //item [4]:  last time that the action was triggered
-            sAct[4] = units.from_si(M::time, state.run_time(actx) - start_time);
+            sAct[4] =  (state.run_count(actx) > 0) ? units.from_si(M::time, (state.run_time(actx) - start_time)) : 0.;
         }
 
     } // sAct
