@@ -354,7 +354,10 @@ bool ScheduleState::rst_file(const RSTConfig&  rst,
         return rst.write_rst_file.value();
 
     const auto freq = rst.freq.value_or(1);
-    const auto basic = rst.basic.value();
+    const auto basic = rst.basic.value_or(0);
+
+    if (basic == 0)
+        return false;
 
     if (basic == 3)
         return (this->sim_step() % freq) == 0;
