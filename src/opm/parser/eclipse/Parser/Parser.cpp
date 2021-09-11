@@ -171,7 +171,7 @@ inline std::string_view del_after_last_slash( std::string_view view ) {
 
       slash--;
   }
-  if (slash == begin)
+  if (slash == begin && *slash != '/')
       slash = end;
 
   /* we want to preserve terminating slashes */

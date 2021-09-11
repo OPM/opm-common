@@ -2613,6 +2613,22 @@ UDQ
     BOOST_CHECK_EQUAL(res["W3"].get(), 100);
 }
 
+BOOST_AUTO_TEST_CASE(UDQ_TRAILING_COMMENT) {
+
+    std::string valid = R"(
+SCHEDULE
+
+UDQ
+   ASSIGN FUBHPP1 100 /
+/ Comment here
+
+)";
+
+
+    BOOST_CHECK_NO_THROW( make_schedule(valid) );
+}
+
+
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_RST) {
     std::unordered_set<std::string> selector{"W1", "W2"};
