@@ -128,15 +128,6 @@ namespace Opm {
 
             return;
         }
-        /*
-          A UNIT statement is sufficient to consider a UDQ keyword is defined;
-          if it is not already defined with an ASSIGN / DEFINE keyword we
-          default construct it with a scalar value of 0. The main purpose of
-          doing this is to be able to really define the content in PYACTION
-          keyword.
-        */
-        if (!this->has_keyword(keyword))
-            this->add_assign(keyword, std::vector<std::string>{}, 0, 0);
         this->units[keyword] = unit;
     }
 
@@ -293,13 +284,6 @@ namespace Opm {
             return true;
 
         if (this->m_definitions.count(keyword) > 0)
-            return true;
-
-        /*
-          That a keyword is mentioned with UNITS is enough to consider it
-          as a keyword which is present.
-        */
-        if (this->units.count(keyword) > 0)
             return true;
 
         return false;

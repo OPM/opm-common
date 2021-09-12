@@ -1393,19 +1393,17 @@ UDQ
     ASSIGN WUBHP1 11 /    0
     ASSIGN WUOPR  20 /    1
     ASSIGN WUBHP2 P2 12 / 2
-    --ASSIGN WUBHP  0 /  --DUMMY   3
     UNITS  WUBHP 'BARSA' /
     UNITS  WUOPR 'SM3/DAY' /
-    DEFINE WUWCT WWPR / (WWPR + WOPR) /  4
+    DEFINE WUWCT WWPR / (WWPR + WOPR) /  3
     UNITS  WUWCT '1' /
-    DEFINE FUOPR SUM(WOPR) /             5
+    DEFINE FUOPR SUM(WOPR) /             4
     UNITS  FUOPR 'SM3/DAY' /
-    --ASSIGN FUXXX 0 /  --DUMMY            6
     UNITS  FUXXX 'SM3/DAY' /
 /
 UDQ
-    ASSIGN WUBHPX P2 12 /                7
-    DEFINE FUOPRX SUM(WOPR) /            8
+    ASSIGN WUBHPX P2 12 /                5
+    DEFINE FUOPRX SUM(WOPR) /            6
 /
 )";
     auto schedule = make_schedule(deck_string);
@@ -1414,30 +1412,28 @@ UDQ
 
     const auto& input = udq.input();
     const auto& def = udq.definitions();
-    BOOST_CHECK_EQUAL(input.size(), 9U);
-    BOOST_CHECK_EQUAL(udq.size(), 9U);
+    BOOST_CHECK_EQUAL(input.size(), 7U);
+    BOOST_CHECK_EQUAL(udq.size(), 7U);
 
     BOOST_CHECK( input[0].is<UDQAssign>() );
     BOOST_CHECK( input[1].is<UDQAssign>() );
     BOOST_CHECK( input[2].is<UDQAssign>() );
-    BOOST_CHECK( input[3].is<UDQAssign>() );
+    BOOST_CHECK( input[3].is<UDQDefine>() );
     BOOST_CHECK( input[4].is<UDQDefine>() );
-    BOOST_CHECK( input[5].is<UDQDefine>() );
-    BOOST_CHECK( input[6].is<UDQAssign>() );
-    BOOST_CHECK( input[7].is<UDQAssign>() );
-    BOOST_CHECK( input[8].is<UDQDefine>() );
+    BOOST_CHECK( input[5].is<UDQAssign>() );
+    BOOST_CHECK( input[6].is<UDQDefine>() );
 
-    BOOST_CHECK_EQUAL( input[5].unit(), "SM3/DAY" );
+    BOOST_CHECK_EQUAL( input[1].unit(), "SM3/DAY" );
 
     BOOST_CHECK_EQUAL(def[0].keyword(), "WUWCT");
     BOOST_CHECK_EQUAL(def[1].keyword(), "FUOPR");
     BOOST_CHECK_EQUAL(def[2].keyword(), "FUOPRX");
 
-    BOOST_CHECK_EQUAL( input[4].get<UDQDefine>().keyword(), "WUWCT");
-    BOOST_CHECK_EQUAL( input[5].get<UDQDefine>().keyword(), "FUOPR");
-    BOOST_CHECK_EQUAL( input[8].get<UDQDefine>().keyword(), "FUOPRX");
+    BOOST_CHECK_EQUAL( input[3].get<UDQDefine>().keyword(), "WUWCT");
+    BOOST_CHECK_EQUAL( input[4].get<UDQDefine>().keyword(), "FUOPR");
+    BOOST_CHECK_EQUAL( input[6].get<UDQDefine>().keyword(), "FUOPRX");
 
-    BOOST_CHECK( udq.has_keyword("FUXXX") );
+    BOOST_CHECK( !udq.has_keyword("FUXXX") );
     const auto wubhp1 = udq["WUBHP1"];
     BOOST_CHECK( wubhp1.is<UDQAssign>() );
 }
@@ -1468,8 +1464,8 @@ UDQ
 
 
     const auto& input = udq.input();
-    BOOST_CHECK_EQUAL(input.size(), 6U);
-    BOOST_CHECK_EQUAL(udq.size(), 6U);
+    BOOST_CHECK_EQUAL(input.size(), 5U);
+    BOOST_CHECK_EQUAL(udq.size(), 5U);
 
     BOOST_CHECK( input[0].is<UDQDefine>());
     BOOST_CHECK_EQUAL( input[0].keyword(), "WUBHP1");
