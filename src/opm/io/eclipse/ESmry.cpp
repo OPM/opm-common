@@ -166,13 +166,31 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         const std::vector<int> nums = smspecList.back().get<int>("NUMS");
         const std::vector<std::string> units = smspecList.back().get<std::string>("UNITS");
 
+        std::vector<std::string> lgrs;
+        std::vector<int> numlx;
+        std::vector<int> numly;
+        std::vector<int> numlz;
+
+        if (smspecList.back().hasKey("LGRS")){
+            lgrs = smspecList.back().get<std::string>("LGRS");
+            numlx = smspecList.back().get<int>("NUMLX");
+            numly = smspecList.back().get<int>("NUMLY");
+            numlz = smspecList.back().get<int>("NUMLZ");
+        }
+
+        const bool have_lgr = !lgrs.empty();
+
         std::vector<std::string> combindKeyList;
         combindKeyList.reserve(dimens[0]);
 
         this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
 
         for (unsigned int i=0; i<keywords.size(); i++) {
-            const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
+
+            const std::string keyString = have_lgr
+                ? makeKeyString(keywords[i], wgnames[i], nums[i], lgrs[i], numlx[i], numly[i], numlz[i])
+                : makeKeyString(keywords[i], wgnames[i], nums[i]);
+
             combindKeyList.push_back(keyString);
 
             if (! keyString.empty()) {
@@ -193,7 +211,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         keywordListSpecFile.push_back(combindKeyList);
         getRstString(restartArray, pathRstFile, rstRootN);
 
-        if ((rstRootN.string() != "") && (loadBaseRunData)){
+        if ((rstRootN.string() != "") && (loadBaseRunData)) {
 
             if (! Opm::filesystem::exists(pathRstFile))
                 OPM_THROW(std::runtime_error, "path to restart file not found, '" + pathRstFile.string() + "'");
@@ -220,7 +238,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     // checking if this is a restart run. Supporting nested restarts (restart, from restart, ...)
     // std::set keywList is storing keywords from all runs involved
 
-    while ((rstRootN.string() != "") && (loadBaseRunData)) {
+    while ((rstRootN.string() != "") && (loadBaseRunData)){
 
         Opm::filesystem::path rstFile = pathRstFile / rstRootN;
         rstFile += ".SMSPEC";
@@ -258,13 +276,31 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         const std::vector<int> nums = smspecList.back().get<int>("NUMS");
         const std::vector<std::string> units = smspecList.back().get<std::string>("UNITS");
 
+        std::vector<std::string> lgrs;
+        std::vector<int> numlx;
+        std::vector<int> numly;
+        std::vector<int> numlz;
+
+        if (smspecList.back().hasKey("LGRS")){
+            lgrs = smspecList.back().get<std::string>("LGRS");
+            numlx = smspecList.back().get<int>("NUMLX");
+            numly = smspecList.back().get<int>("NUMLY");
+            numlz = smspecList.back().get<int>("NUMLZ");
+        }
+
+        const bool have_lgr = !lgrs.empty();
+
         std::vector<std::string> combindKeyList;
         combindKeyList.reserve(dimens[0]);
 
         this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
 
         for (size_t i = 0; i < keywords.size(); i++) {
-            const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
+
+            const std::string keyString = have_lgr
+                ? makeKeyString(keywords[i], wgnames[i], nums[i], lgrs[i], numlx[i], numly[i], numlz[i])
+                : makeKeyString(keywords[i], wgnames[i], nums[i]);
+
             combindKeyList.push_back(keyString);
 
             if (! keyString.empty()) {
@@ -287,6 +323,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         formattedFiles.push_back(baseRunFmt);
         getRstString(restartArray, pathRstFile, rstRootN);
     }
+
 
     nSpecFiles = static_cast<int>(smryArray.size());
     nParamsSpecFile.resize(nSpecFiles, 0);
@@ -326,8 +363,25 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         const std::vector<int> nums = smspecList[specInd].get<int>("NUMS");
 
+        std::vector<std::string> lgrs;
+        std::vector<int> numlx;
+        std::vector<int> numly;
+        std::vector<int> numlz;
+
+        if (smspecList[specInd].hasKey("LGRS")){
+            lgrs = smspecList[specInd].get<std::string>("LGRS");
+            numlx = smspecList[specInd].get<int>("NUMLX");
+            numly = smspecList[specInd].get<int>("NUMLY");
+            numlz = smspecList[specInd].get<int>("NUMLZ");
+        }
+
+        const bool have_lgr = !lgrs.empty();
+
         for (size_t i=0; i < keywords.size(); i++) {
-            const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i]);
+
+            const std::string keyw = have_lgr
+                ? makeKeyString(keywords[i], wgnames[i], nums[i], lgrs[i], numlx[i], numly[i], numlz[i])
+                : makeKeyString(keywords[i], wgnames[i], nums[i]);
 
             if (keywList.find(keyw) != keywList.end())
                 arrayPos[specInd][keyIndex[keyw]]=i;
@@ -1028,7 +1082,8 @@ void ESmry::ijk_from_global_index(int glob, int &i, int &j, int &k) const
 }
 
 
-std::string ESmry::makeKeyString(const std::string& keywordArg, const std::string& wgname, int num) const
+std::string ESmry::makeKeyString(const std::string& keywordArg, const std::string& wgname, int num,
+                                 const std::string& lgr, int numlx, int numly, int numlz) const
 {
     const auto no_wgname = std::string_view(":+:+:+:+");
 
@@ -1072,12 +1127,30 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
         return fmt::format("{}:{}", keywordArg, wgname);
     }
 
+    if (first == 'L') {
+
+        if ((keywordArg[1] == 'B') || (keywordArg[1] == 'C'))
+            return fmt::format("{}:{}:{},{},{}", keywordArg, lgr, numlx, numly, numlz);
+
+        if (keywordArg[1] == 'W')
+            return fmt::format("{}:{}:{}", keywordArg, lgr, wgname);
+
+        return fmt::format("{}", keywordArg);
+    }
+
     if (first == 'R') {
         if (num <= 0) {
             return "";
         }
 
-        if (keywordArg[1] == 'F') {
+        std::string str34 = keywordArg.substr(2,2);
+        std::string str45 = keywordArg.substr(3,2);
+
+        if (keywordArg == "RORFR")    // exception, standard region summary keyword
+            return fmt::format("{}:{}", keywordArg, num);
+
+        if ((str34 == "FR") || (str34 == "FT") || (str45 == "FR") || (str45 == "FT")) {
+
             // NUMS = R1 + 32768*(R2 + 10)
             const auto r1 =  num % (1UL << 15);
             const auto r2 = (num / (1UL << 15)) - 10;
