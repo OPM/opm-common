@@ -30,6 +30,9 @@
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
@@ -2973,6 +2976,12 @@ EDIT
     const auto deck = parser.parseString( deck_data ) ;
     Opm::EclipseGrid grid(deck);
     BOOST_CHECK_CLOSE(grid.getCellVolume(0), 1.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(GDFILE_NO_ACTNUM) {
+    Opm::Parser parser;
+    auto deck = parser.parseFile("GDFILE_NO_ACTNUM.DATA");
+    BOOST_CHECK_NO_THROW( Opm::EclipseState(deck));
 }
 
 
