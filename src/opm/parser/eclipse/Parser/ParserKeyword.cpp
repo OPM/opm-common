@@ -994,9 +994,6 @@ void set_dimensions( ParserItem& item,
         }
         ss << '\n';
 
-        const auto& kw_size = this->getKeywordSize();
-        std::cout << kw_size.construct() << std::endl;
-
         return ss.str();
     }
 
