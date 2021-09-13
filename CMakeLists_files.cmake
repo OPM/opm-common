@@ -546,7 +546,7 @@ if(ENABLE_ECL_INPUT)
     tests/MODEL2_RESTART.DATA
     tests/restart/MODEL2.UNRST
     tests/UDQ_WCONPROD.DATA
-    tests/UDQ_WCONPROD.DATA
+    tests/UDQ_WCONPROD_GRID.grdecl
     tests/UDQ_WCONPROD_RESTART.DATA
     tests/UDQ_WCONPROD.X0006
   )
