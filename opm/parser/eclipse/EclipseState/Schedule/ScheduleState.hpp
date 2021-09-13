@@ -329,7 +329,8 @@ namespace Opm {
 
         bool rst_file(const RSTConfig& rst_config, const time_point& previous_restart_output_time) const;
         void update_date(const time_point& prev_time);
-        void handleSAVE();
+        void updateSAVE(bool save);
+        bool save() const;
 
         const std::optional<double>& sumthin() const;
         void update_sumthin(double sumthin);
@@ -497,7 +498,7 @@ namespace Opm {
         std::size_t m_year_num = 0;
         bool m_first_in_month;
         bool m_first_in_year;
-        std::optional<int> m_save_step;
+        bool m_save_step{false};
 
         Tuning m_tuning;
         Nupcol m_nupcol;

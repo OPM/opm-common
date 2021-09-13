@@ -144,43 +144,9 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
 
 
 BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
-    std::map<int, boost::gregorian::date> rptConfig{};
-
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  0), std::forward_as_tuple(2000,1, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(  8), std::forward_as_tuple(2000,7, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 27), std::forward_as_tuple(2001,1, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 45), std::forward_as_tuple(2001,7, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 50), std::forward_as_tuple(2001,8,24));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 63), std::forward_as_tuple(2002,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 83), std::forward_as_tuple(2002,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple( 92), std::forward_as_tuple(2003,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(101), std::forward_as_tuple(2003,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(111), std::forward_as_tuple(2004,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(129), std::forward_as_tuple(2004,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(137), std::forward_as_tuple(2005,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(149), std::forward_as_tuple(2005,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(159), std::forward_as_tuple(2006,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(165), std::forward_as_tuple(2006,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(173), std::forward_as_tuple(2007,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(179), std::forward_as_tuple(2007,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(185), std::forward_as_tuple(2008,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(193), std::forward_as_tuple(2008,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(199), std::forward_as_tuple(2009,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(205), std::forward_as_tuple(2009,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(211), std::forward_as_tuple(2010,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(217), std::forward_as_tuple(2010,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(223), std::forward_as_tuple(2011,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(229), std::forward_as_tuple(2011,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(235), std::forward_as_tuple(2012,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(241), std::forward_as_tuple(2012,8, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(247), std::forward_as_tuple(2013,2, 1));
-    rptConfig.emplace(std::piecewise_construct, std::forward_as_tuple(251), std::forward_as_tuple(2013,5, 2));
-
-
     const auto deck = Parser{}.parseFile(path_prefix() + "IOConfig/RPT_TEST2.DATA");
     const EclipseState state( deck);
     const Schedule schedule(deck, state, std::make_shared<Python>());
-    verifyRestartConfig(schedule, rptConfig);
 
     const auto keywords0 = schedule.rst_keywords(0);
     const std::map<std::string, int> expected0 = {

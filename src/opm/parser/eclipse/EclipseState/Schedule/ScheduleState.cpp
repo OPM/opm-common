@@ -49,8 +49,18 @@ std::pair<std::size_t, std::size_t> date_diff(const time_point& t2, const time_p
     return { year_diff, month_diff };
 }
 
-
 }
+
+void ScheduleState::updateSAVE(bool save) {
+    this->m_save_step = save;
+}
+
+bool ScheduleState::save() const {
+    return this->m_save_step;
+}
+
+
+
 
 
 
@@ -92,6 +102,7 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     this->m_wellgroup_events.reset();
     this->m_geo_keywords.clear();
     this->target_wellpi.clear();
+    this->m_save_step = false;
 
     auto next_rft = this->rft_config().next();
     if (next_rft.has_value())
@@ -224,6 +235,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_oilvap == other.m_oilvap &&
            this->m_sim_step == other.m_sim_step &&
            this->m_month_num == other.m_month_num &&
+           this->m_save_step == other.m_save_step &&
            this->m_first_in_month == other.m_first_in_month &&
            this->m_first_in_year == other.m_first_in_year &&
            this->m_year_num == other.m_year_num &&
