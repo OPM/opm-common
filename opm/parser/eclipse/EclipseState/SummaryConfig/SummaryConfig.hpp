@@ -68,7 +68,7 @@ namespace Opm {
         const KeywordLocation& location( ) const { return this->loc; }
 
         operator Opm::EclIO::SummaryNode() const {
-            return { keyword_, category_, type_, name_, number_, fip_region_ };
+            return { keyword_, category_, type_, name_, number_, fip_region_, {}};
         }
 
         template<class Serializer>
