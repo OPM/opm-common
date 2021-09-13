@@ -42,7 +42,7 @@ namespace Opm {
         void start_record( );
         void end_record( );
 
-        void start_keyword(const std::string& kw);
+        void start_keyword(const std::string& kw, bool split_line);
         void end_keyword(bool add_slash);
 
         void endl();

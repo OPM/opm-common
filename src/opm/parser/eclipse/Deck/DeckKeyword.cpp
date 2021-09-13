@@ -292,7 +292,7 @@ namespace Opm {
     }
 
     void DeckKeyword::write_TITLE( DeckOutput& output ) const {
-        output.start_keyword( this->name( ) );
+        output.start_keyword( this->name( ), false );
         {
             const auto& record = this->getRecord(0);
             output.write_string("  ");
@@ -305,7 +305,11 @@ namespace Opm {
         if (this->name() == "TITLE")
             this->write_TITLE( output );
         else {
-            output.start_keyword( this->name( ) );
+            bool split_line = this->isDataKeyword();
+            if (this->name() == "VFPPROD" || this->name() == "VFPINJ")
+                split_line = true;
+
+            output.start_keyword( this->name( ), split_line );
             this->write_data( output );
             output.end_keyword( this->m_slashTerminated );
         }
