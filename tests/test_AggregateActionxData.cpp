@@ -113,25 +113,17 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     Opm::Action::State action_state;
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
-    const auto& ioConfig = es.getIOConfig();
-    //const auto& restart = es.cfg().restart();
-
+    const auto& start_time = sched.getStartTime();
 
     // Report Step 3: 2008-08-22 --> 2018-10-01
     const auto rptStep = std::size_t{3};
     std::string outputDir = "./";
     std::string baseName = "UDQ_ACTIONX_TEST1";
-    Opm::Action::ActionX actx_14 = Opm::Action::ActionX("ACT14", 10, 0.543, 0.);
+    Opm::Action::ActionX actx_14 = Opm::Action::ActionX("ACT14", 10, 0.543, start_time);
     Opm::Action::Result result = Opm::Action::Result(true);
-    action_state.add_run(actx_14, 100., result);
-    Opm::EclIO::OutputStream::Restart rstFile {
-    Opm::EclIO::OutputStream::ResultSet { outputDir, baseName },
-    rptStep,
-    Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
-	  Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
-        };
+    action_state.add_run(actx_14, start_time + 1.E09, result);
 
-    double secs_elapsed = 3.1536E07;
+    double secs_elapsed = start_time + 2.E09;
     const auto ih = Opm::RestartIO::Helpers::
         createInteHead(es, grid, sched, secs_elapsed,
                        rptStep, rptStep+1, rptStep);
@@ -246,7 +238,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
             //item [1]: is unknown, (=0)
             //item [2]: is unknown, (=0)
             //item [3]:  Minimum time interval between action triggers.
-            //item [4]: is unknown, (=0)
+            //item [4]:  last time that the action was triggered
         */
 
 
@@ -256,6 +248,9 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_CLOSE(sAct[start + 3], 0.543, 1.0e-5f);
         start = 1*actDims[2];
         BOOST_CHECK_CLOSE(sAct[start + 3], 0.567, 1.0e-5f);
+        //actx_14
+        start = 13*actDims[2];
+        BOOST_CHECK_CLOSE(sAct[start + 4], 1.E09/86400., 1.0e-5f);
     }
 
     {
