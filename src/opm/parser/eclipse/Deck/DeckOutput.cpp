@@ -104,11 +104,9 @@ namespace Opm {
     }
 
 
-    void DeckOutput::start_keyword(const std::string& kw) {
+    void DeckOutput::start_keyword(const std::string& kw, bool split_line_arg) {
         this->os << kw << std::endl;
-        this->split_line = true;
-        if (kw == "UDQ" || kw == "ACTIONX")
-            this->split_line = false;
+        this->split_line = split_line_arg;
     }
 
 

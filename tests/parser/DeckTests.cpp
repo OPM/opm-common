@@ -563,7 +563,7 @@ ABC";
     out.fmt.columns = 2;
     out.fmt.keyword_sep = "ABC";
 
-    out.start_keyword("KEYWORD");
+    out.start_keyword("KEYWORD", true);
     out.start_record();
     out.write<int>(1);
     out.write<int>(2);
