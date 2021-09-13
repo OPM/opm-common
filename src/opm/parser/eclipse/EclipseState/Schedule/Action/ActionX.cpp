@@ -39,9 +39,9 @@ bool ActionX::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> actionx_allowed_list = {
         "COMPLUMP",
         "EXIT",
-        "GCONINJE", "GCONPROD", "GLIFTOPT",
+        "GCONINJE", "GCONPROD", "GCONSUMP", "GLIFTOPT", "GRUPNET", "GRUPTARG", "GRUPTREE", "GSATINJE", "GSATPROD",
         "UDQ",
-        "WELSPECS","WELOPEN", "WELPI", "WPIMULT"
+        "WCONINJE", "WCONPROD", "WEFAC", "WELSPECS","WELOPEN", "WELPI", "WGRUPCON", "WPIMULT", "TEST"
     };
     return (actionx_allowed_list.find(keyword) != actionx_allowed_list.end());
 }
