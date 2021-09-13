@@ -119,8 +119,9 @@ private:
 
     void updatePathAndRootName(filesystem::path& dir, filesystem::path& rootN) const;
 
+
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num,
-                              const std::string& lgr = "none", int numlx = -1, int numly = -1, int numlz = -1) const;
+                              const std::optional<Opm::EclIO::lgr_info> lgr_info) const;
 
     std::string unpackNumber(const SummaryNode&) const;
     std::string lookupKey(const SummaryNode&) const;

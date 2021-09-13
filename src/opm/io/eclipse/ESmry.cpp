@@ -185,23 +185,45 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
 
-        for (unsigned int i=0; i<keywords.size(); i++) {
+        if ( have_lgr ) {
+            for (unsigned int i=0; i<keywords.size(); i++) {
 
-            const std::string keyString = have_lgr
-                ? makeKeyString(keywords[i], wgnames[i], nums[i], lgrs[i], numlx[i], numly[i], numlz[i])
-                : makeKeyString(keywords[i], wgnames[i], nums[i]);
+                Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
+                const std::string keyString =  makeKeyString(keywords[i], wgnames[i], nums[i], lgr);
+                combindKeyList.push_back(keyString);
 
-            combindKeyList.push_back(keyString);
+                if (! keyString.empty()) {
+                    summaryNodes.push_back( {
+                        keywords[i],
+                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::Type::Undefined,
+                        wgnames[i],
+                        nums[i],
+                        "",
+                        lgr
+                    });
 
-            if (! keyString.empty()) {
-                summaryNodes.push_back({
-                    keywords[i],
-                    SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
-                    SummaryNode::Type::Undefined,
-                    wgnames[i],
-                    nums[i],
-                    ""
-                });
+                    keywList.insert(keyString);
+                    kwunits[keyString] = units[i];
+                }
+            }
+        } else {
+
+            for (unsigned int i=0; i<keywords.size(); i++) {
+                const std::string keyString =  makeKeyString(keywords[i], wgnames[i], nums[i], {});
+                combindKeyList.push_back(keyString);
+
+                if (! keyString.empty()) {
+                    summaryNodes.push_back( {
+                        keywords[i],
+                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::Type::Undefined,
+                        wgnames[i],
+                        nums[i],
+                        "",
+                        {}
+                    });
+                }
 
                 keywList.insert(keyString);
                 kwunits[keyString] = units[i];
@@ -295,26 +317,50 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
 
-        for (size_t i = 0; i < keywords.size(); i++) {
+        if (have_lgr) {
+            for (size_t i = 0; i < keywords.size(); i++) {
+                Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
+                const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i], lgr);
 
-            const std::string keyString = have_lgr
-                ? makeKeyString(keywords[i], wgnames[i], nums[i], lgrs[i], numlx[i], numly[i], numlz[i])
-                : makeKeyString(keywords[i], wgnames[i], nums[i]);
+                combindKeyList.push_back(keyString);
 
-            combindKeyList.push_back(keyString);
+                if (! keyString.empty()) {
+                    summaryNodes.push_back( {
+                        keywords[i],
+                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::Type::Undefined,
+                        wgnames[i],
+                        nums[i],
+                        "",
+                        lgr
+                    });
 
-            if (! keyString.empty()) {
-                summaryNodes.push_back({
-                    keywords[i],
-                    SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
-                    SummaryNode::Type::Undefined,
-                    wgnames[i],
-                    nums[i],
-                    ""
-                });
+                    keywList.insert(keyString);
+                    kwunits[keyString] = units[i];
+                }
+            }
 
-                keywList.insert(keyString);
-                kwunits[keyString] = units[i];
+        } else {
+
+            for (size_t i = 0; i < keywords.size(); i++) {
+
+                const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i], {});
+                combindKeyList.push_back(keyString);
+
+                if (! keyString.empty()) {
+                    summaryNodes.push_back( {
+                        keywords[i],
+                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::Type::Undefined,
+                        wgnames[i],
+                        nums[i],
+                        "",
+                        {}
+                    });
+
+                    keywList.insert(keyString);
+                    kwunits[keyString] = units[i];
+                }
             }
         }
 
@@ -377,14 +423,19 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         const bool have_lgr = !lgrs.empty();
 
-        for (size_t i=0; i < keywords.size(); i++) {
-
-            const std::string keyw = have_lgr
-                ? makeKeyString(keywords[i], wgnames[i], nums[i], lgrs[i], numlx[i], numly[i], numlz[i])
-                : makeKeyString(keywords[i], wgnames[i], nums[i]);
-
-            if (keywList.find(keyw) != keywList.end())
-                arrayPos[specInd][keyIndex[keyw]]=i;
+        if (have_lgr) {
+            for (size_t i=0; i < keywords.size(); i++) {
+                Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
+                const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i], lgr);
+                if (keywList.find(keyw) != keywList.end())
+                    arrayPos[specInd][keyIndex[keyw]]=i;
+            }
+        } else {
+            for (size_t i=0; i < keywords.size(); i++) {
+                const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i], {});
+                if (keywList.find(keyw) != keywList.end())
+                    arrayPos[specInd][keyIndex[keyw]]=i;
+            }
         }
 
         specInd--;
@@ -1016,8 +1067,6 @@ bool ESmry::make_esmry_file()
     }
 }
 
-
-
 std::vector<std::string> ESmry::checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const {
 
     std::vector<std::string> fileList;
@@ -1083,7 +1132,7 @@ void ESmry::ijk_from_global_index(int glob, int &i, int &j, int &k) const
 
 
 std::string ESmry::makeKeyString(const std::string& keywordArg, const std::string& wgname, int num,
-                                 const std::string& lgr, int numlx, int numly, int numlz) const
+                                 const std::optional<Opm::EclIO::lgr_info> lgr) const
 {
     const auto no_wgname = std::string_view(":+:+:+:+");
 
@@ -1129,11 +1178,19 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
 
     if (first == 'L') {
 
-        if ((keywordArg[1] == 'B') || (keywordArg[1] == 'C'))
-            return fmt::format("{}:{}:{},{},{}", keywordArg, lgr, numlx, numly, numlz);
+        if (!lgr.has_value())
+            throw std::invalid_argument("need lgr info element for making L type vector strings");
+
+        auto lgr_ = lgr.value();
+
+        if (keywordArg[1] == 'B')
+            return fmt::format("{}:{}:{},{},{}", keywordArg, lgr_.name, lgr_.ijk[0], lgr_.ijk[1], lgr_.ijk[2]);
+
+        if (keywordArg[1] == 'C')
+            return fmt::format("{}:{}:{}:{},{},{}", keywordArg, lgr_.name, wgname, lgr_.ijk[0], lgr_.ijk[1], lgr_.ijk[2]);
 
         if (keywordArg[1] == 'W')
-            return fmt::format("{}:{}:{}", keywordArg, lgr, wgname);
+            return fmt::format("{}:{}:{}", keywordArg, lgr_.name, wgname);
 
         return fmt::format("{}", keywordArg);
     }

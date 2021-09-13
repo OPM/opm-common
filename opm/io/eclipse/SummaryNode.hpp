@@ -24,8 +24,14 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <array>
 
 namespace Opm { namespace EclIO {
+
+    struct lgr_info {
+        std::string name;
+        std::array<int, 3> ijk;
+    };
 
 struct SummaryNode {
     enum class Category {
@@ -52,13 +58,14 @@ struct SummaryNode {
         Undefined,
     };
 
+
     std::string keyword;
     Category    category;
     Type        type;
     std::string wgname;
     int         number;
-
     std::optional<std::string> fip_region;
+    std::optional<lgr_info> lgr;
 
     constexpr static int default_number { std::numeric_limits<int>::min() };
 
