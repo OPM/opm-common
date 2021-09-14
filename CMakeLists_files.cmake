@@ -466,6 +466,8 @@ list (APPEND TEST_DATA_FILES
 )
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES
+          tests/GDFILE_NO_ACTNUM.DATA
+          tests/EGRID_NO_ACTNUM.FEGRID
           tests/BASE_SIM.DATA
           tests/BASE_SIM_THPRES.DATA
           tests/RESTART_SIM.DATA

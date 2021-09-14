@@ -425,7 +425,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         if ((egridfile.hasKey("ACTNUM")) && (m_useActnumFromGdfile)) {
             const std::vector<int>& actnum  = egridfile.get<int>("ACTNUM");
             resetACTNUM( actnum );
-        }
+        } else
+            resetACTNUM( );
 
         if (egridfile.hasKey("MAPAXES"))
             this->m_mapaxes = std::make_optional<MapAxes>(egridfile);
@@ -1399,7 +1400,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     size_t EclipseGrid::getNumActive( ) const {
-        return m_nactive;
+        return this->m_nactive;
     }
 
     bool EclipseGrid::allActive( ) const {
