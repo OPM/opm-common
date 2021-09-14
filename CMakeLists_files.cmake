@@ -104,6 +104,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/Enums.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/State.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/eval_uda.cpp
@@ -284,6 +285,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ExtSmryOutput.cpp
           src/opm/io/eclipse/RestartFileView.cpp
           src/opm/io/eclipse/SummaryNode.cpp
+          src/opm/io/eclipse/rst/action.cpp
           src/opm/io/eclipse/rst/aquifer.cpp
           src/opm/io/eclipse/rst/connection.cpp
           src/opm/io/eclipse/rst/group.cpp
@@ -489,6 +491,9 @@ if(ENABLE_ECL_OUTPUT)
           tests/SOFR_TEST.DATA
           tests/UDQ_BASE.DATA
           tests/UDQ_RESTART.DATA
+          tests/UDQ_ACTIONX.X0007
+          tests/UDQ_ACTIONX.DATA
+          tests/UDQ_ACTIONX_RESTART.DATA
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
           tests/9_4C_WINJ_GINJ_UDQ_MSW-UDARATE_TEST_PACK.DATA
           tests/UDQ_ACTIONX_TEST1.DATA
@@ -763,6 +768,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp
@@ -873,6 +879,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ExtSmryOutput.hpp
         opm/io/eclipse/RestartFileView.hpp
         opm/io/eclipse/SummaryNode.hpp
+        opm/io/eclipse/rst/action.hpp
         opm/io/eclipse/rst/aquifer.hpp
         opm/io/eclipse/rst/connection.hpp
         opm/io/eclipse/rst/group.hpp

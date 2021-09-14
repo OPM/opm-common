@@ -90,6 +90,7 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
     nwell_udq(intehead[VI::intehead::NO_WELL_UDQS]),
     ngroup_udq(intehead[VI::intehead::NO_GROUP_UDQS]),
     nfield_udq(intehead[VI::intehead::NO_FIELD_UDQS]),
+    num_action(intehead[VI::intehead::NOOFACTIONS]),
     //
     e300_radial(logihead[VI::logihead::E300Radial]),
     e100_radial(logihead[VI::logihead::E100Radial]),
@@ -127,7 +128,7 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
 std::time_t RstHeader::sim_time() const {
     TimeStampUTC ts(this->year, this->month, this->mday);
     ts.hour(this->hour);
-    ts.minutes(this->minute); 
+    ts.minutes(this->minute);
     ts.microseconds(this->microsecond);
     return asTimeT(ts);
 }

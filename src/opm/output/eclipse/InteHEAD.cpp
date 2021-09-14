@@ -755,12 +755,12 @@ Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
 variousUDQ_ACTIONXParam()
 {
-    this -> data_[159]  =  4;
-    this -> data_[160]  =  5;
-    this -> data_[161]  =  9;
-    this -> data_[246]  = 26;
-    this -> data_[247]  = 16;
-    this -> data_[248]  = 13;
+    this -> data_[159]  =  4; // entriesPerZACT??
+    this -> data_[160]  =  5; // entriesPerSACT??
+    this -> data_[161]  =  9; // entriesPerIACT??
+    this -> data_[246]  = 26; // entriesPerIACN (multiply max_conditions)
+    this -> data_[247]  = 16; // entriesPerSACN (multiply max_conditions)
+    this -> data_[248]  = 13; // entriesPerZACN (multiply max_conditions)
 
     return *this;
 }

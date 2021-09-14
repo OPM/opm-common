@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
+#include <opm/io/eclipse/rst/action.hpp>
 
 #include "ActionParser.hpp"
 
@@ -60,6 +61,22 @@ ActionX::ActionX(const std::string& name, size_t max_run, double min_wait, std::
     m_start_time(start_time)
 {}
 
+ActionX::ActionX(const RestartIO::RstAction& rst_action)
+    : m_name(rst_action.name)
+    , m_max_run(rst_action.max_run)
+    , m_min_wait(rst_action.min_wait),
+      m_start_time(rst_action.start_time)
+{
+    std::vector<std::string> tokens;
+    for (const auto& rst_condition : rst_action.conditions) {
+        this->m_conditions.emplace_back(rst_condition);
+        const auto& cond_tokens = rst_condition.tokens();
+        tokens.insert(tokens.end(), cond_tokens.begin(), cond_tokens.end());
+    }
+    this->condition = Action::AST(tokens);
+}
+
+
 
 ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
     ActionX( record.getItem("NAME").getTrimmedString(0),
@@ -68,6 +85,9 @@ ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
              start_time )
 
 {}
+
+
+
 
 
 ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
@@ -102,8 +122,8 @@ ActionX ActionX::serializeObject()
     Condition cond;
     cond.lhs = quant;
     cond.rhs = quant;
-    cond.logic = Condition::Logical::AND;
-    cond.cmp = Condition::Comparator::GREATER_EQUAL;
+    cond.logic = Logical::AND;
+    cond.cmp = Comparator::GREATER_EQUAL;
     cond.cmp_string = "test3";
     result.m_conditions = {cond};
 

@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE(Conditions) {
     BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX", ">"}, location), std::invalid_argument);
 
     Action::Condition cond({"WWCT", "OPX", ">", "0.75",  "AND"}, location);
-    BOOST_CHECK(cond.cmp == Action::Condition::Comparator::GREATER);
+    BOOST_CHECK(cond.cmp == Action::Comparator::GREATER);
     BOOST_CHECK(cond.cmp_string == ">" );
     BOOST_CHECK_EQUAL(cond.lhs.quantity, "WWCT");
     BOOST_CHECK_EQUAL(cond.lhs.args.size(), 1U);
@@ -712,10 +712,10 @@ BOOST_AUTO_TEST_CASE(Conditions) {
 
     BOOST_CHECK_EQUAL(cond.rhs.quantity, "0.75");
     BOOST_CHECK_EQUAL(cond.rhs.args.size(), 0U);
-    BOOST_CHECK(cond.logic == Action::Condition::Logical::AND);
+    BOOST_CHECK(cond.logic == Action::Logical::AND);
 
     Action::Condition cond2({"WWCT", "OPX", "<=", "WSOPR", "OPX", "235"}, location);
-    BOOST_CHECK(cond2.cmp == Action::Condition::Comparator::LESS_EQUAL);
+    BOOST_CHECK(cond2.cmp == Action::Comparator::LESS_EQUAL);
     BOOST_CHECK(cond2.cmp_string == "<=" );
     BOOST_CHECK_EQUAL(cond2.lhs.quantity, "WWCT");
     BOOST_CHECK_EQUAL(cond2.lhs.args.size(), 1U);
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(Conditions) {
     BOOST_CHECK_EQUAL(cond2.rhs.args.size(), 2U);
     BOOST_CHECK_EQUAL(cond2.rhs.args[0], "OPX");
     BOOST_CHECK_EQUAL(cond2.rhs.args[1], "235");
-    BOOST_CHECK(cond2.logic == Action::Condition::Logical::END);
+    BOOST_CHECK(cond2.logic == Action::Logical::END);
 }
 
 
@@ -808,8 +808,8 @@ TSTEP
 
     const auto& cond0 = conditions[0];
     BOOST_CHECK_EQUAL(cond0.lhs.quantity, "WWCT");
-    BOOST_CHECK(cond0.cmp == Action::Condition::Comparator::GREATER);
-    BOOST_CHECK(cond0.logic == Action::Condition::Logical::AND);
+    BOOST_CHECK(cond0.cmp == Action::Comparator::GREATER);
+    BOOST_CHECK(cond0.logic == Action::Logical::AND);
     BOOST_CHECK_EQUAL(cond0.lhs.args.size(), 1U);
     BOOST_CHECK_EQUAL(cond0.lhs.args[0], "OPX");
     BOOST_CHECK_EQUAL(cond0.rhs.args.size(), 0U);
@@ -817,8 +817,8 @@ TSTEP
 
     const auto& cond1 = conditions[1];
     BOOST_CHECK_EQUAL(cond1.lhs.quantity, "FPR");
-    BOOST_CHECK(cond1.cmp == Action::Condition::Comparator::LESS);
-    BOOST_CHECK(cond1.logic == Action::Condition::Logical::END);
+    BOOST_CHECK(cond1.cmp == Action::Comparator::LESS);
+    BOOST_CHECK(cond1.logic == Action::Logical::END);
 
     /*****************************************************************/
 
@@ -829,16 +829,16 @@ TSTEP
     const auto& condB = actB.conditions();
     BOOST_CHECK_EQUAL(condB.size() , 1U);
     BOOST_CHECK_EQUAL(condB[0].lhs.quantity, "FWCT");
-    BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS_EQUAL);
-    BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
+    BOOST_CHECK(condB[0].cmp == Action::Comparator::LESS_EQUAL);
+    BOOST_CHECK(condB[0].logic == Action::Logical::END);
     BOOST_CHECK_EQUAL(condB[0].cmp_string, "<=");
 
     const auto& actA = actions2["A"];
     const auto& condA = actA.conditions();
     BOOST_CHECK_EQUAL(condA.size() , 1U);
     BOOST_CHECK_EQUAL(condA[0].lhs.quantity, "WOPR");
-    BOOST_CHECK(condA[0].cmp == Action::Condition::Comparator::EQUAL);
-    BOOST_CHECK(condA[0].logic == Action::Condition::Logical::END);
+    BOOST_CHECK(condA[0].cmp == Action::Comparator::EQUAL);
+    BOOST_CHECK(condA[0].logic == Action::Logical::END);
     BOOST_CHECK_EQUAL(condA[0].cmp_string , "=");
 
     std::size_t index = 0;

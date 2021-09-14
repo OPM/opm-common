@@ -171,3 +171,11 @@ BOOST_AUTO_TEST_CASE(LoadUDQRestartSim) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(LoadActionRestartSim) {
+    const auto& [sched, restart_sched] = load_schedule_pair("UDQ_ACTIONX.DATA", "UDQ_ACTIONX_RESTART.DATA", "UDQ_ACTIONX.X0007", 7);
+    const auto& input_actions = sched[7].actions();
+    const auto& rst_actions = restart_sched[7].actions();
+
+    BOOST_CHECK_EQUAL(input_actions.ecl_size(), rst_actions.ecl_size());
+}

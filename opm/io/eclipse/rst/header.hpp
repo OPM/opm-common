@@ -89,7 +89,7 @@ struct RstHeader {
     int nwell_udq;
     int ngroup_udq;
     int nfield_udq;
-
+    int num_action;
 
     bool e300_radial;
     bool e100_radial;

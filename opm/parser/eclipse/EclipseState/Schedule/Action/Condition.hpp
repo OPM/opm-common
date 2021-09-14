@@ -24,6 +24,8 @@
 #include <vector>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp>
+#include <opm/io/eclipse/rst/action.hpp>
 
 namespace Opm {
 
@@ -34,7 +36,9 @@ class Quantity {
 public:
     Quantity() = default;
 
-    Quantity(const std::string& arg) :
+    explicit Quantity(const RestartIO::RstAction::Quantity& rst_quantity);
+
+    explicit Quantity(const std::string& arg) :
         quantity(arg)
     {}
 
@@ -63,23 +67,8 @@ public:
 class Condition {
 public:
 
-enum class Logical {
-    AND,
-    OR,
-    END
-};
-
-enum class Comparator {
-    EQUAL,
-    GREATER,
-    LESS,
-    GREATER_EQUAL,
-    LESS_EQUAL,
-    INVALID
-};
-
-
     Condition() = default;
+    explicit Condition(const RestartIO::RstAction::Condition& rst_condition);
     Condition(const std::vector<std::string>& tokens, const KeywordLocation& location);
 
 
@@ -94,7 +83,6 @@ enum class Comparator {
 
     static Logical logic_from_int(int);
     int logic_as_int() const;
-    static Comparator comparator_from_int(int);
     int comparator_as_int() const;
     int paren_as_int() const;
     bool open_paren() const;

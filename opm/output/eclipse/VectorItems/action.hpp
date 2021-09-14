@@ -38,7 +38,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         // The same enum is used for both lefthand side and righthand side quantities;
         // although not all values can be used on both sides.
         namespace Value {
-        enum QuantiyType {
+        enum QuantityType {
             Field     = 1,
             Well      = 2,
             Group     = 3,
@@ -63,6 +63,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     namespace SACN {
 
     enum index : std::vector<int>::size_type {
+        LHSValue0 = 0,
         RHSValue0 = 2,
         LHSValue1 = 4,
         RHSValue1 = 5,
@@ -78,15 +79,19 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     namespace ZACN {
     enum index : std::vector<int>::size_type {
+        Quantity = 0,
         LHSQuantity = 0,
         RHSQuantity = 1,
         Comparator = 2,
+        Well = 3,
         LHSWell = 3,
         RHSWell = 4,
+        Group = 5,
         LHSGroup = 5,
         RHSGroup = 6
     };
 
+    constexpr std::size_t RHSOffset = 1;
     constexpr std::size_t ConditionSize = 13;
     }
 
