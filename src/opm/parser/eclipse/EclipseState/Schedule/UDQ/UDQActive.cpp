@@ -16,6 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fmt/format.h>
 #include <iostream>
 
 #include <opm/io/eclipse/rst/state.hpp>
@@ -109,6 +110,11 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
     // Alternative 1
     if (uda.is<double>() && this->input_data.empty())
         return 0;
+
+    if (uda.is<std::string>()) {
+        if (!udq_config.has_keyword(uda.get<std::string>()))
+            throw std::logic_error(fmt::format("Missing ASSIGN/DEFINE for UDQ {} can not be used as UDA for {} for {}", uda.get<std::string>(), UDQ::controlName(control), wgname));
+    }
 
     for (auto iter = this->input_data.begin(); iter != this->input_data.end(); ++iter) {
         auto& record = *iter;

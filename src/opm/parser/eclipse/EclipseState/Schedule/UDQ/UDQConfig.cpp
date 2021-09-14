@@ -350,21 +350,11 @@ namespace Opm {
                this->type_count == data.type_count;
     }
 
-    void UDQConfig::eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const {
-        const auto& func_table = this->function_table();
-        UDQContext context(func_table, wm, st, udq_state);
-
+    void UDQConfig::eval_assign(std::size_t report_step, SummaryState& st, UDQState& udq_state, UDQContext& context) const {
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {
                 auto ws = assign.eval(st.wells());
                 context.update_assign(report_step, assign.keyword(), ws);
-            }
-        }
-
-        for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
-            if (udq_state.define(def.keyword(), def.status())) {
-                auto ws = def.eval(context);
-                context.update_define(report_step, def.keyword(), ws);
             }
         }
 
@@ -375,17 +365,27 @@ namespace Opm {
             }
         }
 
-        for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
+        for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
+            if (udq_state.assign(assign.report_step(), assign.keyword())) {
+                auto ws = assign.eval();
+                context.update_assign(report_step, assign.keyword(), ws);
+            }
+        }
+    }
+
+
+    void UDQConfig::eval_define(std::size_t report_step, UDQState& udq_state, UDQContext& context) const {
+        for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
             if (udq_state.define(def.keyword(), def.status())) {
                 auto ws = def.eval(context);
                 context.update_define(report_step, def.keyword(), ws);
             }
         }
 
-        for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
-            if (udq_state.assign(assign.report_step(), assign.keyword())) {
-                auto ws = assign.eval();
-                context.update_assign(report_step, assign.keyword(), ws);
+        for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
+            if (udq_state.define(def.keyword(), def.status())) {
+                auto ws = def.eval(context);
+                context.update_define(report_step, def.keyword(), ws);
             }
         }
 
@@ -395,6 +395,17 @@ namespace Opm {
                 context.update_define(report_step, def.keyword(), field_udq);
             }
         }
+    }
+
+    void UDQConfig::eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const {
+        UDQContext context(this->function_table(), wm, st, udq_state);
+        this->eval_assign(report_step, st, udq_state, context);
+        this->eval_define(report_step, udq_state, context);
+    }
+
+    void UDQConfig::eval_assign(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const {
+        UDQContext context(this->function_table(), wm, st, udq_state);
+        this->eval_assign(report_step, st, udq_state, context);
     }
 
 

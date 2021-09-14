@@ -195,6 +195,7 @@ namespace UDQ {
     bool production_control(UDAControl control);
 
     std::string typeName(UDQVarType var_type);
+    std::string controlName(UDAControl control);
     UDAKeyword keyword(UDAControl control);
     int udaCode(UDAControl control);
     UDAControl udaControl(int uda_code);

@@ -977,6 +977,41 @@ WELTARG
     BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::WRAT) );
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithWeltArg_UDA_Exception) {
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+
+
+
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+ 'OP_1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+WELTARG
+ OP_1     ORAT        WUORAT /
+ OP_1     WRAT        WUWRAT /
+/
+)";
+
+    BOOST_CHECK_THROW(make_schedule(input), std::exception);
+}
+
+
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
     std::string input = R"(

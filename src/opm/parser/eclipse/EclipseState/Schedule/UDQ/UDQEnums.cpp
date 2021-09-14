@@ -560,4 +560,70 @@ UDAControl udaControl(int uda_code) {
 }
 
 
+std::string controlName(UDAControl control) {
+    switch (control) {
+    case UDAControl::GCONPROD_OIL_TARGET:
+        return "GCONPROD_ORAT";
+
+    case UDAControl::GCONPROD_WATER_TARGET:
+        return "GCONPROD_WRAT";
+
+    case UDAControl::GCONPROD_GAS_TARGET:
+        return "GCONPROD_GRAT";
+
+    case UDAControl::GCONPROD_LIQUID_TARGET:
+        return "GCONPROD_LRAT";
+
+    case UDAControl::GCONINJE_SURFACE_MAX_RATE:
+        return "GCONINJE_SURFACE_RATE";
+
+    case UDAControl::GCONINJE_RESV_MAX_RATE:
+        return "GCONINJE_RESERVOIR_RATE";
+
+    case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
+        return "GCONINJE_REINJ_FRACTION";
+
+    case UDAControl::GCONINJE_TARGET_VOID_FRACTION:
+        return "GCONINJE_VOID_FRACTION";
+
+    case UDAControl::WCONPROD_ORAT:
+        return "WCONPROD_ORAT";
+
+    case UDAControl::WCONPROD_GRAT:
+        return "WCONPROD_GRAT";
+
+    case UDAControl::WCONPROD_WRAT:
+        return "WCONPROD_WRAT";
+
+    case UDAControl::WCONPROD_LRAT:
+        return "WCONPROD_LRAT";
+
+    case UDAControl::WCONPROD_RESV:
+        return "WCONPROD_RESV";
+
+    case UDAControl::WCONPROD_BHP:
+        return "WCONPROD_BHP";
+
+    case UDAControl::WCONPROD_THP:
+        return "WCONPROD_THP";
+
+    case UDAControl::WCONINJE_RATE:
+        return "WCONINJE_RATE";
+
+    case UDAControl::WCONINJE_RESV:
+        return "WCONINJE_RESV";
+
+    case UDAControl::WCONINJE_BHP:
+        return "WCONINJE_BHP";
+
+    case UDAControl::WCONINJE_THP:
+        return "WCONINJE_THP";
+
+    default:
+        throw std::logic_error("What the ??");
+    }
+}
+
+
+
 }} // Opm::UDQ
