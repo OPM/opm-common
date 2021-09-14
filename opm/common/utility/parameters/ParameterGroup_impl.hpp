@@ -142,7 +142,7 @@ namespace Opm {
 		    assignments.push_back(std::make_pair(name, value));
 		    continue;
 		}
-        	OpmLog::warning("Too many assignements  (' "
+                OpmLog::warning("Too many assignments  (' "
                 	        + ID_delimiter_assignment
 	                        + "') detected in argument " + to_string(i));
 	    }
