@@ -74,6 +74,8 @@ ActionX::ActionX(const RestartIO::RstAction& rst_action)
         tokens.insert(tokens.end(), cond_tokens.begin(), cond_tokens.end());
     }
     this->condition = Action::AST(tokens);
+    for (const auto& keyword : rst_action.keywords)
+        this->addKeyword(keyword);
 }
 
 

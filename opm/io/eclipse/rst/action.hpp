@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {
 
@@ -64,6 +65,7 @@ struct RstAction {
     double min_wait;
     std::time_t start_time;
     std::vector<Condition> conditions;
+    std::vector<DeckKeyword> keywords;
 };
 
 }

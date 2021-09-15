@@ -38,6 +38,7 @@ public:
     std::size_t max_line_count() const;
     std::size_t max_characters() const;
     std::size_t max_conditions() const;
+    std::size_t line_size() const;
 
     bool operator==(const Actdims& data) const;
 

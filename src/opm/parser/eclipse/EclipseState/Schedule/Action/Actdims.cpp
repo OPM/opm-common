@@ -16,6 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <cstdlib>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -70,6 +71,13 @@ std::size_t Actdims::max_characters() const {
 
 std::size_t Actdims::max_conditions() const {
     return this->conditions;
+}
+
+std::size_t Actdims::line_size() const {
+    auto [ls, rem] = std::div(this->max_characters(), 8);
+    if (rem != 0)
+        ls += 1;
+    return ls;
 }
 
 bool Actdims::operator==(const Actdims& data) const {

@@ -95,6 +95,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     constexpr std::size_t ConditionSize = 13;
     }
 
+    namespace ZLACT {
+
+    constexpr std::size_t max_line_length = 128;
+    }
+
+
 
 }}}} // Opm::RestartIO::Helpers::VectorItems
 

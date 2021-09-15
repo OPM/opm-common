@@ -30,6 +30,8 @@
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/common/utility/String.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/output/eclipse/UDQDims.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
@@ -276,21 +278,24 @@ std::string oper_string(Action::Logical logic) {
 }
 
 
-void RstState::add_actions(const Actdims& actdims,
+void RstState::add_actions(const Parser& parser,
+                           const Actdims& actdims,
                            std::time_t sim_time,
                            const std::vector<std::string>& zact,
                            const std::vector<int>& iact,
                            const std::vector<float>& sact,
                            const std::vector<std::string>& zacn,
                            const std::vector<int>& iacn,
-                           const std::vector<double>& sacn)
+                           const std::vector<double>& sacn,
+                           const std::vector<std::string>& zlact)
 {
-    auto zact_action_size = RestartIO::Helpers::entriesPerZACT();
-    auto iact_action_size = RestartIO::Helpers::entriesPerIACT();
-    auto sact_action_size = RestartIO::Helpers::entriesPerSACT();
-    auto zacn_action_size = RestartIO::Helpers::entriesPerZACN(actdims);
-    auto iacn_action_size = RestartIO::Helpers::entriesPerIACN(actdims);
-    auto sacn_action_size = RestartIO::Helpers::entriesPerSACN(actdims);
+    auto zact_action_size  = RestartIO::Helpers::entriesPerZACT();
+    auto iact_action_size  = RestartIO::Helpers::entriesPerIACT();
+    auto sact_action_size  = RestartIO::Helpers::entriesPerSACT();
+    auto zacn_action_size  = RestartIO::Helpers::entriesPerZACN(actdims);
+    auto iacn_action_size  = RestartIO::Helpers::entriesPerIACN(actdims);
+    auto sacn_action_size  = RestartIO::Helpers::entriesPerSACN(actdims);
+    auto zlact_action_size = zlact.size() / this->header.num_action;
 
     auto zacn_cond_size = 13;
     auto iacn_cond_size = 26;
@@ -311,6 +316,28 @@ void RstState::add_actions(const Actdims& actdims,
         const auto& max_run = iact[index * iact_action_size + 5];
         const auto& min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[index * sact_action_size + 3]);
         this->actions.emplace_back(name, max_run, min_wait, sim_time, conditions );
+
+
+        std::string action_deck;
+        auto zlact_offset = index * zlact_action_size;
+        while (true) {
+            std::string line;
+            for (std::size_t item_index = 0; item_index < actdims.line_size(); item_index++)
+                line += zlact[zlact_offset + item_index];
+
+            line = trim_copy(line);
+            if (line.empty())
+                continue;
+
+            if (line == "ENDACTIO")
+                break;
+
+            action_deck += line + "\n";
+            zlact_offset += actdims.line_size();
+        }
+        const auto& deck = parser.parseString( action_deck );
+        for (auto keyword : deck)
+            this->actions.back().keywords.push_back(std::move(keyword));
     }
 }
 
@@ -329,7 +356,7 @@ const RstWell& RstState::get_well(const std::string& wname) const {
 
 RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
                         const Runspec& runspec,
-                        const Parser&,
+                        const Parser& parser,
                         const ::Opm::EclipseGrid*               grid)
 {
     RstState state(rstView, grid);
@@ -390,7 +417,8 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         const auto& zacn = rstView->getKeyword<std::string>("ZACN");
         const auto& iacn = rstView->getKeyword<int>("IACN");
         const auto& sacn = rstView->getKeyword<double>("SACN");
-        state.add_actions(runspec.actdims(), state.header.sim_time(), zact, iact, sact, zacn, iacn, sacn);
+        const auto& zlact= rstView->getKeyword<std::string>("ZLACT");
+        state.add_actions(parser, runspec.actdims(), state.header.sim_time(), zact, iact, sact, zacn, iacn, sacn, zlact);
     }
 
 

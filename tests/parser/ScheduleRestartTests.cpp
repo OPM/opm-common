@@ -39,6 +39,7 @@
 #include <opm/io/eclipse/RestartFileView.hpp>
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <utility>
 
@@ -178,4 +179,20 @@ BOOST_AUTO_TEST_CASE(LoadActionRestartSim) {
     const auto& rst_actions = restart_sched[7].actions();
 
     BOOST_CHECK_EQUAL(input_actions.ecl_size(), rst_actions.ecl_size());
+    for (std::size_t iact = 0; iact < input_actions.ecl_size(); iact++) {
+        const auto& input_action = input_actions[iact];
+        const auto& rst_action = rst_actions[iact];
+
+        auto input_iter = input_action.begin();
+        auto rst_iter = rst_action.begin();
+
+        BOOST_REQUIRE_EQUAL( std::distance(input_action.begin(), input_action.end()),
+                             std::distance(rst_action.begin(), rst_action.end()) );
+
+        while (input_iter != input_action.end()) {
+            BOOST_CHECK( *input_iter == *rst_iter );
+            input_iter++;
+            rst_iter++;
+        }
+    }
 }
