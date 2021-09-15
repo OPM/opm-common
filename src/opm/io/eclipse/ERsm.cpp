@@ -269,17 +269,17 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
             const auto rsm_ts = rsm_dates[time_index];
 
             if (smry_ts.year() != rsm_ts.year()) {
-                fmt::print(stderr, "time_index: {}  summary.year: {}   rsm.year: {}", time_index, smry_ts.year(), rsm_ts.year());
+                fmt::print(stderr, "time_index: {}  summary.year: {}   rsm.year: {}\n", time_index, smry_ts.year(), rsm_ts.year());
                 return false;
             }
 
             if (smry_ts.month() != rsm_ts.month()) {
-                fmt::print(stderr, "time_index: {}  summary.month: {}   rsm.month: {}", time_index, smry_ts.month(), rsm_ts.month());
+                fmt::print(stderr, "time_index: {}  summary.month: {}   rsm.month: {}\n", time_index, smry_ts.month(), rsm_ts.month());
                 return false;
             }
 
             if (smry_ts.day() != rsm_ts.day()) {
-                fmt::print(stderr, "time_index: {}  summary.day: {}   rsm.day: {}", time_index, smry_ts.day(), rsm_ts.day());
+                fmt::print(stderr, "time_index: {}  summary.day: {}   rsm.day: {}\n", time_index, smry_ts.day(), rsm_ts.day());
                 return false;
             }
         }
@@ -289,10 +289,10 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
             return false;
 
         for (std::size_t time_index = 0; time_index < rsm_days.size(); time_index++) {
-            auto smry_days = std::chrono::duration_cast<std::chrono::seconds>(summary_dates[time_index] - summary_dates[0]).count() / 86400.0 ;
+            auto smry_days = std::chrono::duration_cast<std::chrono::seconds>(summary_dates[time_index] - smry.startdate()).count() / 86400.0 ;
 
             if (!cmp::scalar_equal(smry_days, rsm_days[time_index])) {
-                fmt::print(stderr, "time_index: {}  summary.days: {}   rsm.days: {}", time_index, smry_days, rsm_days[time_index]);
+                fmt::print(stderr, "time_index: {}  summary.days: {}   rsm.days: {}\n", time_index, smry_days, rsm_days[time_index]);
                 return false;
             }
         }
@@ -322,13 +322,23 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
         const auto& smry_vector = smry.get(node);
         const auto& rsm_vector = rsm.get(key);
         for (std::size_t index = 0; index < smry_vector.size(); index++) {
-            const double eps  = 5e-5;
-            const double diff = static_cast<double>(smry_vector[index]) - rsm_vector[index];
-            const double sum = std::fabs(static_cast<double>(smry_vector[index])) + std::fabs(rsm_vector[index]);
+            const auto smry_value = static_cast<double>(smry_vector[index]);
+            const auto rsm_value = rsm_vector[index];
+            if (std::fabs(rsm_value) < 1e-4) {
+                const double zero_eps = 1e-6;
+                if (std::fabs(smry_value) > zero_eps) {
+                    fmt::print(stderr, "time_index: {}  key: {}  summary: {}   rsm: {}\n", index, key, smry_value, rsm_value);
+                    return false;
+                }
+            } else {
+                const double eps  = 5e-5;
+                const double diff = std::fabs(smry_value - rsm_value);
+                const double sum = std::fabs(smry_value) + std::fabs(rsm_value);
 
-            if (diff > eps * sum) {
-                fmt::print(stderr, "time_index: {}  key: {}  summary: {}   rsm: {}", index, key, smry_vector[index], rsm_vector[index]);
-                return false;
+                if (diff > eps * sum) {
+                    fmt::print(stderr, "time_index: {}  key: {}  summary: {}   rsm: {}\n", index, key, smry_value, rsm_value);
+                    return false;
+                }
             }
         }
     }
