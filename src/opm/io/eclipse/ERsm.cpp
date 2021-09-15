@@ -289,7 +289,7 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
             return false;
 
         for (std::size_t time_index = 0; time_index < rsm_days.size(); time_index++) {
-            auto smry_days = std::chrono::duration_cast<std::chrono::seconds>(summary_dates[time_index] - summary_dates[0]).count() / 86400.0 ;
+            auto smry_days = std::chrono::duration_cast<std::chrono::seconds>(summary_dates[time_index] - smry.startdate()).count() / 86400.0 ;
 
             if (!cmp::scalar_equal(smry_days, rsm_days[time_index])) {
                 fmt::print(stderr, "time_index: {}  summary.days: {}   rsm.days: {}", time_index, smry_days, rsm_days[time_index]);
