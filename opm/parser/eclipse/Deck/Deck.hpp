@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <optional>
 #include <vector>
 #include <string>
 
@@ -146,7 +147,7 @@ namespace Opm {
             void selectActiveUnitSystem( UnitSystem::UnitType unit_type );
 
             const std::string& getInputPath() const;
-            const std::string& getDataFile() const;
+            std::string getDataFile() const;
             void setDataFile(const std::string& dataFile);
             std::string makeDeckPath(const std::string& path) const;
 
@@ -175,7 +176,7 @@ namespace Opm {
             UnitSystem defaultUnits;
             std::unique_ptr<UnitSystem> activeUnits;
 
-            std::string m_dataFile;
+            std::optional<std::string> m_dataFile;
             std::string input_path;
             mutable std::size_t unit_system_access_count = 0;
     };
