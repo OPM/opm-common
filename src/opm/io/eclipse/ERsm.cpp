@@ -17,6 +17,7 @@
 */
 
 
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include <cmath>
@@ -324,18 +325,18 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
         for (std::size_t index = 0; index < smry_vector.size(); index++) {
             const auto smry_value = static_cast<double>(smry_vector[index]);
             const auto rsm_value = rsm_vector[index];
-            if (std::fabs(rsm_value) < 1e-4) {
-                const double zero_eps = 1e-6;
-                if (std::fabs(smry_value) > zero_eps) {
+            const double diff = std::fabs(smry_value - rsm_value);
+            if (std::fabs(rsm_value) < 1e-3) {
+                const double zero_eps = 1e-4;
+                if (diff > zero_eps) {
                     fmt::print(stderr, "time_index: {}  key: {}  summary: {}   rsm: {}\n", index, key, smry_value, rsm_value);
                     return false;
                 }
             } else {
                 const double eps  = 5e-5;
-                const double diff = std::fabs(smry_value - rsm_value);
                 const double sum = std::fabs(smry_value) + std::fabs(rsm_value);
 
-                if (diff > eps * sum) {
+                if (diff > eps * std::max(1.0, sum)) {
                     fmt::print(stderr, "time_index: {}  key: {}  summary: {}   rsm: {}\n", index, key, smry_value, rsm_value);
                     return false;
                 }
