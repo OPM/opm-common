@@ -35,6 +35,8 @@
 #include <stdio.h>
 #include <tuple>
 
+#include "tests/WorkArea.cpp"
+
 using namespace Opm::EclIO;
 
 template<typename InputIterator1, typename InputIterator2>
@@ -172,55 +174,55 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
 
 BOOST_AUTO_TEST_CASE(TestERft_2) {
 
-    std::string testFile="SPE1CASE1.RFT";
+    std::string testFile = "SPE1CASE1.RFT";
 
-    std::string outFile="TEST.RFT";
+    std::string outFile = "TEST.RFT";
 
     {
-        EclOutput eclTest(outFile, false);
+        WorkArea work;
+        work.copyIn(testFile);
+        {
+            EclOutput eclTest(outFile, false);
 
-        ERft rft1(testFile);
+            ERft rft1(testFile);
 
-        auto rftList = rft1.listOfRftReports();
+            auto rftList = rft1.listOfRftReports();
 
-        for (auto& rft : rftList) {
-            std::string wellName = std::get<0>(rft);
-            auto date = std::get<1>(rft);
+            for (auto& rft : rftList) {
+                std::string wellName = std::get<0>(rft);
+                auto date = std::get<1>(rft);
 
-            auto arrayList = rft1.listOfRftArrays(wellName, date);
+                auto arrayList = rft1.listOfRftArrays(wellName, date);
 
-            for (auto& array : arrayList) {
-                std::string arrName = std::get<0>(array);
-                eclArrType arrType = std::get<1>(array);
+                for (auto& array : arrayList) {
+                    std::string arrName = std::get<0>(array);
+                    eclArrType arrType = std::get<1>(array);
 
-                if (arrType == INTE) {
-                    std::vector<int> vect = rft1.getRft<int>(arrName, wellName, date);
-                    eclTest.write(arrName, vect);
-                } else if (arrType == REAL) {
-                    std::vector<float> vect = rft1.getRft<float>(arrName, wellName, date);
-                    eclTest.write(arrName, vect);
-                } else if (arrType == DOUB) {
-                    std::vector<double> vect = rft1.getRft<double>(arrName, wellName, date);
-                    eclTest.write(arrName, vect);
-                } else if (arrType == LOGI) {
-                    std::vector<bool> vect = rft1.getRft<bool>(arrName, wellName, date);
-                    eclTest.write(arrName, vect);
-                } else if (arrType == CHAR) {
-                    std::vector<std::string> vect = rft1.getRft<std::string>(arrName, wellName, date);
-                    eclTest.write(arrName, vect);
-                } else if (arrType == MESS) {
-                    eclTest.write(arrName, std::vector<char>());
-                } else {
-                    std::cout << "unknown type " << std::endl;
-                    exit(1);
+                    if (arrType == INTE) {
+                        std::vector<int> vect = rft1.getRft<int>(arrName, wellName, date);
+                        eclTest.write(arrName, vect);
+                    } else if (arrType == REAL) {
+                        std::vector<float> vect = rft1.getRft<float>(arrName, wellName, date);
+                        eclTest.write(arrName, vect);
+                    } else if (arrType == DOUB) {
+                        std::vector<double> vect = rft1.getRft<double>(arrName, wellName, date);
+                        eclTest.write(arrName, vect);
+                    } else if (arrType == LOGI) {
+                        std::vector<bool> vect = rft1.getRft<bool>(arrName, wellName, date);
+                        eclTest.write(arrName, vect);
+                    } else if (arrType == CHAR) {
+                        std::vector<std::string> vect = rft1.getRft<std::string>(arrName, wellName, date);
+                        eclTest.write(arrName, vect);
+                    } else if (arrType == MESS) {
+                        eclTest.write(arrName, std::vector<char>());
+                    } else {
+                        std::cout << "unknown type " << std::endl;
+                        exit(1);
+                    }
                 }
             }
         }
+
+        BOOST_CHECK_EQUAL(compare_files(testFile, outFile), true);
     }
-
-    BOOST_CHECK_EQUAL(compare_files(testFile, outFile), true);
-
-    if (remove(outFile.c_str())==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
