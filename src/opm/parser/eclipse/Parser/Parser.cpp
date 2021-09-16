@@ -1171,7 +1171,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                             std::inserter(ignore_sections, ignore_sections.end()));
         }
 
-        ParserState parserState( this->codeKeywords(), parseContext, errors, dataFileName, ignore_sections);
+        ParserState parserState( this->codeKeywords(), parseContext, errors, Opm::filesystem::canonical(dataFileName), ignore_sections);
         parseState( parserState, *this );
         return std::move( parserState.deck );
     }
