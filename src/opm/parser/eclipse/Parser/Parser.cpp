@@ -620,9 +620,9 @@ Opm::filesystem::path ParserState::getIncludeFilePath( std::string path ) const 
     Opm::filesystem::path includeFilePath(path);
 
     if (includeFilePath.is_relative())
-        return this->rootPath / includeFilePath;
+        includeFilePath = this->rootPath / includeFilePath;
 
-    return includeFilePath;
+    return Opm::filesystem::canonical( includeFilePath );
 }
 
 void ParserState::addPathAlias( const std::string& alias, const std::string& path ) {
