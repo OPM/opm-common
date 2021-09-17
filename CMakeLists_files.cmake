@@ -46,6 +46,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/io/eclipse/SummaryNode.cpp
     src/opm/json/JsonObject.cpp
     src/opm/parser/eclipse/Deck/Deck.cpp
+    src/opm/parser/eclipse/Deck/DeckTree.cpp
     src/opm/parser/eclipse/Deck/DeckItem.cpp
     src/opm/parser/eclipse/Deck/DeckValue.cpp
     src/opm/parser/eclipse/Deck/DeckKeyword.cpp
@@ -852,6 +853,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
        opm/parser/eclipse/Deck/DeckSection.hpp
+       opm/parser/eclipse/Deck/DeckTree.hpp
        opm/parser/eclipse/Deck/DeckOutput.hpp
        opm/parser/eclipse/Deck/DeckValue.hpp
        opm/parser/eclipse/Deck/DeckKeyword.hpp
