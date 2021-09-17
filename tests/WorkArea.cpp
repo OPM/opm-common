@@ -64,6 +64,11 @@ namespace {
             Opm::filesystem::remove_all(this->root_);
         }
 
+        std::string org_path(const std::string& fname) {
+            return Opm::filesystem::canonical( this->orig_ / fname );
+        }
+
+
     private:
         Opm::filesystem::path root_;
         Opm::filesystem::path area_;
