@@ -41,6 +41,8 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 
+#include "tests/WorkArea.cpp"
+
 using namespace Opm::EclIO;
 
 template<typename InputIterator1, typename InputIterator2>
@@ -221,8 +223,10 @@ BOOST_AUTO_TEST_CASE(TestERst_2) {
     // using API for ERst to read all array from a binary unified restart file1
     // Then write the data back to a new file and check that new file is identical with input file
 
-    ERst rst1(testFile);
 
+    WorkArea work;
+    work.copyIn(testFile);
+    ERst rst1(testFile);
     {
         EclOutput eclTest(outFile, false);
 
@@ -230,7 +234,6 @@ BOOST_AUTO_TEST_CASE(TestERst_2) {
 
         for (size_t i = 0; i < seqnums.size(); i++) {
             rst1.loadReportStepNumber(seqnums[i]);
-
             auto rstArrays = rst1.listOfRstArrays(seqnums[i]);
 
             for (auto& array : rstArrays) {
@@ -242,10 +245,6 @@ BOOST_AUTO_TEST_CASE(TestERst_2) {
     }
 
     BOOST_CHECK_EQUAL(compare_files(testFile, outFile), true);
-
-    if (remove(outFile.c_str()) == -1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 
@@ -257,28 +256,26 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
     // using API for ERst to read all array from a formatted unified restart file1
     // Then write the data back to a new file and check that new file is identical with input file
 
+    WorkArea work;
+    work.copyIn(testFile);
     ERst rst1(testFile);
+    {
+        EclOutput eclTest(outFile, true);
 
-    EclOutput eclTest(outFile, true);
+        std::vector<int> seqnums = rst1.listOfReportStepNumbers();
+        for (unsigned int i = 0; i < seqnums.size(); i++) {
+            rst1.loadReportStepNumber(seqnums[i]);
 
-    std::vector<int> seqnums = rst1.listOfReportStepNumbers();
-    for (unsigned int i=0; i<seqnums.size(); i++) {
-        rst1.loadReportStepNumber(seqnums[i]);
+            auto rstArrays = rst1.listOfRstArrays(seqnums[i]);
 
-        auto rstArrays = rst1.listOfRstArrays(seqnums[i]);
-
-        for (auto& array : rstArrays) {
-            std::string name = std::get<0>(array);
-            eclArrType arrType = std::get<1>(array);
-            readAndWrite(eclTest, rst1, name, seqnums[i], arrType);
+            for (auto& array : rstArrays) {
+                std::string name = std::get<0>(array);
+                eclArrType arrType = std::get<1>(array);
+                readAndWrite(eclTest, rst1, name, seqnums[i], arrType);
+            }
         }
     }
-
     BOOST_CHECK_EQUAL(compare_files(testFile, outFile), true);
-
-    if (remove(outFile.c_str() )== -1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 
