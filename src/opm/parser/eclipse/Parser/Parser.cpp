@@ -1171,7 +1171,22 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                             std::inserter(ignore_sections, ignore_sections.end()));
         }
 
-        ParserState parserState( this->codeKeywords(), parseContext, errors, dataFileName, ignore_sections);
+        /*
+          The following rules apply to the .DATA file argument which is
+          internalized in the deck:
+
+           1. It is normalized by removing uneccessary '.' characters and
+              resolving symlinks.
+
+           2. The relative/abolute status of the path is retained.
+        */
+        std::string data_file;
+        if (dataFileName[0] == '/')
+            data_file = Opm::filesystem::canonical(dataFileName).string();
+        else
+            data_file = Opm::filesystem::relative( Opm::filesystem::canonical(dataFileName) );
+
+        ParserState parserState( this->codeKeywords(), parseContext, errors, data_file, ignore_sections);
         parseState( parserState, *this );
         return std::move( parserState.deck );
     }
