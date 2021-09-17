@@ -89,8 +89,7 @@
       "item": 13,
       "name": "TEMP_AQUIFER",
       "value_type": "DOUBLE",
-      "dimension": "Temperature",
-      "comment": "Not supported"
+      "dimension": "Temperature"
     }
   ]
 }
