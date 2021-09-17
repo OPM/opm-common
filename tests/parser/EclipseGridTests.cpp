@@ -51,8 +51,10 @@
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-
 #include <opm/io/eclipse/EclFile.hpp>
+
+#include "tests/WorkArea.cpp"
+
 
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
     Opm::Deck deck;
@@ -1838,123 +1840,115 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
     Opm::NNC nnc(grid1,  deck);
     bool formatted = false;
+    {
+        WorkArea work;
 
-    time_t timer;
-    time(&timer);
+        time_t timer;
+        time(&timer);
 
-    std::string cwd = Opm::filesystem::current_path().c_str();
-    std::string testDir = cwd + "/tmp_dir_" + std::to_string(timer);
+        std::string fileName = "TMP.EGRID";
+        grid1.save(fileName, formatted, nnc.input(), units);
 
-    if ( Opm::filesystem::exists( testDir )) {
-        Opm::filesystem::remove_all(testDir);
+        Opm::EclIO::EclFile file1(fileName);
+
+        // Values getZCORNed from the grid needs to be converted from SI to Field units
+        // and then converted from double to single precissions before comparing with values saved to
+        // the EGRID file
+
+        // check coord
+        const std::vector<float> coord_egrid = file1.get<float>("COORD");
+        std::vector<double> coord_input_si = grid1.getCOORD();
+
+        BOOST_CHECK(coord_egrid.size() == coord_input_si.size());
+
+        std::vector<float> coord_input_f;
+        coord_input_f.reserve(coord_input_si.size());
+
+        for (size_t n = 0; n < coord_egrid.size(); n++) {
+            coord_input_f.push_back(static_cast<float>(units.from_si(length, coord_input_si[n])));
+            BOOST_CHECK_CLOSE(coord_input_f[n], coord_egrid[n], 1e-6);
+        }
+
+        // check zcorn
+        const std::vector<float> zcorn_egrid = file1.get<float>("ZCORN");
+        std::vector<double> zcorn_input_si = grid1.getZCORN();
+
+        BOOST_CHECK(zcorn_egrid.size() == zcorn_input_si.size());
+
+        std::vector<float> zcorn_input_f;
+        zcorn_input_f.reserve(zcorn_input_si.size());
+
+        for (size_t n = 0; n < zcorn_egrid.size(); n++) {
+            zcorn_input_f.push_back(static_cast<float>(units.from_si(length, zcorn_input_si[n])));
+            BOOST_CHECK_CLOSE(zcorn_input_f[n], zcorn_egrid[n], 1e-6);
+        }
+
+        BOOST_CHECK(file1.hasKey("GRIDUNIT"));
+        const std::vector<std::string> gridunits = file1.get<std::string>("GRIDUNIT");
+
+        BOOST_CHECK(gridunits[0] == "FEET");
+
+        // input deck do not hold MAPAXES or MAPUNITS entries. Below keywords should not be written to EGRID file
+        BOOST_CHECK(!file1.hasKey("MAPAXES"));
+        BOOST_CHECK(!file1.hasKey("MAPUNITS"));
+
+        // this deck do not have any nnc. Below keywords should not be written to EGRID file
+        BOOST_CHECK(!file1.hasKey("NNCHEAD"));
+        BOOST_CHECK(!file1.hasKey("NNC1"));
+        BOOST_CHECK(!file1.hasKey("NNC2"));
+
+        // testing deck in field units and MAPUNITS in METRES
+        auto deck2 = parser.parseString(deckData2);
+
+        Opm::EclipseState es2(deck2);
+        Opm::UnitSystem units2 = es.getDeckUnitSystem();
+        const auto& grid2 = es2.getInputGrid();
+        Opm::NNC nnc2(grid2, deck2);
+
+
+        std::string fileName2 = "TMP2.FEGRID";
+
+        grid2.save(fileName2, true, nnc2.input(), units);
+
+        Opm::EclIO::EclFile file2(fileName2);
+
+        const std::vector<std::string>& test_mapunits2 = file2.get<std::string>("MAPUNITS");
+        BOOST_CHECK(test_mapunits2[0] == "METRES");
+
+        const std::vector<float>& test_mapaxes2 = file2.get<float>("MAPAXES");
+
+        BOOST_CHECK(test_mapaxes2.size() == ref2_mapaxes.size());
+
+        for (size_t n = 0; n < ref2_mapaxes.size(); n++) {
+            BOOST_CHECK_EQUAL(ref2_mapaxes[n], test_mapaxes2[n]);
+        }
+
+        // testing deck in field units and MAPUNITS in FEET
+        auto deck3 = parser.parseString(deckData3);
+
+        Opm::EclipseState es3(deck3);
+        Opm::UnitSystem units3 = es.getDeckUnitSystem();
+        const auto& grid3 = es3.getInputGrid();
+        Opm::NNC nnc3(grid3, deck3);
+
+
+        std::string fileName3 = "TMP3.FEGRID";
+
+        grid3.save(fileName3, true, nnc3.input(), units3);
+
+        Opm::EclIO::EclFile file3(fileName3);
+
+        const std::vector<std::string>& test_mapunits3 = file3.get<std::string>("MAPUNITS");
+        BOOST_CHECK(test_mapunits3[0] == "FEET");
+
+        const std::vector<float>& test_mapaxes3 = file3.get<float>("MAPAXES");
+
+        BOOST_CHECK(test_mapaxes3.size() == ref3_mapaxes.size());
+
+        for (size_t n = 0; n < ref3_mapaxes.size(); n++) {
+            BOOST_CHECK(ref3_mapaxes[n] == test_mapaxes3[n]);
+        }
     }
-
-    Opm::filesystem::create_directory(testDir);
-
-    std::string fileName = testDir + "/" + "TMP.EGRID";
-    grid1.save(fileName, formatted, nnc.input(), units);
-
-    Opm::EclIO::EclFile file1(fileName);
-
-    // Values getZCORNed from the grid needs to be converted from SI to Field units
-    // and then converted from double to single precissions before comparing with values saved to
-    // the EGRID file
-
-    // check coord
-    const std::vector<float> coord_egrid = file1.get<float>("COORD");
-    std::vector<double> coord_input_si = grid1.getCOORD();
-
-    BOOST_CHECK( coord_egrid.size() == coord_input_si.size());
-
-    std::vector<float> coord_input_f;
-    coord_input_f.reserve(coord_input_si.size());
-
-    for (size_t n =0; n< coord_egrid.size(); n++) {
-        coord_input_f.push_back( static_cast<float>(units.from_si(length, coord_input_si[n])));
-        BOOST_CHECK_CLOSE( coord_input_f[n] , coord_egrid[n], 1e-6 );
-    }
-
-    // check zcorn
-    const std::vector<float> zcorn_egrid = file1.get<float>("ZCORN");
-    std::vector<double> zcorn_input_si = grid1.getZCORN();
-
-    BOOST_CHECK( zcorn_egrid.size() == zcorn_input_si.size());
-
-    std::vector<float> zcorn_input_f;
-    zcorn_input_f.reserve(zcorn_input_si.size());
-
-    for (size_t n =0; n< zcorn_egrid.size(); n++) {
-        zcorn_input_f.push_back( static_cast<float>(units.from_si(length, zcorn_input_si[n])));
-        BOOST_CHECK_CLOSE( zcorn_input_f[n] , zcorn_egrid[n], 1e-6 );
-    }
-
-    BOOST_CHECK( file1.hasKey("GRIDUNIT"));
-    const std::vector<std::string> gridunits = file1.get<std::string>("GRIDUNIT");
-
-    BOOST_CHECK( gridunits[0]=="FEET");
-
-    // input deck do not hold MAPAXES or MAPUNITS entries. Below keywords should not be written to EGRID file
-    BOOST_CHECK( !file1.hasKey("MAPAXES"));
-    BOOST_CHECK( !file1.hasKey("MAPUNITS"));
-
-    // this deck do not have any nnc. Below keywords should not be written to EGRID file
-    BOOST_CHECK( !file1.hasKey("NNCHEAD"));
-    BOOST_CHECK( !file1.hasKey("NNC1"));
-    BOOST_CHECK( !file1.hasKey("NNC2"));
-
-    // testing deck in field units and MAPUNITS in METRES
-    auto deck2 = parser.parseString( deckData2) ;
-
-    Opm::EclipseState es2(deck2);
-    Opm::UnitSystem units2 = es.getDeckUnitSystem();
-    const auto& grid2 = es2.getInputGrid();
-    Opm::NNC nnc2(grid2,  deck2 );
-
-
-    std::string fileName2 = testDir + "/" + "TMP2.FEGRID";
-
-    grid2.save(fileName2, true, nnc2.input(), units);
-
-    Opm::EclIO::EclFile file2(fileName2);
-
-    const std::vector<std::string>& test_mapunits2 = file2.get<std::string>("MAPUNITS");
-    BOOST_CHECK( test_mapunits2[0] == "METRES");
-
-    const std::vector<float>& test_mapaxes2 = file2.get<float>("MAPAXES");
-
-    BOOST_CHECK( test_mapaxes2.size() == ref2_mapaxes.size());
-
-    for (size_t n =0; n< ref2_mapaxes.size(); n++) {
-        BOOST_CHECK_EQUAL( ref2_mapaxes[n], test_mapaxes2[n]);
-    }
-
-    // testing deck in field units and MAPUNITS in FEET
-    auto deck3 = parser.parseString( deckData3) ;
-
-    Opm::EclipseState es3(deck3);
-    Opm::UnitSystem units3 = es.getDeckUnitSystem();
-    const auto& grid3 = es3.getInputGrid();
-    Opm::NNC nnc3(grid3, deck3);
-
-
-    std::string fileName3 = testDir + "/" + "TMP3.FEGRID";
-
-    grid3.save(fileName3, true, nnc3.input(), units3);
-
-    Opm::EclIO::EclFile file3(fileName3);
-
-    const std::vector<std::string>& test_mapunits3 = file3.get<std::string>("MAPUNITS");
-    BOOST_CHECK( test_mapunits3[0] == "FEET");
-
-    const std::vector<float>& test_mapaxes3 = file3.get<float>("MAPAXES");
-
-    BOOST_CHECK( test_mapaxes3.size() == ref3_mapaxes.size());
-
-    for (size_t n =0; n< ref3_mapaxes.size(); n++) {
-        BOOST_CHECK( ref3_mapaxes[n] == test_mapaxes3[n]);
-    }
-
-    Opm::filesystem::remove_all(testDir);
 }
 
 BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
@@ -2035,119 +2029,110 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     time_t timer;
     time(&timer);
 
-    std::string cwd = Opm::filesystem::current_path().c_str();
-    std::string testDir = cwd + "/tmp_dir_" + std::to_string(timer);
+    {
+        WorkArea work;
+        std::string fileName = "TMP.FEGRID";
+        grid1.save(fileName, formatted, nnc.input(), units1);
 
-    if ( Opm::filesystem::exists( testDir )) {
-        Opm::filesystem::remove_all(testDir);
+        Opm::EclIO::EclFile file1(fileName);
+
+        // Values getZCORNed from the grid have same units as input deck (metric), however these needs to be
+        // converted from double to single precissions before comparing with values saved to the EGRID file
+
+        // check coord
+        const std::vector<float> coord_egrid = file1.get<float>("COORD");
+        std::vector<double> coord_input_si = grid1.getCOORD();
+
+        BOOST_CHECK(coord_egrid.size() == coord_input_si.size());
+
+        std::vector<float> coord_input_f;
+        coord_input_f.reserve(coord_input_si.size());
+
+        for (size_t n = 0; n < coord_egrid.size(); n++) {
+            coord_input_f.push_back(static_cast<float>(units1.from_si(length, coord_input_si[n])));
+            BOOST_CHECK_CLOSE(coord_input_f[n], coord_egrid[n], 1e-6);
+        }
+
+        // check zcorn
+        const std::vector<float> zcorn_egrid = file1.get<float>("ZCORN");
+        std::vector<double> zcorn_input_si = grid1.getZCORN();
+
+        BOOST_CHECK(zcorn_egrid.size() == zcorn_input_si.size());
+
+        std::vector<float> zcorn_input_f;
+        zcorn_input_f.reserve(zcorn_input_si.size());
+
+        for (size_t n = 0; n < zcorn_egrid.size(); n++) {
+            zcorn_input_f.push_back(static_cast<float>(units1.from_si(length, zcorn_input_si[n])));
+            BOOST_CHECK_CLOSE(zcorn_input_f[n], zcorn_egrid[n], 1e-6);
+        }
+
+        BOOST_CHECK(file1.hasKey("GRIDUNIT"));
+        const std::vector<std::string> gridunits = file1.get<std::string>("GRIDUNIT");
+
+        BOOST_CHECK(gridunits[0] == "METRES");
+
+        BOOST_CHECK(file1.hasKey("MAPAXES"));
+        std::vector<float> mapaxes = file1.get<float>("MAPAXES");
+
+        for (size_t n = 0; n < 6; n++) {
+            BOOST_CHECK_CLOSE(mapaxes[n], ref_mapaxes1[n], 1e-6);
+        }
+
+        BOOST_CHECK(file1.hasKey("MAPUNITS"));
+        const std::vector<std::string> mapunits = file1.get<std::string>("MAPUNITS");
+        BOOST_CHECK(gridunits[0] == "METRES");
+
+        BOOST_CHECK(file1.hasKey("NNCHEAD"));
+        const std::vector<int> nnchead = file1.get<int>("NNCHEAD");
+
+        BOOST_CHECK(nnchead[0] == static_cast<int>(nnc.input().size()));
+
+        std::vector<int> ref_nnc1 = {6, 7, 8};
+        std::vector<int> ref_nnc2 = {26, 27, 28};
+
+        BOOST_CHECK(file1.hasKey("NNC1"));
+        BOOST_CHECK(file1.hasKey("NNC2"));
+
+        const std::vector<int> nnc1 = file1.get<int>("NNC1");
+        const std::vector<int> nnc2 = file1.get<int>("NNC2");
+
+        BOOST_CHECK(nnc1.size() == nnc2.size());
+
+        for (size_t n = 0; n < nnc1.size(); n++) {
+            BOOST_CHECK(nnc1[n] == ref_nnc1[n]);
+        }
+
+        for (size_t n = 0; n < nnc2.size(); n++) {
+            BOOST_CHECK(nnc2[n] == ref_nnc2[n]);
+        }
+
+        // testing deck in metric units with mapaxes in field units
+        auto deck2 = parser.parseString(deckData2);
+
+        Opm::EclipseState es2(deck2);
+        Opm::UnitSystem units2 = es2.getDeckUnitSystem();
+
+        const auto& grid2 = es2.getInputGrid();
+        // Opm::NNC nnc( deck2 );
+
+        std::string fileName2 = "TMP2.FEGRID";
+
+        grid2.save(fileName2, true, nnc.input(), units2);
+
+        Opm::EclIO::EclFile file2(fileName2);
+
+        const std::vector<std::string>& test_mapunits2 = file2.get<std::string>("MAPUNITS");
+        BOOST_CHECK(test_mapunits2[0] == "FEET");
+
+        const std::vector<float>& test_mapaxes2 = file2.get<float>("MAPAXES");
+
+        BOOST_CHECK(test_mapaxes2.size() == ref_mapaxes2.size());
+
+        for (size_t n = 0; n < ref_mapaxes2.size(); n++) {
+            BOOST_CHECK(ref_mapaxes2[n] == test_mapaxes2[n]);
+        }
     }
-
-    Opm::filesystem::create_directory(testDir);
-
-    std::string fileName = testDir + "/" + "TMP.FEGRID";
-    grid1.save(fileName, formatted, nnc.input(), units1);
-
-    Opm::EclIO::EclFile file1(fileName);
-
-    // Values getZCORNed from the grid have same units as input deck (metric), however these needs to be
-    // converted from double to single precissions before comparing with values saved to the EGRID file
-
-    // check coord
-    const std::vector<float> coord_egrid = file1.get<float>("COORD");
-    std::vector<double> coord_input_si = grid1.getCOORD();
-
-    BOOST_CHECK( coord_egrid.size() == coord_input_si.size());
-
-    std::vector<float> coord_input_f;
-    coord_input_f.reserve(coord_input_si.size());
-
-    for (size_t n =0; n< coord_egrid.size(); n++) {
-        coord_input_f.push_back( static_cast<float>(units1.from_si(length, coord_input_si[n])));
-        BOOST_CHECK_CLOSE( coord_input_f[n] , coord_egrid[n], 1e-6 );
-    }
-
-    // check zcorn
-    const std::vector<float> zcorn_egrid = file1.get<float>("ZCORN");
-    std::vector<double> zcorn_input_si = grid1.getZCORN();
-
-    BOOST_CHECK( zcorn_egrid.size() == zcorn_input_si.size());
-
-    std::vector<float> zcorn_input_f;
-    zcorn_input_f.reserve(zcorn_input_si.size());
-
-    for (size_t n =0; n< zcorn_egrid.size(); n++) {
-        zcorn_input_f.push_back( static_cast<float>(units1.from_si(length, zcorn_input_si[n])));
-        BOOST_CHECK_CLOSE( zcorn_input_f[n] , zcorn_egrid[n], 1e-6 );
-    }
-
-    BOOST_CHECK( file1.hasKey("GRIDUNIT"));
-    const std::vector<std::string> gridunits = file1.get<std::string>("GRIDUNIT");
-
-    BOOST_CHECK( gridunits[0]=="METRES");
-
-    BOOST_CHECK( file1.hasKey("MAPAXES"));
-    std::vector<float> mapaxes = file1.get<float>("MAPAXES");
-
-    for (size_t n = 0; n < 6; n++) {
-        BOOST_CHECK_CLOSE( mapaxes[n] , ref_mapaxes1[n], 1e-6 );
-    }
-
-    BOOST_CHECK( file1.hasKey("MAPUNITS"));
-    const std::vector<std::string> mapunits = file1.get<std::string>("MAPUNITS");
-    BOOST_CHECK( gridunits[0]=="METRES");
-
-    BOOST_CHECK( file1.hasKey("NNCHEAD"));
-    const std::vector<int> nnchead = file1.get<int>("NNCHEAD");
-
-    BOOST_CHECK( nnchead[0] == static_cast<int>(nnc.input().size()) );
-
-    std::vector<int> ref_nnc1 = { 6, 7, 8 };
-    std::vector<int> ref_nnc2 = { 26, 27, 28 };
-
-    BOOST_CHECK( file1.hasKey("NNC1"));
-    BOOST_CHECK( file1.hasKey("NNC2"));
-
-    const std::vector<int> nnc1 = file1.get<int>("NNC1");
-    const std::vector<int> nnc2 = file1.get<int>("NNC2");
-
-    BOOST_CHECK( nnc1.size() == nnc2.size() );
-
-    for (size_t n =0; n< nnc1.size(); n++) {
-        BOOST_CHECK( nnc1[n] == ref_nnc1[n] );
-    }
-
-    for (size_t n =0; n< nnc2.size(); n++) {
-        BOOST_CHECK( nnc2[n] == ref_nnc2[n] );
-    }
-
-    // testing deck in metric units with mapaxes in field units
-    auto deck2 = parser.parseString( deckData2) ;
-
-    Opm::EclipseState es2(deck2);
-    Opm::UnitSystem units2 = es2.getDeckUnitSystem();
-
-    const auto& grid2 = es2.getInputGrid();
-    //Opm::NNC nnc( deck2 );
-
-    std::string fileName2 = testDir + "/" + "TMP2.FEGRID";
-
-    grid2.save(fileName2, true, nnc.input(), units2);
-
-    Opm::EclIO::EclFile file2(fileName2);
-
-    const std::vector<std::string>& test_mapunits2 = file2.get<std::string>("MAPUNITS");
-    BOOST_CHECK( test_mapunits2[0] == "FEET");
-
-    const std::vector<float>& test_mapaxes2 = file2.get<float>("MAPAXES");
-
-    BOOST_CHECK( test_mapaxes2.size() == ref_mapaxes2.size());
-
-    for (size_t n =0; n< ref_mapaxes2.size(); n++) {
-        BOOST_CHECK( ref_mapaxes2[n] == test_mapaxes2[n]);
-    }
-
-
-    Opm::filesystem::remove_all(testDir);
 }
 
 BOOST_AUTO_TEST_CASE(CalcCellDims) {
@@ -2775,106 +2760,107 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
 
     const auto& grid1a = es1a.getInputGrid();
     Opm::NNC nnc(grid1a, deck1a);
+    {
+        WorkArea work;
+        grid1a.save("BAD_CP_M.EGRID", false, nnc.input(), units1a);
 
-    grid1a.save("BAD_CP_M.EGRID", false, nnc.input(), units1a);
+        auto deck1b = parser.parseString(deckData1b);
+        Opm::EclipseState es1b(deck1b);
+        Opm::UnitSystem units1b = es1b.getDeckUnitSystem();
+        const auto& grid1b = es1b.getInputGrid();
 
-    auto deck1b = parser.parseString( deckData1b) ;
-    Opm::EclipseState es1b( deck1b );
-    Opm::UnitSystem units1b = es1b.getDeckUnitSystem();
-    const auto& grid1b = es1b.getInputGrid();
+        grid1b.save("BAD_CP_F.EGRID", false, nnc.input(), units1b);
 
-    grid1b.save("BAD_CP_F.EGRID", false, nnc.input(), units1b);
+        auto deck1 = parser.parseString(deckData1);
+        Opm::EclipseGrid grid1(deck1);
 
-    auto deck1 = parser.parseString( deckData1) ;
-    Opm::EclipseGrid grid1( deck1);
+        Opm::EclIO::EclFile file1("BAD_CP_M.EGRID");
 
-    Opm::EclIO::EclFile file1("BAD_CP_M.EGRID");
+        // actnum not defined in deck. keyword GDFILE not present in the DECK
+        // check that coord and zcorn from deck-grid identical to coord and zcorn
+        // from egrid - grid
 
-    // actnum not defined in deck. keyword GDFILE not present in the DECK
-    // check that coord and zcorn from deck-grid identical to coord and zcorn
-    // from egrid - grid
+        std::vector<double> coordGrid1 = grid1.getCOORD();
+        std::vector<double> zcornGrid1 = grid1.getZCORN();
+        std::vector<float> coordGrid1_f(coordGrid1.begin(), coordGrid1.end());
+        std::vector<float> zcornGrid1_f(zcornGrid1.begin(), zcornGrid1.end());
 
-    std::vector<double> coordGrid1 = grid1.getCOORD();
-    std::vector<double> zcornGrid1 = grid1.getZCORN();
-    std::vector<float> coordGrid1_f(coordGrid1.begin(), coordGrid1.end() );
-    std::vector<float> zcornGrid1_f(zcornGrid1.begin(), zcornGrid1.end() );
+        const std::vector<float> coord_egrid_f = file1.get<float>("COORD");
+        const std::vector<float> zcorn_egrid_f = file1.get<float>("ZCORN");
 
-    const std::vector<float> coord_egrid_f = file1.get<float>("COORD");
-    const std::vector<float> zcorn_egrid_f = file1.get<float>("ZCORN");
+        BOOST_CHECK(coordGrid1.size() == coord_egrid_f.size());
+        BOOST_CHECK(zcornGrid1.size() == zcorn_egrid_f.size());
 
-    BOOST_CHECK( coordGrid1.size() == coord_egrid_f.size() );
-    BOOST_CHECK( zcornGrid1.size() == zcorn_egrid_f.size() );
+        for (size_t n = 0; n < coordGrid1.size(); n++) {
+            BOOST_CHECK(coordGrid1_f[n] == coord_egrid_f[n]);
+        }
 
-    for (size_t n = 0; n < coordGrid1.size(); n++){
-        BOOST_CHECK( coordGrid1_f[n] == coord_egrid_f[n] );
+        for (size_t n = 0; n < zcornGrid1.size(); n++) {
+            BOOST_CHECK(zcornGrid1_f[n] == zcorn_egrid_f[n]);
+        }
+
+        // all cells are active, since ACTNUM not present
+        std::vector<int> actGrid1 = grid1.getACTNUM();
+        for (size_t n = 0; n < actGrid1.size(); n++) {
+            BOOST_CHECK(actGrid1[n] == 1);
+        }
+
+
+        auto deck2 = parser.parseString(deckData2);
+        Opm::EclipseGrid grid2(deck2);
+
+        std::vector<int> actGrid2 = grid2.getACTNUM();
+
+        // check that actnum is reset from gdfile
+
+        for (size_t n = 0; n < actGrid2.size(); n++) {
+            BOOST_CHECK(actGrid2[n] == ref_act_egrid[n]);
+        }
+
+
+        auto deck3a = parser.parseString(deckData3a);
+        Opm::EclipseGrid grid3a(deck3a);
+
+        // mapunits and mapaxes define in deck (only)
+
+        std::vector<int> actGrid3 = grid3a.getACTNUM();
+
+        // check that actnum is reset from gdfile, ACTNUM input in deck
+        // but before keyword GDFILE
+
+        for (size_t n = 0; n < actGrid3.size(); n++) {
+            BOOST_CHECK(actGrid3[n] == ref_act_egrid[n]);
+        }
+
+        // check that depth values are in SI units
+        for (size_t n = 0; n < refDepthGrid3a.size(); n++) {
+            BOOST_CHECK_CLOSE(grid3a.getCellDepth(n), refDepthGrid3a[n], 1e-3);
+        }
+
+        auto deck3b = parser.parseString(deckData3b);
+        Opm::EclipseGrid grid3b(deck3b);
+
+        // mapunits and mapaxes both in egrid and deck. Uses properties
+        // from the egrid keyword gdfile input after MAPUNITS and MAPAXES
+
+        actGrid3 = grid3b.getACTNUM();
+
+        // check that actnum is reset from deck since input after keyword GDFILE
+        for (size_t n = 0; n < actGrid3.size(); n++) {
+            BOOST_CHECK(actGrid3[n] == ref_act_deck3[n]);
+        }
+
+        // check that depth values are converted from Field to SI units
+        for (size_t n = 0; n < refDepthGrid3b.size(); n++) {
+            BOOST_CHECK_CLOSE(grid3b.getCellDepth(n), refDepthGrid3b[n], 1e-3);
+        }
+
+        // mapunits and mapaxes both in egrid and deck. Uses properties
+        // from the deck sinze these are input after GDfile
+
+        auto deck3c = parser.parseString(deckData3c);
+        Opm::EclipseGrid grid3c(deck3c);
     }
-
-    for (size_t n = 0; n < zcornGrid1.size(); n++){
-        BOOST_CHECK( zcornGrid1_f[n] == zcorn_egrid_f[n] );
-    }
-
-    // all cells are active, since ACTNUM not present
-    std::vector<int> actGrid1 = grid1.getACTNUM();
-    for (size_t n = 0; n < actGrid1.size(); n++){
-        BOOST_CHECK( actGrid1[n] == 1 );
-    }
-
-
-    auto deck2 = parser.parseString( deckData2) ;
-    Opm::EclipseGrid grid2( deck2);
-
-    std::vector<int> actGrid2 = grid2.getACTNUM();
-
-    // check that actnum is reset from gdfile
-
-    for (size_t n = 0; n < actGrid2.size(); n++){
-        BOOST_CHECK( actGrid2[n] == ref_act_egrid[n] );
-    }
-
-
-    auto deck3a = parser.parseString( deckData3a) ;
-    Opm::EclipseGrid grid3a( deck3a);
-
-    // mapunits and mapaxes define in deck (only)
-
-    std::vector<int> actGrid3 = grid3a.getACTNUM();
-
-    // check that actnum is reset from gdfile, ACTNUM input in deck
-    // but before keyword GDFILE
-
-    for (size_t n = 0; n < actGrid3.size(); n++){
-        BOOST_CHECK( actGrid3[n] == ref_act_egrid[n] );
-    }
-
-    // check that depth values are in SI units
-    for (size_t n = 0; n < refDepthGrid3a.size(); n++){
-        BOOST_CHECK_CLOSE( grid3a.getCellDepth(n), refDepthGrid3a[n], 1e-3 );
-    }
-
-    auto deck3b = parser.parseString( deckData3b) ;
-    Opm::EclipseGrid grid3b( deck3b);
-
-    // mapunits and mapaxes both in egrid and deck. Uses properties
-    // from the egrid keyword gdfile input after MAPUNITS and MAPAXES
-
-    actGrid3 = grid3b.getACTNUM();
-
-    // check that actnum is reset from deck since input after keyword GDFILE
-    for (size_t n = 0; n < actGrid3.size(); n++){
-        BOOST_CHECK( actGrid3[n] == ref_act_deck3[n] );
-    }
-
-    // check that depth values are converted from Field to SI units
-    for (size_t n = 0; n < refDepthGrid3b.size(); n++){
-        BOOST_CHECK_CLOSE( grid3b.getCellDepth(n), refDepthGrid3b[n], 1e-3 );
-    }
-
-    // mapunits and mapaxes both in egrid and deck. Uses properties
-    // from the deck sinze these are input after GDfile
-
-    auto deck3c = parser.parseString( deckData3c) ;
-    Opm::EclipseGrid grid3c( deck3c);
-
 }
 
 BOOST_AUTO_TEST_CASE(TEST_COLLAPSED_CELL) {

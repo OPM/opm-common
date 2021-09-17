@@ -35,6 +35,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <tuple>
+#include "tests/WorkArea.cpp"
 
 using Opm::EclIO::ESmry;
 
@@ -401,11 +402,14 @@ BOOST_AUTO_TEST_CASE(TestCreateRSM) {
     ESmry smry1("SPE1CASE1.SMSPEC");
     smry1.LoadData();
 
-    smry1.write_rsm_file();
-    BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
+    {
+        WorkArea work;
+        smry1.write_rsm_file();
+        BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
 
-    smry1.write_rsm_file("TEST.RSM");
-    BOOST_CHECK(fs::exists("TEST.RSM"));
+        smry1.write_rsm_file("TEST.RSM");
+        BOOST_CHECK(fs::exists("TEST.RSM"));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(TestUnits) {
@@ -430,6 +434,7 @@ BOOST_AUTO_TEST_CASE(Test_all_available) {
 
     std::vector<int> nums (8, 0);
 
+    WorkArea work;
     {
         Opm::EclIO::EclOutput smspec1("TMP1.SMSPEC", false);
         smspec1.write<int>("INTEHEAD", {1,100});
@@ -489,13 +494,6 @@ BOOST_AUTO_TEST_CASE(Test_all_available) {
      Opm::EclIO::ESmry smry2("TMP1.SMSPEC");
 
      BOOST_CHECK_EQUAL( smry2.all_steps_available(), false);
-
-     if (Opm::filesystem::exists("TMP1.SMSPEC"))
-         Opm::filesystem::remove("TMP1.SMSPEC");
-
-     if (Opm::filesystem::exists("TMP1.UNSMRY"))
-         Opm::filesystem::remove("TMP1.UNSMRY");
-
 }
 
 BOOST_AUTO_TEST_CASE(Test_all_available_w_restart) {
@@ -511,6 +509,7 @@ BOOST_AUTO_TEST_CASE(Test_all_available_w_restart) {
 
     std::vector<int> nums (8, 0);
 
+    WorkArea work;
     {
         Opm::EclIO::EclOutput smspec1("BASE1.SMSPEC", false);
         smspec1.write<int>("INTEHEAD", {1,100});
@@ -648,18 +647,6 @@ BOOST_AUTO_TEST_CASE(Test_all_available_w_restart) {
     Opm::EclIO::ESmry smry3("RST2.SMSPEC", true);
 
     BOOST_CHECK_EQUAL( smry3.all_steps_available(), false);
-
-    if (Opm::filesystem::exists("BASE1.SMSPEC"))
-        Opm::filesystem::remove("BASE1.SMSPEC");
-
-    if (Opm::filesystem::exists("BASE1.UNSMRY"))
-        Opm::filesystem::remove("BASE1.UNSMRY");
-
-    if (Opm::filesystem::exists("RST2.SMSPEC"))
-        Opm::filesystem::remove("RST2.SMSPEC");
-
-    if (Opm::filesystem::exists("RST2.UNSMRY"))
-        Opm::filesystem::remove("RST2.UNSMRY");
 }
 
 

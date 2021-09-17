@@ -37,6 +37,9 @@
 #include <stdio.h>
 #include <tuple>
 
+#include "tests/WorkArea.cpp"
+
+
 using Opm::EclIO::ESmry;
 using Opm::EclIO::ExtESmry;
 
@@ -150,9 +153,9 @@ std::vector<float> getFrom(const std::vector<float> &ref_vect,int from){
 }
 
 BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
-
-    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1.ESMRY");
+    WorkArea work;
+    work.copyIn("SPE1CASE1.SMSPEC");
+    work.copyIn("SPE1CASE1.UNSMRY");
 
     ESmry smry1("SPE1CASE1.SMSPEC");
 
@@ -212,10 +215,6 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
 
     ExtESmry esmry2("SPE1CASE1.ESMRY");
     esmry2.loadData();
-
-
-    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1.ESMRY");
 }
 
 BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
@@ -236,7 +235,7 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
     // this is what the summary file from the restart run would be if the restart was 100% perfect.
     // changing summary keywords to make the file realistic.
 
-
+    WorkArea work;
     std::vector <float> time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref, fgor_ref, bpr_111_ref, bpr_10103_ref;
 
     getRefSmryVect(time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref,fgor_ref, bpr_111_ref, bpr_10103_ref);
@@ -244,9 +243,9 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
     // defaulting second argument, loadBaseRunData. Only data from the restarted run
     // will be loaded. No data from base run (SPE1CASE1 in this case)
 
-    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1.ESMRY");
-
+    work.copyIn("SPE1CASE1.SMSPEC");
+    work.copyIn("SPE1CASE1.UNSMRY");
+    work.copyIn("SPE1CASE1_RST60.ESMRY");
     ESmry smry1("SPE1CASE1.SMSPEC");
     smry1.make_esmry_file();
 
@@ -302,10 +301,6 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
 
     for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
-
-    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1.ESMRY");
-
 }
 
 BOOST_AUTO_TEST_CASE(TestESmry_3) {
@@ -325,7 +320,10 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
 
     // this is what the summary file from the restart run would be if the restart was 100% perfect.
     // changing summary keywords to make the file realistic.
-
+    WorkArea work;
+    work.copyIn("SPE1CASE1.SMSPEC");
+    work.copyIn("SPE1CASE1.UNSMRY");
+    work.copyIn("SPE1CASE1_RST60.ESMRY");
 
     std::vector <float> time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref, fgor_ref, bpr_111_ref, bpr_10103_ref;
 
@@ -334,8 +332,6 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
     // second argument, loadBaseRunData = true. Both data from restarted run and base run loaded
     // vectors should be equal to reference vectors (from SPE1CASE1)
 
-    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
     ESmry smry1("SPE1CASE1.SMSPEC");
     smry1.make_esmry_file();
@@ -376,9 +372,6 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
     smryVect = esmry1.get("BPR:10,10,3");
     for (unsigned int i=0;i< smryVect.size();i++)
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_10103_ref[i], 0.01);
-
-    if (Opm::filesystem::exists("SPE1CASE1.ESMRY"))
-        Opm::filesystem::remove("SPE1CASE1.ESMRY");
 
 }
 

@@ -31,6 +31,7 @@
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #include <iomanip>
+#include "tests/WorkArea.cpp"
 
 using Opm::EclIO::EGrid;
 using Opm::EclIO::ESmry;
@@ -318,6 +319,7 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
     std::vector<int> nnc1;
     std::vector<int> nnc2;
     std::vector<int> actnum;
+    WorkArea work;
 
     //-------------------------------------------------------------
     // base:  identical grids
@@ -432,17 +434,10 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
     test6.loadGrids();
 
     BOOST_CHECK_THROW(test6.gridCompare(),std::runtime_error);
-
-    if (remove("TMP1.EGRID")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
-
-    if (remove("TMP2.EGRID")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 BOOST_AUTO_TEST_CASE(results_init_1) {
+    WorkArea work;
 
     std::vector<std::vector<int>> intData1;
     std::vector<std::vector<float>> floatData1;
@@ -520,14 +515,6 @@ BOOST_AUTO_TEST_CASE(results_init_1) {
 
     BOOST_CHECK_THROW(test1a.results_init(),std::runtime_error);
 
-
-    if (remove("TMP1.INIT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.INIT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 BOOST_AUTO_TEST_CASE(results_init_2) {
@@ -548,6 +535,7 @@ BOOST_AUTO_TEST_CASE(results_init_2) {
     std::vector<float> poro2(12,0.25);
     std::vector<int> fipnum2(12,1);
 
+    WorkArea work;
     // ---------------------------------------------------------------------------
     // array PORV requires strict tolerances, 1e-6
 
@@ -625,17 +613,10 @@ BOOST_AUTO_TEST_CASE(results_init_2) {
     ECLRegressionTest test3("TMP1", "TMP2", 1e-3, 1e-3);
 
     BOOST_CHECK_THROW(test3.results_init(),std::runtime_error);
-
-    if (remove("TMP1.INIT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.INIT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 BOOST_AUTO_TEST_CASE(results_unrst_1) {
+    WorkArea work;
     using Date = std::tuple<int, int, int>;
 
     std::vector<int> seqnum1 = {0,1,4,7};
@@ -760,17 +741,10 @@ BOOST_AUTO_TEST_CASE(results_unrst_1) {
 
     // should fail
     BOOST_CHECK_THROW(test2a.results_rst(),std::runtime_error);
-
-    if (remove("TMP1.UNRST")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.UNRST")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 BOOST_AUTO_TEST_CASE(results_unrst_2) {
+    WorkArea work;
     using Date = std::tuple<int, int, int>;
 
     std::vector<int> seqnum1 = {0,1,4,7};
@@ -857,17 +831,11 @@ BOOST_AUTO_TEST_CASE(results_unrst_2) {
 
     test1.results_rst();
 
-    if (remove("TMP1.UNRST")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.UNRST")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 
 BOOST_AUTO_TEST_CASE(results_unrst_3) {
+    WorkArea work;
     using Date = std::tuple<int, int, int>;
 
     std::vector<int> seqnum1 = {0,1,4,7};
@@ -971,18 +939,11 @@ BOOST_AUTO_TEST_CASE(results_unrst_3) {
     // should get deviations for two keywords
     BOOST_CHECK_EQUAL(test2.countDev(),2);
 
-    if (remove("TMP1.UNRST")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.UNRST")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 
 BOOST_AUTO_TEST_CASE(results_unsmry_1) {
-
+    WorkArea work;
     std::vector<std::string> keywords1 = {"TIME", "YEARS", "FOPR", "FOPT", "WOPR", "WOPR", "WBHP", "WBHP", "ROIP"};
     std::vector<std::string> wgnames1 = {":+:+:+:+", ":+:+:+:+", "FIELD", "FIELD", "A-1H", "A-2H", "A-1H", "A-2H", ":+:+:+:+"};
     std::vector<int> nums1 = {-32767, -32767, 0, 0, 1, 2, 1, 2, 1};
@@ -1072,29 +1033,12 @@ BOOST_AUTO_TEST_CASE(results_unsmry_1) {
     // should fail since not found in any of the cases
     test2a.compareSpesificKeyword("XXXXX");
     BOOST_CHECK_THROW(test2a.results_smry(),std::runtime_error);
-
-    if (remove("TMP1.SMSPEC")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.SMSPEC")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP1.UNSMRY")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.UNSMRY")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
 }
 
 
 
 BOOST_AUTO_TEST_CASE(results_unsmry_2) {
-
+    WorkArea work;
     std::vector<std::string> keywords1 = {"TIME", "YEARS", "FOPR", "FOPT", "WOPR", "WOPR", "WBHP", "WBHP", "ROIP"};
     std::vector<std::string> wgnames1 = {":+:+:+:+", ":+:+:+:+", "FIELD", "FIELD", "A-1H", "A-2H", "A-1H", "A-2H", ":+:+:+:+"};
     std::vector<int> nums1 = {-32767, -32767, 0, 0, 1, 2, 1, 2, 1};
@@ -1153,23 +1097,6 @@ BOOST_AUTO_TEST_CASE(results_unsmry_2) {
 
     // should get deviations for two keywords
     BOOST_CHECK_EQUAL(test2.countDev(),2);
-
-    if (remove("TMP1.SMSPEC")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.SMSPEC")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP1.UNSMRY")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.UNSMRY")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
 }
 
 
@@ -1189,6 +1116,7 @@ BOOST_AUTO_TEST_CASE(results_unsmry_3) {
 
 
 BOOST_AUTO_TEST_CASE(results_rft_1) {
+    WorkArea work;
     using Date = std::tuple<int, int, int>;
 
     std::vector<float> time1 = {0.0, 40.0, 50.0};
@@ -1321,22 +1249,10 @@ BOOST_AUTO_TEST_CASE(results_rft_1) {
     ECLRegressionTest test2("TMP1", "TMP3", 1e-3, 1e-3);
 
     BOOST_CHECK_THROW(test2.results_rft(),std::runtime_error);
-
-    if (remove("TMP1.RFT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.RFT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP3.RFT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
 }
 
 BOOST_AUTO_TEST_CASE(results_rft_2) {
+    WorkArea work;
     using Date = std::tuple<int, int, int>;
 
     std::vector<float> time1 = {0.0, 40.0, 50.0};
@@ -1436,14 +1352,5 @@ BOOST_AUTO_TEST_CASE(results_rft_2) {
 
     // should get deviations for two keywords
     BOOST_CHECK_EQUAL(test3.countDev(), 2);
-
-    if (remove("TMP1.RFT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
-    if (remove("TMP2.RFT")==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    }
-
 }
 

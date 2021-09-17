@@ -89,6 +89,7 @@ void write_header(std::ofstream& ofileH, std::string& arrName, int size, std::st
 
 
 BOOST_AUTO_TEST_CASE(TestEclFile_X231) {
+    WorkArea work;
 
     std::string filename = "TEST.DAT";
     std::string arrName = "TESTX231";
@@ -100,17 +101,17 @@ BOOST_AUTO_TEST_CASE(TestEclFile_X231) {
         std::ofstream ofileH;
         ofileH.open(filename, std::ios_base::binary);
 
-        int size = static_cast<int>((-1) * std::pow(2,31) + 10);
+        int size = static_cast<int>((-1) * std::pow(2, 31) + 10);
 
         write_header(ofileH, arrName, -1, std::string("X231"));
         write_header(ofileH, arrName, size, std::string("INTE"));
 
-        int sizeData = ivect.size()*sizeof(int);
+        int sizeData = ivect.size() * sizeof(int);
         sizeData = flipEndianInt(sizeData);
 
         ofileH.write(reinterpret_cast<char*>(&sizeData), sizeof(sizeData));
 
-        for (auto v : ivect){
+        for (auto v : ivect) {
             int fval = flipEndianInt(v);
             ofileH.write(reinterpret_cast<char*>(&fval), sizeof(fval));
         }
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(TestEclFile_X231) {
     EclFile test1(filename);
     auto array = test1.get<int>(arrName);
 
-    for (size_t n = 0; n < 10; n++){
+    for (size_t n = 0; n < 10; n++) {
         BOOST_CHECK_EQUAL(array[n], ivect[n]);
     }
 }
@@ -283,6 +284,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
 
     // writing vectors to test file (TEST.DAT) using class EclOutput
 
+    WorkArea work;
     {
         EclOutput eclTest(testFile, false);
 
@@ -292,13 +294,10 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
         eclTest.write("XCON",xcon);
         eclTest.write("KEYWORDS",keywords);
         eclTest.write("ENDSOL",std::vector<char>());
+
     }
-
+    work.copyIn(inputFile);
     BOOST_CHECK_EQUAL(compare_files(inputFile, testFile), true);
-
-    if (remove(testFile.c_str())==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
@@ -319,20 +318,20 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
 
     // writing vectors to test file (TEST.FDAT) using class EclOutput
 
-    EclOutput eclTest(testFile, true);
+    {
+        WorkArea work;
+        EclOutput eclTest(testFile, true);
 
-    eclTest.write("ICON",icon);
-    eclTest.write("LOGIHEAD",logihead);
-    eclTest.write("PORV",porv);
-    eclTest.write("XCON",xcon);
-    eclTest.write("KEYWORDS",keywords);
-    eclTest.write("ENDSOL",std::vector<char>());
+        eclTest.write("ICON",icon);
+        eclTest.write("LOGIHEAD",logihead);
+        eclTest.write("PORV",porv);
+        eclTest.write("XCON",xcon);
+        eclTest.write("KEYWORDS",keywords);
+        eclTest.write("ENDSOL",std::vector<char>());
 
-    BOOST_CHECK_EQUAL(compare_files(inputFile, testFile), true);
-
-    if (remove(testFile.c_str())==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
+        work.copyIn(inputFile);
+        BOOST_CHECK_EQUAL(compare_files(inputFile, testFile), true);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite) {
@@ -372,6 +371,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
     EclFile file1(inputFile);
     file1.loadData();
 
+    WorkArea work;
     {
         EclOutput eclTest(testFile, false);
 
@@ -407,16 +407,13 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
         }
     }
 
+    work.copyIn(inputFile);
     BOOST_CHECK_EQUAL(compare_files(inputFile, testFile), true);
-
-    if (remove(testFile.c_str())==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
 }
 
 
 BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
-
+    WorkArea work;
     std::string testFile1="TEST.FDAT";
     std::string testFile2="TEST2.DAT";
 
@@ -532,13 +529,4 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
         auto arrayList =file1.getList();
         BOOST_CHECK(std::get<1>(arrayList[0]) == Opm::EclIO::C0NN);
     }
-
-    if (remove(testFile1.c_str())==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
-
-    if (remove(testFile2.c_str())==-1) {
-        std::cout << " > Warning! temporary file was not deleted" << std::endl;
-    };
-
 }
