@@ -2981,7 +2981,7 @@ EDIT
 BOOST_AUTO_TEST_CASE(GDFILE_NO_ACTNUM) {
     Opm::Parser parser;
     auto deck = parser.parseFile("GDFILE_NO_ACTNUM.DATA");
-    BOOST_CHECK_NO_THROW( Opm::EclipseState(deck));
+    BOOST_CHECK_NO_THROW( Opm::EclipseState{deck} );
 }
 
 
