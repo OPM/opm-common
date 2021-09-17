@@ -592,9 +592,13 @@ namespace {
         std::vector<int> aquifera(grid.getNumActive(), 0);
 
         const auto& cons_data = aquifer.connections().data();
+        const std::vector<int>& actnum = grid.getACTNUM();
         for (const auto& [id, cons] : cons_data) {
             const int exp2_id_1 = 1 << (id - 1);
             for (const auto& con : cons) {
+                if(!actnum[con.global_index]) {
+                    continue;
+                }
                 const size_t active_index = grid.activeIndex(con.global_index);
                 aquifera[active_index] += exp2_id_1;
             }

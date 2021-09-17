@@ -236,6 +236,10 @@ namespace {
                            ICAqArray&                       icaq)
         {
             using Ix = VI::IAnalyticAquiferConn::index;
+            const std::vector<int>& actnum = grid.getACTNUM();
+            if(!actnum[connection.global_index]) {
+                return;
+            }
 
             const auto ijk = grid.getIJK(connection.global_index);
             icaq[Ix::Index_I] = ijk[0] + 1;
