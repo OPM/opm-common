@@ -46,6 +46,7 @@
 #include <tuple>
 #include <stdio.h>
 
+#include "tests/WorkArea.cpp"
 
 void verifyWellState(const std::string& rst_filename, const Opm::Schedule& schedule) {
 
@@ -197,7 +198,9 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
 
 BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
+    WorkArea work;
     std::string eclipse_data_filename    = "testblackoilstate3.DATA";
+    work.copyIn(eclipse_data_filename);
 
     auto python = std::make_shared<Opm::Python>();
     Opm::Parser parser;
