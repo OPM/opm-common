@@ -910,6 +910,55 @@ BOOST_AUTO_TEST_CASE(ActionState) {
     BOOST_CHECK(!res.has_value());
 }
 
+BOOST_AUTO_TEST_CASE(MANUAL4_QUOTE) {
+    const auto deck_string = std::string{ R"(
+RUNSPEC
+ACTDIMS
+   3* 4 /
+
+SCHEDULE
+
+ACTIONX
+'A' /
+GWCT FIELD > 0.8 AND /
+DAY > 1 AND /
+MNTH > 'JUN' AND /
+YEAR >= 2021 /
+/
+
+ENDACTIO
+
+        )"};
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    auto python = std::make_shared<Python>();
+
+    Runspec runspec (deck);
+    Schedule sched(deck, grid1, fp, runspec, python);
+    const auto& action1 = sched[0].actions.get()["A"];
+
+    SummaryState st(TimeService::now());
+    WListManager wlm;
+    Action::Context context(st, wlm);
+
+    context.add("MNTH", 7);
+    context.add("DAY", 2);
+    context.add("YEAR", 2030);
+    context.add("GWCT", "FIELD", 1.0);
+    BOOST_CHECK( action1.eval(context) );
+
+    context.add("MNTH", 7);
+    context.add("DAY", 2);
+    context.add("YEAR", 2019);
+    context.add("GWCT", "FIELD", 1.0);
+    BOOST_CHECK( !action1.eval(context) );
+}
+
+
 BOOST_AUTO_TEST_CASE(ActionID) {
     const auto deck_string = std::string{ R"(
 SCHEDULE

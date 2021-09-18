@@ -17,8 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <optional>
 #include <sstream>
 #include <unordered_set>
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -29,11 +31,30 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/io/eclipse/rst/action.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include "ActionParser.hpp"
 
 namespace Opm {
 namespace Action {
+namespace {
+
+std::string dequote(const std::string& token, const std::optional<KeywordLocation>& location) {
+    if (token[0] == '\'') {
+        if (token.back() == '\'')
+            return token.substr(1, token.size() - 2);
+        else {
+            auto msg = fmt::format("Unbalanced quote for token: {}", token);
+            if (location.has_value())
+                throw OpmInputError(msg, location.value());
+            else
+                throw std::logic_error(msg);
+        }
+    } else
+        return token;
+}
+
+}
 
 
 bool ActionX::valid_keyword(const std::string& keyword) {
@@ -70,8 +91,9 @@ ActionX::ActionX(const RestartIO::RstAction& rst_action)
     std::vector<std::string> tokens;
     for (const auto& rst_condition : rst_action.conditions) {
         this->m_conditions.emplace_back(rst_condition);
-        const auto& cond_tokens = rst_condition.tokens();
-        tokens.insert(tokens.end(), cond_tokens.begin(), cond_tokens.end());
+
+        for (const auto& token : rst_condition.tokens())
+            tokens.push_back(dequote(token, {}));
     }
     this->condition = Action::AST(tokens);
     for (const auto& keyword : rst_action.keywords)
@@ -100,8 +122,15 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
         const auto& record = kw.getRecord(record_index);
         const auto& cond_tokens = RawString::strings( record.getItem("CONDITION").getData<RawString>() );
 
+        /*
+          The tokens vector is passed to the internal ACTIONX parser to create
+          the AST used for evaluation, in that context the quotes are removed.
+          The m_conditions variable is a quite raw representation of the input
+          *only* retained in order to be able to create a restart file - here
+          the quotes are retained.
+        */
         for (const auto& token : cond_tokens)
-            tokens.push_back(token);
+            tokens.push_back(dequote(token, kw.location()));
 
         this->m_conditions.emplace_back(cond_tokens, kw.location());
     }
