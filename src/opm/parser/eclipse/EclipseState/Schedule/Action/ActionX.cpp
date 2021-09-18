@@ -19,16 +19,19 @@
 
 #include <sstream>
 #include <unordered_set>
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/io/eclipse/rst/action.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include "ActionParser.hpp"
 
@@ -92,7 +95,7 @@ ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
 
 
 
-ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
+ActionX::ActionX(const DeckKeyword& kw, const Actdims& actdims, std::time_t start_time) :
     ActionX(kw.getRecord(0), start_time)
 {
     std::vector<std::string> tokens;
@@ -105,6 +108,9 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
 
         this->m_conditions.emplace_back(cond_tokens, kw.location());
     }
+    if (this->m_conditions.size() > actdims.max_conditions())
+        throw OpmInputError(fmt::format("Action {} has too many conditions - adjust item 4 of ACTDIMS to at least {}", this->name(), this->m_conditions.size()), kw.location());
+
     this->condition = Action::AST(tokens);
 }
 
