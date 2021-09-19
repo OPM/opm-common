@@ -44,7 +44,7 @@ namespace Opm {
 
     class Deck;
     struct ScheduleDeckContext;
-
+    class Runspec;
 
     /*
       The ScheduleBlock is collection of all the Schedule keywords from one
@@ -141,7 +141,7 @@ namespace Opm {
 
     class ScheduleDeck {
     public:
-        explicit ScheduleDeck(const Deck& deck, const ScheduleRestartInfo& rst_info);
+        explicit ScheduleDeck(const Runspec& runspec, const Deck& deck, const ScheduleRestartInfo& rst_info);
         ScheduleDeck();
         void add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);

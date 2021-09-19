@@ -28,6 +28,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
 
@@ -131,21 +132,9 @@ std::size_t ScheduleDeck::restart_offset() const {
 }
 
 
-ScheduleDeck::ScheduleDeck(const Deck& deck, const ScheduleRestartInfo& rst_info) {
+ScheduleDeck::ScheduleDeck(const Runspec& runspec, const Deck& deck, const ScheduleRestartInfo& rst_info) {
     const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
-    time_point start_time;
-    if (deck.hasKeyword("START")) {
-        // Use the 'START' keyword to find out the start date (if the
-        // keyword was specified)
-        const auto& keyword = deck.getKeyword("START");
-        start_time = TimeService::from_time_t( TimeService::timeFromEclipse(keyword.getRecord(0)) );
-    } else {
-        // The default start date is not specified in the Eclipse
-        // reference manual. We hence just assume it is same as for
-        // the START keyword for Eclipse E100, i.e., January 1st,
-        // 1983...
-        start_time = TimeService::from_time_t( TimeService::mkdate(1983, 1, 1) );
-    }
+    time_point start_time = TimeService::from_time_t(runspec.start_time());
 
     this->m_restart_time = TimeService::from_time_t(rst_info.time);
     this->m_restart_offset = rst_info.report_step;

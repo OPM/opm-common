@@ -124,7 +124,7 @@ namespace {
                         const RestartIO::RstState * rst)
     try :
         m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
-        m_sched_deck(deck, m_static.rst_info )
+        m_sched_deck(runspec, deck, m_static.rst_info )
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
