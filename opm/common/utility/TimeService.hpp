@@ -24,6 +24,7 @@
 #include <ctime>
 #include <string>
 #include <unordered_map>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 
 namespace Opm {
@@ -40,6 +41,10 @@ namespace Opm {
     const std::unordered_map<std::string , int>& eclipseMonthIndices();
     const std::unordered_map<int, std::string>& eclipseMonthNames();
     bool valid_month(const std::string& month_name);
+
+    std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
+    std::time_t mkdate(int in_year, int in_month, int in_day);
+    std::time_t timeFromEclipse(const DeckRecord &dateRecord);
     }
 
     class TimeStampUTC
