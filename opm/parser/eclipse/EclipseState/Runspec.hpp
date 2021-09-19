@@ -406,6 +406,7 @@ public:
 
     static Runspec serializeObject();
 
+    std::time_t start_time() const noexcept;
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
     const Tabdims&  tabdims() const noexcept;
@@ -428,6 +429,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
+        serializer(this->m_start_time);
         active_phases.serializeOp(serializer);
         m_tabdims.serializeOp(serializer);
         m_regdims.serializeOp(serializer);
@@ -445,6 +447,7 @@ public:
     }
 
 private:
+    std::time_t m_start_time;
     Phases active_phases;
     Tabdims m_tabdims;
     Regdims m_regdims;
