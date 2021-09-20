@@ -107,7 +107,14 @@ void python::common::export_Schedule(py::module& module) {
         .def("group", &get_group, ref_internal);
 
 
-    py::class_< Schedule >( module, "Schedule")
+    // Note: In the below class we std::shared_ptr as the holder type, see:
+    //
+    //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
+    //
+    // this makes it possible to share the returned object with e.g. and
+    //   opm.simulators.BlackOilSimulator Python object
+    //
+    py::class_< Schedule, std::shared_ptr<Schedule> >( module, "Schedule")
     .def(py::init<const Deck&, const EclipseState& >())
     .def("_groups", &get_groups )
     .def_property_readonly( "start",  &get_start_time )
