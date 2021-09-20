@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
@@ -77,7 +78,7 @@ ACTIONX
     const auto deck = Parser{}.parseString( action_kw );
     const auto& kw = deck.getKeyword("ACTIONX");
 
-    Action::ActionX action2(kw, 0);
+    Action::ActionX action2(kw, {}, 0);
     BOOST_CHECK_EQUAL(action2.name(), "ACTION");
 }
 
@@ -1217,6 +1218,11 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(COMBINED_OR) {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+
+ACTDIMS
+   3* 4 /
+
 SCHEDULE
 
 ACTIONX
@@ -1370,4 +1376,34 @@ ENDACTIO
     auto result = action.eval(context);
     BOOST_CHECK(result);
     BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});
+}
+
+
+
+BOOST_AUTO_TEST_CASE(MaxConditions) {
+
+    const auto deck_string = std::string{ R"(
+RUNSPEC
+
+ACTDIMS
+  3*  2 /
+
+SCHEDULE
+
+ACTIONX
+INJECTION 10 /
+WBHP P1 < 200.0 AND /
+MNTH = JAN AND /
+YEAR = 2020 /
+/
+
+EXIT
+  1 /
+
+ENDACTIO
+
+        )"};
+
+    auto st = SummaryState{ TimeService::now() };
+    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
 }

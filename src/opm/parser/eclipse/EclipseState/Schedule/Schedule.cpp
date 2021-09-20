@@ -437,7 +437,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 logger.location(keyword.location());
 
                 if (keyword.name() == "ACTIONX") {
-                    Action::ActionX action(keyword, std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
+                    Action::ActionX action(keyword,
+                                           this->m_static.m_runspec.actdims(),
+                                           std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
                     while (true) {
                         keyword_index++;
                         if (keyword_index == block.size())

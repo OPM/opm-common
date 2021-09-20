@@ -37,6 +37,7 @@
 namespace Opm {
 class DeckKeyword;
 class WellMatcher;
+class Actdims;
 
 namespace RestartIO {
 struct RstAction;
@@ -74,7 +75,7 @@ class ActionX {
 public:
     ActionX();
     ActionX(const std::string& name, size_t max_run, double max_wait, std::time_t start_time);
-    ActionX(const DeckKeyword& kw, std::time_t start_time);
+    ActionX(const DeckKeyword& kw, const Actdims& actimds, std::time_t start_time);
     ActionX(const DeckRecord& record, std::time_t start_time);
     explicit ActionX(const RestartIO::RstAction& rst_action);
 
