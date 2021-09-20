@@ -23,6 +23,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
 
 namespace Opm {
 namespace Action {
@@ -64,6 +66,21 @@ std::optional<Result> State::result(const std::string& action) const {
         return std::nullopt;
 
     return iter->second;
+}
+
+
+/*
+  When restoring from restart file we initialize the number of times it has run
+  and the last run time. From the evaluation only the 'true' evaluation is
+  restored, not the well/group set.
+*/
+void State::load_rst(const Actions& action_config, const RestartIO::RstState& rst_state) {
+    for (const auto& rst_action : rst_state.actions) {
+        if (rst_action.run_count > 0) {
+            const auto& action = action_config[rst_action.name];
+            this->add_run(action, rst_action.last_run.value(), Action::Result{ true });
+        }
+    }
 }
 
 }

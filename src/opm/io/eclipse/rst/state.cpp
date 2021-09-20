@@ -30,6 +30,7 @@
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -279,7 +280,7 @@ std::string oper_string(Action::Logical logic) {
 
 
 void RstState::add_actions(const Parser& parser,
-                           const Actdims& actdims,
+                           const Runspec& runspec,
                            std::time_t sim_time,
                            const std::vector<std::string>& zact,
                            const std::vector<int>& iact,
@@ -289,6 +290,7 @@ void RstState::add_actions(const Parser& parser,
                            const std::vector<double>& sacn,
                            const std::vector<std::string>& zlact)
 {
+    const auto& actdims = runspec.actdims();
     auto zact_action_size  = RestartIO::Helpers::entriesPerZACT();
     auto iact_action_size  = RestartIO::Helpers::entriesPerIACT();
     auto sact_action_size  = RestartIO::Helpers::entriesPerSACT();
@@ -314,8 +316,12 @@ void RstState::add_actions(const Parser& parser,
 
         const auto& name = zact[index * zact_action_size + 0];
         const auto& max_run = iact[index * iact_action_size + 5];
+        const auto& run_count = iact[index * iact_action_size + 2] - 1;
         const auto& min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[index * sact_action_size + 3]);
-        this->actions.emplace_back(name, max_run, min_wait, sim_time, conditions );
+        const auto& last_run_elapsed = this->unit_system.to_si(UnitSystem::measure::time, sact[index * sact_action_size + 4]);
+
+        auto last_run_time = TimeService::advance( runspec.start_time(), last_run_elapsed );
+        this->actions.emplace_back(name, max_run, run_count, min_wait, sim_time, last_run_time, conditions );
 
 
         std::string action_deck;
@@ -418,7 +424,7 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         const auto& iacn = rstView->getKeyword<int>("IACN");
         const auto& sacn = rstView->getKeyword<double>("SACN");
         const auto& zlact= rstView->getKeyword<std::string>("ZLACT");
-        state.add_actions(parser, runspec.actdims(), state.header.sim_time(), zact, iact, sact, zacn, iacn, sacn, zlact);
+        state.add_actions(parser, runspec, state.header.sim_time(), zact, iact, sact, zacn, iacn, sacn, zlact);
     }
 
 

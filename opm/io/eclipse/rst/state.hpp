@@ -38,7 +38,6 @@
 namespace Opm {
     class EclipseGrid;
     class Parser;
-    class Actdims;
     class Parser;
 } // namespace Opm
 
@@ -104,7 +103,7 @@ private:
                   const std::vector<double>& dudf);
 
     void add_actions(const Parser& parser,
-                     const Actdims& actdims,
+                     const Runspec& runspec,
                      std::time_t sim_time,
                      const std::vector<std::string>& zact,
                      const std::vector<int>& iact,
