@@ -23,6 +23,7 @@ enum TokenType {
 enum class FuncType {
   none,
   time,
+  time_month,
   region,
   field,
   group,
