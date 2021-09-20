@@ -2042,9 +2042,13 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
   {"TCPUDAY"  , Opm::UnitSystem::measure::time },
   {"STEPTYPE" , Opm::UnitSystem::measure::identity },
   {"TELAPLIN" , Opm::UnitSystem::measure::time },
+  {"FRPV"     , Opm::UnitSystem::measure::volume },
   {"FWIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FWIPR"    , Opm::UnitSystem::measure::volume },
   {"FOIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FOIPR"    , Opm::UnitSystem::measure::volume },
   {"FGIP"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FGIPR"    , Opm::UnitSystem::measure::volume },
   {"FSIP"     , Opm::UnitSystem::measure::mass },
   {"FOIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
   {"FOIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
@@ -2056,6 +2060,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_units = {
   {"RPR"      , Opm::UnitSystem::measure::pressure},
+  {"RRPV"     , Opm::UnitSystem::measure::volume },
   {"ROIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
   {"ROIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
   {"ROIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
@@ -2068,6 +2073,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_u
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_units = {
   {"BPR"        , Opm::UnitSystem::measure::pressure},
+  {"BRPV"     , Opm::UnitSystem::measure::volume },
   {"BPRESSUR"   , Opm::UnitSystem::measure::pressure},
   {"BSWAT"      , Opm::UnitSystem::measure::identity},
   {"BWSAT"      , Opm::UnitSystem::measure::identity},
