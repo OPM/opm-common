@@ -18,10 +18,12 @@
 */
 
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <chrono>
 #include <ctime>
 #include <utility>
+#include <string>
 
 namespace Opm {
 namespace TimeService {
@@ -113,6 +115,52 @@ bool valid_month(const std::string& month_name) {
     return (month_indices.count(month_name) != 0);
 }
 
+std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second) {
+    const auto tp = TimeStampUTC{ TimeStampUTC::YMD { in_year, in_month, in_day } }
+        .hour(hour).minutes(minute).seconds(second);
+
+    std::time_t t = asTimeT(tp);
+    {
+        /*
+          The underlying mktime( ) function will happily wrap
+          around dates like January 33, this function will check
+          that no such wrap-around has taken place.
+        */
+        const auto check = TimeStampUTC{ t };
+        if ((in_day != check.day()) || (in_month != check.month()) || (in_year != check.year()))
+            throw std::invalid_argument("Invalid input arguments for date.");
+    }
+    return t;
+}
+
+std::time_t mkdate(int in_year, int in_month, int in_day) {
+    return mkdatetime(in_year , in_month , in_day, 0,0,0);
+}
+
+std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
+    const auto &dayItem = dateRecord.getItem(0);
+    const auto &monthItem = dateRecord.getItem(1);
+    const auto &yearItem = dateRecord.getItem(2);
+    const auto &timeItem = dateRecord.getItem(3);
+
+    int hour = 0, min = 0, second = 0;
+    if (timeItem.hasValue(0)) {
+        if (sscanf(timeItem.get<std::string>(0).c_str(), "%d:%d:%d" , &hour,&min,&second) != 3) {
+            hour = min = second = 0;
+        }
+    }
+
+    // Accept lower- and mixed-case month names.
+    std::string monthname = uppercase(monthItem.get<std::string>(0));
+
+    std::time_t date = mkdatetime(yearItem.get<int>(0),
+                                  TimeService::eclipseMonthIndices().at(monthname),
+                                  dayItem.get<int>(0),
+                                  hour,
+                                  min,
+                                  second);
+    return date;
+}
 
 }
 }

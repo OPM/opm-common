@@ -4502,7 +4502,7 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
     {
         Parser parser;
         auto deck = parser.parseString( createDeckWTEST() );
-        ScheduleDeck sched_deck( deck, {} );
+        ScheduleDeck sched_deck( Runspec{deck}, deck, {} );
         BOOST_CHECK_EQUAL( sched_deck.size(), 6 );
 
         std::vector<std::string> first_kw = {"WELSPECS", "WTEST", "SUMTHIN", "WCONINJH", "WELOPEN", "WCONINJH"};

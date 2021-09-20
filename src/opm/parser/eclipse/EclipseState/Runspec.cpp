@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -106,6 +107,20 @@ namespace {
 
         return Opm::SatFuncControls::KeywordFamily::Undefined;
     }
+
+
+std::time_t create_start_time(const Opm::Deck& deck) {
+    if (deck.hasKeyword("START")) {
+        const auto& keyword = deck.getKeyword("START");
+        return Opm::TimeService::timeFromEclipse(keyword.getRecord(0));
+    } else
+        // The default start date is not specified in the Eclipse
+        // reference manual. We hence just assume it is same as for
+        // the START keyword for Eclipse E100, i.e., January 1st,
+        // 1983...
+        return Opm::TimeService::mkdate(1983, 1, 1);
+}
+
 }
 
 namespace Opm {
@@ -492,21 +507,22 @@ bool Nupcol::operator==(const Nupcol& data) const {
 }
 
 
-Runspec::Runspec( const Deck& deck ) :
-    active_phases( inferActivePhases(deck) ),
-    m_tabdims( deck ),
-    m_regdims( deck ),
-    endscale( deck ),
-    welldims( deck ),
-    wsegdims( deck ),
-    netwrkdims( deck ),
-    aquiferdims( deck ),
-    udq_params( deck ),
-    hystpar( deck ),
-    m_actdims( deck ),
-    m_sfuncctrl( deck ),
-    m_nupcol( ),
-    m_co2storage (false)
+Runspec::Runspec( const Deck& deck )
+    : m_start_time( create_start_time(deck) )
+    , active_phases( inferActivePhases(deck) )
+    , m_tabdims( deck )
+    , m_regdims( deck )
+    , endscale( deck )
+    , welldims( deck )
+    , wsegdims( deck )
+    , netwrkdims( deck )
+    , aquiferdims( deck )
+    , udq_params( deck )
+    , hystpar( deck )
+    , m_actdims( deck )
+    , m_sfuncctrl( deck )
+    , m_nupcol( )
+    , m_co2storage (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -616,6 +632,12 @@ bool Runspec::co2Storage() const noexcept
 {
     return this->m_co2storage;
 }
+
+std::time_t Runspec::start_time() const noexcept
+{
+    return this->m_start_time;
+}
+
 
 /*
   Returns an integer in the range 0...7 which can be used to indicate
