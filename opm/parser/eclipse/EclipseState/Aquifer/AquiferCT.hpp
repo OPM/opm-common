@@ -61,7 +61,8 @@ namespace Opm {
                        const double k_a_,
                        const double h_,
                        const double theta_,
-                       const double p0_);
+                       const double p0_,
+                       const double T0_);
 
             int aquiferID{};
             int inftableID{};
@@ -76,6 +77,7 @@ namespace Opm {
             double angle_fraction{};
 
             std::optional<double> initial_pressure{};
+            std::optional<double> initial_temperature{};
             std::vector<double> dimensionless_time{};
             std::vector<double> dimensionless_pressure{};
 
@@ -104,6 +106,7 @@ namespace Opm {
                 serializer(this->thickness);
                 serializer(this->angle_fraction);
                 serializer(this->initial_pressure);
+                serializer(this->initial_temperature);
                 serializer(this->dimensionless_time);
                 serializer(this->dimensionless_pressure);
                 serializer(this->time_constant_);

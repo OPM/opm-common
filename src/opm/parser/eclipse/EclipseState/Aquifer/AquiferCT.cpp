@@ -107,6 +107,9 @@ AquiferCT::AQUCT_data::AQUCT_data(const DeckRecord& record, const TableManager& 
     if (record.getItem<ParserKeywords::AQUCT::P_INI>().hasValue(0))
         this->initial_pressure = record.getItem<ParserKeywords::AQUCT::P_INI>().getSIDouble(0);
 
+    if (record.getItem<ParserKeywords::AQUCT::TEMP_AQUIFER>().hasValue(0))
+        this->initial_temperature = record.getItem<ParserKeywords::AQUCT::TEMP_AQUIFER>().getSIDouble(0);
+
     this->finishInitialisation(tables);
 }
 
@@ -123,6 +126,7 @@ bool AquiferCT::AQUCT_data::operator==(const AquiferCT::AQUCT_data& other) const
         && (this->thickness == other.thickness)
         && (this->angle_fraction == other.angle_fraction)
         && (this->initial_pressure == other.initial_pressure)
+        && (this->initial_temperature == other.initial_temperature)
         && (this->dimensionless_time == other.dimensionless_time)
         && (this->dimensionless_pressure == other.dimensionless_pressure)
         && (this->timeConstant() == other.timeConstant())
@@ -142,7 +146,8 @@ AquiferCT::AQUCT_data::AQUCT_data(const int aqID,
                                   const double k_a_,
                                   const double h_,
                                   const double theta_,
-                                  const double p0_)
+                                  const double p0_,
+                                  const double T0_)
     : aquiferID(aqID)
     , inftableID(infID)
     , pvttableID(pvtID)
@@ -154,20 +159,21 @@ AquiferCT::AQUCT_data::AQUCT_data(const int aqID,
     , thickness(h_)
     , angle_fraction(theta_)
     , initial_pressure(p0_)
+    , initial_temperature(T0_)
 {}
 
 AquiferCT::AQUCT_data AquiferCT::AQUCT_data::serializeObject()
 {
     auto ret = AQUCT_data {
-        1, 2, 3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0
+        1, 2, 3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
     };
 
-    ret.dimensionless_time = std::vector<double>{ 12.0 };
-    ret.dimensionless_pressure = std::vector<double>{ 13.0 };
-    ret.time_constant_ = 14.0;
-    ret.influx_constant_ = 15.0;
-    ret.water_density_ = 16.0;
-    ret.water_viscosity_ = 17.0;
+    ret.dimensionless_time = std::vector<double>{ 13.0 };
+    ret.dimensionless_pressure = std::vector<double>{ 14.0 };
+    ret.time_constant_ = 15.0;
+    ret.influx_constant_ = 16.0;
+    ret.water_density_ = 17.0;
+    ret.water_viscosity_ = 18.0;
 
     return ret;
 }

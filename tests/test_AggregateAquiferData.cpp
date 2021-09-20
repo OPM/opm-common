@@ -88,6 +88,12 @@ namespace {
         return Opm::UnitSystem::newMETRIC().to_si(M::liquid_productivity_index, 1.0);
     }
 
+    double temperatureUnit()
+    {
+        using M = Opm::UnitSystem::measure;
+        return Opm::UnitSystem::newMETRIC().to_si(M::temperature, 1.0);
+    }
+
     double pressureUnit()
     {
         using M = Opm::UnitSystem::measure;
@@ -223,6 +229,7 @@ AQUTAB
         const auto compr           = 3.0e-5*compressibilityUnit();
         const auto datumDepth      = 2000.0*depthUnit();
         const auto initialPressure = 269.0*pressureUnit();
+        const auto initialTemperature = 50*temperatureUnit();
 
         const auto angle = 360.0; // degrees
         const auto thickness = 10.0*depthUnit();
@@ -241,7 +248,7 @@ AQUTAB
             auto& ct = properties
                 .emplace_back(aquiferID, influenceFunction, pvtTable,
                               porosity, datumDepth, compr, ro, ka,
-                              thickness, angle / 360.0, initialPressure);
+                              thickness, angle / 360.0, initialPressure, initialTemperature);
 
             ct.dimensionless_time = tD;
             ct.dimensionless_pressure = pD;
@@ -261,7 +268,7 @@ AQUTAB
             auto& ct = properties
                 .emplace_back(aquiferID, influenceFunction, pvtTable,
                               porosity, datumDepth, compr, ro, ka,
-                              thickness, angle / 360.0, initialPressure);
+                              thickness, angle / 360.0, initialPressure, initialTemperature);
 
             ct.dimensionless_time = tD;
             ct.dimensionless_pressure = pD;
