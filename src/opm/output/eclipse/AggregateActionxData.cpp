@@ -454,17 +454,8 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
                 if (it_rhsq == rhsQuantityToIndex.end()) {
                     //come here if constant value condition
                     double t_val = 0.;
-                    if (lhsQtype == "M") {
-                       const auto& monthToNo = Opm::TimeService::eclipseMonthIndices();
-                       const auto& it_mnth = monthToNo.find(condition.rhs.quantity);
-                       if (it_mnth != monthToNo.end()) {
-                           t_val = it_mnth->second;
-                       }
-                       else {
-                            std::cout << "Unknown Month: " << condition.rhs.quantity << std::endl;
-                            throw std::invalid_argument("Actionx: " + action.name() + "  Condition: " + condition.lhs.quantity );
-                        }
-                    }
+                    if (lhsQtype == "M")
+                        t_val = Opm::TimeService::eclipseMonth(condition.rhs.quantity);
                     else {
                         t_val = std::stod(condition.rhs.quantity);
                     }

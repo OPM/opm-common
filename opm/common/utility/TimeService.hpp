@@ -40,6 +40,7 @@ namespace Opm {
     std::time_t makeUTCTime(std::tm timePoint);
     const std::unordered_map<std::string , int>& eclipseMonthIndices();
     const std::unordered_map<int, std::string>& eclipseMonthNames();
+    int eclipseMonth(const std::string& name);
     bool valid_month(const std::string& month_name);
 
     std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
