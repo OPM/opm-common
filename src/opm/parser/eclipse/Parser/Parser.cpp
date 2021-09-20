@@ -22,6 +22,7 @@
 #include <iterator>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <stack>
 #include <string>
 #include <utility>
@@ -374,7 +375,7 @@ class ParserState {
         void openRootFile( const Opm::filesystem::path& );
 
         void handleRandomText(const std::string_view& ) const;
-        Opm::filesystem::path getIncludeFilePath( std::string ) const;
+        std::optional<Opm::filesystem::path> getIncludeFilePath( std::string ) const;
         void addPathAlias( const std::string& alias, const std::string& path );
 
         const Opm::filesystem::path& current_path() const;
@@ -516,18 +517,9 @@ void ParserState::loadString(const std::string& input) {
 
 void ParserState::loadFile(const Opm::filesystem::path& inputFile) {
 
-    Opm::filesystem::path inputFileCanonical;
-    try {
-        inputFileCanonical = Opm::filesystem::canonical(inputFile);
-    } catch (const Opm::filesystem::filesystem_error& fs_error) {
-        std::string msg = "Could not open file: " + inputFile.string();
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, {}, errors);
-        return;
-    }
-
     const auto closer = []( std::FILE* f ) { std::fclose( f ); };
     std::unique_ptr< std::FILE, decltype( closer ) > ufp(
-            std::fopen( inputFileCanonical.string().c_str(), "rb" ),
+            std::fopen( inputFile.c_str(), "rb" ),
             closer
             );
 
@@ -553,9 +545,9 @@ void ParserState::loadFile(const Opm::filesystem::path& inputFile) {
 
     if( std::ferror( fp ) || readc != buffer.size() - 1 )
         throw std::runtime_error( "Error when reading input file '"
-                                + inputFileCanonical.string() + "'" );
+                                  + inputFile.string() + "'" );
 
-    this->input_stack.push( str::clean( this->code_keywords, buffer ), inputFileCanonical );
+    this->input_stack.push( str::clean( this->code_keywords, buffer ), inputFile );
 }
 
 /*
@@ -596,7 +588,7 @@ void ParserState::openRootFile( const Opm::filesystem::path& inputFile) {
     this->rootPath = inputFileCanonical.parent_path();
 }
 
-Opm::filesystem::path ParserState::getIncludeFilePath( std::string path ) const {
+std::optional<Opm::filesystem::path> ParserState::getIncludeFilePath( std::string path ) const {
     static const std::string pathKeywordPrefix("$");
     static const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
 
@@ -620,7 +612,14 @@ Opm::filesystem::path ParserState::getIncludeFilePath( std::string path ) const 
     Opm::filesystem::path includeFilePath(path);
 
     if (includeFilePath.is_relative())
-        return this->rootPath / includeFilePath;
+        includeFilePath = this->rootPath / includeFilePath;
+
+    try {
+        includeFilePath = Opm::filesystem::canonical(includeFilePath);
+    } catch (const Opm::filesystem::filesystem_error& fs_error) {
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , fmt::format("No such file: {}", includeFilePath.string()), {}, errors);
+        return {};
+    }
 
     return includeFilePath;
 }
@@ -1010,9 +1009,10 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
             auto& firstRecord = rawKeyword->getFirstRecord( );
             std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
-            Opm::filesystem::path includeFile = parserState.getIncludeFilePath( includeFileAsString );
+            const auto& includeFile = parserState.getIncludeFilePath( includeFileAsString );
 
-            parserState.loadFile( includeFile );
+            if (includeFile.has_value())
+                parserState.loadFile( includeFile.value() );
             continue;
         }
 
@@ -1042,9 +1042,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
                     if (deck_keyword.name() == ParserKeywords::IMPORT::keywordName) {
                         bool formatted = deck_keyword.getRecord(0).getItem(1).get<std::string>(0)[0] == 'F';
-                        Opm::filesystem::path import_file = parserState.getIncludeFilePath(deck_keyword.getRecord(0).getItem(0).get<std::string>(0));
+                        const auto& import_file = parserState.getIncludeFilePath(deck_keyword.getRecord(0).getItem(0).get<std::string>(0));
 
-                        ImportContainer import(parser, parserState.deck.getActiveUnitSystem(), import_file.string(), formatted, parserState.deck.size());
+                        ImportContainer import(parser, parserState.deck.getActiveUnitSystem(), import_file.value().string(), formatted, parserState.deck.size());
                         for (auto kw : import)
                             parserState.deck.addKeyword(std::move(kw));
                     } else
@@ -1171,7 +1171,22 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                             std::inserter(ignore_sections, ignore_sections.end()));
         }
 
-        ParserState parserState( this->codeKeywords(), parseContext, errors, dataFileName, ignore_sections);
+        /*
+          The following rules apply to the .DATA file argument which is
+          internalized in the deck:
+
+           1. It is normalized by removing uneccessary '.' characters and
+              resolving symlinks.
+
+           2. The relative/abolute status of the path is retained.
+        */
+        std::string data_file;
+        if (dataFileName[0] == '/')
+            data_file = Opm::filesystem::canonical(dataFileName).string();
+        else
+            data_file = Opm::filesystem::relative( Opm::filesystem::canonical(dataFileName) );
+
+        ParserState parserState( this->codeKeywords(), parseContext, errors, data_file, ignore_sections);
         parseState( parserState, *this );
         return std::move( parserState.deck );
     }

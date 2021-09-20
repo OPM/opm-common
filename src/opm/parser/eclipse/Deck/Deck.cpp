@@ -245,8 +245,8 @@ namespace Opm {
             return this->defaultUnits;
     }
 
-    const std::string& Deck::getDataFile() const {
-        return m_dataFile;
+    std::string Deck::getDataFile() const {
+        return m_dataFile.value_or("");
     }
 
     const std::string& Deck::getInputPath() const {
@@ -265,6 +265,9 @@ namespace Opm {
 
 
     void Deck::setDataFile(const std::string& dataFile) {
+        if (this->m_dataFile.has_value())
+            throw std::logic_error("Can not reassign deck datafile");
+
         this->m_dataFile = dataFile;
 
         auto slash_pos = dataFile.find_last_of("/\\");
