@@ -17,7 +17,14 @@ void python::common::export_EclipseConfig(py::module& module)
     py::class_< EclipseConfig >( module, "EclipseConfig" )
         .def( "init",            py::overload_cast<>(&EclipseConfig::init, py::const_));
 
-    py::class_< SummaryConfig >( module, "SummaryConfig")
+    // Note: In the below class we std::shared_ptr as the holder type, see:
+    //
+    //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
+    //
+    // this makes it possible to share the returned object with e.g. and
+    //   opm.simulators.BlackOilSimulator Python object
+    //
+    py::class_< SummaryConfig, std::shared_ptr<SummaryConfig> >( module, "SummaryConfig")
         .def(py::init([](const Deck& deck, const EclipseState& state, const Schedule& schedule) {
             return SummaryConfig( deck, schedule, state.fieldProps(), state.aquifer() );
          }  )  )

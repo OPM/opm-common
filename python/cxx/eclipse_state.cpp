@@ -93,7 +93,14 @@ namespace {
 
 void python::common::export_EclipseState(py::module& module) {
 
-    py::class_< EclipseState >( module, "EclipseState" )
+    // Note: In the below class we std::shared_ptr as the holder type, see:
+    //
+    //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
+    //
+    // this makes it possible to share the returned object with e.g. and
+    //   opm.simulators.BlackOilSimulator Python object
+    //
+    py::class_< EclipseState, std::shared_ptr<EclipseState> >( module, "EclipseState" )
         .def(py::init<const Deck&>())
         .def_property_readonly( "title", &EclipseState::getTitle )
         .def( "field_props",    &get_field_props, ref_internal)

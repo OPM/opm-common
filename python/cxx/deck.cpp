@@ -45,7 +45,14 @@ namespace {
 
 void python::common::export_Deck(py::module &module) {
 
-    py::class_< Deck >(module, "Deck")
+    // Note: In the below class we std::shared_ptr as the holder type, see:
+    //
+    //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
+    //
+    // this makes it possible to share the returned object with e.g. and
+    //   opm.simulators.BlackOilSimulator Python object
+    //
+    py::class_< Deck, std::shared_ptr<Deck> >(module, "Deck")
         .def( "__len__", &size )
         .def( "__contains__", &hasKeyword )
         .def("__iter__",
