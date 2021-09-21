@@ -329,4 +329,12 @@ namespace Opm {
         deck.write( out );
         return os;
     }
+
+    std::size_t Deck::size() const {
+        return this->keywordList.size();
+    }
+
+    bool Deck::empty() const {
+        return this->keywordList.size() == 0;
+    }
 }
