@@ -355,6 +355,19 @@ BOOST_AUTO_TEST_CASE(DATE) {
     BOOST_CHECK( !ast.eval(context));
 }
 
+BOOST_AUTO_TEST_CASE(MNTH_NUMERIC) {
+    Action::AST ast(std::vector<std::string>{"MNTH", ">=", "6.3"});
+    SummaryState st(TimeService::now());
+    WListManager wlm;
+    Action::Context context(st, wlm);
+
+    context.add("MNTH", 5);
+    BOOST_CHECK( !ast.eval(context));
+
+    context.add("MNTH", 6);
+    BOOST_CHECK( ast.eval(context) );
+}
+
 
 BOOST_AUTO_TEST_CASE(MANUAL1) {
     Action::AST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});

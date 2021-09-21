@@ -107,6 +107,15 @@ const std::unordered_map<std::string , int>& eclipseMonthIndices() {
     return month_indices;
 }
 
+int eclipseMonth(const std::string& name) {
+    auto iter = month_indices.find(name);
+    if (iter != month_indices.end())
+        return iter->second;
+
+    return std::stod(name);
+}
+
+
 const std::unordered_map<int, std::string>& eclipseMonthNames() {
     return month_names;
 }

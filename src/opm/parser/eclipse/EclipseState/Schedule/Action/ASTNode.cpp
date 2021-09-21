@@ -18,6 +18,7 @@
 */
 
 #include <fnmatch.h>
+#include <cmath>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
@@ -161,7 +162,26 @@ Action::Result ASTNode::eval(const Action::Context& context) const {
     }
 
     auto v1 = this->children[0].value(context);
-    auto v2 = this->children[1].value(context);
+    Action::Value v2;
+
+    /*
+      Special casing of MONTH comparisons where in addition symbolic month names
+      we can compare with numeric months, in the case of numeric months the
+      numerical value should be rounded before comparison - i.e.
+
+        MNTH = 4.3
+
+      Should evaluate to true for the month April.
+     */
+    if (this->children[0].func_type == FuncType::time_month) {
+        const auto& rhs = this->children[1];
+        if (rhs.type == TokenType::number) {
+            v2 = Action::Value(std::round(rhs.number));
+        } else
+            v2 = rhs.value(context);
+    } else
+        v2 = this->children[1].value(context);
+
     return v1.eval_cmp(this->type, v2);
 }
 

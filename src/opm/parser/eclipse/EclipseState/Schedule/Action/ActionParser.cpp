@@ -88,7 +88,7 @@ TokenType Parser::get_type(const std::string& arg) {
 FuncType Parser::get_func(const std::string& arg) {
 
     if (arg == "YEAR") return FuncType::time;
-    if (arg == "MNTH") return FuncType::time;
+    if (arg == "MNTH") return FuncType::time_month;
     if (arg == "DAY")  return FuncType::time;
 
     using Cat = SummaryConfigNode::Category;
