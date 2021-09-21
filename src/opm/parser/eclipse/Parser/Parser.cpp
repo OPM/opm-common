@@ -1184,7 +1184,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if (dataFileName[0] == '/')
             data_file = Opm::filesystem::canonical(dataFileName).string();
         else
-            data_file = Opm::filesystem::relative( Opm::filesystem::canonical(dataFileName) );
+            data_file = Opm::proximate( Opm::filesystem::canonical(dataFileName) );
 
         ParserState parserState( this->codeKeywords(), parseContext, errors, data_file, ignore_sections);
         parseState( parserState, *this );
