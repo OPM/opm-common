@@ -294,6 +294,11 @@ namespace Opm {
         return this->file_tree;
     }
 
+    DeckTree Deck::tree() const {
+        return this->file_tree;
+    }
+
+
 
     Deck::iterator Deck::begin() {
         return this->keywordList.begin();

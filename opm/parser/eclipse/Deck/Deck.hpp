@@ -155,6 +155,7 @@ namespace Opm {
             void setDataFile(const std::string& dataFile);
             std::string makeDeckPath(const std::string& path) const;
             DeckTree& tree();
+            DeckTree tree() const;
 
             std::size_t size() const;
             bool empty() const;
