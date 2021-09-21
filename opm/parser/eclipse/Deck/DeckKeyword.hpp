@@ -59,6 +59,8 @@ namespace Opm {
         const DeckRecord& getRecord(size_t index) const;
         DeckRecord& getRecord(size_t index);
         const DeckRecord& getDataRecord() const;
+        const DeckRecord& operator[](std::size_t index) const;
+        DeckRecord& operator[](std::size_t index);
         void setDataKeyword(bool isDataKeyword = true);
         void setDoubleRecordKeyword(bool isDoubleRecordKeyword = true);
         bool isDataKeyword() const;

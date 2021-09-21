@@ -69,6 +69,8 @@ namespace Opm {
             const DeckKeyword& getKeyword( const std::string& keyword, size_t index ) const;
             const DeckKeyword& getKeyword( const std::string& keyword ) const;
             const DeckKeyword& getKeyword( size_t index ) const;
+
+            const DeckKeyword& operator[](std::size_t index) const;
             DeckKeyword& getKeyword( size_t index );
             template< class Keyword >
             const DeckKeyword& getKeyword() const {
@@ -123,6 +125,7 @@ namespace Opm {
             using DeckView::size;
             using DeckView::begin;
             using DeckView::end;
+            using DeckView::operator[];
 
             using iterator = std::vector< DeckKeyword >::iterator;
 
@@ -151,6 +154,8 @@ namespace Opm {
             void setDataFile(const std::string& dataFile);
             std::string makeDeckPath(const std::string& path) const;
 
+            std::size_t size() const;
+            bool empty() const;
             iterator begin();
             iterator end();
             void write( DeckOutput& output ) const ;

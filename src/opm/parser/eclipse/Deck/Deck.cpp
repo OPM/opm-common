@@ -63,6 +63,11 @@ namespace Opm {
         return *( this->begin() + index );
     }
 
+    const DeckKeyword& DeckView::operator[](std::size_t index) const {
+        return this->getKeyword(index);
+    }
+
+
     size_t DeckView::count( const std::string& keyword ) const {
         if( !this->hasKeyword( keyword ) ) return 0;
 
@@ -328,5 +333,13 @@ namespace Opm {
         DeckOutput out( os, 10 );
         deck.write( out );
         return os;
+    }
+
+    std::size_t Deck::size() const {
+        return this->keywordList.size();
+    }
+
+    bool Deck::empty() const {
+        return this->keywordList.size() == 0;
     }
 }

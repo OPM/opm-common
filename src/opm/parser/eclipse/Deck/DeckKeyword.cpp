@@ -243,12 +243,20 @@ namespace Opm {
         return m_recordList.end();
     }
 
-    const DeckRecord& DeckKeyword::getRecord(size_t index) const {
+    const DeckRecord& DeckKeyword::operator[](std::size_t index) const {
         return this->m_recordList.at( index );
     }
 
-    DeckRecord& DeckKeyword::getRecord(size_t index) {
+    DeckRecord& DeckKeyword::operator[](std::size_t index) {
         return this->m_recordList.at( index );
+    }
+
+    const DeckRecord& DeckKeyword::getRecord(size_t index) const {
+        return this->operator[](index);
+    }
+
+    DeckRecord& DeckKeyword::getRecord(size_t index) {
+        return this->operator[](index);
     }
 
     const DeckRecord& DeckKeyword::getDataRecord() const {
@@ -306,7 +314,7 @@ namespace Opm {
             this->write_TITLE( output );
         else {
             bool split_line = this->isDataKeyword();
-            if (this->name() == "VFPPROD" || this->name() == "VFPINJ")
+            if (this->name() == "VFPPROD" || this->name() == "VFPINJ" || this->name() == "TSTEP")
                 split_line = true;
 
             output.start_keyword( this->name( ), split_line );
