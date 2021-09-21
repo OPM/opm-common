@@ -314,7 +314,7 @@ namespace Opm {
             this->write_TITLE( output );
         else {
             bool split_line = this->isDataKeyword();
-            if (this->name() == "VFPPROD" || this->name() == "VFPINJ")
+            if (this->name() == "VFPPROD" || this->name() == "VFPINJ" || this->name() == "TSTEP")
                 split_line = true;
 
             output.start_keyword( this->name( ), split_line );
