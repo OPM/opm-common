@@ -120,3 +120,15 @@ BOOST_AUTO_TEST_CASE(split) {
     BOOST_CHECK_EQUAL(split3[0], "lore");
     BOOST_CHECK_EQUAL(split3[1], "ipsu");
 }
+
+
+BOOST_AUTO_TEST_CASE(parse_double) {
+    auto d1 = try_parse_double("NOT_NUMERIC");
+    BOOST_CHECK( !d1.has_value() );
+
+    auto d2 = try_parse_double("1.25X");
+    BOOST_CHECK( !d2.has_value() );
+
+    auto d3 = try_parse_double("-1.5");
+    BOOST_CHECK_EQUAL( d3.value(), -1.50 );
+}
