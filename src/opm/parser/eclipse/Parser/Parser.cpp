@@ -1011,8 +1011,11 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
             const auto& includeFile = parserState.getIncludeFilePath( includeFileAsString );
 
-            if (includeFile.has_value())
+            if (includeFile.has_value()) {
+                auto& deck_tree = parserState.deck.tree();
+                deck_tree.add_include(filesystem::absolute(parserState.current_path()), includeFile.value() );
                 parserState.loadFile( includeFile.value() );
+            }
             continue;
         }
 

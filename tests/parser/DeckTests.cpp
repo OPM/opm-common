@@ -150,13 +150,6 @@ BOOST_AUTO_TEST_CASE(set_and_get_data_file) {
     BOOST_CHECK_EQUAL("", deck.getInputPath());
     BOOST_CHECK_EQUAL("some/path", deck.makeDeckPath("some/path"));
     BOOST_CHECK_EQUAL("/abs/path", deck.makeDeckPath("/abs/path"));
-
-    std::string file("/path/to/file.DATA");
-    deck.setDataFile( file );
-    BOOST_CHECK_EQUAL(file, deck.getDataFile());
-    BOOST_CHECK_EQUAL("/path/to", deck.getInputPath());
-    BOOST_CHECK_EQUAL("/path/to/some/path", deck.makeDeckPath("some/path"));
-    BOOST_CHECK_EQUAL("/abs/path", deck.makeDeckPath("/abs/path"));
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaultsString) {
@@ -689,37 +682,3 @@ BOOST_AUTO_TEST_CASE(STRING_TO_BOOL) {
 }
 
 
-BOOST_AUTO_TEST_CASE(DeckTreeTest2) {
-    DeckTree dt;
-    dt.includes("no_such_file", "target");
-
-    dt.add_root("root");
-    dt.add_include("root", "include1");
-    dt.add_include("include1", "include2");
-
-    BOOST_CHECK( dt.includes("root", "include1") );
-    BOOST_CHECK( dt.includes("include1", "include2") );
-
-    BOOST_CHECK_THROW( dt.add_root("New_root"), std::exception);
-}
-
-BOOST_AUTO_TEST_CASE(DeckTreeTest) {
-    DeckTree dt("root");
-
-    BOOST_CHECK_THROW( dt.includes("no_such_file", "inc_file"), std::exception );
-    BOOST_CHECK_THROW( dt.add_include("no_such_file", "target"), std::exception);
-
-    dt.add_include("root", "include1");
-    dt.add_include("include1", "include2");
-
-    BOOST_CHECK( dt.includes("root", "include1") );
-    BOOST_CHECK( dt.includes("include1", "include2") );
-
-    BOOST_CHECK( !dt.includes("root", "include2") );
-
-    BOOST_CHECK_EQUAL( dt.parent("include2"), "include1" );
-    BOOST_CHECK_EQUAL( dt.parent("include1"), "root" );
-
-
-    BOOST_CHECK_THROW( dt.add_root("New_root"), std::exception);
-}

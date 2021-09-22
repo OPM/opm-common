@@ -27,6 +27,7 @@
 #include <vector>
 #include <string>
 
+#include <opm/parser/eclipse/Deck/DeckTree.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -153,6 +154,8 @@ namespace Opm {
             std::string getDataFile() const;
             void setDataFile(const std::string& dataFile);
             std::string makeDeckPath(const std::string& path) const;
+            DeckTree& tree();
+            DeckTree tree() const;
 
             std::size_t size() const;
             bool empty() const;
@@ -183,6 +186,7 @@ namespace Opm {
 
             std::optional<std::string> m_dataFile;
             std::string input_path;
+            DeckTree file_tree;
             mutable std::size_t unit_system_access_count = 0;
     };
 }

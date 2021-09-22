@@ -23,10 +23,15 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <fstream>
+#include <iostream>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+
+#include "tests/WorkArea.cpp"
+namespace fs = Opm::filesystem;
 
 using namespace Opm;
 
@@ -258,12 +263,25 @@ GRIDFILE
     BOOST_CHECK( !ioConfig.getWriteEGRIDFile() );
 }
 
+void touch_file(const fs::path& file) {
+    if (!fs::exists(file)) {
+        if (file.has_parent_path()) {
+            const auto& parent_path = file.parent_path();
+            if (!fs::is_directory(parent_path))
+                fs::create_directories(parent_path);
+        }
+        std::ofstream os{file};
+    }
+}
+
 BOOST_AUTO_TEST_CASE(OutputPaths) {
+    WorkArea wa;
 
     IOConfig config1( "" );
     BOOST_CHECK_EQUAL("", config1.getBaseName() );
 
     Deck deck2;
+    touch_file("testString.DATA");
     deck2.setDataFile( "testString.DATA" );
     IOConfig config2( deck2 );
     std::string output_dir2 =  ".";
@@ -273,7 +291,8 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     namespace fs = Opm::filesystem;
 
     Deck deck3;
-    deck3.setDataFile( "/path/to/testString.DATA" );
+    touch_file("path/to/testString.DATA");
+    deck3.setDataFile( "path/to/testString.DATA" );
     IOConfig config3( deck3 );
     std::string output_dir3 =  "/path/to";
     config3.setOutputDir( output_dir3 );
