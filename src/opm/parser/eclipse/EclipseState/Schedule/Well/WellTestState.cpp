@@ -100,11 +100,11 @@ namespace Opm {
         return this->wells.size();
     }
 
-    std::vector<std::pair<std::string, WellTestConfig::Reason>>
+    std::vector<std::string>
     WellTestState::updateWells(const WellTestConfig& config,
                                const std::vector<Well>& wells_ecl,
                                double sim_time) {
-        std::vector<std::pair<std::string, WellTestConfig::Reason>> output;
+        std::vector<std::string> output;
 
         updateForNewWTEST(config);
 
@@ -130,7 +130,7 @@ namespace Opm {
                     if (well_config.num_test == 0 || (well.num_attempt < well_config.num_test)) {
                         well.last_test = sim_time;
                         well.num_attempt ++;
-                        output.emplace_back(std::make_pair(well.name, well.reason));
+                        output.emplace_back(well.name);
                         if ( (well_config.num_test != 0) && (well.num_attempt >= well_config.num_test) ) {
                             OpmLog::info(well.name + " will be tested for " + WellTestConfig::reasonToString(well.reason)
                                         + " reason for the last time! " );
@@ -138,6 +138,9 @@ namespace Opm {
                     }
             }
         }
+        std::sort(output.begin(), output.end());
+        auto last = std::unique(output.begin(), output.end());
+        output.erase(last, output.end());
         return output;
     }
 
