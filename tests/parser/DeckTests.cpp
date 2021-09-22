@@ -26,6 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Deck/DeckTree.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -685,4 +686,40 @@ BOOST_AUTO_TEST_CASE(STRING_TO_BOOL) {
     BOOST_CHECK_THROW(DeckItem::to_bool("NO - not valid"), std::invalid_argument);
     BOOST_CHECK_THROW(DeckItem::to_bool("YE"), std::invalid_argument);
     BOOST_CHECK_THROW(DeckItem::to_bool("YE"), std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(DeckTreeTest2) {
+    DeckTree dt;
+    dt.includes("no_such_file", "target");
+
+    dt.add_root("root");
+    dt.add_include("root", "include1");
+    dt.add_include("include1", "include2");
+
+    BOOST_CHECK( dt.includes("root", "include1") );
+    BOOST_CHECK( dt.includes("include1", "include2") );
+
+    BOOST_CHECK_THROW( dt.add_root("New_root"), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(DeckTreeTest) {
+    DeckTree dt("root");
+
+    BOOST_CHECK_THROW( dt.includes("no_such_file", "inc_file"), std::exception );
+    BOOST_CHECK_THROW( dt.add_include("no_such_file", "target"), std::exception);
+
+    dt.add_include("root", "include1");
+    dt.add_include("include1", "include2");
+
+    BOOST_CHECK( dt.includes("root", "include1") );
+    BOOST_CHECK( dt.includes("include1", "include2") );
+
+    BOOST_CHECK( !dt.includes("root", "include2") );
+
+    BOOST_CHECK_EQUAL( dt.parent("include2"), "include1" );
+    BOOST_CHECK_EQUAL( dt.parent("include1"), "root" );
+
+
+    BOOST_CHECK_THROW( dt.add_root("New_root"), std::exception);
 }

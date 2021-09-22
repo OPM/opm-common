@@ -1,6 +1,7 @@
 set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/parser/eclipse/Parser/createDefaultKeywordList.cpp
                   src/opm/parser/eclipse/Deck/UDAValue.cpp
+                  src/opm/parser/eclipse/Deck/DeckTree.cpp
                   src/opm/parser/eclipse/Deck/DeckValue.cpp
                   src/opm/parser/eclipse/Deck/Deck.cpp
                   src/opm/parser/eclipse/Deck/DeckItem.cpp
