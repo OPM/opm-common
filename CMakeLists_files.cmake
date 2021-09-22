@@ -565,6 +565,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
+    examples/rst_deck.cpp
     examples/wellgraph.cpp
     examples/make_ext_smry.cpp
   )
@@ -579,6 +580,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
+    examples/rst_deck.cpp
     examples/make_esmry.cpp
   )
 endif()
