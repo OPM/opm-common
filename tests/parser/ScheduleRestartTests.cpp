@@ -30,6 +30,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -95,10 +97,10 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
 }
 
 
-std::pair<Schedule, Schedule> load_schedule_pair(const std::string& base_deck,
-                                                 const std::string& rst_deck,
-                                                 const std::string& rst_fname,
-                                                 std::size_t restart_step) {
+std::tuple<Schedule, Schedule, RestartIO::RstState> load_schedule_pair(const std::string& base_deck,
+                                                                       const std::string& rst_deck,
+                                                                       const std::string& rst_fname,
+                                                                       std::size_t restart_step) {
     Parser parser;
     auto python = std::make_shared<Python>();
     auto deck = parser.parseFile(base_deck);
@@ -112,7 +114,7 @@ std::pair<Schedule, Schedule> load_schedule_pair(const std::string& base_deck,
     EclipseState ecl_state_restart(restart_deck);
     Schedule restart_sched(restart_deck, ecl_state_restart, python, {}, &rst_state);
 
-    return {sched, restart_sched};
+    return {sched, restart_sched, rst_state};
 }
 
 
@@ -121,8 +123,8 @@ void compare_sched(const std::string& base_deck,
                    const std::string& rst_fname,
                    std::size_t restart_step)
 {
-    const auto& [sched, restart_sched] = load_schedule_pair(base_deck, rst_deck, rst_fname, restart_step);
-
+    const auto& [sched, restart_sched, _] = load_schedule_pair(base_deck, rst_deck, rst_fname, restart_step);
+    (void) _;
     BOOST_CHECK_EQUAL(restart_sched.size(), sched.size());
     for (std::size_t report_step=restart_step; report_step < sched.size(); report_step++) {
         const auto& base = sched[report_step];
@@ -147,7 +149,7 @@ BOOST_AUTO_TEST_CASE(LoadRestartSim) {
 
 
 BOOST_AUTO_TEST_CASE(LoadUDQRestartSim) {
-    const auto& [sched, restart_sched] = load_schedule_pair("UDQ_WCONPROD.DATA", "UDQ_WCONPROD_RESTART.DATA", "UDQ_WCONPROD.X0006", 6);
+    const auto& [sched, restart_sched, rst_state] = load_schedule_pair("UDQ_WCONPROD.DATA", "UDQ_WCONPROD_RESTART.DATA", "UDQ_WCONPROD.X0006", 6);
     std::size_t report_step = 10;
     SummaryState st(TimeService::now());
     st.update_well_var("OPL02", "WUOPRL", 1);
@@ -171,10 +173,13 @@ BOOST_AUTO_TEST_CASE(LoadUDQRestartSim) {
             BOOST_CHECK( controls == rst_controls );
         }
     }
+
+    UDQState udq_state(0);
+    udq_state.load_rst(rst_state);
 }
 
 BOOST_AUTO_TEST_CASE(LoadActionRestartSim) {
-    const auto& [sched, restart_sched] = load_schedule_pair("UDQ_ACTIONX.DATA", "UDQ_ACTIONX_RESTART.DATA", "UDQ_ACTIONX.X0007", 7);
+    const auto& [sched, restart_sched, rst_state] = load_schedule_pair("UDQ_ACTIONX.DATA", "UDQ_ACTIONX_RESTART.DATA", "UDQ_ACTIONX.X0007", 7);
     const auto& input_actions = sched[7].actions();
     const auto& rst_actions = restart_sched[7].actions();
 
@@ -195,4 +200,7 @@ BOOST_AUTO_TEST_CASE(LoadActionRestartSim) {
             rst_iter++;
         }
     }
+
+    Action::State action_state;
+    action_state.load_rst(rst_actions, rst_state);
 }

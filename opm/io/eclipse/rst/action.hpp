@@ -58,12 +58,14 @@ struct RstAction {
     };
 
 
-    RstAction(const std::string& name_arg, int max_run_arg, double min_wait_arg, std::time_t start_time, std::vector<Condition> conditions_arg);
+    RstAction(const std::string& name_arg, int max_run_arg, int run_count_arg, double min_wait_arg, std::time_t start_time, std::time_t last_run, std::vector<Condition> conditions_arg);
 
     std::string name;
     int max_run;
+    int run_count;
     double min_wait;
     std::time_t start_time;
+    std::optional<std::time_t> last_run;
     std::vector<Condition> conditions;
     std::vector<DeckKeyword> keywords;
 };

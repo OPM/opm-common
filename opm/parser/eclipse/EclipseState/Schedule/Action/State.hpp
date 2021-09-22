@@ -26,9 +26,15 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
 namespace Opm {
+
+namespace RestartIO {
+struct RstState;
+}
+
 namespace Action {
 
 class ActionX;
+class Actions;
 class State {
 
 struct RunState {
@@ -51,6 +57,7 @@ public:
     std::size_t run_count(const ActionX& action) const;
     std::time_t run_time(const ActionX& action) const;
     std::optional<Result> result(const std::string& action) const;
+    void load_rst(const Actions& action_config, const RestartIO::RstState& rst_state);
 private:
     using action_id = std::pair<std::string, std::size_t>;
     static action_id make_id(const ActionX& action);
