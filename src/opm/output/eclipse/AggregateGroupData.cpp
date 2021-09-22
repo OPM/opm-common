@@ -16,6 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fmt/format.h>
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -60,6 +61,38 @@ std::size_t ngmaxz(const std::vector<int>& inteHead)
 int nwgmax(const std::vector<int>& inteHead)
 {
     return inteHead[Opm::RestartIO::Helpers::VectorItems::NWGMAX];
+}
+ namespace value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+ value::GuideRateMode GuideRateModeFromGuideRateProdTarget(Opm::Group::GuideRateProdTarget grpt) {
+    switch (grpt) {
+        case Opm::Group::GuideRateProdTarget::OIL:
+            return value::GuideRateMode::Oil;
+        case Opm::Group::GuideRateProdTarget::WAT:
+            return value::GuideRateMode::Water;
+        case Opm::Group::GuideRateProdTarget::GAS:
+            return value::GuideRateMode::Gas;
+        case Opm::Group::GuideRateProdTarget::LIQ:
+            return value::GuideRateMode::Liquid;
+        case Opm::Group::GuideRateProdTarget::RES:
+            return value::GuideRateMode::Resv;
+        case Opm::Group::GuideRateProdTarget::COMB:
+            return value::GuideRateMode::Comb;
+        case Opm::Group::GuideRateProdTarget::WGA:
+            return value::GuideRateMode::None;
+        case Opm::Group::GuideRateProdTarget::CVAL:
+            return value::GuideRateMode::None;
+        case Opm::Group::GuideRateProdTarget::INJV:
+            return value::GuideRateMode::None;
+        case Opm::Group::GuideRateProdTarget::POTN:
+            return value::GuideRateMode::Potn;
+        case Opm::Group::GuideRateProdTarget::FORM:
+            return value::GuideRateMode::Form;
+        case Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE:
+            return value::GuideRateMode::None;
+
+        default:
+            throw std::logic_error(fmt::format("Not recognized value: {} for GuideRateProdTarget", grpt));
+    }
 }
 
 
@@ -211,9 +244,14 @@ std::optional<Opm::Group> controlGroup(const Opm::Schedule& sched,
                                        const Opm::Group& group,
                                        const std::size_t simStep) {
     auto current = group;
+    double cur_prod_ctrl = 0.;
     while (current.name() != "FIELD") {
         current = sched.getGroup(current.parent(), simStep);
-        auto cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP", 0);
+        if (current.name() != "FIELD") {
+            cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP", 0);
+        } else {
+            cur_prod_ctrl = sumState.get("FMCTP", 0);
+        }
         if (cur_prod_ctrl > 0)
             return current;
     }
@@ -224,24 +262,31 @@ std::optional<Opm::Group> controlGroup(const Opm::Schedule& sched,
 std::optional<Opm::Group>  injectionControlGroup(const Opm::Schedule& sched,
         const Opm::SummaryState& sumState,
         const Opm::Group& group,
-        const std::string curInjCtrlKey,
+        const std::string curGroupInjCtrlKey,
+        const std::string curFieldInjCtrlKey,
         const size_t simStep)
 //
 // returns group of higher (highest) level group with active control different from (NONE or FLD)
 //
 {
     auto current = group;
+    double cur_inj_ctrl = 0.;
     while (current.name() != "FIELD" ) {
         current = sched.getGroup(current.parent(), simStep);
-        if (sumState.has_group_var(current.name(), curInjCtrlKey)) {
-            auto cur_inj_ctrl = sumState.get_group_var(current.name(), curInjCtrlKey);
-            if (cur_inj_ctrl > 0) return current;
+        if (current.name() != "FIELD" ) {
+                cur_inj_ctrl = sumState.get_group_var(current.name(), curGroupInjCtrlKey, 0.);
         } else {
+            cur_inj_ctrl = sumState.get(curFieldInjCtrlKey, 0);
+        }
+        if (cur_inj_ctrl > 0) {
+            return current;
+        }
 #if ENABLE_GCNTL_DEBUG_OUTPUT
+        else {
             std::cout << "Current injection group control: " << curInjCtrlKey
                       << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
         }
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
     }
     return {};
 } // namespace
@@ -341,7 +386,7 @@ void productionGroup(const Opm::Schedule&     sched,
     }
     iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdActiveCMode];
 
-    iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
+    iGrp[nwgmax + IGroup::GuideRateDef] = GuideRateModeFromGuideRateProdTarget(prod_guide_rate_def);
 
     // Set iGrp for [nwgmax + IGroup::ExceedAction]
     /*
@@ -465,7 +510,7 @@ std::tuple<int, int, int> injectionGroup(const Opm::Schedule&     sched,
             Opm::Group::InjectionCMode active_cmode = Opm::Group::InjectionCModeFromInt(cur_inj_ctrl);
             const auto& deck_cmode = (group.hasInjectionControl(phase))
                                      ? injection_controls.cmode : Opm::Group::InjectionCMode::NONE;
-            const auto& cgroup = injectionControlGroup(sched, sumState, group, group_key, simStep);
+            const auto& cgroup = injectionControlGroup(sched, sumState, group, group_key, field_key, simStep);
             const auto& group_control_available = group.injectionGroupControlAvailable(phase);
 
             // group is available for higher level control, but is currently constrained by own limits
