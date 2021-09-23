@@ -135,12 +135,11 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
 namespace {
 std::string next_token(const std::string& item, std::size_t& offset, const std::vector<std::string>& splitters) {
     if (std::isdigit(item[offset])) {
-        std::size_t token_size = 0;
-        try {
-            auto substring = item.substr(offset);
-            std::ignore = std::stod(substring, &token_size);
-        } catch (const std::invalid_argument &) {}
+        auto substring = item.substr(offset);
+        char * end_ptr;
+        std::ignore = std::strtod(substring.c_str(), &end_ptr);
 
+        std::size_t token_size = end_ptr - substring.c_str();
         if (token_size > 0) {
             auto token = item.substr(offset, token_size);
             offset += token.size();

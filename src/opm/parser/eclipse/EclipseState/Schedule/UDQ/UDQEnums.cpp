@@ -18,6 +18,7 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <map>
 #include <set>
@@ -151,12 +152,11 @@ UDQVarType targetType(const std::string& keyword) {
     case 'G':
         return UDQVarType::GROUP_VAR;
     default:
-        try {
-            std::stod(keyword);
+        const auto& double_value = try_parse_double(keyword);
+        if (double_value.has_value())
             return UDQVarType::SCALAR;
-        } catch(const std::invalid_argument& exc) {
-            return UDQVarType::NONE;
-        }
+
+        return UDQVarType::NONE;
     }
 
 }
@@ -289,12 +289,11 @@ UDQTokenType tokenType(const std::string& token) {
         else if (token == ")")
             token_type = UDQTokenType::close_paren;
         else {
-            try {
-                std::stod(token);
+            auto value = try_parse_double(token);
+            if (value.has_value())
                 token_type = UDQTokenType::number;
-            } catch(const std::invalid_argument& exc) {
+            else
                 token_type = UDQTokenType::ecl_expr;
-            }
         }
     }
     return token_type;
