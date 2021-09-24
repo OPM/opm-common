@@ -42,11 +42,13 @@ set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-pre
 if(ENABLE_ECL_OUTPUT)
   set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                         set(COMPARE_ECL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareECL)
-                                        set(OPM_PACK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/opmpack)")
+                                        set(OPM_PACK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/opmpack)
+                                        set(RST_DECK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/rst_deck)")
 
   set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
                                      set(COMPARE_ECL_COMMAND ${PROJECT_BINARY_DIR}/bin/compareECL)
-                                     set(OPM_PACK_COMMAND ${PROJECT_BINARY_DIR}/bin/opmpack)")
+                                     set(OPM_PACK_COMMAND ${PROJECT_BINARY_DIR}/bin/opmpack)
+                                     set(RST_DECK_COMMAND ${PROJECT_BINARY_DIR}/bin/rst_deck)")
 endif()
 
 # project information is in dune.module. Read this file and set variables.

@@ -26,6 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Deck/DeckTree.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -148,13 +149,6 @@ BOOST_AUTO_TEST_CASE(set_and_get_data_file) {
     Deck deck;
     BOOST_CHECK_EQUAL("", deck.getInputPath());
     BOOST_CHECK_EQUAL("some/path", deck.makeDeckPath("some/path"));
-    BOOST_CHECK_EQUAL("/abs/path", deck.makeDeckPath("/abs/path"));
-
-    std::string file("/path/to/file.DATA");
-    deck.setDataFile( file );
-    BOOST_CHECK_EQUAL(file, deck.getDataFile());
-    BOOST_CHECK_EQUAL("/path/to", deck.getInputPath());
-    BOOST_CHECK_EQUAL("/path/to/some/path", deck.makeDeckPath("some/path"));
     BOOST_CHECK_EQUAL("/abs/path", deck.makeDeckPath("/abs/path"));
 }
 
@@ -686,3 +680,5 @@ BOOST_AUTO_TEST_CASE(STRING_TO_BOOL) {
     BOOST_CHECK_THROW(DeckItem::to_bool("YE"), std::invalid_argument);
     BOOST_CHECK_THROW(DeckItem::to_bool("YE"), std::invalid_argument);
 }
+
+

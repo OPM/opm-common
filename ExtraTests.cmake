@@ -69,6 +69,11 @@ opm_add_test( rst_msw
               LIBRARIES ${TEST_LIBS}
               TEST_ARGS tests/MSW.DATA tests/MSW_RESTART.DATA )
 
+add_test( NAME rst_deck_test
+          COMMAND ${PROJECT_SOURCE_DIR}/tests/rst_test_driver.sh ${PROJECT_BINARY_DIR}/bin/rst_deck ${PROJECT_BINARY_DIR}/bin/opmhash
+          ${PROJECT_SOURCE_DIR}/tests/SPE1CASE2_INCLUDE.DATA)
+
+
 # opm-tests dependent tests
 if(HAVE_OPM_TESTS)
   opm_add_test(parse_write ONLY_COMPILE
@@ -113,7 +118,16 @@ if(HAVE_OPM_TESTS)
   opm_add_test("SPE9_CP_GROUP2" NO_COMPILE EXE_NAME parse_write TEST_ARGS "${OPM_TESTS_ROOT}/spe9group/SPE9_CP_GROUP.DATA")
   set_property(TEST NORNE_ATW2013
                PROPERTY ENVIRONMENT "OPM_ERRORS_IGNORE=PARSE_RANDOM_SLASH")
+
+  add_test( NAME rst_deck_test_norne
+             COMMAND ${PROJECT_SOURCE_DIR}/tests/rst_test_driver.sh ${CMAKE_BINARY_DIR}/bin/rst_deck ${CMAKE_BINARY_DIR}/bin/opmhash
+             ${OPM_TESTS_ROOT}/norne/NORNE_ATW2013.DATA)
+
+  set_property(TEST rst_deck_test_norne
+               PROPERTY ENVIRONMENT "OPM_ERRORS_IGNORE=PARSE_RANDOM_SLASH")
+
 endif()
+
 
 # JSON tests
 opm_add_test(jsonTests

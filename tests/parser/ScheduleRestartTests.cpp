@@ -21,6 +21,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -33,7 +36,9 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
+#include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/FileDeck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
@@ -44,6 +49,9 @@
 #include <iterator>
 #include <memory>
 #include <utility>
+#include <vector>
+
+namespace fs = Opm::filesystem;
 
 using namespace Opm;
 
@@ -203,4 +211,112 @@ BOOST_AUTO_TEST_CASE(LoadActionRestartSim) {
 
     Action::State action_state;
     action_state.load_rst(rst_actions, rst_state);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestFileDeck)
+{
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("UDQ_WCONPROD.DATA");
+    FileDeck fd(deck);
+
+    {
+        auto index = fd.start();
+        for (const auto& kw : deck) {
+            BOOST_CHECK(kw == fd[index]);
+            index++;
+        }
+    }
+
+    {
+        auto index = fd.stop();
+        for (std::size_t deck_index = deck.size(); deck_index > 0; deck_index--)
+            BOOST_CHECK(deck[deck_index - 1] == fd[--index]);
+    }
+
+
+    const auto& index1 = fd.find("RADIAL");
+    BOOST_CHECK( !index1.has_value() );
+
+
+    const auto& index2 = fd.find("DIMENS");
+    BOOST_CHECK( index2.has_value());
+
+    BOOST_CHECK_EQUAL( index2.value().file_index , 0);
+    BOOST_CHECK_EQUAL( index2.value().keyword_index, 3);
+
+    const auto& index3 = fd.find("COORD");
+    BOOST_CHECK_EQUAL( index3.value().file_index , 1);
+    BOOST_CHECK_EQUAL( index3.value().keyword_index, 3);
+
+    const auto& index4 = fd.find("SGOF");
+    BOOST_CHECK_EQUAL( index4.value().file_index , 2);
+    BOOST_CHECK_EQUAL( index4.value().keyword_index, 2);
+
+    fd.erase(index4.value());
+    const auto& index5 = fd.find("SGOF");
+    BOOST_CHECK( !index5.has_value() );
+
+
+    const auto& index6 = fd.find("SWOF");
+    const auto& index7 = fd.find("SOLUTION");
+
+    fd.erase(index6.value(), index7.value());
+}
+
+
+BOOST_AUTO_TEST_CASE(RestartTest)
+{
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("UDQ_WCONPROD.DATA");
+    FileDeck fd(deck);
+
+    const auto solution = fd.find("SOLUTION");
+    const auto schedule = fd.find("SCHEDULE");
+
+    auto index = solution.value();
+    while (true) {
+        const auto& keyword = fd[++index];
+        if (keyword.name() == "EQUIL")
+            fd.erase(index);
+
+        if (index == schedule)
+            break;
+    }
+
+    UnitSystem units;
+    std::vector<DeckValue> values{ DeckValue{"RESTART_BASE"}, DeckValue{100} };
+    DeckKeyword restart(parser.getKeyword("RESTART"), std::vector<std::vector<DeckValue>>{ values }, units, units);
+
+    index = solution.value();
+    fd.insert(++index, restart);
+
+    BOOST_CHECK( fd[index] == restart );
+
+
+    // time_point tp = asTimePoint( TimeStampUTC(2018, 1, 11) );
+
+    // auto find_date = [tp](const DeckKeyword& keyword)
+    // {
+    //     if (keyword.name() == "DATES") {
+    //         const auto& record = keyword[0];
+
+
+    //         const auto &dayItem = record.getItem(0);
+    //         const auto &monthItem = record.getItem(1);
+    //         const auto &yearItem = record.getItem(2);
+
+    //         // Accept lower- and mixed-case month names.
+    //         std::string monthname = uppercase(monthItem.get<std::string>(0));
+    //         auto date = asTimePoint( TimeStampUTC( yearItem.get<int>(0), TimeService::eclipseMonthIndices().at(monthname), dayItem.get<int>(0)));
+
+    //         return date == tp;
+    //     }
+    // };
+
+
+
 }

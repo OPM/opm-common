@@ -19,11 +19,14 @@
 #include <algorithm>
 #include <vector>
 
+#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+namespace fs = Opm::filesystem;
 
 namespace Opm {
 
@@ -156,7 +159,8 @@ namespace Opm {
         keywordList( d.keywordList ),
         defaultUnits( d.defaultUnits ),
         m_dataFile( d.m_dataFile ),
-        input_path( d.input_path )
+        input_path( d.input_path ),
+        file_tree( d.file_tree )
     {
         this->init(this->keywordList.begin(), this->keywordList.end());
         if (d.activeUnits)
@@ -169,7 +173,8 @@ namespace Opm {
         keywordList( std::move(d.keywordList) ),
         defaultUnits( d.defaultUnits ),
         m_dataFile( d.m_dataFile ),
-        input_path( d.input_path )
+        input_path( d.input_path ),
+        file_tree( std::move(d.file_tree) )
     {
         this->init(this->keywordList.begin(), this->keywordList.end());
         if (d.activeUnits)
@@ -280,7 +285,19 @@ namespace Opm {
             this->input_path = "";
         else
             this->input_path = dataFile.substr(0, slash_pos);
+
+        this->file_tree.add_root(dataFile);
     }
+
+    DeckTree& Deck::tree() {
+        return this->file_tree;
+    }
+
+    DeckTree Deck::tree() const {
+        return this->file_tree;
+    }
+
+
 
     Deck::iterator Deck::begin() {
         return this->keywordList.begin();
