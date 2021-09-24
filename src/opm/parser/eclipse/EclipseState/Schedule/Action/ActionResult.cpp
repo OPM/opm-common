@@ -155,5 +155,19 @@ bool WellSet::operator==(const WellSet& other) const {
     return this->well_set == other.well_set;
 }
 
+WellSet WellSet::serializeObject() {
+    WellSet ws;
+    ws.well_set = {"W1", "W2", "W3"};
+    return ws;
+}
+
+
+Result Result::serializeObject() {
+    Result rs;
+    rs.result = false;
+    rs.matching_wells = WellSet::serializeObject();
+    return rs;
+}
+
 }
 }

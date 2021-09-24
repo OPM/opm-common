@@ -81,6 +81,15 @@ public:
     WellSet& intersect(const WellSet& other);
     WellSet& add(const WellSet& other);
     bool operator==(const WellSet& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.template set<std::unordered_set<std::string>, false>(this->well_set);
+    }
+
+    static WellSet serializeObject();
+
 private:
     std::unordered_set<std::string> well_set;
 };
@@ -89,6 +98,7 @@ private:
 
 class Result {
 public:
+    Result() = default;
     explicit Result(bool result_arg);
     Result(bool result_arg, const std::vector<std::string>& wells);
     Result(bool result_arg, const WellSet& wells);
@@ -103,6 +113,15 @@ public:
     Result& operator|=(const Result& other);
     Result& operator&=(const Result& other);
     bool operator==(const Result& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->result);
+        serializer(this->matching_wells);
+    }
+
+    static Result serializeObject();
 
 private:
     void assign(bool value);

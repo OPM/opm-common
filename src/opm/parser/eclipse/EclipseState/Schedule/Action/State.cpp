@@ -83,5 +83,19 @@ void State::load_rst(const Actions& action_config, const RestartIO::RstState& rs
     }
 }
 
+
+bool State::operator==(const State& other) const {
+    return this->run_state == other.run_state &&
+           this->last_result == other.last_result;
+}
+
+
+State State::serializeObject() {
+    State st;
+    st.run_state.insert(std::make_pair( std::make_pair("ACTION", 100), RunState::serializeObject()));
+    st.last_result.insert( std::make_pair("ACTION", Result::serializeObject()));
+    return st;
+}
+
 }
 }

@@ -38,6 +38,8 @@ class Actions;
 class State {
 
 struct RunState {
+    RunState() = default;
+
     RunState(std::time_t sim_time)
         : run_count(1)
         , last_run(sim_time)
@@ -48,9 +50,32 @@ struct RunState {
         this->run_count += 1;
     }
 
+    static RunState serializeObject()
+    {
+        RunState rs;
+        rs.run_count = 100;
+        rs.last_run = 123456;
+        return rs;
+    }
+
+
+    bool operator==(const RunState& other) const {
+        return this->run_count == other.run_count &&
+               this->last_run == other.last_run;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->run_count);
+        serializer(this->last_run);
+    }
+
     std::size_t run_count;
     std::time_t last_run;
 };
+
+
 
 public:
     void add_run(const ActionX& action, std::time_t sim_time, Result result);
@@ -58,6 +83,18 @@ public:
     std::time_t run_time(const ActionX& action) const;
     std::optional<Result> result(const std::string& action) const;
     void load_rst(const Actions& action_config, const RestartIO::RstState& rst_state);
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.map(this->run_state);
+        serializer.map(this->last_result);
+    }
+
+
+    static State serializeObject();
+    bool operator==(const State& other) const;
+
 private:
     using action_id = std::pair<std::string, std::size_t>;
     static action_id make_id(const ActionX& action);
