@@ -1399,8 +1399,7 @@ namespace {
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
         }
-        this->snapshots[report_step + 1].update_tuning(rst_state.tuning);
-        // Originally at report_step + 1
+        this->snapshots.back().update_tuning(rst_state.tuning);
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
 
