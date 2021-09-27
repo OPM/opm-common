@@ -147,6 +147,7 @@ rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/opmpack.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/summary.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/compareECL.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/convertECL.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/man/man1/rst_deck.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/openmpi/share/doc/opm-common/*
 cd ..
 
@@ -159,6 +160,7 @@ rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/opmpack.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/summary.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/compareECL.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/convertECL.1
+rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/man/man1/rst_deck.1
 rm -f ${RPM_BUILD_ROOT}/usr/lib64/mpich/share/doc/opm-common/*
 
 %clean
