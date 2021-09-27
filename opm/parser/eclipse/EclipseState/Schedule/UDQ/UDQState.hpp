@@ -35,6 +35,7 @@ namespace RestartIO {
 
 class UDQState {
 public:
+    UDQState() = default;
     UDQState(double undefined);
 
     bool has(const std::string& key) const;
@@ -55,6 +56,57 @@ public:
     std::vector<char> serialize() const;
     void deserialize(const std::vector<char>& buffer);
     bool operator==(const UDQState& other) const;
+
+    static UDQState serializeObject() {
+        UDQState st;
+        st.undef_value = 78;
+        st.scalar_values = {{"FU1", 100}, {"FU2", 200}};
+        st.assignments = {{"GU1", 99}, {"GU2", 199}};
+        st.assignments = {{"DU1", 299}, {"DU2", 399}};
+
+        st.well_values.emplace("W1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
+        st.well_values.emplace("W2", std::unordered_map<std::string, double>{{"U1", 700}, {"32", 600}});
+
+        st.group_values.emplace("G1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
+        st.group_values.emplace("G2", std::unordered_map<std::string, double>{{"U1", 700}, {"32", 600}});
+        return st;
+    }
+
+
+    template<class Serializer>
+    void pack_unpack_wgmap(Serializer& serializer, std::unordered_map<std::string, std::unordered_map<std::string, double>>& wgmap) {
+        std::size_t map_size = wgmap.size();
+        serializer(map_size);
+        if (serializer.isSerializing()) {
+            for (auto& [udq_key, values] : wgmap) {
+                serializer(udq_key);
+                serializer.template map<std::unordered_map<std::string, double>, false>(values);
+            }
+        } else {
+            for (std::size_t index=0; index < map_size; index++) {
+                std::string udq_key;
+                std::unordered_map<std::string, double> inner_map;
+                serializer(udq_key);
+                serializer.template map<std::unordered_map<std::string, double>, false>(inner_map);
+
+                wgmap.emplace(udq_key, inner_map);
+            }
+        }
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->undef_value);
+        serializer.template map<std::unordered_map<std::string, double>, false>(this->scalar_values);
+        serializer.template map<std::unordered_map<std::string, std::size_t>, false>(this->assignments);
+        serializer.template map<std::unordered_map<std::string, std::size_t>, false>(this->defines);
+
+        pack_unpack_wgmap(serializer, this->well_values);
+        pack_unpack_wgmap(serializer, this->group_values);
+    }
+
+
 private:
     void add(const std::string& udq_key, const UDQSet& result);
     double get_wg_var(const std::string& well, const std::string& key, UDQVarType var_type) const;
