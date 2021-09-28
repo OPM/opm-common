@@ -82,9 +82,9 @@ public:
       update method will update the internal state of the object by counting up
       the openiing attempts, and also set the time for the last attempt to open.
     */
-    std::vector<std::pair<std::string, WellTestConfig::Reason>> updateWells(const WellTestConfig& config,
-                                                                            const std::vector<Well>& wells_ecl,
-                                                                            double sim_time);
+    std::vector<std::string> updateWells(const WellTestConfig& config,
+                                         const std::vector<Well>& wells_ecl,
+                                         double sim_time);
 
     /*
       The update will consult the WellTestConfig object and return a list of
