@@ -112,7 +112,7 @@ namespace Opm {
     void Well::WellProductionProperties::init_history(const DeckRecord& record)
     {
         this->predictionMode = false;
-        // update LiquidRate. The funnny constrction with explicitly making a new
+        // update LiquidRate. The funny construction with explicitly making a new
         // UDAValue is to ensure that the UDAValue has the correct dimension.
         this->LiquidRate = UDAValue(this->WaterRate.get<double>() + this->OilRate.get<double>(), this->OilRate.get_dim());
 

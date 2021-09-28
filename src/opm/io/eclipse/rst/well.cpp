@@ -71,7 +71,7 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     completion_ordering(                                             iwel[VI::IWell::CompOrd]),
     pvt_table(                                                       def_pvt_table),
     msw_pressure_drop_model(                                         iwel[VI::IWell::MSW_PlossMod]),
-    // The values orat_target -> bhp_target_flow will be used in UDA values. The
+    // The values orat_target -> bhp_target_float will be used in UDA values. The
     // UDA values are responsible for unit conversion and raw values are
     // internalized here.
     orat_target(                                                     swel_value(swel[VI::SWell::OilRateTarget])),

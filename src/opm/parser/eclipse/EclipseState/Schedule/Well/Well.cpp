@@ -230,6 +230,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
         }
 
         p->addProductionControl(Well::ProducerCMode::BHP);
+        if (! p->predictionMode) {
+            p->BHPTarget.update(0.0);
+            p->setBHPLimit(rst_well.bhp_target_double);
+        }
+
         if (this->isAvailableForGroupControl())
             p->addProductionControl(Well::ProducerCMode::GRUP);
         this->updateProduction(std::move(p));
@@ -290,6 +295,13 @@ Well::Well(const RestartIO::RstWell& rst_well,
 
         i->addInjectionControl(Well::InjectorCMode::BHP);
         i->BHPTarget.update(rst_well.bhp_target_float);
+        if (! i->predictionMode) {
+            if (i->controlMode == Well::InjectorCMode::BHP)
+                i->bhp_hist_limit = rst_well.hist_bhp_target;
+            else
+                i->resetDefaultHistoricalBHPLimit();
+        }
+
         if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
 
