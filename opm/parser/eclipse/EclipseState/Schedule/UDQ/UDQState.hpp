@@ -62,7 +62,7 @@ public:
         st.undef_value = 78;
         st.scalar_values = {{"FU1", 100}, {"FU2", 200}};
         st.assignments = {{"GU1", 99}, {"GU2", 199}};
-        st.assignments = {{"DU1", 299}, {"DU2", 399}};
+        st.defines = {{"DU1", 299}, {"DU2", 399}};
 
         st.well_values.emplace("W1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
         st.well_values.emplace("W2", std::unordered_map<std::string, double>{{"U1", 700}, {"32", 600}});
