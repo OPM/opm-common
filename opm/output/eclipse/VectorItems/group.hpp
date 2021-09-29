@@ -81,6 +81,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         Water = 2,
         Gas = 3,
         Liquid = 4,
+        Resv = 6,  // need to be verified!!!
         Potn = 7,
         Form = 8,
         Comb = 9,
