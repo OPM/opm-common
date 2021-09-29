@@ -258,7 +258,7 @@ std::string FileDeck::dump_block(const FileDeck::Block& block, const std::string
         output_file = fs::path(output_dir) / data_file.value();
     else {
         // Should ideally use fs::relative()
-        auto rel_path = fs::proximate(block.fname, this->input_directory);
+        auto rel_path = proximate(block.fname, this->input_directory);
         output_file = output_dir / rel_path;
     }
 
@@ -279,7 +279,7 @@ void FileDeck::include_block(const std::string& input_file, const std::string& o
         auto stream = context.get_stream(parent);
         if (stream.has_value()) {
             // Should ideally use fs::relative()
-            std::string include_file = fs::proximate(output_file, output_dir);
+            std::string include_file = proximate(output_file, output_dir);
             INCLUDE(*stream.value(), include_file);
             break;
         }
@@ -328,7 +328,7 @@ void FileDeck::dump_shared(std::ostream& stream, const std::string& output_dir) 
             block.dump( out );
         } else {
             // Should ideally use fs::relative()
-            std::string include_file = fs::proximate(block.fname, output_dir);
+            std::string include_file = proximate(block.fname, output_dir);
             if (include_file.find(block.fname) == std::string::npos)
                 INCLUDE(stream, include_file);
             else
