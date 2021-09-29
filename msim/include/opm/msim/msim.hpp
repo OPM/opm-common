@@ -27,6 +27,7 @@ class Parser;
 class Python;
 class SummaryState;
 class UDQState;
+class WellTestState;
 
 namespace Action {
 class State;
@@ -48,10 +49,10 @@ public:
     void post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, const time_point& sim_time);
 private:
 
-    void run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, EclipseIO& io) const;
-    void run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, double dt, EclipseIO& io) const;
-    void output(Action::State& action_state, SummaryState& st, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupAndNetworkValues& group_data, EclipseIO& io) const;
-    void simulate(const Schedule& schedule, const SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, double seconds_elapsed, double time_step) const;
+    void run_step(const Schedule& schedule, Action::State& action_state, WellTestState& wtest_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, EclipseIO& io) const;
+    void run_step(const Schedule& schedule, Action::State& action_state, WellTestState& wtest_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, double dt, EclipseIO& io) const;
+    void output(Action::State& action_state, WellTestState& wtest_state, SummaryState& st, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupAndNetworkValues& group_data, EclipseIO& io) const;
+    void simulate(const Schedule& schedule, WellTestState& wtest_state, const SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, double seconds_elapsed, double time_step) const;
 
     EclipseState state;
     std::map<std::string, std::map<data::Rates::opt, std::function<well_rate_function>>> well_rates;

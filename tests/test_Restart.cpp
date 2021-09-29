@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -390,6 +391,7 @@ struct Setup {
 
 
 RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, UDQState& udq_state, bool write_double) {
+    WellTestState wtest_state;
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     auto num_cells = setup.grid.getNumActive( );
     int report_step = 1;
@@ -404,6 +406,7 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
 
     udq.eval(report_step, setup.schedule.wellMatcher(report_step), st, udq_state);
     eclWriter.writeTimeStep( action_state,
+                             wtest_state,
                              st,
                              udq_state,
                              report_step,
@@ -485,6 +488,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto udqState = UDQState{1};
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         Action::State action_state;
+        WellTestState wtest_state;
         {
             RestartValue restart_value(cells, wells, groups, {});
 
@@ -507,6 +511,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                                 base_setup.grid,
                                 base_setup.schedule,
                                 action_state,
+                                wtest_state,
                                 sumState,
                                 udqState,
                                 aquiferData,
@@ -538,6 +543,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                                 base_setup.grid,
                                 base_setup.schedule,
                                 action_state,
+                                wtest_state,
                                 sumState,
                                 udqState,
                                 aquiferData,
@@ -623,6 +629,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         Opm::SummaryState sumState(TimeService::now());
         Opm::Action::State action_state;
         Opm::UDQState udq_state(19);
+        Opm::WellTestState wtest_state;
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
 
         const auto seqnum = 1;
@@ -638,6 +645,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            setup.grid ,
                                            setup.schedule,
                                            action_state,
+                                           wtest_state,
                                            sumState,
                                            udq_state,
                                            aquiferData),
@@ -676,6 +684,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
     Setup setup("BASE_SIM.DATA");
     {
         Action::State action_state;
+        WellTestState wtest_state;
         UDQState udq_state(10);
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
@@ -706,6 +715,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                                 setup.grid,
                                 setup.schedule,
                                 action_state,
+                                wtest_state,
                                 sumState,
                                 udq_state,
                                 aquiferData);
@@ -786,6 +796,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
             const auto sumState = sim_state(base_setup.schedule);
             Action::State action_state;
             UDQState udq_state(99);
+            WellTestState wtest_state;
 
             /* THPRES data has wrong size in extra container. */
             {
@@ -802,6 +813,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                    base_setup.grid,
                                                    base_setup.schedule,
                                                    action_state,
+                                                   wtest_state,
                                                    sumState,
                                                    udq_state,
                                                    aquiferData),
@@ -827,6 +839,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                 base_setup.grid,
                                 base_setup.schedule,
                                 action_state,
+                                wtest_state,
                                 sumState,
                                 udq_state,
                                 aquiferData);
@@ -884,6 +897,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     const auto seqnum = 1;
     {
         Action::State action_state;
+        WellTestState wtest_state;
         auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
         auto rstFile = OS::Restart {
             rset, seqnum, OS::Formatted{ false }, OS::Unified{ true }
@@ -891,7 +905,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 
         RestartIO::save(rstFile, seqnum, 100, restart_value,
                         setup.es, setup.grid, setup.schedule,
-                        action_state, sumState, udq_state, aquiferData);
+                        action_state, wtest_state, sumState, udq_state, aquiferData);
     }
 
     Action::State action_state;

@@ -268,6 +268,7 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 
 // implementation of the writeTimeStep method
 void EclipseIO::writeTimeStep(const Action::State& action_state,
+                              const WellTestState& wtest_state,
                               const SummaryState& st,
                               const UDQState& udq_state,
                               int report_step,
@@ -318,7 +319,7 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
         };
 
         RestartIO::save(rstFile, report_step, secs_elapsed, value,
-                        es, grid, schedule, action_state, st,
+                        es, grid, schedule, action_state, wtest_state, st,
                         udq_state, this->impl->aquiferData, write_double);
     }
 

@@ -40,6 +40,7 @@ namespace Opm {
     class Schedule;
     class UDQState;
     class SummaryState;
+    class WellTestState;
 
 } // namespace Opm
 
@@ -86,6 +87,7 @@ namespace Opm { namespace RestartIO {
               const EclipseGrid&                            grid,
               const Schedule&                               schedule,
               const Action::State&                          action_state,
+              const WellTestState&                          wtest_state,
               const SummaryState&                           sumState,
               const UDQState&                               udqState,
               std::optional<Helpers::AggregateAquiferData>& aquiferData,

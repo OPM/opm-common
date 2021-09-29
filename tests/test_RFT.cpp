@@ -41,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -280,6 +281,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         SummaryState st(TimeService::now());
         Action::State action_state;
         UDQState udq_state(1234);
+        WellTestState wtest_state;
 
         data::Rates r1, r2;
         r1.set( data::Rates::opt::wat, 4.11 );
@@ -322,6 +324,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         RestartValue restart_value(std::move(solution), std::move(wells), std::move(group_nwrk), {});
 
         eclipseWriter.writeTimeStep( action_state,
+                                     wtest_state,
                                      st,
                                      udq_state,
                                      2,
@@ -409,6 +412,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         SummaryState st(Opm::TimeService::now());
         Action::State action_state;
         UDQState udq_state(10);
+        WellTestState wtest_state;
 
         const auto  start_time = schedule.posixStartTime();
         for (int counter = 0; counter < 2; counter++) {
@@ -456,6 +460,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                 RestartValue restart_value(std::move(solution), std::move(wells), data::GroupAndNetworkValues(), {});
 
                 eclipseWriter.writeTimeStep( action_state,
+                                             wtest_state,
                                              st,
                                              udq_state,
                                              step,

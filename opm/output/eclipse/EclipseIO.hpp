@@ -46,6 +46,7 @@ class Schedule;
 class SummaryConfig;
 class SummaryState;
 class UDQState;
+class WellTestState;
 namespace Action { class State; }
 /*!
  * \brief A class to write the reservoir state and the well state of a
@@ -179,6 +180,7 @@ public:
      */
 
     void writeTimeStep( const Action::State& action_state,
+                        const WellTestState& wtest_state,
                         const SummaryState& st,
                         const UDQState& udq_state,
                         int report_step,
