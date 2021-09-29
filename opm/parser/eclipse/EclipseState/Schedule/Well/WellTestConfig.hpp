@@ -21,14 +21,14 @@
 
 #include <cstddef>
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 
 namespace Opm {
 
 class WellTestConfig {
 public:
-    enum Reason {
+    enum class Reason {
         PHYSICAL = 1,
         ECONOMIC = 2,
         GROUP = 4,
@@ -38,7 +38,7 @@ public:
 
     struct WTESTWell {
         std::string name;
-        Reason shut_reason;
+        int reasons;
         double test_interval;
         int num_test;
         double startup_time;
@@ -48,7 +48,7 @@ public:
 
         bool operator==(const WTESTWell& data) const {
             return name == data.name &&
-                   shut_reason == data.shut_reason &&
+                   reasons == data.reasons &&
                    test_interval == data.test_interval &&
                    num_test == data.num_test &&
                    startup_time == data.startup_time &&
@@ -56,7 +56,7 @@ public:
         }
 
         WTESTWell() = default;
-        WTESTWell(const std::string& name, Reason shut_reason, double test_interval, int num_test, double startup_time, int begin_report_step);
+        WTESTWell(const std::string& name, int reasons, double test_interval, int num_test, double startup_time, int begin_report_step);
         static WTESTWell serializeObject();
 
 
@@ -64,7 +64,7 @@ public:
         void serializeOp(Serializer& serializer)
         {
             serializer(name);
-            serializer(shut_reason);
+            serializer(reasons);
             serializer(test_interval);
             serializer(num_test);
             serializer(startup_time);
@@ -72,36 +72,29 @@ public:
         }
     };
 
-    WellTestConfig();
-
     static WellTestConfig serializeObject();
 
-    void add_well(const std::string& well, Reason reason, double test_interval, int num_test, double startup_time, int current_step);
     void add_well(const std::string& well, const std::string& reasons, double test_interval,
                   int num_test, double startup_time, int current_step);
     void drop_well(const std::string& well);
     bool has(const std::string& well) const;
     bool has(const std::string& well, Reason reason) const;
     const WTESTWell& get(const std::string& well, Reason reason) const;
-    size_t size() const;
 
     static std::string reasonToString(const Reason reason);
+    bool empty() const;
 
     bool operator==(const WellTestConfig& data) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(wells);
+        serializer.map(wells);
     }
 
 private:
-    std::vector<WTESTWell> wells;
-
-    WTESTWell* getWell(const std::string& well_name, const Reason reason);
+    std::unordered_map<std::string, WTESTWell> wells;
 };
-
-
 }
 
 #endif
