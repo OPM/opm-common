@@ -66,6 +66,13 @@ namespace Opm {
                 well.closed = false;
     }
 
+    void WellTestState::openAllCompletions(const std::string& well_name) {
+        completions.erase(std::remove_if(completions.begin(),
+                                         completions.end(),
+                                         [&well_name](const ClosedCompletion& completion) { return (completion.wellName == well_name); }),
+                          completions.end());
+    }
+
     bool WellTestState::hasWellClosed(const std::string& well_name) const {
         for (const auto& well : wells)
             if (well.name == well_name && well.closed)
