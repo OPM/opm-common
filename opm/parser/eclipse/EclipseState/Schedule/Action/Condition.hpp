@@ -35,12 +35,8 @@ namespace Action {
 class Quantity {
 public:
     Quantity() = default;
-
     explicit Quantity(const RestartIO::RstAction::Quantity& rst_quantity);
-
-    explicit Quantity(const std::string& arg) :
-        quantity(arg)
-    {}
+    explicit Quantity(const std::string& arg);
 
     void add_arg(const std::string& arg);
     std::string quantity;

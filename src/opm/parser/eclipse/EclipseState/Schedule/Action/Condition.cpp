@@ -68,6 +68,11 @@ std::string strip_quotes(const std::string& s) {
 
 }
 
+Quantity::Quantity(const std::string& arg) :
+    quantity(strip_quotes(arg))
+{}
+
+
 Quantity::Quantity(const RestartIO::RstAction::Quantity& rst_quantity)
 {
     if (std::holds_alternative<std::string>(rst_quantity.quantity))
