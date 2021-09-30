@@ -23,47 +23,9 @@
 
 #include <opm/output/data/GuideRateValue.hpp>
 
+#include "tests/MessageBuffer.cpp"
+
 BOOST_AUTO_TEST_SUITE(GuideRate_Values)
-
-namespace {
-    class MessageBuffer
-    {
-    private:
-        std::stringstream str_{};
-
-    public:
-        template <class T>
-        void read(T& value)
-        {
-            this->str_.read(reinterpret_cast<char *>(&value), sizeof value);
-        }
-
-        template <class T>
-        void write(T const& value)
-        {
-            this->str_.write(reinterpret_cast<const char *>(&value), sizeof value);
-        }
-
-        void write(const std::string& str)
-        {
-            const int size = str.size();
-            this->write(size);
-            for (int k = 0; k < size; ++k) {
-                this->write(str[k]);
-            }
-        }
-
-        void read(std::string& str)
-        {
-            int size = 0;
-            this->read(size);
-            str.resize(size);
-            for (int k = 0; k < size; ++k) {
-                this->read(str[k]);
-            }
-        }
-    };
-}
 
 BOOST_AUTO_TEST_CASE(Construct)
 {
