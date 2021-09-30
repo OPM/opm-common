@@ -23,9 +23,9 @@
 
 namespace Opm {
 
-WellTestConfig::WTESTWell::WTESTWell(const std::string& name_arg, Reason shut_reason_arg, double test_interval_arg, int num_test_arg, double startup_time_arg, int begin_report_step_arg) :
+WellTestConfig::WTESTWell::WTESTWell(const std::string& name_arg, int shut_reason_arg, double test_interval_arg, int num_test_arg, double startup_time_arg, int begin_report_step_arg) :
     name(name_arg),
-    shut_reason(shut_reason_arg),
+    reasons(shut_reason_arg),
     test_interval(test_interval_arg),
     num_test(num_test_arg),
     startup_time(startup_time_arg),
@@ -33,116 +33,96 @@ WellTestConfig::WTESTWell::WTESTWell(const std::string& name_arg, Reason shut_re
 {}
 
 WellTestConfig::WTESTWell WellTestConfig::WTESTWell::serializeObject() {
-    return WellTestConfig::WTESTWell("name", Reason::THP_DESIGN, 100, 1, 674, 56);
+    return WellTestConfig::WTESTWell("name", static_cast<int>(Reason::PHYSICAL), 100, 1, 674, 56);
 }
 
-WellTestConfig::WellTestConfig() {
-
-}
 
 
 WellTestConfig WellTestConfig::serializeObject()
 {
     WellTestConfig result;
-    result.wells = { WellTestConfig::WTESTWell::serializeObject() };
+    result.wells.emplace(  "W1", WellTestConfig::WTESTWell::serializeObject() );
     return result;
 }
 
 
-void WellTestConfig::add_well(const std::string& well, Reason shut_reason, double test_interval,
+
+void WellTestConfig::add_well(const std::string& well, const std::string& reasons_string, double test_interval,
                               int num_retries, double startup_time, const int current_step) {
-
-    WTESTWell* well_ptr = getWell(well, shut_reason);
-
-    if (well_ptr) {
-        *well_ptr = WTESTWell{well, shut_reason, test_interval, num_retries, startup_time, current_step};
-    } else {
-        wells.emplace_back(well, shut_reason, test_interval, num_retries, startup_time, current_step);
-    }
-}
-
-
-void WellTestConfig::add_well(const std::string& well, const std::string& reasons, double test_interval,
-                              int num_retries, double startup_time, const int current_step) {
-    if (reasons.empty())
+    if (reasons_string.empty())
         throw std::invalid_argument("Can not pass empty string to stop testing to add_well() method.");
 
-    for (auto c : reasons) {
+    int reasons{0};
+
+    for (auto c : reasons_string) {
         switch(c) {
         case 'P' :
-            add_well(well, Reason::PHYSICAL, test_interval, num_retries, startup_time, current_step);
+            reasons += static_cast<int>(Reason::PHYSICAL);
             break;
-         case 'E' :
-            add_well(well, Reason::ECONOMIC, test_interval, num_retries, startup_time, current_step);
+        case 'E' :
+            reasons += static_cast<int>(Reason::ECONOMIC);
             break;
         case 'G':
-            add_well(well, Reason::GROUP, test_interval, num_retries, startup_time, current_step);
+            reasons += static_cast<int>(Reason::GROUP);
             break;
         case 'D':
-            add_well(well, Reason::THP_DESIGN, test_interval, num_retries, startup_time, current_step);
+            reasons += static_cast<int>(Reason::THP_DESIGN);
             break;
         case 'C':
-            add_well(well, Reason::COMPLETION, test_interval, num_retries, startup_time, current_step);
+            reasons += static_cast<int>(Reason::COMPLETION);
             break;
         default:
             throw std::invalid_argument("Invalid character in WTEST configuration");
         }
     }
+
+    this->wells.insert_or_assign(well, WTESTWell(well, reasons, test_interval, num_retries, startup_time, current_step));
 }
 
 
 void WellTestConfig::drop_well(const std::string& well) {
-    wells.erase(std::remove_if(wells.begin(),
-                               wells.end(),
-                               [&well](const WTESTWell& wtest_well) { return (wtest_well.name == well); }),
-                wells.end());
+    this->wells.erase(well);
 }
 
 bool WellTestConfig::has(const std::string& well) const {
-    const auto well_iter = std::find_if(wells.begin(),
-                                        wells.end(),
-                                        [&well](const WTESTWell& wtest_well) { return (wtest_well.name == well); });
+    const auto well_iter = this->wells.find(well);
     return (well_iter != wells.end());
 }
 
 
 bool WellTestConfig::has(const std::string& well, Reason reason) const {
-    const auto well_iter = std::find_if(wells.begin(),
-                                        wells.end(),
-                                        [&well, &reason](const WTESTWell& wtest_well)
-                                        {
-                                            return (reason == wtest_well.shut_reason && wtest_well.name == well);
-                                        });
-    return (well_iter != wells.end());
+    const auto well_iter = this->wells.find(well);
+    if (well_iter == wells.end())
+        return false;
+
+    return ((well_iter->second.reasons & static_cast<int>(reason)) != 0);
 }
 
 
 const WellTestConfig::WTESTWell& WellTestConfig::get(const std::string& well, Reason reason) const {
-    const auto well_iter = std::find_if(wells.begin(),
-                                        wells.end(),
-                                        [&well, &reason](const WTESTWell& wtest_well)
-                                        {
-                                            return (reason == wtest_well.shut_reason && wtest_well.name == well);
-                                        });
+    const auto well_iter = this->wells.find(well);
     if (well_iter == wells.end())
-        throw std::invalid_argument("No such WTEST object");
+        throw std::logic_error("No such WTEST well");
 
-    return *well_iter;
+    if (well_iter->second.reasons & static_cast<int>(reason))
+        return well_iter->second;
+
+    throw std::logic_error("No such WTEST well");
 }
 
 
 
 std::string WellTestConfig::reasonToString(const Reason reason) {
     switch(reason) {
-    case PHYSICAL:
+    case Reason::PHYSICAL:
         return std::string("PHYSICAL");
-    case ECONOMIC:
+    case Reason::ECONOMIC:
         return std::string("ECONOMIC");
-    case GROUP:
+    case Reason::GROUP:
         return std::string("GROUP");
-    case THP_DESIGN:
+    case Reason::THP_DESIGN:
         return std::string("THP_DESIGN");
-    case COMPLETION:
+    case Reason::COMPLETION:
         return std::string("COMPLETION");
     default:
         throw std::runtime_error("unknown closure reason");
@@ -150,19 +130,8 @@ std::string WellTestConfig::reasonToString(const Reason reason) {
 }
 
 
-
-WellTestConfig::WTESTWell*  WellTestConfig::getWell(const std::string& well_name, const Reason reason) {
-    const auto well_iter = std::find_if(wells.begin(), wells.end(), [&well_name, &reason](const WTESTWell& well) {
-        return (reason == well.shut_reason && well.name == well_name);
-    });
-
-    return (well_iter == wells.end() ? nullptr : std::addressof(*well_iter) );
-}
-
-
-
-size_t WellTestConfig::size() const {
-    return wells.size();
+bool WellTestConfig::empty() const {
+    return this->wells.empty();
 }
 
 
@@ -173,5 +142,6 @@ bool WellTestConfig::operator==(const WellTestConfig& data) const {
 
 
 }
+
 
 
