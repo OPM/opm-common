@@ -34,6 +34,8 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
+#include "tests/MessageBuffer.cpp"
+
 using namespace Opm;
 
 
@@ -206,5 +208,27 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     BOOST_CHECK_EQUAL(st.sizeCompletions(), 1U);
 }
 
+
+
+
+BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
+    WellTestState st, st2;
+    st.addClosedCompletion("WELL_NAME", 2, 100);
+    st.addClosedCompletion("WELL_NAME", 2, 100);
+    st.addClosedCompletion("WELL_NAME", 3, 100);
+    st.addClosedCompletion("WELLX", 3, 100);
+
+    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
+    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
+
+    BOOST_CHECK(!(st == st2));
+
+    MessageBuffer buffer;
+    st.pack(buffer);
+
+    st2.unpack(buffer);
+    BOOST_CHECK(st == st2);
+}
 
 

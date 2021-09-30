@@ -242,6 +242,16 @@ namespace Opm {
         }
     }
 
+
+    bool WellTestState::operator==(const WellTestState& other) const {
+        return this->wells == other.wells &&
+               this->completions == other.completions;
+    }
+
+    void WellTestState::clear() {
+        this->wells.clear();
+        this->completions.clear();
+    }
 }
 
 
