@@ -113,6 +113,7 @@ public:
      * it is used when WELOPEN or WCON* keyword request to open the well */
     void openWell(const std::string& well_name);
 
+    void openAllCompletions(const std::string& well_name);
 
     bool hasCompletion(const std::string& well_name, const int complnum) const;
 
