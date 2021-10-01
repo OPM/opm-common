@@ -123,13 +123,6 @@ ActionX::ActionX(const DeckKeyword& kw, const Actdims& actdims, std::time_t star
         const auto& record = kw.getRecord(record_index);
         const auto& cond_tokens = RawString::strings( record.getItem("CONDITION").getData<RawString>() );
 
-        /*
-          The tokens vector is passed to the internal ACTIONX parser to create
-          the AST used for evaluation, in that context the quotes are removed.
-          The m_conditions variable is a quite raw representation of the input
-          *only* retained in order to be able to create a restart file - here
-          the quotes are retained.
-        */
         for (const auto& token : cond_tokens)
             tokens.push_back(dequote(token, kw.location()));
 
