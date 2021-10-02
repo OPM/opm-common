@@ -12,7 +12,7 @@
       "default": 0
     },
     {
-      "name": "PRESSURE_CONVERGENCE_LIMT",
+      "name": "PRESSURE_CONVERGENCE_LIMIT",
       "value_type": "DOUBLE",
       "default": 1e-05
     },
