@@ -4422,23 +4422,6 @@ END
     }
 
     sched.shut_well("P1", 0);
-    // The checks below should be activated again when wells are fully implemented with ScheduleState
-    //{
-    //    const auto& well = sched.getWell("P1", 0);
-    //    BOOST_CHECK( well.getStatus() ==  Well::Status::SHUT);
-    //}
-    //{
-    //    const auto& well = sched.getWell("P1", 1);
-    //    BOOST_CHECK( well.getStatus() ==  Well::Status::SHUT);
-    //}
-    //{
-    //    const auto& well = sched.getWell("P1", 2);
-    //    BOOST_CHECK( well.getStatus() ==  Well::Status::SHUT);
-    //}
-    //{
-    //    const auto& well = sched.getWell("P1", 5);
-    //    BOOST_CHECK( well.getStatus() ==  Well::Status::OPEN);
-    //}
 }
 
 bool compare_dates(const time_point& t, int year, int month, int day) {
