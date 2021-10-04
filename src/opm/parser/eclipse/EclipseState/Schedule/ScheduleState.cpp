@@ -249,6 +249,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_whistctl_mode == other.m_whistctl_mode &&
            this->m_nupcol == other.m_nupcol &&
            this->network.get() == other.network.get() &&
+           this->network_balance.get() == other.network_balance.get() &&
            this->wtest_config.get() == other.wtest_config.get() &&
            this->well_order.get() == other.well_order.get() &&
            this->group_order.get() == other.group_order.get() &&
@@ -300,6 +301,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.actions.update( Action::Actions::serializeObject() );
     ts.udq_active.update( UDQActive::serializeObject() );
     ts.network.update( Network::ExtNetwork::serializeObject() );
+    ts.network_balance.update( Network::Balance::serializeObject() );
     ts.well_order.update( NameOrder::serializeObject() );
     ts.group_order.update( GroupOrder::serializeObject() );
     ts.udq.update( UDQConfig::serializeObject() );

@@ -129,6 +129,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/AICD.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Network/Balance.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Network/Branch.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Network/Node.cpp
@@ -778,6 +779,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
        opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Network/Balance.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/Branch.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/Node.hpp

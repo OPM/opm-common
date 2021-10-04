@@ -51,6 +51,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/NameOrder.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Network/Balance.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -4374,6 +4375,9 @@ WCONPROD
 TSTEP -- 1
   10 /
 
+NETBALAN
+  1 2 3 4 5 6 7 8 /
+
 WELPI
   'P1'  200.0 /
 /
@@ -4422,6 +4426,18 @@ END
     }
 
     sched.shut_well("P1", 0);
+
+
+    auto netbalan0 = sched[0].network_balance();
+    BOOST_CHECK(netbalan0.mode() == Network::Balance::CalcMode::None);
+
+    auto netbalan1 = sched[1].network_balance();
+    BOOST_CHECK(netbalan1.mode() == Network::Balance::CalcMode::TimeInterval);
+    BOOST_CHECK_EQUAL( netbalan1.interval(), 86400 );
+    BOOST_CHECK_EQUAL( netbalan1.pressure_tolerance(), 200000 );
+    BOOST_CHECK_EQUAL( netbalan1.pressure_max_iter(), 3 );
+    BOOST_CHECK_EQUAL( netbalan1.thp_tolerance(), 4 );
+    BOOST_CHECK_EQUAL( netbalan1.thp_max_iter(), 5 );
 }
 
 bool compare_dates(const time_point& t, int year, int month, int day) {
