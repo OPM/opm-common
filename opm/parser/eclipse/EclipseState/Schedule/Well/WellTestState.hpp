@@ -28,6 +28,30 @@
 
 namespace Opm {
 
+namespace {
+
+template<class BufferType, class T>
+void pack_vector(BufferType& buffer, const std::vector<T>& v) {
+    buffer.write(v.size());
+    for (const auto& e : v)
+        e.pack(buffer);
+}
+
+template<class BufferType, class T>
+void unpack_vector(BufferType& buffer, std::vector<T>& v) {
+    typename std::vector<T>::size_type size;
+    buffer.read(size);
+    for (std::size_t i = 0; i < size; i++) {
+        T elm;
+        elm.unpack(buffer);
+        v.push_back(std::move(elm));
+    }
+}
+
+}
+
+
+
 class WellTestState {
 public:
     /*
@@ -54,6 +78,32 @@ public:
         // if no, it is -1, which indicates we do not know the associated WTEST yet,
         // or there is not associated WTEST request
         int wtest_report_step;
+
+        bool operator==(const WTestWell& other) const {
+            return this->name == other.name &&
+                   this->closed == other.closed &&
+                   this->last_test == other.last_test &&
+                   this->num_attempt == other.num_attempt &&
+                   this->wtest_report_step == other.wtest_report_step;
+        }
+
+        template<class BufferType>
+        void pack(BufferType& buffer) const {
+            buffer.write(this->name);
+            buffer.write(this->closed);
+            buffer.write(this->last_test);
+            buffer.write(this->num_attempt);
+            buffer.write(this->wtest_report_step);
+        }
+
+        template<class BufferType>
+        void unpack(BufferType& buffer) {
+            buffer.read(this->name);
+            buffer.read(this->closed);
+            buffer.read(this->last_test);
+            buffer.read(this->num_attempt);
+            buffer.read(this->wtest_report_step);
+        }
     };
 
 
@@ -62,6 +112,29 @@ public:
         int complnum;
         double last_test;
         int num_attempt;
+
+        bool operator==(const ClosedCompletion& other) const {
+            return this->wellName == other.wellName &&
+                   this->complnum == other.complnum &&
+                   this->last_test == other.last_test &&
+                   this->num_attempt == other.num_attempt;
+        }
+
+        template<class BufferType>
+        void pack(BufferType& buffer) const {
+            buffer.write(this->wellName);
+            buffer.write(this->complnum);
+            buffer.write(this->last_test);
+            buffer.write(this->num_attempt);
+        }
+
+        template<class BufferType>
+        void unpack(BufferType& buffer) {
+            buffer.read(this->wellName);
+            buffer.read(this->complnum);
+            buffer.read(this->last_test);
+            buffer.read(this->num_attempt);
+        }
     };
 
     /*
@@ -124,6 +197,23 @@ public:
       Return the last tested time for the well, or throw if no such well.
     */
     double lastTestTime(const std::string& well_name) const;
+
+    void clear();
+
+    template<class BufferType>
+    void pack(BufferType& buffer) const {
+        pack_vector(buffer, this->wells);
+        pack_vector(buffer, this->completions);
+    }
+
+    template<class BufferType>
+    void unpack(BufferType& buffer) {
+        unpack_vector(buffer, this->wells);
+        unpack_vector(buffer, this->completions);
+    }
+
+    bool operator==(const WellTestState& other) const;
+
 
 private:
     std::vector<WTestWell> wells;
