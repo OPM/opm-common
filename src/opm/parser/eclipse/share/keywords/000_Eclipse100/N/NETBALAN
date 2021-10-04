@@ -9,12 +9,14 @@
     {
       "name": "TIME_INTERVAL",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension" : "Time"
     },
     {
-      "name": "PRESSURE_CONVERGENCE_LIMT",
+      "name": "PRESSURE_CONVERGENCE_LIMIT",
       "value_type": "DOUBLE",
-      "default": 1e-05
+      "default": 1e-05,
+      "dimension" : "Pressure"
     },
     {
       "name": "MAX_ITER",
@@ -34,16 +36,19 @@
     {
       "name": "TARGET_BALANCE_ERROR",
       "value_type": "DOUBLE",
-      "default": 1e+20
+      "default": 1e+20,
+      "dimension" : "Pressure"
     },
     {
       "name": "MAX_BALANCE_ERROR",
       "value_type": "DOUBLE",
-      "default": 1e+20
+      "default": 1e+20,
+      "dimension" : "Pressure"
     },
     {
       "name": "MIN_TIME_STEP",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension" : "Time"
     }
   ]
 }
