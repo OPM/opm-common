@@ -248,6 +248,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_message_limits == other.m_message_limits &&
            this->m_whistctl_mode == other.m_whistctl_mode &&
            this->m_nupcol == other.m_nupcol &&
+           this->network.get() == other.network.get() &&
            this->wtest_config.get() == other.wtest_config.get() &&
            this->well_order.get() == other.well_order.get() &&
            this->group_order.get() == other.group_order.get() &&
