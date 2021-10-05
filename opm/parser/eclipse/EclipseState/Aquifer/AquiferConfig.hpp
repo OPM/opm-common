@@ -25,6 +25,9 @@
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
+#include <cstddef>
+#include <vector>
+
 namespace Opm {
     class TableManager;
     class EclipseGrid;
@@ -46,6 +49,7 @@ public:
     AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
     void load_connections(const Deck& deck, const EclipseGrid& grid);
 
+    void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
     void loadFromRestart(const RestartIO::RstAquifer& aquifers,
                          const TableManager&          tables);
 

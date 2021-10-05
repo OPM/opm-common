@@ -90,6 +90,7 @@ namespace Opm {
             Aquancon(const EclipseGrid& grid, const Deck& deck);
             explicit Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data);
 
+            void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
             void loadFromRestart(const RestartIO::RstAquifer& rst_aquifers);
 
             static Aquancon serializeObject();

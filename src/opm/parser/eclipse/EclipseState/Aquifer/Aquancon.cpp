@@ -42,6 +42,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include <fmt/format.h>
@@ -214,6 +215,23 @@ namespace Opm {
     Aquancon::Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data) :
         cells(data)
     {}
+
+    void Aquancon::pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells)
+    {
+        const auto removed = std::unordered_set<std::size_t> {
+            deactivated_cells.begin(), deactivated_cells.end()
+        };
+
+        for (auto& conns : this->cells) {
+            auto end = std::remove_if(conns.second.begin(), conns.second.end(),
+                [&removed](const AquancCell& cell) -> bool
+            {
+                return removed.find(cell.global_index) != removed.end();
+            });
+
+            conns.second.erase(end, conns.second.end());
+        }
+    }
 
     void Aquancon::loadFromRestart(const RestartIO::RstAquifer& rst_aquifers)
     {

@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <algorithm>
+#include <cstddef>
 
 namespace Opm {
 
@@ -45,6 +46,14 @@ AquiferConfig::AquiferConfig(const Aquifetp& fetp,
 
 void AquiferConfig::load_connections(const Deck& deck, const EclipseGrid& grid) {
     this->aqconn = Aquancon(grid, deck);
+}
+
+void AquiferConfig::pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells)
+{
+    if (deactivated_cells.empty())
+        return;
+
+    this->aqconn.pruneDeactivatedAquiferConnections(deactivated_cells);
 }
 
 void AquiferConfig::loadFromRestart(const RestartIO::RstAquifer& aquifers,
@@ -97,7 +106,7 @@ bool AquiferConfig::hasAquifer(const int aquID) const {
 }
 
 bool AquiferConfig::hasNumericalAquifer() const {
-    return this->numerical_aquifers.size() > 0;
+    return this->numerical_aquifers.size() > std::size_t{0};
 }
 
 const NumericalAquifers& AquiferConfig::numericalAquifers() const {
@@ -109,8 +118,8 @@ NumericalAquifers& AquiferConfig::mutableNumericalAquifers() const {
 }
 
 bool AquiferConfig::hasAnalyticalAquifer() const {
-    return this->aquiferct.size() > 0 ||
-           this->aquifetp.size() > 0;
+    return (this->aquiferct.size() > std::size_t{0})
+        || (this->aquifetp.size() > std::size_t{0});
 }
 
 }

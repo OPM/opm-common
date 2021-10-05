@@ -267,6 +267,11 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         return this->tracer_config;
     }
 
+    void EclipseState::pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells) {
+        if (this->aquifer_config.hasAnalyticalAquifer())
+            this->aquifer_config.pruneDeactivatedAquiferConnections(deactivated_cells);
+    }
+
     void EclipseState::loadRestartAquifers(const RestartIO::RstAquifer& aquifers) {
         if (aquifers.hasAnalyticAquifers())
             this->aquifer_config.loadFromRestart(aquifers, this->m_tables);
