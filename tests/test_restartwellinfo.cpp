@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 
@@ -222,10 +223,12 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     solution.insert( "SGAS"    , Opm::UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , Opm::data::TargetType::RESTART_SOLUTION);
     Opm::data::Wells wells;
     Opm::data::GroupAndNetworkValues group_nwrk;
+    Opm::WellTestState wtest_state;
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep) {
 
         eclipseWriter.writeTimeStep( action_state,
+                                     wtest_state,
                                      st,
                                      udq_state,
                                      timestep,
