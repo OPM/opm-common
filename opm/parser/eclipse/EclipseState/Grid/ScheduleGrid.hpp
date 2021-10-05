@@ -27,6 +27,8 @@ namespace Opm {
 
     class ScheduleGrid {
     public:
+        virtual std::size_t activeIndex(std::size_t i, std::size_t j, std::size_t k) const = 0;
+
         virtual bool cellActive(std::size_t i, std::size_t j, std::size_t k) const = 0;
 
     public:

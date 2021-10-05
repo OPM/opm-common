@@ -27,6 +27,8 @@ namespace Opm {
 
     class SparseScheduleGrid: public ScheduleGrid {
     public:
+        std::size_t activeIndex(std::size_t i, std::size_t j, std::size_t k) const override;
+
         bool cellActive(std::size_t i, std::size_t j, std::size_t k) const override;
     };
 

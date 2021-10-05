@@ -86,7 +86,7 @@ namespace Opm {
         size_t  getNumActive( ) const;
         bool allActive() const;
 
-        size_t activeIndex(size_t i, size_t j, size_t k) const;
+        size_t activeIndex(size_t i, size_t j, size_t k) const override;
         size_t activeIndex(size_t globalIndex) const;
 
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;

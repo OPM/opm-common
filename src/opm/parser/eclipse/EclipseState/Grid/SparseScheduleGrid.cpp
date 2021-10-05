@@ -21,6 +21,10 @@
 
 #include <stdexcept>
 
-bool Opm::SparseScheduleGrid::cellActive(std::size_t i, std::size_t j, std::size_t k) const {
+std::size_t Opm::SparseScheduleGrid::activeIndex(std::size_t, std::size_t, std::size_t) const {
+    throw std::logic_error("BUG: SparseScheduleGrid::activeIndex called on a sparse grid missing the cell");
+}
+
+bool Opm::SparseScheduleGrid::cellActive(std::size_t, std::size_t, std::size_t) const {
     throw std::logic_error("BUG: SparseScheduleGrid::cellActive called on a sparse grid missing the cell");
 }
