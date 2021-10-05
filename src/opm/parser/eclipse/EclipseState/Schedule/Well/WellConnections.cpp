@@ -289,6 +289,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg, wname, location);
     }
 
+    /// TARGET
     void WellConnections::loadCOMPDAT(const DeckRecord& record,
                                       const EclipseGrid& grid,
                                       const std::vector<int>& satnum_data,

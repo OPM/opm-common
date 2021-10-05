@@ -182,6 +182,7 @@ namespace {
         }
     }
 
+    /// TARGET
     std::vector< Record > compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword,
                                                       const WellSegments& segments,
                                                       const EclipseGrid& grid,
@@ -307,6 +308,7 @@ namespace {
 }
 
 
+    /// TARGET
     std::pair<WellConnections, WellSegments>
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,

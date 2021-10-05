@@ -672,6 +672,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
     return false;
 }
 
+/// TARGET
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
     bool update = this->updateConnections(connections_arg, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
