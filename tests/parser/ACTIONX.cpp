@@ -172,6 +172,38 @@ TSTEP
     BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
 }
 
+BOOST_AUTO_TEST_CASE(COMPDAT) {
+
+    const auto TRAILING_COMPDAT = std::string{ R"(
+SCHEDULE
+
+WELSPECS
+  'W2'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ACTIONX
+   'ACTION' /
+   WWCT OPX  > 0.75 /
+/
+
+ENDACTIO
+
+TSTEP
+   10 /
+
+COMPDAT
+ 'W2'  1  1   1   1 'OPEN'  /
+/
+
+)"};
+
+    Schedule sched = make_schedule(TRAILING_COMPDAT);
+    Action::Result action_result(true);
+    auto sim_time = TimeService::now();
+    const auto& action1 = sched[0].actions.get()["ACTION"];
+    BOOST_CHECK_NO_THROW( sched.applyAction(0, sim_time, action1, Action::Result{true}, {}));
+}
+
 
 BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::SummaryState st(TimeService::now());
