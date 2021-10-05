@@ -34,7 +34,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
 #include "Compsegs.hpp"
@@ -182,10 +182,9 @@ namespace {
         }
     }
 
-    /// TARGET
     std::vector< Record > compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword,
                                                       const WellSegments& segments,
-                                                      const EclipseGrid& grid,
+                                                      const ScheduleGrid& grid,
                                                       const ParseContext& parseContext,
                                                       ErrorGuard& errors) {
 
@@ -308,12 +307,11 @@ namespace {
 }
 
 
-    /// TARGET
     std::pair<WellConnections, WellSegments>
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
-                    const EclipseGrid& grid,
+                    const ScheduleGrid& grid,
                     const ParseContext& parseContext,
                     ErrorGuard& errors)
     {
