@@ -31,7 +31,7 @@ namespace Opm {
     class WellConnections;
     class DeckKeyword;
     class WellSegments;
-    class EclipseGrid;
+    class ScheduleGrid;
     class ParseContext;
     class ErrorGuard;
 
@@ -54,7 +54,7 @@ namespace Compsegs {
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
-                    const EclipseGrid& grid,
+                    const ScheduleGrid& grid,
                     const ParseContext& parseContext,
                     ErrorGuard& errors);
 

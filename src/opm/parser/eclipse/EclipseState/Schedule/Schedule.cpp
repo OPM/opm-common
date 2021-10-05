@@ -66,6 +66,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/Node.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
@@ -143,7 +144,7 @@ namespace Opm {
     }
 
     Schedule::Schedule( const Deck& deck,
-                        const EclipseGrid& grid,
+                        const EclipseGrid& ecl_grid,
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
@@ -153,20 +154,27 @@ namespace Opm {
                         const RestartIO::RstState * rst)
     try :
         m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
-        m_sched_deck(runspec, deck, m_static.rst_info )
+        m_sched_deck(runspec, deck, m_static.rst_info ),
+        completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
 
+        //const ScheduleGridWrapper gridWrapper { grid } ;
+        ScheduleGrid grid(ecl_grid, this->completed_cells);
+
         if (rst) {
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, nullptr, &grid, &fp, "");
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, &fp, "");
             this->load_rst(*rst, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, nullptr, &grid, &fp, "");
-        } else
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, nullptr, &grid, &fp, "");
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, &fp, "");
+        } else {
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, &fp, "");
+        }
+
+        //m_grid = std::make_shared<SparseScheduleGrid>(grid, gridWrapper.getHitKeys());
     }
     catch (const OpmInputError& opm_error) {
         OpmLog::error(opm_error.what());
@@ -286,7 +294,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
-                                 const EclipseGrid* grid,
+                                 const ScheduleGrid& grid,
                                  const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
                                  bool actionx_mode,
@@ -299,13 +307,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, currentStep, matching_wells, actionx_mode, affected_wells, target_wellpi};
+        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, affected_wells, target_wellpi};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
         */
         if (require_grid.count(keyword.name()) > 0) {
-            handlerContext.grid_ptr = grid;
             handlerContext.fp_ptr = fp;
         }
         if (handleNormalKeyword(handlerContext, parseContext, errors))
@@ -381,8 +388,8 @@ private:
 void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_end,
                                       const ParseContext& parseContext ,
                                       ErrorGuard& errors,
+                                      const ScheduleGrid& grid,
                                       const std::unordered_map<std::string, double> * target_wellpi,
-                                      const EclipseGrid* grid,
                                       const FieldPropsManager* fp,
                                       const std::string& prefix) {
 
@@ -1227,6 +1234,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         ParseContext parseContext;
         ErrorGuard errors;
         std::unordered_set<std::string> affected_wells;
+        ScheduleGrid grid(this->completed_cells);
 
         OpmLog::info("/----------------------------------------------------------------------");
         OpmLog::info(fmt::format("{0}Action {1} evaluated to true. Will add action keywords and\n{0}rerun Schedule section.\n{0}", prefix, action.name()));
@@ -1241,7 +1249,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 keyword,
                                 parseContext,
                                 errors,
-                                nullptr,
+                                grid,
                                 nullptr,
                                 result.wells(),
                                 true,
@@ -1256,7 +1264,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         if (reportStep < this->m_sched_deck.size() - 1)
-            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, &target_wellpi, nullptr, nullptr, prefix);
+            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, grid, &target_wellpi, nullptr, prefix);
         OpmLog::info("\\----------------------------------------------------------------------");
 
         return affected_wells;
@@ -1332,7 +1340,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->m_static == data.m_static &&
                this->m_sched_deck == data.m_sched_deck &&
                this->snapshots == data.snapshots &&
-               this->restart_output == data.restart_output;
+               this->restart_output == data.restart_output &&
+               this->completed_cells == data.completed_cells;
      }
 
 
@@ -1363,7 +1372,7 @@ namespace {
     }
 }
 
-    void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp)
+    void Schedule::load_rst(const RestartIO::RstState& rst_state, const ScheduleGrid& grid, const FieldPropsManager& fp)
     {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;

@@ -67,6 +67,9 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletedCells.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
+
 
 using namespace Opm;
 
@@ -4800,4 +4803,23 @@ END
 
     BOOST_CHECK_MESSAGE(! sched[3].rptonly(),
                         R"("RPTONLY" must NOT be configured on report step 4)");
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestScheduleGrid) {
+    EclipseGrid grid(10,10,10);
+    CompletedCells cells(grid);
+
+    {
+        ScheduleGrid sched_grid(grid, cells);
+        auto depth = sched_grid.getCellDepth(1,1,1);
+        BOOST_CHECK_EQUAL(depth, 1.50);
+    }
+    {
+        ScheduleGrid sched_grid(cells);
+        auto depth = sched_grid.getCellDepth(1,1,1);
+        BOOST_CHECK_EQUAL(depth, 1.50);
+        BOOST_CHECK_THROW(sched_grid.getCellDepth(2,2,2), std::exception);
+    }
 }

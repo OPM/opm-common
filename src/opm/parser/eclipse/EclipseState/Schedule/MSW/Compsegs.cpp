@@ -34,8 +34,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
 
 #include "Compsegs.hpp"
 
@@ -184,7 +184,7 @@ namespace {
 
     std::vector< Record > compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword,
                                                       const WellSegments& segments,
-                                                      const EclipseGrid& grid,
+                                                      const ScheduleGrid& grid,
                                                       const ParseContext& parseContext,
                                                       ErrorGuard& errors) {
 
@@ -282,7 +282,7 @@ namespace {
             }
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
 
-              if (grid.cellActive(I, J, K)) {
+              if (grid.isCellActive(I, J, K)) {
                 std::size_t seqIndex = compsegs.size();
                 compsegs.emplace_back( I, J, K,
                                        branch,
@@ -311,7 +311,7 @@ namespace {
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
-                    const EclipseGrid& grid,
+                    const ScheduleGrid& grid,
                     const ParseContext& parseContext,
                     ErrorGuard& errors)
     {
@@ -323,7 +323,7 @@ namespace {
                 const int i = compseg.m_i;
                 const int j = compseg.m_j;
                 const int k = compseg.m_k;
-                if (grid.cellActive(i, j, k)) {
+                if (grid.isCellActive(i, j, k)) {
                     Connection& connection = new_connection_set.getFromIJK(i, j, k);
                     connection.updateSegment(compseg.segment_number,
                                              compseg.center_depth,

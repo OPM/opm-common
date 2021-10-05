@@ -32,9 +32,11 @@
 namespace Opm {
     class ActiveGridCells;
     class DeckRecord;
-    class EclipseGrid;
     class FieldPropsManager;
     class KeywordLocation;
+    class ScheduleGrid;
+    class EclipseGrid;
+
     class WellConnections {
     public:
 
@@ -47,7 +49,20 @@ namespace Opm {
         static WellConnections serializeObject();
 
         // cppcheck-suppress noExplicitConstructor
-        WellConnections(const WellConnections& src, const EclipseGrid& grid);
+        template<class Grid>
+        WellConnections(const WellConnections& src, const Grid& grid) :
+            m_ordering(src.ordering()),
+            headI(src.headI),
+            headJ(src.headJ)
+        {
+            for (const auto& c : src) {
+                if (grid.isCellActive(c.getI(), c.getJ(), c.getK()))
+                    this->add(c);
+            }
+        }
+
+
+
 
         void addConnection(int i, int j , int k ,
                            std::size_t global_index,
@@ -65,7 +80,7 @@ namespace Opm {
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
                            const std::size_t seqIndex = 0,
                            const bool defaultSatTabId = true);
-        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const std::string& wname, const KeywordLocation& location);
+        void loadCOMPDAT(const DeckRecord& record, const ScheduleGrid& grid, const FieldPropsManager& field_properties, const std::string& wname, const KeywordLocation& location);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -155,7 +170,7 @@ namespace Opm {
                            const bool defaultSatTabId = true);
 
         void loadCOMPDAT(const DeckRecord& record,
-                         const EclipseGrid& grid,
+                         const ScheduleGrid& grid,
                          const std::vector<int>& satnum_data,
                          const std::vector<double>* permx,
                          const std::vector<double>* permy,

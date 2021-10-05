@@ -88,6 +88,10 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
+        size_t getActiveIndex(size_t i, size_t j, size_t k) const {
+            return activeIndex(i, j, k);
+        }
+
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
@@ -164,6 +168,15 @@ namespace Opm {
         std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
         bool cellActive( size_t i , size_t j, size_t k ) const;
+
+        std::array<double, 3> getCellDimensions(size_t i, size_t j, size_t k) const {
+            return getCellDims(i, j, k);
+        }
+
+        bool isCellActive(size_t i, size_t j, size_t k) const {
+            return cellActive(i, j, k);
+        }
+
         double getCellDepth(size_t i,size_t j, size_t k) const;
         double getCellDepth(size_t globalIndex) const;
         ZcornMapper zcornMapper() const;

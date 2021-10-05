@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
 
 #include "../MSW/Compsegs.hpp"
 
@@ -688,11 +689,11 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
     return false;
 }
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const ScheduleGrid& grid, const std::vector<int>& pvtnum) {
     bool update = this->updateConnections(connections_arg, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
-        auto active_index = grid.activeIndex(lowest.global_index());
+        auto active_index = grid.getActiveIndex(lowest.getI(), lowest.getJ(), lowest.getK());
         this->pvt_table = pvtnum[active_index];
         update = true;
     }
@@ -710,11 +711,17 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
-                          const EclipseGrid& grid,
+                          const ScheduleGrid& grid,
                           const ParseContext& parseContext,
                           ErrorGuard& errors) {
-    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
-                                                                     parseContext, errors);
+    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
+        keyword,
+        *this->connections,
+        *this->segments,
+        grid,
+        parseContext,
+        errors
+    );
 
     this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), false );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );

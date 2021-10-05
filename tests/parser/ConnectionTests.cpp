@@ -34,6 +34,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletedCells.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -55,8 +57,9 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
+    Opm::CompletedCells cells(grid);
     for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, grid, field_props, "WELL", {});
+        connections.loadCOMPDAT(rec, Opm::ScheduleGrid(grid, cells), field_props, "WELL", {});
 
     return connections;
 }
