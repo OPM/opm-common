@@ -106,6 +106,7 @@ namespace Opm {
         const AquiferConfig& aquifer() const;
         const TracerConfig& tracer() const;
 
+        void reset_actnum(const std::vector<int>& new_actnum);
         void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
         void loadRestartAquifers(const RestartIO::RstAquifer& aquifers);
 
