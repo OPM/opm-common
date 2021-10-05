@@ -86,8 +86,12 @@ namespace Opm {
         size_t  getNumActive( ) const;
         bool allActive() const;
 
-        size_t activeIndex(size_t i, size_t j, size_t k) const override;
+        size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
+
+        size_t getActiveIndex(size_t i, size_t j, size_t k) const override {
+            return activeIndex(i, j, k);
+        }
 
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
         /*
@@ -161,10 +165,19 @@ namespace Opm {
         double getCellVolume(size_t i , size_t j , size_t k) const;
         double getCellThickness(size_t globalIndex) const;
         double getCellThickness(size_t i , size_t j , size_t k) const;
-        std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const override;
+        std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
-        bool cellActive( size_t i , size_t j, size_t k ) const override;
+        bool cellActive( size_t i , size_t j, size_t k ) const;
+
+        std::array<double, 3> getCellDimensions(size_t i, size_t j, size_t k) const override {
+            return getCellDims(i, j, k);
+        }
+
+        bool isCellActive(size_t i, size_t j, size_t k) const override {
+            return cellActive(i, j, k);
+        }
+
         double getCellDepth(size_t i,size_t j, size_t k) const override;
         double getCellDepth(size_t globalIndex) const;
         ZcornMapper zcornMapper() const;

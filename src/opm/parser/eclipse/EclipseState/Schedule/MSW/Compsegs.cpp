@@ -282,7 +282,7 @@ namespace {
             }
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
 
-              if (grid.cellActive(I, J, K)) {
+              if (grid.isCellActive(I, J, K)) {
                 std::size_t seqIndex = compsegs.size();
                 compsegs.emplace_back( I, J, K,
                                        branch,
@@ -323,7 +323,7 @@ namespace {
                 const int i = compseg.m_i;
                 const int j = compseg.m_j;
                 const int k = compseg.m_k;
-                if (grid.cellActive(i, j, k)) {
+                if (grid.isCellActive(i, j, k)) {
                     Connection& connection = new_connection_set.getFromIJK(i, j, k);
                     connection.updateSegment(compseg.segment_number,
                                              compseg.center_depth,

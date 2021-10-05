@@ -168,7 +168,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         headJ(src.headJ)
     {
         for (const auto& c : src) {
-            if (grid.cellActive(c.getI(), c.getJ(), c.getK()))
+            if (grid.isCellActive(c.getI(), c.getJ(), c.getK()))
                 this->add(c);
         }
     }
@@ -179,7 +179,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
         std::vector<const Connection*> out;
         for (const auto& conn : this->m_connections)
-            if (grid.cellActive(conn.getI(), conn.getJ(), conn.getK()))
+            if (grid.isCellActive(conn.getI(), conn.getJ(), conn.getK()))
                 out.push_back( &conn );
 
         if (!this->m_connections[0].attachedToSegment() && (this->m_ordering != Connection::Order::INPUT)) {
@@ -337,7 +337,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             rw = 0.5*unit::feet;
 
         for (int k = K1; k <= K2; k++) {
-            if (!grid.cellActive(I, J, k)) {
+            if (!grid.isCellActive(I, J, k)) {
                 auto msg = fmt::format("Problem with COMPDAT keyword\n"
                                        "In {} line {}\n"
                                        "The cell ({},{},{}) in well {} is not active and the connection will be ignored", location.filename, location.lineno, I,J,k, wname);
@@ -345,7 +345,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 continue;
             }
 
-            size_t active_index = grid.activeIndex(I,J,k);
+            size_t active_index = grid.getActiveIndex(I,J,k);
             double CF = -1;
             double Kh = -1;
             double r0 = -1;
@@ -370,7 +370,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             // Angle of completion exposed to flow.  We assume centre
             // placement so there's complete exposure (= 2\pi).
             const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
-            std::array<double,3> cell_size = grid.getCellDims(I,J,k);
+            std::array<double,3> cell_size = grid.getCellDimensions(I,J,k);
             const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
 
             /* We start with the absolute happy path; both CF and Kh are explicitly given in the deck. */
