@@ -76,6 +76,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/Box.cpp
     src/opm/parser/eclipse/EclipseState/Grid/BoxManager.cpp
     src/opm/parser/eclipse/EclipseState/Grid/EclipseGrid.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/SparseScheduleGrid.cpp
     src/opm/parser/eclipse/EclipseState/Grid/FaceDir.cpp
     src/opm/parser/eclipse/EclipseState/Grid/FaultCollection.cpp
     src/opm/parser/eclipse/EclipseState/Grid/Fault.cpp
@@ -667,6 +668,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp
        opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp
        opm/parser/eclipse/EclipseState/Grid/NNC.hpp
+       opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp
        opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp
        opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp
        opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp
