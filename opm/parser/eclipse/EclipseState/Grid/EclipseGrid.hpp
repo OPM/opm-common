@@ -21,6 +21,7 @@
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 
+#include <opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
@@ -52,7 +53,7 @@ namespace Opm {
          - Active/inactive status of cells
     */
 
-    class EclipseGrid : public GridDims {
+    class EclipseGrid : public GridDims, public ScheduleGrid {
     public:
         EclipseGrid() = default;
         explicit EclipseGrid(const std::string& filename);
@@ -163,7 +164,7 @@ namespace Opm {
         std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
-        bool cellActive( size_t i , size_t j, size_t k ) const;
+        bool cellActive( size_t i , size_t j, size_t k ) const override;
         double getCellDepth(size_t i,size_t j, size_t k) const;
         double getCellDepth(size_t globalIndex) const;
         ZcornMapper zcornMapper() const;
