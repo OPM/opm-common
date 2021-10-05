@@ -527,7 +527,7 @@ namespace Opm
             const bool actionx_mode;
             std::unordered_set<std::string> * affected_wells;
             const std::unordered_map<std::string, double> * target_wellpi;
-            const EclipseGrid* grid_ptr;
+            const ScheduleGrid* grid_ptr;
             const FieldPropsManager* fp_ptr;
 
             HandlerContext(const ScheduleBlock& block_,

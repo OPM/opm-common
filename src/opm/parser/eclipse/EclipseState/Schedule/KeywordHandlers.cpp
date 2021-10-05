@@ -143,7 +143,6 @@ namespace {
         this->snapshots.back().network.update( std::move( ext_network ));
     }
 
-    /// TARGET
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         if (!handlerContext.grid_ptr)
             throw std::logic_error("BUG: Schedule::handleCOMPDAT() has been called with an invalid grid pointer");
@@ -208,7 +207,6 @@ namespace {
     {
     }
 
-    /// TARGET
     void Schedule::handleCOMPSEGS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         if (!handlerContext.grid_ptr)
             throw std::logic_error("BUG: Schedule::handleCOMPDAT() has been called with an invalid grid pointer");
