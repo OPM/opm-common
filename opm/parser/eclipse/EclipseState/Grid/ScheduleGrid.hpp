@@ -23,13 +23,19 @@
 
 #include <cstddef>
 
+#include <array>
+
 namespace Opm {
 
     class ScheduleGrid {
     public:
         virtual std::size_t activeIndex(std::size_t i, std::size_t j, std::size_t k) const = 0;
+        virtual std::size_t getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const = 0;
 
         virtual bool cellActive(std::size_t i, std::size_t j, std::size_t k) const = 0;
+
+        virtual double getCellDepth(std::size_t i, std::size_t j, std::size_t k) const = 0;
+        virtual std::array<double, 3> getCellDims(std::size_t i, std::size_t j, std::size_t k) const = 0;
 
     public:
         virtual ~ScheduleGrid() {}

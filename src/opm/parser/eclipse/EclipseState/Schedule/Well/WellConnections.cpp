@@ -34,7 +34,7 @@
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
@@ -162,7 +162,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
 
-    WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) :
+    WellConnections::WellConnections(const WellConnections& src, const ScheduleGrid& grid) :
         m_ordering(src.ordering()),
         headI(src.headI),
         headJ(src.headJ)
@@ -173,7 +173,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         }
     }
 
-    std::vector<const Connection *> WellConnections::output(const EclipseGrid& grid) const {
+    std::vector<const Connection *> WellConnections::output(const ScheduleGrid& grid) const {
         if (this->m_connections.empty())
             return {};
 
@@ -279,7 +279,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const std::string& wname, const KeywordLocation& location) {
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const ScheduleGrid& grid, const FieldPropsManager& field_properties, const std::string& wname, const KeywordLocation& location) {
         const auto permx        = field_properties.try_get<double>("PERMX");
         const auto permy        = field_properties.try_get<double>("PERMY");
         const auto permz        = field_properties.try_get<double>("PERMZ");
@@ -289,9 +289,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg, wname, location);
     }
 
-    /// TARGET
     void WellConnections::loadCOMPDAT(const DeckRecord& record,
-                                      const EclipseGrid& grid,
+                                      const ScheduleGrid& grid,
                                       const std::vector<int>& satnum_data,
                                       const std::vector<double>* permx,
                                       const std::vector<double>* permy,

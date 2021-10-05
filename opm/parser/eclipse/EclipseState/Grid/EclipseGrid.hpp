@@ -97,7 +97,7 @@ namespace Opm {
           in the current class.
         */
         size_t getGlobalIndex(size_t active_index) const;
-        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
+        size_t getGlobalIndex(size_t i, size_t j, size_t k) const override;
 
         /*
           For RADIAL grids you can *optionally* use the keyword
@@ -161,11 +161,11 @@ namespace Opm {
         double getCellVolume(size_t i , size_t j , size_t k) const;
         double getCellThickness(size_t globalIndex) const;
         double getCellThickness(size_t i , size_t j , size_t k) const;
-        std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const;
+        std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const override;
         std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
         bool cellActive( size_t i , size_t j, size_t k ) const override;
-        double getCellDepth(size_t i,size_t j, size_t k) const;
+        double getCellDepth(size_t i,size_t j, size_t k) const override;
         double getCellDepth(size_t globalIndex) const;
         ZcornMapper zcornMapper() const;
 

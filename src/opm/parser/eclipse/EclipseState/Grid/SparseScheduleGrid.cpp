@@ -25,6 +25,18 @@ std::size_t Opm::SparseScheduleGrid::activeIndex(std::size_t, std::size_t, std::
     throw std::logic_error("BUG: SparseScheduleGrid::activeIndex called on a sparse grid missing the cell");
 }
 
+std::size_t Opm::SparseScheduleGrid::getGlobalIndex(std::size_t, std::size_t, std::size_t) const {
+    throw std::logic_error("BUG: SparseScheduleGrid::getGlobalIndex called on a sparse grid missing the cell");
+}
+
 bool Opm::SparseScheduleGrid::cellActive(std::size_t, std::size_t, std::size_t) const {
     throw std::logic_error("BUG: SparseScheduleGrid::cellActive called on a sparse grid missing the cell");
+}
+
+double Opm::SparseScheduleGrid::getCellDepth(std::size_t, std::size_t, std::size_t) const {
+    throw std::logic_error("BUG: SparseScheduleGrid::getCellDepth called on a sparse grid missing the cell");
+}
+
+std::array<double, 3> Opm::SparseScheduleGrid::getCellDims(std::size_t i, std::size_t j, std::size_t k) const {
+    throw std::logic_error("BUG: SparseScheduleGrid::getCellDims called on a sparse grid missing the cell");
 }
