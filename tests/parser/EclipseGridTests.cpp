@@ -1104,6 +1104,11 @@ BOOST_AUTO_TEST_CASE(regularCartGrid) {
                 BOOST_CHECK_CLOSE(cc[0], ref_x, 1e-12);
                 BOOST_CHECK_CLOSE(cc[1], ref_y, 1e-12);
                 BOOST_CHECK_CLOSE(cc[2], ref_z, 1e-12);
+
+
+                const auto& ai = grid.activeIndex(i,j,k);
+                const auto& cc2 = grid.getCellCenter( Opm::EclipseGrid::ActiveIndex{ai} ));
+                BOOST_CHECK(cc == cc2);
             }
         }
     }
@@ -1401,6 +1406,9 @@ BOOST_AUTO_TEST_CASE(SpiderDetails) {
     BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , sqrt(3.0)*0.25*( 4 - 1 ) , 0.0001);
     auto pos0 = grid.getCellCenter(0,0,0);
     auto pos2 = grid.getCellCenter(0,2,0);
+
+    auto pos00 = grid.getCellCenter( Opm::EclipseGrid::GlobalIndex{0} );
+    BOOST_CHECK(pos0 == pos00);
 
     BOOST_CHECK_CLOSE( std::get<0>(pos0) , 0.75 , 0.0001);
     BOOST_CHECK_CLOSE( std::get<1>(pos0) , 0.75 , 0.0001);

@@ -1549,6 +1549,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
 
+    std::array<double, 3> EclipseGrid::getCellCenter(const EclipseGrid::ActiveIndex& index) const {
+        auto gi = this->getGlobalIndex( index.value );
+        return this->getCellCenter(gi);
+    }
+
+    std::array<double, 3> EclipseGrid::getCellCenter(const EclipseGrid::GlobalIndex& index) const {
+        auto gi = index.value;
+        return this->getCellCenter(gi);
+    }
+
+
     std::array<double, 3> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
         assertIJK(i,j,k);
 
