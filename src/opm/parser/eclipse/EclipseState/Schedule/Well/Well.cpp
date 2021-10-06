@@ -230,6 +230,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
             p->addProductionControl( Well::ProducerCMode::THP );
         }
 
+        if (! p->predictionMode)
+            p->clearControls();
 
         p->controlMode = producer_cmode_from_int(rst_well.active_control);
         p->addProductionControl(p->controlMode);
@@ -238,12 +240,15 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (! p->predictionMode) {
             p->BHPTarget.update(0.0);
             p->setBHPLimit(rst_well.bhp_target_double);
+            p->controlMode = p->whistctl_cmode =
+                producer_cmode_from_int(rst_well.hist_requested_control);
         }
-
-        if (this->isAvailableForGroupControl())
+        else if (this->isAvailableForGroupControl())
             p->addProductionControl(Well::ProducerCMode::GRUP);
+
         this->updateProduction(std::move(p));
-    } else {
+    }
+    else {
         auto i = std::make_shared<WellInjectionProperties>(this->unit_system, wname);
         i->VFPTableNumber = rst_well.vfp_table;
         i->predictionMode = this->prediction_mode;
@@ -279,6 +284,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
             : injector_cmode_from_int(rst_well.hist_requested_control);
 
         if (! i->predictionMode) {
+            i->clearControls();
             if ((active_control != Well::InjectorCMode::RATE) &&
                 (active_control != Well::InjectorCMode::BHP))
             {
@@ -301,8 +307,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
             else
                 i->resetDefaultHistoricalBHPLimit();
         }
-
-        if (this->isAvailableForGroupControl())
+        else if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
 
         this->updateInjection(std::move(i));
