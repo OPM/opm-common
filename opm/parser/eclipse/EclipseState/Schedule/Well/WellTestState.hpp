@@ -156,7 +156,6 @@ public:
       the openiing attempts, and also set the time for the last attempt to open.
     */
     std::vector<std::string> updateWells(const WellTestConfig& config,
-                                         const std::vector<Well>& wells_ecl,
                                          double sim_time);
 
     /*
