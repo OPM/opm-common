@@ -246,6 +246,10 @@ namespace Opm {
         return !(*this == other);
     }
 
+    void Well::WellInjectionProperties::clearControls() {
+        this->injectionControls = 0;
+    }
+
     void Well::WellInjectionProperties::resetDefaultHistoricalBHPLimit() {
         // this default BHP value is from simulation result,
         // without finding any related document
@@ -255,7 +259,6 @@ namespace Opm {
     void Well::WellInjectionProperties::resetBHPLimit() {
         this->bhp_hist_limit = 0;
     }
-
 
     std::ostream& operator<<( std::ostream& stream,
                               const Well::WellInjectionProperties& wp ) {

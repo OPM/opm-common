@@ -287,6 +287,8 @@ public:
                 injectionControls += int_arg;
         }
 
+        void clearControls();
+
         void resetDefaultHistoricalBHPLimit();
         void resetBHPLimit();
         void setBHPLimit(const double limit);
