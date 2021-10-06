@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cmath>
 #include <utility>
 
 #include <fmt/format.h>
@@ -28,6 +29,168 @@
 #include <opm/io/eclipse/rst/group.hpp>
 
 #include "../eval_uda.hpp"
+
+namespace {
+    bool has_limit(const double x)
+    {
+        return std::abs(x) > 0.0;
+    }
+
+    struct ProductionLimits
+    {
+        explicit ProductionLimits(const Opm::RestartIO::RstGroup& rst_group)
+            : oil { has_limit(rst_group.oil_rate_limit)    }
+            , gas { has_limit(rst_group.gas_rate_limit)    }
+            , wat { has_limit(rst_group.water_rate_limit)  }
+            , liq { has_limit(rst_group.liquid_rate_limit) }
+        {}
+
+        bool oil { false };
+        bool gas { false };
+        bool wat { false };
+        bool liq { false };
+    };
+
+    struct GasInjectionLimits
+    {
+        explicit GasInjectionLimits(const Opm::RestartIO::RstGroup& rst_group)
+            : rate { has_limit(rst_group.gas_surface_limit)   }
+            , resv { has_limit(rst_group.gas_reservoir_limit) }
+            , rein { has_limit(rst_group.gas_reinject_limit)  }
+            , vrep { has_limit(rst_group.gas_voidage_limit)   }
+        {}
+
+        bool rate { false };
+        bool resv { false };
+        bool rein { false };
+        bool vrep { false };
+    };
+
+    struct WaterInjectionLimits
+    {
+        explicit WaterInjectionLimits(const Opm::RestartIO::RstGroup& rst_group)
+            : rate { has_limit(rst_group.water_surface_limit)   }
+            , resv { has_limit(rst_group.water_reservoir_limit) }
+            , rein { has_limit(rst_group.water_reinject_limit)  }
+            , vrep { has_limit(rst_group.water_voidage_limit)   }
+        {}
+
+        bool rate { false };
+        bool resv { false };
+        bool rein { false };
+        bool vrep { false };
+    };
+
+    template <typename InjectionLimits>
+    void assign_injection_controls(const InjectionLimits&                active,
+                                   Opm::Group::GroupInjectionProperties& injection)
+    {
+        injection.injection_controls = 0;
+
+        if (active.rate)
+            injection.injection_controls += static_cast<int>(Opm::Group::InjectionCMode::RATE);
+
+        if (active.resv)
+            injection.injection_controls += static_cast<int>(Opm::Group::InjectionCMode::RESV);
+
+        if (active.rein)
+            injection.injection_controls += static_cast<int>(Opm::Group::InjectionCMode::REIN);
+
+        if (active.vrep)
+            injection.injection_controls += static_cast<int>(Opm::Group::InjectionCMode::VREP);
+    }
+
+    bool has_active(const ProductionLimits& limits)
+    {
+        return limits.oil || limits.gas || limits.wat || limits.liq;
+    }
+
+    bool has_active(const GasInjectionLimits& limits)
+    {
+        return limits.rate || limits.resv || limits.rein || limits.vrep;
+    }
+
+    bool has_active(const WaterInjectionLimits& limits)
+    {
+        return limits.rate || limits.resv || limits.rein || limits.vrep;
+    }
+
+    Opm::Group::GroupProductionProperties
+    make_production_properties(const Opm::RestartIO::RstGroup& rst_group,
+                               const ProductionLimits&         active,
+                               const Opm::UnitSystem&          unit_system)
+    {
+        auto production = Opm::Group::GroupProductionProperties { unit_system, rst_group.name };
+
+        production.oil_target.update(rst_group.oil_rate_limit);
+        production.gas_target.update(rst_group.gas_rate_limit);
+        production.water_target.update(rst_group.water_rate_limit);
+        production.liquid_target.update(rst_group.liquid_rate_limit);
+        production.cmode = Opm::Group::ProductionCModeFromInt(rst_group.prod_cmode);
+        production.guide_rate_def = Opm::Group::GuideRateProdTargetFromInt(rst_group.guide_rate_def);
+        production.exceed_action = Opm::Group::ExceedActionFromInt(rst_group.exceed_action);
+
+        if ((production.cmode == Opm::Group::ProductionCMode::ORAT) ||
+            (production.cmode == Opm::Group::ProductionCMode::WRAT) ||
+            (production.cmode == Opm::Group::ProductionCMode::GRAT) ||
+            (production.cmode == Opm::Group::ProductionCMode::LRAT))
+        {
+            production.exceed_action = Opm::Group::ExceedAction::RATE;
+        }
+
+        production.production_controls = 0;
+
+        if (active.oil)
+            production.production_controls += static_cast<int>(Opm::Group::ProductionCMode::ORAT);
+
+        if (active.gas)
+            production.production_controls += static_cast<int>(Opm::Group::ProductionCMode::GRAT);
+
+        if (active.wat)
+            production.production_controls += static_cast<int>(Opm::Group::ProductionCMode::WRAT);
+
+        if (active.liq)
+            production.production_controls += static_cast<int>(Opm::Group::ProductionCMode::LRAT);
+
+        return production;
+    }
+
+    Opm::Group::GroupInjectionProperties
+    make_injection_properties(const Opm::RestartIO::RstGroup& rst_group,
+                              const GasInjectionLimits&       active)
+    {
+        auto injection = Opm::Group::GroupInjectionProperties { rst_group.name };
+
+        injection.surface_max_rate.update(rst_group.gas_surface_limit);
+        injection.resv_max_rate.update(rst_group.gas_reservoir_limit);
+        injection.target_reinj_fraction.update(rst_group.gas_reinject_limit);
+        injection.target_void_fraction.update(rst_group.gas_voidage_limit);
+        injection.phase = Opm::Phase::GAS;
+        injection.cmode = Opm::Group::InjectionCModeFromInt(rst_group.ginj_cmode);
+
+        assign_injection_controls(active, injection);
+
+        return injection;
+    }
+
+    Opm::Group::GroupInjectionProperties
+    make_injection_properties(const Opm::RestartIO::RstGroup& rst_group,
+                              const WaterInjectionLimits&     active)
+    {
+        auto injection = Opm::Group::GroupInjectionProperties { rst_group.name };
+
+        injection.surface_max_rate.update(rst_group.water_surface_limit);
+        injection.resv_max_rate.update(rst_group.water_reservoir_limit);
+        injection.target_reinj_fraction.update(rst_group.water_reinject_limit);
+        injection.target_void_fraction.update(rst_group.water_voidage_limit);
+        injection.phase = Opm::Phase::WATER;
+        injection.cmode = Opm::Group::InjectionCModeFromInt(rst_group.winj_cmode);
+
+        assign_injection_controls(active, injection);
+
+        return injection;
+    }
+}
 
 namespace Opm {
 
@@ -59,42 +222,20 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, double udq_u
 Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     Group(rst_group.name, insert_index_arg, udq_undefined_arg, unit_system_arg)
 {
-    if (rst_group.prod_cmode != 0) {
-        Group::GroupProductionProperties production(unit_system_arg, this->m_name);
-        production.oil_target.update(rst_group.oil_rate_limit);
-        production.gas_target.update(rst_group.gas_rate_limit);
-        production.water_target.update(rst_group.water_rate_limit);
-        production.liquid_target.update(rst_group.liquid_rate_limit);
-        production.cmode = Group::ProductionCModeFromInt(rst_group.prod_cmode);
-        production.guide_rate_def = Group::GuideRateProdTargetFromInt(rst_group.guide_rate_def);
-        if ((production.cmode == Group::ProductionCMode::ORAT) ||
-            (production.cmode == Group::ProductionCMode::WRAT) ||
-            (production.cmode == Group::ProductionCMode::GRAT) ||
-            (production.cmode == Group::ProductionCMode::LRAT))
-            production.exceed_action = Group::ExceedAction::RATE;
-        this->updateProduction(production);
+    const auto prod_limits      = ProductionLimits    { rst_group };
+    const auto gas_inj_limits   = GasInjectionLimits  { rst_group };
+    const auto water_inj_limits = WaterInjectionLimits{ rst_group };
+
+    if ((rst_group.prod_cmode != 0) || has_active(prod_limits)) {
+        this->updateProduction(make_production_properties(rst_group, prod_limits, unit_system_arg));
     }
 
-    if (rst_group.winj_cmode != 0) {
-        Group::GroupInjectionProperties injection{this->m_name};
-        injection.surface_max_rate.update(rst_group.water_surface_limit);
-        injection.resv_max_rate.update(rst_group.water_reservoir_limit);
-        injection.target_reinj_fraction.update(rst_group.water_reinject_limit);
-        injection.target_void_fraction.update(rst_group.water_voidage_limit);
-        injection.phase = Phase::WATER;
-        injection.cmode = Group::InjectionCModeFromInt(rst_group.winj_cmode);
-        this->updateInjection(injection);
+    if ((rst_group.ginj_cmode != 0) || has_active(gas_inj_limits)) {
+        this->updateInjection(make_injection_properties(rst_group, gas_inj_limits));
     }
 
-    if (rst_group.ginj_cmode != 0) {
-        Group::GroupInjectionProperties injection{this->m_name};
-        injection.surface_max_rate.update(rst_group.gas_surface_limit);
-        injection.resv_max_rate.update(rst_group.gas_reservoir_limit);
-        injection.target_reinj_fraction.update(rst_group.gas_reinject_limit);
-        injection.target_void_fraction.update(rst_group.gas_voidage_limit);
-        injection.phase = Phase::GAS;
-        injection.cmode = Group::InjectionCModeFromInt(rst_group.ginj_cmode);
-        this->updateInjection(injection);
+    if ((rst_group.winj_cmode != 0) || has_active(water_inj_limits)) {
+        this->updateInjection(make_injection_properties(rst_group, water_inj_limits));
     }
 }
 
