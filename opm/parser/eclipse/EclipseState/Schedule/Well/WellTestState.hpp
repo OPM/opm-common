@@ -190,8 +190,8 @@ public:
 
     bool hasCompletion(const std::string& well_name, const int complnum) const;
 
-    size_t sizeWells() const;
-    size_t sizeCompletions() const;
+    std::size_t num_closed_wells() const;
+    std::size_t num_closed_completions() const;
 
     /*
       Return the last tested time for the well, or throw if no such well.

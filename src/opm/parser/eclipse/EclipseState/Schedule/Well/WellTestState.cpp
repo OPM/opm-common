@@ -103,8 +103,8 @@ namespace Opm {
     }
 
 
-    size_t WellTestState::sizeWells() const {
-        return this->wells.size();
+    size_t WellTestState::closed_wells() const {
+        return std::count_if(this->wells.begin(), this->wells.end(), [](const WTestWell& well) { return well.closed; });
     }
 
     std::vector<std::string>
@@ -178,7 +178,7 @@ namespace Opm {
         return (completion_iter != completions.end());
     }
 
-    size_t WellTestState::sizeCompletions() const {
+    size_t WellTestState::num_closed_completions() const {
         return this->completions.size();
     }
 
