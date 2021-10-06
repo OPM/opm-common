@@ -77,6 +77,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
@@ -1643,6 +1644,23 @@ namespace {
         }
     }
 
+    void Schedule::handleWMICP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells( well_name );
+                auto micp_properties = std::make_shared<WellMICPProperties>( well.getMICPProperties() );
+                micp_properties->handleWMICP(record);
+                if (well.updateMICPProperties(micp_properties))
+                    this->snapshots.back().wells.update( std::move(well));
+            }
+        }
+    }
+
     void Schedule::handleWPIMULT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2058,6 +2076,7 @@ namespace {
             { "WINJTEMP", &Schedule::handleWINJTEMP },
             { "WLIFTOPT", &Schedule::handleWLIFTOPT },
             { "WLIST"   , &Schedule::handleWLIST    },
+            { "WMICP"   , &Schedule::handleWMICP    },
             { "WPAVE"   , &Schedule::handleWPAVE    },
             { "WPAVEDEP", &Schedule::handleWPAVEDEP },
             { "WWPAVE"  , &Schedule::handleWWPAVE   },

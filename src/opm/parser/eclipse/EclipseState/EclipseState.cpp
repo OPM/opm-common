@@ -148,6 +148,9 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
         this->initTransMult();
         this->initFaults(deck);
+        if (deck.hasKeyword( "MICPPARA" )) {
+          this->initPara(deck);
+        }
     }
     catch (const OpmInputError& opm_error) {
         OpmLog::error(opm_error.what());
@@ -233,6 +236,10 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         return m_faults;
     }
 
+    const MICPpara& EclipseState::getMICPpara() const {
+        return m_micppara;
+    }
+
     const TransMult& EclipseState::getTransMult() const {
         return m_transMult;
     }
@@ -300,7 +307,32 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         m_transMult.applyMULTFLT( m_faults );
     }
 
+    void EclipseState::initPara(const Deck& deck) {
+        using namespace ParserKeywords;
 
+
+            const auto& keyword = deck.getKeyword<MICPPARA>();
+            const auto& record = keyword.getRecord(0);
+            double density_biofilm = record.getItem<MICPPARA::DENSITY_BIOFILM>().getSIDouble(0);
+            double density_calcite = record.getItem<MICPPARA::DENSITY_CALCITE>().getSIDouble(0);
+            double detachment_rate = record.getItem<MICPPARA::DETACHMENT_RATE>().getSIDouble(0);
+            double critical_porosity = record.getItem<MICPPARA::CRITICAL_POROSITY>().get< double >(0);
+            double fitting_factor = record.getItem<MICPPARA::FITTING_FACTOR>().get< double >(0);
+            double half_velocity_oxygen = record.getItem<MICPPARA::HALF_VELOCITY_OXYGEN>().getSIDouble(0);
+            double half_velocity_urea = record.getItem<MICPPARA::HALF_VELOCITY_UREA>().getSIDouble(0);
+            double maximum_growth_rate = record.getItem<MICPPARA::MAXIMUM_GROWTH_RATE>().getSIDouble(0);
+            double maximum_oxygen_concentration = record.getItem<MICPPARA::MAXIMUM_OXYGEN_CONCENTRATION>().getSIDouble(0);
+            double maximum_urea_concentration = record.getItem<MICPPARA::MAXIMUM_UREA_CONCENTRATION>().getSIDouble(0);
+            double maximum_urea_utilization = record.getItem<MICPPARA::MAXIMUM_UREA_UTILIZATION>().getSIDouble(0);
+            double microbial_attachment_rate = record.getItem<MICPPARA::MICROBIAL_ATTACHMENT_RATE>().getSIDouble(0);
+            double microbial_death_rate = record.getItem<MICPPARA::MICROBIAL_DEATH_RATE>().getSIDouble(0);
+            double minimum_permeability = record.getItem<MICPPARA::MINIMUM_PERMEABILITY>().getSIDouble(0);
+            double oxygen_consumption_factor = record.getItem<MICPPARA::OXYGEN_CONSUMPTION_FACTOR>().get< double >(0);
+            double tolerance_before_clogging = record.getItem<MICPPARA::TOLERANCE_BEFORE_CLOGGING>().get< double >(0);
+            double yield_growth_coefficient = record.getItem<MICPPARA::YIELD_GROWTH_COEFFICIENT>().get< double >(0);
+
+            m_micppara = MICPpara(density_biofilm, density_calcite, detachment_rate, critical_porosity, fitting_factor, half_velocity_oxygen, half_velocity_urea, maximum_growth_rate, maximum_oxygen_concentration, maximum_urea_concentration, maximum_urea_utilization, microbial_attachment_rate, microbial_death_rate, minimum_permeability, oxygen_consumption_factor , tolerance_before_clogging, yield_growth_coefficient);
+    }
 
     void EclipseState::setMULTFLT(const DeckSection& section) {
         for (size_t index=0; index < section.count("MULTFLT"); index++) {

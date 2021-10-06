@@ -422,6 +422,7 @@ public:
     const SatFuncControls& saturationFunctionControls() const noexcept;
     const Nupcol& nupcol() const noexcept;
     bool co2Storage() const noexcept;
+    bool micp() const noexcept;
 
     bool operator==(const Runspec& data) const;
     static bool rst_cmp(const Runspec& full_state, const Runspec& rst_state);
@@ -444,6 +445,7 @@ public:
         m_sfuncctrl.serializeOp(serializer);
         m_nupcol.serializeOp(serializer);
         serializer(m_co2storage);
+        serializer(m_micp);
     }
 
 private:
@@ -462,6 +464,7 @@ private:
     SatFuncControls m_sfuncctrl;
     Nupcol m_nupcol;
     bool m_co2storage;
+    bool m_micp;
 };
 
 

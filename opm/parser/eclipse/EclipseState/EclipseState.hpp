@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/MICPpara.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -73,6 +74,7 @@ namespace Opm {
         virtual const EclipseGrid& getInputGrid() const;
 
         const FaultCollection& getFaults() const;
+        const MICPpara& getMicppara() const;
         const TransMult& getTransMult() const;
 
         /// non-neighboring connections
@@ -104,6 +106,7 @@ namespace Opm {
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;
         const TracerConfig& tracer() const;
+        const MICPpara& getMICPpara() const;
 
         void loadRestartAquifers(const RestartIO::RstAquifer& aquifers);
 
@@ -123,6 +126,7 @@ namespace Opm {
             m_faults.serializeOp(serializer);
             serializer(m_title);
             tracer_config.serializeOp(serializer);
+            m_micppara.serializeOp(serializer);
         }
 
         static bool rst_cmp(const EclipseState& full_state, const EclipseState& rst_state);
@@ -132,6 +136,7 @@ namespace Opm {
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
         void initFaults(const Deck& deck);
+        void initPara(const Deck& deck);
 
         void setMULTFLT(const Opm::DeckSection& section);
 
@@ -154,6 +159,7 @@ namespace Opm {
         FaultCollection m_faults;
         std::string m_title;
         TracerConfig tracer_config;
+        MICPpara m_micppara;
     };
 } // namespace Opm
 
