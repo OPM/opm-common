@@ -67,8 +67,6 @@ public:
     struct WTestWell {
         std::string name;
         WellTestConfig::Reason reason;
-        // the well can be re-opened if the well testing is successful. We only test when it is closed.
-        bool closed;
         // it can be the time of last test,
         // or the time that the well is closed if not test has not been performed after
         double last_test;
@@ -81,7 +79,6 @@ public:
 
         bool operator==(const WTestWell& other) const {
             return this->name == other.name &&
-                   this->closed == other.closed &&
                    this->last_test == other.last_test &&
                    this->num_attempt == other.num_attempt &&
                    this->wtest_report_step == other.wtest_report_step;
@@ -90,7 +87,6 @@ public:
         template<class BufferType>
         void pack(BufferType& buffer) const {
             buffer.write(this->name);
-            buffer.write(this->closed);
             buffer.write(this->last_test);
             buffer.write(this->num_attempt);
             buffer.write(this->wtest_report_step);
@@ -99,7 +95,6 @@ public:
         template<class BufferType>
         void unpack(BufferType& buffer) {
             buffer.read(this->name);
-            buffer.read(this->closed);
             buffer.read(this->last_test);
             buffer.read(this->num_attempt);
             buffer.read(this->wtest_report_step);

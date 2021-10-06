@@ -30,19 +30,13 @@ namespace Opm {
 
         WTestWell* well_ptr = getWell(well_name, reason);
 
-        if (well_ptr) {
-            if (well_ptr->closed) {
-                throw std::runtime_error( " Well " + well_name + " is closed with reason "
-                                        + WellTestConfig::reasonToString(reason)
-                                        + ", we are trying to close it again with same reason!");
-            }
+        if (well_ptr)
             // the well exists already, we just update it with action of closing
-            well_ptr->closed = true;
             well_ptr->last_test = sim_time;
-        } else {
+        else {
             // by default, we use -1 if there is no WTEST request for this well
             // it will be updated when checking for WellTestConfig
-            this->wells.push_back({well_name, reason, true, sim_time, 0, -1});
+            this->wells.push_back({well_name, reason, sim_time, 0, -1});
         }
     }
 
@@ -63,7 +57,7 @@ namespace Opm {
 
     bool WellTestState::hasWellClosed(const std::string& well_name) const {
         for (const auto& well : wells)
-            if (well.name == well_name && well.closed)
+            if (well.name == well_name)
                 return true;
 
         return false;
@@ -107,7 +101,7 @@ namespace Opm {
             if (well_ecl->getStatus() != Well::Status::OPEN)
                 continue;
 
-            if (well.closed && config.has(well.name, well.reason)) {
+            if (config.has(well.name, well.reason)) {
                 const auto& well_config = config.get(well.name, well.reason);
                 double elapsed = sim_time - well.last_test;
 
