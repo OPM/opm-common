@@ -178,8 +178,6 @@ public:
      * no matter what is the closing cause */
     bool hasWellClosed(const std::string& well_name) const;
 
-    void openWell(const std::string& well_name, WellTestConfig::Reason reason);
-
     /* open the well no matter what is the closing cause.
      * it is used when WELOPEN or WCON* keyword request to open the well */
     void openWell(const std::string& well_name);

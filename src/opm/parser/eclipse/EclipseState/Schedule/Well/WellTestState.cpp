@@ -47,19 +47,6 @@ namespace Opm {
     }
 
 
-    void WellTestState::openWell(const std::string& well_name, WellTestConfig::Reason reason) {
-
-        WTestWell* well_ptr = getWell(well_name, reason);
-
-        if (well_ptr)
-            well_ptr->closed = false;
-        else
-            throw std::runtime_error("No well named " + well_name + " with close reason "
-                                    + WellTestConfig::reasonToString(reason)
-                                    + " found in WellTestState.");
-    }
-
-
     void WellTestState::openWell(const std::string& well_name) {
         for (auto& well : wells)
             if (well.name == well_name)
