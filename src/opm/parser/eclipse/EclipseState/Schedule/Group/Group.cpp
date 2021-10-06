@@ -772,6 +772,13 @@ Group::ExceedAction Group::ExceedActionFromString( const std::string& stringValu
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+Group::ExceedAction Group::ExceedActionFromInt( const int value ) {
+
+    if (value < 0) return ExceedAction::NONE;
+    if (value == 4) return ExceedAction::RATE;
+
+    throw std::invalid_argument(fmt::format("Unknown ExceedAction state integer: {}", value));
+}
 
 const std::string Group::InjectionCMode2String( InjectionCMode enumValue ) {
     switch( enumValue ) {
