@@ -48,9 +48,10 @@ namespace Opm {
 
 
     void WellTestState::openWell(const std::string& well_name) {
-        for (auto& well : wells)
-            if (well.name == well_name)
-                well.closed = false;
+        this->wells.erase( std::remove_if(this->wells.begin(),
+                                          this->wells.end(),
+                                          [&well_name](const WellTestState::WTestWell& well) { return well.name == well_name; }),
+                           this->wells.end());
     }
 
     void WellTestState::openAllCompletions(const std::string& well_name) {
@@ -81,7 +82,7 @@ namespace Opm {
 
 
     size_t WellTestState::closed_wells() const {
-        return std::count_if(this->wells.begin(), this->wells.end(), [](const WTestWell& well) { return well.closed; });
+        return this->wells.size();
     }
 
     std::vector<std::string>
