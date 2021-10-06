@@ -738,6 +738,11 @@ namespace {
         parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg_fmt, handlerContext.keyword.location(), errors );
     }
 
+    void Schedule::handleNETBALAN(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        Network::Balance new_balance(this->snapshots.back().tuning(), handlerContext.keyword);
+        this->snapshots.back().network_balance.update( std::move(new_balance) );
+    }
+
     void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto ext_network = this->snapshots.back().network.get();
 
@@ -2028,6 +2033,7 @@ namespace {
             { "MULTY-"  , &Schedule::handleMXUNSUPP },
             { "MULTZ"   , &Schedule::handleMXUNSUPP },
             { "MULTZ-"  , &Schedule::handleMXUNSUPP },
+            { "NETBALAN", &Schedule::handleNETBALAN },
             { "NODEPROP", &Schedule::handleNODEPROP },
             { "NUPCOL"  , &Schedule::handleNUPCOL   },
             { "RPTONLY" , &Schedule::handleRPTONLY  },

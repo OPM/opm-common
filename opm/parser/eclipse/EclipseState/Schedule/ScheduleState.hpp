@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Network/Balance.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
@@ -358,6 +359,7 @@ namespace Opm {
         ptr_member<WellTestConfig> wtest_config;
         ptr_member<GasLiftOpt> glo;
         ptr_member<Network::ExtNetwork> network;
+        ptr_member<Network::Balance> network_balance;
 
         ptr_member<RPTConfig> rpt_config;
         ptr_member<RFTConfig> rft_config;
@@ -379,6 +381,8 @@ namespace Opm {
                                   return this->wlist_manager;
             else if constexpr ( std::is_same_v<T, Network::ExtNetwork> )
                                   return this->network;
+            else if constexpr ( std::is_same_v<T, Network::Balance> )
+                                  return this->network_balance;
             else if constexpr ( std::is_same_v<T, RPTConfig> )
                                   return this->rpt_config;
             else if constexpr ( std::is_same_v<T, Action::Actions> )
@@ -417,6 +421,8 @@ namespace Opm {
                                   return this->wlist_manager;
             else if constexpr ( std::is_same_v<T, Network::ExtNetwork> )
                                   return this->network;
+            else if constexpr ( std::is_same_v<T, Network::Balance> )
+                                  return this->network_balance;
             else if constexpr ( std::is_same_v<T, RPTConfig> )
                                   return this->rpt_config;
             else if constexpr ( std::is_same_v<T, Action::Actions> )

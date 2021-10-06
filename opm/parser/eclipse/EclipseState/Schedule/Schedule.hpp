@@ -301,6 +301,7 @@ namespace Opm
             pack_unpack<GConSump, Serializer>(serializer);
             pack_unpack<WListManager, Serializer>(serializer);
             pack_unpack<Network::ExtNetwork, Serializer>(serializer);
+            pack_unpack<Network::Balance, Serializer>(serializer);
             pack_unpack<RPTConfig, Serializer>(serializer);
             pack_unpack<Action::Actions, Serializer>(serializer);
             pack_unpack<UDQActive, Serializer>(serializer);
@@ -602,6 +603,7 @@ namespace Opm
         void handleMESSAGES (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleMULTFLT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleMXUNSUPP (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNETBALAN (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNODEPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNUPCOL   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleRPTONLY  (const HandlerContext&, const ParseContext&, ErrorGuard&);
