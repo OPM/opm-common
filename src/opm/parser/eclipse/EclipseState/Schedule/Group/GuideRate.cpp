@@ -392,6 +392,40 @@ void Opm::GuideRate::init_grvalue(const std::size_t  report_step,
     this->assign_grvalue(wgname, model, std::move(value));
 }
 
+void Opm::GuideRate::init_grvalue_SI(const std::size_t  report_step,
+                                     const std::string& wgname,
+                                     GuideRateValue     value)
+{
+    if ((value.sim_time < 0.0) ||
+        (value.target == GuideRateModel::Target::NONE) ||
+        !(value.value > 0.0))
+    {
+        return;
+    }
+
+    using M = UnitSystem::measure;
+
+    switch (value.target) {
+    case GuideRateModel::Target::OIL:
+    case GuideRateModel::Target::WAT:
+    case GuideRateModel::Target::LIQ:
+        value.value = this->schedule.getUnits().from_si(M::liquid_surface_rate, value.value);
+        break;
+
+    case GuideRateModel::Target::GAS:
+        value.value = this->schedule.getUnits().from_si(M::gas_surface_rate, value.value);
+        break;
+
+    case GuideRateModel::Target::RES:
+        value.value = this->schedule.getUnits().from_si(M::rate, value.value);
+        break;
+
+    default:
+        break;
+    }
+
+    this->init_grvalue(report_step, wgname, std::move(value));
+}
 
 double Opm::GuideRate::get_grvalue_result(const GRValState& gr) const
 {

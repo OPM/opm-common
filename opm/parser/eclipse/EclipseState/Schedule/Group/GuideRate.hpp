@@ -113,6 +113,7 @@ public:
     double getSI(const std::string& group, const Phase& phase) const;
 
     void init_grvalue(const std::size_t report_step, const std::string& wgname, GuideRateValue value);
+    void init_grvalue_SI(const std::size_t report_step, const std::string& wgname, GuideRateValue value);
 
     void updateGuideRateExpiration(const double      sim_time,
                                    const std::size_t report_step);
