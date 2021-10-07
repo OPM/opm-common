@@ -47,7 +47,7 @@ namespace Opm {
     }
 
 
-    void WellTestState::openWell(const std::string& well_name, WellTestConfig::Reason reason) {
+    void WellTestState::open_well(const std::string& well_name, WellTestConfig::Reason reason) {
 
         WTestWell* well_ptr = getWell(well_name, reason);
 
@@ -60,7 +60,7 @@ namespace Opm {
     }
 
 
-    void WellTestState::openWell(const std::string& well_name) {
+    void WellTestState::open_well(const std::string& well_name) {
         for (auto& well : wells)
             if (well.name == well_name)
                 well.closed = false;
