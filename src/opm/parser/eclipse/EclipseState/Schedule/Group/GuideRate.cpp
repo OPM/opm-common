@@ -17,11 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
 
-#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -30,23 +31,19 @@
 #include <type_traits>
 #include <utility>
 
-#include <stddef.h>
-
 #include <fmt/core.h>
 
-namespace Opm {
-
-double GuideRate::RateVector::eval(Well::GuideRateTarget target) const
+double Opm::GuideRate::RateVector::eval(const Well::GuideRateTarget target) const
 {
     return this->eval(GuideRateModel::convert_target(target));
 }
 
-double GuideRate::RateVector::eval(Group::GuideRateProdTarget target) const
+double Opm::GuideRate::RateVector::eval(const Group::GuideRateProdTarget target) const
 {
     return this->eval(GuideRateModel::convert_target(target));
 }
 
-double GuideRate::RateVector::eval(GuideRateModel::Target target) const
+double Opm::GuideRate::RateVector::eval(const GuideRateModel::Target target) const
 {
     if (target == GuideRateModel::Target::OIL)
         return this->oil_rat;
@@ -68,22 +65,27 @@ double GuideRate::RateVector::eval(GuideRateModel::Target target) const
     };
 }
 
-
-GuideRate::GuideRate(const Schedule& schedule_arg) :
-    schedule(schedule_arg)
+Opm::GuideRate::GuideRate(const Schedule& schedule_arg)
+    : schedule(schedule_arg)
 {}
 
-double GuideRate::get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const
+double Opm::GuideRate::get(const std::string&          well,
+                           const Well::GuideRateTarget target,
+                           const RateVector&           rates) const
 {
     return this->get(well, GuideRateModel::convert_target(target), rates);
 }
 
-double GuideRate::get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const
+double Opm::GuideRate::get(const std::string&               group,
+                           const Group::GuideRateProdTarget target,
+                           const RateVector&                rates) const
 {
     return this->get(group, GuideRateModel::convert_target(target), rates);
 }
 
-double GuideRate::get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const
+double Opm::GuideRate::get(const std::string&           name,
+                           const GuideRateModel::Target model_target,
+                           const RateVector&            rates) const
 {
     using namespace unit;
     using prefix::micro;
@@ -110,7 +112,7 @@ double GuideRate::get(const std::string& name, GuideRateModel::Target model_targ
     return grvalue * scale;
 }
 
-double GuideRate::get(const std::string& name, const Phase& phase) const
+double Opm::GuideRate::get(const std::string& name, const Phase& phase) const
 {
     auto iter = this->injection_group_values.find(std::make_pair(phase, name));
     if (iter == this->injection_group_values.end()) {
@@ -120,23 +122,23 @@ double GuideRate::get(const std::string& name, const Phase& phase) const
     return iter->second;
 }
 
-double GuideRate::getSI(const std::string&          well,
-                        const Well::GuideRateTarget target,
-                        const RateVector&           rates) const
+double Opm::GuideRate::getSI(const std::string&          well,
+                             const Well::GuideRateTarget target,
+                             const RateVector&           rates) const
 {
     return this->getSI(well, GuideRateModel::convert_target(target), rates);
 }
 
-double GuideRate::getSI(const std::string&               group,
-                        const Group::GuideRateProdTarget target,
-                        const RateVector&                rates) const
+double Opm::GuideRate::getSI(const std::string&               group,
+                             const Group::GuideRateProdTarget target,
+                             const RateVector&                rates) const
 {
     return this->getSI(group, GuideRateModel::convert_target(target), rates);
 }
 
-double GuideRate::getSI(const std::string&           wgname,
-                        const GuideRateModel::Target target,
-                        const RateVector&            rates) const
+double Opm::GuideRate::getSI(const std::string&           wgname,
+                             const GuideRateModel::Target target,
+                             const RateVector&            rates) const
 {
     using M = UnitSystem::measure;
 
@@ -165,7 +167,7 @@ double GuideRate::getSI(const std::string&           wgname,
     };
 }
 
-double GuideRate::getSI(const std::string& group, const Phase& phase) const
+double Opm::GuideRate::getSI(const std::string& group, const Phase& phase) const
 {
     using M = UnitSystem::measure;
 
@@ -188,22 +190,22 @@ double GuideRate::getSI(const std::string& group, const Phase& phase) const
     };
 }
 
-bool GuideRate::has(const std::string& name) const
+bool Opm::GuideRate::has(const std::string& name) const
 {
     return this->values.count(name) > 0;
 }
 
-bool GuideRate::has(const std::string& name, const Phase& phase) const
+bool Opm::GuideRate::has(const std::string& name, const Phase& phase) const
 {
     return this->injection_group_values.count(std::pair(phase, name)) > 0;
 }
 
-void GuideRate::compute(const std::string& wgname,
-                        size_t             report_step,
-                        double             sim_time,
-                        double             oil_pot,
-                        double             gas_pot,
-                        double             wat_pot)
+void Opm::GuideRate::compute(const std::string& wgname,
+                             const std::size_t  report_step,
+                             const double       sim_time,
+                             const double       oil_pot,
+                             const double       gas_pot,
+                             const double       wat_pot)
 {
     this->potentials[wgname] = RateVector{oil_pot, gas_pot, wat_pot};
 
@@ -216,12 +218,12 @@ void GuideRate::compute(const std::string& wgname,
     }
 }
 
-void GuideRate::group_compute(const std::string& wgname,
-                              size_t             report_step,
-                              double             sim_time,
-                              double             oil_pot,
-                              double             gas_pot,
-                              double             wat_pot)
+void Opm::GuideRate::group_compute(const std::string& wgname,
+                                   const std::size_t  report_step,
+                                   const double       sim_time,
+                                   const double       oil_pot,
+                                   const double       gas_pot,
+                                   const double       wat_pot)
 {
     const auto& config = this->schedule[report_step].guide_rate();
     const auto& group = config.production_group(wgname);
@@ -271,10 +273,10 @@ void GuideRate::group_compute(const std::string& wgname,
     }
 }
 
-void GuideRate::compute(const std::string& wgname,
-                        const Phase& phase,
-                        size_t report_step,
-                        double guide_rate)
+void Opm::GuideRate::compute(const std::string& wgname,
+                             const Phase&       phase,
+                             const std::size_t  report_step,
+                             const double       guide_rate)
 {
     const auto& config = this->schedule[report_step].guide_rate();
     if (!config.has_injection_group(phase, wgname))
@@ -292,17 +294,16 @@ void GuideRate::compute(const std::string& wgname,
     this->injection_group_values[std::make_pair(phase, wgname)] = group.guide_rate;
 }
 
-void GuideRate::well_compute(const std::string& wgname,
-                             size_t             report_step,
-                             double             sim_time,
-                             double             oil_pot,
-                             double             gas_pot,
-                             double             wat_pot)
+void Opm::GuideRate::well_compute(const std::string& wgname,
+                                  const std::size_t  report_step,
+                                  const double       sim_time,
+                                  const double       oil_pot,
+                                  const double       gas_pot,
+                                  const double       wat_pot)
 {
     const auto& config = this->schedule[report_step].guide_rate();
 
-    // guide rates spesified with WGRUPCON
-    if (config.has_well(wgname)) {
+    if (config.has_well(wgname)) { // WGRUPCON
         const auto& well = config.well(wgname);
         if (well.guide_rate > 0.0) {
             auto model_target = GuideRateModel::convert_target(well.target);
@@ -312,8 +313,8 @@ void GuideRate::well_compute(const std::string& wgname,
         }
     }
     else if (config.has_model()) { // GUIDERAT
-        // only look for wells not groups
         if (! this->schedule.hasWell(wgname, report_step)) {
+            // 'wgname' might be a group or the well is not yet online.
             return;
         }
 
@@ -337,24 +338,27 @@ void GuideRate::well_compute(const std::string& wgname,
     // If neither WGRUPCON nor GUIDERAT is specified potentials are used
 }
 
-double GuideRate::eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot) const
+double Opm::GuideRate::eval_form(const GuideRateModel& model,
+                                 const double          oil_pot,
+                                 const double          gas_pot,
+                                 const double          wat_pot) const
 {
     return model.eval(oil_pot, gas_pot, wat_pot);
 }
 
-double GuideRate::eval_group_pot() const
+double Opm::GuideRate::eval_group_pot() const
 {
     return 0.0;
 }
 
-double GuideRate::eval_group_resvinj() const
+double Opm::GuideRate::eval_group_resvinj() const
 {
     return 0.0;
 }
 
-void GuideRate::assign_grvalue(const std::string&    wgname,
-                               const GuideRateModel& model,
-                               GuideRateValue&&      value)
+void Opm::GuideRate::assign_grvalue(const std::string&    wgname,
+                                    const GuideRateModel& model,
+                                    GuideRateValue&&      value)
 {
     auto& v = this->values[wgname];
     if (v == nullptr) {
@@ -383,26 +387,28 @@ void GuideRate::assign_grvalue(const std::string&    wgname,
     v->curr.value = damping_factor*new_guide_rate + (1 - damping_factor)*v->prev.value;
 }
 
-
-void GuideRate::init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value) {
+void Opm::GuideRate::init_grvalue(const std::size_t  report_step,
+                                  const std::string& wgname,
+                                  GuideRateValue     value)
+{
     const auto& model = this->schedule[report_step].guide_rate().model();
     this->assign_grvalue(wgname, model, std::move(value));
 }
 
 
-double GuideRate::get_grvalue_result(const GRValState& gr) const
+double Opm::GuideRate::get_grvalue_result(const GRValState& gr) const
 {
     return (gr.curr.sim_time < 0.0)
         ? 0.0
         : std::max(gr.curr.value, 0.0);
 }
 
-
-void GuideRate::updateGuideRateExpiration(double sim_time, size_t report_step)
+void Opm::GuideRate::updateGuideRateExpiration(const double      sim_time,
+                                               const std::size_t report_step)
 {
     const auto& config = this->schedule[report_step].guide_rate();
 
-    if (!config.has_model()) {
+    if (! config.has_model()) {
         this->guide_rates_expired = false;
         return;
     }
