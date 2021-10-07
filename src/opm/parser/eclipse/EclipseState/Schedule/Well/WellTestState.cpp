@@ -108,7 +108,7 @@ namespace Opm {
     }
 
     std::vector<std::string>
-    WellTestState::updateWells(const WellTestConfig& config,
+    WellTestState::test_wells(const WellTestConfig& config,
                                double sim_time) {
         std::vector<std::string> output;
 
