@@ -1434,6 +1434,16 @@ namespace {
                 this->updateGuideRateModel(guide_rate_model, report_step);
             }
         }
+
+        for (const auto& rst_group : rst_state.groups) {
+            const auto& group = this->snapshots.back().groups.get( rst_group.name );
+            if (group.isProductionGroup()) {
+                auto new_config = this->snapshots.back().guide_rate();
+                new_config.update_production_group(group);
+                this->snapshots.back().guide_rate.update(std::move(new_config));
+            }
+        }
+
         this->snapshots.back().udq.update( UDQConfig(this->m_static.m_runspec.udqParams(), rst_state) );
         const auto& uda_records = UDQActive::load_rst( this->m_static.m_unit_system, this->snapshots.back().udq(), rst_state, this->wellNames(report_step), this->groupNames(report_step));
         if (!uda_records.empty()) {
