@@ -234,21 +234,23 @@ void Opm::GuideRate::group_compute(const std::string& wgname,
         this->assign_grvalue(wgname, model, { sim_time, group.guide_rate, model_target });
     }
     else {
+        const auto is_formula = group.target == Group::GuideRateProdTarget::FORM;
+
+        if (is_formula && !config.has_model()) {
+            throw std::logic_error {
+                "When specifying GUIDERATE target FORM you must "
+                "enter a guiderate model with the GUIDERAT keyword"
+            };
+        }
+
         auto iter = this->values.find(wgname);
 
-        // If the FORM mode is used we check if the last computation is
-        // recent enough; then we just return.
-        if (iter != this->values.end()) {
-            if (group.target == Group::GuideRateProdTarget::FORM) {
-                if (! config.has_model()) {
-                    throw std::logic_error {
-                        "When specifying GUIDERATE target FORM you must "
-                        "enter a guiderate model with the GUIDERAT keyword"
-                    };
-                }
-
-                if (!this->guide_rates_expired && this->values.at(wgname)->curr.value > 0) return;
-            }
+        // Use existing GR value if sufficently recent.
+        if ((iter != this->values.end()) && is_formula &&
+            !this->guide_rates_expired &&
+            (iter->second->curr.value > 0.0))
+        {
+            return;
         }
 
         if (group.target == Group::GuideRateProdTarget::INJV) {
@@ -259,14 +261,7 @@ void Opm::GuideRate::group_compute(const std::string& wgname,
             throw std::logic_error("Group guide rate mode: POTN not implemented");
         }
 
-        if (group.target == Group::GuideRateProdTarget::FORM) {
-            if (! config.has_model()) {
-                throw std::logic_error {
-                    "When specifying GUIDERATE target FORM you must "
-                    "enter a guiderate model with the GUIDERAT keyword"
-                };
-            }
-
+        if (is_formula) {
             const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
             this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
         }
@@ -318,24 +313,26 @@ void Opm::GuideRate::well_compute(const std::string& wgname,
             return;
         }
 
-        const auto& well = this->schedule.getWell(wgname, report_step);
-
         // GUIDERAT does not apply to injectors
-        if (well.isInjector()) {
+        if (this->schedule.getWell(wgname, report_step).isInjector()) {
             return;
         }
 
-        // Newly opened wells without calculated guide rates always need to update guide rates
-        // With a non-zero guide rate value basically mean the well exisits in GuideRate already, aka, NOT new well
-        if (!this->guide_rates_expired &&
-            (this->values.count(wgname) > 0 && this->values.at(wgname)->curr.value > 0) ) {
-            return;
+        // Use existing guide rate value if sufficiently recent.
+        {
+            auto existing = this->values.find(wgname);
+            if ((existing != this->values.end()) &&
+                !this->guide_rates_expired &&
+                (existing->second->curr.value > 0.0))
+            {
+                return;
+            }
         }
 
-        const auto guide_rate = this->eval_form(config.model(), oil_pot, gas_pot, wat_pot);
-        this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
+        const auto& model = config.model();
+        const auto guide_rate = this->eval_form(model, oil_pot, gas_pot, wat_pot);
+        this->assign_grvalue(wgname, model, { sim_time, guide_rate, model.target() });
     }
-    // If neither WGRUPCON nor GUIDERAT is specified potentials are used
 }
 
 double Opm::GuideRate::eval_form(const GuideRateModel& model,
