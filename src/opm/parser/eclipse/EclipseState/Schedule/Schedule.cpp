@@ -1399,35 +1399,38 @@ namespace {
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
         }
+
         this->snapshots.back().update_tuning(rst_state.tuning);
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
-
         {
             const auto& header = rst_state.header;
-            bool time_interval = 0;
-            GuideRateModel::Target target = GuideRateModel::Target::OIL;
-            bool allow_increase = true;
-            bool use_free_gas = false;
-            if (GuideRateModel::rst_valid(time_interval,
+            if (GuideRateModel::rst_valid(header.guide_rate_delay,
                                           header.guide_rate_a,
                                           header.guide_rate_b,
                                           header.guide_rate_c,
                                           header.guide_rate_d,
                                           header.guide_rate_e,
                                           header.guide_rate_f,
-                                          header.guide_rate_damping)) {
-                auto guide_rate_model = GuideRateModel(time_interval,
-                                                       target,
-                                                       header.guide_rate_a,
-                                                       header.guide_rate_b,
-                                                       header.guide_rate_c,
-                                                       header.guide_rate_d,
-                                                       header.guide_rate_e,
-                                                       header.guide_rate_f,
-                                                       allow_increase,
-                                                       header.guide_rate_damping,
-                                                       use_free_gas);
+                                          header.guide_rate_damping))
+            {
+                const bool allow_increase = true;
+                const bool use_free_gas = false;
+
+                const auto guide_rate_model = GuideRateModel {
+                    header.guide_rate_delay,
+                    GuideRateModel::TargetFromRestart(header.guide_rate_nominated_phase),
+                    header.guide_rate_a,
+                    header.guide_rate_b,
+                    header.guide_rate_c,
+                    header.guide_rate_d,
+                    header.guide_rate_e,
+                    header.guide_rate_f,
+                    allow_increase,
+                    header.guide_rate_damping,
+                    use_free_gas
+                };
+
                 this->updateGuideRateModel(guide_rate_model, report_step);
             }
         }
@@ -1468,7 +1471,6 @@ namespace {
             }
             this->snapshots.back().udq_active.update( std::move(udq_active) );
         }
-
 
         if (!rst_state.actions.empty()) {
             auto actions = this->snapshots.back().actions();

@@ -90,6 +90,7 @@ struct RstHeader {
     int ngroup_udq;
     int nfield_udq;
     int num_action;
+    int guide_rate_nominated_phase;
 
     bool e300_radial;
     bool e100_radial;
