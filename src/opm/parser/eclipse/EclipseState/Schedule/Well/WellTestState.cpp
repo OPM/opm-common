@@ -73,7 +73,7 @@ namespace Opm {
                           completions.end());
     }
 
-    bool WellTestState::hasWellClosed(const std::string& well_name) const {
+    bool WellTestState::well_is_closed(const std::string& well_name) const {
         for (const auto& well : wells)
             if (well.name == well_name && well.closed)
                 return true;
@@ -82,7 +82,7 @@ namespace Opm {
     }
 
 
-    bool WellTestState::hasWellClosed(const std::string& well_name, WellTestConfig::Reason reason) const {
+    bool WellTestState::well_is_closed(const std::string& well_name, WellTestConfig::Reason reason) const {
         const auto well_iter = std::find_if(wells.begin(),
                                             wells.end(),
                                             [&well_name, &reason](const WTestWell& well)

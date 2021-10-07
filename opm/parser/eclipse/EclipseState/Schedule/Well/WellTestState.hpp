@@ -166,11 +166,11 @@ public:
     */
     void dropCompletion(const std::string& well_name, int complnum);
 
-    bool hasWellClosed(const std::string& well_name, WellTestConfig::Reason reason) const;
+    bool well_is_closed(const std::string& well_name, WellTestConfig::Reason reason) const;
 
     /* whether there is a well with the well_name closed in the WellTestState,
      * no matter what is the closing cause */
-    bool hasWellClosed(const std::string& well_name) const;
+    bool well_is_closed(const std::string& well_name) const;
 
     void openWell(const std::string& well_name, WellTestConfig::Reason reason);
 
