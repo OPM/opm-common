@@ -410,17 +410,25 @@ void Opm::GuideRate::updateGuideRateExpiration(const double      sim_time,
         return;
     }
 
-    // getting the last update time
-    double last_update_time = std::numeric_limits<double>::max();
-    for ([[maybe_unused]] const auto& [wgname, value] : this->values) {
-        const double update_time = value->curr.sim_time;
-        if (value->curr.value > 0 && update_time < last_update_time) {
-            last_update_time = update_time;
-        }
+    if (this->values.empty()) {
+        this->guide_rates_expired = true;
+        return;
     }
 
-    const double update_delay = config.model().update_delay();
-    this->guide_rates_expired = (sim_time >= (last_update_time + update_delay));
-}
+    auto curr_sim_time = [](const auto& grMapElem)
+    {
+        return grMapElem.second->curr.sim_time;
+    };
 
+    // Get previous general update time--earliest 'curr.sim_time' in
+    // existing collection.
+    auto last_update = std::min_element(this->values.begin(), this->values.end(),
+        [&curr_sim_time](const auto& gr1, const auto& gr2)
+    {
+        return curr_sim_time(gr1) < curr_sim_time(gr2);
+    });
+
+    const auto update_delay = config.model().update_delay();
+    this->guide_rates_expired =
+        ! (sim_time < curr_sim_time(*last_update) + update_delay);
 }
