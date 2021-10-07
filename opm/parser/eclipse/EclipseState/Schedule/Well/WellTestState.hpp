@@ -180,7 +180,7 @@ public:
 
     void open_completions(const std::string& well_name);
 
-    bool hasCompletion(const std::string& well_name, const int complnum) const;
+    bool completion_is_closed(const std::string& well_name, const int complnum) const;
 
     std::size_t num_closed_wells() const;
     std::size_t num_closed_completions() const;

@@ -153,7 +153,7 @@ namespace Opm {
 
 
     void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time) {
-        if (this->hasCompletion(well_name, complnum))
+        if (this->completion_is_closed(well_name, complnum))
             return;
 
         this->completions.push_back( {well_name, complnum, sim_time, 0} );
@@ -168,7 +168,7 @@ namespace Opm {
     }
 
 
-    bool WellTestState::hasCompletion(const std::string& well_name, const int complnum) const {
+    bool WellTestState::completion_is_closed(const std::string& well_name, const int complnum) const {
         const auto completion_iter = std::find_if(completions.begin(),
                                                   completions.end(),
                                                   [&well_name, &complnum](const ClosedCompletion& completion)
