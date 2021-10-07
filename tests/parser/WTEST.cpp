@@ -165,16 +165,16 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     WellTestConfig wc;
     WellTestState st;
-    st.addClosedCompletion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 2, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 1U);
 
-    st.addClosedCompletion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 2, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 1U);
 
-    st.addClosedCompletion("WELL_NAME", 3, 100);
+    st.close_completion("WELL_NAME", 3, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 2U);
 
-    st.addClosedCompletion("WELLX", 3, 100);
+    st.close_completion("WELLX", 3, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 3U);
 
     const UnitSystem us{};
@@ -197,10 +197,10 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 
 BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
     WellTestState st, st2;
-    st.addClosedCompletion("WELL_NAME", 2, 100);
-    st.addClosedCompletion("WELL_NAME", 2, 100);
-    st.addClosedCompletion("WELL_NAME", 3, 100);
-    st.addClosedCompletion("WELLX", 3, 100);
+    st.close_completion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 3, 100);
+    st.close_completion("WELLX", 3, 100);
 
     st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
     st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);

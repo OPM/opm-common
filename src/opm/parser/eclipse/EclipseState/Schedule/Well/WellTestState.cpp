@@ -152,7 +152,7 @@ namespace Opm {
     }
 
 
-    void WellTestState::addClosedCompletion(const std::string& well_name, int complnum, double sim_time) {
+    void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time) {
         if (this->hasCompletion(well_name, complnum))
             return;
 

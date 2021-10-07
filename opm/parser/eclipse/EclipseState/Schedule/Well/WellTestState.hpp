@@ -147,7 +147,7 @@ public:
       The simulator has decided to close a particular completion in a well; we then add it here
       as a closed completions
     */
-    void addClosedCompletion(const std::string& well_name, int complnum, double sim_time);
+    void close_completion(const std::string& well_name, int complnum, double sim_time);
 
     /*
       The update will consult the WellTestConfig object and return a list of
