@@ -26,7 +26,7 @@
 
 namespace Opm {
 
-    void WellTestState::closeWell(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
+    void WellTestState::close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
 
         WTestWell* well_ptr = getWell(well_name, reason);
 

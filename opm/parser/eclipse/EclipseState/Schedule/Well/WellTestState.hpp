@@ -141,7 +141,7 @@ public:
       The simulator has decided to close a particular well; we then add it here
       as a closed well with a particualar reason.
     */
-    void closeWell(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
+    void close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
 
     /*
       The simulator has decided to close a particular completion in a well; we then add it here

@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
     WellTestConfig wc;
     WellTestState st;
     wc.add_well("WELL_NAME", "P", 0, 0, 0, 0);
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 1U);
 
     const UnitSystem us{};
@@ -91,19 +91,19 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
 BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     const double day = 86400.;
     WellTestState st;
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 1U);
 
     st.openWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 0);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 1U);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 2U);
 
-    st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
+    st.close_well("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 3U);
 
     const UnitSystem us{};
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 
     st.openWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1900. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1900. * day);
 
     // We should not test it:
     BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 2400. * day).size(), 0U);
@@ -202,9 +202,9 @@ BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
     st.close_completion("WELL_NAME", 3, 100);
     st.close_completion("WELLX", 3, 100);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
-    st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    st.close_well("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
 
     BOOST_CHECK(!(st == st2));
 
