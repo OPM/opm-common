@@ -20,6 +20,7 @@
 #ifndef OPM_ECLIPSE_STATE_HPP
 #define OPM_ECLIPSE_STATE_HPP
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -91,9 +92,9 @@ namespace Opm {
         const EclipseConfig& cfg() const;
         const GridDims& gridDims() const;
 
-        // the unit system used by the deck. note that it is rarely needed to convert
-        // units because internally to opm-parser everything is represented by SI
-        // units...
+        // the unit system used by the deck. note that it is rarely needed
+        // to convert units because internally to opm-parser everything is
+        // represented by SI units.
         const UnitSystem& getDeckUnitSystem() const;
         const UnitSystem& getUnits() const;
 
@@ -105,6 +106,7 @@ namespace Opm {
         const AquiferConfig& aquifer() const;
         const TracerConfig& tracer() const;
 
+        void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
         void loadRestartAquifers(const RestartIO::RstAquifer& aquifers);
 
         template<class Serializer>
