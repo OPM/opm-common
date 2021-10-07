@@ -109,8 +109,7 @@ macro (config_hook)
                                             set(HAVE_ECL_OUTPUT 1)")
     endif()
 
-    # Configure boost targets for old cmake
-    include(cmake/Modules/BoostTargets.cmake)
+    find_package(Boost COMPONENTS filesystem regex system unit_test_framework)
 
     if (HAVE_DYNAMIC_BOOST_TEST)
       set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
