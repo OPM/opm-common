@@ -160,14 +160,6 @@ public:
                                          double sim_time);
 
     /*
-      The update will consult the WellTestConfig object and return a list of
-      completions which should be checked for possible reopening; observe that the
-      update method will update the internal state of the object by counting up
-      the openiing attempts, and also set the time for the last attempt to open.
-    */
-    std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
-
-    /*
       If the simulator decides that a constraint is no longer met the dropCompletion()
       method should be called to indicate that this reason for keeping the well
       closed is no longer active.

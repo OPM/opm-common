@@ -187,22 +187,6 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     auto num_closed_completions = st.updateWells(wc, wells, 5000);
     BOOST_CHECK_EQUAL( num_closed_completions.size(), 0U);
 
-    wc.add_well("WELL_NAME", "C", 1000, 2, 0, 0);
-    // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 200).size(), 0U);
-
-    // We should test it:
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 1200).size(), 2U);
-
-    // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 1700).size(), 0U);
-
-    // We should test it:
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 2400).size(), 2U);
-
-    // Too many attempts:
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 24000).size(), 0U);
-
     st.dropCompletion("WELL_NAME", 2);
     st.dropCompletion("WELLX", 3);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 1U);

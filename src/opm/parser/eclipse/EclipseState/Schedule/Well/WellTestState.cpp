@@ -182,23 +182,6 @@ namespace Opm {
         return this->completions.size();
     }
 
-    std::vector<std::pair<std::string, int>> WellTestState::updateCompletion(const WellTestConfig& config, double sim_time) {
-        std::vector<std::pair<std::string, int>> output;
-        for (auto& closed_completion : this->completions) {
-            if (config.has(closed_completion.wellName, WellTestConfig::Reason::COMPLETION)) {
-                const auto& well_config = config.get(closed_completion.wellName, WellTestConfig::Reason::COMPLETION);
-                double elapsed = sim_time - closed_completion.last_test;
-
-                if (elapsed >= well_config.test_interval)
-                    if (well_config.num_test == 0 || (closed_completion.num_attempt < well_config.num_test)) {
-                        closed_completion.last_test = sim_time;
-                        closed_completion.num_attempt += 1;
-                        output.push_back(std::make_pair(closed_completion.wellName, closed_completion.complnum));
-                    }
-            }
-        }
-        return output;
-    }
 
     double WellTestState::lastTestTime(const std::string& well_name) const {
         const auto well_iter = std::find_if(wells.begin(),
