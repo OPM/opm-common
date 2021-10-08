@@ -20,7 +20,9 @@
 #define WELLTEST_STATE_H
 
 #include <cstddef>
+#include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
@@ -30,21 +32,25 @@ namespace Opm {
 
 namespace {
 
-template<class BufferType, class T>
-void pack_vector(BufferType& buffer, const std::vector<T>& v) {
-    buffer.write(v.size());
-    for (const auto& e : v)
-        e.pack(buffer);
+template<class BufferType, class M>
+void pack_map(BufferType& buffer, const M& m) {
+    buffer.write(m.size());
+    for (const auto& [k,v] : m) {
+        buffer.write(k);
+        v.pack(buffer);
+    }
 }
 
-template<class BufferType, class T>
-void unpack_vector(BufferType& buffer, std::vector<T>& v) {
-    typename std::vector<T>::size_type size;
+template<class BufferType, class M>
+void unpack_map(BufferType& buffer, M& m) {
+    typename M::size_type size;
     buffer.read(size);
     for (std::size_t i = 0; i < size; i++) {
-        T elm;
-        elm.unpack(buffer);
-        v.push_back(std::move(elm));
+        typename M::key_type k;
+        typename M::mapped_type v;
+        buffer.read(k);
+        v.unpack(buffer);
+        m.emplace(std::move(k), std::move(v));
     }
 }
 
@@ -56,52 +62,53 @@ class WellTestState {
 public:
     /*
       This class implements a small mutable state object which keeps track of
-      which wells have been automatically closed by the simulator, and by
-      checking with the WTEST configuration object the class can return a list
-      (well_name,reason) pairs for wells which should be checked as candiates
-      for opening.
+      which wells have been automatically closed by the simulator through the
+      WTEST mechanism.
+
+      The default behavior of the container is to manage *closed* wells, but
+      since the counter mechanism for the maximum number of opening attempts
+      should maintain the same counter through open/close events we need to
+      manage the well object also after they have been opened up again.
     */
-
-
 
     struct WTestWell {
         std::string name;
         WellTestConfig::Reason reason;
-        // the well can be re-opened if the well testing is successful. We only test when it is closed.
-        bool closed;
-        // it can be the time of last test,
-        // or the time that the well is closed if not test has not been performed after
         double last_test;
-        int num_attempt;
-        // if there is a WTEST setup for well testing,
-        // it will be the report step that WTEST is specified.
-        // if no, it is -1, which indicates we do not know the associated WTEST yet,
-        // or there is not associated WTEST request
-        int wtest_report_step;
+
+        int num_attempt{0};
+        bool closed{true};
+        std::optional<int> wtest_report_step;
+
+        WTestWell() = default;
+        WTestWell(const std::string& wname, WellTestConfig::Reason reason_, double last_test);
 
         bool operator==(const WTestWell& other) const {
             return this->name == other.name &&
-                   this->closed == other.closed &&
+                   this->reason == other.reason &&
                    this->last_test == other.last_test &&
                    this->num_attempt == other.num_attempt &&
+                   this->closed == other.closed &&
                    this->wtest_report_step == other.wtest_report_step;
         }
 
         template<class BufferType>
         void pack(BufferType& buffer) const {
             buffer.write(this->name);
-            buffer.write(this->closed);
+            buffer.write(this->reason);
             buffer.write(this->last_test);
             buffer.write(this->num_attempt);
+            buffer.write(this->closed);
             buffer.write(this->wtest_report_step);
         }
 
         template<class BufferType>
         void unpack(BufferType& buffer) {
             buffer.read(this->name);
-            buffer.read(this->closed);
+            buffer.read(this->reason);
             buffer.read(this->last_test);
             buffer.read(this->num_attempt);
+            buffer.read(this->closed);
             buffer.read(this->wtest_report_step);
         }
     };
@@ -136,84 +143,73 @@ public:
             buffer.read(this->num_attempt);
         }
     };
+    std::vector<std::string> test_wells(const WellTestConfig& config, double sim_time);
 
     /*
-      The simulator has decided to close a particular well; we then add it here
-      as a closed well with a particualar reason.
+      As mentioned the purpose of this class is to manage *closed wells*; i.e.
+      the default state of a well/completion in this container is closed. This
+      has some consequences for the behavior of well_is_closed() and
+      well_is_open() which are *not* perfectly opposite.
+
+          well_is_closed("UNKNOWN_WELL") -> false
+          well_is_open("UNKNOWN_WELL")   -> throw std::exception
+
+          completion_is_closed("UNKNOWN_WELL", *)       -> false
+          completion_is_closed("W1", $unknown_complnum) -> false
+          completion_is_open("UNKNOWN_WELL", *)         -> throw std::exception
+          completion_is_closed("W1", $unknown_complnum) -> false
     */
     void close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
-
-    /*
-      The simulator has decided to close a particular completion in a well; we then add it here
-      as a closed completions
-    */
-    void close_completion(const std::string& well_name, int complnum, double sim_time);
-
-    /*
-      The update will consult the WellTestConfig object and return a list of
-      wells which should be checked for possible reopening; observe that the
-      update method will update the internal state of the object by counting up
-      the openiing attempts, and also set the time for the last attempt to open.
-    */
-    std::vector<std::string> test_wells(const WellTestConfig& config,
-                                         double sim_time);
-
-    /*
-      If the simulator decides that a constraint is no longer met the open_completion()
-      method should be called to indicate that this reason for keeping the well
-      closed is no longer active.
-    */
-    void open_completion(const std::string& well_name, int complnum);
-
-    bool well_is_closed(const std::string& well_name, WellTestConfig::Reason reason) const;
-
-    /* whether there is a well with the well_name closed in the WellTestState,
-     * no matter what is the closing cause */
     bool well_is_closed(const std::string& well_name) const;
-
-    void open_well(const std::string& well_name, WellTestConfig::Reason reason);
-
-    /* open the well no matter what is the closing cause.
-     * it is used when WELOPEN or WCON* keyword request to open the well */
+    bool well_is_open(const std::string& well_name) const;
     void open_well(const std::string& well_name);
-
-    void open_completions(const std::string& well_name);
-
-    bool completion_is_closed(const std::string& well_name, const int complnum) const;
-
     std::size_t num_closed_wells() const;
-    std::size_t num_closed_completions() const;
-
-    /*
-      Return the last tested time for the well, or throw if no such well.
-    */
     double lastTestTime(const std::string& well_name) const;
+
+    void close_completion(const std::string& well_name, int complnum, double sim_time);
+    void open_completion(const std::string& well_name, int complnum);
+    void open_completions(const std::string& well_name);
+    bool completion_is_closed(const std::string& well_name, const int complnum) const;
+    bool completion_is_open(const std::string& well_name, const int complnum) const;
+    std::size_t num_closed_completions() const;
 
     void clear();
 
+
     template<class BufferType>
     void pack(BufferType& buffer) const {
-        pack_vector(buffer, this->wells);
-        pack_vector(buffer, this->completions);
+        pack_map(buffer, this->wells);
+
+        buffer.write(this->completions.size());
+        for (const auto& [well, cmap] : this->completions) {
+            buffer.write(well);
+            pack_map(buffer, cmap);
+        }
     }
 
     template<class BufferType>
     void unpack(BufferType& buffer) {
-        unpack_vector(buffer, this->wells);
-        unpack_vector(buffer, this->completions);
+        unpack_map(buffer, this->wells);
+        std::size_t size;
+        buffer.read(size);
+        for (std::size_t i = 0; i < size; i++) {
+            std::string well;
+            std::unordered_map<int, ClosedCompletion> cmap;
+
+            buffer.read(well);
+            unpack_map(buffer, cmap);
+            this->completions.emplace(std::move(well), std::move(cmap));
+        }
     }
 
     bool operator==(const WellTestState& other) const;
 
 
 private:
-    std::vector<WTestWell> wells;
-    std::vector<ClosedCompletion> completions;
+    std::unordered_map<std::string, WTestWell> wells;
+    std::unordered_map<std::string, std::unordered_map<int, ClosedCompletion>> completions;
 
-
-    WTestWell* getWell(const std::string& well_name, WellTestConfig::Reason reason);
-
-    void updateForNewWTEST(const WellTestConfig& config);
+    std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
 };
 
 

@@ -36,6 +36,16 @@ WellTestConfig::WTESTWell WellTestConfig::WTESTWell::serializeObject() {
     return WellTestConfig::WTESTWell("name", static_cast<int>(Reason::PHYSICAL), 100, 1, 674, 56);
 }
 
+bool WellTestConfig::WTESTWell::test_well(int num_attempt, double elapsed) const {
+    if (num_attempt >= this->num_test && this->num_test != 0)
+        return false;
+
+    if (elapsed < this->test_interval)
+        return false;
+
+    return true;
+}
+
 
 
 WellTestConfig WellTestConfig::serializeObject()
