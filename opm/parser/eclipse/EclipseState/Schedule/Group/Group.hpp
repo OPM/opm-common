@@ -65,7 +65,7 @@ enum class ExceedAction {
 };
 static const std::string ExceedAction2String( ExceedAction enumValue );
 static ExceedAction ExceedActionFromString( const std::string& stringValue );
-
+static ExceedAction ExceedActionFromInt(const int value);
 
 enum class InjectionCMode  : int {
     NONE = 0,
