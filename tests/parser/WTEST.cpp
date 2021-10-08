@@ -187,9 +187,13 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     auto num_closed_completions = st.updateWells(wc, wells, 5000);
     BOOST_CHECK_EQUAL( num_closed_completions.size(), 0U);
 
-    st.dropCompletion("WELL_NAME", 2);
-    st.dropCompletion("WELLX", 3);
+    BOOST_CHECK_NO_THROW( st.open_completion("WELL_NAME", 20000));
+
+    st.open_completion("WELL_NAME", 2);
+    st.open_completion("WELLX", 3);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 1U);
+
+    BOOST_CHECK_NO_THROW( st.open_completion("NO_SUCH_WELL", 3) );
 }
 
 

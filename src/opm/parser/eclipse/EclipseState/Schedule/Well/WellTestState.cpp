@@ -160,7 +160,7 @@ namespace Opm {
     }
 
 
-    void WellTestState::dropCompletion(const std::string& well_name, int complnum) {
+    void WellTestState::open_completion(const std::string& well_name, int complnum) {
         completions.erase(std::remove_if(completions.begin(),
                                          completions.end(),
                                          [&well_name, complnum](const ClosedCompletion& completion) { return (completion.wellName == well_name && completion.complnum == complnum); }),

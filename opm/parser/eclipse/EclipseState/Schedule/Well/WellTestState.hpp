@@ -160,11 +160,11 @@ public:
                                          double sim_time);
 
     /*
-      If the simulator decides that a constraint is no longer met the dropCompletion()
+      If the simulator decides that a constraint is no longer met the open_completion()
       method should be called to indicate that this reason for keeping the well
       closed is no longer active.
     */
-    void dropCompletion(const std::string& well_name, int complnum);
+    void open_completion(const std::string& well_name, int complnum);
 
     bool well_is_closed(const std::string& well_name, WellTestConfig::Reason reason) const;
 
