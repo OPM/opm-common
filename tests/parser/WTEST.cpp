@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
     WellTestConfig wc;
     WellTestState st;
     wc.add_well("WELL_NAME", "P", 0, 0, 0, 0);
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 1U);
 
     const UnitSystem us{};
@@ -91,19 +91,19 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
 BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     const double day = 86400.;
     WellTestState st;
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 1U);
 
-    st.openWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
+    st.open_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 0);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 1U);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 2U);
 
-    st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
+    st.close_well("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 3U);
 
     const UnitSystem us{};
@@ -133,9 +133,9 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     // Not sufficient time has passed.
     BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 1700. * day).size(), 0U);
 
-    st.openWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL);
+    st.open_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1900. * day);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1900. * day);
 
     // We should not test it:
     BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 2400. * day).size(), 0U);
@@ -165,16 +165,16 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     WellTestConfig wc;
     WellTestState st;
-    st.addClosedCompletion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 2, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 1U);
 
-    st.addClosedCompletion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 2, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 1U);
 
-    st.addClosedCompletion("WELL_NAME", 3, 100);
+    st.close_completion("WELL_NAME", 3, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 2U);
 
-    st.addClosedCompletion("WELLX", 3, 100);
+    st.close_completion("WELLX", 3, 100);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 3U);
 
     const UnitSystem us{};
@@ -187,25 +187,13 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     auto num_closed_completions = st.updateWells(wc, wells, 5000);
     BOOST_CHECK_EQUAL( num_closed_completions.size(), 0U);
 
-    wc.add_well("WELL_NAME", "C", 1000, 2, 0, 0);
-    // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 200).size(), 0U);
+    BOOST_CHECK_NO_THROW( st.open_completion("WELL_NAME", 20000));
 
-    // We should test it:
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 1200).size(), 2U);
-
-    // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 1700).size(), 0U);
-
-    // We should test it:
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 2400).size(), 2U);
-
-    // Too many attempts:
-    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 24000).size(), 0U);
-
-    st.dropCompletion("WELL_NAME", 2);
-    st.dropCompletion("WELLX", 3);
+    st.open_completion("WELL_NAME", 2);
+    st.open_completion("WELLX", 3);
     BOOST_CHECK_EQUAL(st.num_closed_completions(), 1U);
+
+    BOOST_CHECK_NO_THROW( st.open_completion("NO_SUCH_WELL", 3) );
 }
 
 
@@ -213,14 +201,14 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 
 BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
     WellTestState st, st2;
-    st.addClosedCompletion("WELL_NAME", 2, 100);
-    st.addClosedCompletion("WELL_NAME", 2, 100);
-    st.addClosedCompletion("WELL_NAME", 3, 100);
-    st.addClosedCompletion("WELLX", 3, 100);
+    st.close_completion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 2, 100);
+    st.close_completion("WELL_NAME", 3, 100);
+    st.close_completion("WELLX", 3, 100);
 
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
-    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
-    st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
+    st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    st.close_well("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
 
     BOOST_CHECK(!(st == st2));
 

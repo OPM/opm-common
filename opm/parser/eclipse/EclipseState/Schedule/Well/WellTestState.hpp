@@ -141,13 +141,13 @@ public:
       The simulator has decided to close a particular well; we then add it here
       as a closed well with a particualar reason.
     */
-    void closeWell(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
+    void close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
 
     /*
       The simulator has decided to close a particular completion in a well; we then add it here
       as a closed completions
     */
-    void addClosedCompletion(const std::string& well_name, int complnum, double sim_time);
+    void close_completion(const std::string& well_name, int complnum, double sim_time);
 
     /*
       The update will consult the WellTestConfig object and return a list of
@@ -160,35 +160,27 @@ public:
                                          double sim_time);
 
     /*
-      The update will consult the WellTestConfig object and return a list of
-      completions which should be checked for possible reopening; observe that the
-      update method will update the internal state of the object by counting up
-      the openiing attempts, and also set the time for the last attempt to open.
-    */
-    std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
-
-    /*
-      If the simulator decides that a constraint is no longer met the dropCompletion()
+      If the simulator decides that a constraint is no longer met the open_completion()
       method should be called to indicate that this reason for keeping the well
       closed is no longer active.
     */
-    void dropCompletion(const std::string& well_name, int complnum);
+    void open_completion(const std::string& well_name, int complnum);
 
-    bool hasWellClosed(const std::string& well_name, WellTestConfig::Reason reason) const;
+    bool well_is_closed(const std::string& well_name, WellTestConfig::Reason reason) const;
 
     /* whether there is a well with the well_name closed in the WellTestState,
      * no matter what is the closing cause */
-    bool hasWellClosed(const std::string& well_name) const;
+    bool well_is_closed(const std::string& well_name) const;
 
-    void openWell(const std::string& well_name, WellTestConfig::Reason reason);
+    void open_well(const std::string& well_name, WellTestConfig::Reason reason);
 
     /* open the well no matter what is the closing cause.
      * it is used when WELOPEN or WCON* keyword request to open the well */
-    void openWell(const std::string& well_name);
+    void open_well(const std::string& well_name);
 
-    void openAllCompletions(const std::string& well_name);
+    void open_completions(const std::string& well_name);
 
-    bool hasCompletion(const std::string& well_name, const int complnum) const;
+    bool completion_is_closed(const std::string& well_name, const int complnum) const;
 
     std::size_t num_closed_wells() const;
     std::size_t num_closed_completions() const;

@@ -26,7 +26,7 @@
 
 namespace Opm {
 
-    void WellTestState::closeWell(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
+    void WellTestState::close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
 
         WTestWell* well_ptr = getWell(well_name, reason);
 
@@ -47,7 +47,7 @@ namespace Opm {
     }
 
 
-    void WellTestState::openWell(const std::string& well_name, WellTestConfig::Reason reason) {
+    void WellTestState::open_well(const std::string& well_name, WellTestConfig::Reason reason) {
 
         WTestWell* well_ptr = getWell(well_name, reason);
 
@@ -60,20 +60,20 @@ namespace Opm {
     }
 
 
-    void WellTestState::openWell(const std::string& well_name) {
+    void WellTestState::open_well(const std::string& well_name) {
         for (auto& well : wells)
             if (well.name == well_name)
                 well.closed = false;
     }
 
-    void WellTestState::openAllCompletions(const std::string& well_name) {
+    void WellTestState::open_completions(const std::string& well_name) {
         completions.erase(std::remove_if(completions.begin(),
                                          completions.end(),
                                          [&well_name](const ClosedCompletion& completion) { return (completion.wellName == well_name); }),
                           completions.end());
     }
 
-    bool WellTestState::hasWellClosed(const std::string& well_name) const {
+    bool WellTestState::well_is_closed(const std::string& well_name) const {
         for (const auto& well : wells)
             if (well.name == well_name && well.closed)
                 return true;
@@ -82,7 +82,7 @@ namespace Opm {
     }
 
 
-    bool WellTestState::hasWellClosed(const std::string& well_name, WellTestConfig::Reason reason) const {
+    bool WellTestState::well_is_closed(const std::string& well_name, WellTestConfig::Reason reason) const {
         const auto well_iter = std::find_if(wells.begin(),
                                             wells.end(),
                                             [&well_name, &reason](const WTestWell& well)
@@ -152,15 +152,15 @@ namespace Opm {
     }
 
 
-    void WellTestState::addClosedCompletion(const std::string& well_name, int complnum, double sim_time) {
-        if (this->hasCompletion(well_name, complnum))
+    void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time) {
+        if (this->completion_is_closed(well_name, complnum))
             return;
 
         this->completions.push_back( {well_name, complnum, sim_time, 0} );
     }
 
 
-    void WellTestState::dropCompletion(const std::string& well_name, int complnum) {
+    void WellTestState::open_completion(const std::string& well_name, int complnum) {
         completions.erase(std::remove_if(completions.begin(),
                                          completions.end(),
                                          [&well_name, complnum](const ClosedCompletion& completion) { return (completion.wellName == well_name && completion.complnum == complnum); }),
@@ -168,7 +168,7 @@ namespace Opm {
     }
 
 
-    bool WellTestState::hasCompletion(const std::string& well_name, const int complnum) const {
+    bool WellTestState::completion_is_closed(const std::string& well_name, const int complnum) const {
         const auto completion_iter = std::find_if(completions.begin(),
                                                   completions.end(),
                                                   [&well_name, &complnum](const ClosedCompletion& completion)
@@ -182,23 +182,6 @@ namespace Opm {
         return this->completions.size();
     }
 
-    std::vector<std::pair<std::string, int>> WellTestState::updateCompletion(const WellTestConfig& config, double sim_time) {
-        std::vector<std::pair<std::string, int>> output;
-        for (auto& closed_completion : this->completions) {
-            if (config.has(closed_completion.wellName, WellTestConfig::Reason::COMPLETION)) {
-                const auto& well_config = config.get(closed_completion.wellName, WellTestConfig::Reason::COMPLETION);
-                double elapsed = sim_time - closed_completion.last_test;
-
-                if (elapsed >= well_config.test_interval)
-                    if (well_config.num_test == 0 || (closed_completion.num_attempt < well_config.num_test)) {
-                        closed_completion.last_test = sim_time;
-                        closed_completion.num_attempt += 1;
-                        output.push_back(std::make_pair(closed_completion.wellName, closed_completion.complnum));
-                    }
-            }
-        }
-        return output;
-    }
 
     double WellTestState::lastTestTime(const std::string& well_name) const {
         const auto well_iter = std::find_if(wells.begin(),
