@@ -57,11 +57,6 @@ BOOST_AUTO_TEST_CASE(CreateWellTestConfig) {
     BOOST_CHECK(wc.has("NAMEX", WellTestConfig::Reason::PHYSICAL));
     BOOST_CHECK(!wc.has("NAMEX", WellTestConfig::Reason::ECONOMIC));
     BOOST_CHECK(!wc.has("NAME"));
-
-    BOOST_CHECK_THROW(wc.get("NAMEX", WellTestConfig::Reason::ECONOMIC), std::exception);
-    BOOST_CHECK_THROW(wc.get("NO_NAME", WellTestConfig::Reason::ECONOMIC), std::exception);
-    const auto& wt = wc.get("NAMEX", WellTestConfig::Reason::PHYSICAL);
-    BOOST_CHECK_EQUAL(wt.name, "NAMEX");
 }
 
 
@@ -202,3 +197,22 @@ BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WTEST_RESTART) {
+    UnitSystem us;
+    WellTestConfig wc;
+    WellTestState ws;
+    wc.add_well("W1", "PGD", 1, 10, 100, 1000);
+    wc.add_well("W2", "PGD", 1, 10, 100, 1000);
+
+    auto rst_well0 = ws.restart_well(wc, "W0");
+    BOOST_CHECK(!rst_well0.has_value());
+
+    auto rst_well1 = ws.restart_well(wc, "W1");
+    BOOST_CHECK(rst_well1.has_value());
+    {
+        const auto& well = rst_well1.value();
+        BOOST_CHECK_EQUAL(well.name, "W1");
+        BOOST_CHECK_EQUAL(well.test_interval, 1);
+        BOOST_CHECK_EQUAL(well.startup_time, 100);
+    }
+}

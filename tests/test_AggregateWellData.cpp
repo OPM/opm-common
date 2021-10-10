@@ -286,6 +286,11 @@ COMPDAT
       'OP_2'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
       'OP_1'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
+
+WTEST
+ 'OP_1' 1  PGD  3 2 /
+/
+
 WCONPROD
       'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /
 /
@@ -610,12 +615,18 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+
+    wtest_state.close_well("OP_1", Opm::WellTestConfig::Reason::PHYSICAL, 0);
+    auto tw = wtest_state.test_wells(simCase.sched[rptStep].wtest_config(), 86400 * 10);
+    BOOST_CHECK(tw == std::vector<std::string>{"OP_1"});
+
     awd.captureDeclaredWellData(simCase.sched,
                                 simCase.es.getUnits(), rptStep, action_state, wtest_state, smry, ih.value);
 
     // IWEL (OP_1)
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        namespace WTestReason = Opm::RestartIO::Helpers::VectorItems::IWell::Value;
 
         const auto start = 0*ih.niwelz;
 
@@ -626,7 +637,9 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 2); // OP_1 #Compl
         BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // OP_1 -> Producer
         BOOST_CHECK_EQUAL(iwell[start + Ix::VFPTab], 0); // VFP defaulted -> 0
-
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WTestConfigReason], Opm::WTest::EclConfigReason::PHYSICAL * Opm::WTest::EclConfigReason::GCON * Opm::WTest::EclConfigReason::THPLimit);
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WTestRemaining], 3 + 1 - 1);  // Total + 1 - #attempt
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WTestCloseReason], Opm::WTest::EclCloseReason::PHYSICAL);
         // Completion order
         BOOST_CHECK_EQUAL(iwell[start + Ix::CompOrd], 0); // Track ordering (default)
 
@@ -684,6 +697,10 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget] ,    0.0f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget] , 1000.0f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth], 7050.00049f, 1.0e-7f);
+
+        // Wtest
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::WTestInterval], 1, 1e-7);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::WTestStartupTime], 2, 1e-7);
     }
 
     // SWEL (OP_2)

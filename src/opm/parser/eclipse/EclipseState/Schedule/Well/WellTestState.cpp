@@ -33,6 +33,20 @@ namespace Opm {
         , last_test(sim_time)
     {}
 
+    int WellTestState::WTestWell::int_reason() const {
+        if (!this->closed)
+            return 0;
+
+        switch (this->reason) {
+        case WellTestConfig::Reason::PHYSICAL:   return WTest::EclCloseReason::PHYSICAL;
+        case WellTestConfig::Reason::ECONOMIC:   return WTest::EclCloseReason::ECONOMIC;
+        case WellTestConfig::Reason::GROUP:      return WTest::EclCloseReason::GCON;
+        case WellTestConfig::Reason::THP_DESIGN: return WTest::EclCloseReason::THPLimit;
+        default:
+            throw std::logic_error("Not yet handled WTEST config alternative");
+        }
+    }
+
 
     void WellTestState::close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
         auto well_iter = this->wells.find(well_name);
@@ -85,7 +99,7 @@ namespace Opm {
                 continue;
 
             if (config.has(wname, well.reason)) {
-                const auto& well_config = config.get(wname, well.reason);
+                const auto& well_config = config.get(wname);
                 const double elapsed = sim_time - well.last_test;
 
                 if (!well.wtest_report_step.has_value())
@@ -177,6 +191,25 @@ namespace Opm {
         this->wells.clear();
         this->completions.clear();
     }
+
+    std::optional<WellTestState::RestartWell> WellTestState::restart_well(const Opm::WellTestConfig& config, const std::string& wname) const {
+        if (!config.has(wname))
+            return std::nullopt;
+
+        const auto& conf = config.get(wname);
+
+        int num_test = conf.num_test + 1;
+        int close_reason = 0;
+        const auto& state_iter = this->wells.find(wname);
+        if (state_iter != this->wells.end()) {
+            num_test -= state_iter->second.num_attempt;
+            close_reason = state_iter->second.int_reason();
+        }
+
+        return RestartWell(wname, conf.test_interval, num_test, conf.startup_time, conf.ecl_reasons(), close_reason);
+    }
+
+
 }
 
 

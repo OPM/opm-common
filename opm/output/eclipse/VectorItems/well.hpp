@@ -45,6 +45,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             XFlow  = 22,
             item25 = 24, // Unknown
             item32 = 31, // Unknown
+            WTestCloseReason = 39,
+            WTestConfigReason = 42,
+            WTestRemaining = 45,
             item48 = 47, // Unknown
 
             HistReqWCtrl = 49, // Well's requested control mode from
@@ -141,6 +144,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                 Open = 1,
                 Auto = 3,
             };
+
         } // Value
     } // IWell
 
@@ -162,8 +166,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             DrainageRadius = 17, // Well's drainage radius - item 7 from WELSPECS
             EfficiencyFactor1 = 24, // Item2 from WEFAC; this value is repeated at two locations.
             EfficiencyFactor2 = 31, // Item2 from WEFAC
+            WTestInterval     = 32,
             HistLiqRateTarget = 33, // Well's historical/observed liquid
                                     // rate target/limit
+            WTestStartupTime  = 39,
 
             HistGasRateTarget = 54, // Well's historical/observed gas rate
                                     // target/limit

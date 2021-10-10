@@ -47,6 +47,29 @@ bool WellTestConfig::WTESTWell::test_well(int num_attempt, double elapsed) const
 }
 
 
+int WellTestConfig::WTESTWell::ecl_reasons() const
+{
+    int ecl_value = 1;
+
+    if (this->reasons & static_cast<int>(Reason::PHYSICAL))
+        ecl_value *= WTest::EclConfigReason::PHYSICAL;
+
+    if (this->reasons & static_cast<int>(Reason::ECONOMIC))
+        ecl_value *= WTest::EclConfigReason::ECONOMIC;
+
+    if (this->reasons & static_cast<int>(Reason::GROUP))
+        ecl_value *= WTest::EclConfigReason::GCON;
+
+    if (this->reasons & static_cast<int>(Reason::THP_DESIGN))
+        ecl_value *= WTest::EclConfigReason::THPLimit;
+
+    if (this->reasons & static_cast<int>(Reason::COMPLETION))
+        ecl_value *= WTest::EclConfigReason::CONNECTION;
+
+    return ecl_value;
+}
+
+
 
 WellTestConfig WellTestConfig::serializeObject()
 {
@@ -109,15 +132,8 @@ bool WellTestConfig::has(const std::string& well, Reason reason) const {
 }
 
 
-const WellTestConfig::WTESTWell& WellTestConfig::get(const std::string& well, Reason reason) const {
-    const auto well_iter = this->wells.find(well);
-    if (well_iter == wells.end())
-        throw std::logic_error("No such WTEST well");
-
-    if (well_iter->second.reasons & static_cast<int>(reason))
-        return well_iter->second;
-
-    throw std::logic_error("No such WTEST well");
+const WellTestConfig::WTESTWell& WellTestConfig::get(const std::string& well) const {
+    return this->wells.at(well);
 }
 
 

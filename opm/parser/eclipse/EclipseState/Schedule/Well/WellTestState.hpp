@@ -70,6 +70,24 @@ public:
       should maintain the same counter through open/close events we need to
       manage the well object also after they have been opened up again.
     */
+    struct RestartWell {
+        std::string name;
+        double test_interval;
+        int num_test;
+        double startup_time;
+
+        int config_reasons;
+        int close_reason;
+
+        RestartWell(const std::string& wname, double ti, int num, double st, int r1, int r2)
+            : name(wname)
+            , test_interval(ti)
+            , num_test(num)
+            , startup_time(st)
+            , config_reasons(r1)
+            , close_reason(r2)
+        {};
+    };
 
     struct WTestWell {
         std::string name;
@@ -82,6 +100,8 @@ public:
 
         WTestWell() = default;
         WTestWell(const std::string& wname, WellTestConfig::Reason reason_, double last_test);
+
+        int int_reason() const;
 
         bool operator==(const WTestWell& other) const {
             return this->name == other.name &&
@@ -204,6 +224,7 @@ public:
 
     bool operator==(const WellTestState& other) const;
 
+    std::optional<WellTestState::RestartWell> restart_well(const Opm::WellTestConfig& config, const std::string& wname) const;
 
 private:
     std::unordered_map<std::string, WTestWell> wells;
