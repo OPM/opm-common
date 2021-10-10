@@ -38,6 +38,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -970,6 +972,7 @@ captureDeclaredWellData(const Schedule&   sched,
                         const UnitSystem& units,
                         const std::size_t sim_step,
                         const ::Opm::Action::State& action_state,
+                        const Opm::WellTestState& wtest_state,
                         const ::Opm::SummaryState&  smry,
                         const std::vector<int>& inteHead)
 {

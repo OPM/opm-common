@@ -383,14 +383,14 @@ namespace {
                    const std::vector<std::string>& well_names,
                    const data::Wells&              wells,
                    const Opm::Action::State&       action_state,
+                   const Opm::WellTestState&       wtest_state,
                    const Opm::SummaryState&        sumState,
                    const std::vector<int>&         ih,
                    EclIO::OutputStream::Restart&   rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellData(schedule, units, sim_step, action_state, sumState, ih);
-        wellData.captureDynamicWellData(schedule, sim_step,
-                                        wells, sumState);
+        wellData.captureDeclaredWellData(schedule, units, sim_step, action_state, wtest_state, sumState, ih);
+        wellData.captureDynamicWellData(schedule, sim_step, wells, sumState);
 
         rstFile.write("IWEL", wellData.getIWell());
         rstFile.write("SWEL", wellData.getSWell());
@@ -482,6 +482,7 @@ namespace {
                           const Schedule&                               schedule,
                           const data::Wells&                            wellSol,
                           const Opm::Action::State&                     action_state,
+                          const Opm::WellTestState&                     wtest_state,
                           const Opm::SummaryState&                      sumState,
                           const std::vector<int>&                       inteHD,
                           const data::Aquifers&                         aquDynData,
@@ -514,7 +515,7 @@ namespace {
             }
 
             writeWell(sim_step, ecl_compatible_rst, phases, units, grid, schedule,
-                      wells, wellSol, action_state, sumState, inteHD, rstFile);
+                      wells, wellSol, action_state, wtest_state, sumState, inteHD, rstFile);
         }
 
         if ((es.aquifer().hasAnalyticalAquifer() || es.aquifer().hasNumericalAquifer()) &&
@@ -757,7 +758,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
           const EclipseGrid&                            grid,
           const Schedule&                               schedule,
           const Action::State&                          action_state,
-          const WellTestState&                          ,
+          const WellTestState&                          wtest_state,
           const SummaryState&                           sumState,
           const UDQState&                               udqState,
           std::optional<Helpers::AggregateAquiferData>& aquiferData,
@@ -784,7 +785,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
 
     if (report_step > 0) {
         writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
-                         units, grid, es, schedule, value.wells, action_state,
+                         units, grid, es, schedule, value.wells, action_state, wtest_state,
                          sumState, inteHD, value.aquifer, aquiferData, rstFile);
     }
 

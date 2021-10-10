@@ -43,6 +43,8 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <exception>
 #include <stdexcept>
@@ -596,6 +598,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 {
     const auto simCase = SimulationCase{first_sim()};
     Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
 
@@ -608,7 +611,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep, action_state, smry, ih.value);
+                                simCase.es.getUnits(), rptStep, action_state, wtest_state, smry, ih.value);
 
     // IWEL (OP_1)
     {
@@ -753,7 +756,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     //smry = sim_state();
     awd = Opm::RestartIO::Helpers::AggregateWellData{ih_8.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep_8, action_state, smry, ih_8.value);
+                                simCase.es.getUnits(), rptStep_8, action_state, wtest_state, smry, ih_8.value);
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
 
@@ -779,6 +782,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data_MSW_well_data)
     Opm::EclipseState es    = simCase.es;
     Opm::Schedule     sched = simCase.sched;
     Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
@@ -788,7 +792,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data_MSW_well_data)
 
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep, action_state, smry, ih.value);
+                                simCase.es.getUnits(), rptStep, action_state, wtest_state, smry, ih.value);
 
     // IWEL (PROD1)
     {
@@ -848,6 +852,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
     const auto xw   = well_rates_1();
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    Opm::WellTestState wtest_state;
 
     awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
 
@@ -991,6 +996,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
     const auto xw   = well_rates_2();
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    Opm::WellTestState wtest_state;
 
     awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
 
@@ -1172,6 +1178,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     const auto rptStep = std::size_t{2};
     const auto sim_step = rptStep - 1;
     Opm::SummaryState sumState(Opm::TimeService::now());
+    Opm::WellTestState wtest_state;
     const auto xw   = well_rates_1();
     Opm::Action::State action_state;
 
@@ -1184,7 +1191,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
                                                             sim_step);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, action_state, sumState, ih);
+    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, action_state, wtest_state, sumState, ih);
     wellData.captureDynamicWellData(simCase.sched, sim_step, xw , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
