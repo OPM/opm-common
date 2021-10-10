@@ -26,204 +26,146 @@
 
 namespace Opm {
 
+
+    WellTestState::WTestWell::WTestWell(const std::string& wname, WellTestConfig::Reason reason_, double sim_time)
+        : name(wname)
+        , reason(reason_)
+        , last_test(sim_time)
+    {}
+
+
     void WellTestState::close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
-
-        WTestWell* well_ptr = getWell(well_name, reason);
-
-        if (well_ptr) {
-            if (well_ptr->closed) {
-                throw std::runtime_error( " Well " + well_name + " is closed with reason "
-                                        + WellTestConfig::reasonToString(reason)
-                                        + ", we are trying to close it again with same reason!");
-            }
-            // the well exists already, we just update it with action of closing
-            well_ptr->closed = true;
-            well_ptr->last_test = sim_time;
-        } else {
-            // by default, we use -1 if there is no WTEST request for this well
-            // it will be updated when checking for WellTestConfig
-            this->wells.push_back({well_name, reason, true, sim_time, 0, -1});
+        auto well_iter = this->wells.find(well_name);
+        if (well_iter == this->wells.end())
+            this->wells.emplace(well_name, WTestWell{well_name, reason, sim_time});
+        else {
+            well_iter->second.closed = true;
+            well_iter->second.last_test = sim_time;
+            well_iter->second.reason = reason;
         }
-    }
-
-
-    void WellTestState::open_well(const std::string& well_name, WellTestConfig::Reason reason) {
-
-        WTestWell* well_ptr = getWell(well_name, reason);
-
-        if (well_ptr)
-            well_ptr->closed = false;
-        else
-            throw std::runtime_error("No well named " + well_name + " with close reason "
-                                    + WellTestConfig::reasonToString(reason)
-                                    + " found in WellTestState.");
     }
 
 
     void WellTestState::open_well(const std::string& well_name) {
-        for (auto& well : wells)
-            if (well.name == well_name)
-                well.closed = false;
+        auto& well = this->wells.at(well_name);
+        well.closed = false;
     }
 
     void WellTestState::open_completions(const std::string& well_name) {
-        completions.erase(std::remove_if(completions.begin(),
-                                         completions.end(),
-                                         [&well_name](const ClosedCompletion& completion) { return (completion.wellName == well_name); }),
-                          completions.end());
+        this->completions.erase( well_name );
     }
+
 
     bool WellTestState::well_is_closed(const std::string& well_name) const {
-        for (const auto& well : wells)
-            if (well.name == well_name && well.closed)
-                return true;
+        auto iter = this->wells.find(well_name);
+        if (iter == this->wells.end())
+            return false;
 
-        return false;
+        return iter->second.closed;
     }
 
 
-    bool WellTestState::well_is_closed(const std::string& well_name, WellTestConfig::Reason reason) const {
-        const auto well_iter = std::find_if(wells.begin(),
-                                            wells.end(),
-                                            [&well_name, &reason](const WTestWell& well)
-                                            {
-                                                return (reason == well.reason && well.name == well_name && well.closed);
-                                            });
-        return (well_iter != wells.end());
-    }
-
-
-    WellTestState::WTestWell* WellTestState::getWell(const std::string& well_name, WellTestConfig::Reason reason)
-    {
-        const auto well_iter = std::find_if(wells.begin(), wells.end(), [&well_name, &reason](const WTestWell& well) {
-            return (reason == well.reason && well.name == well_name);
-        });
-
-        return (well_iter == wells.end() ? nullptr : std::addressof(*well_iter) );
+    bool WellTestState::well_is_open(const std::string& well_name) const {
+        const auto& well = this->wells.at(well_name);
+        return !well.closed;
     }
 
 
     size_t WellTestState::num_closed_wells() const {
-        return std::count_if(this->wells.begin(), this->wells.end(), [](const WTestWell& well) { return well.closed; });
+        return std::count_if(this->wells.begin(), this->wells.end(), [](const auto& well_pair) { return well_pair.second.closed; });
     }
 
     std::vector<std::string>
-    WellTestState::updateWells(const WellTestConfig& config,
-                               const std::vector<Well>& wells_ecl,
+    WellTestState::test_wells(const WellTestConfig& config,
                                double sim_time) {
         std::vector<std::string> output;
 
-        updateForNewWTEST(config);
-
-        for (auto& well : this->wells) {
-            auto well_ecl = std::find_if(wells_ecl.begin(), wells_ecl.end(),
-                    [&well](const Well& w)
-                    {
-                        return w.name() == well.name;
-                    });
-
-            if (well_ecl == wells_ecl.end())
-                throw std::runtime_error("No well named " + well.name + " is found in wells_ecl.");
-
-            // if the well is SHUT, we do not consider to test it
-            if (well_ecl->getStatus() != Well::Status::OPEN)
+        for (auto& [wname, well] : this->wells) {
+            if (!well.closed)
                 continue;
 
-            if (well.closed && config.has(well.name, well.reason)) {
-                const auto& well_config = config.get(well.name, well.reason);
-                double elapsed = sim_time - well.last_test;
+            if (config.has(wname, well.reason)) {
+                const auto& well_config = config.get(wname, well.reason);
+                const double elapsed = sim_time - well.last_test;
 
-                if (elapsed >= well_config.test_interval)
-                    if (well_config.num_test == 0 || (well.num_attempt < well_config.num_test)) {
-                        well.last_test = sim_time;
-                        well.num_attempt ++;
-                        output.emplace_back(well.name);
-                        if ( (well_config.num_test != 0) && (well.num_attempt >= well_config.num_test) ) {
-                            OpmLog::info(well.name + " will be tested for " + WellTestConfig::reasonToString(well.reason)
-                                        + " reason for the last time! " );
-                        }
-                    }
+                if (!well.wtest_report_step.has_value())
+                    well.wtest_report_step = well_config.begin_report_step;
+
+                if (well_config.begin_report_step > well.wtest_report_step) {
+                    well.wtest_report_step = well_config.begin_report_step;
+                    well.num_attempt = 0;
+                }
+
+                if (well_config.test_well(well.num_attempt, elapsed)) {
+                    well.last_test = sim_time;
+                    well.num_attempt ++;
+                    output.push_back(well.name);
+                }
             }
         }
-        std::sort(output.begin(), output.end());
-        auto last = std::unique(output.begin(), output.end());
-        output.erase(last, output.end());
         return output;
     }
 
 
     void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time) {
-        if (this->completion_is_closed(well_name, complnum))
-            return;
+        auto well_iter = this->completions.find(well_name);
+        if (well_iter == this->completions.end())
+            this->completions.emplace(well_name, std::unordered_map<int, ClosedCompletion>{});
 
-        this->completions.push_back( {well_name, complnum, sim_time, 0} );
+        this->completions[well_name].insert_or_assign(complnum, ClosedCompletion{well_name, complnum, sim_time, 0});
     }
 
 
     void WellTestState::open_completion(const std::string& well_name, int complnum) {
-        completions.erase(std::remove_if(completions.begin(),
-                                         completions.end(),
-                                         [&well_name, complnum](const ClosedCompletion& completion) { return (completion.wellName == well_name && completion.complnum == complnum); }),
-                          completions.end());
+        const auto& well_iter = this->completions.find(well_name);
+        if (well_iter == this->completions.end())
+            return;
+
+        auto& well_map = well_iter->second;
+        well_map.erase(complnum);
+
+        if (well_map.empty())
+            this->completions.erase(well_name);
     }
 
 
     bool WellTestState::completion_is_closed(const std::string& well_name, const int complnum) const {
-        const auto completion_iter = std::find_if(completions.begin(),
-                                                  completions.end(),
-                                                  [&well_name, &complnum](const ClosedCompletion& completion)
-                                                  {
-                                                    return (complnum == completion.complnum && completion.wellName == well_name);
-                                                  });
-        return (completion_iter != completions.end());
+        const auto& well_iter = this->completions.find(well_name);
+        if (well_iter == this->completions.end())
+            return false;
+
+        const auto& completion_iter = well_iter->second.find(complnum);
+        if (completion_iter == well_iter->second.end())
+            return false;
+
+        return true;
     }
 
+    bool WellTestState::completion_is_open(const std::string& well_name, const int complnum) const {
+        const auto& well = this->completions.at(well_name);
+        const auto& completion_iter = well.find(complnum);
+        if (completion_iter == well.end())
+            return true;
+
+        return false;
+    }
+
+
     size_t WellTestState::num_closed_completions() const {
-        return this->completions.size();
+        std::size_t count = 0;
+        for (const auto& [_, comp_map] : this->completions) {
+            (void)_;
+            count += comp_map.size();
+        }
+        return count;
     }
 
 
     double WellTestState::lastTestTime(const std::string& well_name) const {
-        const auto well_iter = std::find_if(wells.begin(),
-                                            wells.end(),
-                                            [&well_name](const WTestWell& well)
-                                            {
-                                                return (well.name == well_name);
-                                            });
-        if (well_iter == wells.end())
-            throw std::runtime_error("No well named " + well_name + " is found in WellTestState.");
-
-        return well_iter->last_test;
+        const auto& well = this->wells.at(well_name);
+        return well.last_test;
     }
 
-    void WellTestState::updateForNewWTEST(const Opm::WellTestConfig& config)
-    {
-        // check whether to reset based on the new WTEST request
-        for (auto& well: this->wells) {
-            if (config.has(well.name, well.reason)) {
-                const auto& well_config = config.get(well.name, well.reason);
-                if (well_config.begin_report_step > well.wtest_report_step) {
-                    // there is a new WTEST input, we should reset the counting
-                    well.num_attempt = 0;
-                    well.wtest_report_step = well_config.begin_report_step;
-                }
-                if (well_config.begin_report_step != well.wtest_report_step)
-                    throw std::logic_error(" Bug in OPM/flow when using WTEST information related to well " + well.name);
-
-            } else {
-                // If there is WTEST step, due to new WTEST input, which does not specify any testing closure cause,
-                // there is no WTEST request anymore.
-                // If there is no WTEST step, then everything stay the same.
-                if (well.wtest_report_step >= 0) {
-                    well.wtest_report_step = -1;
-                    well.num_attempt = 0;
-                }
-                if (well.wtest_report_step != -1 || well.num_attempt != 0)
-                    throw std::logic_error(" Bugs in OPM/flow when there is WTEST request for well " + well.name);
-
-            }
-        }
-    }
 
 
     bool WellTestState::operator==(const WellTestState& other) const {

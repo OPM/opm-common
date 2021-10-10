@@ -57,6 +57,8 @@ public:
 
         WTESTWell() = default;
         WTESTWell(const std::string& name, int reasons, double test_interval, int num_test, double startup_time, int begin_report_step);
+        bool test_well(int num_attempt, double elapsed) const;
+
         static WTESTWell serializeObject();
 
 
