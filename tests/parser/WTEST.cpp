@@ -167,10 +167,6 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 
     BOOST_CHECK_NO_THROW(st.open_completion("NO_SUCH_WELL", 1000));
     BOOST_CHECK_NO_THROW(st.open_completion("NO_SUCH_WELL", 1000));
-
-    BOOST_CHECK_THROW(st.completion_is_open("NO_SUCH_WELL", 1000), std::exception);
-    BOOST_CHECK_EQUAL(st.completion_is_open("WELL_NAME", 2), true);
-    BOOST_CHECK_THROW(st.well_is_open("NO_SUCH_WELL"), std::exception);
 }
 
 

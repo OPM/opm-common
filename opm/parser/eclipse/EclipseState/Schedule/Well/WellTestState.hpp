@@ -166,22 +166,23 @@ public:
     std::vector<std::string> test_wells(const WellTestConfig& config, double sim_time);
 
     /*
-      As mentioned the purpose of this class is to manage *closed wells*; i.e.
-      the default state of a well/completion in this container is closed. This
-      has some consequences for the behavior of well_is_closed() and
-      well_is_open() which are *not* perfectly opposite.
+      The purpose of this container is to manage explicitly *closed wells*,
+      since the class has no relation to the set of of wells defined in the
+      Schedule section the concept of open wells and totally unknown wells is
+      slightly murky:
 
-          well_is_closed("UNKNOWN_WELL") -> false
-          well_is_open("UNKNOWN_WELL")   -> throw std::exception
+         well_is_closed("UNKOWN_WELL") -> false
 
-          completion_is_closed("UNKNOWN_WELL", *)       -> false
-          completion_is_closed("W1", $unknown_complnum) -> false
-          completion_is_open("UNKNOWN_WELL", *)         -> throw std::exception
-          completion_is_closed("W1", $unknown_complnum) -> false
+      This implies that we have not explicitly closed a well with name
+      'UNKNOWN_WELL', but since we do not know whether the well is at all
+      defined it does not make sense to extrapolate to:
+
+         well_is_open("UNKNOWN_WELL") -> true.
+
+      That is the reason we do not have any xxx_is_open() predicates.
     */
     void close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
     bool well_is_closed(const std::string& well_name) const;
-    bool well_is_open(const std::string& well_name) const;
     void open_well(const std::string& well_name);
     std::size_t num_closed_wells() const;
     double lastTestTime(const std::string& well_name) const;
@@ -190,7 +191,6 @@ public:
     void open_completion(const std::string& well_name, int complnum);
     void open_completions(const std::string& well_name);
     bool completion_is_closed(const std::string& well_name, const int complnum) const;
-    bool completion_is_open(const std::string& well_name, const int complnum) const;
     std::size_t num_closed_completions() const;
 
     void clear();

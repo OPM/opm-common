@@ -79,11 +79,6 @@ namespace Opm {
     }
 
 
-    bool WellTestState::well_is_open(const std::string& well_name) const {
-        const auto& well = this->wells.at(well_name);
-        return !well.closed;
-    }
-
 
     size_t WellTestState::num_closed_wells() const {
         return std::count_if(this->wells.begin(), this->wells.end(), [](const auto& well_pair) { return well_pair.second.closed; });
@@ -154,16 +149,6 @@ namespace Opm {
 
         return true;
     }
-
-    bool WellTestState::completion_is_open(const std::string& well_name, const int complnum) const {
-        const auto& well = this->completions.at(well_name);
-        const auto& completion_iter = well.find(complnum);
-        if (completion_iter == well.end())
-            return true;
-
-        return false;
-    }
-
 
     size_t WellTestState::num_closed_completions() const {
         std::size_t count = 0;
