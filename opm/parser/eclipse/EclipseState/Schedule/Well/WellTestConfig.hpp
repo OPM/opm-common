@@ -26,6 +26,9 @@
 
 namespace Opm {
 
+namespace RestartIO {
+struct RstState;
+}
 
 namespace WTest {
 /*
@@ -84,6 +87,7 @@ public:
         WTESTWell(const std::string& name, int reasons, double test_interval, int num_test, double startup_time, int begin_report_step);
         bool test_well(int num_attempt, double elapsed) const;
 
+        static int inverse_ecl_reasons(int ecl_reasons);
         static WTESTWell serializeObject();
         int ecl_reasons() const;
 
@@ -101,6 +105,10 @@ public:
 
     static WellTestConfig serializeObject();
 
+    WellTestConfig() = default;
+    WellTestConfig(const RestartIO::RstState& rst_state, int report_step);
+    void add_well(const std::string& well, int reasons, double test_interval,
+                  int num_test, double startup_time, int current_step);
     void add_well(const std::string& well, const std::string& reasons, double test_interval,
                   int num_test, double startup_time, int current_step);
     void drop_well(const std::string& well);

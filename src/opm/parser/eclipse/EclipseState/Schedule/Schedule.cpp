@@ -1476,6 +1476,7 @@ namespace {
                 actions.add( Action::ActionX(rst_action) );
             this->snapshots.back().actions.update( std::move(actions) );
         }
+        this->snapshots.back().wtest_config.update( WellTestConfig{rst_state, report_step});
     }
 
     std::shared_ptr<const Python> Schedule::python() const

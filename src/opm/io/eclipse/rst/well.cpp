@@ -71,6 +71,9 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     completion_ordering(                                             iwel[VI::IWell::CompOrd]),
     pvt_table(                                                       def_pvt_table),
     msw_pressure_drop_model(                                         iwel[VI::IWell::MSW_PlossMod]),
+    wtest_config_reasons(                                            iwel[VI::IWell::WTestConfigReason]),
+    wtest_close_reason(                                              iwel[VI::IWell::WTestCloseReason]),
+    wtest_remaining(                                                 iwel[VI::IWell::WTestRemaining] -1),
     // The values orat_target -> bhp_target_float will be used in UDA values. The
     // UDA values are responsible for unit conversion and raw values are
     // internalized here.
@@ -88,6 +91,8 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     drainage_radius(     unit_system.to_si(M::length,                swel_value(swel[VI::SWell::DrainageRadius]))),
     efficiency_factor(   unit_system.to_si(M::identity,              swel[VI::SWell::EfficiencyFactor1])),
     alq_value(                                                       swel[VI::SWell::Alq_value]),
+    wtest_interval(      unit_system.to_si(M::time,                  swel[VI::SWell::WTestInterval])),
+    wtest_startup(       unit_system.to_si(M::time,                  swel[VI::SWell::WTestStartupTime])),
     oil_rate(            unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::OilPrRate])),
     water_rate(          unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::WatPrRate])),
     gas_rate(            unit_system.to_si(M::gas_surface_rate,      xwel[VI::XWell::GasPrRate])),
