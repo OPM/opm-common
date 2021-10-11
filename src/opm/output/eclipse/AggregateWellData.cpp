@@ -38,6 +38,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -271,6 +273,8 @@ namespace {
         template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
                            const Opm::GasLiftOpt&          glo,
+                           const Opm::WellTestConfig&      wtest_config,
+                           const Opm::WellTestState&       wtest_state,
                            const Opm::SummaryState&        st,
                            const std::size_t               msWellID,
                            const std::map <const std::string, size_t>&  GroupMapNameInd,
@@ -351,6 +355,12 @@ namespace {
             }
 
             iWell[Ix::CompOrd] = compOrder(well);
+            const auto& wtest_rst = wtest_state.restart_well(wtest_config, well.name());
+            if (wtest_rst.has_value()) {
+                iWell[Ix::WTestConfigReason] = wtest_rst->config_reasons;
+                iWell[Ix::WTestCloseReason] = wtest_rst->close_reason;
+                iWell[Ix::WTestRemaining] = wtest_rst->num_test;
+            }
         }
 
         template <class IWellArray>
@@ -515,6 +525,7 @@ namespace {
                            const Opm::UnitSystem&       units,
                            const std::size_t            sim_step,
                            const Opm::Schedule&         sched,
+                           const Opm::WellTestState&    wtest_state,
                            const ::Opm::SummaryState&   smry,
                            SWellArray&                  sWell)
         {
@@ -669,8 +680,6 @@ namespace {
 
             sWell[Ix::DatumDepth] = swprop(M::length, datumDepth(well));
             sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
-            sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
-            sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
             /*
               Restart files from Eclipse indicate that the efficiency factor is
               found in two items in the restart file; since only one of the
@@ -678,6 +687,15 @@ namespace {
               that the two values are equal by construction we have only
               assigned one of the items explicitly here.
             */
+            sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
+            sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
+
+            const auto& wtest_config = sched[sim_step].wtest_config();
+            const auto& wtest_rst = wtest_state.restart_well(wtest_config, well.name());
+            if (wtest_rst.has_value()) {
+                sWell[Ix::WTestInterval] = units.from_si(Opm::UnitSystem::measure::time, wtest_rst->test_interval);
+                sWell[Ix::WTestStartupTime] = units.from_si(Opm::UnitSystem::measure::time, wtest_rst->startup_time);
+            }
         }
     } // SWell
 
@@ -970,6 +988,7 @@ captureDeclaredWellData(const Schedule&   sched,
                         const UnitSystem& units,
                         const std::size_t sim_step,
                         const ::Opm::Action::State& action_state,
+                        const Opm::WellTestState& wtest_state,
                         const ::Opm::SummaryState&  smry,
                         const std::vector<int>& inteHead)
 {
@@ -982,23 +1001,24 @@ captureDeclaredWellData(const Schedule&   sched,
         const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
         auto msWellID       = std::size_t{0};
 
-        wellLoop(wells, sched, sim_step, [&groupMapNameIndex, &msWellID, &step_glo, &smry, this]
+        wellLoop(wells, sched, sim_step, [&groupMapNameIndex, &msWellID, &step_glo, &wtest_state, &smry, &sched, &sim_step, this]
             (const Well& well, const std::size_t wellID) -> void
         {
             msWellID += well.isMultiSegment();  // 1-based index.
             auto iw   = this->iWell_[wellID];
+            const auto& wtest_config = sched[sim_step].wtest_config();
 
-            IWell::staticContrib(well, step_glo, smry, msWellID, groupMapNameIndex, iw);
+            IWell::staticContrib(well, step_glo, wtest_config, wtest_state, smry, msWellID, groupMapNameIndex, iw);
         });
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, sched, sim_step, [&units, &step_glo, &sim_step, &sched, &smry, this]
+    wellLoop(wells, sched, sim_step, [&units, &step_glo, &sim_step, &sched, &wtest_state, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
 
-        SWell::staticContrib(well, step_glo, units, sim_step, sched, smry, sw);
+        SWell::staticContrib(well, step_glo, units, sim_step, sched, wtest_state, smry, sw);
     });
 
     // Static contributions to XWEL array.

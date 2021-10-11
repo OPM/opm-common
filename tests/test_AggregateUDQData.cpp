@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -256,8 +257,9 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             }
             {
                 auto action_state = Opm::Action::State {};
+                auto wtest_state = Opm::WellTestState{};
                 auto well_aggregator = Opm::RestartIO::Helpers::AggregateWellData(ih);
-                well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep, action_state, st, ih);
+                well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep, action_state, wtest_state, st, ih);
                 rstFile.write("IWEL", well_aggregator.getIWell());
                 rstFile.write("SWEL", well_aggregator.getSWell());
                 rstFile.write("XWEL", well_aggregator.getXWell());

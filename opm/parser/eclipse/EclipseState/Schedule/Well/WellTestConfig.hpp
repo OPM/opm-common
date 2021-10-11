@@ -26,7 +26,32 @@
 
 namespace Opm {
 
+
+namespace WTest {
+/*
+  Different numerical values are used in the restart file to enumarate the
+  possible WTEST modes and the actual reason a well has been closed.
+*/
+
+namespace EclConfigReason {
+constexpr int PHYSICAL   = 2;
+constexpr int ECONOMIC   = 3;
+constexpr int GCON       = 5;
+constexpr int THPLimit   = 7;
+constexpr int CONNECTION = 11;
+}
+
+namespace EclCloseReason {
+constexpr int PHYSICAL = 3;
+constexpr int ECONOMIC = 5;
+constexpr int GCON     = 6;
+constexpr int THPLimit = 9;
+}
+
+}
+
 class WellTestConfig {
+
 public:
     enum class Reason {
         PHYSICAL = 1,
@@ -60,7 +85,7 @@ public:
         bool test_well(int num_attempt, double elapsed) const;
 
         static WTESTWell serializeObject();
-
+        int ecl_reasons() const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -81,7 +106,7 @@ public:
     void drop_well(const std::string& well);
     bool has(const std::string& well) const;
     bool has(const std::string& well, Reason reason) const;
-    const WTESTWell& get(const std::string& well, Reason reason) const;
+    const WTESTWell& get(const std::string& well) const;
 
     static std::string reasonToString(const Reason reason);
     bool empty() const;

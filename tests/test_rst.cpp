@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -270,6 +271,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
     const auto sim_step = rptStep - 1;
     Opm::SummaryState sumState(Opm::TimeService::now());
     Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
 
     const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
                                                             simCase.grid,
@@ -287,7 +289,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
                                                             0, 0);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, action_state, sumState, ih);
+    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, action_state, wtest_state, sumState, ih);
     wellData.captureDynamicWellData(simCase.sched, sim_step, {} , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
