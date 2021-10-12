@@ -455,7 +455,7 @@ namespace Opm
     private:
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
-        std::shared_ptr<ScheduleGrid> m_grid;
+        std::shared_ptr<const ScheduleGrid> m_grid;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
         WriteRestartFileEvents restart_output;

@@ -99,16 +99,3 @@ std::array<double, 3> Opm::SparseScheduleGrid::getCellDimensions(std::size_t i, 
 
     return cell.dimensions;
 }
-
-std::set<Opm::ScheduleGrid::CellKey> Opm::SparseScheduleGrid::getActiveCellKeys() const {
-    std::set<ScheduleGrid::CellKey> keys;
-
-    std::transform(
-        loadedCells.begin(),
-        loadedCells.end(),
-        std::inserter(keys, keys.end()),
-        [](const auto &pair){ return pair.first; }
-    );
-
-    return keys;
-}

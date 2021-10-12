@@ -90,6 +90,56 @@ namespace Opm {
 
 namespace {
 
+    class ScheduleGridWrapper: public ScheduleGrid {
+        const ScheduleGrid& wrapped;
+        std::unique_ptr<std::set<ScheduleGrid::CellKey>> hitKeys;
+
+        void hitKey(std::size_t i, std::size_t j, std::size_t k) const {
+            hitKeys->insert({i, j, k});
+        }
+
+    public:
+        ScheduleGridWrapper(const ScheduleGrid& _wrapped)
+            : wrapped { _wrapped }
+            , hitKeys { std::make_unique<std::set<ScheduleGrid::CellKey>>() }
+        { }
+
+        std::size_t getActiveIndex(std::size_t i, std::size_t j, std::size_t k) const {
+            hitKey(i, j, k);
+
+            return wrapped.getActiveIndex(i, j, k);
+        }
+
+        std::size_t getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const {
+            hitKey(i, j, k);
+
+            return wrapped.getGlobalIndex(i, j, k);
+        }
+
+        bool isCellActive(std::size_t i, std::size_t j, std::size_t k) const {
+            hitKey(i, j, k);
+
+            return wrapped.isCellActive(i, j, k);
+        }
+
+        double getCellDepth(std::size_t i, std::size_t j, std::size_t k) const {
+            hitKey(i, j, k);
+
+            return wrapped.getCellDepth(i, j, k);
+        }
+
+        std::array<double, 3> getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const {
+            hitKey(i, j, k);
+
+            return wrapped.getCellDimensions(i, j, k);
+        }
+
+        std::set<ScheduleGrid::CellKey> getHitKeys() const {
+            return *hitKeys;
+        }
+
+    };
+
     bool name_match(const std::string& pattern, const std::string& name) {
         int flags = 0;
         return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
@@ -127,20 +177,25 @@ namespace {
     try :
         m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
         m_sched_deck(runspec, deck, m_static.rst_info ),
-        m_grid { new SparseScheduleGrid(grid) }
+        m_grid(nullptr)
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
 
+        const ScheduleGridWrapper gridWrapper { grid } ;
+
         if (rst) {
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, nullptr, &grid, &fp, "");
-            this->load_rst(*rst, grid, fp);
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, nullptr, &gridWrapper, &fp, "");
+            this->load_rst(*rst, gridWrapper, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, nullptr, &grid, &fp, "");
-        } else
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, nullptr, &grid, &fp, "");
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, nullptr, &gridWrapper, &fp, "");
+        } else {
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, nullptr, &gridWrapper, &fp, "");
+        }
+
+        m_grid = std::make_shared<SparseScheduleGrid>(grid, gridWrapper.getHitKeys());
     }
     catch (const OpmInputError& opm_error) {
         OpmLog::error(opm_error.what());
