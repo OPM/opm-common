@@ -49,7 +49,7 @@ namespace Opm
     class Deck;
     class DeckKeyword;
     class DeckRecord;
-    class EclipseGrid;
+    class ScheduleGrid;
     class EclipseState;
     class FieldPropsManager;
     class ParseContext;
@@ -126,7 +126,7 @@ namespace Opm
         Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
         Schedule(const Deck& deck,
-                 const EclipseGrid& grid,
+                 const ScheduleGrid& grid,
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
@@ -137,7 +137,7 @@ namespace Opm
 
         template<typename T>
         Schedule(const Deck& deck,
-                 const EclipseGrid& grid,
+                 const ScheduleGrid& grid,
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
@@ -147,7 +147,7 @@ namespace Opm
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
-                 const EclipseGrid& grid,
+                 const ScheduleGrid& grid,
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
@@ -452,7 +452,6 @@ namespace Opm
 
 
 
-
     private:
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
@@ -461,7 +460,7 @@ namespace Opm
         WriteRestartFileEvents restart_output;
 
         void load_rst(const RestartIO::RstState& rst,
-                      const EclipseGrid& grid,
+                      const ScheduleGrid& grid,
                       const FieldPropsManager& fp);
         void addWell(Well well);
         void addWell(const std::string& wellName,
@@ -489,7 +488,7 @@ namespace Opm
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
                                     const std::unordered_map<std::string, double> * target_wellpi,
-                                    const EclipseGrid* grid,
+                                    const ScheduleGrid* grid,
                                     const FieldPropsManager* fp,
                                     const std::string& prefix);
         void addACTIONX(const Action::ActionX& action);
@@ -504,7 +503,7 @@ namespace Opm
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
-                           const EclipseGrid* grid,
+                           const ScheduleGrid* grid,
                            const FieldPropsManager* fp,
                            const std::vector<std::string>& matching_wells,
                            bool runtime,

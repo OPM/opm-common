@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -79,7 +79,7 @@ namespace {
 constexpr bool defaultSatTabId = true;
 }
 
-Connection::Connection(const RestartIO::RstConnection& rst_connection, const EclipseGrid& grid, const FieldPropsManager& fp) :
+Connection::Connection(const RestartIO::RstConnection& rst_connection, const ScheduleGrid& grid, const FieldPropsManager& fp) :
         direction(rst_connection.dir),
         center_depth(rst_connection.depth),
         open_state(rst_connection.state),
@@ -101,7 +101,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
     {
         if (this->m_defaultSatTabId) {
             const auto& satnum = fp.get_int("SATNUM");
-            auto active_index = grid.activeIndex(this->ijk[0], this->ijk[1], this->ijk[2]);
+            auto active_index = grid.getActiveIndex(this->ijk[0], this->ijk[1], this->ijk[2]);
             this->sat_tableId = satnum[active_index];
         }
         if (this->segment_number > 0)

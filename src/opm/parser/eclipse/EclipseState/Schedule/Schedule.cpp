@@ -114,7 +114,7 @@ namespace {
     }
 
     Schedule::Schedule( const Deck& deck,
-                        const EclipseGrid& grid,
+                        const ScheduleGrid& grid,
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
@@ -154,7 +154,7 @@ namespace {
 
     template <typename T>
     Schedule::Schedule( const Deck& deck,
-                        const EclipseGrid& grid,
+                        const ScheduleGrid& grid,
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
@@ -167,7 +167,7 @@ namespace {
 
 
     Schedule::Schedule( const Deck& deck,
-                        const EclipseGrid& grid,
+                        const ScheduleGrid& grid,
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
@@ -257,7 +257,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
-                                 const EclipseGrid* grid,
+                                 const ScheduleGrid* grid,
                                  const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
                                  bool actionx_mode,
@@ -353,7 +353,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                       const ParseContext& parseContext ,
                                       ErrorGuard& errors,
                                       const std::unordered_map<std::string, double> * target_wellpi,
-                                      const EclipseGrid* grid,
+                                      const ScheduleGrid* grid,
                                       const FieldPropsManager* fp,
                                       const std::string& prefix) {
 
@@ -1334,7 +1334,7 @@ namespace {
     }
 }
 
-    void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp)
+    void Schedule::load_rst(const RestartIO::RstState& rst_state, const ScheduleGrid& grid, const FieldPropsManager& fp)
     {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;

@@ -37,7 +37,7 @@ namespace RestartIO {
 
     class DeckKeyword;
     class DeckRecord;
-    class EclipseGrid;
+    class ScheduleGrid;
     class FieldPropsManager;
 
     class Connection {
@@ -96,7 +96,7 @@ namespace RestartIO {
                    const std::size_t sort_value,
                    const bool defaultSatTabId);
 
-        Connection(const RestartIO::RstConnection& rst_connection, const EclipseGrid& grid, const FieldPropsManager& fp);
+        Connection(const RestartIO::RstConnection& rst_connection, const ScheduleGrid& grid, const FieldPropsManager& fp);
 
         static Connection serializeObject();
 
