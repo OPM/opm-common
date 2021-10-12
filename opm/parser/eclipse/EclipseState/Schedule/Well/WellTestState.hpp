@@ -112,6 +112,19 @@ public:
                    this->wtest_report_step == other.wtest_report_step;
         }
 
+        static WTestWell serializeObject();
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->name);
+            serializer(this->reason);
+            serializer(this->last_test);
+            serializer(this->num_attempt);
+            serializer(this->closed);
+            serializer(this->wtest_report_step);
+        }
+
         template<class BufferType>
         void pack(BufferType& buffer) const {
             buffer.write(this->name);
@@ -145,6 +158,17 @@ public:
                    this->complnum == other.complnum &&
                    this->last_test == other.last_test &&
                    this->num_attempt == other.num_attempt;
+        }
+
+        static ClosedCompletion serializeObject();
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->wellName);
+            serializer(this->complnum);
+            serializer(this->last_test);
+            serializer(this->num_attempt);
         }
 
         template<class BufferType>
@@ -222,6 +246,33 @@ public:
         }
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.map(this->wells);
+        if (serializer.isSerializing()) {
+            std::size_t size = this->completions.size();
+            serializer(size);
+            for (auto& [well, comp_map] : this->completions) {
+                serializer(well);
+                serializer.map(comp_map);
+            }
+        } else {
+            std::size_t size;
+            serializer(size);
+            for (std::size_t i=0; i < size; i++) {
+                std::string well;
+                std::unordered_map<int, ClosedCompletion> comp_map;
+
+                serializer(well);
+                serializer.map(comp_map);
+                this->completions.emplace(well, std::move(comp_map));
+            }
+        }
+    }
+
+
+    static WellTestState serializeObject();
     bool operator==(const WellTestState& other) const;
 
     std::optional<WellTestState::RestartWell> restart_well(const Opm::WellTestConfig& config, const std::string& wname) const;

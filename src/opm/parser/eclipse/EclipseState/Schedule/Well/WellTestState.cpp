@@ -48,6 +48,11 @@ namespace Opm {
     }
 
 
+    WellTestState::WTestWell WellTestState::WTestWell::serializeObject() {
+        return WTestWell("Name", WellTestConfig::Reason::GROUP, 123.45);
+    }
+
+
     void WellTestState::close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
         auto well_iter = this->wells.find(well_name);
         if (well_iter == this->wells.end())
@@ -115,6 +120,14 @@ namespace Opm {
         return output;
     }
 
+    WellTestState::ClosedCompletion WellTestState::ClosedCompletion::serializeObject() {
+        ClosedCompletion c;
+        c.wellName = "ABC";
+        c.last_test = 0.781;
+        c.complnum = 11;
+        c.num_attempt = 10;
+        return c;
+    }
 
     void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time) {
         auto well_iter = this->completions.find(well_name);
@@ -195,6 +208,12 @@ namespace Opm {
     }
 
 
+    WellTestState WellTestState::serializeObject() {
+        WellTestState ws;
+        ws.close_well("W1", WellTestConfig::Reason::PHYSICAL, 100);
+        ws.close_completion("W1", 3, 200);
+        return ws;
+    }
 }
 
 
