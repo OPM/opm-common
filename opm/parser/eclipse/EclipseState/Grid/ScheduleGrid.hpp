@@ -41,6 +41,8 @@ namespace Opm {
         virtual double getCellDepth(std::size_t i, std::size_t j, std::size_t k) const = 0;
         virtual std::array<double, 3> getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const = 0;
 
+        virtual const std::set<CellKey>& getActiveCellKeys() const = 0;
+
     public:
         virtual ~ScheduleGrid() {}
     };

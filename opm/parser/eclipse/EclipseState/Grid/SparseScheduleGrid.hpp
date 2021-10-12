@@ -54,7 +54,10 @@ namespace Opm {
         double getCellDepth(std::size_t i, std::size_t j, std::size_t k) const override;
         std::array<double, 3> getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const override;
 
+        const std::set<ScheduleGrid::CellKey>& getActiveCellKeys() const override;
+
         SparseScheduleGrid(const ScheduleGrid& source, const std::set<ScheduleGrid::CellKey>& loadKeys);
+        SparseScheduleGrid(const ScheduleGrid& source) : SparseScheduleGrid { source, source.getActiveCellKeys() } { }
 
     private:
         typedef std::map<ScheduleGrid::CellKey, Cell> CellMap;

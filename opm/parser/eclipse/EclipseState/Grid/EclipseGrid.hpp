@@ -86,6 +86,8 @@ namespace Opm {
         size_t  getNumActive( ) const;
         bool allActive() const;
 
+        const std::set<ScheduleGrid::CellKey>& getActiveCellKeys() const override;
+
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
