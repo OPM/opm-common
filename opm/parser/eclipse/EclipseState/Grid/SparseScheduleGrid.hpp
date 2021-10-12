@@ -21,11 +21,31 @@
 #ifndef OPM_PARSER_SPARSE_SCHEDULE_GRID_HPP
 #define OPM_PARSER_SPARSE_SCHEDULE_GRID_HPP
 
+#include <cstddef>
+
+#include <array>
+#include <map>
+#include <optional>
+
 #include <opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp>
 
 namespace Opm {
 
     class SparseScheduleGrid: public ScheduleGrid {
+    private:
+        struct Cell {
+            std::size_t i, j, k;
+            std::optional<std::size_t> activeIndex;
+            std::size_t globalIndex;
+
+            double depth;
+            std::array<double, 3> dimensions;
+        };
+
+        typedef std::array<std::size_t, 3> CellKey;
+
+        const Cell& getCell(std::size_t i, std::size_t j, std::size_t k) const;
+
     public:
         std::size_t getActiveIndex(std::size_t i, std::size_t j, std::size_t k) const override;
         std::size_t getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const override;
@@ -34,6 +54,9 @@ namespace Opm {
 
         double getCellDepth(std::size_t i, std::size_t j, std::size_t k) const override;
         std::array<double, 3> getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const override;
+
+    private:
+        std::map<CellKey, Cell> loadedCells;
     };
 
 }

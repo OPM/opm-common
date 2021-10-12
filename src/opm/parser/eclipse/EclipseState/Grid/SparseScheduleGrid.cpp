@@ -21,22 +21,42 @@
 
 #include <stdexcept>
 
-std::size_t Opm::SparseScheduleGrid::getActiveIndex(std::size_t, std::size_t, std::size_t) const {
-    throw std::logic_error("BUG: SparseScheduleGrid::activeIndex called on a sparse grid missing the cell");
+const Opm::SparseScheduleGrid::Cell& Opm::SparseScheduleGrid::getCell(std::size_t i, std::size_t j, std::size_t k) const {
+    const auto iter { loadedCells.find({i, j, k}) } ;
+
+    if (iter == loadedCells.end()) {
+        throw std::logic_error("BUG: SparseScheduleGrid::getCell called on a sparse grid missing the cell");
+    }
+
+    return iter->second;
 }
 
-std::size_t Opm::SparseScheduleGrid::getGlobalIndex(std::size_t, std::size_t, std::size_t) const {
-    throw std::logic_error("BUG: SparseScheduleGrid::getGlobalIndex called on a sparse grid missing the cell");
+std::size_t Opm::SparseScheduleGrid::getActiveIndex(std::size_t i, std::size_t j, std::size_t k) const {
+    const auto& cell { getCell(i, j, k) } ;
+
+    return cell.activeIndex.value();
 }
 
-bool Opm::SparseScheduleGrid::isCellActive(std::size_t, std::size_t, std::size_t) const {
-    throw std::logic_error("BUG: SparseScheduleGrid::cellActive called on a sparse grid missing the cell");
+std::size_t Opm::SparseScheduleGrid::getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const {
+    const auto& cell { getCell(i, j, k) } ;
+
+    return cell.globalIndex;
 }
 
-double Opm::SparseScheduleGrid::getCellDepth(std::size_t, std::size_t, std::size_t) const {
-    throw std::logic_error("BUG: SparseScheduleGrid::getCellDepth called on a sparse grid missing the cell");
+bool Opm::SparseScheduleGrid::isCellActive(std::size_t i, std::size_t j, std::size_t k) const {
+    const auto& cell { getCell(i, j, k) } ;
+
+    return bool(cell.activeIndex);
 }
 
-std::array<double, 3> Opm::SparseScheduleGrid::getCellDimensions(std::size_t, std::size_t, std::size_t) const {
-    throw std::logic_error("BUG: SparseScheduleGrid::getCellDims called on a sparse grid missing the cell");
+double Opm::SparseScheduleGrid::getCellDepth(std::size_t i, std::size_t j, std::size_t k) const {
+    const auto& cell { getCell(i, j, k) } ;
+
+    return cell.depth;
+}
+
+std::array<double, 3> Opm::SparseScheduleGrid::getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const {
+    const auto& cell { getCell(i, j, k) } ;
+
+    return cell.dimensions;
 }
