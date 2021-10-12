@@ -471,16 +471,16 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
 
-    const std::set<Opm::ScheduleGrid::CellKey>& Opm::EclipseGrid::getActiveCellKeys() const {
+    std::set<Opm::ScheduleGrid::CellKey> Opm::EclipseGrid::getActiveCellKeys() const {
         std::set<ScheduleGrid::CellKey> cell_keys {};
 
-        for (const auto &global_index : m_global_to_active) {
+        for (const auto &global_index : m_active_to_global) {
             const auto& ijk { getIJK(global_index) } ;
             std::size_t i = ijk[0], j = ijk[1], k = ijk[2];
             cell_keys.insert({ i, j, k });
         }
 
-        return std::move(cell_keys);
+        return cell_keys;
     }
 
 

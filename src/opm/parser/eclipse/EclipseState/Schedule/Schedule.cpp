@@ -52,6 +52,8 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/SparseScheduleGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
@@ -124,7 +126,8 @@ namespace {
                         const RestartIO::RstState * rst)
     try :
         m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
-        m_sched_deck(runspec, deck, m_static.rst_info )
+        m_sched_deck(runspec, deck, m_static.rst_info ),
+        m_grid { new SparseScheduleGrid(grid) }
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);

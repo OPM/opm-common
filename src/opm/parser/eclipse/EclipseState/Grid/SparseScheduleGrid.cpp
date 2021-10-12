@@ -21,7 +21,7 @@
 
 #include <stdexcept>
 
-const Opm::SparseScheduleGrid::Cell& Opm::SparseScheduleGrid::loadCell(const Opm::ScheduleGrid& source, const Opm::ScheduleGrid::CellKey& key) {
+Opm::SparseScheduleGrid::Cell Opm::SparseScheduleGrid::loadCell(const Opm::ScheduleGrid& source, const Opm::ScheduleGrid::CellKey& key) {
     std::size_t
         i { key[0] } ,
         j { key[1] } ,
@@ -42,17 +42,17 @@ const Opm::SparseScheduleGrid::Cell& Opm::SparseScheduleGrid::loadCell(const Opm
         source.getCellDimensions(i, j, k),
     };
 
-    return std::move(loadedCell);
+    return loadedCell;
 }
 
-const Opm::SparseScheduleGrid::CellMap& Opm::SparseScheduleGrid::loadCells(const Opm::ScheduleGrid& source, const std::set<Opm::ScheduleGrid::CellKey>& loadKeys) {
+Opm::SparseScheduleGrid::CellMap Opm::SparseScheduleGrid::loadCells(const Opm::ScheduleGrid& source, const std::set<Opm::ScheduleGrid::CellKey>& loadKeys) {
         Opm::SparseScheduleGrid::CellMap loadedCells { } ;
 
         for (const auto &key : loadKeys) {
             loadedCells[key] = loadCell(source, key);
         }
 
-        return std::move(loadedCells);
+        return loadedCells;
     }
 
 Opm::SparseScheduleGrid::SparseScheduleGrid(const Opm::ScheduleGrid& source, const std::set<Opm::ScheduleGrid::CellKey>& loadKeys)
@@ -100,7 +100,7 @@ std::array<double, 3> Opm::SparseScheduleGrid::getCellDimensions(std::size_t i, 
     return cell.dimensions;
 }
 
-const std::set<Opm::ScheduleGrid::CellKey>& Opm::SparseScheduleGrid::getActiveCellKeys() const {
+std::set<Opm::ScheduleGrid::CellKey> Opm::SparseScheduleGrid::getActiveCellKeys() const {
     std::set<ScheduleGrid::CellKey> keys;
 
     std::transform(
@@ -110,5 +110,5 @@ const std::set<Opm::ScheduleGrid::CellKey>& Opm::SparseScheduleGrid::getActiveCe
         [](const auto &pair){ return pair.first; }
     );
 
-    return std::move(keys);
+    return keys;
 }
