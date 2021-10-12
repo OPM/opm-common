@@ -26,6 +26,7 @@
 #include <array>
 #include <map>
 #include <optional>
+#include <set>
 
 #include <opm/parser/eclipse/EclipseState/Grid/ScheduleGrid.hpp>
 
@@ -35,14 +36,12 @@ namespace Opm {
     private:
         struct Cell {
             std::size_t i, j, k;
-            std::optional<std::size_t> activeIndex;
             std::size_t globalIndex;
+            std::optional<std::size_t> activeIndex;
 
             double depth;
             std::array<double, 3> dimensions;
         };
-
-        typedef std::array<std::size_t, 3> CellKey;
 
         const Cell& getCell(std::size_t i, std::size_t j, std::size_t k) const;
 
@@ -55,9 +54,16 @@ namespace Opm {
         double getCellDepth(std::size_t i, std::size_t j, std::size_t k) const override;
         std::array<double, 3> getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const override;
 
+        SparseScheduleGrid(const ScheduleGrid& source, const std::set<ScheduleGrid::CellKey>& loadKeys);
+
     private:
-        std::map<CellKey, Cell> loadedCells;
-    };
+        typedef std::map<ScheduleGrid::CellKey, Cell> CellMap;
+
+        CellMap loadedCells;
+
+        static const CellMap& loadCells(const ScheduleGrid& source, const std::set<ScheduleGrid::CellKey>& loadKeys);
+        static const Cell& loadCell(const ScheduleGrid& source, const ScheduleGrid::CellKey& loadKey);
+};
 
 }
 

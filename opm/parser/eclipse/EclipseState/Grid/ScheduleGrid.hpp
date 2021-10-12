@@ -24,10 +24,14 @@
 #include <cstddef>
 
 #include <array>
+#include <set>
 
 namespace Opm {
 
     class ScheduleGrid {
+    public:
+        typedef std::array<std::size_t, 3> CellKey;
+
     public:
         virtual std::size_t getActiveIndex(std::size_t i, std::size_t j, std::size_t k) const = 0;
         virtual std::size_t getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const = 0;

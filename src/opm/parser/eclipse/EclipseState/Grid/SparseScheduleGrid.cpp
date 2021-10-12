@@ -21,6 +21,45 @@
 
 #include <stdexcept>
 
+const Opm::SparseScheduleGrid::Cell& Opm::SparseScheduleGrid::loadCell(const Opm::ScheduleGrid& source, const Opm::ScheduleGrid::CellKey& key) {
+    std::size_t
+        i { key[0] } ,
+        j { key[1] } ,
+        k { key[2] } ;
+
+    std::optional<std::size_t> activeIndex {};
+
+    if (source.isCellActive(i, j, k)) {
+        activeIndex = source.getActiveIndex(i, j, k);
+    }
+
+    Cell loadedCell {
+        i, j, k,
+        source.getGlobalIndex(i, j, k),
+        activeIndex,
+
+        source.getCellDepth(i, j, k),
+        source.getCellDimensions(i, j, k),
+    };
+
+    return std::move(loadedCell);
+}
+
+const Opm::SparseScheduleGrid::CellMap& Opm::SparseScheduleGrid::loadCells(const Opm::ScheduleGrid& source, const std::set<Opm::ScheduleGrid::CellKey>& loadKeys) {
+        Opm::SparseScheduleGrid::CellMap loadedCells { } ;
+
+        for (const auto &key : loadKeys) {
+            loadedCells[key] = loadCell(source, key);
+        }
+
+        return std::move(loadedCells);
+    }
+
+Opm::SparseScheduleGrid::SparseScheduleGrid(const Opm::ScheduleGrid& source, const std::set<Opm::ScheduleGrid::CellKey>& loadKeys)
+    : loadedCells { loadCells(source, loadKeys) }
+{
+}
+
 const Opm::SparseScheduleGrid::Cell& Opm::SparseScheduleGrid::getCell(std::size_t i, std::size_t j, std::size_t k) const {
     const auto iter { loadedCells.find({i, j, k}) } ;
 
