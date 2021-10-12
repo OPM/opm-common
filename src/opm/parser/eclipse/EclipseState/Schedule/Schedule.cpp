@@ -1270,7 +1270,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 keyword,
                                 parseContext,
                                 errors,
-                                nullptr,
+                                m_grid.get(),
                                 nullptr,
                                 result.wells(),
                                 true,

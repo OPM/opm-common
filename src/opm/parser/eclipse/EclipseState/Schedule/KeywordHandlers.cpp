@@ -209,7 +209,7 @@ namespace {
 
     void Schedule::handleCOMPSEGS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         if (!handlerContext.grid_ptr)
-            throw std::logic_error("BUG: Schedule::handleCOMPDAT() has been called with an invalid grid pointer");
+            throw std::logic_error("BUG: Schedule::handleCOMPSEGS() has been called with an invalid grid pointer");
 
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
