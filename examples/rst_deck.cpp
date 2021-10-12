@@ -235,16 +235,20 @@ void update_solution(const options& opt, Opm::FileDeck& file_deck)
     if (!solution.has_value())
         print_help_and_exit(fmt::format("Could not find SOLUTION section in input deck: {}", opt.input_deck));
 
-    const auto summary = file_deck.find("SUMMARY");
+    auto summary = file_deck.find("SUMMARY");
     if (!summary.has_value())
         print_help_and_exit(fmt::format("Could not find SUMMARY section in input deck: {}", opt.input_deck));
 
     auto index = solution.value();
+    index++;
     {
         while (true) {
-            const auto& keyword = file_deck[++index];
-            if (keep_in_solution.count(keyword.name()) == 0)
+            const auto& keyword = file_deck[index];
+            if (keep_in_solution.count(keyword.name()) == 0) {
                 file_deck.erase(index);
+                summary.value()--;
+            } else
+                index++;
 
             if (index == summary)
                 break;
