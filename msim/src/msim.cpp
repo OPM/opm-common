@@ -110,7 +110,7 @@ void msim::run_step(const Schedule& schedule, WellTestState& wtest_state, Summar
         if ((seconds_elapsed + time_step) > end_time)
             time_step = end_time - seconds_elapsed;
 
-        this->simulate(schedule, st, sol, well_data, group_nwrk_data, report_step, seconds_elapsed, time_step);
+        this->simulate(schedule, wtest_state, st, sol, well_data, group_nwrk_data, report_step, seconds_elapsed, time_step);
 
         seconds_elapsed += time_step;
 
