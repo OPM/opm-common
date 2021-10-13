@@ -165,6 +165,29 @@ double GuideRate::getSI(const std::string&           wgname,
     };
 }
 
+double GuideRate::getSI(const std::string& group, const Phase& phase) const
+{
+    using M = UnitSystem::measure;
+
+    const auto gr = this->get(group, phase);
+
+    switch (phase) {
+    case Phase::OIL:
+    case Phase::WATER:
+        return this->schedule.getUnits().to_si(M::liquid_surface_rate, gr);
+
+    case Phase::GAS:
+        return this->schedule.getUnits().to_si(M::gas_surface_rate, gr);
+
+    default:
+        break;
+    }
+
+    throw std::invalid_argument {
+        fmt::format("Unsupported Injection Guiderate Phase '{}'", static_cast<int>(phase))
+    };
+}
+
 bool GuideRate::has(const std::string& name) const
 {
     return this->values.count(name) > 0;

@@ -102,6 +102,7 @@ public:
     double getSI(const std::string& well, const Well::GuideRateTarget target, const RateVector& rates) const;
     double getSI(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
     double getSI(const std::string& wgname, const GuideRateModel::Target target, const RateVector& rates) const;
+    double getSI(const std::string& group, const Phase& phase) const;
 
     bool has(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
