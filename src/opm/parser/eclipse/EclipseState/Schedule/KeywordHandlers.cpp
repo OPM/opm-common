@@ -1012,7 +1012,7 @@ namespace {
     void Schedule::handleWCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep, handlerContext.matching_wells);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
@@ -1074,7 +1074,7 @@ namespace {
     void Schedule::handleWCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep, handlerContext.matching_wells);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
