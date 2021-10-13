@@ -266,6 +266,28 @@ BOOST_AUTO_TEST_CASE(TestFileDeck)
     fd.erase(index6.value(), index7.value());
 }
 
+BOOST_AUTO_TEST_CASE(RestartTest2)
+{
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("UDQ_WCONPROD.DATA");
+    FileDeck fd(deck);
+
+    fd.rst_solution("RESTART", 77);
+    fd.insert_skiprest();
+
+    auto solution_index = fd.find("SOLUTION").value();
+    auto restart_index = fd.find("RESTART").value();
+    auto summary_index = fd.find("SUMMARY").value();
+    auto schedule_index = fd.find("SCHEDULE").value();
+    auto skiprest_index = fd.find("SKIPREST").value();
+
+    BOOST_CHECK(solution_index < restart_index);
+    BOOST_CHECK(restart_index < summary_index);
+    BOOST_CHECK(summary_index < schedule_index);
+    BOOST_CHECK(schedule_index < skiprest_index);
+}
+
 
 BOOST_AUTO_TEST_CASE(RestartTest)
 {

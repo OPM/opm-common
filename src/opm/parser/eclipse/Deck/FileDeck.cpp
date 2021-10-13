@@ -19,8 +19,11 @@
 #include <fmt/format.h>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/FileDeck.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 namespace fs = Opm::filesystem;
 
@@ -355,4 +358,44 @@ void FileDeck::dump_stdout(const std::string& output_dir, OutputMode mode) const
     else if (mode == OutputMode::SHARE)
         this->dump_shared(std::cout, output_dir);
 }
+
+
+void FileDeck::rst_solution(const std::string& rst_base, int report_step) {
+    auto index = this->find("SOLUTION").value();
+    auto summary_index = this->find("SUMMARY").value();
+
+    index++;
+    {
+        while (true) {
+            const auto& keyword = this->operator[](index);
+            if (FileDeck::rst_keep_in_solution.count(keyword.name()) == 0) {
+                this->erase(index);
+                summary_index--;
+            } else
+                index++;
+
+            if (index == summary_index)
+                break;
+        }
+    }
+
+    {
+        Opm::UnitSystem units;
+        std::vector<DeckValue> values{ DeckValue{rst_base}, DeckValue{report_step} };
+        DeckKeyword restart(ParserKeywords::RESTART(), std::vector<std::vector<DeckValue>>{ values }, units, units);
+
+        auto solution = this->find("SOLUTION").value();
+        this->insert(++solution, restart);
+    }
+}
+
+void FileDeck::insert_skiprest() {
+    DeckKeyword skiprest( ParserKeywords::SKIPREST{} );
+    const auto schedule = this->find("SCHEDULE");
+    auto index = schedule.value();
+    this->insert(++index, skiprest);
+}
+
+const std::unordered_set<std::string> FileDeck::rst_keep_in_solution = {"ABC"};
+
 }
