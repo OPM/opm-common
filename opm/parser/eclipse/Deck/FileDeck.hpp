@@ -63,6 +63,7 @@ struct Index {
     Index  operator++(int);
     bool   operator==(const Index& other) const;
     bool   operator!=(const Index& other) const;
+    bool   operator<(const Index& other) const;
 
 
 private:

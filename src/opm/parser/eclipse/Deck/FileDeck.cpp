@@ -97,7 +97,15 @@ bool FileDeck::Index::operator!=(const Index& other) const {
     return !(*this == other);
 }
 
+bool FileDeck::Index::operator<(const Index& other) const {
+    if (this->file_index < other.file_index)
+        return true;
 
+    if (this->file_index == other.file_index)
+        return (this->keyword_index < other.keyword_index);
+
+    return false;
+}
 
 FileDeck::FileDeck(const Deck& deck)
     : input_directory(deck.getInputPath())
