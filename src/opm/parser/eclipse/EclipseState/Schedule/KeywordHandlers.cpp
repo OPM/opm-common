@@ -103,7 +103,7 @@ namespace {
       means that we do not inform the user about "our fix", but it is *not* possible
       to configure the parser to leave the spaces intact.
     */
-    std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg, const ParseContext& parseContext, ErrorGuard errors) {
+    std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg, const ParseContext& parseContext, ErrorGuard& errors) {
         std::string wgname = trim_copy(wgname_arg);
         if (wgname != wgname_arg)  {
             const auto& location = keyword.location();
