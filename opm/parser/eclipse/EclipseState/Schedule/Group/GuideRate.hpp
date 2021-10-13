@@ -20,6 +20,10 @@
 #ifndef GUIDE_RATE_HPP
 #define GUIDE_RATE_HPP
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+
 #include <cstddef>
 #include <ctime>
 #include <limits>
@@ -28,75 +32,79 @@
 #include <unordered_map>
 #include <utility>
 
-#include <stddef.h>
-
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
-
 namespace Opm {
 
 class Schedule;
-class GuideRate {
 
+} // namespace Opm
+
+namespace Opm {
+
+class GuideRate
+{
 public:
-// used for potentials and well rates
-struct RateVector {
-    RateVector () = default;
-    RateVector (double orat, double grat, double wrat) :
-        oil_rat(orat),
-        gas_rat(grat),
-        wat_rat(wrat)
-    {}
+    // used for potentials and well rates
+    struct RateVector {
+        RateVector() = default;
+        RateVector(const double orat, const double grat, const double wrat)
+            : oil_rat(orat)
+            , gas_rat(grat)
+            , wat_rat(wrat)
+        {}
 
+        double eval(const Well::GuideRateTarget target) const;
+        double eval(const Group::GuideRateProdTarget target) const;
+        double eval(const GuideRateModel::Target target) const;
 
-    double eval(Well::GuideRateTarget target) const;
-    double eval(Group::GuideRateProdTarget target) const;
-    double eval(GuideRateModel::Target target) const;
+        double oil_rat{0.0};
+        double gas_rat{0.0};
+        double wat_rat{0.0};
+    };
 
+    struct GuideRateValue {
+        GuideRateValue() = default;
+        GuideRateValue(const double t, const double v, const GuideRateModel::Target tg)
+            : sim_time(t)
+            , value   (v)
+            , target  (tg)
+        {}
 
-    double oil_rat;
-    double gas_rat;
-    double wat_rat;
-};
+        bool operator==(const GuideRateValue& other) const
+        {
+            return (this->sim_time == other.sim_time)
+                && (this->value == other.value);
+        }
 
+        bool operator!=(const GuideRateValue& other) const
+        {
+            return !(*this == other);
+        }
 
-struct GuideRateValue {
-    GuideRateValue() = default;
-    GuideRateValue(double t, double v, GuideRateModel::Target tg):
-        sim_time(t),
-        value(v),
-        target(tg)
-    {}
+        double sim_time { std::numeric_limits<double>::lowest() };
+        double value { std::numeric_limits<double>::lowest() };
+        GuideRateModel::Target target { GuideRateModel::Target::NONE };
+    };
 
-    bool operator==(const GuideRateValue& other) const {
-        return (this->sim_time == other.sim_time &&
-                this->value == other.value);
-    }
-
-    bool operator!=(const GuideRateValue& other) const {
-        return !(*this == other);
-    }
-
-    double sim_time { std::numeric_limits<double>::lowest() };
-    double value { std::numeric_limits<double>::lowest() };
-    GuideRateModel::Target target { GuideRateModel::Target::NONE };
-};
-
-private:
-
-struct GRValState {
-    GuideRateValue curr{};
-    GuideRateValue prev{};
-};
-
-public:
     GuideRate(const Schedule& schedule);
-    void compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    void compute(const std::string& wgname, const Phase& phase, size_t report_step, double guide_rate);
-    double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
-    double get(const std::string& group, Group::GuideRateProdTarget target, const RateVector& rates) const;
-    double get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
+
+    void compute(const std::string& wgname,
+                 const std::size_t  report_step,
+                 const double       sim_time,
+                 const double       oil_pot,
+                 const double       gas_pot,
+                 const double       wat_pot);
+
+    void compute(const std::string& wgname,
+                 const Phase&       phase,
+                 const std::size_t  report_step,
+                 const double       guide_rate);
+
+    bool has(const std::string& name) const;
+    bool has(const std::string& name, const Phase& phase) const;
+
+    double get(const std::string& well, const Well::GuideRateTarget target, const RateVector& rates) const;
+    double get(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
+    double get(const std::string& name, const GuideRateModel::Target model_target, const RateVector& rates) const;
     double get(const std::string& group, const Phase& phase) const;
 
     double getSI(const std::string& well, const Well::GuideRateTarget target, const RateVector& rates) const;
@@ -104,42 +112,65 @@ public:
     double getSI(const std::string& wgname, const GuideRateModel::Target target, const RateVector& rates) const;
     double getSI(const std::string& group, const Phase& phase) const;
 
-    bool has(const std::string& name) const;
-    bool has(const std::string& name, const Phase& phase) const;
-    void init_grvalue(std::size_t report_step, const std::string& wgname, GuideRateValue value);
+    void init_grvalue(const std::size_t report_step, const std::string& wgname, GuideRateValue value);
+    void init_grvalue_SI(const std::size_t report_step, const std::string& wgname, GuideRateValue value);
 
-    void updateGuideRateExpiration(double sim_time, size_t report_step);
+    void updateGuideRateExpiration(const double      sim_time,
+                                   const std::size_t report_step);
 
 private:
-    void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot) const;
-    double eval_group_pot() const;
-    double eval_group_resvinj() const;
-
-    void assign_grvalue(const std::string& wgname, const GuideRateModel& model, GuideRateValue&& value);
-    double get_grvalue_result(const GRValState& gr) const;
-
-    using GRValPtr = std::unique_ptr<GRValState>;
-
-    typedef std::pair<Phase,std::string> pair;
+    struct GRValState
+    {
+        GuideRateValue curr{};
+        GuideRateValue prev{};
+    };
 
     struct pair_hash
     {
         template <class T1, class T2>
-        std::size_t operator() (const std::pair<T1, T2> &pair) const
+        std::size_t operator()(const std::pair<T1, T2>& pair) const
         {
             return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
         }
     };
 
-    std::unordered_map<std::string, GRValPtr> values;
-    std::unordered_map<pair, double, pair_hash> injection_group_values;
-    std::unordered_map<std::string, RateVector > potentials;
-    bool guide_rates_expired {false};
+    using GRValPtr = std::unique_ptr<GRValState>;
+    using pair = std::pair<Phase, std::string>;
+
+    void well_compute(const std::string& wgname,
+                      const std::size_t  report_step,
+                      const double       sim_time,
+                      const double       oil_pot,
+                      const double       gas_pot,
+                      const double       wat_pot);
+
+    void group_compute(const std::string& wgname,
+                       const std::size_t  report_step,
+                       const double       sim_time,
+                       const double       oil_pot,
+                       const double       gas_pot,
+                       const double       wat_pot);
+
+    double eval_form(const GuideRateModel& model,
+                     const double          oil_pot,
+                     const double          gas_pot,
+                     const double          wat_pot) const;
+    double eval_group_pot() const;
+    double eval_group_resvinj() const;
+
+    void assign_grvalue(const std::string&    wgname,
+                        const GuideRateModel& model,
+                        GuideRateValue&&      value);
+    double get_grvalue_result(const GRValState& gr) const;
+
     const Schedule& schedule;
+
+    std::unordered_map<std::string, GRValPtr> values{};
+    std::unordered_map<pair, double, pair_hash> injection_group_values{};
+    std::unordered_map<std::string, RateVector> potentials{};
+    bool guide_rates_expired {false};
 };
 
-}
+} // namespace Opm
 
 #endif

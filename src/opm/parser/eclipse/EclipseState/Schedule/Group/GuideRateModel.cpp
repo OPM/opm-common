@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <string>
+#include <unordered_map>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
@@ -277,6 +278,19 @@ GuideRateModel::Target GuideRateModel::TargetFromString(const std::string& s) {
     throw std::invalid_argument("Could not convert: " + s + " to a valid Target enum value");
 }
 
+GuideRateModel::Target GuideRateModel::TargetFromRestart(const int nominated_phase) {
+    static const auto int_to_target = std::unordered_map<int, Target> {
+        {0, Target::NONE},
+        {1, Target::OIL },
+        {3, Target::GAS },
+        {4, Target::LIQ },
+        {6, Target::RES },
+        {9, Target::COMB},
+    };
+
+    auto t = int_to_target.find(nominated_phase);
+    return (t == int_to_target.end()) ? Target::NONE : t->second;
+}
 
 /*
   The COMB target - which requires parameters from the LINCOM keyword, is not
