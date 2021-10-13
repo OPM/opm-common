@@ -24,6 +24,7 @@
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
+#include <opm/output/eclipse/AggregateGroupData.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -45,11 +46,17 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
+#include <opm/io/eclipse/OutputStream.hpp>
 
 #include <exception>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include "tests/WorkArea.cpp"
 
 struct MockIH
 {
@@ -759,6 +766,67 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
         BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "OP_2    ");
     }
+    {
+        WorkArea work;
+        std::string outputDir = "./";
+        std::string baseName = "TEST";
+        {
+            Opm::EclIO::OutputStream::Restart rstFile {Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
+                                                       rptStep,
+                                                       Opm::EclIO::OutputStream::Formatted {false},
+                                                       Opm::EclIO::OutputStream::Unified {true}};
+            const double secs_elapsed = 100;
+            const double next_step_size = 10;
+
+            const auto IH = Opm::RestartIO::Helpers::
+                createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
+                               rptStep, rptStep, rptStep);
+
+            const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es, simCase.sched, rptStep,
+                                                                    secs_elapsed, next_step_size);
+
+            const auto& lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
+
+            rstFile.write("INTEHEAD", IH);
+            rstFile.write("DOUBHEAD", dh);
+            rstFile.write("LOGIHEAD", lh);
+            {
+                auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(IH);
+                rstFile.write("IGRP", group_aggregator.getIGroup());
+                rstFile.write("SGRP", group_aggregator.getSGroup());
+                rstFile.write("XGRP", group_aggregator.getXGroup());
+                rstFile.write("ZGRP", group_aggregator.getZGroup());
+            }
+            rstFile.write("IWEL", awd.getIWell());
+            rstFile.write("SWEL", awd.getSWell());
+            rstFile.write("XWEL", awd.getXWell());
+            rstFile.write("ZWEL", awd.getZWell());
+            {
+                auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(IH);
+                auto xw = Opm::data::Wells {};
+                conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(), simCase.es.getUnits(), xw, sim_state(), rptStep);
+                rstFile.write("ICON", conn_aggregator.getIConn());
+                rstFile.write("SCON", conn_aggregator.getSConn());
+                rstFile.write("XCON", conn_aggregator.getXConn());
+            }
+        }
+
+        auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST.UNRST");
+        auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), 1);
+        auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), simCase.es.runspec(), Opm::Parser{});
+
+        {
+            Opm::WellTestConfig wtest_config{rst_state, rptStep};
+            Opm::WellTestState wtest_state;
+            BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::PHYSICAL));
+            BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::GROUP));
+            BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::THP_DESIGN));
+        }
+    }
+
+
+
+
 
     // SWEL (OP_6)
     // Report Step 8: 2014-10-18 --> 2014-10-28

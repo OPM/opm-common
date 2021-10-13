@@ -76,6 +76,9 @@ struct RstWell {
     int completion_ordering;
     int pvt_table;
     int msw_pressure_drop_model;
+    int wtest_config_reasons;
+    int wtest_close_reason;
+    int wtest_remaining;
 
     float orat_target;
     float wrat_target;
@@ -91,6 +94,8 @@ struct RstWell {
     float drainage_radius;
     float efficiency_factor;
     float alq_value;
+    float wtest_interval;
+    float wtest_startup;
 
     double oil_rate;
     double water_rate;

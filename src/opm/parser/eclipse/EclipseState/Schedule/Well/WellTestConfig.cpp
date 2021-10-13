@@ -18,6 +18,7 @@
 */
 #include <stdexcept>
 #include <algorithm>
+#include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 
@@ -69,6 +70,27 @@ int WellTestConfig::WTESTWell::ecl_reasons() const
     return ecl_value;
 }
 
+namespace {
+
+void update(int& opm_reasons, const WellTestConfig::Reason opm_reason, const int ecl_reasons, const int ecl_reason) {
+    if (ecl_reasons % ecl_reason == 0)
+        opm_reasons += static_cast<int>(opm_reason);
+}
+
+}
+
+int WellTestConfig::WTESTWell::inverse_ecl_reasons(int ecl_reasons) {
+    int reasons{0};
+
+    update(reasons, Reason::PHYSICAL  , ecl_reasons, WTest::EclConfigReason::PHYSICAL);
+    update(reasons, Reason::ECONOMIC  , ecl_reasons, WTest::EclConfigReason::ECONOMIC);
+    update(reasons, Reason::GROUP     , ecl_reasons, WTest::EclConfigReason::GCON);
+    update(reasons, Reason::THP_DESIGN, ecl_reasons, WTest::EclConfigReason::THPLimit);
+    update(reasons, Reason::COMPLETION, ecl_reasons, WTest::EclConfigReason::CONNECTION);
+
+    return reasons;
+}
+
 
 
 WellTestConfig WellTestConfig::serializeObject()
@@ -79,6 +101,10 @@ WellTestConfig WellTestConfig::serializeObject()
 }
 
 
+void WellTestConfig::add_well(const std::string& well, int reasons, double test_interval,
+                              int num_retries, double startup_time, const int current_step) {
+    this->wells.insert_or_assign(well, WTESTWell(well, reasons, test_interval, num_retries, startup_time, current_step));
+}
 
 void WellTestConfig::add_well(const std::string& well, const std::string& reasons_string, double test_interval,
                               int num_retries, double startup_time, const int current_step) {
@@ -108,8 +134,7 @@ void WellTestConfig::add_well(const std::string& well, const std::string& reason
             throw std::invalid_argument("Invalid character in WTEST configuration");
         }
     }
-
-    this->wells.insert_or_assign(well, WTESTWell(well, reasons, test_interval, num_retries, startup_time, current_step));
+    this->add_well(well, reasons, test_interval, num_retries, startup_time, current_step);
 }
 
 
@@ -166,8 +191,18 @@ bool WellTestConfig::operator==(const WellTestConfig& data) const {
 }
 
 
-
+WellTestConfig::WellTestConfig(const RestartIO::RstState& rst_state, int report_step) {
+    for (const auto& well : rst_state.wells) {
+        if (well.wtest_config_reasons != 0) {
+            this->add_well(well.name,
+                           WellTestConfig::WTESTWell::inverse_ecl_reasons(well.wtest_config_reasons),
+                           well.wtest_interval,
+                           well.wtest_remaining,
+                           well.wtest_startup,
+                           report_step);
+        }
+    }
 }
 
-
+}
 
