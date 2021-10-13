@@ -817,10 +817,12 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
         {
             Opm::WellTestConfig wtest_config{rst_state, rptStep};
-            Opm::WellTestState wtest_state;
+            Opm::WellTestState ws{simCase.sched.runspec().start_time(), rst_state};
             BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::PHYSICAL));
             BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::GROUP));
             BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::THP_DESIGN));
+
+            BOOST_CHECK(ws.well_is_closed("OP_1"));
         }
     }
 

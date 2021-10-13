@@ -24,6 +24,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -102,6 +103,7 @@ public:
         WTestWell(const std::string& wname, WellTestConfig::Reason reason_, double last_test);
 
         int int_reason() const;
+        static WellTestConfig::Reason inverse_ecl_reason(int ecl_reason);
 
         bool operator==(const WTestWell& other) const {
             return this->name == other.name &&
@@ -187,6 +189,11 @@ public:
             buffer.read(this->num_attempt);
         }
     };
+
+    WellTestState() = default;
+    WellTestState(std::time_t start_time, const RestartIO::RstState& rst_state);
+
+
     std::vector<std::string> test_wells(const WellTestConfig& config, double sim_time);
 
     /*

@@ -16,10 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdexcept>
 #include <algorithm>
-
 #include <cassert>
+#include <ctime>
+#include <stdexcept>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -44,6 +45,31 @@ namespace Opm {
         case WellTestConfig::Reason::THP_DESIGN: return WTest::EclCloseReason::THPLimit;
         default:
             throw std::logic_error("Not yet handled WTEST config alternative");
+        }
+    }
+
+    WellTestConfig::Reason WellTestState::WTestWell::inverse_ecl_reason(int ecl_reason) {
+        switch (ecl_reason) {
+        case  WTest::EclCloseReason::PHYSICAL: return WellTestConfig::Reason::PHYSICAL;
+        case  WTest::EclCloseReason::ECONOMIC: return WellTestConfig::Reason::ECONOMIC;
+        case  WTest::EclCloseReason::GCON:     return WellTestConfig::Reason::GROUP;
+        case  WTest::EclCloseReason::THPLimit: return WellTestConfig::Reason::THP_DESIGN;
+        default:
+            throw std::logic_error("Not yet handled WTEST config alternative");
+        }
+    }
+
+
+    WellTestState::WellTestState(std::time_t start_time, const RestartIO::RstState& rst_state) {
+        // Dont know whether the closing time of the closed well is stored in
+        // the restart file, here we just initialize the well close time to the
+        // time of the restart.
+        auto elapsed = std::difftime(start_time, rst_state.header.sim_time());
+        for (const auto& well : rst_state.wells) {
+            if (well.wtest_close_reason != 0)
+                this->close_well(well.name,
+                                 WellTestState::WTestWell::inverse_ecl_reason(well.wtest_close_reason),
+                                 elapsed);
         }
     }
 
