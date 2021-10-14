@@ -60,8 +60,6 @@ BOOST_AUTO_TEST_CASE( TestMICPPARA ) {
     "1000*0.25 /\n"
     "TOPS\n"
     "100*0.25 /\n"
-    "EQLDIMS"
-    "3 1 1 /\n"
     "PROPS\n"
     "MICPPARA\n"
     " 1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. 14. 15. 16. 17. /\n";
