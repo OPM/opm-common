@@ -47,8 +47,24 @@ BOOST_AUTO_TEST_CASE(TestMICP) {
 
 BOOST_AUTO_TEST_CASE( TestMICPPARA ) {
     const char *data =
-        "MICPPARA\n"
-        " 1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. 14. 15. 16. 17. /\n";
+    "DIMENS\n"
+    "10 10 10 /\n"
+    "TABDIMS\n"
+    "3 /\n"
+    "GRID\n"
+    "DX\n"
+    "1000*0.25 /\n"
+    "DY\n"
+    "1000*0.25 /\n"
+    "DZ\n"
+    "1000*0.25 /\n"
+    "TOPS\n"
+    "100*0.25 /\n"
+    "EQLDIMS"
+    "3 1 1 /\n"
+    "PROPS\n"
+    "MICPPARA\n"
+    " 1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. 14. 15. 16. 17. /\n";
 
     Opm::Parser parser;
 
