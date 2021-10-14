@@ -189,6 +189,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     econ_limits(std::make_shared<WellEconProductionLimits>()),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
+    micp_properties(std::make_shared<WellMICPProperties>()),
     brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
@@ -354,6 +355,7 @@ Well::Well(const std::string& wname_arg,
     econ_limits(std::make_shared<WellEconProductionLimits>()),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
+    micp_properties(std::make_shared<WellMICPProperties>()),
     brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
@@ -392,6 +394,7 @@ Well Well::serializeObject()
     result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
+    result.micp_properties =  std::make_shared<WellMICPProperties>(WellMICPProperties::serializeObject());
     result.brine_properties = std::make_shared<WellBrineProperties>(WellBrineProperties::serializeObject());
     result.tracer_properties = std::make_shared<WellTracerProperties>(WellTracerProperties::serializeObject());
     result.connections = std::make_shared<WellConnections>(WellConnections::serializeObject());
@@ -453,6 +456,19 @@ bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polyme
     }
     if (*this->polymer_properties != *polymer_properties_arg) {
         this->polymer_properties = polymer_properties_arg;
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateMICPProperties(std::shared_ptr<WellMICPProperties> micp_properties_arg) {
+    if (this->wtype.producer()) {
+        throw std::runtime_error("Not allowed to set micp injection properties for well " + name() +
+                                 " since it is a production well");
+    }
+    if (*this->micp_properties != *micp_properties_arg) {
+        this->micp_properties = micp_properties_arg;
         return true;
     }
 
@@ -910,6 +926,10 @@ const WellFoamProperties& Well::getFoamProperties() const {
 
 const WellPolymerProperties& Well::getPolymerProperties() const {
     return *this->polymer_properties;
+}
+
+const WellMICPProperties& Well::getMICPProperties() const {
+    return *this->micp_properties;
 }
 
 const WellBrineProperties& Well::getBrineProperties() const {
@@ -1709,4 +1729,3 @@ int Opm::Well::eclipseControlMode(const Well&         well,
         return eclipseControlMode(ctrl.cmode, well.injectorType());
     }
 }
-

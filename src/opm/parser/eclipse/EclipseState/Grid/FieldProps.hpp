@@ -103,7 +103,7 @@ inline bool isFipxxx(const std::string& keyword) {
   The aliased_keywords map defines aliases for other keywords. The FieldProps
   objects will translate those keywords before further processing. The aliases
   will also be exposed by the FieldPropsManager object.
- 
+
   However, the following methods of FieldProps do not fully support aliases:
   - FieldProps::keys() does not return the aliases.
   - FieldProps::erase() and FieldProps::extract() do not support aliases. Using
@@ -254,6 +254,11 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"SSOL",     keyword_info<double>{}},
                                                                                       {"SWAT",     keyword_info<double>{}},
                                                                                       {"SGAS",     keyword_info<double>{}},
+                                                                                      {"SMICR",    keyword_info<double>{}.unit_string("Density")},
+                                                                                      {"SOXYG",    keyword_info<double>{}.unit_string("Density")},
+                                                                                      {"SUREA",    keyword_info<double>{}.unit_string("Density")},
+                                                                                      {"SBIOF",    keyword_info<double>{}},
+                                                                                      {"SCALC",    keyword_info<double>{}},
                                                                                       {"TEMPI",    keyword_info<double>{}.unit_string("Temperature")},
                                                                                       {"RS",       keyword_info<double>{}.unit_string("GasDissolutionFactor")},
                                                                                       {"RV",       keyword_info<double>{}.unit_string("OilDissolutionFactor")}};

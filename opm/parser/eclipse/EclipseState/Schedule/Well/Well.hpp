@@ -45,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -537,6 +538,7 @@ public:
     const WellEconProductionLimits& getEconLimits() const;
     const WellFoamProperties& getFoamProperties() const;
     const WellPolymerProperties& getPolymerProperties() const;
+    const WellMICPProperties& getMICPProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
     /* The rate of a given phase under the following assumptions:
@@ -591,6 +593,7 @@ public:
     bool updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties);
     bool updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties);
     bool updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties);
+    bool updateMICPProperties(std::shared_ptr<WellMICPProperties> micp_properties);
     bool updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_properties);
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
@@ -661,6 +664,7 @@ public:
         serializer(econ_limits);
         serializer(foam_properties);
         serializer(polymer_properties);
+        serializer(micp_properties);
         serializer(brine_properties);
         serializer(tracer_properties);
         serializer(connections);
@@ -700,6 +704,7 @@ private:
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;
     std::shared_ptr<WellPolymerProperties> polymer_properties;
+    std::shared_ptr<WellMICPProperties> micp_properties;
     std::shared_ptr<WellBrineProperties> brine_properties;
     std::shared_ptr<WellTracerProperties> tracer_properties;
     std::shared_ptr<WellConnections> connections; // The WellConnections object cannot be const because of WELPI and the filterConnections method

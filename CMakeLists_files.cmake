@@ -96,6 +96,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
     src/opm/parser/eclipse/EclipseState/TracerConfig.cpp
+    src/opm/parser/eclipse/EclipseState/MICPpara.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.cpp
@@ -158,6 +159,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellMICPProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellBrineProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.cpp
@@ -381,6 +383,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ImportTests.cpp
     tests/parser/InitConfigTest.cpp
     tests/parser/IOConfigTests.cpp
+    tests/parser/MICPTests.cpp
     tests/parser/MessageLimitTests.cpp
     tests/parser/MultiRegTests.cpp
     tests/parser/MultisegmentWellTests.cpp
@@ -674,6 +677,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp
        opm/parser/eclipse/EclipseState/EndpointScaling.hpp
        opm/parser/eclipse/EclipseState/TracerConfig.hpp
+       opm/parser/eclipse/EclipseState/MICPpara.hpp
        opm/parser/eclipse/EclipseState/Tables/DenT.hpp
        opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp
        opm/parser/eclipse/EclipseState/Tables/StandardCond.hpp
@@ -800,6 +804,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellBrineProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellMICPProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp
