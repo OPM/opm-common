@@ -21,8 +21,10 @@
 #include <unordered_set>
 #include <algorithm>
 
+#include <opm/io/eclipse/rst/state.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
+
 namespace Opm {
 
     WListManager WListManager::serializeObject()
@@ -31,6 +33,11 @@ namespace Opm {
         result.wlists = {{"test1", WList({"test2", "test3"}, "test1")}};
 
         return result;
+    }
+
+    WListManager::WListManager(const RestartIO::RstState& rst_state) {
+        for (const auto& [wlist, wells] : rst_state.wlists)
+            this->newList(wlist, wells);
     }
 
     std::size_t WListManager::WListSize() const {

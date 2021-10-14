@@ -27,10 +27,14 @@
 
 namespace Opm {
 
+namespace RestartIO {
+class RstState;
+}
+
 class WListManager {
 public:
     WListManager() = default;
-
+    explicit WListManager(const RestartIO::RstState& rst_state);
     static WListManager serializeObject();
 
     std::size_t WListSize() const;

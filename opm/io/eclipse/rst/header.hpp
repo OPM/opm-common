@@ -91,6 +91,7 @@ struct RstHeader {
     int nfield_udq;
     int num_action;
     int guide_rate_nominated_phase;
+    int max_wlist;
 
     bool e300_radial;
     bool e100_radial;
