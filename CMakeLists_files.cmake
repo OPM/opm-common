@@ -524,6 +524,9 @@ if(ENABLE_ECL_OUTPUT)
           tests/action_syntax_error.py
           tests/action_missing_run.py
           tests/EMBEDDED_PYTHON.DATA
+          tests/ACTIONX_M1.DATA
+          tests/ACTIONX_M1_RESTART.DATA
+          tests/ACTIONX_M1.X0010
           tests/wclose.py
           tests/msim/MSIM_PYACTION.DATA
           tests/msim/action1.py
