@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/MICPpara.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 BOOST_AUTO_TEST_CASE(TestMICP) {
 
@@ -66,25 +67,31 @@ BOOST_AUTO_TEST_CASE( TestMICPPARA ) {
 
     Opm::Parser parser;
 
+    Opm::UnitSystem unitSystem = Opm::UnitSystem( Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC );
+
     auto deck = parser.parseString(data);
+
+    double siFactor1 = unitSystem.parse("Length/Viscosity").getSIScaling();
+    double siFactor2 = unitSystem.parse("1/Time").getSIScaling();
+    double siFactor3 = unitSystem.parse("Permeability").getSIScaling();
 
     Opm::EclipseState eclipsestate( deck );
     const auto& MICPpara = eclipsestate.getMICPpara();
     BOOST_CHECK_EQUAL( MICPpara.getDensityBiofilm()             , 1.  );
     BOOST_CHECK_EQUAL( MICPpara.getDensityCalcite()             , 2.  );
-    BOOST_CHECK_EQUAL( MICPpara.getDetachmentRate()             , 3.  );
+    BOOST_CHECK_EQUAL( MICPpara.getDetachmentRate()             , 3. * siFactor1  );
     BOOST_CHECK_EQUAL( MICPpara.getCriticalPorosity()           , 4.  );
     BOOST_CHECK_EQUAL( MICPpara.getFittingFactor()              , 5.  );
     BOOST_CHECK_EQUAL( MICPpara.getHalfVelocityOxygen()         , 6.  );
     BOOST_CHECK_EQUAL( MICPpara.getHalfVelocityUrea()           , 7.  );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumGrowthRate()          , 8.  );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumUreaUtilization()     , 9.  );
-    BOOST_CHECK_EQUAL( MICPpara.getMicrobialAttachmentRate()    , 10. );
-    BOOST_CHECK_EQUAL( MICPpara.getMicrobialDeathRate()         , 11. );
-    BOOST_CHECK_EQUAL( MICPpara.getMinimumPermeability()        , 12. );
-    BOOST_CHECK_EQUAL( MICPpara.getOxygenConsumptionFactor()    , 13. );
-    BOOST_CHECK_EQUAL( MICPpara.getYieldGrowthCoefficient()     , 14. );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumOxygenConcentration() , 15. );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumUreaConcentration()   , 16. );
-    BOOST_CHECK_EQUAL( MICPpara.getToleranceBeforeClogging()    , 17. );
+    BOOST_CHECK_EQUAL( MICPpara.getMaximumGrowthRate()          , 8. * siFactor2  );
+    BOOST_CHECK_EQUAL( MICPpara.getMaximumOxygenConcentration() , 9.  );
+    BOOST_CHECK_EQUAL( MICPpara.getMaximumUreaConcentration()   , 10. );
+    BOOST_CHECK_EQUAL( MICPpara.getMaximumUreaUtilization()     , 11. * siFactor2 );
+    BOOST_CHECK_EQUAL( MICPpara.getMicrobialAttachmentRate()    , 12. * siFactor2 );
+    BOOST_CHECK_EQUAL( MICPpara.getMicrobialDeathRate()         , 13. * siFactor2 );
+    BOOST_CHECK_EQUAL( MICPpara.getMinimumPermeability()        , 14. * siFactor3 );
+    BOOST_CHECK_EQUAL( MICPpara.getOxygenConsumptionFactor()    , 15. );
+    BOOST_CHECK_EQUAL( MICPpara.getToleranceBeforeClogging()    , 16. );
+    BOOST_CHECK_EQUAL( MICPpara.getYieldGrowthCoefficient()     , 17. );
 }
