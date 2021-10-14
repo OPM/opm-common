@@ -24,7 +24,6 @@
 #include <fmt/format.h>
 #include <unordered_set>
 
-#include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -43,7 +42,6 @@
 namespace fs = Opm::filesystem;
 
 const std::unordered_set<std::string> remove_from_solution = {"EQUIL", "PRESSURE", "SWAT", "SGAS"};
-const std::unordered_set<std::string> keep_in_solution = {"ABC"};
 
 void print_help_and_exit(const std::optional<std::string> error_msg = {}) {
 
@@ -54,7 +52,7 @@ void print_help_and_exit(const std::optional<std::string> error_msg = {}) {
     }
 
     std::string keep_keywords;
-    for (const auto& kw : keep_in_solution)
+    for (const auto& kw : Opm::FileDeck::rst_keep_in_solution)
         keep_keywords += kw + " ";
 
     const std::string help_text = fmt::format(R"(
@@ -239,30 +237,7 @@ void update_solution(const options& opt, Opm::FileDeck& file_deck)
     if (!summary.has_value())
         print_help_and_exit(fmt::format("Could not find SUMMARY section in input deck: {}", opt.input_deck));
 
-    auto index = solution.value();
-    index++;
-    {
-        while (true) {
-            const auto& keyword = file_deck[index];
-            if (keep_in_solution.count(keyword.name()) == 0) {
-                file_deck.erase(index);
-                summary.value()--;
-            } else
-                index++;
-
-            if (index == summary)
-                break;
-        }
-    }
-
-    {
-        Opm::UnitSystem units;
-        std::vector<Opm::DeckValue> values{ Opm::DeckValue{opt.restart.first}, Opm::DeckValue{opt.restart.second} };
-        Opm::DeckKeyword restart(Opm::ParserKeywords::RESTART(), std::vector<std::vector<Opm::DeckValue>>{ values }, units, units);
-
-        auto schedule = file_deck.find("SCHEDULE");
-        file_deck.insert(++schedule.value(), restart);
-    }
+    file_deck.rst_solution(opt.restart.first, opt.restart.second);
 }
 
 
@@ -271,13 +246,8 @@ void update_schedule(const options& opt, Opm::FileDeck& file_deck)
     if (opt.restart.second == 0)
         return;
 
-    const auto schedule = file_deck.find("SCHEDULE");
-    if (opt.skiprest) {
-        Opm::DeckKeyword skiprest( Opm::ParserKeywords::SKIPREST{} );
-
-        auto index = schedule.value();
-        file_deck.insert(++index, skiprest);
-    }
+    if (opt.skiprest)
+        file_deck.insert_skiprest();
 }
 
 

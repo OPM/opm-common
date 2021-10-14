@@ -38,6 +38,8 @@ class Deck;
 
 class FileDeck {
 public:
+    static const std::unordered_set<std::string> rst_keep_in_solution;
+
 
 enum class OutputMode {
     INLINE = 1,
@@ -63,6 +65,7 @@ struct Index {
     Index  operator++(int);
     bool   operator==(const Index& other) const;
     bool   operator!=(const Index& other) const;
+    bool   operator<(const Index& other) const;
 
 
 private:
@@ -101,6 +104,9 @@ friend FileDeck;
     const DeckKeyword& operator[](const Index& index) const;
     const Index start() const;
     const Index stop() const;
+
+    void rst_solution(const std::string& rst_base, int report_step);
+    void insert_skiprest();
 
 private:
     std::vector<Block> blocks;
