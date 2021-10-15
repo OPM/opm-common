@@ -539,7 +539,7 @@ namespace {
                   const std::size_t      lookup_step)
     {
         const int maxNoItNBC = sched[lookup_step].network_balance().pressure_max_iter();
-        const int maxNoItTHP  = sched[lookup_step].network_balance().thp_max_iter() .;
+        const int maxNoItTHP  = sched[lookup_step].network_balance().thp_max_iter();
 
         return {
             maxNoItNBC,
