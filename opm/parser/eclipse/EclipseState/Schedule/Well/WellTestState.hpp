@@ -195,7 +195,7 @@ public:
 
 
     std::vector<std::string> test_wells(const WellTestConfig& config, double sim_time);
-
+    void filter_wells(const std::vector<std::string>& existing_wells);
     /*
       The purpose of this container is to manage explicitly *closed wells*,
       since the class has no relation to the set of of wells defined in the
