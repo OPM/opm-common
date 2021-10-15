@@ -26,7 +26,7 @@
 
 namespace Opm {
 class DeckKeyword;
-class Tuning;
+struct Tuning;
 namespace Network {
 
 class Balance {
