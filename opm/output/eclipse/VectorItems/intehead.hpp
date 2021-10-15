@@ -94,6 +94,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         WHISTC = 71, //  Calendar year of report step
 
+        NETBALAN_5 = 77, // NETBALAN, Item5
+        NETBALAN_3 = 79, // NETBALAN, Item3
+
         NEWTMX = 80, // Tuning, Record3, Item1
         NEWTMN = 81, // Tuning, Record3, Item2
         LITMAX = 82, // Tuning, Record3, Item3
