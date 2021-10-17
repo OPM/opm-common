@@ -25,8 +25,10 @@
 #include <opm/common/OpmLog/InfoLogger.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/io/eclipse/rst/aquifer.hpp>
+#include <opm/io/eclipse/ERst.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -150,6 +152,21 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         this->initFaults(deck);
         if (deck.hasKeyword( "MICPPARA" )) {
           this->initPara(deck);
+        }
+
+        const auto& init_config = this->getInitConfig();
+        if (init_config.restartRequested()) {
+            const auto& io_config = this->getIOConfig();
+            const int report_step = init_config.getRestartStep();
+            const auto& restart_file = io_config.getRestartFileName( init_config.getRestartRootName(), report_step, false);
+            if (!filesystem::exists(restart_file))
+                throw std::logic_error(fmt::format("The restart file: {} does not exist", restart_file));
+
+            if (io_config.getUNIFIN()) {
+                EclIO::ERst rst{restart_file};
+                if (!rst.hasReportStepNumber(report_step))
+                    throw std::logic_error(fmt::format("Report step: {} not found in restart file: {}", report_step, restart_file));
+            }
         }
     }
     catch (const OpmInputError& opm_error) {
