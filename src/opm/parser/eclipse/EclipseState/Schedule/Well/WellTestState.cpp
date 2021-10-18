@@ -110,6 +110,14 @@ namespace Opm {
     }
 
 
+    void WellTestState::filter_wells(const std::vector<std::string>& existing_wells) {
+        std::unordered_set<std::string> well_set{ existing_wells.begin(), existing_wells.end() };
+        for (auto& [wname, test_well] : this->wells) {
+            if (well_set.count(wname) == 0)
+                test_well.closed = false;
+        }
+    }
+
 
     size_t WellTestState::num_closed_wells() const {
         return std::count_if(this->wells.begin(), this->wells.end(), [](const auto& well_pair) { return well_pair.second.closed; });

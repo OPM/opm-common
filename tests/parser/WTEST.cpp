@@ -90,6 +90,14 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     st.close_well("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.num_closed_wells(), 2U);
 
+    {
+        auto st2 = st;
+        st2.filter_wells(std::vector<std::string>{"WELLX"});
+
+        BOOST_CHECK(!st2.well_is_closed("WELL_NAME"));  // This well has been opened/removed by the filter_wells() call
+        BOOST_CHECK( st2.well_is_closed("WELLX"));
+    }
+
     const UnitSystem us{};
 
     WellTestConfig wc;
