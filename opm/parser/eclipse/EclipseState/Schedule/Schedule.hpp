@@ -19,29 +19,37 @@
 #ifndef SCHEDULE_HPP
 #define SCHEDULE_HPP
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <optional>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
-#include <opm/parser/eclipse/Python/Python.hpp>
+#include <time.h>
+
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WriteRestartFileEvents.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm
 {
@@ -57,6 +65,7 @@ namespace Opm
     class SummaryState;
     class ErrorGuard;
     class UDQConfig;
+
     namespace RestartIO { struct RstState; }
 
 
@@ -69,6 +78,8 @@ namespace Opm
         Runspec m_runspec;
         RSTConfig rst_config;
         std::optional<int> output_interval;
+        double sumthin{-1.0};
+        bool rptonly{false};
 
         ScheduleStatic() = default;
 

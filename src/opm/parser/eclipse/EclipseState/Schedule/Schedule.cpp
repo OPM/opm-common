@@ -48,6 +48,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -84,9 +85,6 @@
 #include "Well/injection.hpp"
 #include "MSW/Compsegs.hpp"
 
-namespace Opm {
-
-
 namespace {
 
     bool name_match(const std::string& pattern, const std::string& name) {
@@ -94,7 +92,35 @@ namespace {
         return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
     }
 
+    double sumthin_summary_section(const Opm::SUMMARYSection& section) {
+        const auto entries = section.getKeywordList<Opm::ParserKeywords::SUMTHIN>();
+
+        // Care only about the last SUMTHIN entry in the SUMMARY
+        // section if keyword is present here at all.
+        return entries.empty()
+            ? -1.0 // (<= 0.0)
+            : entries.back()->getRecord(0).getItem(0).getSIDouble(0);
+    }
+
+    bool rptonly_summary_section(const Opm::SUMMARYSection& section) {
+        auto rptonly = false;
+
+        using On = Opm::ParserKeywords::RPTONLY;
+        using Off = Opm::ParserKeywords::RPTONLYO;
+
+        // Last on/off keyword entry "wins".
+        for (const auto& keyword : section) {
+            if (keyword.name() == On::keywordName)
+                rptonly = true;
+            else if (keyword.name() == Off::keywordName)
+                rptonly = false;
+        }
+
+        return rptonly;
+    }
 }
+
+namespace Opm {
 
     ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
                                    const ScheduleRestartInfo& restart_info,
@@ -110,7 +136,9 @@ namespace {
         m_unit_system( deck.getActiveUnitSystem() ),
         m_runspec( runspec ),
         rst_config( SOLUTIONSection(deck), parseContext, errors ),
-        output_interval(output_interval_)
+        output_interval(output_interval_),
+        sumthin(sumthin_summary_section(SUMMARYSection{ deck })),
+        rptonly(rptonly_summary_section(SUMMARYSection{ deck }))
     {
     }
 
@@ -1790,6 +1818,8 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.rft_config.update( RFTConfig() );
     sched_state.rst_config.update( RSTConfig::first( this->m_static.rst_config ) );
     sched_state.network_balance.update( Network::Balance() );
+    sched_state.update_sumthin(this->m_static.sumthin);
+    sched_state.rptonly(this->m_static.rptonly);
     //sched_state.update_date( start_time );
     this->addGroup("FIELD", 0);
 }
