@@ -114,6 +114,13 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
         new_rst.save = false;
         this->rst_config.update( std::move(new_rst) );
     }
+
+    if (this->next_tstep.has_value()) {
+        if (!this->next_tstep->every_report()) {
+            this->next_tstep = std::nullopt;
+            this->events().addEvent(ScheduleEvents::TUNING_CHANGE);
+        }
+    }
 }
 
 
@@ -267,6 +274,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->vfpprod == other.vfpprod &&
            this->vfpinj == other.vfpinj &&
            this->m_sumthin == other.m_sumthin &&
+           this->next_tstep == other.next_tstep &&
            this->m_rptonly == other.m_rptonly;
 }
 
@@ -323,6 +331,15 @@ const Tuning& ScheduleState::tuning() const {
 
 Tuning& ScheduleState::tuning() {
     return this->m_tuning;
+}
+
+double ScheduleState::max_next_tstep() const {
+    auto tuning_value = this->m_tuning.TSINIT;
+    if (!this->next_tstep.has_value())
+        return tuning_value;
+
+    auto next_value = this->next_tstep->value();
+    return std::max(next_value, tuning_value);
 }
 
 void ScheduleState::update_events(Events events) {

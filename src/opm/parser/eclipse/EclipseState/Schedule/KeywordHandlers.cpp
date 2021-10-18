@@ -744,6 +744,16 @@ namespace {
         this->snapshots.back().network_balance.update( std::move(new_balance) );
     }
 
+    void Schedule::handleNEXTSTEP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& record = handlerContext.keyword[0];
+        auto next_tstep = record.getItem<ParserKeywords::NEXTSTEP::MAX_STEP>().getSIDouble(0);
+        auto apply_to_all = DeckItem::to_bool( record.getItem<ParserKeywords::NEXTSTEP::APPLY_TO_ALL>().get<std::string>(0) );
+
+        this->snapshots.back().next_tstep = NextStep{next_tstep, apply_to_all};
+        this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
+    }
+
+
     void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto ext_network = this->snapshots.back().network.get();
 
@@ -2052,6 +2062,7 @@ namespace {
             { "MULTZ"   , &Schedule::handleMXUNSUPP },
             { "MULTZ-"  , &Schedule::handleMXUNSUPP },
             { "NETBALAN", &Schedule::handleNETBALAN },
+            { "NEXTSTEP", &Schedule::handleNEXTSTEP },
             { "NODEPROP", &Schedule::handleNODEPROP },
             { "NUPCOL"  , &Schedule::handleNUPCOL   },
             { "RPTONLY" , &Schedule::handleRPTONLY  },

@@ -25,6 +25,29 @@
 
 namespace Opm {
 
+
+NextStep::NextStep(double value, bool every_report)
+    : next_tstep(value)
+    , persist(every_report)
+{}
+
+bool NextStep::operator==(const NextStep& other) const {
+    return this->next_tstep == other.next_tstep &&
+           this->persist == other.persist;
+}
+
+double NextStep::value() const {
+    return this->next_tstep;
+}
+
+bool NextStep::every_report() const {
+    return this->persist;
+}
+
+
+
+
+
 Tuning::Tuning() {
     using TuningKw = ParserKeywords::TUNING;
     using WsegIterKW = ParserKeywords::WSEGITER;

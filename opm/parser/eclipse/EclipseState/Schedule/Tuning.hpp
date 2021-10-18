@@ -21,6 +21,28 @@
 #define OPM_TUNING_HPP
 
 namespace Opm {
+
+    class NextStep {
+    public:
+        NextStep() = default;
+        NextStep(double value, bool every_report);
+        double value() const;
+        bool every_report() const;
+        bool operator==(const NextStep& other) const;
+        static NextStep serializeObject();
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->next_tstep);
+            serializer(this->persist);
+        }
+
+    private:
+        double next_tstep;
+        bool persist;
+    };
+
     struct Tuning {
         Tuning();
 

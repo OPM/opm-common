@@ -41,6 +41,9 @@ START
  21 MAY 1981 /
 
 SCHEDULE
+NEXTSTEP
+  5 YES /
+
 TSTEP
  1 2 3 4 5 /
 
@@ -49,10 +52,14 @@ TUNING
 0.2 0.002 2E-7 0.0002 11 0.02 2.0E-6 0.002 0.002 0.035 66 0.02 2/
 13 2 26 2 9 9 4.0E6 4.0E6 4.0E6 1/
 DATES
- 1 JAN 1982 /
- 1 JAN 1982 13:55:44 /
- 3 JAN 1982 14:56:45.123 /
+ 1 JAN 1982 /  -- 6
+ 1 JAN 1982 13:55:44 /  --7
+ 3 JAN 1982 14:56:45.123 /   -- 8
 /
+
+NEXTSTEP
+ 10 /
+
 TSTEP
  9 10 /
 
@@ -95,6 +102,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       const auto& tuning = schedule[4].tuning();
       double TSINIT_default = tuning.TSINIT;
       BOOST_CHECK_CLOSE(TSINIT_default, 1 * Metric::Time, diff);
+      BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(), 5*Metric::Time, diff);
 
       double TSMAXZ_default = tuning.TSMAXZ;
       BOOST_CHECK_CLOSE(TSMAXZ_default, 365 * Metric::Time, diff);
@@ -215,6 +223,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
       double TSINIT = tuning.TSINIT;
       BOOST_CHECK_CLOSE(TSINIT, 2 * Metric::Time, diff);
+      BOOST_CHECK_CLOSE(schedule[timeStep].max_next_tstep(), 5*Metric::Time, diff);
 
       double TSMAXZ = tuning.TSMAXZ;
       BOOST_CHECK_CLOSE(TSMAXZ, 300 * Metric::Time, diff);
@@ -322,11 +331,31 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE));
   }
 
+  /*** TIMESTEP 8 ***/
+  {
+      std::size_t timestep = 8;
+      const auto& event = schedule[timestep].events();
+      const auto& tuning = schedule[timestep].tuning();
+      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
+
+      BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(), 10*Metric::Time, diff);
+  }
+
+  /*** TIMESTEP 9 ***/
+  {
+      std::size_t timestep = 9;
+      const auto& event = schedule[timestep].events();
+      const auto& tuning = schedule[timestep].tuning();
+      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
+
+      BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(), 2*Metric::Time, diff);
+  }
+
   /*** TIMESTEP 10 ***/
   {
       /********* Record 1 ***********/
       std::size_t timestep = 10;
-      const auto& tuning = schedule[10].tuning();
+      const auto& tuning = schedule[timestep].tuning();
       const auto& event = schedule[timestep].events();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
       BOOST_CHECK_EQUAL(true, tuning.TMAXWC_has_value);
