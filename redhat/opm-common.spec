@@ -2,10 +2,10 @@
 # spec file for package opm-common
 #
 
-%define tag final
+%define tag rc1
 
 Name:           opm-common
-Version:        2018.10
+Version:        2021.10
 Release:        0
 Summary:        Open Porous Media - common helpers and buildsystem
 License:        GPL-3.0
