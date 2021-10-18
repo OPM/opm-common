@@ -347,6 +347,25 @@ void RstState::add_actions(const Parser& parser,
     }
 }
 
+void RstState::add_wlist(const std::vector<std::string>& zwls,
+                         const std::vector<int>& iwls)
+{
+    for (std::size_t well_index = 0; well_index < this->header.num_wells; well_index++) {
+        const auto zwls_offset = this->header.max_wlist * well_index;
+        const auto iwls_offset = this->header.max_wlist * well_index;
+        const auto& well_name = this->wells[well_index].name;
+
+        for (std::size_t wlist_index = 0; wlist_index < this->header.max_wlist; wlist_index++) {
+            int well_order = iwls[iwls_offset + wlist_index];
+            if (well_order != 0) {
+                const auto& wlist_name = zwls[zwls_offset + wlist_index];
+                auto& wlist = this->wlists[wlist_name];
+                wlist.resize( well_order );
+                wlist[well_order - 1] = well_name;
+            }
+        }
+    }
+}
 
 const RstWell& RstState::get_well(const std::string& wname) const {
     const auto well_iter = std::find_if(this->wells.begin(),
@@ -395,6 +414,13 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         } else
             state.add_wells(zwel, iwel, swel, xwel,
                             icon, scon, xcon);
+
+        if (rstView->hasKeyword<int>("IWLS")) {
+            const auto& iwls = rstView->getKeyword<int>("IWLS");
+            const auto& zwls = rstView->getKeyword<std::string>("ZWLS");
+
+            state.add_wlist(zwls, iwls);
+        }
     }
 
     if (state.header.num_udq() > 0) {

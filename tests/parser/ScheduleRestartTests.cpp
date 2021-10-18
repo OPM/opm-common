@@ -213,6 +213,31 @@ BOOST_AUTO_TEST_CASE(LoadActionRestartSim) {
     action_state.load_rst(rst_actions, rst_state);
 }
 
+BOOST_AUTO_TEST_CASE(LoadUDQRestartSim0) {
+    const auto& [sched, restart_sched, _] = load_schedule_pair("ACTIONX_M1.DATA", "ACTIONX_M1_RESTART.DATA", "ACTIONX_M1.X0010", 10);
+    (void)_;
+    std::size_t report_step = 12;
+
+    const auto& group = sched.getGroup("TEST", report_step);
+    const auto& rst_group = restart_sched.getGroup("TEST", report_step);
+
+    // The GCONINJE which connects a UDA with the water injection control
+    // in group TEST is evaluated in an ACTIONX statement, i.e. it has not
+    // been initialized in the normal deck.
+    BOOST_CHECK_NO_THROW( rst_group.injectionProperties(Phase::WATER) );
+    BOOST_CHECK_THROW( group.injectionProperties(Phase::WATER), std::exception );
+}
+
+BOOST_AUTO_TEST_CASE(LoadWLISTRestartSim) {
+    const auto& [sched, restart_sched, _] = load_schedule_pair("ACTIONX_M1.DATA", "ACTIONX_M1_RESTART.DATA", "ACTIONX_M1.X0010", 10);
+    (void)_;
+    std::size_t report_step = 12;
+
+    const auto& wlm = sched[report_step].wlist_manager();
+    const auto& rst_wlm = restart_sched[report_step].wlist_manager();
+
+    BOOST_CHECK(wlm == rst_wlm);
+}
 
 
 BOOST_AUTO_TEST_CASE(TestFileDeck)

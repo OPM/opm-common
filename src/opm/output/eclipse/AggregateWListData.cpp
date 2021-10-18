@@ -133,14 +133,14 @@ void staticContrib(const Opm::Well&                well,
                    const std::vector<std::vector<std::size_t>> &  welOrdLst,
                    IWlsArray&                     iWls)
 {
-    const auto& seq_ind = well.seqIndex();
+    const auto& well_index = well.seqIndex();
 
     // set values for iWls to the well order for all Wlists
     //
-    std::size_t ind = 0;
-    for (const auto& wlist_vec : welOrdLst[seq_ind]) {
-        iWls[ind] = wlist_vec;
-        ind += 1;
+    std::size_t output_index = 0;
+    for (const auto& wlist_index : welOrdLst[well_index]) {
+        iWls[output_index] = wlist_index;
+        output_index += 1;
     }
 }
 

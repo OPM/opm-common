@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <opm/io/eclipse/rst/header.hpp>
@@ -67,6 +68,7 @@ struct RstState {
     RstUDQActive udq_active;
     std::vector<RstAction> actions;
     Tuning tuning;
+    std::unordered_map<std::string, std::vector<std::string>> wlists;
 
 private:
     void load_tuning(const std::vector<int>& intehead,
@@ -112,6 +114,9 @@ private:
                      const std::vector<int>& iacn,
                      const std::vector<double>& sacn,
                      const std::vector<std::string>& zlact);
+
+    void add_wlist(const std::vector<std::string>& zwls,
+                   const std::vector<int>& iwls);
 
 };
 

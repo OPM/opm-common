@@ -1490,6 +1490,10 @@ namespace {
             this->snapshots.back().actions.update( std::move(actions) );
         }
         this->snapshots.back().wtest_config.update( WellTestConfig{rst_state, report_step});
+
+
+        if (!rst_state.wlists.empty())
+            this->snapshots.back().wlist_manager.update( WListManager(rst_state) );
     }
 
     std::shared_ptr<const Python> Schedule::python() const
