@@ -604,6 +604,7 @@ namespace Opm
         void handleMULTFLT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleMXUNSUPP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNETBALAN (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNEXTSTEP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNODEPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNUPCOL   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleRPTONLY  (const HandlerContext&, const ParseContext&, ErrorGuard&);

@@ -300,6 +300,7 @@ namespace Opm {
         void update_tuning(Tuning tuning);
         Tuning& tuning();
         const Tuning& tuning() const;
+        double max_next_tstep() const;
 
         void init_nupcol(Nupcol nupcol);
         void update_nupcol(int nupcol);
@@ -468,6 +469,7 @@ namespace Opm {
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
         std::unordered_map<std::string, double> target_wellpi;
+        std::optional<NextStep> next_tstep;
 
 
         using WellPIMapType = std::unordered_map<std::string, double>;
@@ -483,6 +485,7 @@ namespace Opm {
             serializer(m_save_step);
             serializer(m_sumthin);
             serializer(this->m_rptonly);
+            serializer(this->next_tstep);
             m_tuning.serializeOp(serializer);
             m_nupcol.serializeOp(serializer);
             m_oilvap.serializeOp(serializer);
