@@ -335,7 +335,6 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   {
       std::size_t timestep = 8;
       const auto& event = schedule[timestep].events();
-      const auto& tuning = schedule[timestep].tuning();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
       BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(), 10*Metric::Time, diff);
@@ -345,7 +344,6 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   {
       std::size_t timestep = 9;
       const auto& event = schedule[timestep].events();
-      const auto& tuning = schedule[timestep].tuning();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
       BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(), 2*Metric::Time, diff);
