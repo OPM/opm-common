@@ -57,6 +57,15 @@ namespace Opm { namespace RestartIO {
             double min_ec_grad;
         };
 
+       struct NetBalanceDims {
+            double balancingInterval;
+            double convTolNodPres;
+            double convTolTHPCalc;
+            double targBranchBalError;
+            double maxBranchBalError;
+            double minTimeStepSize;
+        };
+
         DoubHEAD();
 
         ~DoubHEAD() = default;
@@ -79,6 +88,7 @@ namespace Opm { namespace RestartIO {
         DoubHEAD& udq_param(const UDQParams& udqPar);
         DoubHEAD& guide_rate_param(const guideRate& guide_rp);
         DoubHEAD& lift_opt_param(const liftOptPar& lo_par);
+        DoubHEAD& netBalDimensions(const NetBalanceDims& net_bal_par);
 
         const std::vector<double>& data() const
         {

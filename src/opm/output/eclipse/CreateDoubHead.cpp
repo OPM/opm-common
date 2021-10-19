@@ -121,6 +121,27 @@ namespace {
             units.from_si(M::oil_gas_ratio, glo.min_eco_gradient())
         };
     }
+
+    Opm::RestartIO::DoubHEAD::NetBalanceDims
+    getNetworkBalanceDims(const Opm::Schedule&   sched,
+                  const std::size_t      lookup_step)
+    {
+            const double balancingInterval = sched[lookup_step].network_balance().interval();
+            const double convTolNodPres = sched[lookup_step].network_balance().pressure_tolerance();
+            const double convTolTHPCalc = sched[lookup_step].network_balance().thp_tolerance();
+            const double targBranchBalError = sched[lookup_step].network_balance().target_balance_error();
+            const double maxBranchBalError = sched[lookup_step].network_balance().max_balance_error();
+            const double minTimeStepSize = sched[lookup_step].network_balance().min_tstep();
+
+            return {
+                balancingInterval,
+                convTolNodPres,
+                convTolTHPCalc,
+                targBranchBalError,
+                maxBranchBalError,
+                minTimeStepSize
+            };
+    }
 } // Anonymous
 
 // #####################################################################
@@ -146,6 +167,7 @@ createDoubHead(const EclipseState& es,
         .udq_param(rspec.udqParams())
         .guide_rate_param(computeGuideRate(sched, lookup_step))
         .lift_opt_param(computeLiftOptParam(sched, usys, lookup_step))
+        .netBalDimensions(getNetworkBalanceDims(sched, lookup_step))
         ;
 
     if (nextTimeStep > 0.0) {
