@@ -1358,7 +1358,8 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE) {
     BOOST_CHECK(!value1.is<std::string>());
     BOOST_CHECK_EQUAL( value1.get<double>(), 10);
     BOOST_CHECK_NO_THROW( value1.assert_numeric() );
-
+    value1 *= 10;
+    BOOST_CHECK_EQUAL( value1.get<double>(), 100);
 
 
     UDAValue value2("FUBHP");
@@ -1367,6 +1368,7 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE) {
     BOOST_CHECK_EQUAL( value2.get<std::string>(), std::string("FUBHP"));
     BOOST_CHECK_THROW( value2.get<double>(), std::invalid_argument);
     BOOST_CHECK_THROW( value2.assert_numeric("SHould contain numeric value"), std::invalid_argument);
+    BOOST_CHECK_THROW( value2 *= 10, std::exception );
 }
 
 

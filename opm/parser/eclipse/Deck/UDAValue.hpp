@@ -91,6 +91,9 @@ public:
         dim.serializeOp(serializer);
     }
 
+    void operator*=(double rhs);
+
+
 private:
     bool numeric_value;
     double double_value;
