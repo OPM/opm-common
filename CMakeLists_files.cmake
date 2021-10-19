@@ -567,6 +567,7 @@ if(ENABLE_ECL_INPUT)
     tests/UDQ_WCONPROD_GRID.grdecl
     tests/UDQ_WCONPROD_RESTART.DATA
     tests/UDQ_WCONPROD.X0006
+    tests/BASE.UNRST
   )
   list (APPEND EXAMPLE_SOURCE_FILES
     examples/opmi.cpp
