@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <optional>
 
 #include <fmt/format.h>
 
