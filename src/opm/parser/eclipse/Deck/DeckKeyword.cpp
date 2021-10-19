@@ -34,7 +34,7 @@ namespace Opm {
     DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword) :
         m_keywordName(parserKeyword.getName()),
         m_isDataKeyword(false),
-        m_slashTerminated(true)
+        m_slashTerminated(!parserKeyword.hasFixedSize())
     {
     }
 

@@ -1590,20 +1590,12 @@ BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectHasFixedSize_sizeReturned) {
 
 }
 
-BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectDoesNotHaveFixedSizeObjectSet_ExceptionThrown) {
-    const auto& parserKeyword = createDynamicSized("JA");
-    BOOST_CHECK_THROW(parserKeyword.getFixedSize(), std::logic_error);
-}
 
 BOOST_AUTO_TEST_CASE(hasFixedSize_hasFixedSizeObject_returnstrue) {
     const auto& parserKeyword = createFixedSized("JA", (size_t) 2);
     BOOST_CHECK(parserKeyword.hasFixedSize());
 }
 
-BOOST_AUTO_TEST_CASE(hasFixedSize_sizeObjectDoesNotHaveFixedSize_returnsfalse) {
-    const auto& parserKeyword = createDynamicSized("JA");
-    BOOST_CHECK(!parserKeyword.hasFixedSize());
-}
 
 /******/
 /* Tables: */
@@ -1615,7 +1607,6 @@ BOOST_AUTO_TEST_CASE(DefaultIsNot_TableKeyword) {
 BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
     auto parserKeyword = createTable("JA" , "TABDIMS" , "NTPVT" , true);
     BOOST_CHECK(parserKeyword.isTableCollection());
-    BOOST_CHECK(!parserKeyword.hasFixedSize());
 
     auto keyword_size = parserKeyword.getKeywordSize();
     BOOST_CHECK_EQUAL( parserKeyword.getSizeType() , OTHER_KEYWORD_IN_DECK);
