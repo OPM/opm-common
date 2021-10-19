@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <fmt/format.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -267,6 +268,38 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
             this->VFPTableNumber = static_cast<int>( new_arg.get<double>() );
         } else if (cmode != WELTARGCMode::GUID)
             throw std::invalid_argument("Invalid keyword (MODE) supplied");
+    }
+
+
+    void Well::WellProductionProperties::handleWTMULT(Well::WELTARGCMode cmode, double factor) {
+        switch (cmode) {
+        case Well::WELTARGCMode::ORAT:
+            this->OilRate *= factor;
+            break;
+        case Well::WELTARGCMode::GRAT:
+            this->GasRate *= factor;
+            break;
+        case Well::WELTARGCMode::WRAT:
+            this->WaterRate *= factor;
+            break;
+        case Well::WELTARGCMode::LRAT:
+            this->LiquidRate *= factor;
+            break;
+        case Well::WELTARGCMode::RESV:
+            this->ResVRate *= factor;
+            break;
+        case Well::WELTARGCMode::BHP:
+            this->BHPTarget *= factor;
+            break;
+        case Well::WELTARGCMode::THP:
+            this->THPTarget *= factor;
+            break;
+        case Well::WELTARGCMode::LIFT:
+            this->ALQValue *= factor;
+            break;
+        default:
+            throw std::logic_error("Unhandled WTMULT control");
+        }
     }
 
 

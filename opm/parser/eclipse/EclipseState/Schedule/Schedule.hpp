@@ -652,6 +652,7 @@ namespace Opm
         void handleWSOLVENT (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWTEMP    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWTEST    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTMULT   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWTRACER  (const HandlerContext&, const ParseContext&, ErrorGuard&);
     };
 }
