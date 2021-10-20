@@ -74,6 +74,8 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     wtest_config_reasons(                                            iwel[VI::IWell::WTestConfigReason]),
     wtest_close_reason(                                              iwel[VI::IWell::WTestCloseReason]),
     wtest_remaining(                                                 iwel[VI::IWell::WTestRemaining] -1),
+    glift_active(                                                    iwel[VI::IWell::LiftOpt] == 1),
+    glift_alloc_extra_gas(                                           iwel[VI::IWell::LiftOptAllocExtra] == 1),
     // The values orat_target -> bhp_target_float will be used in UDA values. The
     // UDA values are responsible for unit conversion and raw values are
     // internalized here.
@@ -93,6 +95,11 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     alq_value(                                                       swel[VI::SWell::Alq_value]),
     wtest_interval(      unit_system.to_si(M::time,                  swel[VI::SWell::WTestInterval])),
     wtest_startup(       unit_system.to_si(M::time,                  swel[VI::SWell::WTestStartupTime])),
+    glift_max_rate(      unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::LOmaxRate])),
+    glift_min_rate(      unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::LOminRate])),
+    glift_weight_factor(                                             swel[VI::SWell::LOmaxRate]),
+    glift_inc_weight_factor(                                         swel[VI::SWell::LOincFac]),
+    //
     oil_rate(            unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::OilPrRate])),
     water_rate(          unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::WatPrRate])),
     gas_rate(            unit_system.to_si(M::gas_surface_rate,      xwel[VI::XWell::GasPrRate])),
