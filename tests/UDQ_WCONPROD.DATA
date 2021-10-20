@@ -400,47 +400,45 @@ WELTARG
  'OPU02' 'ORAT' 'WUOPRU' /
  'OPU02' 'LRAT' 'WULPRU' /
 /
-DATES
+DATES    --- 1
  1 'SEP' 2018 /
 /
 WELOPEN
  'OPL01' 'OPEN' /
 /
-DATES
- 1 'OCT' 2018 /
-/
+TSTEP    --- 2
+  30 /
 WELOPEN
  'WIL01' 'OPEN' /
 /
-DATES
+DATES    --- 3
  1 'NOV' 2018 /
 /
 WELOPEN
  'OPL02' 'OPEN' /
 /
-DATES
- 1 'DEC' 2018 /
-/
+TSTEP    --- 4
+  30 /
 WELOPEN
  'OPU01' 'OPEN' /
 /
-DATES
+DATES    --- 5
  1 'JAN' 2019 /
 /
 WELOPEN
  'OPU02' 'OPEN' /
 /
-DATES
+DATES    --- 6
  1 'FEB' 2019 /
 /
 WELOPEN
  'WIU01' 'OPEN' /
 /
 DATES
- 1 'MAR' 2019 /
- 1 'APR' 2019 /
- 1 'MAY' 2019 /
- 1 'JUN' 2019 /
- 1 'JUL' 2019 /
- 1 'JAN' 2020 /
+ 1 'MAR' 2019 /    --- 7
+ 1 'APR' 2019 /    --- 8
+ 1 'MAY' 2019 /    --- 9
+ 1 'JUN' 2019 /    --- 10
+ 1 'JUL' 2019 /    --- 11
+ 1 'JAN' 2020 /    --- 12
 /
