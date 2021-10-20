@@ -406,9 +406,8 @@ DATES    --- 1
 WELOPEN
  'OPL01' 'OPEN' /
 /
-DATES    --- 2
- 1 'OCT' 2018 /
-/
+TSTEP    --- 2
+  30 /
 WELOPEN
  'WIL01' 'OPEN' /
 /
@@ -418,9 +417,8 @@ DATES    --- 3
 WELOPEN
  'OPL02' 'OPEN' /
 /
-DATES    --- 4
- 1 'DEC' 2018 /
-/
+TSTEP    --- 4
+  30 /
 WELOPEN
  'OPU01' 'OPEN' /
 /
