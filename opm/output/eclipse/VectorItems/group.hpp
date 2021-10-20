@@ -25,6 +25,9 @@
 namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
 
     namespace SGroup {
+        enum index : std::vector<float>::size_type {
+            EfficiencyFactor = 92, // Group's efficiency factor (Item 2 of GEFAC)
+        };
 
         enum prod_index : std::vector<float>::size_type {
             GuideRate     =  2, // Group's guide rate value

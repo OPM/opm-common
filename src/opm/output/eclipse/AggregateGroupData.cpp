@@ -770,6 +770,7 @@ void staticContrib(const Opm::Group&        group,
                    const Opm::UnitSystem&   units,
                    SGrpArray&               sGrp)
 {
+    using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
     using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
     using Isi = ::Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
     using M   = ::Opm::UnitSystem::measure;
@@ -819,6 +820,9 @@ void staticContrib(const Opm::Group&        group,
     {
         return static_cast<float>(units.from_si(u, x));
     };
+
+    sGrp[Ix::EfficiencyFactor] =
+        sgprop(M::identity, group.getGroupEfficiencyFactor());
 
     if (group.isProductionGroup()) {
         const auto& prod_cntl = group.productionControls(sumState);
