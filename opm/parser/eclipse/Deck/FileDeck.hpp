@@ -39,7 +39,7 @@ class Deck;
 class FileDeck {
 public:
     static const std::unordered_set<std::string> rst_keep_in_solution;
-
+    static const std::unordered_set<std::string> rst_keep_in_schedule;
 
 enum class OutputMode {
     INLINE = 1,
@@ -79,7 +79,7 @@ public:
     explicit Block(const std::string& filename);
     std::size_t size() const;
     void load(const Deck& deck, std::size_t deck_index);
-    std::optional<std::size_t> find(const std::string& keyword) const;
+    std::optional<std::size_t> find(const std::string& keyword, std::size_t keyword_index) const;
     bool empty() const;
     void erase(const FileDeck::Index& index);
     void insert(std::size_t keyword_index, const DeckKeyword& keyword);
@@ -94,7 +94,9 @@ friend FileDeck;
 
 
     explicit FileDeck(const Deck& deck);
+    std::optional<Index> find(const std::string& keyword, const Index& offset) const;
     std::optional<Index> find(const std::string& keyword) const;
+    std::size_t count(const std::string& keyword) const;
     void erase(const Index& index);
     void erase(const Index& begin, const Index& end);
     void insert(const Index& index, const DeckKeyword& keyword);
@@ -107,6 +109,7 @@ friend FileDeck;
 
     void rst_solution(const std::string& rst_base, int report_step);
     void insert_skiprest();
+    void skip(int report_step);
 
 private:
     std::vector<Block> blocks;
