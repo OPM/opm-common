@@ -2019,6 +2019,82 @@ namespace {
     }
 
 
+/*
+  The WTMULT keyword can optionally use UDA values in three different ways:
+
+    1. The target can be UDA - instead of the standard strings "ORAT", "GRAT",
+       "WRAT", ..., the keyword can be configured with a UDA which is evaluated to
+       an integer and then mapped to one of the common controls.
+
+    2. The scaling factor itself can be a UDA.
+
+    3. The target we aim to scale might already be specified as a UDA.
+
+  The current implementation does not support UDA usage in any part of WTMULT
+  codepath.
+*/
+
+    void Schedule::handleWTMULT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const auto& wellNamePattern = record.getItem<ParserKeywords::WTMULT::WELL>().getTrimmedString(0);
+            const auto& control = record.getItem<ParserKeywords::WTMULT::CONTROL>().get<std::string>(0);
+            const auto& factor = record.getItem<ParserKeywords::WTMULT::FACTOR>().get<UDAValue>(0);
+            const auto& num = record.getItem<ParserKeywords::WTMULT::NUM>().get<int>(0);
+
+            if (factor.is<std::string>()) {
+                std::string reason = fmt::format("Use of UDA value: {} is not supported as multiplier", factor.get<std::string>());
+                throw OpmInputError(reason, handlerContext.keyword.location());
+            }
+
+            if (this->snapshots.back().udq().has_keyword(control)) {
+                std::string reason = fmt::format("Use of UDA value: {} is not supported for control target", control);
+                throw OpmInputError(reason, handlerContext.keyword.location());
+            }
+
+            if (num != 1) {
+                std::string reason = fmt::format("Only NUM=1 is supported in WTMULT keyword");
+                throw OpmInputError(reason, handlerContext.keyword.location());
+            }
+
+            const auto cmode = Well::WELTARGCModeFromString(control);
+            if (cmode == Well::WELTARGCMode::GUID)
+                throw std::logic_error("Multiplying guide rate is not implemented");
+
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep, handlerContext.matching_wells);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells.get(well_name);
+                if (well.isInjector()) {
+                    bool update_well = true;
+                    auto properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
+                    properties->handleWTMULT( cmode, factor.get<double>());
+
+                    well.updateInjection(properties);
+                    if (update_well) {
+                        this->snapshots.back().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                        this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+                        this->snapshots.back().wells.update(std::move(well));
+                    }
+                } else {
+                    bool update_well = true;
+                    auto properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
+                    properties->handleWTMULT( cmode, factor.get<double>());
+
+                    well.updateProduction(properties);
+                    if (update_well) {
+                        this->snapshots.back().events().addEvent(ScheduleEvents::PRODUCTION_UPDATE);
+                        this->snapshots.back().wellgroup_events().addEvent(well_name,
+                                                                           ScheduleEvents::PRODUCTION_UPDATE);
+                        this->snapshots.back().wells.update(std::move(well));
+                    }
+                }
+            }
+        }
+    }
+
+
     bool Schedule::handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         using handler_function = void (Schedule::*)(const HandlerContext&, const ParseContext&, ErrorGuard&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
@@ -2111,6 +2187,7 @@ namespace {
             { "WSOLVENT", &Schedule::handleWSOLVENT },
             { "WTEMP"   , &Schedule::handleWTEMP    },
             { "WTEST"   , &Schedule::handleWTEST    },
+            { "WTMULT"  , &Schedule::handleWTMULT   },
             { "WTRACER" , &Schedule::handleWTRACER  },
         };
 

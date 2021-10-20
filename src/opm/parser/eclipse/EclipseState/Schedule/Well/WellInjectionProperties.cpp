@@ -339,5 +339,39 @@ namespace Opm {
         }
     }
 
+    void Well::WellInjectionProperties::handleWTMULT(Well::WELTARGCMode cmode, double factor) {
+        if (cmode == Well::WELTARGCMode::BHP)
+            this->BHPTarget *= factor;
+
+        else if (cmode == WELTARGCMode::ORAT) {
+            if (this->injectorType == InjectorType::OIL)
+                this->surfaceInjectionRate *= factor;
+            else
+                std::invalid_argument("Well type must be OIL to scale the oil rate");
+        }
+
+        else if (cmode == WELTARGCMode::WRAT) {
+            if (this->injectorType == InjectorType::WATER)
+                this->surfaceInjectionRate *= factor;
+            else
+                std::invalid_argument("Well type must be WATER to scale the water rate");
+        }
+
+        else if (cmode == WELTARGCMode::GRAT) {
+            if(this->injectorType == InjectorType::GAS)
+                this->surfaceInjectionRate *= factor;
+            else
+                std::invalid_argument("Well type must be GAS to scale the gas rate");
+        }
+
+        else if (cmode == WELTARGCMode::THP)
+            this->THPTarget *= factor;
+
+        else if (cmode == WELTARGCMode::RESV)
+            this->reservoirInjectionRate*= factor;
+
+        else throw std::invalid_argument("Invalid keyword (MODE) supplied");
+    }
+
 
 }

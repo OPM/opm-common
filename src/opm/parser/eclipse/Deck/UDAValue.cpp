@@ -181,6 +181,12 @@ void UDAValue::update_value(const UDAValue& other) {
     }
 }
 
+void UDAValue::operator*=(double factor) {
+    if (this->is<double>())
+        this->double_value *=factor;
+    else
+        throw std::logic_error(fmt::format("Can not multiply UDA: {} with numeric value", this->get<std::string>()));
+}
 
 
 }

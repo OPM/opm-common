@@ -856,14 +856,23 @@ DATES             -- 1
 /
 WELSPECS
     'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I1' 'I' 5 5 2522.5 'WATER' /
 /
 COMPDAT
  'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
  'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
- 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'I1'  8 8   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'I1'  8 8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'I1'  8 8   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
+
 WCONPROD
  'OP_1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+
+WCONINJE
+  'I1' 'WATER'  'OPEN'  'RATE'  200  1*  450.0 /
 /
 DATES             -- 2
  20  JAN 2010 /
@@ -878,6 +887,20 @@ WELTARG
  OP_1     THP         2000 /
  OP_1     GUID        2300.14 /
 /
+
+DATES
+ 1 FEB 2010 /
+/
+
+WTMULT
+OP_1 ORAT 2 /
+OP_1 GRAT 3 /
+OP_1 WRAT 4 /
+I1 WRAT 2 /
+I1 BHP 3 /
+I1 THP 4 /
+/
+
 )";
 
     const auto& schedule = make_schedule(input);
@@ -910,7 +933,24 @@ WELTARG
     BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::ORAT) );
     BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::RESV) );
 
+
+    const auto& well_3 = schedule.getWell("OP_1", 3);
+    const auto wpp_3 = well_3.getProductionProperties();
+    const auto prod_controls3 = wpp_3.controls(st, 0);
+
+    BOOST_CHECK_EQUAL(prod_controls3.oil_rate, 2 * 1300 * siFactorL);
+    BOOST_CHECK_EQUAL(prod_controls3.water_rate, 4 * 1400 * siFactorL);
+    BOOST_CHECK_EQUAL(prod_controls3.gas_rate, 3 * 1500.52 * siFactorG);
+
+
+    const auto& inj_controls2 = schedule.getWell("I1", 2).getInjectionProperties().controls(unitSystem, st, 0);
+    const auto& inj_controls3 = schedule.getWell("I1", 3).getInjectionProperties().controls(unitSystem, st, 0);
+
+    BOOST_CHECK_EQUAL(inj_controls2.surface_rate * 2, inj_controls3.surface_rate);
+    BOOST_CHECK_EQUAL(inj_controls2.bhp_limit * 3, inj_controls3.bhp_limit);
+    BOOST_CHECK_EQUAL(inj_controls2.thp_limit * 4, inj_controls3.thp_limit);
 }
+
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg_UDA) {
     std::string input = R"(
