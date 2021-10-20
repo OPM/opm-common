@@ -1398,6 +1398,7 @@ namespace {
             this->addGroupToGroup(parent_group.name, rst_group.name);
         }
 
+        auto glo = this->snapshots.back().glo();
         for (const auto& rst_well : rst_state.wells) {
             Opm::Well well(rst_well, report_step, this->m_static.m_unit_system, udq_undefined);
             std::vector<Opm::Connection> rst_connections;
@@ -1427,8 +1428,11 @@ namespace {
             this->addWellToGroup(well.groupName(), well.name(), report_step);
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
-        }
 
+            if (GasLiftOpt::Well::active(rst_well))
+                glo.add_well(GasLiftOpt::Well(rst_well));
+        }
+        this->snapshots.back().glo.update( std::move(glo) );
         this->snapshots.back().update_tuning(rst_state.tuning);
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
