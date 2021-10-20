@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -264,13 +265,18 @@ BOOST_AUTO_TEST_CASE(TestFileDeck)
 
     const auto& index1 = fd.find("RADIAL");
     BOOST_CHECK( !index1.has_value() );
+    BOOST_CHECK_EQUAL( fd.count("RADIAL"), 0);
 
+    BOOST_CHECK_EQUAL( fd.count("DIMENS"), 1);
+    BOOST_CHECK_EQUAL( fd.count("DATES"), 5);
 
     const auto& index2 = fd.find("DIMENS");
     BOOST_CHECK( index2.has_value());
-
     BOOST_CHECK_EQUAL( index2.value().file_index , 0);
     BOOST_CHECK_EQUAL( index2.value().keyword_index, 3);
+    auto offset = index2.value();
+    const auto& dimens2 = fd.find("DIMENS", ++offset);
+    BOOST_CHECK(!dimens2.has_value());
 
     const auto& index3 = fd.find("COORD");
     BOOST_CHECK_EQUAL( index3.value().file_index , 1);
@@ -298,7 +304,7 @@ BOOST_AUTO_TEST_CASE(RestartTest2)
     auto deck = parser.parseFile("UDQ_WCONPROD.DATA");
     FileDeck fd(deck);
 
-    fd.rst_solution("RESTART", 77);
+    fd.rst_solution("RESTART", 6);
     fd.insert_skiprest();
 
     auto solution_index = fd.find("SOLUTION").value();
@@ -313,6 +319,23 @@ BOOST_AUTO_TEST_CASE(RestartTest2)
     BOOST_CHECK(schedule_index < skiprest_index);
 }
 
+BOOST_AUTO_TEST_CASE(RestartTest23)
+{
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("UDQ_WCONPROD.DATA");
+    FileDeck fd(deck);
+
+    fd.skip(7);
+    BOOST_CHECK_EQUAL(fd.count("DATES"), 1);
+
+    auto dates_index = fd.find("DATES");
+    BOOST_CHECK(dates_index.has_value());
+    auto kw = fd[dates_index.value()];
+    auto rec0 = kw[0];
+    BOOST_CHECK_EQUAL( rec0.getItem<ParserKeywords::DATES::MONTH>().get<std::string>(0), "MAR");
+    BOOST_CHECK_EQUAL(kw.size() , 1);
+}
 
 BOOST_AUTO_TEST_CASE(RestartTest)
 {

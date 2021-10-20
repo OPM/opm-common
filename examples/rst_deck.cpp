@@ -63,7 +63,7 @@ output the program will update the SOLUTION and SCHEDULE sections. All keywords
 from the SOLUTION section will be cleared out(1) and a RESTART keyword will be
 inserted. In the SCHEDULE section the program can either remove all keywords up
 until the restart date, or alternatively insert SKIPREST immediately following
-the SCHEDULE keyword(2).
+the SCHEDULE keyword.
 
 When creating the updated restart deck the program can either link to unmodified
 include files with INCLUDE statements, create a copy of deck structure in an
@@ -77,7 +77,7 @@ Arguments:
 1. The data file we are starting with.
 
 2. The basename of the restart file - with an optional path prefix and a :N to
-   restart from step N(3). A restart step value of 0 is interpreted as a dry run
+   restart from step N(2). A restart step value of 0 is interpreted as a dry run
    - a deck which has not been set up for restart will be written out.
 
 3. Basename of the restart deck we create, can optionally contain a path prefix;
@@ -91,7 +91,7 @@ Options:
 -s: Manipulate the SCHEDULE section by inserting a SKIPREST keyword immediately
     following the SCHEDULE keyword. If the -s option is not used the SCHEDULE
     section will be modified by removing all keywords until we reach the restart
-    date. NB: Currently the -s option is required
+    date.
 
 -m: [share|inline|copy] The restart deck can reuse the unmodified include files
     from the base case, this is mode 'share' and is the default. With mode
@@ -102,7 +102,7 @@ Options:
     In the case of 'share' and 'copy' the correct path to include files will be
     negotiated based on the path given to the output case in the third argument.
     If the restart deck is passed to stdout the include files will be resolved
-    based on output in cwd. 
+    based on output in cwd.
 
 Example:
 
@@ -111,10 +111,7 @@ Example:
 1: The program has a compiled list of keywords which will be retained in the
    SOLUTION section. The current value of that list is: {}
 
-2: Current version of the program *only* supports the SKIPREST option, and the
-   -s option is required.
-
-3: The second argument is treated purely as a string and inserted verbatim into
+2: The second argument is treated purely as a string and inserted verbatim into
    the updated restart deck. In a future version we might interpret the second
    argument as a file path and check the content and also do filesystem
    manipulations from it.
@@ -248,6 +245,8 @@ void update_schedule(const options& opt, Opm::FileDeck& file_deck)
 
     if (opt.skiprest)
         file_deck.insert_skiprest();
+    else
+        file_deck.skip(opt.restart.second);
 }
 
 
