@@ -767,12 +767,12 @@ template <class SGrpArray>
 void staticContrib(const Opm::Group&        group,
                    const Opm::GasLiftOpt&   glo,
                    const Opm::SummaryState& sumState,
-                   const Opm::UnitSystem& units,
+                   const Opm::UnitSystem&   units,
                    SGrpArray&               sGrp)
 {
     using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
     using Isi = ::Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
-    using M = ::Opm::UnitSystem::measure;
+    using M   = ::Opm::UnitSystem::measure;
 
     const auto dflt   = -1.0e+20f;
     const auto dflt_2 = -2.0e+20f;
@@ -782,14 +782,14 @@ void staticContrib(const Opm::Group&        group,
 
     const auto init = std::vector<float> { // 112 Items (0..111)
         // 0     1      2      3      4
-        infty, infty, dflt , infty,  zero ,     //   0..  4  ( 0)
+        infty, infty, dflt , infty , zero ,     //   0..  4  ( 0)
         zero , infty, infty, infty , infty,     //   5..  9  ( 1)
         infty, infty, infty, infty , dflt ,     //  10.. 14  ( 2)
         infty, infty, infty, infty , dflt ,     //  15.. 19  ( 3)
         infty, infty, infty, infty , dflt ,     //  20.. 24  ( 4)
         zero , zero , zero , dflt_2, zero ,     //  24.. 29  ( 5)
         zero , zero , zero , zero  , zero ,     //  30.. 34  ( 6)
-        infty ,zero , zero , zero  , infty,     //  35.. 39  ( 7)
+        infty, zero , zero , zero  , infty,     //  35.. 39  ( 7)
         zero , zero , zero , zero  , zero ,     //  40.. 44  ( 8)
         zero , zero , zero , zero  , zero ,     //  45.. 49  ( 9)
         zero , infty, infty, infty , infty,     //  50.. 54  (10)
