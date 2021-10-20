@@ -766,7 +766,7 @@ void set_dimensions( ParserItem& item,
 
     bool ParserKeyword::hasFixedSize() const {
         auto size_type = this->keyword_size.size_type();
-        return (size_type == FIXED || size_type == FIXED_CODE);
+        return (size_type == FIXED || size_type == FIXED_CODE || this->m_records.empty());
     }
 
     enum ParserKeywordSizeEnum ParserKeyword::getSizeType() const {

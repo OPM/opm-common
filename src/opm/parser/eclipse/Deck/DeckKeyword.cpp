@@ -34,7 +34,7 @@ namespace Opm {
     DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword) :
         m_keywordName(parserKeyword.getName()),
         m_isDataKeyword(false),
-        m_slashTerminated(true)
+        m_slashTerminated(!parserKeyword.hasFixedSize())
     {
     }
 
@@ -70,7 +70,7 @@ namespace Opm {
     void add_deckvalue( DeckItem deck_item, DeckRecord& deck_record, const ParserItem& parser_item, const std::vector<DeckValue>& input_record, size_t j) {
          if (j >= input_record.size() || input_record[j].is_default()) {
               if (parser_item.hasDefault())
-                  deck_item.push_back( parser_item.getDefault<T>() );
+                  deck_item.push_backDefault( parser_item.getDefault<T>() );
               else
                   deck_item.push_backDummyDefault<T>();
          }

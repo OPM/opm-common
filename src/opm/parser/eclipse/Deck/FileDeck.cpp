@@ -382,7 +382,7 @@ void FileDeck::rst_solution(const std::string& rst_base, int report_step) {
     {
         Opm::UnitSystem units;
         std::vector<DeckValue> values{ DeckValue{rst_base}, DeckValue{report_step} };
-        DeckKeyword restart(ParserKeywords::RESTART(), std::vector<std::vector<DeckValue>>{ values }, units, units);
+        DeckKeyword restart(ParserKeywords::RESTART{}, std::vector<std::vector<DeckValue>>{ values }, units, units);
 
         auto solution = this->find("SOLUTION").value();
         this->insert(++solution, restart);
