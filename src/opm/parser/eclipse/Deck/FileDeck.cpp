@@ -463,9 +463,9 @@ void FileDeck::skip(int report_step) {
         current_report -= deck_keyword.size();
         for (int record_index = 0; record_index < (report_step - current_report); record_index++) {
             const auto& record = deck_keyword[record_index];
-            records.push_back( {DeckValue{record.getItem<D::DAY>().get<int>(0)},
-                                DeckValue{record.getItem<D::MONTH>().get<std::string>(0)},
-                                DeckValue{record.getItem<D::YEAR>().get<int>(0)} });
+            records.push_back( {record.getItem<D::DAY>().get<int>(0),
+                                record.getItem<D::MONTH>().get<std::string>(0),
+                                record.getItem<D::YEAR>().get<int>(0)} );
         }
 
         UnitSystem unit_system;

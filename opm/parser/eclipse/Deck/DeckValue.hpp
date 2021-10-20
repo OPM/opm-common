@@ -30,10 +30,10 @@ class DeckValue {
 
     public:
         DeckValue();
-        explicit DeckValue(int);
-        explicit DeckValue(double);
-        explicit DeckValue(const std::string&);
-        
+        DeckValue(int);
+        DeckValue(double);
+        DeckValue(const std::string&);
+
         bool is_default() const;
 
         template<typename T>
@@ -48,7 +48,7 @@ class DeckValue {
         type_tag value_enum;
         int int_value;
         double double_value;
-        std::string string_value;    
+        std::string string_value;
 
 };
 
