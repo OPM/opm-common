@@ -20,7 +20,8 @@ find_opm_package (
   LAPACK REQUIRED;
   CxaDemangle;
   MPI;
-  TBB
+  TBB;
+  GMP
   "
   # header to search for
   "dune/common/fvector.hh"
