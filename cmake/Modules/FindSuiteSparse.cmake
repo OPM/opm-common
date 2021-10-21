@@ -280,6 +280,32 @@ if (SuiteSparse_LIBRARIES)
   list (REVERSE SuiteSparse_LIBRARIES)
 endif (SuiteSparse_LIBRARIES)
 
+if(SuiteSparse_FOUND)
+  if(NOT TARGET SuiteSparse::SuiteSparse)
+    add_library(SuiteSparse::SuiteSparse INTERFACE IMPORTED GLOBAL)
+    set_property(TARGET SuiteSparse::SuiteSparse PROPERTY
+      INTERFACE_INCLUDE_DIRECTORIES ${SuiteSparse_INCLUDE_DIRS})
+    if(config_LIBRARY)
+      set_property(TARGET SuiteSparse::SuiteSparse PROPERTY
+	INTERFACE_LINK_LIBRARIES ${config_LIBRARY})
+    endif()
+  endif()
+  foreach(_module ${SuiteSparse_MODULES})
+    string (TOUPPER ${_module} _MODULE)
+    if(SuiteSparse_${_MODULE}_FOUND)
+      if(NOT TARGET SuiteSparse::${_module})
+	message(STATUS "Creating target SuitSparse::${_module}")
+	add_library(SuiteSparse::${_module} UNKNOWN IMPORTED GLOBAL)
+	set_target_properties(SuiteSparse::${_module} PROPERTIES
+	  IMPORTED_LOCATION ${${_MODULE}_LIBRARY}
+	  INCLUDE_DIRECTORIES ${${_MODULE}_INCLUDE_DIRS}
+	  INTERFACE_LINK_LIBRARIES "${config_LIBRARY}")
+	target_link_libraries(SuiteSparse::SuiteSparse
+          INTERFACE SuiteSparse::${_module})
+      endif()
+    endif()
+  endforeach(_module)
+endif()
 # print a message to indicate status of this package
 include (FindPackageHandleStandardArgs)
 find_package_handle_standard_args (SuiteSparse
