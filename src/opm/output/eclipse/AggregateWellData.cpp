@@ -327,8 +327,7 @@ namespace {
             if (glo.has_well(well.name())) {
                 const auto& w_glo = glo.well(well.name());
                 iWell[Ix::LiftOpt] = (w_glo.use_glo()) ? 1 : 0;
-            } else {
-                iWell[Ix::LiftOpt] = 0;
+                iWell[Ix::LiftOptAllocExtra] = w_glo.alloc_extra_gas() ? 1 : 0;
             }
 
             // Deliberate misrepresentation.  Function 'eclipseControlMode'
@@ -671,12 +670,8 @@ namespace {
                 sWell[Ix::LOmaxRate] = swprop(M::gas_surface_rate, w_glo.max_rate().value_or(0.));
                 sWell[Ix::LOminRate] = swprop(M::gas_surface_rate, w_glo.min_rate());
                 sWell[Ix::LOweightFac] = static_cast<float>(w_glo.weight_factor());
-            } else {
-                sWell[Ix::LOmaxRate] = 0.;
-                sWell[Ix::LOminRate] = 0.;
-                sWell[Ix::LOweightFac] = 0.;
+                sWell[Ix::LOincFac] = static_cast<float>(w_glo.inc_weight_factor());
             }
-
 
             sWell[Ix::DatumDepth] = swprop(M::length, datumDepth(well));
             sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());

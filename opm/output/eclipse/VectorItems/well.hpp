@@ -77,6 +77,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
 
             CompOrd = 98, // Well's completion ordering scheme.
+
+            LiftOptAllocExtra = 144
         };
 
         namespace Value {
@@ -180,7 +182,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             LOmaxRate         = 56, // Well's maximum lift gas rate
             LOweightFac       = 57, // Well's wighting factor for preferential allocation of lift gas
             LOminRate         = 67, // Well's mimimum lift gas rate
-
+            LOincFac          =115,
         };
     } // SWell
 
