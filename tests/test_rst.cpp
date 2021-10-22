@@ -231,6 +231,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
 
     const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es,
                                                             simCase.sched,
+                                                            sim_step+1,
                                                             sim_step,
                                                             0, 0);
 
@@ -285,6 +286,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
 
     const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es,
                                                             simCase.sched,
+                                                            sim_step+1,
                                                             sim_step,
                                                             0, 0);
 

@@ -24,12 +24,12 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/io/eclipse/rst/header.hpp>
 
@@ -75,7 +75,32 @@ std::vector<double> elapsedTime(const Opm::Schedule& sched)
         BOOST_CHECK_EQUAL(tp.second      , 0);
         BOOST_CHECK_EQUAL(tp.microseconds, 0);
     }
+
+    Opm::Deck first_sim(std::string fname) {
+        return Opm::Parser{}.parseFile(fname);
+    }
+
 } // Anonymous
+
+
+//int main(int argc, char* argv[])
+struct SimulationCase
+{
+    explicit SimulationCase(const Opm::Deck& deck)
+        : es   { deck }
+        , grid { deck }
+        , python{ std::make_shared<Opm::Python>() }
+        , sched{ deck, es, python }
+    {}
+
+    // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::EclipseState es;
+    Opm::EclipseGrid  grid;
+    std::shared_ptr<Opm::Python> python;
+    Opm::Schedule     sched;
+
+};
+
 
 BOOST_AUTO_TEST_SUITE(Member_Functions)
 
@@ -695,5 +720,37 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     BOOST_CHECK_EQUAL(header.nmfipr, nmfipr);
     BOOST_CHECK_EQUAL(header.ngroup, ngroup);
 }
+
+
+BOOST_AUTO_TEST_CASE(Netbalan)
+{
+    const auto simCase = SimulationCase{first_sim("5_NETWORK_MODEL5_STDW_NETBAL_PACK.DATA")};
+
+    Opm::EclipseState es    = simCase.es;
+    Opm::EclipseGrid  grid   = simCase.grid;
+
+    Opm::Schedule     sched = simCase.sched;
+    const auto& start_time = sched.getStartTime();
+    double simTime = start_time + 2.E09;
+
+    const std::size_t report_step = 1;
+    const std::size_t lookup_step = report_step - 1;
+
+    const auto ih = Opm::RestartIO::Helpers::
+            createInteHead(es, grid, sched, simTime,
+                           report_step, // Should really be number of timesteps
+                           report_step, lookup_step);
+
+
+    const auto& v = ih.data();
+
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    BOOST_CHECK_EQUAL(v[VI::intehead::NETBALAN_3], 13);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NETBALAN_5], 14);
+
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END() // Transfer_Protocol

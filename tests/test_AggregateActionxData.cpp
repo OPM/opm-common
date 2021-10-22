@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             // set dummy value for next_step_size
             const double next_step_size = 0.1;
-            const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep, secs_elapsed, next_step_size);
+            const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep+1, rptStep, secs_elapsed, next_step_size);
 
             const auto& lh = Opm::RestartIO::Helpers::createLogiHead(es);
 

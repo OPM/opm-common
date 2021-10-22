@@ -124,23 +124,37 @@ namespace {
 
     Opm::RestartIO::DoubHEAD::NetBalanceDims
     getNetworkBalanceDims(const Opm::Schedule&   sched,
-                  const std::size_t      lookup_step)
+                          const Opm::UnitSystem& units,
+                          const std::size_t      report_step)
     {
-            const double balancingInterval = sched[lookup_step].network_balance().interval();
-            const double convTolNodPres = sched[lookup_step].network_balance().pressure_tolerance();
-            const double convTolTHPCalc = sched[lookup_step].network_balance().thp_tolerance();
-            const double targBranchBalError = sched[lookup_step].network_balance().target_balance_error();
-            const double maxBranchBalError = sched[lookup_step].network_balance().max_balance_error();
-            const double minTimeStepSize = sched[lookup_step].network_balance().min_tstep();
+        using M = ::Opm::UnitSystem::measure;
+        double balancingInterval = 0.;
+        double convTolNodPres = 0.;
+        double convTolTHPCalc = 0.01;
+        double targBranchBalError = 1.E+20;
+        double maxBranchBalError = 1.E+20;
+        double minTimeStepSize = 0.;
 
-            return {
-                balancingInterval,
-                convTolNodPres,
-                convTolTHPCalc,
-                targBranchBalError,
-                maxBranchBalError,
-                minTimeStepSize
-            };
+        if (report_step > 0) {
+            if (sched[report_step].network().active()) {
+                const auto lookup_step = report_step - 1;
+                balancingInterval = units.from_si(M::time, sched[lookup_step].network_balance().interval());
+                convTolNodPres = units.from_si(M::pressure, sched[lookup_step].network_balance().pressure_tolerance());
+                convTolTHPCalc = sched[lookup_step].network_balance().thp_tolerance();
+                targBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().target_balance_error());
+                maxBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().max_balance_error());
+                minTimeStepSize = units.from_si(M::time, sched[lookup_step].network_balance().min_tstep());
+            }
+        }
+
+        return {
+            balancingInterval,
+            convTolNodPres,
+            convTolTHPCalc,
+            targBranchBalError,
+            maxBranchBalError,
+            minTimeStepSize
+        };
     }
 } // Anonymous
 
@@ -152,6 +166,7 @@ std::vector<double>
 Opm::RestartIO::Helpers::
 createDoubHead(const EclipseState& es,
                const Schedule&     sched,
+               const std::size_t   report_step,
                const std::size_t   lookup_step,
                const double        simTime,
                const double        nextTimeStep)
@@ -167,7 +182,7 @@ createDoubHead(const EclipseState& es,
         .udq_param(rspec.udqParams())
         .guide_rate_param(computeGuideRate(sched, lookup_step))
         .lift_opt_param(computeLiftOptParam(sched, usys, lookup_step))
-        .netBalDimensions(getNetworkBalanceDims(sched, lookup_step))
+        .netBalDimensions(getNetworkBalanceDims(sched, usys, report_step))
         ;
 
     if (nextTimeStep > 0.0) {

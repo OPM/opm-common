@@ -300,7 +300,7 @@ namespace {
 
         {
             const auto dh = ::Opm::RestartIO::Helpers::
-                createDoubHead(es, sched, 0, 0.0, 0.0);
+                createDoubHead(es, sched, 0, 0, 0.0, 0.0);
 
             initFile.write("DOUBHEAD", dh);
         }

@@ -782,7 +782,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
                 createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
                                rptStep, rptStep, rptStep);
 
-            const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es, simCase.sched, rptStep,
+            const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es, simCase.sched, rptStep+1, rptStep,
                                                                     secs_elapsed, next_step_size);
 
             const auto& lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
