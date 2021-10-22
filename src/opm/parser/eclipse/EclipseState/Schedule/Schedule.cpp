@@ -1399,6 +1399,11 @@ namespace {
         }
 
         auto glo = this->snapshots.back().glo();
+        glo.all_newton(rst_state.header.glift_all_nupcol);
+        glo.min_wait(rst_state.header.glift_min_wait);
+        glo.min_eco_gradient(rst_state.header.glift_min_eco_grad);
+        glo.gaslift_increment(rst_state.header.glift_rate_delta);
+
         for (const auto& rst_well : rst_state.wells) {
             Opm::Well well(rst_well, report_step, this->m_static.m_unit_system, udq_undefined);
             std::vector<Opm::Connection> rst_connections;
