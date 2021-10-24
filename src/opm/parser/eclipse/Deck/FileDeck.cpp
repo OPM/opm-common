@@ -450,7 +450,7 @@ void FileDeck::skip(int report_step) {
             throw std::logic_error(fmt::format("Could not find DATES keyword corresponding to report_step {}", report_step));
     }
 
-    auto index = schedule.value();
+    auto index = schedule.value() + 1;
     auto end_pos = deck_pos;
     while (index < end_pos) {
         const auto& keyword = this->operator[](index);

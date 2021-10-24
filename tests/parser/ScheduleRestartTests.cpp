@@ -334,13 +334,26 @@ BOOST_AUTO_TEST_CASE(RestartTest23)
 
     fd.skip(7);
     BOOST_CHECK_EQUAL(fd.count("DATES"), 1);
+    BOOST_CHECK(fd.find("SCHEDULE").has_value());
 
     auto dates_index = fd.find("DATES");
     BOOST_CHECK(dates_index.has_value());
     auto kw = fd[dates_index.value()];
     auto rec0 = kw[0];
-    BOOST_CHECK_EQUAL( rec0.getItem<ParserKeywords::DATES::MONTH>().get<std::string>(0), "MAR");
-    BOOST_CHECK_EQUAL(kw.size() , 1);
+    BOOST_CHECK_EQUAL( rec0.getItem<ParserKeywords::DATES::MONTH>().get<std::string>(0), "APR");
+    BOOST_CHECK_EQUAL( kw.size() , 5);
+}
+
+BOOST_AUTO_TEST_CASE(RestartTest24)
+{
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("UDQ_WCONPROD.DATA");
+    FileDeck fd(deck);
+
+    fd.skip(4);
+    BOOST_CHECK_EQUAL(fd.count("DATES"), 3);
+    BOOST_CHECK(fd.find("SCHEDULE").has_value());
 }
 
 BOOST_AUTO_TEST_CASE(RestartTest)
