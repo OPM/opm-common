@@ -92,6 +92,15 @@ FileDeck::Index  FileDeck::Index::operator++(int) {
     return current;
 }
 
+FileDeck::Index  FileDeck::Index::operator+(std::size_t shift) const {
+    auto sum = *this;
+
+    for (std::size_t arg = 0; arg < shift; arg++)
+        sum++;
+
+    return sum;
+}
+
 
 bool FileDeck::Index::operator==(const Index& other) const {
     return this->file_index == other.file_index &&

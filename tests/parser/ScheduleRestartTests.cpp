@@ -278,6 +278,12 @@ BOOST_AUTO_TEST_CASE(TestFileDeck)
     const auto& dimens2 = fd.find("DIMENS", ++offset);
     BOOST_CHECK(!dimens2.has_value());
 
+    auto index2p1 = index2.value() + 1;
+    BOOST_CHECK(index2.value() < index2p1);
+    const auto& kw = fd[index2p1];
+    BOOST_CHECK_EQUAL(kw.name(), "START");
+
+
     const auto& index3 = fd.find("COORD");
     BOOST_CHECK_EQUAL( index3.value().file_index , 1);
     BOOST_CHECK_EQUAL( index3.value().keyword_index, 3);
