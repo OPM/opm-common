@@ -1,6 +1,7 @@
 #include <ctime>
 #include <chrono>
 
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -92,6 +93,16 @@ namespace {
         return sch[index];
     }
 
+    void insert_keywords(
+        Schedule& sch,
+        const std::string& deck_string,
+        std::size_t index
+    )
+    {
+        Parser parser;
+        auto deck = parser.parseString(deck_string);
+        //sch.applyKeywords(deck, index);
+    }
 }
 
 
@@ -128,6 +139,7 @@ void python::common::export_Schedule(py::module& module) {
     .def( "get_wells", &Schedule::getWells)
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
+        .def( "insert_keywords", &insert_keywords, py::arg("data"), py::arg("step"))
     .def( "__contains__", &has_well );
 
 }

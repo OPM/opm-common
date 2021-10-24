@@ -509,6 +509,7 @@ namespace Opm
         void addGroup(Group group);
         void addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
+        void applyKeywords(const DeckView &deck, std::size_t timeStep);
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void end_report(std::size_t report_step);
         void handleKeyword(std::size_t currentStep,
