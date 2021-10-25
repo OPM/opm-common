@@ -85,6 +85,7 @@ inline void createDot(const Opm::Schedule& schedule, const std::string& casename
     }
     os << "}\n";
     std::cout << "complete." << std::endl;
+    std::cout << "Convert output to PDF with 'dot -Tpdf " << casename << ".gv > " << casename << ".pdf'\n" << std::endl;
 }
 
 
