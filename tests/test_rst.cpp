@@ -232,6 +232,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
     const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es,
                                                             simCase.sched,
                                                             sim_step,
+                                                            sim_step+1,
                                                             0, 0);
 
     auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
@@ -286,6 +287,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
     const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es,
                                                             simCase.sched,
                                                             sim_step,
+                                                            sim_step+1,
                                                             0, 0);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);

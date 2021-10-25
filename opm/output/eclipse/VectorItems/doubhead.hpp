@@ -43,6 +43,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         XxxMBE  = 18,
         XxxLCV  = 19,
         XxxWFL  = 20,
+        Netbalint  = 51,    //  balancingInterval
+        Netbalnpre  = 53,    //  convTolNodPres
+        Netbalthpc  = 50,    //  convTolTHPCalc
+        Netbaltarerr  = 63,    //  targBranchBalError
+        Netbalmaxerr  = 64,    //  maxBranchBalError
+        Netbalstepsz  = 66,    //  minTimeStepSize
         TrgDPR  = 82,
         TfDiff  = 83,
         DdpLim  = 84,

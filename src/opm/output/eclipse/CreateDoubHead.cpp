@@ -121,6 +121,42 @@ namespace {
             units.from_si(M::oil_gas_ratio, glo.min_eco_gradient())
         };
     }
+
+    Opm::RestartIO::DoubHEAD::NetBalanceParams
+    getNetworkBalanceParameters(const Opm::Schedule&   sched,
+                          const Opm::UnitSystem& units,
+                          const std::size_t      report_step)
+    {
+        using M = ::Opm::UnitSystem::measure;
+        double balancingInterval = 0.;
+        double convTolNodPres = 0.;
+        double convTolTHPCalc = 0.01;
+        double targBranchBalError = 1.E+20;
+        double maxBranchBalError = 1.E+20;
+        double minTimeStepSize = 0.;
+
+        if (report_step > 0) {
+            const auto& sched_state = sched[report_step];
+            if (sched_state.network().active()) {
+                const auto lookup_step = report_step - 1;
+                balancingInterval = units.from_si(M::time, sched[lookup_step].network_balance().interval());
+                convTolNodPres = units.from_si(M::pressure, sched[lookup_step].network_balance().pressure_tolerance());
+                convTolTHPCalc = sched[lookup_step].network_balance().thp_tolerance();
+                targBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().target_balance_error());
+                maxBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().max_balance_error());
+                minTimeStepSize = units.from_si(M::time, sched[lookup_step].network_balance().min_tstep());
+            }
+        }
+
+        return {
+            balancingInterval,
+            convTolNodPres,
+            convTolTHPCalc,
+            targBranchBalError,
+            maxBranchBalError,
+            minTimeStepSize
+        };
+    }
 } // Anonymous
 
 // #####################################################################
@@ -132,6 +168,7 @@ Opm::RestartIO::Helpers::
 createDoubHead(const EclipseState& es,
                const Schedule&     sched,
                const std::size_t   lookup_step,
+               const std::size_t   report_step,
                const double        simTime,
                const double        nextTimeStep)
 {
@@ -146,6 +183,7 @@ createDoubHead(const EclipseState& es,
         .udq_param(rspec.udqParams())
         .guide_rate_param(computeGuideRate(sched, lookup_step))
         .lift_opt_param(computeLiftOptParam(sched, usys, lookup_step))
+        .netBalParams(getNetworkBalanceParameters(sched, usys, report_step))
         ;
 
     if (nextTimeStep > 0.0) {

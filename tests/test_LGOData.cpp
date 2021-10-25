@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(liftGasOptimzation_data)
 
     // set dummy value for next_step_size
     const double next_step_size = 0.1;
-    const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep, secs_elapsed, next_step_size);
+    const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep, simStep+1, secs_elapsed, next_step_size);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
     wellData.captureDeclaredWellData(sched, es.getUnits(), simStep, action_state, {}, st, ih);

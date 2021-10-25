@@ -136,6 +136,11 @@ namespace Opm { namespace RestartIO {
             int ninobr;
         };
 
+     struct NetBalanceDims {
+            int maxNoIterationsNBC;
+            int maxNoIterationsTHP;
+        };
+
         struct AquiferDims {
             // Number of active analytic aquifers (# unique aquifer IDs)
             int numAquifers {0};
@@ -212,6 +217,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& variousParam(const int version, const int iprog);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& networkDimensions(const NetworkDims& nwdim);
+        InteHEAD& netBalanceData(const NetBalanceDims& nwbaldim);
         InteHEAD& regionDimensions(const RegDims& rdim);
         InteHEAD& rockOpts(const RockOpts& rckop);
         InteHEAD& ngroups(const Group& gr);

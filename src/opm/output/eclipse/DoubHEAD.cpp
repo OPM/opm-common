@@ -100,10 +100,10 @@ enum Index : std::vector<double>::size_type {
     dh_049  =  49,
 
     // 50..59
-    dh_050  =  50,
-    dh_051  =  51,
+    Netbalan_thpc  = VI::doubhead::Netbalthpc,
+    Netbalan_int  = VI::doubhead::Netbalint,
     dh_052  =  52,
-    dh_053  =  53,
+    Netbalan_npre  = VI::doubhead::Netbalnpre,
     dh_054  =  54,
     dh_055  =  55,
     dh_056  =  56,
@@ -115,10 +115,10 @@ enum Index : std::vector<double>::size_type {
     dh_060  =  60,
     dh_061  =  61,
     dh_062  =  62,
-    dh_063  =  63,
-    dh_064  =  64,
+    Netbalan_tarerr  = VI::doubhead::Netbaltarerr,
+    Netbalan_maxerr  = VI::doubhead::Netbalmaxerr,
     dh_065  =  65,
-    dh_066  =  66,
+    Netbalan_stepsz  = VI::doubhead::Netbalstepsz,
     dh_067  =  67,
     dh_068  =  68,
     dh_069  =  69,
@@ -383,13 +383,9 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::dh_026] = 0.0;
     this->data_[Index::dh_027] = 0.0;
     this->data_[Index::dh_028] = 0.0;
-    this->data_[Index::dh_050] = 0.01;
     this->data_[Index::dh_054] = 1.0e+20;
     this->data_[Index::dh_055] = 1.0e+20;
-    this->data_[Index::dh_063] = 1.0e+20;
-    this->data_[Index::dh_064] = 1.0e+20;
     this->data_[Index::dh_065] = 0.0;
-    this->data_[Index::dh_066] = 0.0;
     this->data_[Index::dh_069] = -1.0;
     this->data_[Index::dh_080] = 1.0e+20;
     this->data_[Index::dh_081] = 1.0e+20;
@@ -650,3 +646,17 @@ Opm::RestartIO::DoubHEAD::lift_opt_param(const liftOptPar& lo_par)
 
     return *this;
 }
+
+Opm::RestartIO::DoubHEAD&
+Opm::RestartIO::DoubHEAD::netBalParams(const NetBalanceParams& net_bal_par)
+{
+    this->data_[Netbalan_int]   = net_bal_par.balancingInterval;
+    this->data_[Netbalan_npre]   = net_bal_par.convTolNodPres;
+    this->data_[Netbalan_thpc]   = net_bal_par.convTolTHPCalc;
+    this->data_[Netbalan_tarerr]   = net_bal_par.targBranchBalError;
+    this->data_[Netbalan_maxerr]   = net_bal_par.maxBranchBalError;
+    this->data_[Netbalan_stepsz]   = net_bal_par.minTimeStepSize;
+
+    return *this;
+}
+

@@ -172,11 +172,11 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                                                        Opm::EclIO::OutputStream::Unified {ioConfig.getUNIFOUT()}};
 
             std::vector<int> ih
-                = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep + 1, rptStep);
+                = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep, rptStep-1);
 
             // set dummy value for next_step_size
             const double next_step_size = 0.1;
-            const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep, secs_elapsed, next_step_size);
+            const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep-1, rptStep, secs_elapsed, next_step_size);
 
             const auto& lh = Opm::RestartIO::Helpers::createLogiHead(es);
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             rstFile.write("LOGIHEAD", lh);
             {
                 auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-                group_aggregator.captureDeclaredGroupData(sched, es.getUnits(), rptStep, st, ih);
+                group_aggregator.captureDeclaredGroupData(sched, es.getUnits(), rptStep-1, st, ih);
                 rstFile.write("IGRP", group_aggregator.getIGroup());
                 rstFile.write("SGRP", group_aggregator.getSGroup());
                 rstFile.write("XGRP", group_aggregator.getXGroup());
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             }
             {
                 auto well_aggregator = Opm::RestartIO::Helpers::AggregateWellData(ih);
-                well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep, {}, {}, st, ih);
+                well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep-1, {}, {}, st, ih);
                 rstFile.write("IWEL", well_aggregator.getIWell());
                 rstFile.write("SWEL", well_aggregator.getSWell());
                 rstFile.write("XWEL", well_aggregator.getXWell());
@@ -207,18 +207,14 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             {
                 auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
                 auto xw = Opm::data::Wells {};
-                conn_aggregator.captureDeclaredConnData(sched, grid, es.getUnits(), xw, st, rptStep);
+                conn_aggregator.captureDeclaredConnData(sched, grid, es.getUnits(), xw, st, rptStep-1);
                 rstFile.write("ICON", conn_aggregator.getIConn());
                 rstFile.write("SCON", conn_aggregator.getSConn());
                 rstFile.write("XCON", conn_aggregator.getXConn());
             }
 
-            // const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
-            // auto udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
-            // udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
-
-            const auto actDims = Opm::RestartIO::Helpers::createActionRSTDims(sched, rptStep);
-            Opm::RestartIO::Helpers::AggregateActionxData actionxData {sched, action_state, st, rptStep};
+            const auto actDims = Opm::RestartIO::Helpers::createActionRSTDims(sched, rptStep-1);
+            Opm::RestartIO::Helpers::AggregateActionxData actionxData {sched, action_state, st, rptStep-1};
 
             rstFile.write("IACT", actionxData.getIACT());
             rstFile.write("SACT", actionxData.getSACT());
@@ -240,24 +236,24 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                         ---------------------------------------------------------------------------------------------------------------------]
 
                 */
-                const auto rptStep_1 = std::size_t {0};
+                const auto rptStep_1 = std::size_t {1};
                 const auto ih_1 = Opm::RestartIO::Helpers::createInteHead(
-                    es, grid, sched, secs_elapsed, rptStep, rptStep_1 + 1, rptStep_1);
+                    es, grid, sched, secs_elapsed, rptStep, rptStep_1, rptStep_1-1);
 
                 BOOST_CHECK_EQUAL(ih_1[156], 2);
                 BOOST_CHECK_EQUAL(ih_1[157], 7);
 
 
 
-                const auto rptStep_2 = std::size_t {1};
+                const auto rptStep_2 = std::size_t {2};
                 const auto ih_2 = Opm::RestartIO::Helpers::createInteHead(
-                    es, grid, sched, secs_elapsed, rptStep, rptStep_2 + 1, rptStep_2);
+                    es, grid, sched, secs_elapsed, rptStep, rptStep_2, rptStep_2-1);
                 BOOST_CHECK_EQUAL(ih_2[156], 14);
                 BOOST_CHECK_EQUAL(ih_2[157], 10);
 
-                const auto rptStep_3 = std::size_t {2};
+                const auto rptStep_3 = std::size_t {3};
                 const auto ih_3 = Opm::RestartIO::Helpers::createInteHead(
-                    es, grid, sched, secs_elapsed, rptStep, rptStep_3 + 1, rptStep_3);
+                    es, grid, sched, secs_elapsed, rptStep, rptStep_3, rptStep_3-1);
 
                 BOOST_CHECK_EQUAL(ih_3[156], 14);
                 BOOST_CHECK_EQUAL(ih_3[157], 10);
@@ -1007,7 +1003,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             auto rst_file = std::make_shared<Opm::EclIO::ERst>("UDQ_ACTIONX_TEST1.UNRST");
             auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), 3);
             auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), es.runspec(), simCase.parser);
-            const auto& input_actions = sched[rptStep].actions();
+            const auto& input_actions = sched[rptStep-1].actions();
 
             BOOST_CHECK(rst_state.actions.size() == input_actions.ecl_size());
 

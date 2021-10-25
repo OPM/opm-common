@@ -31,12 +31,14 @@ Balance::Balance(const Tuning& tuning, const DeckKeyword& keyword) {
     const auto& record = keyword[0];
     double interval = record.getItem<NB::TIME_INTERVAL>().getSIDouble(0);
 
-    if (interval < 0)
+    if (interval < 0) {
         this->calc_mode = CalcMode::NUPCOL;
-
-    else if (interval == 0)
+        this->calc_interval = 0.;
+    }
+    else if (interval == 0) {
         this->calc_mode = CalcMode::TimeStepStart;
-
+        this->calc_interval = interval;
+    }
     else {
         this->calc_mode = CalcMode::TimeInterval;
         this->calc_interval = interval;
@@ -62,7 +64,7 @@ Balance::CalcMode Balance::mode() const {
 }
 
 double Balance::interval() const {
-    return this->calc_interval.value();
+    return this->calc_interval;
 }
 
 double Balance::pressure_tolerance() const {
@@ -95,6 +97,7 @@ double Balance::min_tstep() const {
 
 Balance Balance::serializeObject() {
     Balance balance;
+    balance.calc_interval = 0.;
     balance.calc_mode = Balance::CalcMode::NUPCOL;
     balance.m_min_tstep = 123;
     balance.ptol = 0.25;

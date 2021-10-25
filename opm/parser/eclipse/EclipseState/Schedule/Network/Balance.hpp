@@ -72,7 +72,7 @@ enum class CalcMode {
 
 private:
     CalcMode calc_mode{CalcMode::None};
-    std::optional<double> calc_interval;
+    double calc_interval;
     double ptol;
     std::size_t m_pressure_max_iter;
 

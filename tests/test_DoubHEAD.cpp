@@ -26,6 +26,7 @@
 
 #include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 
@@ -166,6 +167,45 @@ BOOST_AUTO_TEST_CASE(Wsegiter)
 
     BOOST_CHECK_EQUAL(v[VI::WsegRedFac], 0.3);
     BOOST_CHECK_EQUAL(v[VI::WsegIncFac], 2.0);
+
+}
+
+BOOST_AUTO_TEST_CASE(Netbalan)
+{
+    const auto simCase = SimulationCase{first_sim("5_NETWORK_MODEL5_STDW_NETBAL_PACK.DATA")};
+
+    Opm::EclipseState es    = simCase.es;
+    Opm::EclipseGrid  grid   = simCase.grid;
+
+    Opm::Schedule     sched = simCase.sched;
+    const auto& start_time = sched.getStartTime();
+
+    const auto& usys  = es.getDeckUnitSystem();
+    const auto  tconv = getTimeConv(usys);
+
+    double simTime = start_time + 2.E09;
+    const double next_step_size = 0.2;
+
+    const std::size_t report_step = 1;
+    const std::size_t lookup_step = report_step - 1;
+
+    const auto ih = Opm::RestartIO::Helpers::
+            createInteHead(es, grid, sched, simTime,
+                           report_step, // Should really be number of timesteps
+                           report_step, lookup_step);
+    const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, lookup_step, report_step,
+                                                simTime, next_step_size);
+
+    const auto& v = dh.data();
+
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalint], 2.345);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalnpre], 0.033);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalthpc], 0.1);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbaltarerr], 1.E+19);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalmaxerr], 1.E+18);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalstepsz], 0.15);
 
 }
 
