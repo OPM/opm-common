@@ -1221,7 +1221,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
 
-    void Schedule::applyKeywords(const DeckView& deck, std::size_t reportStep) {
+    void Schedule::applyKeywords(const Deck& deck, std::size_t reportStep) {
         ParseContext parseContext;
         ErrorGuard errors;
         std::unordered_set<std::string> affected_wells;

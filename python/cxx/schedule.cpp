@@ -101,7 +101,7 @@ namespace {
     {
         Parser parser;
         auto deck = parser.parseString(deck_string);
-        //sch.applyKeywords(deck, index);
+        sch.applyKeywords(deck, index);
     }
 }
 
