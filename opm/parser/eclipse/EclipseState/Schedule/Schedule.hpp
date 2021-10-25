@@ -46,6 +46,10 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WriteRestartFileEvents.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletedCells.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 
@@ -57,7 +61,6 @@ namespace Opm
     class Deck;
     class DeckKeyword;
     class DeckRecord;
-    class EclipseGrid;
     class EclipseState;
     class FieldPropsManager;
     class ParseContext;
@@ -305,6 +308,7 @@ namespace Opm
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
             restart_output.serializeOp(serializer);
+            this->completed_cells.serializeOp(serializer);
 
             pack_unpack<PAvg, Serializer>(serializer);
             pack_unpack<WellTestConfig, Serializer>(serializer);
@@ -463,16 +467,16 @@ namespace Opm
 
 
 
-
     private:
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
         WriteRestartFileEvents restart_output;
+        CompletedCells completed_cells;
 
         void load_rst(const RestartIO::RstState& rst,
-                      const EclipseGrid& grid,
+                      const ScheduleGrid& grid,
                       const FieldPropsManager& fp);
         void addWell(Well well);
         void addWell(const std::string& wellName,
@@ -499,8 +503,8 @@ namespace Opm
                                     std::size_t load_end,
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
+                                    const ScheduleGrid& grid,
                                     const std::unordered_map<std::string, double> * target_wellpi,
-                                    const EclipseGrid* grid,
                                     const FieldPropsManager* fp,
                                     const std::string& prefix);
         void addACTIONX(const Action::ActionX& action);
@@ -515,7 +519,7 @@ namespace Opm
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
-                           const EclipseGrid* grid,
+                           const ScheduleGrid& grid,
                            const FieldPropsManager* fp,
                            const std::vector<std::string>& matching_wells,
                            bool runtime,
@@ -538,25 +542,26 @@ namespace Opm
             const bool actionx_mode;
             std::unordered_set<std::string> * affected_wells;
             const std::unordered_map<std::string, double> * target_wellpi;
-            const EclipseGrid* grid_ptr;
+            const ScheduleGrid& grid;
             const FieldPropsManager* fp_ptr;
 
             HandlerContext(const ScheduleBlock& block_,
                            const DeckKeyword& keyword_,
+                           const ScheduleGrid& grid_,
                            const std::size_t currentStep_,
                            const std::vector<std::string>& matching_wells_,
                            bool actionx_mode_,
                            std::unordered_set<std::string> * affected_wells_,
-                           const std::unordered_map<std::string, double> * target_wellpi_):
-                block(block_),
-                keyword(keyword_),
-                currentStep(currentStep_),
-                matching_wells(matching_wells_),
-                actionx_mode(actionx_mode_),
-                affected_wells(affected_wells_),
-                target_wellpi(target_wellpi_),
-                grid_ptr(nullptr),
-                fp_ptr(nullptr)
+                           const std::unordered_map<std::string, double> * target_wellpi_)
+            : block(block_)
+            , keyword(keyword_)
+            , currentStep(currentStep_)
+            , matching_wells(matching_wells_)
+            , actionx_mode(actionx_mode_)
+            , affected_wells(affected_wells_)
+            , target_wellpi(target_wellpi_)
+            , grid(grid_)
+            , fp_ptr(nullptr)
             {}
 
 

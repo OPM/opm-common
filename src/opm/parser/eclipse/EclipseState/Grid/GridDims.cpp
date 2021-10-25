@@ -119,12 +119,12 @@ namespace Opm {
 
     void GridDims::assertGlobalIndex(size_t globalIndex) const {
         if (globalIndex >= getCartesianSize())
-            throw std::invalid_argument("input index above valid range");
+            throw std::invalid_argument("input global index above valid range");
     }
 
     void GridDims::assertIJK(size_t i, size_t j, size_t k) const {
         if (i >= getNX() || j >= getNY() || k >= getNZ())
-            throw std::invalid_argument("input index above valid range");
+            throw std::invalid_argument("input IJK index above valid range");
     }
 
     GridDims::GridDims() :
