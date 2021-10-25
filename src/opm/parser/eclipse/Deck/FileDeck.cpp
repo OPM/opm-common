@@ -470,7 +470,7 @@ void FileDeck::skip(int report_step) {
 
         using D = ParserKeywords::DATES;
         current_report -= deck_keyword.size();
-        for (int record_index = report_step - current_report; record_index < deck_keyword.size(); record_index++) {
+        for (size_t record_index = report_step - current_report; record_index < deck_keyword.size(); record_index++) {
             const auto& record = deck_keyword[record_index];
             records.push_back( {DeckValue{record.getItem<D::DAY>().get<int>(0)},
                                 DeckValue{record.getItem<D::MONTH>().get<std::string>(0)},
