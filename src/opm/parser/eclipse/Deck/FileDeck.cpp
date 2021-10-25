@@ -92,6 +92,15 @@ FileDeck::Index  FileDeck::Index::operator++(int) {
     return current;
 }
 
+FileDeck::Index  FileDeck::Index::operator+(std::size_t shift) const {
+    auto sum = *this;
+
+    for (std::size_t arg = 0; arg < shift; arg++)
+        sum++;
+
+    return sum;
+}
+
 
 bool FileDeck::Index::operator==(const Index& other) const {
     return this->file_index == other.file_index &&
@@ -441,7 +450,7 @@ void FileDeck::skip(int report_step) {
             throw std::logic_error(fmt::format("Could not find DATES keyword corresponding to report_step {}", report_step));
     }
 
-    auto index = schedule.value();
+    auto index = schedule.value() + 1;
     auto end_pos = deck_pos;
     while (index < end_pos) {
         const auto& keyword = this->operator[](index);
@@ -461,7 +470,7 @@ void FileDeck::skip(int report_step) {
 
         using D = ParserKeywords::DATES;
         current_report -= deck_keyword.size();
-        for (int record_index = 0; record_index < (report_step - current_report); record_index++) {
+        for (int record_index = report_step - current_report; record_index < deck_keyword.size(); record_index++) {
             const auto& record = deck_keyword[record_index];
             records.push_back( {DeckValue{record.getItem<D::DAY>().get<int>(0)},
                                 DeckValue{record.getItem<D::MONTH>().get<std::string>(0)},

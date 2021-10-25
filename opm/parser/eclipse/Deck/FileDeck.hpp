@@ -66,7 +66,7 @@ struct Index {
     bool   operator==(const Index& other) const;
     bool   operator!=(const Index& other) const;
     bool   operator<(const Index& other) const;
-
+    Index  operator+(std::size_t shift) const;
 
 private:
     const FileDeck * deck;
