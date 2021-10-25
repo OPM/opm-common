@@ -222,18 +222,18 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
         createInteHead(es, grid, sched, secs_elapsed,
-                       rptStep, rptStep, rptStep);
+                       rptStep, rptStep, rptStep-1);
 
     //set dummy value for next_step_size
     const double next_step_size= 0.1;
-    const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep+1, rptStep,
+    const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep-1, rptStep,
                                                             secs_elapsed, next_step_size);
 
     const auto& lh = Opm::RestartIO::Helpers::createLogiHead(es);
 
-    const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
+    const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep-1, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
-    udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
+    udqData.captureDeclaredUDQData(sched, rptStep-1, udq_state, ih);
 
     {
         WorkArea work;
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             rstFile.write("LOGIHEAD", lh);
             {
                 auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-                group_aggregator.captureDeclaredGroupData(sched, es.getUnits(), rptStep, st, ih);
+                group_aggregator.captureDeclaredGroupData(sched, es.getUnits(), rptStep-1, st, ih);
                 rstFile.write("IGRP", group_aggregator.getIGroup());
                 rstFile.write("SGRP", group_aggregator.getSGroup());
                 rstFile.write("XGRP", group_aggregator.getXGroup());
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
                 auto action_state = Opm::Action::State {};
                 auto wtest_state = Opm::WellTestState{};
                 auto well_aggregator = Opm::RestartIO::Helpers::AggregateWellData(ih);
-                well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep, action_state, wtest_state, st, ih);
+                well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep-1, action_state, wtest_state, st, ih);
                 rstFile.write("IWEL", well_aggregator.getIWell());
                 rstFile.write("SWEL", well_aggregator.getSWell());
                 rstFile.write("XWEL", well_aggregator.getXWell());
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             {
                 auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
                 auto xw = Opm::data::Wells {};
-                conn_aggregator.captureDeclaredConnData(sched, grid, es.getUnits(), xw, st, rptStep);
+                conn_aggregator.captureDeclaredConnData(sched, grid, es.getUnits(), xw, st, rptStep-1);
                 rstFile.write("ICON", conn_aggregator.getIConn());
                 rstFile.write("SCON", conn_aggregator.getSConn());
                 rstFile.write("XCON", conn_aggregator.getXConn());
@@ -922,7 +922,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
 
     //set dummy value for next_step_size
     double next_step_size= 0.1;
-    auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep+1, simStep,
+    auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep, simStep+1,
                 secs_elapsed, next_step_size);
 
     auto lh = Opm::RestartIO::Helpers::createLogiHead(es);
@@ -949,7 +949,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
 
     //set dummy value for next_step_size
     next_step_size= 0.1;
-    dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep+1, simStep,
+    dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep, simStep+1,
             secs_elapsed, next_step_size);
 
     lh = Opm::RestartIO::Helpers::createLogiHead(es);

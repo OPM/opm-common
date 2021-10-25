@@ -42,8 +42,8 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     std::vector<double>
     createDoubHead(const EclipseState& es,
                    const Schedule&     sched,
+                   const std::size_t   sim_step,
                    const std::size_t   report_step,
-                   const std::size_t   lookup_step,
                    const double        simTime,
                    const double        nextTimeStep);
 

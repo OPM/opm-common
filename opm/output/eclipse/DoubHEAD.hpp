@@ -57,7 +57,7 @@ namespace Opm { namespace RestartIO {
             double min_ec_grad;
         };
 
-       struct NetBalanceDims {
+       struct NetBalanceParams {
             double balancingInterval;
             double convTolNodPres;
             double convTolTHPCalc;
@@ -88,7 +88,7 @@ namespace Opm { namespace RestartIO {
         DoubHEAD& udq_param(const UDQParams& udqPar);
         DoubHEAD& guide_rate_param(const guideRate& guide_rp);
         DoubHEAD& lift_opt_param(const liftOptPar& lo_par);
-        DoubHEAD& netBalDimensions(const NetBalanceDims& net_bal_par);
+        DoubHEAD& netBalParams(const NetBalanceParams& net_bal_par);
 
         const std::vector<double>& data() const
         {

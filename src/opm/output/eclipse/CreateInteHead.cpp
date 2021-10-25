@@ -535,7 +535,7 @@ namespace {
     }
 
     Opm::RestartIO::InteHEAD::NetBalanceDims
-    getNetworkBalanceDims(const Opm::Schedule&   sched,
+    getNetworkBalanceParameters(const Opm::Schedule&   sched,
                   const std::size_t      lookup_step)
     {
         const int maxNoItNBC = sched[lookup_step].network_balance().pressure_max_iter();
@@ -604,7 +604,7 @@ createInteHead(const EclipseState& es,
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched, report_step, lookup_step))
         .whistControlMode   (getWhistctlMode(sched, report_step, lookup_step))
         .networkDimensions  (getNetworkDims(sched, lookup_step, rspec))
-        .netBalanceData  (getNetworkBalanceDims(sched, lookup_step))
+        .netBalanceData  (getNetworkBalanceParameters(sched, lookup_step))
         .rockOpts(getRockOpts(rckcfg,rdim))
         ;
 

@@ -244,7 +244,7 @@ namespace {
         rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
 
         // write DOUBHEAD to restart file
-        const auto dh = Helpers::createDoubHead(es, schedule, report_step, sim_step,
+        const auto dh = Helpers::createDoubHead(es, schedule, sim_step, report_step,
                                                 simTime, next_step_size);
         rstFile.write("DOUBHEAD", dh);
 

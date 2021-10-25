@@ -122,8 +122,8 @@ namespace {
         };
     }
 
-    Opm::RestartIO::DoubHEAD::NetBalanceDims
-    getNetworkBalanceDims(const Opm::Schedule&   sched,
+    Opm::RestartIO::DoubHEAD::NetBalanceParams
+    getNetworkBalanceParameters(const Opm::Schedule&   sched,
                           const Opm::UnitSystem& units,
                           const std::size_t      report_step)
     {
@@ -136,7 +136,8 @@ namespace {
         double minTimeStepSize = 0.;
 
         if (report_step > 0) {
-            if (sched[report_step].network().active()) {
+            const auto& sched_state = sched[report_step];
+            if (sched_state.network().active()) {
                 const auto lookup_step = report_step - 1;
                 balancingInterval = units.from_si(M::time, sched[lookup_step].network_balance().interval());
                 convTolNodPres = units.from_si(M::pressure, sched[lookup_step].network_balance().pressure_tolerance());
@@ -166,8 +167,8 @@ std::vector<double>
 Opm::RestartIO::Helpers::
 createDoubHead(const EclipseState& es,
                const Schedule&     sched,
-               const std::size_t   report_step,
                const std::size_t   lookup_step,
+               const std::size_t   report_step,
                const double        simTime,
                const double        nextTimeStep)
 {
@@ -182,7 +183,7 @@ createDoubHead(const EclipseState& es,
         .udq_param(rspec.udqParams())
         .guide_rate_param(computeGuideRate(sched, lookup_step))
         .lift_opt_param(computeLiftOptParam(sched, usys, lookup_step))
-        .netBalDimensions(getNetworkBalanceDims(sched, usys, report_step))
+        .netBalParams(getNetworkBalanceParameters(sched, usys, report_step))
         ;
 
     if (nextTimeStep > 0.0) {

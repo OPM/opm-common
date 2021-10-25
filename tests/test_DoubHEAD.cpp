@@ -193,19 +193,19 @@ BOOST_AUTO_TEST_CASE(Netbalan)
             createInteHead(es, grid, sched, simTime,
                            report_step, // Should really be number of timesteps
                            report_step, lookup_step);
-    const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, report_step, lookup_step,
+    const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, lookup_step, report_step,
                                                 simTime, next_step_size);
 
     const auto& v = dh.data();
 
     namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
-    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalan_1], 2.345);
-    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalan_2], 0.033);
-    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalan_4], 0.1);
-    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalan_6], 1.E+19);
-    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalan_7], 1.E+18);
-    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalan_8], 0.15);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalint], 2.345);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalnpre], 0.033);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalthpc], 0.1);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbaltarerr], 1.E+19);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalmaxerr], 1.E+18);
+    BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalstepsz], 0.15);
 
 }
 
