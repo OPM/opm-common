@@ -83,6 +83,9 @@ FIPNUM
          self.assertEqual(46, es.grid().nx)
          self.assertEqual(112, es.grid().ny)
          self.assertEqual(22, es.grid().nz)
+         for key,value in parse_context:
+             if key == "PARSE_RANDOM_SLASH":
+                 self.assertEqual(value, opm.io.action.ignore)
 
     def test_parse_ignore_keyword(self):
         deck_string = """
