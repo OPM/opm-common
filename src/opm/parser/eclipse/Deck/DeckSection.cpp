@@ -39,7 +39,7 @@ namespace Opm {
         return false;
     }
 
-    static std::pair< DeckView::const_iterator, DeckView::const_iterator >
+    static std::pair< DeckViewInternal::const_iterator, DeckViewInternal::const_iterator >
     find_section( const Deck& deck, const std::string& keyword ) {
 
         const auto fn = [&keyword]( const DeckKeyword& kw ) {
@@ -60,7 +60,7 @@ namespace Opm {
     }
 
     DeckSection::DeckSection( const Deck& deck, const std::string& section )
-        : DeckView( find_section( deck, section ) ),
+        : DeckViewInternal( find_section( deck, section ) ),
           section_name( section ),
           units( deck.getActiveUnitSystem() )
     {}

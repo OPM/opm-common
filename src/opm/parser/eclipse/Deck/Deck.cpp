@@ -30,7 +30,7 @@ namespace fs = Opm::filesystem;
 
 namespace Opm {
 
-    bool DeckView::hasKeyword( const DeckKeyword& keyword ) const {
+    bool DeckViewInternal::hasKeyword( const DeckKeyword& keyword ) const {
         auto key = this->keywordMap.find( keyword.name() );
 
         if( key == this->keywordMap.end() ) return false;
@@ -41,43 +41,43 @@ namespace Opm {
         return false;
     }
 
-    bool DeckView::hasKeyword( const std::string& keyword ) const {
+    bool DeckViewInternal::hasKeyword( const std::string& keyword ) const {
         return this->keywordMap.find( keyword ) != this->keywordMap.end();
     }
 
-    const DeckKeyword& DeckView::getKeyword( const std::string& keyword, size_t index ) const {
+    const DeckKeyword& DeckViewInternal::getKeyword( const std::string& keyword, size_t index ) const {
         if( !this->hasKeyword( keyword ) )
             throw std::invalid_argument("Keyword " + keyword + " not in deck.");
 
         return this->getKeyword( this->offsets( keyword ).at( index ) );
     }
 
-    const DeckKeyword& DeckView::getKeyword( const std::string& keyword ) const {
+    const DeckKeyword& DeckViewInternal::getKeyword( const std::string& keyword ) const {
         if( !this->hasKeyword( keyword ) )
             throw std::invalid_argument("Keyword " + keyword + " not in deck.");
 
         return this->getKeyword( this->offsets( keyword ).back() );
     }
 
-    const DeckKeyword& DeckView::getKeyword( size_t index ) const {
+    const DeckKeyword& DeckViewInternal::getKeyword( size_t index ) const {
         if( index >= this->size() )
             throw std::out_of_range("Keyword index " + std::to_string( index ) + " is out of range.");
 
         return *( this->begin() + index );
     }
 
-    const DeckKeyword& DeckView::operator[](std::size_t index) const {
+    const DeckKeyword& DeckViewInternal::operator[](std::size_t index) const {
         return this->getKeyword(index);
     }
 
 
-    size_t DeckView::count( const std::string& keyword ) const {
+    size_t DeckViewInternal::count( const std::string& keyword ) const {
         if( !this->hasKeyword( keyword ) ) return 0;
 
         return this->offsets( keyword ).size();
-   }
+    }
 
-    const std::vector< const DeckKeyword* > DeckView::getKeywordList( const std::string& keyword ) const {
+    const std::vector< const DeckKeyword* > DeckViewInternal::getKeywordList( const std::string& keyword ) const {
         if( !hasKeyword( keyword ) ) return {};
 
         const auto& indices = this->offsets( keyword );
@@ -91,37 +91,37 @@ namespace Opm {
         return ret;
     }
 
-    size_t DeckView::size() const {
+    size_t DeckViewInternal::size() const {
         return std::distance( this->begin(), this->end() );
     }
 
-    DeckView::const_iterator DeckView::begin() const {
+    DeckViewInternal::const_iterator DeckViewInternal::begin() const {
         return this->first;
     }
 
-    DeckView::const_iterator DeckView::end() const {
+    DeckViewInternal::const_iterator DeckViewInternal::end() const {
         return this->last;
     }
 
-    void DeckView::add( const DeckKeyword* kw, const_iterator f, const_iterator l ) {
+    void DeckViewInternal::add( const DeckKeyword* kw, const_iterator f, const_iterator l ) {
         this->keywordMap[ kw->name() ].push_back( std::distance( f, l ) - 1 );
         this->first = f;
         this->last = l;
     }
 
     static const std::vector< size_t > empty_indices = {};
-    const std::vector< size_t >& DeckView::offsets( const std::string& keyword ) const {
+    const std::vector< size_t >& DeckViewInternal::offsets( const std::string& keyword ) const {
         if( !hasKeyword( keyword ) ) return empty_indices;
 
         return this->keywordMap.find( keyword )->second;
     }
 
-    DeckView::DeckView( const_iterator first_arg, const_iterator last_arg)
+    DeckViewInternal::DeckViewInternal( const_iterator first_arg, const_iterator last_arg)
     {
         this->init(first_arg, last_arg);
     }
 
-    void DeckView::init( const_iterator first_arg, const_iterator last_arg ) {
+    void DeckViewInternal::init( const_iterator first_arg, const_iterator last_arg ) {
         this->first = first_arg;
         this->last = last_arg;
 
@@ -132,8 +132,8 @@ namespace Opm {
             this->keywordMap[ kw.name() ].push_back( index++ );
     }
 
-    DeckView::DeckView( std::pair< const_iterator, const_iterator > limits ) :
-        DeckView( limits.first, limits.second )
+    DeckViewInternal::DeckViewInternal( std::pair< const_iterator, const_iterator > limits ) :
+        DeckViewInternal( limits.first, limits.second )
     {}
 
     Deck::Deck() :
@@ -143,19 +143,19 @@ namespace Opm {
     /*
       This constructor should be ssen as a technical implemtation detail of the
       default constructor, and not something which should be invoked directly.
-      The point is that the derived class DeckView contains iterators to the
+      The point is that the derived class DeckViewInternal contains iterators to the
       keywordList member in the base class - this represents some ordering
       challenges in the construction phase.
     */
     Deck::Deck( std::vector<DeckKeyword>&& x) :
-        DeckView(x.begin(), x.end()),
+        DeckViewInternal(x.begin(), x.end()),
         keywordList(std::move(x)),
         defaultUnits( UnitSystem::newMETRIC() )
     {
     }
 
     Deck::Deck( const Deck& d ) :
-        DeckView(d.begin(), d.end()),
+        DeckViewInternal(d.begin(), d.end()),
         keywordList( d.keywordList ),
         defaultUnits( d.defaultUnits ),
         m_dataFile( d.m_dataFile ),
@@ -169,7 +169,7 @@ namespace Opm {
     }
 
     Deck::Deck( Deck&& d ) :
-        DeckView(d.begin(), d.end()),
+        DeckViewInternal(d.begin(), d.end()),
         keywordList( std::move(d.keywordList) ),
         defaultUnits( d.defaultUnits ),
         m_dataFile( d.m_dataFile ),
