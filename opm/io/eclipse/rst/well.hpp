@@ -79,6 +79,8 @@ struct RstWell {
     int wtest_config_reasons;
     int wtest_close_reason;
     int wtest_remaining;
+    bool glift_active;
+    bool glift_alloc_extra_gas;
 
     float orat_target;
     float wrat_target;
@@ -96,6 +98,10 @@ struct RstWell {
     float alq_value;
     float wtest_interval;
     float wtest_startup;
+    float glift_max_rate;
+    float glift_min_rate;
+    float glift_weight_factor;
+    float glift_inc_weight_factor;
 
     double oil_rate;
     double water_rate;

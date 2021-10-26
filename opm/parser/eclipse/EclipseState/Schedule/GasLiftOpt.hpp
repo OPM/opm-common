@@ -22,6 +22,7 @@
 #include <optional>
 #include <string>
 #include <map>
+#include <opm/io/eclipse/rst/well.hpp>
 
 namespace Opm {
 
@@ -92,6 +93,30 @@ public:
     class Well {
     public:
         Well() = default;
+
+        // Unfortunately it seems just using the rst_well.glift_active flag is
+        // not sufficient to determine whether the well should be included in
+        // gas lift optimization or not. The current implementation based on
+        // numerical values found in the restart file is pure guesswork.
+        static bool active(const RestartIO::RstWell& rst_well) {
+            if ((rst_well.glift_max_rate + rst_well.glift_min_rate + rst_well.glift_weight_factor == 0))
+                return false;
+
+            return true;
+        }
+
+
+        explicit Well(const RestartIO::RstWell& rst_well)
+            : m_name(rst_well.name)
+            , m_max_rate(rst_well.glift_max_rate)
+            , m_min_rate(rst_well.glift_min_rate)
+            , m_use_glo(rst_well.glift_active)
+            , m_weight(rst_well.glift_weight_factor)
+            , m_inc_weight(rst_well.glift_inc_weight_factor)
+            , m_alloc_extra_gas(rst_well.glift_alloc_extra_gas)
+        {}
+
+
         Well(const std::string& name, bool use_glo) :
             m_name(name),
             m_use_glo(use_glo)

@@ -107,6 +107,7 @@ struct RstHeader {
     bool reversible_eps;
     bool alt_eps;
     bool group_control_active;
+    bool glift_all_nupcol;
 
     double next_timestep1;
     double next_timestep2;
@@ -122,6 +123,10 @@ struct RstHeader {
     double udq_range;
     double udq_undefined;
     double udq_eps;
+    double glift_min_wait;
+    double glift_rate_delta;
+    double glift_min_eco_grad;
+
 
     std::time_t sim_time() const;
     std::pair<std::time_t, std::size_t> restart_info() const;
