@@ -180,9 +180,6 @@ BOOST_AUTO_TEST_CASE(Netbalan)
     Opm::Schedule     sched = simCase.sched;
     const auto& start_time = sched.getStartTime();
 
-    const auto& usys  = es.getDeckUnitSystem();
-    const auto  tconv = getTimeConv(usys);
-
     double simTime = start_time + 2.E09;
     const double next_step_size = 0.2;
 
