@@ -30,32 +30,6 @@ Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells)
     : cells(completed_cells)
 {}
 
-std::size_t Opm::ScheduleGrid::getActiveIndex(std::size_t i, std::size_t j, std::size_t k) const {
-    const auto& cell = this->get_cell(i,j,k);
-    return cell.active_index.value();
-}
-
-bool Opm::ScheduleGrid::isCellActive(std::size_t i, std::size_t j, std::size_t k) const {
-    const auto& cell = this->get_cell(i,j,k);
-    return cell.active_index.has_value();
-}
-
-std::size_t Opm::ScheduleGrid::getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const {
-    const auto& cell = this->get_cell(i,j,k);
-    return cell.global_index;
-}
-
-double Opm::ScheduleGrid::getCellDepth(std::size_t i, std::size_t j, std::size_t k) const {
-    const auto& cell = this->get_cell(i,j,k);
-    return cell.depth;
-}
-
-std::array<double, 3> Opm::ScheduleGrid::getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const {
-    const auto& cell = this->get_cell(i,j,k);
-    return cell.dimensions;
-}
-
-
 const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const {
     if (this->grid) {
         auto [valid, cell] = this->cells.try_get(i,j,k);

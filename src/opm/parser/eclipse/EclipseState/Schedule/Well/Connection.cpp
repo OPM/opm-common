@@ -94,14 +94,14 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
         m_skin_factor(rst_connection.skin_factor),
         ijk(rst_connection.ijk),
         m_ctfkind(rst_connection.cf_kind),
-        m_global_index(grid.getGlobalIndex(this->ijk[0], this->ijk[1], this->ijk[2])),
+        m_global_index(grid.get_cell(this->ijk[0], this->ijk[1], this->ijk[2]).global_index),
         m_sort_value(rst_connection.rst_index),
         m_defaultSatTabId(defaultSatTabId),
         segment_number(rst_connection.segment)
     {
         if (this->m_defaultSatTabId) {
             const auto& satnum = fp.get_int("SATNUM");
-            auto active_index = grid.getActiveIndex(this->ijk[0], this->ijk[1], this->ijk[2]);
+            auto active_index = grid.get_cell(this->ijk[0], this->ijk[1], this->ijk[2]).active_index.value();
             this->sat_tableId = satnum[active_index];
         }
         if (this->segment_number > 0)

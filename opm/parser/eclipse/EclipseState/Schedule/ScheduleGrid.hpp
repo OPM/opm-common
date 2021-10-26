@@ -30,16 +30,9 @@ public:
     ScheduleGrid(const EclipseGrid& ecl_grid, CompletedCells& completed_cells);
     explicit ScheduleGrid(CompletedCells& completed_cells);
 
-    std::size_t getActiveIndex(std::size_t i, std::size_t j, std::size_t k) const;
-    bool isCellActive(std::size_t i, std::size_t j, std::size_t k) const;
-    std::size_t getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const;
-    double getCellDepth(std::size_t i, std::size_t j, std::size_t k) const;
-    std::array<double, 3> getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const;
-
-private:
-
     const CompletedCells::Cell& get_cell(std::size_t i, std::size_t j, std::size_t k) const;
 
+private:
     const EclipseGrid* grid{nullptr};
     CompletedCells& cells;
 };
