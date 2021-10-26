@@ -1,0 +1,291 @@
+Using opm code from Python
+
+
+Some of the C++ code in Opm has been /wrapped/ in Python which means that you
+can invoke the Opm C++ code from your own Python programs. At the moment the
+wrappers for the input layer and the code for working with the result files is
+quite complete and usable. Work is also underways to be able to run and interact
+with simulations from Python.
+
+The goal has been that the Python code should feel like a native Python API, but
+some decisions are certainly influenced by the underlying C++ implementation and
+to get a deeper understanding of what is possible and how to achieve specialized
+tasks you might need to consult the C++ code.
+
+NB: Observe that the Python bindings described here are not very mature. The api
+might change in future releases. It is in general quite simple to expose new
+functionality to Python.
+
+1. Working with the input deck
+
+The reading of the input deck in Opm is a two step process, first a
+datastructure called a /Deck/ is created - the Deck is essentially a collection
+of keywords where all elements have been converted to the correct type and
+default values have been injected. The Deck is a quite low level data structure,
+and the actual simulation is based on higher level datastructures where the
+origin in /keywords/ from a .DATA file is no longer so apparent. The most
+notable high level objects are the /EclipseState/ and /Schedule/ classes. Large
+parts of this functionality is available from Python.
+
+
+1.1 The Parser object
+
+The initial building block in the parsing process is the /Parser/ object which
+knows how to interpret the input keywords and create datastructures. Virtually all
+scripts working with the input files will start with creating a Parser object:
+
+   #!/usr/bin/env python3
+   from opm.io.parser import Parser
+   
+   # Create a parser object which can be used to parse a string or input files
+   parser = Parser()
+
+In most cases you will just create a default parser object and be done with it,
+but it is possible to both add your own keyword definitions to the parser and
+alternatively create a custom parser which only accepts a subset of keywords.
+These features will be demonstrated briefly in section [Special parsing].
+
+
+1.2 Loading a deck
+
+The /Deck/ datastructure is essentially a list of keywords which have been
+loaded as /DeckKeyword/ instances. The Deck can either be loaded from an input
+datafile or from a string:
+
+
+   #!/usr/bin/env python3
+   from opm.io.parser import Parser
+
+   deck_string = """
+   WELSPECS
+      'W1'  'G1'   19    4      1*   WATER   1*   1*   SHUT 1* 1* 1* /
+   /
+
+   COMPDAT
+     'W1'    11   3    1    5   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+   /
+   """ 
+
+   parser = Parser()
+   deck = parser.parseString( deck_string )
+
+After running this small script the deck variable will contain the two keywords
+WELSPECS and COMPDAT. For these keywords the '*' have been replaced with the
+correct default value and the items have been converted to the correct type. In
+addition all numerical values have been converted to SI units, more about units
+can be found in section [units]. Alternatively you can use the
+Parser.parseFile() method to parse an entire input file. In this case INCLUDE
+and IMPORT keywords will be resolved and everything will be coalesced into one
+large Deck datastructure:
+
+   #!/usr/bin/env python3
+   import os.path
+   import sys
+   from opm.io.parser import Parser
+
+   data_file = sys.argv[1]
+   print(f"Loading deck from {data_file}")
+
+   parser = Parser()
+   deck = parser.parseFile( data_file )
+
+
+1.3 Accessing the Deck
+
+After you have loaded a Deck you can query it with normal Python functions:
+
+   # Check if deck has keyword:
+   if "GRID" in deck:
+       print("Deck contains 'GRID' keyword")
+   else
+       print("Deck does not have 'GRID' keyword")
+
+   # Loop through all the keywords:
+   for kw in deck:
+       print("kw: {}".format(kw.name)
+
+To get a keyword from the deck you can access it with index, name or a
+combination of name and occurence index:
+
+   # Get keyword 10
+   kw10 = deck[10]
+
+   # Get the last DATES keyword
+   last_dates = deck["DATES"]
+
+   # Get the third WELSPECS keyword
+   welspecs3 = deck[("WELSPECS", 3)]
+
+A deck keyword is composed of /records/, which are again composed of /items/.
+This is how you can iterate through the wells in a WELSPECS keyword:
+
+   kw = deck["WELSPECS"] 
+   print(f"Keyword has {len(kw)} records")
+   for record in kw:
+       well = record["WELL"].get_str()
+       group = record[1].get_str()
+
+       print(f"Well {num}: {well} is part of group{group})
+
+
+1.3 Special parsing
+
+
+The keywords OPM recognizes are configured with Json files which are embedded in
+the source distribution, you can take a look in the public GitHub repository:
+https://github.com/OPM/opm-common/tree/master/src/opm/parser/eclipse/share/keywords.
+By default the Parser class will recognize all the keywords which are known to
+OPM, but you can create your own custom parser with only a subset of keywords:
+
+    from opm.io.parser import Builtin
+
+    # Create a special parser which only recognizes the corner point grid keywords
+    parser = Parser(add_default = False)
+
+    builtin = Builtin()
+    parser.add_keyword( builtin.COORD )
+    parser.add_keyword( builtin.ZCORN )
+    parser.add_keyword( builtin.ACTNUM )
+
+The opposite is also possible, here is how you can add a special keyword GCLOSE which
+could be used to close all the wells in the group:
+
+    # Create a fictious home mode keyword GCLOSE:
+    GCLOSE = {"name" : "GCLOSE",
+              "sections" : ["SCHEDULE"],
+              "items" : [
+                 {"name" : "GROUP", "value_type" : "STRING"}
+               ]}
+
+    parser = Parser()
+    # Add the keyword description ad a json string
+    parser.add_keyword(json.dumps(GCLOSE))
+
+By default the parser used in OPM is quite strict - a tad stricter than the one
+used in Eclipse. However you can configure how the parser should react to
+certain error conditions. By default the parser will fail with an exception if
+an INCLUDE file is not found, but you can for instance say to you want to ignore
+that error condition:
+
+    parse_context = ParseContext( [('PARSE_MISSING_INCLUDE', opm.io.action.ignore)])
+    parser = Parser()
+    deck = parser.parseFile(self.norne_fname, parse_context)
+
+
+1.4 Creating EclipseState and grid
+
+The Deck is a quite raw structure and not very user friendly. Before actually
+used in the simulator the properties from the Deck are coalesced to a form more
+easily usable. Consider e.g. the PORO field configured below where the
+configuration is in three steps:
+
+  -- GRID dimensions 10 x 10 3
+  DIMENS
+    10 10 3 /
+
+  -- Set a global value 0.10 for all of the grid
+  PORO
+     300*0.10 /
+
+  -- Set a value of 0.15 for the middle layer
+  BOX
+     1 10 1 10 2 2 /
+
+  PORO
+     100*0.15 /
+
+  ENDBOX
+
+  -- Scale the bottom layer with a factor 2
+  MULTIPLY
+     PORO 2 1 10 1 10 3 3 /
+  /
+
+In the deck representation this will be a collection of five different keywords:
+{"PORO", "BOX", "PORO", "ENDBOX", "MULTIPLY"}, whereas in the /EclipseState/
+this will be one property "PORO" where all the modifications have been
+completed. In addition to the grid properties like "PERMX" and "PORO" the
+/EclipseState/ object contains numerous other objects like Fault properties, PVT
+tables and more.
+
+   #!/usr/bin/env python3
+   import syshe
+   form opm.io.parser import Parser
+   from opm.io.ecl_state import EclipseState
+
+   parser = Parser()
+   data_file = sys.argv[1]
+   deck = parser.parseFile( data_file )
+   es = EclipseState( deck )
+
+   # Get the FieldPropsManager from the EclipseState. The FieldPropsManager
+   # is then used to query and look up grid properties like PERMX and PORO.
+   # Observe that the properties you get from the FieldPropsManager only have
+   # active size.
+   fp = es.field_props()
+   poro = fp["PORO"]
+   satnum = fp["SATNUM"]
+
+   # Get the input grid from the EclipseState:
+   grid = es.grid()
+
+   # Get a manager for all the tables
+   tables = es.tables()
+
+
+1.5 Creating Schedule
+
+The Schedule object contains all the dynamic information in the model, in
+particular that includes all information about wells and groups. The Schedule
+object is constructed from the Deck and the EclipseState:
+
+   #!/usr/bin/env python3
+   import sys
+   from opm.io.parser import Parser
+   from opm.io.ecl_state import EclipseState
+
+   parser = Parser()
+   data_file = sys.argv[1]
+   deck = parser.parseFile( data_file )
+   es = EclipseState( deck )
+
+   schedule = Schedule(deck, es)
+
+   print(f"Schedule file has {len(schedule)} report steps")'
+
+   print("List of wells")
+   for well in schedule.well_names():
+       print(well)
+
+
+2. Working with the result files
+
+In addition to the functionality to load and inspect the input deck Opm also has
+Python code to load and inspect the various result files. There is also some
+functionality to create files with the correct formatting.
+
+2.1 Loading a grid
+
+Using the class EclipseGrid you can load a grid representation from a .EGRID
+file on disk:
+
+   #!/usr/bin/env python3
+   import sys
+   from opm.io.ecl import EGrid
+
+   grid_file = sys.argv[1]
+   grid = EGrid(grid_file)
+
+The return value from EclipseState.ecl_grid() is also of this type.
+
+
+2.2 Loading a summary case
+
+   #!/usr/bin/env python3
+   import sys
+   from opm.io.ecl import ESMry
+
+   case = sys.argv[1]
+   summary = ESmry(case)
+
+    
