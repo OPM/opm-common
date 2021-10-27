@@ -108,7 +108,7 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
     reversible_eps(logihead[VI::logihead::RevEPS]),
     alt_eps(logihead[VI::logihead::AltEPS]),
     group_control_active(intehead[VI::intehead::NGRNPH] == 1),
-    glift_all_nupcol(intehead[VI::intehead::EACHNCITS] == 2),
+    glift_all_nupcol(intehead[VI::intehead::EACHNCITS] == VI::InteheadValues::LiftOpt::EachNupCol),
     //
     next_timestep1(unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit])),
     next_timestep2(0),
