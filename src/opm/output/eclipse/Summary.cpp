@@ -549,27 +549,25 @@ inline quantity artificial_lift_quantity( const fn_args& args ) {
     // Note: This function is intentionally supported only at the well level
     // (meaning there's no loop over args.schedule_wells by intention).  Its
     // purpose is to calculate WALQ only.
-    auto alq = quantity { 0.0, measure::identity };
+    auto zero = quantity { 0.0, measure::identity };
 
     if (args.schedule_wells.empty()) {
-        return alq;
+        return zero;
     }
 
     const auto* well = args.schedule_wells.front();
     if (well->isInjector()) {
-        return alq;
+        return zero;
     }
 
     auto xwPos = args.wells.find(well->name());
     if ((xwPos == args.wells.end()) ||
         (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
     {
-        return alq;
+        return zero;
     }
 
-    alq.value = well->productionControls(args.st).alq_value;
-
-    return alq;
+    return { well->productionControls(args.st).alq_value, measure::identity};
 }
 
 inline bool
