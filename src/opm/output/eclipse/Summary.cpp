@@ -549,14 +549,14 @@ inline bool
 has_vfp_table(const Opm::ScheduleState&            sched_state,
               int vfp_table_number)
 {
-    return sched_state.vfpprod.has(pc.vfp_table_number);
+    return sched_state.vfpprod.has(vfp_table_number);
 }
 
 inline Opm::VFPProdTable::ALQ_TYPE
 alq_type(const Opm::ScheduleState&            sched_state,
-         const Opm::Well::ProductionControls& pc)
+         int vfp_table_number)
 {
-    return sched_state.vfpprod(pc.vfp_table_number).getALQType();
+    return sched_state.vfpprod(vfp_table_number).getALQType();
 }
 
 inline quantity artificial_lift_quantity( const fn_args& args ) {
@@ -630,11 +630,11 @@ inline quantity glir( const fn_args& args ) {
         }
 
         const auto& production = well->productionControls(args.st);
-        if (! has_alq_vfp_table(sched_state, production.vfp_table_number)) {
+        if (! has_vfp_table(sched_state, production.vfp_table_number)) {
             continue;
         }
 
-        const auto thisAlqType = alq_type(sched_state, production);
+        const auto thisAlqType = alq_type(sched_state, production.vfp_table_number);
         if (thisAlqType != Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
             continue;
         }
