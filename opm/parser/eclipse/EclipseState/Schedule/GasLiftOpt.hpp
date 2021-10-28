@@ -267,6 +267,7 @@ public:
     bool active() const;
     bool has_well(const std::string& well) const;
     bool has_group(const std::string& group) const;
+    std::size_t num_wells() const;
 
     static GasLiftOpt serializeObject();
     bool operator==(const GasLiftOpt& other) const;
