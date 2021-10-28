@@ -425,6 +425,13 @@ Opm::Deck first_sim()
         /
         /
 
+        LIFTOPT
+          1 2 /
+
+        GLIFTOPT
+           'WGRP1'  100 200 /
+        /
+
         TSTEP
         4
         /
@@ -669,6 +676,16 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
         BOOST_CHECK_EQUAL(iGrp[start + 4] ,  1); // Group FIELD - No of child groups
         BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  1); // Group FIELD - Group type (well group = 0, node group = 1)
         BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  0); // Group FIELD - Group level (FIELD level is 0)
+    }
+
+    // SGRP
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+        auto start = 1*ih.nsgrpz;
+
+        const auto& sGrp = agrpd.getSGroup();
+        BOOST_CHECK_CLOSE(sGrp[start + Ix::GLOMaxSupply], 100, 1e-6);
+        BOOST_CHECK_CLOSE(sGrp[start + Ix::GLOMaxRate],   200, 1e-6);
     }
 
 
