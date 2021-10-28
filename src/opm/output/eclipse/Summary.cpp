@@ -635,12 +635,18 @@ inline quantity glir( const fn_args& args ) {
         }
 
         const auto thisAlqType = alq_type(sched_state, production.vfp_table_number);
-        if (thisAlqType != Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
-            continue;
+        if (thisAlqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
+            const double eff_fac = efac(args.eff_factors, well->name());
+            alq_rate += eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
         }
 
-        const double eff_fac = efac(args.eff_factors, well->name());
-        alq_rate += eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
+        if (thisAlqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_IGLR) {
+            const double eff_fac = efac(args.eff_factors, well->name());
+            auto glr = production.alq_value;
+            auto wpr = xwPos->second.rates.get(rt::wat);
+            auto opr = xwPos->second.rates.get(rt::oil);
+            alq_rate += eff_fac * glr * (wpr + opr);
+        }
     }
 
     return { alq_rate, measure::gas_surface_rate };
