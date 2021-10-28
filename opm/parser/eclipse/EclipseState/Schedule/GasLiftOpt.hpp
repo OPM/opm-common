@@ -23,6 +23,7 @@
 #include <string>
 #include <map>
 #include <opm/io/eclipse/rst/well.hpp>
+#include <opm/io/eclipse/rst/group.hpp>
 
 namespace Opm {
 
@@ -35,6 +36,19 @@ public:
 
         Group(const std::string& name) :
             m_name(name)
+        {}
+
+        static bool active(const RestartIO::RstGroup& rst_group) {
+            if ((rst_group.glift_max_rate + rst_group.glift_max_supply) != 0)
+                return false;
+
+            return true;
+        }
+
+        explicit Group(const RestartIO::RstGroup& rst_group)
+            : m_name(rst_group.name)
+            , m_max_lift_gas(rst_group.glift_max_supply)
+            , m_max_total_gas(rst_group.glift_max_rate)
         {}
 
         const std::optional<double>& max_lift_gas() const {
