@@ -393,6 +393,10 @@ if (OPM_ENABLE_PYTHON)
     set(SETUP_PY_FMT_FLAGS "'-DFMT_HEADER_ONLY'")
   endif()
 
+  if(cjson_FOUND)
+    list(APPEND opm-common_PYTHON_LINKAGE "'${cjson_LIBRARIES}'")
+  endif()
+
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
   file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
   execute_process(COMMAND ${Python3_EXECUTABLE} target_name.py
