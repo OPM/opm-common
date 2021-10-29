@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
+#include <utility>
 
 #include <fnmatch.h>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
@@ -45,6 +46,10 @@ WellMatcher::WellMatcher(const NameOrder& well_order, const WListManager &wlm) :
 {
 }
 
+std::vector<std::string> WellMatcher::sort(std::vector<std::string> wells) const {
+    return this->m_well_order.sort(std::move(wells));
+}
+
 const std::vector<std::string>& WellMatcher::wells() const {
     return this->m_well_order.names();
 }
@@ -56,7 +61,7 @@ std::vector<std::string> WellMatcher::wells(const std::string& pattern) const {
 
     // WLIST
     if (pattern[0] == '*' && pattern.size() > 1)
-        return this->m_well_order.sort( this->m_wlm.wells(pattern) );
+        return this->sort( this->m_wlm.wells(pattern) );
 
     // Normal pattern matching
     auto star_pos = pattern.find('*');
