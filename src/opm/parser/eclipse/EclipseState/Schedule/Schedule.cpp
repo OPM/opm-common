@@ -999,9 +999,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells) const {
         // ACTIONX handler
-        if (pattern == "?")
-            return { matching_wells.begin(), matching_wells.end() };
-
+        if (pattern == "?") {
+            auto wells = matching_wells;
+            std::sort(wells.begin(), wells.end(), [this, timeStep] (const std::string& w1, const std::string& w2) {
+                const auto& well1 = this->getWell(w1, timeStep);
+                const auto& well2 = this->getWell(w2, timeStep);
+                return well1.seqIndex() < well2.seqIndex();
+            });
+            return wells;
+        }
         auto wm = this->wellMatcher(timeStep);
         return wm.wells(pattern);
     }
