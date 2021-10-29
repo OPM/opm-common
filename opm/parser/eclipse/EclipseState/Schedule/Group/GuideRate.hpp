@@ -100,6 +100,7 @@ public:
                  const double       guide_rate);
 
     bool has(const std::string& name) const;
+    bool hasPotentials(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
 
     double get(const std::string& well, const Well::GuideRateTarget target, const RateVector& rates) const;

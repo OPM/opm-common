@@ -195,6 +195,11 @@ bool Opm::GuideRate::has(const std::string& name) const
     return this->values.count(name) > 0;
 }
 
+bool Opm::GuideRate::hasPotentials(const std::string& name) const
+{
+    return this->potentials.find(name) != this->potentials.end();
+}
+
 bool Opm::GuideRate::has(const std::string& name, const Phase& phase) const
 {
     return this->injection_group_values.count(std::pair(phase, name)) > 0;
