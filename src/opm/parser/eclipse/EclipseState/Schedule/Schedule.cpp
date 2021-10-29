@@ -998,12 +998,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells) const {
-        // ACTIONX handler
-        if (pattern == "?")
-            return { matching_wells.begin(), matching_wells.end() };
+        const auto wm = this->wellMatcher(timeStep);
 
-        auto wm = this->wellMatcher(timeStep);
-        return wm.wells(pattern);
+        return (pattern == "?")
+            ? wm.sort(matching_wells) // ACTIONX handler
+            : wm.wells(pattern);      // Normal well name pattern matching
     }
 
 
