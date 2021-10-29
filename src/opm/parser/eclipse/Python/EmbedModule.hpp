@@ -9,10 +9,21 @@ It allows for slightly changing the python embedding without changing the pybind
 #ifdef EMBEDDED_PYTHON
 #include <pybind11/embed.h>
 
-#define OPM_EMBEDDED_MODULE(name, variable)                              \
+#if (PYBIND11_VERSION_MAJOR > 2 || (PYBIND11_VERSION_MAJOR == 2 && PYBIND11_VERSION_MINOR >= 6))
+#define PYBIND11_INSTANCE_DEF(name) static pybind11::module_::module_def PYBIND11_CONCAT(pybind11_module_def_, name)
+#define PYBIND11_INSTANCE_MODULE(name) pybind11::module_::create_extension_module(PYBIND11_TOSTRING(name), \
+                                                                                           nullptr, \
+                                                                                           &PYBIND11_CONCAT(pybind11_module_def_, name))
+#else
+#define PYBIND11_INSTANCE_DEF(name)
+#define PYBIND11_INSTANCE_MODULE(name) pybind11::module(PYBIND11_TOSTRING(name))
+#endif
+
+#define OPM_EMBEDDED_MODULE(name, variable)                                   \
+    PYBIND11_INSTANCE_DEF(name);                                              \
     static void PYBIND11_CONCAT(pybind11_init_, name)(pybind11::module &);    \
     static PyObject PYBIND11_CONCAT(*pybind11_init_wrapper_, name)() {        \
-        auto m = pybind11::module(PYBIND11_TOSTRING(name));                   \
+        auto m = PYBIND11_INSTANCE_MODULE(name);                              \
         try {                                                                 \
             PYBIND11_CONCAT(pybind11_init_, name)(m);                         \
             return m.ptr();                                                   \
@@ -25,7 +36,7 @@ It allows for slightly changing the python embedding without changing the pybind
         }                                                                     \
     }                                                                         \
     PYBIND11_EMBEDDED_MODULE_IMPL(name)                                       \
-    Opm::embed::python_module name(PYBIND11_TOSTRING(name),           \
+    Opm::embed::python_module name(PYBIND11_TOSTRING(name),                   \
                                PYBIND11_CONCAT(pybind11_init_impl_, name));   \
     void PYBIND11_CONCAT(pybind11_init_, name)(pybind11::module &variable)
 
