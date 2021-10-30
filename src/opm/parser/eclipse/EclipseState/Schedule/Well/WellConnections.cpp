@@ -327,7 +327,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             rw = 0.5*unit::feet;
 
         for (int k = K1; k <= K2; k++) {
-            if (!grid.isCellActive(I, J, k)) {
+            const CompletedCells::Cell& cell = grid.get_cell(I, J, k);
+            if (!cell.active_index.has_value()) {
                 auto msg = fmt::format("Problem with COMPDAT keyword\n"
                                        "In {} line {}\n"
                                        "The cell ({},{},{}) in well {} is not active and the connection will be ignored", location.filename, location.lineno, I,J,k, wname);
@@ -335,7 +336,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 continue;
             }
 
-            size_t active_index = grid.getActiveIndex(I,J,k);
+            size_t active_index = cell.active_index.value();
             double CF = -1;
             double Kh = -1;
             double r0 = -1;
@@ -360,7 +361,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             // Angle of completion exposed to flow.  We assume centre
             // placement so there's complete exposure (= 2\pi).
             const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
-            std::array<double,3> cell_size = grid.getCellDimensions(I,J,k);
+            std::array<double,3> cell_size = cell.dimensions;
             const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
 
             /* We start with the absolute happy path; both CF and Kh are explicitly given in the deck. */
@@ -407,8 +408,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             if (prev == this->m_connections.end()) {
                 std::size_t noConn = this->m_connections.size();
                 this->addConnection(I,J,k,
-                                    grid.getGlobalIndex(I,J,k),
-                                    grid.getCellDepth( I,J,k ),
+                                    cell.global_index,
+                                    cell.depth,
                                     state,
                                     CF,
                                     Kh,
@@ -426,9 +427,9 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 std::size_t css_ind = prev->sort_value();
                 int conSegNo = prev->segment();
                 const auto& perf_range = prev->perf_range();
-                double depth = grid.getCellDepth(I,J,k);
+                double depth = cell.depth;
                 *prev = Connection(I,J,k,
-                                   grid.getGlobalIndex(I,J,k),
+                                   cell.global_index,
                                    prev->complnum(),
                                    depth,
                                    state,

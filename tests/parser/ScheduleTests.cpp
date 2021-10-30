@@ -4813,13 +4813,13 @@ BOOST_AUTO_TEST_CASE(TestScheduleGrid) {
 
     {
         ScheduleGrid sched_grid(grid, cells);
-        auto depth = sched_grid.getCellDepth(1,1,1);
+        auto depth = sched_grid.get_cell(1,1,1).depth;
         BOOST_CHECK_EQUAL(depth, 1.50);
     }
     {
         ScheduleGrid sched_grid(cells);
-        auto depth = sched_grid.getCellDepth(1,1,1);
+        auto depth = sched_grid.get_cell(1,1,1).depth;
         BOOST_CHECK_EQUAL(depth, 1.50);
-        BOOST_CHECK_THROW(sched_grid.getCellDepth(2,2,2), std::exception);
+        BOOST_CHECK_THROW(sched_grid.get_cell(2,2,2), std::exception);
     }
 }
