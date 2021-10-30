@@ -41,9 +41,9 @@ enum class Section {
     class Parser;
 
 
-class DeckSection : public DeckView {
+class DeckSection : public DeckViewInternal {
     public:
-        using DeckView::const_iterator;
+        using DeckViewInternal::const_iterator;
 
         DeckSection( const Deck& deck, const std::string& startKeyword );
         const std::string& name() const;

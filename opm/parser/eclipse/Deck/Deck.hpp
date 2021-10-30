@@ -56,7 +56,7 @@ namespace Opm {
      */
     class DeckOutput;
 
-    class DeckView {
+    class DeckViewInternal {
         public:
             typedef std::vector< DeckKeyword >::const_iterator const_iterator;
 
@@ -104,9 +104,9 @@ namespace Opm {
 
             const std::vector< size_t >& offsets( const std::string& ) const;
 
-            DeckView( const_iterator first, const_iterator last );
-            explicit DeckView( std::pair< const_iterator, const_iterator > );
-            DeckView() = default;
+            DeckViewInternal( const_iterator first, const_iterator last );
+            explicit DeckViewInternal( std::pair< const_iterator, const_iterator > );
+            DeckViewInternal() = default;
             void init( const_iterator, const_iterator );
 
         private:
@@ -116,17 +116,17 @@ namespace Opm {
 
     };
 
-    class Deck : private DeckView {
+    class Deck : private DeckViewInternal {
         public:
-            using DeckView::const_iterator;
-            using DeckView::hasKeyword;
-            using DeckView::getKeyword;
-            using DeckView::getKeywordList;
-            using DeckView::count;
-            using DeckView::size;
-            using DeckView::begin;
-            using DeckView::end;
-            using DeckView::operator[];
+            using DeckViewInternal::const_iterator;
+            using DeckViewInternal::hasKeyword;
+            using DeckViewInternal::getKeyword;
+            using DeckViewInternal::getKeywordList;
+            using DeckViewInternal::count;
+            using DeckViewInternal::size;
+            using DeckViewInternal::begin;
+            using DeckViewInternal::end;
+            using DeckViewInternal::operator[];
 
             using iterator = std::vector< DeckKeyword >::iterator;
 
