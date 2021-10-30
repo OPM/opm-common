@@ -97,7 +97,7 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     wtest_startup(       unit_system.to_si(M::time,                  swel[VI::SWell::WTestStartupTime])),
     glift_max_rate(      unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::LOmaxRate])),
     glift_min_rate(      unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::LOminRate])),
-    glift_weight_factor(                                             swel[VI::SWell::LOmaxRate]),
+    glift_weight_factor(                                             swel[VI::SWell::LOweightFac]),
     glift_inc_weight_factor(                                         swel[VI::SWell::LOincFac]),
     //
     oil_rate(            unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::OilPrRate])),

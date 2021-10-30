@@ -22,7 +22,7 @@
       "default": 0
     },
     {
-      "name": "OPTIMISE_GAS_LIFT",
+      "name": "OPTIMISE_ALL_ITERATIONS",
       "value_type": "STRING",
       "default": "YES"
     }

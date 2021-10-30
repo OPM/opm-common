@@ -108,7 +108,7 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
     reversible_eps(logihead[VI::logihead::RevEPS]),
     alt_eps(logihead[VI::logihead::AltEPS]),
     group_control_active(intehead[VI::intehead::NGRNPH] == 1),
-    glift_all_nupcol(intehead[VI::intehead::EACHNCITS] == 2),
+    glift_all_nupcol(intehead[VI::intehead::EACHNCITS] == VI::InteheadValues::LiftOpt::EachNupCol),
     //
     next_timestep1(unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit])),
     next_timestep2(0),
@@ -125,7 +125,7 @@ RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>&
     udq_undefined(doubhead[VI::doubhead::UdqPar_3]),
     udq_eps(doubhead[VI::doubhead::UdqPar_4]),
     glift_min_wait(unit_system.to_si(M::time, doubhead[VI::doubhead::LOminInt])),
-    glift_rate_delta(unit_system.to_si(M::gas_surface_rate, doubhead[VI::doubhead::LOminInt])),
+    glift_rate_delta(unit_system.to_si(M::gas_surface_rate, doubhead[VI::doubhead::LOincrsz])),
     glift_min_eco_grad(unit_system.to_si(M::identity, doubhead[VI::doubhead::LOminEcGrad]))
 {
 }
