@@ -755,6 +755,7 @@ allocate(const std::vector<int>& inteHead)
 
 template <class SGrpArray>
 void staticContrib(const Opm::Group&        group,
+                   const Opm::GasLiftOpt&   glo,
                    const Opm::SummaryState& sumState,
                    const Opm::UnitSystem& units,
                    SGrpArray&               sGrp)
@@ -828,6 +829,12 @@ void staticContrib(const Opm::Group&        group,
             sGrp[Isp::LiqRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.liquid_target);
             sGrp[54] = sGrp[Isp::LiqRateLimit];  //"LRAT" control
         }
+    }
+
+    if (glo.has_group(group.name())) {
+        const auto& glo_group = glo.group(group.name());
+        sGrp[Isp::GLOMaxSupply] = sgprop(M::gas_surface_rate, glo_group.max_lift_gas().value());
+        sGrp[Isp::GLOMaxRate]   = sgprop(M::gas_surface_rate, glo_group.max_total_gas().value());
     }
 
     if ((group.name() == "FIELD") && (group.getGroupType() == Opm::Group::GroupType::NONE)) {
@@ -1011,6 +1018,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
                          const std::vector<int>&              inteHead)
 {
     const auto& curGroups = sched.restart_groups(simStep);
+    const auto& sched_state = sched[simStep];
 
     groupLoop(curGroups, [&sched, simStep, sumState, this]
               (const Group& group, const std::size_t groupID) -> void
@@ -1022,10 +1030,10 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
-              [&sumState, &units, this](const Group& group , const std::size_t groupID) -> void
+              [&sumState, &units, &sched_state, this](const Group& group , const std::size_t groupID) -> void
     {
         auto sw = this->sGroup_[groupID];
-        SGrp::staticContrib(group, sumState, units, sw);
+        SGrp::staticContrib(group, sched_state.glo(), sumState, units, sw);
     });
 
     // Define Dynamic Contributions to XGrp Array.

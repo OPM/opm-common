@@ -79,20 +79,12 @@ bool GasLiftOpt::has_group(const std::string& gname) const {
 
 
 void GasLiftOpt::add_group(const Group& group) {
-    auto iter = this->m_groups.find(group.name());
-    if (iter == this->m_groups.end())
-        this->m_groups.insert( std::make_pair(group.name(), group) );
-    else
-        iter->second = group;
+    this->m_groups.insert_or_assign(group.name(), group);
 }
 
 
 void GasLiftOpt::add_well(const Well& well) {
-    auto iter = this->m_wells.find(well.name());
-    if (iter == this->m_wells.end())
-        this->m_wells.insert( std::make_pair(well.name(), well) );
-    else
-        iter->second = well;
+    this->m_wells.insert_or_assign(well.name(), well);
 }
 
 

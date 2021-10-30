@@ -1393,6 +1393,12 @@ namespace {
             OpmLog::info(fmt::format("Adding group {} from restart file", rst_group.name));
         }
 
+        auto glo = this->snapshots.back().glo();
+        glo.all_newton(rst_state.header.glift_all_nupcol);
+        glo.min_wait(rst_state.header.glift_min_wait);
+        glo.min_eco_gradient(rst_state.header.glift_min_eco_grad);
+        glo.gaslift_increment(rst_state.header.glift_rate_delta);
+
         for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
             const auto& rst_group = rst_state.groups[group_index];
 
@@ -1404,13 +1410,10 @@ namespace {
 
             const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
             this->addGroupToGroup(parent_group.name, rst_group.name);
-        }
 
-        auto glo = this->snapshots.back().glo();
-        glo.all_newton(rst_state.header.glift_all_nupcol);
-        glo.min_wait(rst_state.header.glift_min_wait);
-        glo.min_eco_gradient(rst_state.header.glift_min_eco_grad);
-        glo.gaslift_increment(rst_state.header.glift_rate_delta);
+            if (GasLiftOpt::Group::active(rst_group))
+                glo.add_group(GasLiftOpt::Group(rst_group));
+        }
 
         for (const auto& rst_well : rst_state.wells) {
             Opm::Well well(rst_well, report_step, this->m_static.m_unit_system, udq_undefined);

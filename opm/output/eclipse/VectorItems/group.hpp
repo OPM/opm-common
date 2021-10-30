@@ -32,6 +32,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WatRateLimit  =  7, // Group's water production target/limit
             GasRateLimit  =  8, // Group's gas production target/limit
             LiqRateLimit  =  9, // Group's liquid production target/limit
+            GLOMaxSupply  = 34, // Group's maximum supply of lift gas
+            GLOMaxRate    = 91, // Group's maximum lift gas rate
         };
 
         enum inj_index : std::vector<float>::size_type {
