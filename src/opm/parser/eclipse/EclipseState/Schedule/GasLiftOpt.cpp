@@ -72,6 +72,10 @@ bool GasLiftOpt::has_well(const std::string& wname) const {
     return (iter != this->m_wells.end());
 }
 
+std::size_t GasLiftOpt::num_wells() const {
+    return this->m_wells.size();
+}
+
 bool GasLiftOpt::has_group(const std::string& gname) const {
     const auto iter = this->m_groups.find(gname);
     return (iter != this->m_groups.end());

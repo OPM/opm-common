@@ -1208,9 +1208,9 @@ BOOST_AUTO_TEST_CASE(GLIR_and_ALQ)
     BOOST_CHECK_CLOSE(1234.56 + 2345.67 + 3456.78,
                       ecl_sum_get_group_var(resp, 1, "B1", "GGLIR"), 1.0e-5);
 
-    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "B-1H", "WALQ"), 1.0e-5);
-    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "B-2H", "WALQ"), 1.0e-5);
-    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "B-3H", "WALQ"), 1.0e-5);
+    BOOST_CHECK_EQUAL(ecl_sum_get_well_var(resp, 1, "B-1H", "WGLIR"), ecl_sum_get_well_var(resp, 1, "B-1H", "WALQ"));
+    BOOST_CHECK_EQUAL(ecl_sum_get_well_var(resp, 1, "B-2H", "WGLIR"), ecl_sum_get_well_var(resp, 1, "B-2H", "WALQ"));
+    BOOST_CHECK_EQUAL(ecl_sum_get_well_var(resp, 1, "B-3H", "WGLIR"), ecl_sum_get_well_var(resp, 1, "B-3H", "WALQ"));
 }
 
 BOOST_AUTO_TEST_CASE(connection_kewords) {

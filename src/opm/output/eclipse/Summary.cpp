@@ -545,46 +545,69 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1.0;
 }
 
+inline bool
+has_vfp_table(const Opm::ScheduleState&            sched_state,
+              int vfp_table_number)
+{
+    return sched_state.vfpprod.has(vfp_table_number);
+}
+
+inline Opm::VFPProdTable::ALQ_TYPE
+alq_type(const Opm::ScheduleState&            sched_state,
+         int vfp_table_number)
+{
+    return sched_state.vfpprod(vfp_table_number).getALQType();
+}
+
 inline quantity artificial_lift_quantity( const fn_args& args ) {
     // Note: This function is intentionally supported only at the well level
     // (meaning there's no loop over args.schedule_wells by intention).  Its
     // purpose is to calculate WALQ only.
-    auto alq = quantity { 0.0, measure::identity };
 
+    // Note: in order to determine the correct dimension to use the Summary code
+    // calls the various evaluator functions with a default constructed fn_args
+    // instance. In the case of the WALQ function this does not really work,
+    // because the correct output dimension depends on exactly what physical
+    // quantity is represented by the ALQ - and that again requires quite some
+    // context to determine correctly. The current hack is that if WLIFTOPT is
+    // configured for at least one well we use dimension
+    // measure::gas_surface_rate - otherwise we use measure::identity.
+
+    auto dimension = measure::identity;
+    const auto& glo = args.schedule[args.sim_step].glo();
+    if (glo.num_wells() != 0)
+        dimension = measure::gas_surface_rate;
+
+    auto zero = quantity{0, dimension};
     if (args.schedule_wells.empty()) {
-        return alq;
+        return zero;
     }
 
     const auto* well = args.schedule_wells.front();
     if (well->isInjector()) {
-        return alq;
+        return zero;
     }
 
     auto xwPos = args.wells.find(well->name());
     if ((xwPos == args.wells.end()) ||
         (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
     {
-        return alq;
+        return zero;
     }
 
-    alq.value = well->productionControls(args.st).alq_value;
+    const auto& production = well->productionControls(args.st);
+    if (!glo.has_well(well->name()))
+        return { production.alq_value, dimension};
 
-    return alq;
+    const auto& sched_state = args.schedule[args.sim_step];
+    if (alq_type(sched_state, production.vfp_table_number) != Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT)
+        return zero;
+
+    const double eff_fac = efac(args.eff_factors, well->name());
+    auto alq_rate = eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
+    return { alq_rate, dimension };
 }
 
-inline bool
-has_alq_type(const Opm::ScheduleState&            sched_state,
-             const Opm::Well::ProductionControls& pc)
-{
-    return sched_state.vfpprod.has(pc.vfp_table_number);
-}
-
-inline Opm::VFPProdTable::ALQ_TYPE
-alq_type(const Opm::ScheduleState&            sched_state,
-         const Opm::Well::ProductionControls& pc)
-{
-    return sched_state.vfpprod(pc.vfp_table_number).getALQType();
-}
 
 inline quantity glir( const fn_args& args ) {
     if (args.schedule_wells.empty()) {
@@ -607,17 +630,23 @@ inline quantity glir( const fn_args& args ) {
         }
 
         const auto& production = well->productionControls(args.st);
-        if (! has_alq_type(sched_state, production)) {
+        if (! has_vfp_table(sched_state, production.vfp_table_number)) {
             continue;
         }
 
-        const auto thisAlqType = alq_type(sched_state, production);
-        if (thisAlqType != Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
-            continue;
+        const auto thisAlqType = alq_type(sched_state, production.vfp_table_number);
+        if (thisAlqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
+            const double eff_fac = efac(args.eff_factors, well->name());
+            alq_rate += eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
         }
 
-        const double eff_fac = efac(args.eff_factors, well->name());
-        alq_rate += eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value);
+        if (thisAlqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_IGLR) {
+            const double eff_fac = efac(args.eff_factors, well->name());
+            auto glr = production.alq_value;
+            auto wpr = xwPos->second.rates.get(rt::wat);
+            auto opr = xwPos->second.rates.get(rt::oil);
+            alq_rate += eff_fac * glr * (wpr + opr);
+        }
     }
 
     return { alq_rate, measure::gas_surface_rate };
