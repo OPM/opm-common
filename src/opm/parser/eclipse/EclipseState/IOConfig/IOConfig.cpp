@@ -17,12 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <sstream>
-
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -58,12 +57,12 @@ namespace Opm {
 
 
         inline std::string basename( const std::string& path ) {
-            return Opm::filesystem::path( path ).stem().string();
+            return std::filesystem::path( path ).stem().string();
         }
 
 
         inline std::string outputdir( const std::string& path ) {
-            auto dir = Opm::filesystem::path( path ).parent_path().string();
+            auto dir = std::filesystem::path( path ).parent_path().string();
 
             if( dir.empty() ) return default_dir;
 
@@ -262,7 +261,7 @@ namespace Opm {
     }
 
     std::string IOConfig::fullBasePath( ) const {
-        namespace fs = Opm::filesystem;
+        namespace fs = std::filesystem;
 
         fs::path dir( m_output_dir );
         fs::path base( m_base_name );

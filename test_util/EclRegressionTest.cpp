@@ -30,13 +30,13 @@
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <set>
@@ -998,7 +998,7 @@ void ECLRegressionTest::results_smry()
             }
         }
 
-        namespace fs = Opm::filesystem;
+        namespace fs = std::filesystem;
         std::string rsm_file = rootName2 + ".RSM";
         if (fs::is_regular_file(fs::path(rsm_file))) {
             auto rsm = ERsm(rsm_file);

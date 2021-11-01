@@ -120,7 +120,7 @@ namespace Json {
 
 
 
-    JsonObject::JsonObject(const Opm::filesystem::path& jsonFile ) {
+    JsonObject::JsonObject(const std::filesystem::path& jsonFile ) {
         std::ifstream stream(jsonFile.string().c_str());
         if (stream) {
             std::string content_from_file( (std::istreambuf_iterator<char>(stream)),

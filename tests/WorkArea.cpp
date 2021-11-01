@@ -30,21 +30,21 @@ namespace {
     {
     public:
         explicit WorkArea(const std::string& subdir = "")
-            : root_(Opm::filesystem::temp_directory_path() /
+            : root_(std::filesystem::temp_directory_path() /
                     Opm::unique_path("wrk-%%%%"))
             , area_(root_)
-            , orig_(Opm::filesystem::current_path())
+            , orig_(std::filesystem::current_path())
         {
             if (! subdir.empty())
                 this->area_ /= subdir;
 
-            Opm::filesystem::create_directories(this->area_);
-            Opm::filesystem::current_path(this->area_);
+            std::filesystem::create_directories(this->area_);
+            std::filesystem::current_path(this->area_);
         }
 
         void copyIn(const std::string& filename) const
         {
-            Opm::filesystem::copy_file(this->orig_ / filename,
+            std::filesystem::copy_file(this->orig_ / filename,
                                        this->area_ / filename);
         }
 
@@ -55,23 +55,23 @@ namespace {
 
         void makeSubDir(const std::string& dirname)
         {
-            Opm::filesystem::create_directories(this->area_ / dirname);
+            std::filesystem::create_directories(this->area_ / dirname);
         }
 
         ~WorkArea()
         {
-            Opm::filesystem::current_path(this->orig_);
-            Opm::filesystem::remove_all(this->root_);
+            std::filesystem::current_path(this->orig_);
+            std::filesystem::remove_all(this->root_);
         }
 
         std::string org_path(const std::string& fname) {
-            return Opm::filesystem::canonical( this->orig_ / fname );
+            return std::filesystem::canonical( this->orig_ / fname );
         }
 
 
     private:
-        Opm::filesystem::path root_;
-        Opm::filesystem::path area_;
-        Opm::filesystem::path orig_;
+        std::filesystem::path root_;
+        std::filesystem::path area_;
+        std::filesystem::path orig_;
     };
 } // Anonymous

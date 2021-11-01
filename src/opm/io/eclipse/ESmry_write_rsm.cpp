@@ -22,6 +22,7 @@
 #include <chrono>
 #include <cmath>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -238,8 +239,8 @@ void ESmry::write_rsm(std::ostream& os) const {
     }
 }
 
-void ESmry::write_rsm_file(std::optional<Opm::filesystem::path> filename) const {
-    Opm::filesystem::path summary_file_name { filename.value_or(inputFileName) } ;
+void ESmry::write_rsm_file(std::optional<std::filesystem::path> filename) const {
+    std::filesystem::path summary_file_name { filename.value_or(inputFileName) } ;
     summary_file_name.replace_extension("RSM");
 
     std::ofstream rsm_file { summary_file_name } ;

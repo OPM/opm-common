@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <pybind11/chrono.h>
+#include <filesystem>
 #include <stdexcept>
 
 #include <opm/io/eclipse/EclFile.hpp>
@@ -13,7 +14,6 @@
 #include <opm/io/eclipse/ERft.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/common/utility/TimeService.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
@@ -34,7 +34,7 @@ public:
 
     ESmryBind(const std::string& filename, bool loadBaseRunData)
     {
-        filesystem::path m_inputFileName(filename);
+        std::filesystem::path m_inputFileName(filename);
 
         if (m_inputFileName.extension() == ".SMSPEC"){
             m_esmry = std::make_unique<Opm::EclIO::ESmry>(m_inputFileName, loadBaseRunData);

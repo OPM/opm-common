@@ -40,8 +40,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 
+#include <filesystem>
 #include <stdexcept>
 #include <iostream>
 
@@ -53,7 +53,7 @@ inline std::string prefix() {
 
 BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
     Parser parser;
-    Opm::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    std::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.getKeyword<ParserKeywords::PVTO>()) , 1);
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
 
 BOOST_AUTO_TEST_CASE( PvtxNumTables2 ) {
     Parser parser;
-    Opm::filesystem::path deckFile(prefix() + "TABLES/PVTO2.DATA");
+    std::filesystem::path deckFile(prefix() + "TABLES/PVTO2.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.getKeyword<ParserKeywords::PVTO>()) , 3);
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables3 ) {
 
 BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
     Parser parser;
-    Opm::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    std::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     Opm::TableManager tables(deck);
     const auto& pvtoTables = tables.getPvtoTables( );
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
 
 BOOST_AUTO_TEST_CASE( PVTGSaturatedTable ) {
     Parser parser;
-    Opm::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    std::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     Opm::TableManager tables(deck);
     const auto& pvtgTables = tables.getPvtgTables( );

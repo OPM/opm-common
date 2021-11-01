@@ -26,7 +26,6 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -42,6 +41,7 @@
 #include "src/opm/parser/eclipse/Parser/raw/RawKeyword.hpp"
 #include "src/opm/parser/eclipse/Parser/raw/RawRecord.hpp"
 
+#include <filesystem>
 #include <iostream>
 
 using namespace Opm;
@@ -193,28 +193,28 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_fileDoesNotExist_returnsFalse) {
     Parser parser;
-    Opm::filesystem::path configFile("File/does/not/exist");
+    std::filesystem::path configFile("File/does/not/exist");
     BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidJson_returnsFalse) {
     Parser parser;
-    Opm::filesystem::path configFile(prefix() + "json/example_invalid_json");
+    std::filesystem::path configFile(prefix() + "json/example_invalid_json");
     BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidConfig_returnsFalse) {
     Parser parser;
-    Opm::filesystem::path configFile(prefix() + "json/example_missing_name.json");
+    std::filesystem::path configFile(prefix() + "json/example_missing_name.json");
     BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
     Parser parser( false );
-    Opm::filesystem::path configFile(prefix() + "json/BPR");
+    std::filesystem::path configFile(prefix() + "json/BPR");
     BOOST_CHECK_EQUAL( true , parser.loadKeywordFromFile( configFile ));
     BOOST_CHECK_EQUAL( 1U , parser.size() );
     BOOST_CHECK_EQUAL( true , parser.isRecognizedKeyword("BPR") );
@@ -224,14 +224,14 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
         Parser parser;
-        Opm::filesystem::path configPath("path/does/not/exist");
+        std::filesystem::path configPath("path/does/not/exist");
         BOOST_CHECK_THROW(parser.loadKeywordsFromDirectory( configPath), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
         Parser parser( false );
         BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        Opm::filesystem::path configPath(prefix() + "config/directory1");
+        std::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
         Parser parser( false );
-        Opm::filesystem::path configPath(prefix() + "config/directory1");
+        std::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
         Parser parser( false );
         BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        Opm::filesystem::path configPath(prefix() + "config/directory1");
+        std::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, true));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
         Parser parser( false );
         BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        Opm::filesystem::path configPath(prefix() + "config/directory1");
+        std::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath ));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that

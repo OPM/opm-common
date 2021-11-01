@@ -23,7 +23,6 @@
 
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -47,12 +46,13 @@
 #include <opm/io/eclipse/RestartFileView.hpp>
 
 #include <cstddef>
+#include <filesystem>
 #include <iterator>
 #include <memory>
 #include <utility>
 #include <vector>
 
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 using namespace Opm;
 

@@ -16,9 +16,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Deck/DeckTree.hpp>
-namespace fs = Opm::filesystem;
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace Opm {
 

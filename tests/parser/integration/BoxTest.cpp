@@ -21,8 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
-
-#include <opm/common/utility/FileSystem.hpp>
+#include <filesystem>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -38,7 +37,7 @@ inline std::string prefix() {
 
 inline Deck makeDeck(const std::string& fileName) {
     Parser parser;
-    Opm::filesystem::path boxFile(fileName);
+    std::filesystem::path boxFile(fileName);
     return parser.parseFile(boxFile.string());
 }
 

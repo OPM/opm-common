@@ -20,6 +20,7 @@
 #ifndef JSON_OBJECT_HPP
 #define JSON_OBJECT_HPP
 
+#include <filesystem>
 #include <string>
 
 #include <opm/common/utility/FileSystem.hpp>
@@ -32,7 +33,7 @@ namespace Json {
     public:
         JsonObject();
 
-        explicit JsonObject(const Opm::filesystem::path& jsonFile );
+        explicit JsonObject(const std::filesystem::path& jsonFile );
         explicit JsonObject(const std::string& inline_json);
         explicit JsonObject(const char * inline_json);
         explicit JsonObject(cJSON * root);

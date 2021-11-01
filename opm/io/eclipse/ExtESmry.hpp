@@ -20,6 +20,7 @@
 #define OPM_IO_ExtESmry_HPP
 
 #include <chrono>
+#include <filesystem>
 #include <ostream>
 #include <string>
 #include <unordered_map>
@@ -27,7 +28,6 @@
 #include <map>
 #include <stdint.h>
 
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 namespace Opm { namespace EclIO {
@@ -68,10 +68,9 @@ public:
 
     bool all_steps_available();
 
-
 private:
-    filesystem::path m_inputFileName;
-    std::vector<filesystem::path> m_lodsmry_files;
+    std::filesystem::path m_inputFileName;
+    std::vector<std::filesystem::path> m_lodsmry_files;
 
     bool m_loadBaseRun;
     std::vector<std::map<std::string, int>> m_keyword_index;
@@ -95,9 +94,9 @@ private:
 
     time_point m_startdat;
 
-    uint64_t open_esmry(Opm::filesystem::path& inputFileName, LodsmryHeadType& lodsmry_head);
+    uint64_t open_esmry(std::filesystem::path& inputFileName, LodsmryHeadType& lodsmry_head);
 
-    void updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::path& rootN);
+    void updatePathAndRootName(std::filesystem::path& dir, std::filesystem::path& rootN);
 };
 
 }} // namespace Opm::EclIO

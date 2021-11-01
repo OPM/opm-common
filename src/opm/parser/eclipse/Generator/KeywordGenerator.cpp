@@ -18,13 +18,12 @@
 */
 
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <cctype>
 #include <fmt/format.h>
-
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Generator/KeywordGenerator.hpp>
@@ -61,9 +60,9 @@ namespace Opm {
     }
 
     void KeywordGenerator::ensurePath( const std::string& file_name) {
-        Opm::filesystem::path file(file_name);
-        if (!Opm::filesystem::is_directory( file.parent_path()))
-            Opm::filesystem::create_directories( file.parent_path());
+        std::filesystem::path file(file_name);
+        if (!std::filesystem::is_directory( file.parent_path()))
+            std::filesystem::create_directories( file.parent_path());
     }
 
     void KeywordGenerator::updateFile(const std::stringstream& newContent , const std::string& filename) {
@@ -274,7 +273,7 @@ void python::common::export_ParserKeywords(py::module& module) {
         stream << R"(
 
 #define BOOST_TEST_MODULE GeneratedKeywordTest
-#include <opm/common/utility/FileSystem.hpp>
+#include <filesystem>
 #include <boost/test/unit_test.hpp>
 #include <memory>
 #include <opm/json/JsonObject.hpp>
@@ -286,7 +285,7 @@ auto unitSystem =  Opm::UnitSystem::newMETRIC();
 
 namespace Opm {
 void test_keyword(const ParserKeyword& inline_keyword, const std::string& json_file) {
-    Opm::filesystem::path jsonPath( json_file );
+    std::filesystem::path jsonPath( json_file );
     Json::JsonObject jsonConfig( jsonPath );
     ParserKeyword json_keyword(jsonConfig);
     BOOST_CHECK_EQUAL( json_keyword, inline_keyword);

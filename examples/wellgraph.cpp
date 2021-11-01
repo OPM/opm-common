@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <chrono>
@@ -34,7 +35,6 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 
 
 inline void createDot(const Opm::Schedule& schedule, const std::string& casename)
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
         for (int iarg = 1; iarg < argc; iarg++) {
             const std::string filename = argv[iarg];
             const auto sched = loadSchedule(filename);
-            const auto casename = Opm::filesystem::path(filename).stem();
+            const auto casename = std::filesystem::path(filename).stem();
             createDot(sched, casename);
         }
     } catch (const std::exception& e) {

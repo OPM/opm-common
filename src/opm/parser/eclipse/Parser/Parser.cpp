@@ -18,6 +18,7 @@
  */
 
 #include <cctype>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <iomanip>
@@ -30,8 +31,6 @@
 #include <algorithm>
 
 #include <fmt/format.h>
-
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
@@ -336,26 +335,26 @@ inline bool isTerminatedRecordString(const std::string_view& line) {
 }
 
 struct file {
-    file( Opm::filesystem::path p, const std::string& in ) :
+    file( std::filesystem::path p, const std::string& in ) :
         input( in ), path( p )
     {}
 
     std::string_view input;
     size_t lineNR = 0;
-    Opm::filesystem::path path;
+    std::filesystem::path path;
 };
 
 
 class InputStack : public std::stack< file, std::vector< file > > {
     public:
-        void push( std::string&& input, Opm::filesystem::path p = "<memory string>" );
+        void push( std::string&& input, std::filesystem::path p = "<memory string>" );
 
     private:
         std::list< std::string > string_storage;
         using base = std::stack< file, std::vector< file > >;
 };
 
-void InputStack::push( std::string&& input, Opm::filesystem::path p ) {
+void InputStack::push( std::string&& input, std::filesystem::path p ) {
     this->string_storage.push_back( std::move( input ) );
     this->emplace( p, this->string_storage.back() );
 }
@@ -368,17 +367,17 @@ class ParserState {
 
         ParserState( const std::vector<std::pair<std::string,std::string>>&,
                      const ParseContext&, ErrorGuard&,
-                     Opm::filesystem::path, const std::set<Opm::Ecl::SectionType>& ignore = {});
+                     std::filesystem::path, const std::set<Opm::Ecl::SectionType>& ignore = {});
 
         void loadString( const std::string& );
-        void loadFile( const Opm::filesystem::path& );
-        void openRootFile( const Opm::filesystem::path& );
+        void loadFile( const std::filesystem::path& );
+        void openRootFile( const std::filesystem::path& );
 
         void handleRandomText(const std::string_view& ) const;
-        std::optional<Opm::filesystem::path> getIncludeFilePath( std::string ) const;
+        std::optional<std::filesystem::path> getIncludeFilePath( std::string ) const;
         void addPathAlias( const std::string& alias, const std::string& path );
 
-        const Opm::filesystem::path& current_path() const;
+        const std::filesystem::path& current_path() const;
         size_t line() const;
 
         bool done() const;
@@ -401,14 +400,14 @@ class ParserState {
         std::string lastKeyWord;
 
         Deck deck;
-        Opm::filesystem::path rootPath;
+        std::filesystem::path rootPath;
         std::unique_ptr<Python> python;
         const ParseContext& parseContext;
         ErrorGuard& errors;
         bool unknown_keyword = false;
 };
 
-const Opm::filesystem::path& ParserState::current_path() const {
+const std::filesystem::path& ParserState::current_path() const {
     return this->input_stack.top().path;
 }
 
@@ -466,11 +465,11 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
 ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
                           const ParseContext& context,
                           ErrorGuard& errors_arg,
-                          Opm::filesystem::path p,
+                          std::filesystem::path p,
                           const std::set<Opm::Ecl::SectionType>& ignore ) :
     code_keywords(code_keywords_arg),
     ignore_sections(ignore),
-    rootPath( Opm::filesystem::canonical( p ).parent_path() ),
+    rootPath( std::filesystem::canonical( p ).parent_path() ),
     python( std::make_unique<Python>() ),
     parseContext( context ),
     errors( errors_arg )
@@ -515,7 +514,7 @@ void ParserState::loadString(const std::string& input) {
     this->input_stack.push( str::clean( this->code_keywords, input + "\n" ) );
 }
 
-void ParserState::loadFile(const Opm::filesystem::path& inputFile) {
+void ParserState::loadFile(const std::filesystem::path& inputFile) {
 
     const auto closer = []( std::FILE* f ) { std::fclose( f ); };
     std::unique_ptr< std::FILE, decltype( closer ) > ufp(
@@ -580,15 +579,15 @@ void ParserState::handleRandomText(const std::string_view& keywordString ) const
 }
 
 
-void ParserState::openRootFile( const Opm::filesystem::path& inputFile) {
+void ParserState::openRootFile( const std::filesystem::path& inputFile) {
 
     this->loadFile( inputFile );
     this->deck.setDataFile( inputFile.string() );
-    const Opm::filesystem::path& inputFileCanonical = Opm::filesystem::canonical(inputFile);
+    const std::filesystem::path& inputFileCanonical = std::filesystem::canonical(inputFile);
     this->rootPath = inputFileCanonical.parent_path();
 }
 
-std::optional<Opm::filesystem::path> ParserState::getIncludeFilePath( std::string path ) const {
+std::optional<std::filesystem::path> ParserState::getIncludeFilePath( std::string path ) const {
     static const std::string pathKeywordPrefix("$");
     static const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
 
@@ -609,14 +608,14 @@ std::optional<Opm::filesystem::path> ParserState::getIncludeFilePath( std::strin
         OpmLog::warning("Replaced one or more backslash with a slash in an INCLUDE path.");
     }
 
-    Opm::filesystem::path includeFilePath(path);
+    std::filesystem::path includeFilePath(path);
 
     if (includeFilePath.is_relative())
         includeFilePath = this->rootPath / includeFilePath;
 
     try {
-        includeFilePath = Opm::filesystem::canonical(includeFilePath);
-    } catch (const Opm::filesystem::filesystem_error& fs_error) {
+        includeFilePath = std::filesystem::canonical(includeFilePath);
+    } catch (const std::filesystem::filesystem_error& fs_error) {
         parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , fmt::format("No such file: {}", includeFilePath.string()), {}, errors);
         return {};
     }
@@ -1013,7 +1012,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
             if (includeFile.has_value()) {
                 auto& deck_tree = parserState.deck.tree();
-                deck_tree.add_include(filesystem::absolute(parserState.current_path()), includeFile.value() );
+                deck_tree.add_include(std::filesystem::absolute(parserState.current_path()), includeFile.value() );
                 parserState.loadFile( includeFile.value() );
             }
             continue;
@@ -1185,9 +1184,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         */
         std::string data_file;
         if (dataFileName[0] == '/')
-            data_file = Opm::filesystem::canonical(dataFileName).string();
+            data_file = std::filesystem::canonical(dataFileName).string();
         else
-            data_file = Opm::proximate( Opm::filesystem::canonical(dataFileName) );
+            data_file = std::filesystem::proximate( std::filesystem::canonical(dataFileName) );
 
         ParserState parserState( this->codeKeywords(), parseContext, errors, data_file, ignore_sections);
         parseState( parserState, *this );
@@ -1341,7 +1340,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
             throw std::invalid_argument("Input JSON object is not an array");
     }
 
-    bool Parser::loadKeywordFromFile(const Opm::filesystem::path& configFile) {
+    bool Parser::loadKeywordFromFile(const std::filesystem::path& configFile) {
 
         try {
             Json::JsonObject jsonKeyword(configFile);
@@ -1354,13 +1353,13 @@ std::vector<std::string> Parser::getAllDeckNames () const {
     }
 
 
-    void Parser::loadKeywordsFromDirectory(const Opm::filesystem::path& directory, bool recursive) {
-        if (!Opm::filesystem::exists(directory))
+    void Parser::loadKeywordsFromDirectory(const std::filesystem::path& directory, bool recursive) {
+        if (!std::filesystem::exists(directory))
             throw std::invalid_argument("Directory: " + directory.string() + " does not exist.");
         else {
-            Opm::filesystem::directory_iterator end;
-            for (Opm::filesystem::directory_iterator iter(directory); iter != end; iter++) {
-                if (Opm::filesystem::is_directory(*iter)) {
+            std::filesystem::directory_iterator end;
+            for (std::filesystem::directory_iterator iter(directory); iter != end; iter++) {
+                if (std::filesystem::is_directory(*iter)) {
                     if (recursive)
                         loadKeywordsFromDirectory(*iter, recursive);
                 } else {

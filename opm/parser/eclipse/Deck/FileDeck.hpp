@@ -23,15 +23,15 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <fmt/format.h>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/FileDeck.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 namespace Opm {
 class Deck;

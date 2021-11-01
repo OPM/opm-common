@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_5) {
 
 
 
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 BOOST_AUTO_TEST_CASE(TestCreateRSM) {
     ESmry smry1("SPE1CASE1.SMSPEC");
     smry1.LoadData();

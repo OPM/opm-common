@@ -20,6 +20,7 @@
 #define OPM_IO_ESMRY_HPP
 
 #include <chrono>
+#include <filesystem>
 #include <ostream>
 #include <string>
 #include <unordered_map>
@@ -27,7 +28,6 @@
 #include <map>
 #include <stdint.h>
 
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/SummaryNode.hpp>
 
@@ -75,13 +75,12 @@ public:
     const std::string& get_unit(const SummaryNode& node) const;
 
     void write_rsm(std::ostream&) const;
-    void write_rsm_file(std::optional<filesystem::path> = std::nullopt) const;
+    void write_rsm_file(std::optional<std::filesystem::path> = std::nullopt) const;
 
     bool all_steps_available();
 
 private:
-
-    filesystem::path inputFileName;
+    std::filesystem::path inputFileName;
     RstEntry restart_info;
 
     int nI, nJ, nK, nSpecFiles;
@@ -111,13 +110,13 @@ private:
 
     time_point startdat;
 
-    std::vector<std::string> checkForMultipleResultFiles(const filesystem::path& rootN, bool formatted) const;
+    std::vector<std::string> checkForMultipleResultFiles(const std::filesystem::path& rootN, bool formatted) const;
 
     void getRstString(const std::vector<std::string>& restartArray,
-                      filesystem::path& pathRst,
-                      filesystem::path& rootN) const;
+                      std::filesystem::path& pathRst,
+                      std::filesystem::path& rootN) const;
 
-    void updatePathAndRootName(filesystem::path& dir, filesystem::path& rootN) const;
+    void updatePathAndRootName(std::filesystem::path& dir, std::filesystem::path& rootN) const;
 
 
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num,

@@ -23,12 +23,11 @@
 #include <opm/msim/msim.hpp>
 
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
-
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/io/eclipse/ERst.hpp>
@@ -81,10 +80,10 @@ void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solutio
     std::fill(data.begin(), data.end(), units.to_si(UnitSystem::measure::pressure, seconds_elapsed));
 }
 
-bool is_file(const Opm::filesystem::path& name)
+bool is_file(const std::filesystem::path& name)
 {
-    return Opm::filesystem::exists(name)
-        && Opm::filesystem::is_regular_file(name);
+    return std::filesystem::exists(name)
+        && std::filesystem::is_regular_file(name);
 }
 
 }
