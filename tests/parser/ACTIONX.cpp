@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 #include <iostream>
-
+#include <algorithm>
 #define BOOST_TEST_MODULE ACTIONX
 
 #include <boost/test/unit_test.hpp>
@@ -100,7 +100,9 @@ TSTEP
 SCHEDULE
 
 WELSPECS
+  'W0'  'OP'  1 1 3.33  'OIL' 7*/
   'W2'  'OP'  1 1 3.33  'OIL' 7*/
+  'W3'  'OP'  1 1 3.33  'OIL' 7*/
 /
 
 ACTIONX
@@ -112,11 +114,20 @@ WELSPECS
   'W1'  'OP'  1 1 3.33  'OIL' 7*/
 /
 
+WCONPROD
+ 'W0'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+
+WCONINJE
+ 'W3' 'WATER'  'OPEN'  'RATE'  200  1*  450.0 /
+/
+
 ENDACTIO
 
 TSTEP
    10 /
 )"};
+
 
     const auto WITH_GRID = std::string{ R"(
 SCHEDULE
@@ -148,8 +159,9 @@ TSTEP
     auto sim_time = TimeService::now();
     const auto& action1 = sched[0].actions.get()["ACTION"];
     auto affected_wells = sched.applyAction(0, sim_time, action1, action_result, {});
-    BOOST_CHECK_EQUAL( affected_wells.size(), 1);
-    BOOST_CHECK_EQUAL( affected_wells.count("W1"), 1);
+    std::vector<std::string> expected_wells{"W0", "W1", "W3"};
+    BOOST_CHECK( std::is_permutation(affected_wells.begin(), affected_wells.end(),
+                                     expected_wells.begin(), expected_wells.end() ));
 
     {
         const auto& wg_events = sched[0].wellgroup_events();

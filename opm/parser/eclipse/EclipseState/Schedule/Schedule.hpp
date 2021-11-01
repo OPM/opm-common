@@ -564,6 +564,10 @@ namespace Opm
             , fp_ptr(nullptr)
             {}
 
+            void affected_well(const std::string& well_name) {
+                if (this->affected_wells)
+                    this->affected_wells->insert(well_name);
+            }
 
         };
 
@@ -582,7 +586,7 @@ namespace Opm
          *
          * @return `true` if the keyword was handled
          */
-        bool handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors);
+        bool handleNormalKeyword(HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors);
 
         // Keyword Handlers
         void handlePYACTION(const DeckKeyword&);
@@ -590,87 +594,87 @@ namespace Opm
         void handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWELPI   (const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells = {});
-        void handleWELPIRuntime(const HandlerContext&);
+        void handleWELPIRuntime(HandlerContext&);
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
-        void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleCOMPDAT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleCOMPLUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleCOMPORD  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleCOMPSEGS (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleDRSDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleDRSDTCON (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleDRSDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleDRVDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleDRVDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleEXIT     (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGCONINJE (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGCONPROD (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGCONSALE (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGCONSUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGEFAC    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGLIFTOPT (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGPMAINT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGRUPNET  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGRUPTREE (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleGUIDERAT (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleLIFTOPT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleLINCOM   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleMESSAGES (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleMULTFLT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleMXUNSUPP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleNETBALAN (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleNEXTSTEP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleNODEPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleNUPCOL   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleRPTONLY  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleRPTONLYO (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleRPTRST   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleRPTSCHED (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleTUNING   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleSAVE     (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleSUMTHIN  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleUDQ      (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleVAPPARS  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleVFPINJ   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleVFPPROD  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWCONHIST (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWCONINJE (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWCONINJH (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWCONPROD (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWECON    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWEFAC    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWELOPEN  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWELPI    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWELSEGS  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWELSPECS (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWELTARG  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWFOAM    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWGRUPCON (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWHISTCTL (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWINJTEMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWLIFTOPT (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWLIST    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWMICP    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWPAVE    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWPAVEDEP (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWWPAVE   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWPIMULT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWPMITAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWPOLYMER (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWRFT     (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWRFTPLT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWSALT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWSEGITER (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWSEGSICD (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWSEGAICD (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWSEGVALV (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWSKPTAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWSOLVENT (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWTEMP    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWTEST    (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWTMULT   (const HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleWTRACER  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleBRANPROP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPDAT  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPLUMP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPORD  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPSEGS (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRSDT    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRSDTCON (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRSDTR   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRVDT    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRVDTR   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleEXIT     (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONINJE (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONPROD (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONSALE (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONSUMP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGEFAC    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGLIFTOPT (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGPMAINT  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGRUPNET  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGRUPTREE (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGUIDERAT (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleLIFTOPT  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleLINCOM   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleMESSAGES (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleMULTFLT  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleMXUNSUPP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNETBALAN (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNEXTSTEP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNODEPROP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNUPCOL   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTONLY  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTONLYO (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTRST   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTSCHED (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleTUNING   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleSAVE     (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleSUMTHIN  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleUDQ      (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleVAPPARS  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleVFPINJ   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleVFPPROD  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONHIST (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONINJE (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONINJH (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONPROD (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWECON    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWEFAC    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELOPEN  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELPI    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELSEGS  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELSPECS (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELTARG  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWFOAM    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWGRUPCON (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWHISTCTL (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWINJTEMP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWLIFTOPT (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWLIST    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWMICP    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPAVE    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPAVEDEP (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWWPAVE   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPIMULT  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPMITAB  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPOLYMER (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWRFT     (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWRFTPLT  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSALT    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGITER (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGSICD (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGAICD (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGVALV (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSKPTAB  (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSOLVENT (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTEMP    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTEST    (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTMULT   (HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTRACER  (HandlerContext&, const ParseContext&, ErrorGuard&);
     };
 }
 
