@@ -74,6 +74,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         GroupLevel = 27,
         ParentGroup = 28,
         FlowingWells = 33,
+        NodeNumber = 39
     };
 
     namespace Value {
