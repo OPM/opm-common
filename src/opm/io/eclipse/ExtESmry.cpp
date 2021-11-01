@@ -19,7 +19,6 @@
 #include <opm/io/eclipse/ExtESmry.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
@@ -28,6 +27,7 @@
 #include <numeric>
 #include <chrono>
 #include <exception>
+#include <filesystem>
 #include <iterator>
 #include <limits>
 #include <set>
@@ -101,10 +101,10 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
 
     m_lodsmry_files.push_back(m_inputFileName);
 
-    Opm::filesystem::path rootName = m_inputFileName.parent_path() / m_inputFileName.stem();
-    Opm::filesystem::path path = Opm::filesystem::current_path();
+    std::filesystem::path rootName = m_inputFileName.parent_path() / m_inputFileName.stem();
+    std::filesystem::path path = std::filesystem::current_path();
 
-    Opm::filesystem::path rstRootN;
+    std::filesystem::path rstRootN;
 
     updatePathAndRootName(path, rootName);
 
@@ -153,11 +153,11 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
         while (!restart.empty()){
             sim_ind++;
 
-            rstRootN = Opm::filesystem::path(restart);
+            rstRootN = std::filesystem::path(restart);
 
             updatePathAndRootName(path, rstRootN);
 
-            Opm::filesystem::path rstLodSmryFile = path / rstRootN;
+            std::filesystem::path rstLodSmryFile = path / rstRootN;
             rstLodSmryFile += ".ESMRY";
 
             m_lodsmry_files.push_back(rstLodSmryFile);
@@ -255,7 +255,7 @@ bool ExtESmry::all_steps_available()
     return true;
 }
 
-uint64_t ExtESmry::open_esmry(Opm::filesystem::path& inputFileName, LodsmryHeadType& lodsmry_head)
+uint64_t ExtESmry::open_esmry(std::filesystem::path& inputFileName, LodsmryHeadType& lodsmry_head)
 {
     std::fstream fileH;
 
@@ -343,7 +343,7 @@ uint64_t ExtESmry::open_esmry(Opm::filesystem::path& inputFileName, LodsmryHeadT
 }
 
 
-void ExtESmry::updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::path& rootN) {
+void ExtESmry::updatePathAndRootName(std::filesystem::path& dir, std::filesystem::path& rootN) {
 
     if (rootN.parent_path().is_absolute()){
         dir = rootN.parent_path();

@@ -17,11 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <getopt.h>
 
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 Opm::Deck pack_deck( const char * deck_file, std::ostream& os) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);

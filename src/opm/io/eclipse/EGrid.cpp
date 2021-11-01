@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
 #include <iterator>
 #include <iomanip>
 #include <numeric>
@@ -202,7 +203,7 @@ void EGrid::load_nnc_data()
         nnc1_array = getImpl(nnc1_array_index, Opm::EclIO::INTE, inte_array, "inte");
         nnc2_array = getImpl(nnc2_array_index, Opm::EclIO::INTE, inte_array, "inte");
 
-        if ((Opm::filesystem::exists(initFileName)) && (nnc1_array.size() > 0)){
+        if ((std::filesystem::exists(initFileName)) && (nnc1_array.size() > 0)){
             Opm::EclIO::EInit init(initFileName);
 
             auto init_dims = init.grid_dimension(m_grid_name);

@@ -47,8 +47,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/common/utility/FileSystem.hpp>
-
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
@@ -72,6 +70,7 @@
 #include <cctype>
 #include <ctime>
 #include <exception>
+#include <filesystem>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
@@ -3387,8 +3386,8 @@ SummaryImplementation(const EclipseState&  es,
 
     std::string esmryFileName = EclIO::OutputStream::outputFileName(this->rset_, "ESMRY");
 
-    if (Opm::filesystem::exists(esmryFileName))
-        Opm::filesystem::remove(esmryFileName);
+    if (std::filesystem::exists(esmryFileName))
+        std::filesystem::remove(esmryFileName);
 
     if ((writeEsmry) and (es.cfg().io().getFMTOUT()==false))
         this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>(this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());

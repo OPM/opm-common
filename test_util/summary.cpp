@@ -18,6 +18,7 @@
 */
 
 #include <cmath>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <tuple>
@@ -99,7 +100,7 @@ int main(int argc, char **argv) {
     std::unique_ptr<Opm::EclIO::ExtESmry> ext_esmry;
 
     std::string filename = argv[argOffset];
-    Opm::filesystem::path inputFileName(filename);
+    std::filesystem::path inputFileName(filename);
 
     if (inputFileName.extension()=="")
         inputFileName+=".SMSPEC";

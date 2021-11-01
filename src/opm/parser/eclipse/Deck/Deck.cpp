@@ -17,16 +17,16 @@
  */
 
 #include <algorithm>
+#include <filesystem>
 #include <vector>
 
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 namespace Opm {
 

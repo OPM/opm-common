@@ -19,9 +19,8 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <filesystem>
 #include <fstream>
-
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Generator/KeywordLoader.hpp>
@@ -36,13 +35,13 @@ namespace Opm {
             if (verbose)
                 std::cout << "Loading keyword from file: " << keyword_file << std::endl;
 
-            Opm::filesystem::path path( keyword_file );
+            std::filesystem::path path( keyword_file );
             std::unique_ptr<ParserKeyword> parserKeyword;
 
             try {
                 Json::JsonObject jsonConfig = Json::JsonObject( path );
                 parserKeyword.reset( new ParserKeyword(jsonConfig) );
-                auto abs_path = Opm::filesystem::absolute( path );
+                auto abs_path = std::filesystem::absolute( path );
             } catch (const std::exception& exc) {
                 std::cerr << std::endl;
                 std::cerr << "Failed to create parserkeyword from: " << path.string() << std::endl;

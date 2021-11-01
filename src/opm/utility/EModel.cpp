@@ -18,10 +18,10 @@
 
 #include <opm/utility/EModel.hpp>
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <fmt/format.h>
 
+#include <filesystem>
 #include <string>
 #include <string.h>
 #include <sstream>
@@ -44,7 +44,7 @@ EModel::EModel(const std::string& filename) :
     else
         OPM_THROW(std::invalid_argument, "Input to EModel should be a binary INIT file");
 
-    if ( Opm::filesystem::exists(rootN + ".EGRID") )
+    if ( std::filesystem::exists(rootN + ".EGRID") )
         grid = Opm::EclipseGrid(rootN + ".EGRID");
 
 
@@ -122,7 +122,7 @@ EModel::EModel(const std::string& filename) :
         }
     }
 
-    if ( Opm::filesystem::exists( rootN + ".UNRST" ) )
+    if ( std::filesystem::exists( rootN + ".UNRST" ) )
     {
         rstfile = Opm::EclIO::ERst(rootN + ".UNRST");
         std::vector<int> rstepList = rstfile->listOfReportStepNumbers();

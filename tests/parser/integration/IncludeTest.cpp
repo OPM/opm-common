@@ -34,7 +34,7 @@
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
-using namespace Opm::filesystem;
+using namespace std::filesystem;
 
 static void
 createDeckWithInclude(path& datafile, std::string addEndKeyword)

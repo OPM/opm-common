@@ -18,6 +18,7 @@
 */
 
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <getopt.h>
@@ -25,7 +26,6 @@
 #include <unordered_set>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -39,7 +39,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/FileDeck.hpp>
 
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 const std::unordered_set<std::string> remove_from_solution = {"EQUIL", "PRESSURE", "SWAT", "SGAS"};
 

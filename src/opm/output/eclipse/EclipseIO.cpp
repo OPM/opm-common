@@ -54,6 +54,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cctype>
+#include <filesystem>
 #include <limits>
 #include <memory>     // unique_ptr
 #include <optional>
@@ -61,8 +62,6 @@
 #include <sstream>
 #include <unordered_map>
 #include <utility>    // move
-
-#include <opm/common/utility/FileSystem.hpp>
 
 
 namespace {
@@ -74,9 +73,9 @@ inline std::string uppercase( std::string x ) {
     return x;
 }
 
-void ensure_directory_exists( const Opm::filesystem::path& odir )
+void ensure_directory_exists( const std::filesystem::path& odir )
 {
-    namespace fs = Opm::filesystem;
+    namespace fs = std::filesystem;
 
     if (fs::exists( odir ) && !fs::is_directory( odir ))
         throw std::runtime_error {
@@ -183,7 +182,7 @@ void EclipseIO::Impl::writeEGRIDFile( const std::vector<NNCdata>& nnc ) {
         + (formatted ? std::string{"F"} : std::string{})
         + "EGRID";
 
-    const auto egridFile = (Opm::filesystem::path{ this->outputDir }
+    const auto egridFile = (std::filesystem::path{ this->outputDir }
         / (this->baseName + ext)).generic_string();
 
     this->grid.save( egridFile, formatted, nnc, this->es.getDeckUnitSystem());
@@ -298,8 +297,8 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
     const bool final_step { report_step == static_cast<int>(schedule.size()) - 1 };
 
     if (final_step && !isSubstep && this->impl->summaryConfig.createRunSummary()) {
-        Opm::filesystem::path outputDir { this->impl->outputDir } ;
-        Opm::filesystem::path outputFile { outputDir / this->impl->baseName } ;
+        std::filesystem::path outputDir { this->impl->outputDir } ;
+        std::filesystem::path outputFile { outputDir / this->impl->baseName } ;
         EclIO::ESmry(outputFile).write_rsm_file();
     }
 

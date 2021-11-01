@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE ImportTests
 #include <boost/test/unit_test.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -29,6 +28,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <tests/WorkArea.cpp>
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
@@ -37,7 +37,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/Z.hpp>
 
 using namespace Opm;
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 BOOST_AUTO_TEST_CASE(CreateImportContainer) {
     WorkArea work;

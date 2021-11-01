@@ -23,15 +23,15 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 #include "tests/WorkArea.cpp"
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 using namespace Opm;
 
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     BOOST_CHECK_EQUAL( output_dir2,  config2.getOutputDir() );
     BOOST_CHECK_EQUAL( "TESTSTRING", config2.getBaseName() );
 
-    namespace fs = Opm::filesystem;
+    namespace fs = std::filesystem;
 
     Deck deck3;
     touch_file("path/to/testString.DATA");

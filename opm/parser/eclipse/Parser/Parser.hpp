@@ -20,6 +20,7 @@
 #ifndef OPM_PARSER_HPP
 #define OPM_PARSER_HPP
 
+#include <filesystem>
 #include <iosfwd>
 #include <list>
 #include <map>
@@ -29,8 +30,6 @@
 #include <vector>
 
 #include <stddef.h>
-
-#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -102,9 +101,9 @@ namespace Opm {
         std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
-        bool loadKeywordFromFile(const filesystem::path& configFile);
+        bool loadKeywordFromFile(const std::filesystem::path& configFile);
 
-        void loadKeywordsFromDirectory(const filesystem::path& directory , bool recursive = true);
+        void loadKeywordsFromDirectory(const std::filesystem::path& directory , bool recursive = true);
         void applyUnitsToDeck(Deck& deck) const;
 
         /*!

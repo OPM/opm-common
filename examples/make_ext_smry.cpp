@@ -18,6 +18,7 @@
 */
 
 
+#include <filesystem>
 #include <iostream>
 #include <getopt.h>
 #include <string.h>
@@ -31,7 +32,6 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
-#include <opm/common/utility/FileSystem.hpp>
 
 
 static void printHelp() {
@@ -93,9 +93,9 @@ int main(int argc, char **argv) {
 
     #pragma omp parallel for
     for (int f = argOffset; f < argc; f ++){
-        Opm::filesystem::path inputFileName = argv[f];
+        std::filesystem::path inputFileName = argv[f];
 
-        Opm::filesystem::path esmryFileName = inputFileName.parent_path() / inputFileName.stem();
+        std::filesystem::path esmryFileName = inputFileName.parent_path() / inputFileName.stem();
         esmryFileName = esmryFileName += ".ESMRY";
 
         if (Opm::EclIO::fileExists(esmryFileName) && (force))

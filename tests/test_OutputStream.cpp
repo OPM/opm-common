@@ -134,16 +134,16 @@ class RSet
 {
 public:
     explicit RSet(std::string base)
-        : odir_(Opm::filesystem::temp_directory_path() /
+        : odir_(std::filesystem::temp_directory_path() /
                 Opm::unique_path("rset-%%%%"))
         , base_(std::move(base))
     {
-        Opm::filesystem::create_directories(this->odir_);
+        std::filesystem::create_directories(this->odir_);
     }
 
     ~RSet()
     {
-        Opm::filesystem::remove_all(this->odir_);
+        std::filesystem::remove_all(this->odir_);
     }
 
     operator ::Opm::EclIO::OutputStream::ResultSet() const
@@ -152,7 +152,7 @@ public:
     }
 
 private:
-    Opm::filesystem::path odir_;
+    std::filesystem::path odir_;
     std::string             base_;
 };
 

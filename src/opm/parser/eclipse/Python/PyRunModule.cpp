@@ -25,12 +25,13 @@ error BUG: The PyRunModule.hpp header should *not* be included in a configuratio
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
-#include <opm/common/utility/FileSystem.hpp>
 #include "src/opm/parser/eclipse/Python/PyRunModule.hpp"
+
+#include <filesystem>
 
 namespace Opm {
 
-namespace fs = Opm::filesystem;
+namespace fs = std::filesystem;
 
 PyRunModule::PyRunModule(std::shared_ptr<const Python> python, const std::string& fname) {
     if (python->enabled())
