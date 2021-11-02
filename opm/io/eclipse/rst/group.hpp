@@ -61,6 +61,7 @@ struct RstGroup {
     float gas_voidage_limit;
     float glift_max_supply;
     float glift_max_rate;
+    float efficiency_factor;
 
     double oil_production_rate;
     double water_production_rate;

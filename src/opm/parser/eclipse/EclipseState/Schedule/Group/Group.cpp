@@ -222,6 +222,8 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, double udq_u
 Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     Group(rst_group.name, insert_index_arg, udq_undefined_arg, unit_system_arg)
 {
+    this->gefac = rst_group.efficiency_factor;
+
     const auto prod_limits      = ProductionLimits    { rst_group };
     const auto gas_inj_limits   = GasInjectionLimits  { rst_group };
     const auto water_inj_limits = WaterInjectionLimits{ rst_group };
