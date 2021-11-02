@@ -811,16 +811,19 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data_2)
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  5] ,   2); // group available for higher level production control
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 17] ,   1); // group available for higher level water injection control
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 22] ,  -1); // group available for higher level gas injection control
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 39] ,   3); // groups sequence number in the external networt defined
 
         start = 1*ih[VI::intehead::NIGRPZ];
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  5] ,   0); // group available for higher level production control
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 17] ,  -1); // group available for higher level water injection control
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 22] ,  -1); // group available for higher level gas injection control
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 39] ,   2); // groups sequence number in the external networt defined
 
         start = 2*ih[VI::intehead::NIGRPZ];
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  5] ,   2); // group available for higher level production control
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 17] ,   2); // group available for higher level water injection control
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 22] ,  -1); // group available for higher level gas injection control
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 39] ,   1); // groups sequence number in the external networt defined
 
         start = 3*ih[VI::intehead::NIGRPZ];
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  5] ,  -1); // group available for higher level production control

@@ -112,25 +112,13 @@ void groupLoop(const std::vector<const Opm::Group*>& groups,
     }
 }
 
-template < typename T>
-std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const T  & element)
+template <typename T>
+std::optional<int> findInVector(const std::vector<T>  & vecOfElements, const T  & element)
 {
-    std::pair<bool, int > result;
-
     // Find given element in vector
     auto it = std::find(vecOfElements.begin(), vecOfElements.end(), element);
 
-    if (it != vecOfElements.end())
-    {
-        result.second = std::distance(vecOfElements.begin(), it);
-        result.first = true;
-    }
-    else
-    {
-        result.first = false;
-        result.second = -1;
-    }
-    return result;
+    return (it != vecOfElements.end()) ? std::optional<int>{std::distance(vecOfElements.begin(), it)} : std::nullopt;
 }
 
 int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
@@ -628,6 +616,24 @@ void injectionGroup(const Opm::Schedule&     sched,
 }
 
 template <class IGrpArray>
+void storeNodeSequenceNo(const Opm::Schedule& sched,
+                    const Opm::Group& group,
+                    const int nwgmax,
+                    const std::size_t simStep,
+                    IGrpArray& iGrp) {
+
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+
+    const auto& netwrk = sched[simStep].network();
+    const auto seq_ind = findInVector(netwrk.node_names(), group.name());
+
+    // The igrp node number is equal to the node sequence number from the BRANPROP keyword
+    // for the groups that also are nodes in the external network (BRANPROP, NODEPROP)
+    // If not - the node numbr is zero.
+    iGrp[nwgmax + IGroup::NodeNumber] = seq_ind ? seq_ind.value()+1 : 0;
+}
+
+template <class IGrpArray>
 void storeGroupTree(const Opm::Schedule& sched,
                     const Opm::Group& group,
                     const int nwgmax,
@@ -702,6 +708,10 @@ void staticContrib(const Opm::Schedule&     sched,
     const bool is_field = group.name() == "FIELD";
 
     storeGroupTree(sched, group, nwgmax, ngmaxz, simStep, iGrp);
+
+    //node-number for groups in external network (according to sequence in BRANPROP)
+    storeNodeSequenceNo(sched, group, nwgmax, simStep, iGrp);
+
     storeFlowingWells(group, nwgmax, sumState, iGrp);
 
     // Treat all groups for production controls

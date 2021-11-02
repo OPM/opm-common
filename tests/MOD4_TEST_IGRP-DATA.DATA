@@ -75,6 +75,10 @@ REGDIMS
 -- ntfip  nmfipr  nrfreg
     1      1       1* /
 
+NETWORK
+ 3 2 /
+
+
 -- Well dimension data
 -- nwmaxz: max wells in the model
 -- ncwmax: max connections per well
@@ -9707,6 +9711,22 @@ GRUPTREE
  'SE'       'UPPER'  /
  'CENTRAL'  'LOWER'  /
 /
+
+
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    LOWER       MOD4   9999       1* /
+    UPPER        MOD4   9999       1* /
+/
+
+NODEPROP
+--  Node_name  Press  autoChoke?  addGasLift?  Group_name
+     MOD4   21.0   NO          NO           1*  /
+     UPPER       1*     NO          NO           1*  /
+     LOWER      1*     NO          NO           1*  /
+/
+
 
 
 -- This reservoir simulation deck is made available under the Open Database
