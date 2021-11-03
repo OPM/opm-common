@@ -4810,16 +4810,43 @@ END
 BOOST_AUTO_TEST_CASE(TestScheduleGrid) {
     EclipseGrid grid(10,10,10);
     CompletedCells cells(grid);
+    std::string deck_string = R"(
+GRID
+
+PORO
+   1000*0.10 /
+
+PERMX
+   1000*1 /
+
+PERMY
+   1000*0.1 /
+
+PERMZ
+   1000*0.01 /
+
+
+)";
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, TableManager());
+    const auto& unit_system = deck.getActiveUnitSystem();
 
     {
-        ScheduleGrid sched_grid(grid, cells);
-        auto depth = sched_grid.get_cell(1,1,1).depth;
-        BOOST_CHECK_EQUAL(depth, 1.50);
+        ScheduleGrid sched_grid(grid, fp, cells);
+        const auto& cell = sched_grid.get_cell(1,1,1);
+        BOOST_CHECK_EQUAL(cell.depth, 1.50);
+        BOOST_CHECK_EQUAL(cell.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
+        BOOST_CHECK_EQUAL(cell.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
+        BOOST_CHECK_EQUAL(cell.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
     }
     {
         ScheduleGrid sched_grid(cells);
-        auto depth = sched_grid.get_cell(1,1,1).depth;
-        BOOST_CHECK_EQUAL(depth, 1.50);
+        const auto& cell = sched_grid.get_cell(1,1,1);
+        BOOST_CHECK_EQUAL(cell.depth, 1.50);
+        BOOST_CHECK_EQUAL(cell.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
+        BOOST_CHECK_EQUAL(cell.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
+        BOOST_CHECK_EQUAL(cell.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
+
         BOOST_CHECK_THROW(sched_grid.get_cell(2,2,2), std::exception);
     }
 }

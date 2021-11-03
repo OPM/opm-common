@@ -20,9 +20,16 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletedCells.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
 Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid, Opm::CompletedCells& completed_cells)
     : grid(&ecl_grid)
+    , cells(completed_cells)
+{}
+
+Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid, const Opm::FieldPropsManager& fpm, Opm::CompletedCells& completed_cells)
+    : grid(&ecl_grid)
+    , fp(&fpm)
     , cells(completed_cells)
 {}
 
@@ -36,8 +43,15 @@ const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std:
         if (!valid) {
             cell.depth = this->grid->getCellDepth(i,j,k);
             cell.dimensions = this->grid->getCellDimensions(i,j,k);
-            if (this->grid->cellActive(i,j,k))
+            if (this->grid->cellActive(i,j,k)){
                 cell.active_index = this->grid->getActiveIndex(i,j,k);
+                if (this->fp){
+                    cell.permx = this->fp->try_get<double>("PERMX")->at(cell.active_index.value());
+                    cell.permy = this->fp->try_get<double>("PERMY")->at(cell.active_index.value());
+                    cell.permz = this->fp->try_get<double>("PERMZ")->at(cell.active_index.value());
+                }
+
+            }
         }
         return cell;
     } else

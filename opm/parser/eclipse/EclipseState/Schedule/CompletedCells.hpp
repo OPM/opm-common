@@ -33,6 +33,10 @@ public:
         std::size_t i, j, k;
         std::optional<std::size_t> active_index;
 
+        double permx;
+        double permy;
+        double permz;
+
         double depth;
         std::array<double, 3> dimensions;
 
@@ -43,7 +47,10 @@ public:
                    this->k == other.k &&
                    this->active_index == other.active_index &&
                    this->depth == other.depth &&
-                   this->dimensions == other.dimensions;
+                   this->dimensions == other.dimensions && 
+                   this->permx == other.permx &&
+                   this->permy == other.permy &&
+                   this->permz == other.permz;
         }
 
         static Cell serializeObject() {
@@ -61,6 +68,9 @@ public:
             serializer(this->k);
             serializer(this->active_index);
             serializer(this->depth);
+            serializer(this->permx);
+            serializer(this->permy);
+            serializer(this->permz);
             serializer.template array<std::array<double,3>, false>(this->dimensions);
         }
 
