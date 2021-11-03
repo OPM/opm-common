@@ -25,6 +25,7 @@
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/network.hpp>
 #include <opm/io/eclipse/rst/udq.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 
@@ -85,6 +86,7 @@ RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
     : unit_system(rstView->intehead()[VI::intehead::UNIT])
     , header(unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead())
     , aquifers(rstView, grid, unit_system)
+    , network(rstView, unit_system)
 {
     this->load_tuning(rstView->intehead(), rstView->doubhead());
 }
