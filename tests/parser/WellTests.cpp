@@ -69,6 +69,15 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
+                "GRID\n"
+                "PORO\n"
+                "1000*0.1  /\n"
+                "PERMX \n"
+                "1000*1 /\n"
+                "PERMY \n"
+                "1000*0.1 /\n"
+                "PERMZ \n"
+                "1000*0.01 /\n"
                 "SCHEDULE\n"
                 "DATES             -- 1\n"
                 " 10  OKT 2008 / \n"
@@ -118,6 +127,15 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDEPTH) {
     std::string input  = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -169,6 +187,15 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
+                "GRID\n"
+                "PORO\n"
+                "1000*0.1  /\n"
+                "PERMX \n"
+                "1000*1 /\n"
+                "PERMY \n"
+                "1000*0.1 /\n"
+                "PERMZ \n"
+                "1000*0.01 /\n"
                 "SCHEDULE\n"
                 "DATES             -- 1\n"
                 " 10  OKT 2008 / \n"
@@ -209,6 +236,15 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
+                "GRID\n"
+                "PORO\n"
+                "1000*0.1  /\n"
+                "PERMX \n"
+                "1000*1 /\n"
+                "PERMY \n"
+                "1000*0.1 /\n"
+                "PERMZ \n"
+                "1000*0.01 /\n"
                 "SCHEDULE\n"
                 "DATES             -- 1\n"
                 " 10  OKT 2008 / \n"
@@ -881,6 +917,15 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
     std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
+                "GRID\n"
+                "PORO\n"
+                "1000*0.1  /\n"
+                "PERMX \n"
+                "1000*1 /\n"
+                "PERMY \n"
+                "1000*0.1 /\n"
+                "PERMZ \n"
+                "1000*0.01 /\n"
                 "SCHEDULE\n"
                 "DATES             -- 1\n"
                 " 10  OKT 2008 / \n"
@@ -1025,6 +1070,15 @@ REGIONS
 PVTNUM
  1000*77 /
 
+GRID
+PORO
+ 1000*0.1 /
+PERMX
+ 1000*1 /
+PERMY
+ 1000*0.1 /
+PERMZ
+ 1000*0.01 /
 SCHEDULE
 
 WELSPECS
@@ -1152,6 +1206,16 @@ REGIONS
 
 PVTNUM
  1000*77 /
+
+GRID
+PORO
+ 1000*0.1 /
+PERMX
+ 1000*1 /
+PERMY
+ 1000*0.1 /
+PERMZ
+ 1000*0.01 /
 
 SCHEDULE
 

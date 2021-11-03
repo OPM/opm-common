@@ -98,6 +98,15 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     std::string input =
             "START             -- 0 \n"
             "19 JUN 2007 / \n"
+            "GRID\n"
+            "PORO\n"
+            "1000*0.1  /\n"
+            "PERMX \n"
+            "1000*1 /\n"
+            "PERMY \n"
+            "1000*0.1 /\n"
+            "PERMZ \n"
+            "1000*0.01 /\n"
             "SCHEDULE\n"
 
 	    "WELSPECS\n"
@@ -135,6 +144,15 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     std::string input =
             "START             -- 0 \n"
             "19 JUN 2007 / \n"
+            "GRID\n"
+            "PORO\n"
+            "1000*0.1  /\n"
+            "PERMX \n"
+            "1000*1 /\n"
+            "PERMY \n"
+            "1000*0.1 /\n"
+            "PERMZ \n"
+            "1000*0.01 /\n"
             "SCHEDULE\n"
 
 	    "WELSPECS\n"

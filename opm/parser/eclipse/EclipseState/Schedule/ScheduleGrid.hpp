@@ -28,7 +28,6 @@ class FieldPropsManager;
 
 class ScheduleGrid {
 public:
-    ScheduleGrid(const EclipseGrid& ecl_grid, CompletedCells& completed_cells);
     ScheduleGrid(const EclipseGrid& ecl_grid, const FieldPropsManager& fpm, CompletedCells& completed_cells);
     explicit ScheduleGrid(CompletedCells& completed_cells);
 

@@ -161,7 +161,7 @@ namespace Opm {
         this->restart_output.clearRemainingEvents(0);
 
         //const ScheduleGridWrapper gridWrapper { grid } ;
-        ScheduleGrid grid(ecl_grid, this->completed_cells);
+        ScheduleGrid grid(ecl_grid, fp, this->completed_cells);
 
         if (rst) {
             auto restart_step = this->m_static.rst_info.report_step;

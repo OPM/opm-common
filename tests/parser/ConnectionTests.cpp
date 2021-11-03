@@ -59,7 +59,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
     Opm::CompletedCells cells(grid);
     for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, Opm::ScheduleGrid(grid, cells), field_props, "WELL", {});
+        connections.loadCOMPDAT(rec, Opm::ScheduleGrid(grid, field_props, cells), field_props, "WELL", {});
 
     return connections;
 }
@@ -177,7 +177,18 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
 BOOST_AUTO_TEST_CASE(loadCOMPDATTEST) {
     Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC); // Unit system used in deck FIRST_SIM.DATA.
     {
-        const std::string deck = R"(COMPDAT
+        const std::string deck = R"(GRID
+
+PERMX
+  1000*0.10 /
+
+COPY
+  'PERMX' 'PERMZ' /
+  'PERMX' 'PERMY' /
+/
+SCHEDULE
+
+COMPDAT
 --                                    CF      Diam    Kh      Skin   Df
     'WELL'  1  1   1   1 'OPEN' 1*    1.168   0.311   107.872 1*     1*  'Z'  21.925 /
 /)";
