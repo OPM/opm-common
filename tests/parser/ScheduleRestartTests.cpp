@@ -123,7 +123,7 @@ std::tuple<Schedule, Schedule, RestartIO::RstState> load_schedule_pair(const std
     EclipseState ecl_state_restart(restart_deck);
     Schedule restart_sched(restart_deck, ecl_state_restart, python, {}, &rst_state);
 
-    return {sched, restart_sched, rst_state};
+    return {sched, restart_sched, std::move(rst_state)};
 }
 
 
