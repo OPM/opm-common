@@ -645,7 +645,7 @@ inline quantity glir( const fn_args& args ) {
             auto glr = production.alq_value;
             auto wpr = xwPos->second.rates.get(rt::wat);
             auto opr = xwPos->second.rates.get(rt::oil);
-            alq_rate += eff_fac * glr * (wpr + opr);
+            alq_rate -= eff_fac * glr * (wpr + opr);
         }
     }
 
