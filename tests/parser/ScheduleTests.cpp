@@ -4834,18 +4834,20 @@ PERMZ
     {
         ScheduleGrid sched_grid(grid, fp, cells);
         const auto& cell = sched_grid.get_cell(1,1,1);
+        const auto& props_val = cell.props.value();
         BOOST_CHECK_EQUAL(cell.depth, 1.50);
-        BOOST_CHECK_EQUAL(cell.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
-        BOOST_CHECK_EQUAL(cell.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
-        BOOST_CHECK_EQUAL(cell.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
+        BOOST_CHECK_EQUAL(props_val.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
+        BOOST_CHECK_EQUAL(props_val.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
+        BOOST_CHECK_EQUAL(props_val.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
     }
     {
         ScheduleGrid sched_grid(cells);
         const auto& cell = sched_grid.get_cell(1,1,1);
+        const auto& props_val = cell.props.value();
         BOOST_CHECK_EQUAL(cell.depth, 1.50);
-        BOOST_CHECK_EQUAL(cell.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
-        BOOST_CHECK_EQUAL(cell.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
-        BOOST_CHECK_EQUAL(cell.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
+        BOOST_CHECK_EQUAL(props_val.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
+        BOOST_CHECK_EQUAL(props_val.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
+        BOOST_CHECK_EQUAL(props_val.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
 
         BOOST_CHECK_THROW(sched_grid.get_cell(2,2,2), std::exception);
     }

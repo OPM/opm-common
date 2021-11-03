@@ -44,12 +44,15 @@ const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std:
             cell.depth = this->grid->getCellDepth(i,j,k);
             cell.dimensions = this->grid->getCellDimensions(i,j,k);
             if (this->grid->cellActive(i,j,k)){
-                cell.active_index = this->grid->getActiveIndex(i,j,k);
+                CompletedCells::Cell::Props props;
+
+                props.active_index = this->grid->getActiveIndex(i,j,k);
                 if (this->fp){
-                    cell.permx = this->fp->try_get<double>("PERMX")->at(cell.active_index.value());
-                    cell.permy = this->fp->try_get<double>("PERMY")->at(cell.active_index.value());
-                    cell.permz = this->fp->try_get<double>("PERMZ")->at(cell.active_index.value());
+                    props.permx = this->fp->try_get<double>("PERMX")->at(props.active_index);
+                    props.permy = this->fp->try_get<double>("PERMY")->at(props.active_index);
+                    props.permz = this->fp->try_get<double>("PERMZ")->at(props.active_index);
                 }
+                cell.props = props;
 
             }
         }

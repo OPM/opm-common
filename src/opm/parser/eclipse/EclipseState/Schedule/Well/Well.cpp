@@ -693,7 +693,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, c
     bool update = this->updateConnections(connections_arg, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
-        auto active_index = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK()).active_index.value();
+        auto active_index = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK()).active_index();
         this->pvt_table = pvtnum[active_index];
         update = true;
     }

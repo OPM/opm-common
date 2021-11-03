@@ -281,7 +281,7 @@ namespace {
                 // will decide the segment number based on the distance in a process later.
             }
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
-              if (grid.get_cell(I, J, K).active_index.has_value()) {
+              if (grid.get_cell(I, J, K).is_active()) {
                 std::size_t seqIndex = compsegs.size();
                 compsegs.emplace_back( I, J, K,
                                        branch,
@@ -322,7 +322,7 @@ namespace {
                 const int i = compseg.m_i;
                 const int j = compseg.m_j;
                 const int k = compseg.m_k;
-                if (grid.get_cell(i, j, k).active_index.has_value()) {
+                if (grid.get_cell(i, j, k).is_active()) {
                     Connection& connection = new_connection_set.getFromIJK(i, j, k);
                     connection.updateSegment(compseg.segment_number,
                                              compseg.center_depth,

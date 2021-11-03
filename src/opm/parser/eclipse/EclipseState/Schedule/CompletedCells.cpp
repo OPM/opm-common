@@ -58,3 +58,11 @@ Opm::CompletedCells Opm::CompletedCells::serializeObject() {
     cells.cells.emplace(7, Opm::CompletedCells::Cell::serializeObject());
     return cells;
 }
+
+std::size_t Opm::CompletedCells::Cell::active_index() const{
+    return this->props.value().active_index;
+}
+
+bool Opm::CompletedCells::Cell::is_active() const{
+    return this->props.has_value();
+}
