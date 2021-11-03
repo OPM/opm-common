@@ -37,6 +37,7 @@ public:
             double permx;
             double permy;
             double permz;
+            //int satnum;
 
             bool operator==(const Props& other) const{
                 return this->active_index == other.active_index &&
@@ -77,7 +78,6 @@ public:
             serializer(this->i);
             serializer(this->j);
             serializer(this->k);
-            serializer(this->active_index);
             serializer(this->depth);
             serializer(this->props);
             serializer.template array<std::array<double,3>, false>(this->dimensions);
