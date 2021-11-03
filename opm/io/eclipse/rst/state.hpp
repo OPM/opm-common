@@ -24,21 +24,20 @@
 #include <unordered_map>
 #include <vector>
 
-#include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/aquifer.hpp>
-#include <opm/io/eclipse/rst/group.hpp>
-#include <opm/io/eclipse/rst/well.hpp>
-#include <opm/io/eclipse/rst/udq.hpp>
 #include <opm/io/eclipse/rst/action.hpp>
+#include <opm/io/eclipse/rst/group.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/udq.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-
 namespace Opm {
     class EclipseGrid;
-    class Parser;
     class Parser;
 } // namespace Opm
 

@@ -16,32 +16,39 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/io/eclipse/rst/state.hpp>
+
+#include <opm/io/eclipse/RestartFileView.hpp>
+
+#include <opm/io/eclipse/rst/aquifer.hpp>
+#include <opm/io/eclipse/rst/action.hpp>
+#include <opm/io/eclipse/rst/connection.hpp>
+#include <opm/io/eclipse/rst/group.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/udq.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
+
+#include <opm/common/utility/String.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+
+#include <opm/output/eclipse/UDQDims.hpp>
+#include <opm/output/eclipse/VectorItems/connection.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
+
 #include <algorithm>
 #include <iterator>
 #include <memory>
 #include <numeric>
 #include <optional>
-
-#include <opm/io/eclipse/RestartFileView.hpp>
-
-#include <opm/io/eclipse/rst/header.hpp>
-#include <opm/io/eclipse/rst/connection.hpp>
-#include <opm/io/eclipse/rst/well.hpp>
-#include <opm/io/eclipse/rst/state.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
-
-#include <opm/common/utility/TimeService.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/common/utility/String.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/output/eclipse/UDQDims.hpp>
-#include <opm/output/eclipse/VectorItems/connection.hpp>
-#include <opm/output/eclipse/VectorItems/well.hpp>
-#include <opm/output/eclipse/VectorItems/intehead.hpp>
-#include <opm/output/eclipse/VectorItems/doubhead.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
-
 
 namespace {
     std::string
