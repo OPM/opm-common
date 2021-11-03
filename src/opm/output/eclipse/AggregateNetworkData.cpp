@@ -541,7 +541,7 @@ template <class ZNodeArray>
 void staticContrib(const std::string&       nodeName,
                    ZNodeArray&               zNode)
 {
-    zNode[0] = nodeName;
+    zNode[VI::ZNode::index::NodeName] = nodeName;
 }
 } // Znode
 
