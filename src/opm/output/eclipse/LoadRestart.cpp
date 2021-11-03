@@ -1451,6 +1451,11 @@ namespace {
         smry.update_well_var(well, "WGPT", xwel[VI::XWell::index::GasPrTotal]);
         smry.update_well_var(well, "WVPT", xwel[VI::XWell::index::VoidPrTotal]);
 
+        // Cumulative liquid production = WOPT + WWPT
+        smry.update_well_var(well, "WLPT",
+                             xwel[VI::XWell::index::OilPrTotal] +
+                             xwel[VI::XWell::index::WatPrTotal]);
+
         smry.update_well_var(well, "WWIT", xwel[VI::XWell::index::WatInjTotal]);
         smry.update_well_var(well, "WGIT", xwel[VI::XWell::index::GasInjTotal]);
         smry.update_well_var(well, "WVIT", xwel[VI::XWell::index::VoidInjTotal]);
@@ -1493,6 +1498,11 @@ namespace {
         update("WPT", xgrp[VI::XGroup::index::WatPrTotal]);
         update("GPT", xgrp[VI::XGroup::index::GasPrTotal]);
         update("VPT", xgrp[VI::XGroup::index::VoidPrTotal]);
+
+        // Cumulative liquid production = xOPT + xWPT
+        update("LPT",
+               xgrp[VI::XGroup::index::OilPrTotal] +
+               xgrp[VI::XGroup::index::WatPrTotal]);
 
         update("WIT", xgrp[VI::XGroup::index::WatInjTotal]);
         update("GIT", xgrp[VI::XGroup::index::GasInjTotal]);
