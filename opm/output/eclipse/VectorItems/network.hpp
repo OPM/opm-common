@@ -61,6 +61,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     };
     }
 
+    namespace ZNode {
+        enum index : std::vector<const char*>::size_type {
+            NodeName = 0, // Node name
+        };
+    } // ZNode
+
 }}}} // Opm::RestartIO::Helpers::VectorItems
 
 #endif // OPM_OUTPUT_ECLIPSE_VECTOR_NETWORK_HPP
