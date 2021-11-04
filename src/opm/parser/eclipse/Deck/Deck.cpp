@@ -30,17 +30,6 @@ namespace fs = std::filesystem;
 
 namespace Opm {
 
-    bool DeckViewInternal::hasKeyword( const DeckKeyword& keyword ) const {
-        auto key = this->keywordMap.find( keyword.name() );
-
-        if( key == this->keywordMap.end() ) return false;
-
-        for( auto index : key->second )
-            if( &this->getKeyword( index ) == &keyword ) return true;
-
-        return false;
-    }
-
     bool DeckViewInternal::hasKeyword( const std::string& keyword ) const {
         return this->keywordMap.find( keyword ) != this->keywordMap.end();
     }
