@@ -30,7 +30,6 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/rst/state.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 namespace Opm {
 
@@ -93,30 +92,9 @@ namespace Opm {
 
         ScheduleRestartInfo() = default;
 
-        ScheduleRestartInfo(const RestartIO::RstState * rst, const Deck& deck) {
-            if (rst) {
-                const auto& [t,r] = rst->header.restart_info();
-                this->time = t;
-                this->report_step = r;
-                this->skiprest = deck.hasKeyword<ParserKeywords::SKIPREST>();
-            }
-        }
-
-
-        bool operator==(const ScheduleRestartInfo& other) const {
-            return this->time == other.time &&
-                   this->report_step == other.report_step &&
-                   this->skiprest == other.skiprest;
-        }
-
-
-        static ScheduleRestartInfo serializeObject() {
-            ScheduleRestartInfo rst_info;
-            rst_info.report_step = 12345;
-            rst_info.skiprest = false;
-            return rst_info;
-        }
-
+        ScheduleRestartInfo(const RestartIO::RstState * rst, const Deck& deck);
+        bool operator==(const ScheduleRestartInfo& other) const;
+        static ScheduleRestartInfo serializeObject();
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
