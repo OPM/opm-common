@@ -60,7 +60,6 @@ namespace Opm {
         public:
             typedef std::vector< DeckKeyword >::const_iterator const_iterator;
 
-            bool hasKeyword( const DeckKeyword& keyword ) const;
             bool hasKeyword( const std::string& keyword ) const;
             template< class Keyword >
             bool hasKeyword() const {
