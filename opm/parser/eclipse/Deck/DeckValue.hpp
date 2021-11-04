@@ -23,6 +23,7 @@
 #include <string>
 
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
 namespace Opm {
 
@@ -33,7 +34,8 @@ class DeckValue {
         explicit DeckValue(int);
         explicit DeckValue(double);
         explicit DeckValue(const std::string&);
-        
+        explicit DeckValue(const UDAValue&);
+
         bool is_default() const;
 
         template<typename T>
@@ -48,7 +50,8 @@ class DeckValue {
         type_tag value_enum;
         int int_value;
         double double_value;
-        std::string string_value;    
+        std::string string_value;
+        UDAValue uda_value;
 
 };
 

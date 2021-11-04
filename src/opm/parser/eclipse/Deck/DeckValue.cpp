@@ -47,6 +47,12 @@ DeckValue::DeckValue(const std::string& value):
     string_value(value)
 {}
 
+DeckValue::DeckValue(const UDAValue& value):
+    default_value(false),
+    value_enum(type_tag::uda),
+    uda_value(value)
+{}
+
 bool DeckValue::is_default() const {
     return default_value;
 }
@@ -79,6 +85,15 @@ std::string DeckValue::get() const {
 }
 
 template<>
+UDAValue DeckValue::get() const {
+    if (value_enum == type_tag::uda)
+        return this->uda_value;
+
+    throw std::invalid_argument("DeckValue does not hold an UDAValue");
+}
+
+
+template<>
 bool DeckValue::is_compatible<int>() const {
     return (value_enum == type_tag::integer);
 }
@@ -94,6 +109,10 @@ bool DeckValue::is_compatible<std::string>() const {
     return (value_enum == type_tag::string);
 }
 
+template<>
+bool DeckValue::is_compatible<UDAValue>() const {
+    return (value_enum == type_tag::uda);
+}
 
 }
 

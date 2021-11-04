@@ -1221,7 +1221,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
 
-    void Schedule::applyKeywords(const Deck& deck, std::size_t reportStep) {
+    void Schedule::applyKeywords(
+             std::vector<DeckKeyword*>& keywords, std::size_t reportStep) {
         ParseContext parseContext;
         ErrorGuard errors;
         std::unordered_set<std::string> affected_wells;
@@ -1230,11 +1231,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         const std::string prefix = "| "; /* logger prefix string */
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
-        for (const auto& keyword : deck) {
-            input_block.push_back(keyword);
+        for (auto keyword : keywords) {
+            input_block.push_back(*keyword);
             this->handleKeyword(reportStep,
                                 input_block,
-                                keyword,
+                                *keyword,
                                 parseContext,
                                 errors,
                                 /*EclipseGrid *grid=*/nullptr,
