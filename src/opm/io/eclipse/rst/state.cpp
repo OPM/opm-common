@@ -126,7 +126,8 @@ void RstState::add_groups(const std::vector<std::string>& zgrp,
                           const std::vector<float>& sgrp,
                           const std::vector<double>& xgrp)
 {
-    for (int ig=0; ig < this->header.ngroup; ig++) {
+    auto load_group = [this, &zgrp, &igrp, &sgrp, &xgrp](const int ig)
+    {
         std::size_t zgrp_offset = ig * this->header.nzgrpz;
         std::size_t igrp_offset = ig * this->header.nigrpz;
         std::size_t sgrp_offset = ig * this->header.nsgrpz;
@@ -138,7 +139,20 @@ void RstState::add_groups(const std::vector<std::string>& zgrp,
                                   igrp.data() + igrp_offset,
                                   sgrp.data() + sgrp_offset,
                                   xgrp.data() + xgrp_offset);
-    }
+    };
+
+    // Load active named/user-defined groups.
+    for (int ig=0; ig < this->header.ngroup; ig++)
+        load_group(ig);
+
+    // Load FIELD group from zero-based window index NGMAX in the *GRP
+    // arrays.  Needed to reconstruct any field-wide constraints (e.g.,
+    // GCONINJE and/or GCONPROD applied to the FIELD itself).
+    //
+    // Recall that 'max_groups_in_field' is really NGMAX + 1 here as FIELD
+    // is also included in this value in the restart file.  Subtract one to
+    // get the actual NGMAX value.
+    load_group(this->header.max_groups_in_field - 1);
 }
 
 void RstState::add_wells(const std::vector<std::string>& zwel,
@@ -386,7 +400,9 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
 {
     RstState state(rstView, grid);
 
-    if (state.header.ngroup > 0) {
+    // At minimum we need any applicable constraint data for FIELD.  Load
+    // groups unconditionally.
+    {
         const auto& zgrp = rstView->getKeyword<std::string>("ZGRP");
         const auto& igrp = rstView->getKeyword<int>("IGRP");
         const auto& sgrp = rstView->getKeyword<float>("SGRP");

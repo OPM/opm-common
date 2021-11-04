@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <ctime>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
@@ -1111,9 +1112,27 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     void Schedule::addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep) {
         auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
-        const auto& sched_state = this->snapshots.back();
-        auto insert_index = sched_state.groups.size();
-        this->addGroup( Group(rst_group, insert_index, udq_undefined, this->m_static.m_unit_system) );
+
+        const auto insert_index = this->snapshots.back().groups.size();
+        auto new_group = Group(rst_group, insert_index, udq_undefined, this->m_static.m_unit_system);
+        if (rst_group.name != "FIELD") {
+            // Common case.  Add new group.
+            this->addGroup( std::move(new_group) );
+            return;
+        }
+
+        // If we get here we're updating the FIELD group to incorporate any
+        // applicable field-wide GCONPROD and/or GCONINJE settings stored in
+        // the restart file.  Happens at most once per run.
+
+        auto& field = this->snapshots.back().groups.get("FIELD");
+        if (new_group.isProductionGroup())
+            // Initialise field-wide GCONPROD settings from restart.
+            field.updateProduction(new_group.productionProperties());
+        for (const auto phase : { Phase::GAS, Phase::WATER })
+            if (new_group.hasInjectionControl(phase))
+                // Initialise field-wide GCONINJE settings (phase) from restart.
+                field.updateInjection(new_group.injectionProperties(phase));
     }
 
 
