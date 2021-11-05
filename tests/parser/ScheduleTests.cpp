@@ -135,6 +135,15 @@ static std::string createDeckWTEST() {
     std::string input = R"(
 START             -- 0
 10 MAI 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 WELSPECS
      'DEFAULT'    'OP'   30   37  3.33       'OIL'  7*/
@@ -228,6 +237,15 @@ static std::string createDeckForTestingCrossFlow() {
     std::string input = R"(
 START             -- 0
 10 MAI 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 WELSPECS
      'DEFAULT'    'OP'   30   37  3.33       'OIL'  7*/
@@ -329,6 +347,15 @@ static std::string createDeckWithWellsAndCompletionData() {
     std::string input = R"(
 START             -- 0
 1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  1 DES 1979/
@@ -645,6 +672,15 @@ static std::string createDeckWithWellsAndConnectionDataWithWELOPEN() {
     std::string input = R"(
 START             -- 0
 1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  1 DES 1979/
@@ -744,6 +780,15 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
     std::string input = R"(
 START             -- 0
 1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  1 DES 1979/
@@ -787,6 +832,15 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
   std::string input = R"(
 START             -- 0
 1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  1 DES 1979/
@@ -853,6 +907,15 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -959,6 +1022,15 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg_UDA) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -1087,6 +1159,15 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -1424,6 +1505,15 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -1505,6 +1595,15 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -1638,6 +1737,15 @@ BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -1694,6 +1802,15 @@ BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 WHISTCTL
  GRAT/
@@ -2802,6 +2919,15 @@ BOOST_AUTO_TEST_CASE(handleWEFAC) {
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -3452,6 +3578,15 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateConfig) {
     std::string input = R"(
 START             -- 0
 10 MAI 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 WELSPECS
      'W1'    'G1'   1 2  3.33       'OIL'  7*/
@@ -4400,6 +4535,12 @@ DEPTHZ
 
 PORO
   300*0.3 /
+PERMX
+    300*1 /
+PERMY
+    300*0.1 /
+PERMZ
+    300*0.01 /
 
 SCHEDULE
 WELSPECS -- 0
@@ -4599,6 +4740,12 @@ DEPTHZ
 
 PORO
   300*0.3 /
+PERMX
+    300*1 /
+PERMY
+    300*0.1 /
+PERMZ
+    300*0.01 /
 
 SCHEDULE
 
@@ -4810,16 +4957,45 @@ END
 BOOST_AUTO_TEST_CASE(TestScheduleGrid) {
     EclipseGrid grid(10,10,10);
     CompletedCells cells(grid);
+    std::string deck_string = R"(
+GRID
+
+PORO
+   1000*0.10 /
+
+PERMX
+   1000*1 /
+
+PERMY
+   1000*0.1 /
+
+PERMZ
+   1000*0.01 /
+
+
+)";
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, TableManager());
+    const auto& unit_system = deck.getActiveUnitSystem();
 
     {
-        ScheduleGrid sched_grid(grid, cells);
-        auto depth = sched_grid.get_cell(1,1,1).depth;
-        BOOST_CHECK_EQUAL(depth, 1.50);
+        ScheduleGrid sched_grid(grid, fp, cells);
+        const auto& cell = sched_grid.get_cell(1,1,1);
+        const auto& props_val = cell.props.value();
+        BOOST_CHECK_EQUAL(cell.depth, 1.50);
+        BOOST_CHECK_EQUAL(props_val.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
+        BOOST_CHECK_EQUAL(props_val.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
+        BOOST_CHECK_EQUAL(props_val.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
     }
     {
         ScheduleGrid sched_grid(cells);
-        auto depth = sched_grid.get_cell(1,1,1).depth;
-        BOOST_CHECK_EQUAL(depth, 1.50);
+        const auto& cell = sched_grid.get_cell(1,1,1);
+        const auto& props_val = cell.props.value();
+        BOOST_CHECK_EQUAL(cell.depth, 1.50);
+        BOOST_CHECK_EQUAL(props_val.permx, unit_system.to_si(UnitSystem::measure::permeability, 1));
+        BOOST_CHECK_EQUAL(props_val.permy, unit_system.to_si(UnitSystem::measure::permeability, 0.1));
+        BOOST_CHECK_EQUAL(props_val.permz, unit_system.to_si(UnitSystem::measure::permeability, 0.01));
+
         BOOST_CHECK_THROW(sched_grid.get_cell(2,2,2), std::exception);
     }
 }

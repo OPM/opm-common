@@ -101,7 +101,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
     {
         if (this->m_defaultSatTabId) {
             const auto& satnum = fp.get_int("SATNUM");
-            auto active_index = grid.get_cell(this->ijk[0], this->ijk[1], this->ijk[2]).active_index.value();
+            auto active_index = grid.get_cell(this->ijk[0], this->ijk[1], this->ijk[2]).active_index();
             this->sat_tableId = satnum[active_index];
         }
         if (this->segment_number > 0)

@@ -59,6 +59,15 @@ using namespace Opm;
 std::string deck0 = R"(
 START             -- 0
 10 MAI 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 
 DATES             -- 1
@@ -98,6 +107,15 @@ DATES             -- 7
 std::string WTEST_deck = R"(
 START             -- 0
 10 MAI 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
 SCHEDULE
 WELSPECS
      'DEFAULT'    'OP'   30   37  3.33       'OIL'  7*/

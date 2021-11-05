@@ -328,7 +328,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
         for (int k = K1; k <= K2; k++) {
             const CompletedCells::Cell& cell = grid.get_cell(I, J, k);
-            if (!cell.active_index.has_value()) {
+            if (!cell.is_active()) {
                 auto msg = fmt::format("Problem with COMPDAT keyword\n"
                                        "In {} line {}\n"
                                        "The cell ({},{},{}) in well {} is not active and the connection will be ignored", location.filename, location.lineno, I,J,k, wname);
@@ -336,7 +336,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 continue;
             }
 
-            size_t active_index = cell.active_index.value();
+            size_t active_index = cell.active_index();
             double CF = -1;
             double Kh = -1;
             double r0 = -1;

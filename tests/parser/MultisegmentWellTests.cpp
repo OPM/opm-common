@@ -67,6 +67,19 @@ BOOST_AUTO_TEST_CASE(AICDWellTest) {
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
     const std::string compsegs_string = R"(
+GRID
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
 WELSEGS
 'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' /
 2         2      1      1    2537.5 2537.5  0.3   0.00010 /
@@ -109,7 +122,8 @@ WSEGAICD
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
     Opm::CompletedCells cells(grid);
-    const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, cells), parseContext, errorGuard);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
+    const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
 
     // checking the ICD segment
     const Opm::DeckKeyword wsegaicd = deck.getKeyword("WSEGAICD");
@@ -213,6 +227,19 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
     const std::string compsegs_string = R"(
+GRID
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
 WELSEGS
 'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' /
 2         2      1      1    2537.5 2537.5  0.3   0.00010 /
@@ -252,9 +279,10 @@ WSEGSICD
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
     Opm::CompletedCells cells(grid);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, cells), parseContext, errorGuard);
+    const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
 
     // checking the ICD segment
     const Opm::DeckKeyword wsegsicd = deck.getKeyword("WSEGSICD");
@@ -366,6 +394,16 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
     const std::string compsegs_string =
+        "GRID \n"
+        "PORO \n"
+        "8000*0.1 /\n"
+        "PERMX \n"
+        "8000*1 /\n"
+        "PERMY \n"
+        "8000*0.1 /\n"
+        "PERMZ \n"
+        "8000*0.01 /\n"
+        "SCHEDULE \n"
         "WELSEGS \n"
         "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'H--' 'HO' /\n"
         "2         2      1      1    2537.5 2537.5  0.3   0.00010 /\n"
@@ -400,11 +438,12 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
     Opm::CompletedCells cells(grid);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, cells), parseContext, errorGuard), Opm::OpmInputError);
+    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard), Opm::OpmInputError);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, cells), parseContext, errorGuard));
+    BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard));
 }
 
 BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
@@ -424,6 +463,16 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
     const std::string compsegs_string =
+        "GRID \n"
+        "PORO \n"
+        "8000*0.1 /\n"
+        "PERMX \n"
+        "8000*1 /\n"
+        "PERMY \n"
+        "8000*0.1 /\n"
+        "PERMZ \n"
+        "8000*0.01 /\n"
+        "SCHEDULE \n"
         "WELSEGS \n"
         "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'H--' 'HO' /\n"
         "2         2      1      1    2537.5 2537.5  0.3   0.00010 /\n"
@@ -458,11 +507,12 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
     Opm::CompletedCells cells(grid);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, cells), parseContext, errorGuard), Opm::OpmInputError);
+    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard), Opm::OpmInputError);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, cells), parseContext, errorGuard) );
+    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard) );
 }
 
 BOOST_AUTO_TEST_CASE(testwsegvalv) {
@@ -482,6 +532,16 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
     const std::string compsegs_string =
+        "GRID \n"
+        "PORO \n"
+        "8000*0.1 /\n"
+        "PERMX \n"
+        "8000*1 /\n"
+        "PERMY \n"
+        "8000*0.1 /\n"
+        "PERMZ \n"
+        "8000*0.01 /\n"
+        "SCHEDULE \n"
         "WELSEGS \n"
         "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' /\n"
         "2         2      1      1    2537.5 2537.5  0.3   0.00010 /\n"
@@ -522,9 +582,10 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
     Opm::CompletedCells cells(grid);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, cells), parseContext, errorGuard));
+    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard));
 
     // checking the WSEGVALV segment
     const Opm::DeckKeyword wsegvalv = deck.getKeyword("WSEGVALV");

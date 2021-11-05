@@ -24,16 +24,18 @@
 namespace Opm {
 
 class EclipseGrid;
+class FieldPropsManager;
 
 class ScheduleGrid {
 public:
-    ScheduleGrid(const EclipseGrid& ecl_grid, CompletedCells& completed_cells);
+    ScheduleGrid(const EclipseGrid& ecl_grid, const FieldPropsManager& fpm, CompletedCells& completed_cells);
     explicit ScheduleGrid(CompletedCells& completed_cells);
 
     const CompletedCells::Cell& get_cell(std::size_t i, std::size_t j, std::size_t k) const;
 
 private:
     const EclipseGrid* grid{nullptr};
+    const FieldPropsManager* fp{nullptr};
     CompletedCells& cells;
 };
 
