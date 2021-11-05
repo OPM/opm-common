@@ -689,7 +689,10 @@ bool Group::hasGroup(const std::string& group_name) const  {
 void Group::delGroup(const std::string& group_name) {
     auto rm_count = this->m_groups.erase(group_name);
     if (rm_count == 0)
-        throw std::invalid_argument("Group does not have group: " + group_name);
+        throw std::invalid_argument {
+            fmt::format("Group '{}' is not a parent of group: {}",
+                        this->name(), group_name)
+        };
 }
 
 bool Group::update_gefac(double gf, bool transfer_gf) {
