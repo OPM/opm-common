@@ -299,9 +299,13 @@ macro(opm_add_test TestName)
   endif()
 
   if (NOT SKIP_CUR_TEST)
-    if (CURTEST_ONLY_COMPILE)
+    if (CURTEST_ONLY_COMPILE OR NOT CURTEST_NO_COMPILE)
       # only compile the binary but do not run it as a test
       add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+      if(HAVE_DYNAMIC_BOOST_TEST)
+        set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
+          COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
+      endif()
       target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
       get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
       add_static_analysis_tests(CURTEST_SOURCES dirs)
@@ -311,27 +315,6 @@ macro(opm_add_test TestName)
       endif()
       if(CURTEST_DEPENDS)
         add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
-      endif()
-    else()
-      if (NOT CURTEST_NO_COMPILE)
-        # in addition to being run, the test must be compiled. (the
-        # run-only case occurs if the binary is already compiled by an
-        # earlier test.)
-        add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
-        if(HAVE_DYNAMIC_BOOST_TEST)
-          set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
-                                 COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
-        endif()
-        target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
-        get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-        add_static_analysis_tests(CURTEST_SOURCES dirs)
-
-        if(CURTEST_DEPENDS)
-          add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
-        endif()
-        if(TARGET ${project}_prepare)
-          add_dependencies("${CURTEST_EXE_NAME}" ${project}_prepare)
-        endif()
       endif()
 
       # figure out how the test should be run. if a test driver script
