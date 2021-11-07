@@ -149,7 +149,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
             m_title.pop_back();
         }
 
-        this->initTransMult();
+        this->applyMULTXYZ();
         this->initFaults(deck);
 
         const auto& init_config = this->getInitConfig();
@@ -307,7 +307,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
             this->aquifer_config.loadFromRestart(aquifers, this->m_tables);
     }
 
-    void EclipseState::initTransMult() {
+    void EclipseState::applyMULTXYZ() {
         const auto& fp = this->field_props;
         if (fp.has_double("MULTX"))  this->m_transMult.applyMULT(fp.get_global_double("MULTX") , FaceDir::XPlus);
         if (fp.has_double("MULTX-")) this->m_transMult.applyMULT(fp.get_global_double("MULTX-"), FaceDir::XMinus);

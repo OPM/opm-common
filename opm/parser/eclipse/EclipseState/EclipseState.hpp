@@ -137,7 +137,7 @@ namespace Opm {
 
     private:
         void initIOConfigPostSchedule(const Deck& deck);
-        void initTransMult();
+        void applyMULTXYZ();
         void initFaults(const Deck& deck);
         void initPara(const Deck& deck);
 
