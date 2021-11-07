@@ -29,6 +29,7 @@ namespace Opm {
 
 class EclipseGrid;
 class Deck;
+class DeckKeyword;
 class FieldProps;
 class Phases;
 class TableManager;
@@ -46,6 +47,9 @@ public:
     const std::string& default_region() const;
     virtual std::vector<int> actnum() const;
     virtual std::vector<double> porv(bool global = false) const;
+
+
+    void apply_schedule_keywords(const std::vector<DeckKeyword>& keywords);
 
     /*
      The number of cells in the fields managed by this FieldPropsManager.

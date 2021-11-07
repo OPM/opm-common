@@ -267,7 +267,13 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
 
 namespace SCHEDULE {
 
-static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {};
+static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
+                                                                                      {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
+                                                                                      {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
+                                                                                      {"MULTY-",  keyword_info<double>{}.init(1.0).mult(true)},
+                                                                                      {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true).global_kw(true)},
+                                                                                      {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true)}};
+
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {{"ROCKNUM",   keyword_info<int>{}}};
 
 }
@@ -485,6 +491,7 @@ public:
         return this->double_data.size();
     }
 
+    void handle_schedule_keywords(const std::vector<DeckKeyword>& keywords);
     bool tran_active(const std::string& keyword) const;
     void apply_tran(const std::string& keyword, std::vector<double>& data);
     std::vector<char> serialize_tran() const;
@@ -497,7 +504,6 @@ private:
     void scanPROPSSection(const PROPSSection& props_section);
     void scanREGIONSSection(const REGIONSSection& regions_section);
     void scanSOLUTIONSection(const SOLUTIONSection& solution_section);
-    void scanSCHEDULESection(const SCHEDULESection& schedule_section);
     double getSIValue(const std::string& keyword, double raw_value) const;
     double getSIValue(ScalarOperation op, const std::string& keyword, double raw_value) const;
     template <typename T>
