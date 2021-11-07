@@ -21,34 +21,23 @@
 
 namespace Opm {
 
+class Deck;
+
   class MICPpara {
   public:
 
       MICPpara();
 
-      MICPpara( double density_biofilm , double density_calcite , double detachment_rate , double critical_porosity , double fitting_factor , double half_velocity_oxygen , double half_velocity_urea , double maximum_growth_rate , double maximum_oxygen_concentration , double maximum_urea_concentration , double maximum_urea_utilization , double microbial_attachment_rate , double microbial_death_rate , double minimum_permeability , double oxygen_consumption_factor , double tolerance_before_clogging , double yield_growth_coefficient) :
-          m_density_biofilm( density_biofilm ),
-          m_density_calcite( density_calcite ),
-          m_detachment_rate( detachment_rate ),
-          m_critical_porosity(  critical_porosity ),
-          m_fitting_factor(  fitting_factor ),
-          m_half_velocity_oxygen(  half_velocity_oxygen ),
-          m_half_velocity_urea(  half_velocity_urea ),
-          m_maximum_growth_rate(  maximum_growth_rate ),
-          m_maximum_oxygen_concentration(  maximum_oxygen_concentration ),
-          m_maximum_urea_concentration(  maximum_urea_concentration ),
-          m_maximum_urea_utilization(  maximum_urea_utilization ),
-          m_microbial_attachment_rate(  microbial_attachment_rate ),
-          m_microbial_death_rate(  microbial_death_rate ),
-          m_minimum_permeability(  minimum_permeability ),
-          m_oxygen_consumption_factor(  oxygen_consumption_factor ),
-          m_tolerance_before_clogging(  tolerance_before_clogging ),
-          m_yield_growth_coefficient(  yield_growth_coefficient )
-      { }
+      explicit MICPpara(const Deck& deck);
+
 
       static MICPpara serializeObject()
       {
-          return MICPpara(1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15., 16., 17.);
+          MICPpara mp;
+          mp.m_density_biofilm = 100;
+          mp.m_fitting_factor = 77;
+          mp.m_maximum_oxygen_concentration = -1;
+          return mp;
       }
 
       double getDensityBiofilm() const {

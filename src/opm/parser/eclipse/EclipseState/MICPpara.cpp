@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/MICPpara.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 
@@ -40,3 +41,34 @@ Opm::MICPpara::MICPpara() :
     m_tolerance_before_clogging(  ParserKeywords::MICPPARA::TOLERANCE_BEFORE_CLOGGING::defaultValue ),
     m_yield_growth_coefficient(  ParserKeywords::MICPPARA::YIELD_GROWTH_COEFFICIENT::defaultValue )
 { }
+
+
+Opm::MICPpara::MICPpara( const Opm::Deck& deck)
+    : MICPpara()
+{
+    using namespace Opm::ParserKeywords;
+
+    if (!deck.hasKeyword<MICPPARA>())
+        return;
+
+    const auto& keyword = deck.getKeyword<MICPPARA>();
+    const auto& record = keyword.getRecord(0);
+    this->m_density_biofilm = record.getItem<MICPPARA::DENSITY_BIOFILM>().getSIDouble(0);
+    this->m_density_calcite = record.getItem<MICPPARA::DENSITY_CALCITE>().getSIDouble(0);
+    this->m_detachment_rate = record.getItem<MICPPARA::DETACHMENT_RATE>().getSIDouble(0);
+    this->m_critical_porosity = record.getItem<MICPPARA::CRITICAL_POROSITY>().get< double >(0);
+    this->m_fitting_factor = record.getItem<MICPPARA::FITTING_FACTOR>().get< double >(0);
+    this->m_half_velocity_oxygen = record.getItem<MICPPARA::HALF_VELOCITY_OXYGEN>().getSIDouble(0);
+    this->m_half_velocity_urea = record.getItem<MICPPARA::HALF_VELOCITY_UREA>().getSIDouble(0);
+    this->m_maximum_growth_rate = record.getItem<MICPPARA::MAXIMUM_GROWTH_RATE>().getSIDouble(0);
+    this->m_maximum_oxygen_concentration = record.getItem<MICPPARA::MAXIMUM_OXYGEN_CONCENTRATION>().getSIDouble(0);
+    this->m_maximum_urea_concentration = record.getItem<MICPPARA::MAXIMUM_UREA_CONCENTRATION>().getSIDouble(0);
+    this->m_maximum_urea_utilization = record.getItem<MICPPARA::MAXIMUM_UREA_UTILIZATION>().getSIDouble(0);
+    this->m_microbial_attachment_rate = record.getItem<MICPPARA::MICROBIAL_ATTACHMENT_RATE>().getSIDouble(0);
+    this->m_microbial_death_rate = record.getItem<MICPPARA::MICROBIAL_DEATH_RATE>().getSIDouble(0);
+    this->m_minimum_permeability = record.getItem<MICPPARA::MINIMUM_PERMEABILITY>().getSIDouble(0);
+    this->m_oxygen_consumption_factor = record.getItem<MICPPARA::OXYGEN_CONSUMPTION_FACTOR>().get< double >(0);
+    this->m_tolerance_before_clogging = record.getItem<MICPPARA::TOLERANCE_BEFORE_CLOGGING>().get< double >(0);
+    this->m_yield_growth_coefficient = record.getItem<MICPPARA::YIELD_GROWTH_COEFFICIENT>().get< double >(0);
+}
+
