@@ -730,7 +730,7 @@ namespace {
         std::string msg_fmt = fmt::format("Problem with keyword {{keyword}} at report step {}\n"
                                           "In {{file}} line {{line}}\n"
                                           "OPM does not support grid property modifier {} in the Schedule section", handlerContext.currentStep, handlerContext.keyword.name());
-        parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg_fmt, handlerContext.keyword.location(), errors );
+        OpmLog::warning(OpmInputError::format(msg_fmt, handlerContext.keyword.location()));
     }
 
     void Schedule::handleNETBALAN(HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
