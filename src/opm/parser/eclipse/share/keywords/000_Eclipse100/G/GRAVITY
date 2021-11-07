@@ -17,11 +17,13 @@
     {
       "name": "WATER_SP_GRAVITY",
       "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 1
     },
     {
       "name": "GAS_SP_GRAVITY",
       "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 0.7773
     }
   ]

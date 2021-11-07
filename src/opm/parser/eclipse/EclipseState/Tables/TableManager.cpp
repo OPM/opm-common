@@ -18,9 +18,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <ios>
+#include <iterator>
 #include <memory>
 #include <sstream>
 
@@ -120,6 +122,36 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     return JFunc(deck);
 }
 
+DensityTable make_density_table(const GravityTable& gravity) {
+    auto rho = DensityTable{};
+    rho.reserve(gravity.size());
+
+    constexpr auto default_air_density =
+        1.22 * unit::kilogram / unit::cubic(unit::meter);
+
+    constexpr auto default_water_density =
+        1000.0 * unit::kilogram / unit::cubic(unit::meter);
+
+    // Degrees API defined as
+    //
+    //   API = (141.5 / SG) - 131.5
+    //
+    // with SG being the specific gravity of oil relative to pure water.
+
+    std::transform(gravity.begin(), gravity.end(),
+                   std::back_inserter(rho),
+                   [](const GRAVITYRecord& record)
+    {
+        return DENSITYRecord {
+            (141.5 / (record.oil_api + 131.5)) * default_water_density,
+            record.water_sg * default_water_density,
+            record.gas_sg * default_air_density
+        };
+    });
+
+    return rho;
+}
+
 }
 
 
@@ -162,6 +194,9 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         if( deck.hasKeyword( "DENSITY" ) )
             this->m_densityTable = DensityTable( deck.getKeyword( "DENSITY" ) );
+
+        else if( deck.hasKeyword( "GRAVITY" ) )
+            this->m_densityTable = make_density_table( GravityTable ( deck.getKeyword( "GRAVITY" ) ) );
 
         if( deck.hasKeyword( "DIFFC" ) )
             this->m_diffCoeffTable = DiffCoeffTable( deck.getKeyword( "DIFFC" ) );
