@@ -33,6 +33,7 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
@@ -43,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 #include "src/opm/parser/eclipse/EclipseState/Grid/FieldProps.hpp"
 
@@ -2595,4 +2597,109 @@ COPYREG
     BOOST_CHECK( !(fp == fp2) );
     BOOST_CHECK( FieldPropsManager::rst_cmp(fp, fp2) );
     (void) satnum;
+}
+
+BOOST_AUTO_TEST_CASE(SCHEDULE_MULTZ) {
+    std::string deck_string1 = R"(
+GRID
+
+PORO
+   200*0.15 /
+
+PERMX
+   200*1 /
+
+REGIONS
+
+FIPNUM
+  200*1 /
+
+MULTNUM
+  50*1 50*2 100*3 /
+
+
+EDIT
+
+MULTZ
+  200*3 /
+
+SCHEDULE
+
+TSTEP
+  1 /
+
+BOX
+   1 10 1 10 1 1 /
+
+
+MULTZ
+  100*2 /
+
+ENDBOX
+
+TSTEP
+ 1 /
+
+BOX
+   1 10 1 10 2 2 /
+
+
+MULTZ
+  100*4 /
+
+ENDBOX
+
+TSTEP
+  10 /
+
+MULTZ
+  100*2 100*4/
+
+MULTZ
+  200*10 /
+
+)";
+
+    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::permeability, raw_value); };
+    EclipseGrid grid(10,10, 2);
+    Deck deck = Parser{}.parseString(deck_string1);
+    TableManager tables;
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, tables);
+    Runspec runspec (deck);
+    auto python = std::make_shared<Python>();
+    Schedule sched(deck, grid, fp, runspec, python);
+    const auto& multz0 = fp.get_double("MULTZ");
+    for (std::size_t k=0; k < 2; k++) {
+        for (std::size_t ij=0; ij < 100; ij++)
+            BOOST_CHECK_EQUAL(multz0[ij + k*100], 3.0);
+    }
+
+    // Observe that the MULTZ multiplier is reset to 1.0 for every timestep
+
+    const auto& sched1 = sched[1];
+    fp.apply_schedule_keywords(sched1.geo_keywords());
+    const auto& multz1 = fp.get_double("MULTZ");
+    for (std::size_t ij=0; ij < 100; ij++) {
+        BOOST_CHECK_EQUAL(multz1[ij]      , 2.0);
+        BOOST_CHECK_EQUAL(multz1[ij + 100], 1.0);
+    }
+
+
+    const auto& sched2 = sched[2];
+    fp.apply_schedule_keywords(sched2.geo_keywords());
+    const auto& multz2 = fp.get_double("MULTZ");
+    for (std::size_t ij=0; ij < 100; ij++) {
+        BOOST_CHECK_EQUAL(multz2[ij]      , 1.0);
+        BOOST_CHECK_EQUAL(multz2[ij + 100], 4.0);
+    }
+
+
+    const auto& sched3 = sched[3];
+    fp.apply_schedule_keywords(sched3.geo_keywords());
+    const auto& multz3 = fp.get_double("MULTZ");
+    for (std::size_t ij=0; ij < 100; ij++) {
+        BOOST_CHECK_EQUAL(multz2[ij]      , 20.0);
+        BOOST_CHECK_EQUAL(multz2[ij + 100], 40.0);
+    }
 }
