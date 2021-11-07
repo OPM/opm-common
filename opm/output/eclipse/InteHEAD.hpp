@@ -123,6 +123,11 @@ namespace Opm { namespace RestartIO {
       int   nominated_phase;
      };
 
+
+     struct ActiveNetwork {
+         int actnetwrk;
+     };
+
      struct NetworkDims {
             int noactnod;
             int noactbr;
@@ -216,6 +221,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& tuningParam(const TuningPar& tunpar);
         InteHEAD& variousParam(const int version, const int iprog);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
+        InteHEAD& activeNetwork(const ActiveNetwork& actntwrk);
         InteHEAD& networkDimensions(const NetworkDims& nwdim);
         InteHEAD& netBalanceData(const NetBalanceDims& nwbaldim);
         InteHEAD& regionDimensions(const RegDims& rdim);

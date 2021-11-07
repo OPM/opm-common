@@ -123,7 +123,7 @@ enum index : std::vector<int>::size_type {
   NWHISTCTL    =       VI::intehead::WHISTC,   //       index for WHISTCTL keyword
   ih_072       =       72       ,              //       0       0
   ih_073       =       73       ,              //       0       0
-  ih_074       =       74       ,              //       0       0
+  ACTIVENETWRK =       VI::intehead::ACTNETWRK,  // Indicator for active external network (= 0: no active network, = 2 Active network)
   ih_075       =       75       ,              //       0       0
   ih_076       =       76       ,              //       0       0       2
   NETBALAN_5   =       VI::intehead::NETBALAN_5, // NETBALAN item 5 - Maximum number of iterations allowed in the calculation of the THP
@@ -793,6 +793,16 @@ liftOptParam(int in_enc)
 
     return *this;
 }
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::activeNetwork(const ActiveNetwork& actntwrk)
+{
+    this->data_[ACTIVENETWRK] = actntwrk.actnetwrk;
+
+    return *this;
+}
+
+
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::networkDimensions(const NetworkDims& nwdim)

@@ -486,6 +486,17 @@ namespace {
             : Value::FirstIterationOnly;
     }
 
+    Opm::RestartIO::InteHEAD::ActiveNetwork
+    getActiveNetwork(const Opm::Schedule&   sched,
+                  const std::size_t      lookup_step)
+    {
+        const auto&  netwrk = sched[lookup_step].network();
+        const auto actntwrk = netwrk.active() ? 2 : 0;
+        return {
+            actntwrk
+        };
+    }
+
     Opm::RestartIO::InteHEAD::NetworkDims
     getNetworkDims(const Opm::Schedule&   sched,
                   const std::size_t      lookup_step,
@@ -520,11 +531,19 @@ namespace {
 
     Opm::RestartIO::InteHEAD::NetBalanceDims
     getNetworkBalanceParameters(const Opm::Schedule&   sched,
-                  const std::size_t      lookup_step)
+                  const std::size_t      report_step)
     {
-        const int maxNoItNBC = sched[lookup_step].network_balance().pressure_max_iter();
-        const int maxNoItTHP  = sched[lookup_step].network_balance().thp_max_iter();
-
+        int maxNoItNBC = 0;
+        int maxNoItTHP = 10;
+        if (report_step > 0) {
+            const auto& sched_state = sched[report_step];
+            if (sched_state.network().active()) {
+                const auto lookup_step = report_step - 1;
+                const auto& netbal = sched[lookup_step].network_balance();
+                maxNoItNBC = netbal.pressure_max_iter();
+                maxNoItTHP  = netbal.thp_max_iter();
+            }
+        }
         return {
             maxNoItNBC,
             maxNoItTHP
@@ -589,8 +608,9 @@ createInteHead(const EclipseState& es,
         .variousUDQ_ACTIONXParam()
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched, report_step, lookup_step))
         .whistControlMode   (getWhistctlMode(sched, report_step, lookup_step))
+        .activeNetwork  (getActiveNetwork(sched, lookup_step))
         .networkDimensions  (getNetworkDims(sched, lookup_step, rspec))
-        .netBalanceData  (getNetworkBalanceParameters(sched, lookup_step))
+        .netBalanceData  (getNetworkBalanceParameters(sched, report_step))
         .rockOpts(getRockOpts(rckcfg,rdim))
         ;
 
