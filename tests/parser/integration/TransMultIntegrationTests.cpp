@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     BOOST_CHECK( schedule[3].events().hasEvent( ScheduleEvents::GEO_MODIFIER) );
     {
         const auto& keywords = schedule[3].geo_keywords();
-        state.apply_geo_keywords( keywords );
+        state.apply_schedule_keywords( keywords );
     }
     BOOST_CHECK_EQUAL( 2.00 , trans.getMultiplier( 2,2,0,FaceDir::XPlus ));
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 3,2,0,FaceDir::XPlus ));
