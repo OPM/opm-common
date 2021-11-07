@@ -361,44 +361,38 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         }
     }
 
+
+    /*
+      The apply_schedule_keywords can apply a small set of keywords from the
+      Schdule section for transmissibility scaling; the currently supported
+      keywords are: {MULTFLT, MULTX, MULTX-, MULTY, MULTY-, MULTZ, MULTZ-}.
+
+      Observe that the multiplier scalars which are in the schedule section are
+      applied by multiplying with the transmissibility which has already been
+      calculated, i.e. to increase the permeability you must use a multiplier
+      greater than one.
+    */
     void EclipseState::apply_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
         using namespace ParserKeywords;
+        static const std::unordered_set<std::string> multipliers = {"MULTFLT", "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
         for (const auto& keyword : keywords) {
-
             if (keyword.isKeyword<MULTFLT>()) {
                 for (const auto& record : keyword) {
                     const std::string& faultName = record.getItem<MULTFLT::fault>().get< std::string >(0);
                     auto& fault = m_faults.getFault( faultName );
-                    double tmpMultFlt = record.getItem<MULTFLT::factor>().get< double >(0);
-                    double oldMultFlt = fault.getTransMult( );
-                    double newMultFlt = oldMultFlt * tmpMultFlt;
+                    auto multflt = record.getItem<MULTFLT::factor>().get< double >(0);
 
-                    /*
-                      This extremely contrived way of doing it is because of difference in
-                      behavior and section awareness between the Fault object and the
-                      Transmult object:
-
-                      1. MULTFLT keywords found in the SCHEDULE section should apply the
-                         transmissibility modifiers cumulatively - i.e. the current
-                         transmissibility across the fault should be *multiplied* with the
-                         newly entered MULTFLT value, and the resulting transmissibility
-                         multplier for this fault should be the product of the newly
-                         entered value and the current value.
-
-                      2. The TransMult::applyMULTFLT() implementation will *multiply* the
-                         transmissibility across a face with the value in the fault
-                         object. Hence the current value has already been multiplied in;
-                         we therefor first *set* the MULTFLT value to the new value, then
-                         apply it to the TransMult object and then eventually update the
-                         MULTFLT value in the fault instance.
-
-                    */
-                    fault.setTransMult( tmpMultFlt );
+                    fault.setTransMult( multflt );
                     m_transMult.applyMULTFLT( fault );
-                    fault.setTransMult( newMultFlt );
                 }
             }
+
+            if (multipliers.count(keyword.name()) == 1)
+                OpmLog::info(fmt::format("Apply transmissibility multiplier: {}", keyword.name()));
         }
+
+        this->field_props.apply_schedule_keywords(keywords);
+        this->applyMULTXYZ();
     }
 
 
