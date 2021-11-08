@@ -261,6 +261,10 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         return m_transMult;
     }
 
+    TransMult& EclipseState::getTransMult() {
+        return m_transMult;
+    }
+
     const NNC& EclipseState::getInputNNC() const {
         return m_inputNnc;
     }

@@ -77,6 +77,7 @@ namespace Opm {
         const FaultCollection& getFaults() const;
         const MICPpara& getMicppara() const;
         const TransMult& getTransMult() const;
+        TransMult& getTransMult();
 
         /// non-neighboring connections
         /// the non-standard adjacencies as specified in input deck
