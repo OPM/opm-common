@@ -309,14 +309,16 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
     void EclipseState::applyMULTXYZ() {
         const auto& fp = this->field_props;
-        if (fp.has_double("MULTX"))  this->m_transMult.applyMULT(fp.get_global_double("MULTX") , FaceDir::XPlus);
-        if (fp.has_double("MULTX-")) this->m_transMult.applyMULT(fp.get_global_double("MULTX-"), FaceDir::XMinus);
-
-        if (fp.has_double("MULTY"))  this->m_transMult.applyMULT(fp.get_global_double("MULTY") , FaceDir::YPlus);
-        if (fp.has_double("MULTY-")) this->m_transMult.applyMULT(fp.get_global_double("MULTY-"), FaceDir::YMinus);
-
-        if (fp.has_double("MULTZ"))  this->m_transMult.applyMULT(fp.get_global_double("MULTZ") , FaceDir::ZPlus);
-        if (fp.has_double("MULTZ-")) this->m_transMult.applyMULT(fp.get_global_double("MULTZ-"), FaceDir::ZMinus);
+        static const std::vector<std::pair<std::string, FaceDir::DirEnum>> multipliers = {{"MULTX" , FaceDir::XPlus},
+                                                                                          {"MULTX-", FaceDir::XMinus},
+                                                                                          {"MULTY" , FaceDir::YPlus},
+                                                                                          {"MULTY-", FaceDir::YMinus},
+                                                                                          {"MULTZ" , FaceDir::ZPlus},
+                                                                                          {"MULTZ-", FaceDir::ZMinus}};
+        for (const auto& [field, face] : multipliers) {
+            if (fp.has_double(field))
+                this->m_transMult.applyMULT(fp.get_global_double(field), face);
+        }
     }
 
     void EclipseState::initFaults(const Deck& deck) {
