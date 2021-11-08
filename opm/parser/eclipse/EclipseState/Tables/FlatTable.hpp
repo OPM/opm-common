@@ -51,6 +51,37 @@ struct DensityTable : public FlatTable< DENSITYRecord > {
     }
 };
 
+struct GRAVITYRecord {
+    static constexpr std::size_t size = 3;
+
+    double oil_api;
+    double water_sg;
+    double gas_sg;
+
+    bool operator==(const GRAVITYRecord& data) const {
+        return this->oil_api == data.oil_api &&
+               this->water_sg == data.water_sg &&
+               this->gas_sg == data.gas_sg;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->oil_api);
+        serializer(this->water_sg);
+        serializer(this->gas_sg);
+    }
+};
+
+struct GravityTable : public FlatTable< GRAVITYRecord > {
+    using FlatTable< GRAVITYRecord >::FlatTable;
+
+    static GravityTable serializeObject()
+    {
+        return GravityTable({{1.0, 2.0, 3.0}});
+    }
+};
+
 struct DiffCoeffRecord {
     static constexpr std::size_t size = 8;
 

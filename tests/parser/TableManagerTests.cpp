@@ -1665,6 +1665,25 @@ BOOST_AUTO_TEST_CASE( TestParseDENSITY ) {
     BOOST_CHECK_EQUAL( 1.3, density[0].gas );
 }
 
+BOOST_AUTO_TEST_CASE( TestParseGRAVITY ) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+TABDIMS
+  1* 1 /
+
+GRAVITY
+  12.34 1.2 1.21 /
+
+END
+)");
+
+    const auto tables = Opm::TableManager { deck };
+    const auto& density = tables.getDensityTable();
+
+    BOOST_CHECK_CLOSE(  983.731924360, density[0].oil  , 1.0e-8 );
+    BOOST_CHECK_CLOSE( 1200.0        , density[0].water, 1.0e-8 );
+    BOOST_CHECK_CLOSE(    1.4762     , density[0].gas  , 1.0e-8 );
+}
+
 BOOST_AUTO_TEST_CASE( TestParseDIFFC ) {
     const std::string data = R"(
       TABDIMS

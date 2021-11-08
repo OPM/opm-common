@@ -1526,6 +1526,7 @@ FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
 {}
 
 template FlatTable< DENSITYRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< GRAVITYRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< DiffCoeffRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PVTWRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PVCDORecord >::FlatTable( const DeckKeyword& );
