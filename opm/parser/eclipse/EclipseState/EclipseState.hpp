@@ -102,7 +102,7 @@ namespace Opm {
 
         std::string getTitle() const;
 
-        void apply_geo_keywords(const std::vector<DeckKeyword>& keywords);
+        void apply_schedule_keywords(const std::vector<DeckKeyword>& keywords);
 
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;

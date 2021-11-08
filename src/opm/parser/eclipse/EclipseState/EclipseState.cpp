@@ -385,7 +385,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         }
     }
 
-    void EclipseState::apply_geo_keywords(const std::vector<DeckKeyword>& keywords) {
+    void EclipseState::apply_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
         using namespace ParserKeywords;
         for (const auto& keyword : keywords) {
 
