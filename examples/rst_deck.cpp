@@ -24,6 +24,7 @@
 #include <getopt.h>
 #include <fmt/format.h>
 #include <unordered_set>
+#include <utility>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -36,6 +37,7 @@
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/FileDeck.hpp>
 
@@ -76,9 +78,35 @@ Arguments:
 
 1. The data file we are starting with.
 
-2. The basename of the restart file - with an optional path prefix and a :N to
-   restart from step N(2). A restart step value of 0 is interpreted as a dry run
-   - a deck which has not been set up for restart will be written out.
+2. The restart source; this can either be a basename with an optional path
+   prefix and a :N to restart from step N; alternatively you can point to an
+   existing restart file. If you point to an existing restart file the input
+   will be validated in several ways:
+
+   a) Unified/multiple files will be checked against the UNIFIN setting of
+      the deck.
+
+   b) Formatted/unformatted will be checked against the FMTIn setting of the
+      deck.
+
+   c) If a single file like /path/to/case/HISTORY.X0067 is given as argument the
+      :N notation to denote report step should not be used.
+
+   If the restart argument is given as the path to an existing file the content
+   of the RESTART keyword will be updated to contain the correct path from the
+   location of the restart deck to the location of the restart file. This path
+   awareness will be fooled if the restart deck is redirected from stdout to a
+   path different from cwd. If the restart argument is given as an absolute
+   filename the RESTART keyword will have an absolute path, if the restart
+   argument is a relative path the RESTART keyword will get a relative path -
+   although an absolute path will be used if the restart file and the output
+   deck have different roots. If the restart argument is given as a string not
+   pointing to an existing file it will be inserted verbatim in the restart
+   deck.
+
+   A restart step value of 0 is interpreted as a dry run - a deck which has not
+   been set up for restart will be written out.
+
 
 3. Basename of the restart deck we create, can optionally contain a path prefix;
    the path will be created if it does not already exist. This argument is
@@ -111,11 +139,6 @@ Example:
 1: The program has a compiled list of keywords which will be retained in the
    SOLUTION section. The current value of that list is: {}
 
-2: The second argument is treated purely as a string and inserted verbatim into
-   the updated restart deck. In a future version we might interpret the second
-   argument as a file path and check the content and also do filesystem
-   manipulations from it.
-
 )", keep_keywords);
 
     std::cerr << help_text << std::endl;
@@ -129,15 +152,17 @@ Example:
 
 struct options {
     std::string input_deck;
-    std::pair<std::string, int> restart;
-    std::optional<std::string> target;
+    std::string restart_base;
+    int restart_step;
+    std::optional<std::string> target_path;
+    std::optional<std::string> target_fname;
 
     Opm::FileDeck::OutputMode mode{Opm::FileDeck::OutputMode::SHARE};
     bool skiprest{false};
 };
 
 
-Opm::FileDeck load_deck(const options& opt) {
+Opm::Deck load_deck(const options& opt) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
@@ -147,8 +172,7 @@ Opm::FileDeck load_deck(const options& opt) {
     parseContext.update(Opm::ParseContext::PARSE_MISSING_DIMS_KEYWORD, Opm::InputError::WARN);
     parseContext.update(Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputError::WARN);
     parseContext.update(Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputError::WARN);
-    auto deck = parser.parseFile(opt.input_deck, parseContext, errors);
-    return Opm::FileDeck{ deck };
+    return parser.parseFile(opt.input_deck, parseContext, errors);
 }
 
 
@@ -166,16 +190,85 @@ Opm::FileDeck::OutputMode mode(const std::string& mode_arg) {
     return Opm::FileDeck::OutputMode::INLINE;
 }
 
-std::pair<std::string, std::size_t> split_restart(const std::string& restart_base) {
-    auto sep_pos = restart_base.rfind(':');
-    if (sep_pos == std::string::npos)
-        print_help_and_exit(fmt::format("Expected restart argument on the form: BASE:NUMBER - e.g. HISTORY:60"));
+std::optional<std::size_t> verify_extension(const std::string& extension, bool unified, bool formatted) {
+    if (unified) {
+        if (formatted) {
+            if (extension == ".FUNRST")
+                return std::nullopt;
+            print_help_and_exit("Deck has specified formatted unified input - expected restart extension: .FUNRST");
 
-    return std::make_pair(restart_base.substr(0, sep_pos), std::stoi(restart_base.substr(sep_pos + 1)));
+        }
+        if (extension == ".UNRST")
+            return std::nullopt;
+        print_help_and_exit("Deck has expected unformatted unified input - expected restart extension: .UNRST");
+    }
+
+    std::size_t report_step;
+    if ((formatted && (extension[1] == 'F')) || (!formatted && (extension[1] == 'X'))) {
+        try {
+            report_step = std::stoi(extension.substr(2));
+            return report_step;
+        }
+        catch (...) {}
+    }
+    print_help_and_exit("Deck has specified multiple input files - expected restart extension: .Xnnnn / .Fnnnn");
+    return std::nullopt;
 }
 
 
-options load_options(int argc, char **argv) {
+bool same_mount(const fs::path& p1, const fs::path& p2) {
+    auto abs1 = fs::absolute(p1);
+    auto abs2 = fs::absolute(p2);
+
+    auto iter1 = abs1.begin(); iter1++;
+    auto iter2 = abs2.begin(); iter2++;
+
+    auto mnt1 = *iter1;
+    auto mnt2 = *iter2;
+    return (mnt1 == mnt2);
+}
+
+
+void update_restart_path(options& opt, const std::string& restart_arg, const Opm::IOConfig& io_config) {
+    std::string base;
+    std::optional<std::size_t> rst_step;
+    auto sep_pos = restart_arg.rfind(':');
+
+    auto base_arg = restart_arg.substr(0, sep_pos);
+    if (fs::exists(base_arg)) {
+        auto unif = io_config.getUNIFIN();
+        auto fmt = io_config.getFMTIN();
+        auto path = fs::path(base_arg);
+        auto extension = path.extension();
+        rst_step = verify_extension(extension, unif, fmt);
+        if (path.is_absolute()) {
+            path.replace_extension();
+            base = path;
+        } else {
+            auto target_path = fs::current_path();
+            if (opt.target_path.has_value())
+                target_path = fs::path(opt.target_path.value());
+
+            if (same_mount(path, target_path))
+                base = fs::relative(path, target_path).replace_extension();
+            else
+                base = fs::canonical(fs::absolute(path)).replace_extension();
+        }
+    } else
+        base = base_arg;
+
+    if (!rst_step.has_value()) {
+        if (sep_pos == std::string::npos)
+            print_help_and_exit(fmt::format("Expected restart argument on the form: BASE:NUMBER - e.g. HISTORY:60"));
+        rst_step = std::stoi(restart_arg.substr(sep_pos + 1));
+    }
+
+    opt.restart_step = rst_step.value();
+    opt.restart_base = base;
+}
+
+
+std::pair<options, std::string> load_options(int argc, char **argv) {
     options opt;
     while (true) {
         int c;
@@ -201,11 +294,21 @@ options load_options(int argc, char **argv) {
         print_help_and_exit();
 
     opt.input_deck = argv[arg_offset];
-    opt.restart = split_restart(argv[arg_offset + 1]);
+    std::string restart_arg = argv[arg_offset + 1];
     if ((argc - arg_offset) >= 3) {
-        opt.target = argv[arg_offset + 2];
+        auto target_arg = argv[arg_offset + 2];
+
+        if (fs::is_directory(target_arg)) {
+            opt.target_path = target_arg;
+            opt.target_fname = fs::path(opt.input_deck).filename();
+        } else {
+            auto target_path = fs::path( fs::absolute(target_arg) );
+            opt.target_path = fs::absolute(target_path.parent_path());
+            opt.target_fname = target_path.filename();
+        }
+
         if (opt.mode == Opm::FileDeck::OutputMode::COPY) {
-            auto target = fs::path(opt.target.value()).parent_path();
+            auto target = fs::path(target_arg).parent_path();
             if (fs::exists(target)) {
                 auto input = fs::path(opt.input_deck).parent_path();
                 if (fs::equivalent(target, input))
@@ -217,13 +320,13 @@ options load_options(int argc, char **argv) {
             print_help_and_exit("When writing output to stdout you must use inline|share mode");
     }
 
-    return opt;
+    return {opt, restart_arg};
 }
 
 
 void update_solution(const options& opt, Opm::FileDeck& file_deck)
 {
-    if (opt.restart.second == 0)
+    if (opt.restart_step == 0)
         return;
 
     const auto solution = file_deck.find("SOLUTION");
@@ -234,37 +337,33 @@ void update_solution(const options& opt, Opm::FileDeck& file_deck)
     if (!summary.has_value())
         print_help_and_exit(fmt::format("Could not find SUMMARY section in input deck: {}", opt.input_deck));
 
-    file_deck.rst_solution(opt.restart.first, opt.restart.second);
+    file_deck.rst_solution(opt.restart_base, opt.restart_step);
 }
 
 
 void update_schedule(const options& opt, Opm::FileDeck& file_deck)
 {
-    if (opt.restart.second == 0)
+    if (opt.restart_step == 0)
         return;
 
     if (opt.skiprest)
         file_deck.insert_skiprest();
     else
-        file_deck.skip(opt.restart.second);
+        file_deck.skip(opt.restart_step);
 }
 
 
 int main(int argc, char** argv) {
-    auto options = load_options(argc, argv);
-    auto file_deck = load_deck(options);
+    auto [options, restart_arg] = load_options(argc, argv);
+    auto deck = load_deck(options);
+    Opm::FileDeck file_deck(deck);
+
+    update_restart_path(options, restart_arg, Opm::IOConfig(deck));
     update_solution(options, file_deck);
     update_schedule(options, file_deck);
-    if (!options.target.has_value())
+    if (!options.target_path.has_value())
         file_deck.dump_stdout(fs::current_path(), options.mode);
-    else {
-        std::string target = options.target.value();
-        if (fs::is_directory(target))
-            file_deck.dump( fs::absolute(target), fs::path(options.input_deck).filename(), options.mode );
-        else {
-            auto target_path = fs::path( fs::absolute(options.target.value()) );
-            file_deck.dump( fs::absolute(target_path.parent_path()), target_path.filename(), options.mode );
-        }
-    }
+    else
+        file_deck.dump( options.target_path.value(), options.target_fname.value(), options.mode);
 }
 

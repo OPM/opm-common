@@ -74,6 +74,15 @@ add_test( NAME rst_deck_test
           ${PROJECT_SOURCE_DIR}/tests/SPE1CASE2_INCLUDE.DATA)
 
 
+add_test( NAME rst_deck_test2
+          COMMAND ${PROJECT_SOURCE_DIR}/tests/rst_test_driver2.sh
+                  ${PROJECT_BINARY_DIR}/bin/rst_deck
+                  ${PROJECT_BINARY_DIR}/bin/opmi
+                  ${PROJECT_SOURCE_DIR}/tests/ACTIONX_M1.DATA
+                  ${PROJECT_SOURCE_DIR}/tests/ACTIONX_M1_MULTIPLE.DATA
+                  ${PROJECT_SOURCE_DIR}/tests/ACTIONX_M1.UNRST
+                  ${PROJECT_SOURCE_DIR}/tests/ACTIONX_M1.X0010 )
+
 # opm-tests dependent tests
 if(HAVE_OPM_TESTS)
   opm_add_test(parse_write ONLY_COMPILE
