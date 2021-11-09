@@ -321,7 +321,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 continue;
             }
             const auto& props = cell.props;
-            size_t active_index = cell.active_index();
             double CF = -1;
             double Kh = -1;
             double r0 = -1;
