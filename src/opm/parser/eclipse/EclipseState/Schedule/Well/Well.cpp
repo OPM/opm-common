@@ -689,12 +689,12 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
     return false;
 }
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const ScheduleGrid& grid, const std::vector<int>& pvtnum) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const ScheduleGrid& grid) {
     bool update = this->updateConnections(connections_arg, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
-        auto active_index = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK()).active_index();
-        this->pvt_table = pvtnum[active_index];
+        const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK()).props;
+        this->pvt_table = props->pvtnum;
         update = true;
     }
     return update;

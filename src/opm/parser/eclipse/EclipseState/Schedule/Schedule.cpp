@@ -166,13 +166,13 @@ namespace Opm {
 
         if (rst) {
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, &fp, "");
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, "");
             this->load_rst(*rst, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, &fp, "");
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
         } else {
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, &fp, "");
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
         }
 
         //m_grid = std::make_shared<SparseScheduleGrid>(grid, gridWrapper.getHitKeys());
@@ -296,7 +296,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
                                  const ScheduleGrid& grid,
-                                 const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
                                  bool actionx_mode,
                                  std::unordered_set<std::string> * affected_wells,
@@ -313,9 +312,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
         */
-        if (require_grid.count(keyword.name()) > 0) {
-            handlerContext.fp_ptr = fp;
-        }
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
 
@@ -391,7 +387,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                       ErrorGuard& errors,
                                       const ScheduleGrid& grid,
                                       const std::unordered_map<std::string, double> * target_wellpi,
-                                      const FieldPropsManager* fp,
                                       const std::string& prefix) {
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
@@ -506,7 +501,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     parseContext,
                                     errors,
                                     grid,
-                                    fp,
                                     {},
                                     false,
                                     nullptr,
@@ -1268,7 +1262,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 parseContext,
                                 errors,
                                 grid,
-                                nullptr,
                                 result.wells(),
                                 true,
                                 &affected_wells,
@@ -1282,7 +1275,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         if (reportStep < this->m_sched_deck.size() - 1)
-            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, grid, &target_wellpi, nullptr, prefix);
+            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, grid, &target_wellpi, prefix);
         OpmLog::info("\\----------------------------------------------------------------------");
 
         return affected_wells;
@@ -1446,7 +1439,7 @@ namespace {
                                                  rst_well.ij[0],
                                                  rst_well.ij[1],
                                                  rst_connections);
-                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
+                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid);
             } else {
                 std::unordered_map<int, Opm::Segment> rst_segments;
                 for (const auto& rst_segment : rst_well.segments) {
@@ -1455,7 +1448,7 @@ namespace {
                 }
 
                 auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
-                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
+                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid);
                 well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
             }
 
