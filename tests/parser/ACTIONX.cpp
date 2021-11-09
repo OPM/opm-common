@@ -1266,6 +1266,57 @@ TSTEP
 
 }
 
+BOOST_AUTO_TEST_CASE(Action_COMPDAT_ACTION) {
+    const auto deck_string = std::string{ R"(
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+WELSPECS
+    'PROD1' 'G1'  1 1 10 'OIL' /
+/
+
+COMPDAT
+ 'PROD1'  1  1   1   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+        )"};
+
+    const auto st = SummaryState{ TimeService::now() };
+    Schedule sched = make_schedule(deck_string);
+    const auto& action1 = sched[0].actions.get()["A"];
+
+    BOOST_CHECK(!sched.hasWell("PROD1"));
+
+    Action::Result action_result(true);
+    sched.applyAction(0, TimeService::now(), action1, action_result, {});
+
+    const auto& well = sched.getWell("PROD1", 1);
+    const auto& connections = well.getConnections();
+    BOOST_CHECK_EQUAL(connections.size(), 3);
+}
+
+
+
 BOOST_AUTO_TEST_CASE(Action_WELPI) {
     const auto deck_string = std::string{ R"(
 GRID
