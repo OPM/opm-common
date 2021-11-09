@@ -150,7 +150,7 @@ Example:
 
 
 
-struct options {
+struct Options {
     std::string input_deck;
     std::string restart_base;
     int restart_step;
@@ -162,7 +162,7 @@ struct options {
 };
 
 
-Opm::Deck load_deck(const options& opt) {
+Opm::Deck load_deck(const Options& opt) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
@@ -229,7 +229,7 @@ bool same_mount(const fs::path& p1, const fs::path& p2) {
 }
 
 
-void update_restart_path(options& opt, const std::string& restart_arg, const Opm::IOConfig& io_config) {
+void update_restart_path(Options& opt, const std::string& restart_arg, const Opm::IOConfig& io_config) {
     std::string base;
     std::optional<std::size_t> rst_step;
     auto sep_pos = restart_arg.rfind(':');
@@ -268,8 +268,8 @@ void update_restart_path(options& opt, const std::string& restart_arg, const Opm
 }
 
 
-std::pair<options, std::string> load_options(int argc, char **argv) {
-    options opt;
+std::pair<Options, std::string> load_options(int argc, char **argv) {
+    Options opt;
     while (true) {
         int c;
         c = getopt(argc, argv, "hm:s");
@@ -324,7 +324,7 @@ std::pair<options, std::string> load_options(int argc, char **argv) {
 }
 
 
-void update_solution(const options& opt, Opm::FileDeck& file_deck)
+void update_solution(const Options& opt, Opm::FileDeck& file_deck)
 {
     if (opt.restart_step == 0)
         return;
@@ -341,7 +341,7 @@ void update_solution(const options& opt, Opm::FileDeck& file_deck)
 }
 
 
-void update_schedule(const options& opt, Opm::FileDeck& file_deck)
+void update_schedule(const Options& opt, Opm::FileDeck& file_deck)
 {
     if (opt.restart_step == 0)
         return;
