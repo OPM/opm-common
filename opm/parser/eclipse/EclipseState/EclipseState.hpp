@@ -75,7 +75,6 @@ namespace Opm {
         virtual const EclipseGrid& getInputGrid() const;
 
         const FaultCollection& getFaults() const;
-        const MICPpara& getMicppara() const;
         const TransMult& getTransMult() const;
 
         /// non-neighboring connections
