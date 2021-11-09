@@ -59,7 +59,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
     Opm::CompletedCells cells(grid);
     for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, Opm::ScheduleGrid(grid, field_props, cells), field_props, "WELL", {});
+        connections.loadCOMPDAT(rec, Opm::ScheduleGrid(grid, field_props, cells), "WELL", {});
 
     return connections;
 }

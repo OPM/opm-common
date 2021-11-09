@@ -155,7 +155,7 @@ namespace {
             for (const auto& name : wellnames) {
                 auto well2 = this->snapshots.back().wells.get(name);
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
-                connections->loadCOMPDAT(record, handlerContext.grid, *handlerContext.fp_ptr, name, handlerContext.keyword.location());
+                connections->loadCOMPDAT(record, handlerContext.grid, name, handlerContext.keyword.location());
                 if (well2.updateConnections(connections, handlerContext.grid, handlerContext.fp_ptr->get_int("PVTNUM"))) {
                     this->snapshots.back().wells.update( well2 );
                     wells.insert( name );

@@ -269,23 +269,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const ScheduleGrid& grid, const FieldPropsManager& field_properties, const std::string& wname, const KeywordLocation& location) {
-        const auto permx        = field_properties.try_get<double>("PERMX");
-        const auto permy        = field_properties.try_get<double>("PERMY");
-        const auto permz        = field_properties.try_get<double>("PERMZ");
-        const auto& ntg         = field_properties.get_double("NTG");
-        const auto& satnum_data = field_properties.get_int("SATNUM");
-
-        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg, wname, location);
-    }
-
     void WellConnections::loadCOMPDAT(const DeckRecord& record,
                                       const ScheduleGrid& grid,
-                                      const std::vector<int>& satnum_data,
-                                      const std::vector<double>* permx,
-                                      const std::vector<double>* permy,
-                                      const std::vector<double>* permz,
-                                      const std::vector<double>& ntg,
                                       const std::string& wname,
                                       const KeywordLocation& location) {
 
@@ -335,7 +320,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 OpmLog::warning(msg);
                 continue;
             }
-
+            const auto& props = cell.props;
             size_t active_index = cell.active_index();
             double CF = -1;
             double Kh = -1;
@@ -343,7 +328,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             auto ctf_kind = ::Opm::Connection::CTFKind::DeckValue;
 
             if (defaultSatTable)
-                satTableId = satnum_data[active_index];
+                satTableId = props->satnum;
 
             auto same_ijk = [&]( const Connection& c ) {
                 return c.sameCoordinate( I,J,k );
@@ -362,17 +347,17 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             // placement so there's complete exposure (= 2\pi).
             const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
             std::array<double,3> cell_size = cell.dimensions;
-            const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
+            const auto& D = effectiveExtent(direction, props->ntg, cell_size);
 
             /* We start with the absolute happy path; both CF and Kh are explicitly given in the deck. */
             if (CF > 0 && Kh > 0)
                 goto CF_done;
 
             /* We must calculate CF and Kh from the items in the COMPDAT record and cell properties. */
-            if (permx && permy && permz) {
-                std::array<double,3> cell_perm = {{ permx->operator[](active_index),
-                                                    permy->operator[](active_index),
-                                                    permz->operator[](active_index)}};
+            {
+                std::array<double,3> cell_perm = {{ props->permx,
+                                                    props->permy,
+                                                    props->permz}};
                 const auto& K = permComponents(direction, cell_perm);
 
                 if (r0 < 0)
@@ -391,8 +376,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             Kh = std::sqrt(K[0] * K[1]) * D[2];
                     }
                 }
-            } else
-                throw std::invalid_argument("Missing PERM values to calculate connection factors");
+            }
 
         CF_done:
             if (r0 < 0)
