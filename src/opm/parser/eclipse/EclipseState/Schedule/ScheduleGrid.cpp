@@ -56,7 +56,8 @@ const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std:
                 props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
                 props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
                 props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
-                //props.satnum = this->fp->int("SATNUM");
+                props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
+                props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
                 cell.props = props;
             }
         }

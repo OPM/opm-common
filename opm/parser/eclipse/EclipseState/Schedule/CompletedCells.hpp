@@ -37,13 +37,16 @@ public:
             double permx;
             double permy;
             double permz;
-            //int satnum;
+            int satnum;
+            int pvtnum;
 
             bool operator==(const Props& other) const{
                 return this->active_index == other.active_index &&
                        this->permx == other.permx &&
                        this->permy == other.permy &&
-                       this->permz == other.permz;
+                       this->permz == other.permz &&
+                       this->satnum == other.satnum &&
+                       this->pvtnum == other.pvtnum;
             }
 
         };
