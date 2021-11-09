@@ -39,6 +39,7 @@ public:
             double permz;
             int satnum;
             int pvtnum;
+            double ntg;
 
             bool operator==(const Props& other) const{
                 return this->active_index == other.active_index &&
@@ -46,7 +47,8 @@ public:
                        this->permy == other.permy &&
                        this->permz == other.permz &&
                        this->satnum == other.satnum &&
-                       this->pvtnum == other.pvtnum;
+                       this->pvtnum == other.pvtnum &&
+                       this->ntg == other.ntg;
             }
 
         };
