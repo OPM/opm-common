@@ -154,7 +154,7 @@ void msim::output(WellTestState& wtest_state, SummaryState& st, const UDQState& 
 }
 
 
-void msim::simulate(const Schedule& schedule, WellTestState&, const SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& /* group_nwrk_data */, size_t report_step, double seconds_elapsed, double time_step) const {
+void msim::simulate(const Schedule& schedule, const SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& /* group_nwrk_data */, size_t report_step, double seconds_elapsed, double time_step) const {
     for (const auto& sol_pair : this->solutions) {
         auto func = sol_pair.second;
         func(this->state, schedule, sol, report_step, seconds_elapsed + time_step);

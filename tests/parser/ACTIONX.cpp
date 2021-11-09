@@ -187,6 +187,17 @@ TSTEP
 BOOST_AUTO_TEST_CASE(COMPDAT) {
 
     const auto TRAILING_COMPDAT = std::string{ R"(
+GRID
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
 SCHEDULE
 
 WELSPECS

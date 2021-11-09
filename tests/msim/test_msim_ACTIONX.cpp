@@ -471,10 +471,7 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
     {
         WorkArea work_area("compdat_sim");
 
-        sim.run(td.schedule, io, true);
-
-        auto result = sim.action_state.result("SHUT_WELL");
-        BOOST_CHECK(result.value());
+        BOOST_CHECK_NO_THROW(sim.run(td.schedule, io, true));
     }
 }
 
