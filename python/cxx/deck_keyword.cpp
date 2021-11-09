@@ -247,9 +247,10 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_SI_data_list", &SI_data_to_pylist)
         .def("__has_value", &DeckItem::hasValue)
         .def("__defaulted", &DeckItem::defaultApplied)
-        .def("__is_numberic", &uda_item_is_numeric)
+        .def("__is_numeric", &uda_item_is_numeric)
         .def("__uda_double", &get_uda_double)
         .def("__uda_str", &get_uda_str)
+        .def("name", &DeckItem::name)
         ;
 
 

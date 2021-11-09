@@ -161,6 +161,37 @@ FIPNUM
         with self.assertRaises(ValueError):
             raise DeckKeyword(parser["AQANTRC"], [["1*2.2", "ABC", 8]], active_unit_system, default_unit_system)
 
+    def test_deck_kw_records_uda(self):
+        parser = Parser()
+        deck = parser.parse_string(self.REGIONDATA)
+        active_unit_system = deck.active_unit_system()
+        default_unit_system = deck.default_unit_system()
+        report_step = 3
+        oil_target = 30000  # stb/day
+        well_name = "PROD"
+        well_status = "OPEN"
+        control_mode = "ORAT"
+        bhp_limit = 1000  # psia
+
+        wconprod = DeckKeyword(
+            parser["WCONPROD"],
+            [[well_name, well_status, control_mode, oil_target, "4*", bhp_limit]],
+            active_unit_system, default_unit_system)
+
+        self.assertEqual(len(wconprod), 1)
+        record = wconprod[0]
+        self.assertEqual(record[0].name(), "WELL")
+        self.assertTrue(record[0].is_string())
+        self.assertEqual(record[0].get_str(0), "PROD")
+        self.assertEqual(record[1].name(), "STATUS")
+        self.assertTrue(record[1].is_string())
+        self.assertEqual(record[1].get_str(0), "OPEN")
+        self.assertEqual(record[2].name(), "CMODE")
+        self.assertTrue(record[2].is_string())
+        self.assertEqual(record[2].get_str(0), "ORAT")
+        self.assertEqual(record[3].name(), "ORAT")
+        self.assertTrue(record[3].is_uda())
+        # self.assertEqual(record[3].__uda_double, 30000)
 
     def test_deck_kw_vector(self):
         parser = Parser()
@@ -183,9 +214,8 @@ FIPNUM
         assert( not( "ZCORN" in deck ) )
         deck.add( zcorn_kw )
         assert( "ZCORN" in deck )
-        
-    
+
+
 
 if __name__ == "__main__":
     unittest.main()
-

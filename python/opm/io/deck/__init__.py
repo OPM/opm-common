@@ -27,7 +27,7 @@ def get_item_deckitem(self):
     elif self.is_double():
         return self.get_raw(0)
     elif self.is_uda():
-        if self.__is_numberic():
+        if self.__is_numeric():
             return self.__uda_double()
         else:
             return self.__uda_str()
