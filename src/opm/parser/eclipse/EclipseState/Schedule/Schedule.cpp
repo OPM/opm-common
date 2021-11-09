@@ -482,8 +482,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                         if (action_keyword.name() == "ENDACTIO")
                             break;
 
-                        if (Action::ActionX::valid_keyword(action_keyword.name()))
+                        if (Action::ActionX::valid_keyword(action_keyword.name())){
                             action.addKeyword(action_keyword);
+                            this->inspect_actionx_keyword(grid, action_keyword);
+                        }
                         else {
                             std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
                                 "In {file} line {line}.";
@@ -521,6 +523,33 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         auto new_actions = this->snapshots.back().actions.get();
         new_actions.add( action );
         this->snapshots.back().actions.update( std::move(new_actions) );
+    }
+
+    void Schedule::inspect_actionx_keyword(const ScheduleGrid& grid, const DeckKeyword& keyword){
+        static std::unordered_set<std::string> keyword_list = {"COMPDAT"};
+
+        if(keyword_list.count(keyword.name())){
+            for (auto record : keyword){
+                const auto& itemI = record.getItem("I");
+                const auto& itemJ = record.getItem("J");
+                bool defaulted_I = itemI.defaultApplied(0) || itemI.get<int>(0) == 0;
+                bool defaulted_J = itemJ.defaultApplied(0) || itemJ.get<int>(0) == 0;
+
+                if (defaulted_I || defaulted_J)
+                    throw std::logic_error(fmt::format("Defaulted grid coordinates not allowed: {}, {}", defaulted_I, defaulted_J));
+
+                const int I = itemI.get<int>(0) - 1;
+                const int J = itemJ.get<int>(0) - 1;
+                int K1 = record.getItem("K1").get<int>(0) - 1;
+                int K2 = record.getItem("K2").get<int>(0) - 1;
+
+                for (int k = K1; k <= K2; k++){
+                    auto cell = grid.get_cell(I, J, k);
+                    (void) cell;
+                    //Only interested in activating the cells.
+                }
+            }
+        }
     }
 
     void Schedule::handlePYACTION(const DeckKeyword& keyword) {
