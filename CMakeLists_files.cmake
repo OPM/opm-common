@@ -786,6 +786,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/Enums.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/SimulatorUpdate.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
        opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp

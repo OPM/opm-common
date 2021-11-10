@@ -1233,8 +1233,8 @@ namespace {
         }
     }
 
-    void Schedule::handleWELOPEN (HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        this->applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors, handlerContext.matching_wells, handlerContext.affected_wells);
+    void Schedule::handleWELOPEN(HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        this->applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors, handlerContext.matching_wells, handlerContext.sim_update);
     }
 
     void Schedule::handleWELPI(HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -1391,8 +1391,7 @@ namespace {
                         well2.updateRefDepth();
                         this->snapshots.back().wellgroup_events().addEvent( wellName, ScheduleEvents::WELL_WELSPECS_UPDATE);
                         this->snapshots.back().wells.update( std::move(well2) );
-                        if (handlerContext.affected_wells)
-                            handlerContext.affected_wells->insert(wellName);
+                        handlerContext.affected_well(wellName);
                     }
                 }
             }

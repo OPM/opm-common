@@ -299,7 +299,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const FieldPropsManager* fp,
                                  const std::vector<std::string>& matching_wells,
                                  bool actionx_mode,
-                                 std::unordered_set<std::string> * affected_wells,
+                                 SimulatorUpdate * sim_update,
                                  const std::unordered_map<std::string, double> * target_wellpi) {
 
         static const std::unordered_set<std::string> require_grid = {
@@ -308,7 +308,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, affected_wells, target_wellpi};
+        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, sim_update, target_wellpi};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -631,7 +631,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
                                  const std::vector<std::string>& matching_wells,
-                                 std::unordered_set<std::string> * affected_wells) {
+                                 SimulatorUpdate * sim_update) {
 
         auto conn_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -668,8 +668,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                             OpmLog::note(msg);
                         } else {
                             this->updateWellStatus( wname, currentStep, well_status);
-                            if (affected_wells)
-                                affected_wells->insert(wname);
+                            if (sim_update)
+                                sim_update->affected_wells.insert(wname);
                         }
                     }
                 }
@@ -696,8 +696,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     this->snapshots[currentStep].wells.update( std::move(well) );
                 }
 
-                if (affected_wells)
-                    affected_wells->insert(wname);
+                if (sim_update)
+                    sim_update->affected_wells.insert(wname);
                 this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
             }
         }
@@ -1247,11 +1247,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    std::unordered_set<std::string> Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
+    SimulatorUpdate Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         const std::string prefix = "| ";
         ParseContext parseContext;
         ErrorGuard errors;
-        std::unordered_set<std::string> affected_wells;
+        SimulatorUpdate sim_update;
         ScheduleGrid grid(this->completed_cells);
 
         OpmLog::info("/----------------------------------------------------------------------");
@@ -1271,13 +1271,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 nullptr,
                                 result.wells(),
                                 true,
-                                &affected_wells,
+                                &sim_update,
                                 &target_wellpi);
         }
         this->end_report(reportStep);
-        if (!affected_wells.empty()) {
+        if (!sim_update.affected_wells.empty()) {
             this->snapshots.back().events().addEvent( ScheduleEvents::ACTIONX_WELL_EVENT );
-            for (const auto& well: affected_wells)
+            for (const auto& well: sim_update.affected_wells)
                 this->snapshots.back().wellgroup_events().addEvent(well, ScheduleEvents::ACTIONX_WELL_EVENT);
         }
 
@@ -1285,7 +1285,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, grid, &target_wellpi, nullptr, prefix);
         OpmLog::info("\\----------------------------------------------------------------------");
 
-        return affected_wells;
+        return sim_update;
     }
 
 
