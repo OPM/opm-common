@@ -158,7 +158,8 @@ TSTEP
     Action::Result action_result(true);
     auto sim_time = TimeService::now();
     const auto& action1 = sched[0].actions.get()["ACTION"];
-    auto affected_wells = sched.applyAction(0, sim_time, action1, action_result, {});
+    auto sim_update = sched.applyAction(0, sim_time, action1, action_result, {});
+    const auto& affected_wells = sim_update.affected_wells;
     std::vector<std::string> expected_wells{"W0", "W1", "W3"};
     BOOST_CHECK( std::is_permutation(affected_wells.begin(), affected_wells.end(),
                                      expected_wells.begin(), expected_wells.end() ));
@@ -1210,8 +1211,8 @@ TSTEP
 
 
     Action::Result action_result(true);
-    const auto& affected_wells = sched.applyAction(0, TimeService::now(), action1, action_result, {});
-    BOOST_CHECK( affected_wells.empty() );
+    const auto& sim_update = sched.applyAction(0, TimeService::now(), action1, action_result, {});
+    BOOST_CHECK( sim_update.affected_wells.empty() );
     {
         const auto& glo = sched.glo(0);
         BOOST_CHECK(glo.has_group("PLAT-A"));
@@ -1278,9 +1279,9 @@ TSTEP
     BOOST_CHECK_THROW( sched.applyAction(0, TimeService::now(), action1, action_result, {}), std::exception);
     {
         const auto& well = sched.getWell("PROD1", 0);
-        const auto& affected_wells = sched.applyAction(0, TimeService::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
-        BOOST_CHECK_EQUAL( affected_wells.count("PROD1"), 1);
-        BOOST_CHECK_EQUAL( affected_wells.size(), 1);
+        const auto& sim_update = sched.applyAction(0, TimeService::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
+        BOOST_CHECK_EQUAL( sim_update.affected_wells.count("PROD1"), 1);
+        BOOST_CHECK_EQUAL( sim_update.affected_wells.size(), 1);
     }
     {
         const auto& target_wellpi = sched[0].target_wellpi;
