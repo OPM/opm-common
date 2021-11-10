@@ -23,8 +23,7 @@
 /*!
  * \file
  *
- * \brief This is test for the SPE5 fluid system (which uses the
- *        Peng-Robinson EOS) and the NCP flash solver.
+ * \brief This is test for the ChiFlash flash solver.
  */
 #include "config.h"
 
@@ -33,11 +32,11 @@
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
-#include <opm/material/constraintsolvers/NcpFlash.hpp>
+// #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/material/fluidsystems/Spe5FluidSystem.hpp>
+// #include <opm/material/fluidsystems/Spe5FluidSystem.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
-#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+// #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 
 #include <dune/common/parallel/mpihelper.hh>
 
@@ -50,115 +49,58 @@ void testChiFlash()
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
-    typedef Opm::LinearMaterial<MaterialTraits> MaterialLaw;
-    typedef typename MaterialLaw::Params MaterialLawParams;
-
+    // From co2-compositional branch, it uses
+    // typename FluidSystem::template ParameterCache<Evaluation> paramCache;
     typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
+    using ComponentVector = Dune::FieldVector<Scalar, numComponents>;
+    using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
 
-    ////////////
-    // Initialize the fluid system and create the capillary pressure
-    // parameters
-    ////////////
-    Scalar T = 273.15 + 20; // 20 deg Celsius
-    FluidSystem::init(/*minTemperature=*/T - 1,
-                      /*maxTemperature=*/T + 1,
-                      /*minPressure=*/1.0e4,
-                      /*maxTemperature=*/40.0e6);
 
-    // set the parameters for the capillary pressure law
-    MaterialLawParams matParams;
-    for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-        matParams.setPcMinSat(phaseIdx, 0.0);
-        matParams.setPcMaxSat(phaseIdx, 0.0);
-    }
-    matParams.finalize();
+    FluidState fs;
+    // TODO: no capillary pressure for now
+    const Scalar p_init = 100.*1.e5; // 100 bar
+    fs.setPressure(FluidSystem::oilPhaseIdx, p_init);
+    fs.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
-    ////////////
-    // Create a fluid state
-    ////////////
-    FluidState gasFluidState;
-    createSurfaceGasFluidSystem<FluidSystem>(gasFluidState);
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, MFCOMP0);
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, MFCOMP1);
 
-    FluidState fluidState;
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, MFCOMP0);
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, MFCOMP1);
+
+    fs.setSaturation(FluidSystem::oilPhaseIdx, 1.0);
+    fs.setSaturation(FluidSystem::gasPhaseIdx, 0.0);
+
+    fs.setTemperature(303);
+
     ParameterCache paramCache;
+    paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
+    paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
+    fs.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::oilPhaseIdx));
+    fs.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx));
 
-    // temperature
-    fluidState.setTemperature(T);
+    ComponentVector zInit(0.); // TODO; zInit needs to be normalized.
+    const double flash_tolerance = 1.e-8;
+    const int flash_verbosity = 1;
+    const std::string flash_twophase_method = "ssi";
 
-    // oil pressure
-    fluidState.setPressure(oilPhaseIdx, 4000 * 6894.7573); // 4000 PSI
-
-    // oil saturation
-    fluidState.setSaturation(oilPhaseIdx, 1.0);
-    fluidState.setSaturation(gasPhaseIdx, 1.0 - fluidState.saturation(oilPhaseIdx));
-
-    // oil composition: SPE-5 reservoir oil
-    fluidState.setMoleFraction(oilPhaseIdx, H2OIdx, 0.0);
-    fluidState.setMoleFraction(oilPhaseIdx, C1Idx, 0.50);
-    fluidState.setMoleFraction(oilPhaseIdx, C3Idx, 0.03);
-    fluidState.setMoleFraction(oilPhaseIdx, C6Idx, 0.07);
-    fluidState.setMoleFraction(oilPhaseIdx, C10Idx, 0.20);
-    fluidState.setMoleFraction(oilPhaseIdx, C15Idx, 0.15);
-    fluidState.setMoleFraction(oilPhaseIdx, C20Idx, 0.05);
-
-    //makeOilSaturated<Scalar, FluidSystem>(fluidState, gasFluidState);
-
-    // set the saturations and pressures of the other phases
-    for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-        if (phaseIdx != oilPhaseIdx) {
-            fluidState.setSaturation(phaseIdx, 0.0);
-            fluidState.setPressure(phaseIdx, fluidState.pressure(oilPhaseIdx));
-        }
-
-        // initial guess for the composition (needed by the ComputeFromReferencePhase
-        // constraint solver. TODO: bug in ComputeFromReferencePhase?)
-        guessInitial<FluidSystem>(fluidState, phaseIdx);
+    // Set initial K and L
+    for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+        const Scalar Ktmp = fs.wilsonK_(compIdx);
+        fs.setKvalue(compIdx, Ktmp);
     }
+    const Scalar Ltmp = -1.0;
+    fs.setLvalue(Ltmp);
 
-    typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
-    CFRP::solve(fluidState,
-                paramCache,
-                /*refPhaseIdx=*/oilPhaseIdx,
-                /*setViscosity=*/false,
-                /*setEnthalpy=*/false);
-
-    ////////////
-    // Calculate the total molarities of the components
-    ////////////
-    ComponentVector totalMolarities;
-    for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx)
-        totalMolarities[compIdx] = fluidState.saturation(oilPhaseIdx)*fluidState.molarity(oilPhaseIdx, compIdx);
-
-    ////////////
-    // Gradually increase the volume for and calculate the gas
-    // formation factor, oil formation volume factor and gas formation
-    // volume factor.
-    ////////////
-
-    FluidState flashFluidState, surfaceFluidState;
-    flashFluidState.assign(fluidState);
-    //Flash::guessInitial(flashFluidState, totalMolarities);
-
-    using E = Opm::DenseAd::Evaluation<double, 3>;
-    using Flash = Opm::ChiFlash<double, E, FluidSystem>;
-    Flash::solve(flashFluidState, {0.9, 0.1}, 123456, 5, "SSI", 1e-8);
+    const int spatialIdx = 0;
+    using Flash = Opm::ChiFlash<double, Evaluation, FluidSystem>;
+    Flash::solve(fs, zInit, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
 
 }
 
 int main(int argc, char **argv)
 {
     Dune::MPIHelper::instance(argc, argv);
-
-    testAll<double>();
-
-    // the Peng-Robinson test currently does not work with single-precision floating
-    // point scalars because of precision issues. (these are caused by the fact that the
-    // test uses finite differences to calculate derivatives.)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunreachable-code"
-    while (0) testAll<float>();
-#pragma GCC diagnostic pop
-
 
     testChiFlash();
 

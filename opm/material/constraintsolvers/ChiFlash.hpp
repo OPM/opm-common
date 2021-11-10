@@ -149,7 +149,7 @@ public:
                 if (verbosity >= 1) {
                     std::cout << "Calculate composition using Newton." << std::endl;
                 }
-                newtonCompositionUpdate_(K, L, fluidState, globalComposition, verbosity);
+                newtonCompositionUpdate_(K, static_cast<DenseAd::Evaluation<double, 2>&>(L), fluidState, globalComposition, verbosity);
                 
             }
 
