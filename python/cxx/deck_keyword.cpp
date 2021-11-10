@@ -62,7 +62,11 @@ bool is_int(const std::string& s)
 }
 
 
-void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string str) {
+void push_string_as_deck_value(
+    const ParserItem& parser_item,
+    std::vector<DeckValue>& record,
+    const std::string str)
+{
 
     std::size_t star_pos = str.find('*');
     if (star_pos != std::string::npos) {
@@ -79,12 +83,24 @@ void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string
 
         std::string value_str = str.substr(star_pos + 1, str.length());
         DeckValue value;
-
-        if (value_str.length() > 0) {
-            if (is_int(value_str))
-                value = DeckValue( stoi(value_str) );
-            else
-                value = DeckValue( stod(value_str) );
+        if (parser_item.dataType() == type_tag::uda) {
+            if (value_str.length() > 0) {
+                if (is_int(value_str))
+                    value = DeckValue( UDAValue(stoi(value_str)) );
+                else
+                    value = DeckValue( UDAValue(stod(value_str)) );
+            }
+            else {
+                value = DeckValue( UDAValue( parser_item.getDefault<UDAValue>() ) );
+            }
+        }
+        else {
+            if (value_str.length() > 0) {
+                if (is_int(value_str))
+                    value = DeckValue( stoi(value_str) );
+                else
+                    value = DeckValue( stod(value_str) );
+            }
         }
 
         for (int i = 0; i < multiplier; i++)
@@ -95,7 +111,6 @@ void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string
         record.push_back( DeckValue(str) );
 
 }
-
 
 py::array_t<int> get_int_array(const DeckKeyword& kw) {
     return convert::numpy_array( kw.getIntData() );
@@ -140,35 +155,47 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def(py::init([](const ParserKeyword& parser_keyword, py::list record_list, UnitSystem& active_system, UnitSystem& default_system) {
 
             std::vector< std::vector<DeckValue> > value_record_list;
-
+            int i = 0;
             for (py::handle record_obj : record_list) {
                  py::list record = record_obj.cast<py::list>();
                  std::vector<DeckValue> value_record;
-
+                 const ParserRecord& parser_record = parser_keyword.getRecord(i++);
+                 int j = 0;
                  for (const py::handle& value_obj : record) {
+                     const ParserItem& parser_item = parser_record.get(j++);
+                     try {
+                         int val_int = value_obj.cast<int>();
+                         if (parser_item.dataType() == type_tag::uda) {
+                             value_record.push_back( DeckValue(UDAValue(val_int)) );
+                         }
+                         else {
+                             value_record.push_back( DeckValue( val_int) );
+                         }
+                         continue;
+                     }
+                     catch (const std::exception& e_int) {}
 
-                      try {
-                          int val_int = value_obj.cast<int>();
-                          value_record.push_back( DeckValue(val_int) );
-                          continue;
-                      }
-                      catch (const std::exception& e_int) {}
+                     try {
+                         double val_double = value_obj.cast<double>();
+                         if (parser_item.dataType() == type_tag::uda) {
+                             value_record.push_back( DeckValue(UDAValue(val_double)));
+                         }
+                         else {
+                             value_record.push_back( DeckValue(val_double) );
+                         }
+                         continue;
+                     }
+                     catch (const std::exception& e_double) {}
 
-                      try {
-                           double val_double = value_obj.cast<double>();
-                           value_record.push_back( DeckValue(val_double) );
-                           continue;
-                      }
-                      catch (const std::exception& e_double) {}
+                     try {
+                         std::string val_string = value_obj.cast<std::string>();
+                         push_string_as_deck_value(
+                             parser_item, value_record, val_string);
+                         continue;
+                     }
+                     catch (const std::exception& e_string) {}
 
-                      try {
-                           std::string val_string = value_obj.cast<std::string>();
-                           push_string_as_deck_value(value_record, val_string);
-                           continue;
-                      }
-                      catch (const std::exception& e_string) {}
-
-                      throw py::type_error("DeckKeyword: tried to add unknown type to record.");
+                     throw py::type_error("DeckKeyword: tried to add unknown type to record.");
 
                  }
                  value_record_list.push_back( value_record );
@@ -220,9 +247,10 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_SI_data_list", &SI_data_to_pylist)
         .def("__has_value", &DeckItem::hasValue)
         .def("__defaulted", &DeckItem::defaultApplied)
-        .def("__is_numberic", &uda_item_is_numeric)
+        .def("__is_numeric", &uda_item_is_numeric)
         .def("__uda_double", &get_uda_double)
         .def("__uda_str", &get_uda_str)
+        .def("name", &DeckItem::name)
         ;
 
 

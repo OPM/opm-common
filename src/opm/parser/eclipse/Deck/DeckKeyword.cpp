@@ -128,7 +128,23 @@ namespace Opm {
                               add_deckvalue<std::string>(std::move(deck_item), deck_record, parser_item, input_record, j);
                           }
                           break;
-
+                      case type_tag::uda:
+                         {
+                             auto& dimensions = parser_item.dimensions();
+                             std::vector<Dimension> active_dimensions;
+                             std::vector<Dimension> default_dimensions;
+                             for (const auto& dim_string : dimensions) {
+                                 active_dimensions.push_back(
+                                     system_active.parse(dim_string));
+                                 default_dimensions.push_back(
+                                     system_default.parse(dim_string));
+                             }
+                             DeckItem deck_item(parser_item.name(), UDAValue(),
+                                 active_dimensions, default_dimensions);
+                             add_deckvalue<UDAValue>(std::move(deck_item),
+                                 deck_record, parser_item, input_record, j);
+                         }
+                         break;
                       default: throw std::invalid_argument("For input to DeckKeyword '" + name() + ": unsupported type. (only support for string, double and int.)");
                   }
              }
@@ -136,10 +152,7 @@ namespace Opm {
              this->addRecord( std::move(deck_record) );
 
         }
-
-
     }
-
 
     DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data) :
         DeckKeyword(parserKeyword)
