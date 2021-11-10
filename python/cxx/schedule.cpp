@@ -1,7 +1,9 @@
 #include <ctime>
 #include <chrono>
 
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
@@ -92,10 +94,35 @@ namespace {
         return sch[index];
     }
 
+    void insert_keywords(
+        Schedule& sch,
+        const std::string& deck_string,
+        std::size_t index,
+        const UnitSystem& unit_system
+    )
+    {
+        Parser parser;
+        std::string str {unit_system.deck_name() + "\n\n" + deck_string};
+        auto deck = parser.parseString(str);
+        std::vector<DeckKeyword*> keywords;
+        for (auto &keyword : deck) {
+            keywords.push_back(&keyword);
+        }
+        sch.applyKeywords(keywords, index);
+    }
+
+    void insert_keywords(
+        Schedule& sch, py::list& deck_keywords, std::size_t index)
+    {
+        Parser parser;
+        std::vector<DeckKeyword*> keywords;
+        for (py::handle item : deck_keywords) {
+            DeckKeyword &keyword = item.cast<DeckKeyword&>();
+            keywords.push_back(&keyword);
+        }
+        sch.applyKeywords(keywords, index);
+    }
 }
-
-
-
 
 
 
@@ -107,7 +134,7 @@ void python::common::export_Schedule(py::module& module) {
         .def("group", &get_group, ref_internal);
 
 
-    // Note: In the below class we std::shared_ptr as the holder type, see:
+    // Note: In the below class we use std::shared_ptr as the holder type, see:
     //
     //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
     //
@@ -128,6 +155,14 @@ void python::common::export_Schedule(py::module& module) {
     .def( "get_wells", &Schedule::getWells)
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
+    .def( "insert_keywords",
+        py::overload_cast<Schedule&, py::list&, std::size_t>(&insert_keywords),
+        py::arg("keywords"), py::arg("step"))
+    .def( "insert_keywords",
+        py::overload_cast<
+               Schedule&, const std::string&, std::size_t, const UnitSystem&
+           >(&insert_keywords),
+        py::arg("data"), py::arg("step"), py::arg("unit_system"))
     .def( "__contains__", &has_well );
 
 }
