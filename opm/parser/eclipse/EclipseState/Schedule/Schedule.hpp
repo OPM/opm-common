@@ -620,7 +620,6 @@ namespace Opm
         void handleLIFTOPT   (HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleLINCOM    (HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleMESSAGES  (HandlerContext&, const ParseContext&, ErrorGuard&);
-        void handleMULTFLT   (HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleMXUNSUPP  (HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNETBALAN  (HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleNEXTSTEP  (HandlerContext&, const ParseContext&, ErrorGuard&);

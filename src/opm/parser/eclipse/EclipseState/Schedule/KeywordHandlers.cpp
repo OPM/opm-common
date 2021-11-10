@@ -721,11 +721,6 @@ namespace {
         this->snapshots.back().message_limits().update( handlerContext.keyword );
     }
 
-    void Schedule::handleMULTFLT(HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        this->snapshots.back().geo_keywords().push_back(handlerContext.keyword);
-        this->snapshots.back().events().addEvent( ScheduleEvents::GEO_MODIFIER );
-    }
-
 
     void Schedule::handleGEOKeyword(HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         this->snapshots.back().geo_keywords().push_back(handlerContext.keyword);
@@ -2126,7 +2121,7 @@ namespace {
             { "LIFTOPT" , &Schedule::handleLIFTOPT   },
             { "LINCOM"  , &Schedule::handleLINCOM    },
             { "MESSAGES", &Schedule::handleMESSAGES  },
-            { "MULTFLT" , &Schedule::handleMULTFLT   },
+            { "MULTFLT" , &Schedule::handleGEOKeyword},
             { "MULTPV"  , &Schedule::handleMXUNSUPP  },
             { "MULTR"   , &Schedule::handleMXUNSUPP  },
             { "MULTR-"  , &Schedule::handleMXUNSUPP  },
