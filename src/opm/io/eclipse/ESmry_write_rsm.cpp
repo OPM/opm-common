@@ -245,7 +245,7 @@ void ESmry::write_rsm(std::ostream& os) const {
         data_vector_blocks.emplace_back(data_vectors.begin() + i, data_vectors.begin() + last);
     }
 
-    this->LoadData();
+    this->loadData();
     std::vector<std::string> time_column;
     if (this->hasKey("DAY") && this->hasKey("MONTH") && this->hasKey("YEAR")) {
         write_dates = true;

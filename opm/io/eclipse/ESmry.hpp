@@ -56,8 +56,8 @@ public:
     std::vector<float> get_at_rstep(const SummaryNode& node) const;
     std::vector<time_point> dates_at_rstep() const;
 
-    void LoadData(const std::vector<std::string>& vectList) const;
-    void LoadData() const;
+    void loadData(const std::vector<std::string>& vectList) const;
+    void loadData() const;
 
     bool make_esmry_file();
 
@@ -78,6 +78,8 @@ public:
     void write_rsm_file(std::optional<std::filesystem::path> = std::nullopt) const;
 
     bool all_steps_available();
+    std::string rootname() { return inputFileName.stem(); }
+    std::tuple<double, double> get_io_elapsed() const;
 
 private:
     std::filesystem::path inputFileName;
@@ -109,6 +111,9 @@ private:
     std::unordered_map<std::string, std::string> kwunits;
 
     time_point startdat;
+
+    mutable double m_io_opening;
+    mutable double m_io_loading;
 
     std::vector<std::string> checkForMultipleResultFiles(const std::filesystem::path& rootN, bool formatted) const;
 

@@ -96,6 +96,11 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     inputFileName { filename },
     summaryNodes { }
 {
+    m_io_opening = 0.0;
+    m_io_loading = 0.0;
+
+    auto start = std::chrono::system_clock::now();
+
     fromSingleRun = !loadBaseRunData;
 
     std::filesystem::path rootName = inputFileName.parent_path() / inputFileName.stem();
@@ -577,6 +582,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         nTstep = timeStepList.size();
     }
+
+    std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
+    m_io_opening += elapsed_seconds.count();
 }
 
 void ESmry::read_ministeps_from_disk()
@@ -660,8 +668,9 @@ std::string ESmry::read_string_from_disk(std::fstream& fileH, uint64_t size) con
 }
 
 
-void ESmry::LoadData(const std::vector<std::string>& vectList) const
+void ESmry::loadData(const std::vector<std::string>& vectList) const
 {
+    auto start = std::chrono::system_clock::now();
     size_t nvect = vectList.size();
 
     std::vector<int> keywIndVect;
@@ -758,6 +767,9 @@ void ESmry::LoadData(const std::vector<std::string>& vectList) const
 
     for (const auto& ind : keywIndVect)
         vectorLoaded[ind] = true;
+
+    std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
+    m_io_loading += elapsed_seconds.count();
 }
 
 std::vector<int> ESmry::makeKeywPosVector(int specInd) const
@@ -782,7 +794,7 @@ std::vector<int> ESmry::makeKeywPosVector(int specInd) const
     return keywpos;
 }
 
-void ESmry::LoadData() const
+void ESmry::loadData() const
 {
     std::fstream fileH;
 
@@ -1021,7 +1033,7 @@ bool ESmry::make_esmry_file()
             else
                 is_rstep.push_back(0);
 
-        this->LoadData();
+        this->loadData();
 
         {
             Opm::TimeStampUTC ts( std::chrono::system_clock::to_time_t( startdat ));
@@ -1286,7 +1298,7 @@ const std::vector<float>& ESmry::get(const std::string& name) const
     int ind = std::distance(keyword.begin(), it);
 
     if (!vectorLoaded[ind]){
-        LoadData({name});
+        loadData({name});
         vectorLoaded[ind]=true;
     }
 
@@ -1353,4 +1365,12 @@ std::vector<time_point> ESmry::dates_at_rstep() const {
     const auto& full_vector = this->dates();
     return this->rstep_vector(full_vector);
 }
+
+std::tuple<double, double> ESmry::get_io_elapsed() const
+{
+    std::tuple<double, double> duration = std::make_tuple(m_io_opening, m_io_loading);
+    return duration;
+}
+
+
 }} // namespace Opm::EclIO

@@ -883,11 +883,11 @@ void ECLRegressionTest::results_smry()
 
     if (foundSmspec1 && foundSmspec2) {
         ESmry smry1(fileName1, loadBaseRunData);
-        smry1.LoadData();
+        smry1.loadData();
         std::cout << "\nLoading summary file " << fileName1 << "  .... done" << std::endl;
 
         ESmry smry2(fileName2, loadBaseRunData);
-        smry2.LoadData();
+        smry2.loadData();
         std::cout << "\nLoading summary file " << fileName2 << "  .... done" << std::endl;
 
         deviations.clear();

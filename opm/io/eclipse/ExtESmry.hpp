@@ -67,6 +67,8 @@ public:
     std::vector<time_point> dates();
 
     bool all_steps_available();
+    std::string rootname() { return m_inputFileName.stem(); }
+    std::tuple<double, double> get_io_elapsed() const;
 
 private:
     std::filesystem::path m_inputFileName;
@@ -93,6 +95,9 @@ private:
     std::vector<uint64_t> m_lod_arr_size;
 
     time_point m_startdat;
+
+    double m_io_opening;
+    double m_io_loading;
 
     uint64_t open_esmry(std::filesystem::path& inputFileName, LodsmryHeadType& lodsmry_head);
 
