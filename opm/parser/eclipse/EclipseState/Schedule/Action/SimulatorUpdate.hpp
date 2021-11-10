@@ -36,6 +36,10 @@ struct SimulatorUpdate {
     // These wells have been affected by the ACTIONX and the simulator needs to
     // reapply rates and state from the newly updated Schedule object.
     std::unordered_set<std::string> affected_wells;
+
+    // If one of the transmissibility multiplier keywords has been invoked as an
+    // ACTIONX keyword the simulator needs to recalculate the transmissibility.
+    bool tran_update{false};
 };
 
 }

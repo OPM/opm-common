@@ -725,6 +725,8 @@ namespace {
     void Schedule::handleGEOKeyword(HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         this->snapshots.back().geo_keywords().push_back(handlerContext.keyword);
         this->snapshots.back().events().addEvent( ScheduleEvents::GEO_MODIFIER );
+        if (handlerContext.sim_update)
+            handlerContext.sim_update->tran_update = true;
     }
 
     void Schedule::handleMXUNSUPP(HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
