@@ -2661,7 +2661,6 @@ MULTZ
 )";
 
     UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-    auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::permeability, raw_value); };
     EclipseGrid grid(10,10, 2);
     Deck deck = Parser{}.parseString(deck_string1);
     TableManager tables;
@@ -2697,7 +2696,6 @@ MULTZ
 
     const auto& sched3 = sched[3];
     fp.apply_schedule_keywords(sched3.geo_keywords());
-    const auto& multz3 = fp.get_double("MULTZ");
     for (std::size_t ij=0; ij < 100; ij++) {
         BOOST_CHECK_EQUAL(multz2[ij]      , 20.0);
         BOOST_CHECK_EQUAL(multz2[ij + 100], 40.0);
