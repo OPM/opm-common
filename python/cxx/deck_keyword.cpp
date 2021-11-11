@@ -1,3 +1,4 @@
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -167,7 +168,8 @@ void python::common::export_DeckKeyword(py::module& module) {
                      try {
                          int val_int = value_obj.cast<int>();
                          if (parser_item.dataType() == type_tag::uda) {
-                             value_record.push_back( DeckValue(UDAValue(val_int)) );
+                             auto dim = active_system.parse(parser_item.dimensions()[0]);
+                             value_record.push_back( DeckValue(UDAValue(static_cast<double>(val_int), dim)));
                          }
                          else {
                              value_record.push_back( DeckValue( val_int) );
@@ -179,7 +181,8 @@ void python::common::export_DeckKeyword(py::module& module) {
                      try {
                          double val_double = value_obj.cast<double>();
                          if (parser_item.dataType() == type_tag::uda) {
-                             value_record.push_back( DeckValue(UDAValue(val_double)));
+                             auto dim = active_system.parse(parser_item.dimensions()[0]);
+                             value_record.push_back( DeckValue(UDAValue(val_double, dim)));
                          }
                          else {
                              value_record.push_back( DeckValue(val_double) );
