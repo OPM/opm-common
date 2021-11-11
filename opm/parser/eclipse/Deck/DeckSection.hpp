@@ -41,9 +41,8 @@ enum class Section {
     class Parser;
 
 
-class DeckSection : public DeckViewInternal {
+class DeckSection : public DeckView {
     public:
-        using DeckViewInternal::const_iterator;
 
         DeckSection( const Deck& deck, const std::string& startKeyword );
         const std::string& name() const;
@@ -64,6 +63,53 @@ class DeckSection : public DeckViewInternal {
                                          const Parser&,
                                          bool ensureKeywordSectionAffiliation = false);
 
+
+        // ---------------------------------------------------------------------------------
+        // Highly deprecated shims
+        const DeckKeyword& getKeyword(const std::string& keyword, std::size_t index) const {
+            auto view = this->operator[](keyword);
+            return view[index];
+        }
+
+        const DeckKeyword& getKeyword(const std::string& keyword) const {
+            auto view = this->operator[](keyword);
+            return view.back();
+        }
+
+        template<class Keyword>
+        const DeckKeyword& getKeyword() const {
+            auto view = this->operator[](Keyword::keywordName);
+            return view.back();
+        }
+
+
+
+        std::vector<const DeckKeyword*> getKeywordList(const std::string& keyword) const {
+            std::vector<const DeckKeyword*> kw_list;
+            auto view = this->operator[](keyword);
+            for (const auto& kw : view)
+                kw_list.push_back(&kw);
+            return kw_list;
+        }
+
+        template <class Keyword>
+        std::vector<const DeckKeyword*> getKeywordList() const {
+            return this->getKeywordList(Keyword::keywordName);
+        }
+
+
+        bool hasKeyword(const std::string& keyword) const {
+            return this->has_keyword(keyword);
+        }
+
+        template <class Keyword>
+        bool hasKeyword() const {
+            return this->has_keyword(Keyword::keywordName);
+        }
+
+        // ---------------------------------------------------------------------------------
+
+
     private:
         std::string section_name;
         const UnitSystem& units;
@@ -72,49 +118,41 @@ class DeckSection : public DeckViewInternal {
 
     class RUNSPECSection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit RUNSPECSection(const Deck& deck) : DeckSection(deck, "RUNSPEC") {}
     };
 
     class GRIDSection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit GRIDSection(const Deck& deck) : DeckSection(deck, "GRID") {}
     };
 
     class EDITSection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit EDITSection(const Deck& deck) : DeckSection(deck, "EDIT") {}
     };
 
     class PROPSSection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit PROPSSection(const Deck& deck) : DeckSection(deck, "PROPS") {}
     };
 
     class REGIONSSection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit REGIONSSection(const Deck& deck) : DeckSection(deck, "REGIONS") {}
     };
 
     class SOLUTIONSection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit SOLUTIONSection(const Deck& deck) : DeckSection(deck, "SOLUTION") {}
     };
 
     class SUMMARYSection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit SUMMARYSection(const Deck& deck) : DeckSection(deck, "SUMMARY") {}
     };
 
     class SCHEDULESection : public DeckSection {
     public:
-        using DeckSection::const_iterator;
         explicit SCHEDULESection(const Deck& deck) : DeckSection(deck, "SCHEDULE") {}
     };
 }

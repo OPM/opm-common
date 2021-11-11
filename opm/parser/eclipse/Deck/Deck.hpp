@@ -20,6 +20,7 @@
 #ifndef DECK_HPP
 #define DECK_HPP
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -27,6 +28,7 @@
 #include <vector>
 #include <string>
 
+#include <opm/parser/eclipse/Deck/DeckView.hpp>
 #include <opm/parser/eclipse/Deck/DeckTree.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -56,80 +58,14 @@ namespace Opm {
      */
     class DeckOutput;
 
-    class DeckViewInternal {
+
+
+    class Deck {
         public:
-            typedef std::vector< DeckKeyword >::const_iterator const_iterator;
-
-            bool hasKeyword( const std::string& keyword ) const;
-            template< class Keyword >
-            bool hasKeyword() const {
-                return hasKeyword( Keyword::keywordName );
-            }
-
-            const DeckKeyword& getKeyword( const std::string& keyword, size_t index ) const;
-            const DeckKeyword& getKeyword( const std::string& keyword ) const;
-            const DeckKeyword& getKeyword( size_t index ) const;
-
-            const DeckKeyword& operator[](std::size_t index) const;
-            DeckKeyword& getKeyword( size_t index );
-            template< class Keyword >
-            const DeckKeyword& getKeyword() const {
-                return getKeyword( Keyword::keywordName );
-            }
-            template< class Keyword >
-            const DeckKeyword& getKeyword( size_t index ) const {
-                return getKeyword( Keyword::keywordName, index );
-            }
-            template< class Keyword >
-            std::size_t count() const {
-                return count( Keyword::keywordName );
-            }
-
-            const std::vector< const DeckKeyword* > getKeywordList( const std::string& keyword ) const;
-            template< class Keyword >
-            const std::vector< const DeckKeyword* > getKeywordList() const {
-                return getKeywordList( Keyword::keywordName );
-            }
-
-            size_t count(const std::string& keyword) const;
-            size_t size() const;
-
-            const_iterator begin() const;
-            const_iterator end() const;
-
-
-        protected:
-            void add( const DeckKeyword*, const_iterator, const_iterator );
-
-            const std::vector< size_t >& offsets( const std::string& ) const;
-
-            DeckViewInternal( const_iterator first, const_iterator last );
-            explicit DeckViewInternal( std::pair< const_iterator, const_iterator > );
-            DeckViewInternal() = default;
-            void init( const_iterator, const_iterator );
-
-        private:
-            const_iterator first;
-            const_iterator last;
-            std::map< std::string, std::vector< size_t > > keywordMap;
-
-    };
-
-    class Deck : private DeckViewInternal {
-        public:
-            using DeckViewInternal::const_iterator;
-            using DeckViewInternal::hasKeyword;
-            using DeckViewInternal::getKeyword;
-            using DeckViewInternal::getKeywordList;
-            using DeckViewInternal::count;
-            using DeckViewInternal::size;
-            using DeckViewInternal::begin;
-            using DeckViewInternal::end;
-            using DeckViewInternal::operator[];
-
             using iterator = std::vector< DeckKeyword >::iterator;
+            using const_iterator = std::vector< DeckKeyword >::const_iterator;
 
-            Deck();
+            Deck() = default;
             Deck( const Deck& );
             Deck( Deck&& );
 
@@ -140,8 +76,6 @@ namespace Opm {
 
             void addKeyword( DeckKeyword&& keyword );
             void addKeyword( const DeckKeyword& keyword );
-
-            DeckKeyword& getKeyword( size_t );
 
             const UnitSystem& getDefaultUnitSystem() const;
             const UnitSystem& getActiveUnitSystem() const;
@@ -162,6 +96,30 @@ namespace Opm {
             iterator end();
             void write( DeckOutput& output ) const ;
             friend std::ostream& operator<<(std::ostream& os, const Deck& deck);
+            const_iterator begin() const;
+            const_iterator end() const;
+
+            const DeckKeyword& getKeyword( const std::string& keyword, size_t index ) const;
+            const DeckKeyword& getKeyword( const std::string& keyword ) const;
+            const DeckKeyword& getKeyword( size_t index ) const;
+            DeckKeyword& getKeyword( size_t index );
+
+            const DeckKeyword& operator[](std::size_t index) const;
+
+            template< class Keyword >
+            const DeckKeyword& getKeyword() const {
+                return getKeyword( Keyword::keywordName );
+            }
+            template< class Keyword >
+            const DeckKeyword& getKeyword( size_t index ) const {
+                return getKeyword( Keyword::keywordName, index );
+            }
+
+            std::vector< const DeckKeyword* > getKeywordList( const std::string& keyword ) const;
+            template< class Keyword >
+            std::vector< const DeckKeyword* > getKeywordList() const {
+                return getKeywordList( Keyword::keywordName );
+            }
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
@@ -172,12 +130,30 @@ namespace Opm {
                 serializer(m_dataFile);
                 serializer(input_path);
                 serializer(unit_system_access_count);
-                if (!serializer.isSerializing())
-                  this->init(this->keywordList.begin(), this->keywordList.end());
             }
 
+            bool hasKeyword( const std::string& keyword ) const;
+
+            template< class Keyword >
+            bool hasKeyword() const {
+                return this->hasKeyword( Keyword::keywordName );
+            }
+
+
+
+            const std::vector<std::size_t> index(const std::string& keyword) const {
+                return this->global_view().index(keyword);
+            }
+
+            template< class Keyword >
+            std::size_t count() const {
+                return count( Keyword::keywordName );
+            }
+            size_t count(const std::string& keyword) const;
+
+
+
         private:
-            Deck(std::vector<DeckKeyword>&& keywordList);
 
             std::vector< DeckKeyword > keywordList;
             UnitSystem defaultUnits;
@@ -187,6 +163,9 @@ namespace Opm {
             std::string input_path;
             DeckTree file_tree;
             mutable std::size_t unit_system_access_count = 0;
+
+            const DeckView& global_view() const;
+            mutable std::unique_ptr<DeckView> m_global_view{nullptr};
     };
 }
 #endif  /* DECK_HPP */

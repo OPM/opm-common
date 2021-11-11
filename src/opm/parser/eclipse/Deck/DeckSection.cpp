@@ -17,53 +17,80 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <exception>
 #include <algorithm>
 #include <cassert>
+#include <exception>
+#include <iostream>
+#include <optional>
 #include <set>
 #include <string>
+#include <unordered_map>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 namespace Opm {
 
-    static bool isSectionDelimiter( const DeckKeyword& keyword ) {
-        const auto& name = keyword.name();
-        for( const auto& x : { "RUNSPEC", "GRID", "EDIT", "PROPS",
-                               "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE" } )
-            if( name == x ) return true;
 
-        return false;
+const std::unordered_map<std::string, std::size_t> section_index = {
+    {"RUNSPEC", 0},
+    {"GRID", 1},
+    {"EDIT", 2},
+    {"PROPS", 3},
+    {"REGIONS", 4},
+    {"SOLUTION", 5},
+    {"SUMMARY", 6},
+    {"SCHEDULE", 7}
+};
+
+    std::pair<std::size_t, std::size_t> index_pair(const Deck& deck, const std::string& section) {
+        if (!deck.hasKeyword(section))
+            return {0,0};
+
+        auto start_index = deck.index(section).front();
+        std::unordered_set<std::string> end_set;
+        {
+            auto this_section_index = section_index.at(section);
+
+            for (const auto& [section_name, index] : section_index) {
+                if (index > this_section_index)
+                    end_set.insert(section_name);
+            }
+        }
+
+        if (end_set.empty())
+            return {start_index, deck.size()};
+
+        std::size_t deck_index = start_index;
+        while (true) {
+            const auto& kw = deck[deck_index];
+            if (end_set.count(kw.name()) == 1)
+                break;
+
+            deck_index++;
+
+            if (deck_index == deck.size())
+                break;
+        }
+        return {start_index, deck_index};
     }
 
-    static std::pair< DeckViewInternal::const_iterator, DeckViewInternal::const_iterator >
-    find_section( const Deck& deck, const std::string& keyword ) {
-
-        const auto fn = [&keyword]( const DeckKeyword& kw ) {
-            return kw.name() == keyword;
-        };
-
-        auto first = std::find_if( deck.begin(), deck.end(), fn );
-
-        if( first == deck.end() )
-            return { first, first };
-
-        auto last = std::find_if( first + 1, deck.end(), isSectionDelimiter );
-
-        if( last != deck.end() && last->name() == keyword )
-            throw std::invalid_argument( std::string( "Deck contains the '" ) + keyword + "' section multiple times" );
-
-        return { first, last };
-    }
 
     DeckSection::DeckSection( const Deck& deck, const std::string& section )
-        : DeckViewInternal( find_section( deck, section ) ),
-          section_name( section ),
-          units( deck.getActiveUnitSystem() )
-    {}
+        : section_name( section )
+        , units( deck.getActiveUnitSystem() )
+    {
+        auto [start_index, end_index] = index_pair(deck, section);
+        for (std::size_t index = start_index; index < end_index; index++)
+            this->add_keyword(deck.getKeyword(index));
+    }
+
 
     const std::string& DeckSection::name() const {
         return this->section_name;
@@ -73,13 +100,13 @@ namespace Opm {
         return this->units;
     }
 
-    bool DeckSection::hasRUNSPEC(const Deck& deck) { return deck.hasKeyword( "RUNSPEC" ); }
-    bool DeckSection::hasGRID(const Deck& deck) { return deck.hasKeyword( "GRID" ); }
-    bool DeckSection::hasEDIT(const Deck& deck) { return deck.hasKeyword( "EDIT" ); }
-    bool DeckSection::hasPROPS(const Deck& deck) { return deck.hasKeyword( "PROPS" ); }
-    bool DeckSection::hasREGIONS(const Deck& deck) { return deck.hasKeyword( "REGIONS" ); }
-    bool DeckSection::hasSOLUTION(const Deck& deck) { return deck.hasKeyword( "SOLUTION" ); }
-    bool DeckSection::hasSUMMARY(const Deck& deck) { return deck.hasKeyword( "SUMMARY" ); }
-    bool DeckSection::hasSCHEDULE(const Deck& deck) { return deck.hasKeyword( "SCHEDULE" ); }
+bool DeckSection::hasRUNSPEC(const Deck& deck) { return deck.hasKeyword<ParserKeywords::RUNSPEC>(); }
+bool DeckSection::hasGRID(const Deck& deck) { return deck.hasKeyword<ParserKeywords::GRID>(); }
+bool DeckSection::hasEDIT(const Deck& deck) { return deck.hasKeyword<ParserKeywords::EDIT>(); }
+bool DeckSection::hasPROPS(const Deck& deck) { return deck.hasKeyword<ParserKeywords::PROPS>(); }
+bool DeckSection::hasREGIONS(const Deck& deck) { return deck.hasKeyword<ParserKeywords::REGIONS>(); }
+bool DeckSection::hasSOLUTION(const Deck& deck) { return deck.hasKeyword<ParserKeywords::SOLUTION>(); }
+bool DeckSection::hasSUMMARY(const Deck& deck) { return deck.hasKeyword<ParserKeywords::SUMMARY>(); }
+bool DeckSection::hasSCHEDULE(const Deck& deck) { return deck.hasKeyword<ParserKeywords::SCHEDULE>(); }
 
 }

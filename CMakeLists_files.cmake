@@ -46,6 +46,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/io/eclipse/SummaryNode.cpp
     src/opm/json/JsonObject.cpp
     src/opm/parser/eclipse/Deck/Deck.cpp
+    src/opm/parser/eclipse/Deck/DeckView.cpp
     src/opm/parser/eclipse/Deck/DeckTree.cpp
     src/opm/parser/eclipse/Deck/FileDeck.cpp
     src/opm/parser/eclipse/Deck/DeckItem.cpp
@@ -871,6 +872,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
+       opm/parser/eclipse/Deck/DeckView.hpp
        opm/parser/eclipse/Deck/FileDeck.hpp
        opm/parser/eclipse/Deck/DeckSection.hpp
        opm/parser/eclipse/Deck/DeckTree.hpp

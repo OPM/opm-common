@@ -854,8 +854,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
 
 BOOST_AUTO_TEST_CASE(BHP_CMODE)
 {
-    BOOST_CHECK_THROW( WCONHIST::properties(WCONHIST::all_specified_CMODE_THP()) , std::invalid_argument);
-    BOOST_CHECK_THROW( WCONPROD::properties(WCONPROD::all_specified_CMODE_BHP()) , std::invalid_argument);
+    BOOST_CHECK_THROW( WCONHIST::properties(WCONHIST::all_specified_CMODE_THP()) , std::exception);
+    BOOST_CHECK_THROW( WCONPROD::properties(WCONPROD::all_specified_CMODE_BHP()) , std::exception);
 }
 
 
