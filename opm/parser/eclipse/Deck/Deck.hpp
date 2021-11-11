@@ -181,7 +181,7 @@ namespace Opm {
 
             std::vector< DeckKeyword > keywordList;
             UnitSystem defaultUnits;
-            std::unique_ptr<UnitSystem> activeUnits;
+            std::optional<UnitSystem> activeUnits;
 
             std::optional<std::string> m_dataFile;
             std::string input_path;

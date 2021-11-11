@@ -143,32 +143,30 @@ namespace Opm {
     {
     }
 
-    Deck::Deck( const Deck& d ) :
-        DeckViewInternal(d.begin(), d.end()),
-        keywordList( d.keywordList ),
-        defaultUnits( d.defaultUnits ),
-        m_dataFile( d.m_dataFile ),
-        input_path( d.input_path ),
-        file_tree( d.file_tree )
+    Deck::Deck( const Deck& d )
+        : DeckViewInternal(d.begin(), d.end())
+        , keywordList( d.keywordList )
+        , defaultUnits( d.defaultUnits )
+        , activeUnits( d.activeUnits )
+        , m_dataFile( d.m_dataFile )
+        , input_path( d.input_path )
+        , file_tree( d.file_tree )
+        , unit_system_access_count(d.unit_system_access_count)
     {
         this->init(this->keywordList.begin(), this->keywordList.end());
-        if (d.activeUnits)
-            this->activeUnits.reset( new UnitSystem(*d.activeUnits.get()));
-        unit_system_access_count = d.unit_system_access_count;
     }
 
-    Deck::Deck( Deck&& d ) :
-        DeckViewInternal(d.begin(), d.end()),
-        keywordList( std::move(d.keywordList) ),
-        defaultUnits( d.defaultUnits ),
-        m_dataFile( d.m_dataFile ),
-        input_path( d.input_path ),
-        file_tree( std::move(d.file_tree) )
+    Deck::Deck( Deck&& d )
+        : DeckViewInternal(d.begin(), d.end())
+        , keywordList( std::move(d.keywordList) )
+        , defaultUnits( d.defaultUnits )
+        , activeUnits( d.activeUnits )
+        , m_dataFile( d.m_dataFile )
+        , input_path( d.input_path )
+        , file_tree( std::move(d.file_tree) )
+        , unit_system_access_count(d.unit_system_access_count)
     {
         this->init(this->keywordList.begin(), this->keywordList.end());
-        if (d.activeUnits)
-            this->activeUnits = std::move(d.activeUnits);
-        unit_system_access_count = d.unit_system_access_count;
     }
 
     Deck Deck::serializeObject()
@@ -176,7 +174,7 @@ namespace Opm {
         Deck result;
         result.keywordList = {DeckKeyword::serializeObject()};
         result.defaultUnits = UnitSystem::serializeObject();
-        result.activeUnits = std::make_unique<UnitSystem>(UnitSystem::serializeObject());
+        result.activeUnits = UnitSystem::serializeObject();
         result.m_dataFile = "test1";
         result.input_path = "test2";
         result.unit_system_access_count = 1;
@@ -220,8 +218,8 @@ namespace Opm {
 
     UnitSystem& Deck::getActiveUnitSystem() {
         this->unit_system_access_count++;
-        if (this->activeUnits)
-            return *this->activeUnits;
+        if (this->activeUnits.has_value())
+            return this->activeUnits.value();
         else
             return this->defaultUnits;
     }
@@ -232,14 +230,14 @@ namespace Opm {
             throw std::invalid_argument("Sorry - can not change unit system after dimensionfull features have been entered");
 
         if (current.getType() != unit_type)
-            this->activeUnits.reset( new UnitSystem(unit_type) );
+            this->activeUnits = UnitSystem(unit_type);
     }
 
 
     const UnitSystem& Deck::getActiveUnitSystem() const {
         this->unit_system_access_count++;
-        if (this->activeUnits)
-            return *this->activeUnits;
+        if (this->activeUnits.has_value())
+            return this->activeUnits.value();
         else
             return this->defaultUnits;
     }
@@ -314,9 +312,7 @@ namespace Opm {
         input_path = data.input_path;
         unit_system_access_count = data.unit_system_access_count;
         this->init(this->keywordList.begin(), this->keywordList.end());
-        activeUnits.reset();
-        if (data.activeUnits)
-            activeUnits.reset(new UnitSystem(*data.activeUnits));
+        activeUnits = data.activeUnits;
 
         return *this;
     }
