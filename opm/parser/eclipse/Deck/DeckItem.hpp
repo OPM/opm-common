@@ -113,7 +113,7 @@ namespace Opm {
           account, i.e. two items will compare differently if one is
           defaulted and the other has the default value explicitly
           set. The default behaviour is cmp_default == false -
-          itrespective of whether they have been set explicitly or
+          irrespective of whether they have been set explicitly or
           have been defaulted.
         */
         bool equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) const;
