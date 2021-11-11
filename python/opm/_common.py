@@ -14,6 +14,7 @@ from .libopmcommon_python import action
 from .libopmcommon_python import Parser, ParseContext, Builtin, eclSectionType
 from .libopmcommon_python import DeckKeyword
 from .libopmcommon_python import DeckItem
+from .libopmcommon_python import UnitSystem
 
 from .libopmcommon_python import EclipseState
 from .libopmcommon_python import FieldProperties
