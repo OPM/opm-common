@@ -50,6 +50,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/SimulatorUpdate.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 
@@ -274,7 +275,7 @@ namespace Opm
         bool write_rst_file(std::size_t report_step) const;
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
 
-        std::unordered_set<std::string> applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
+        SimulatorUpdate applyAction(std::size_t reportStep, const time_point& sim_time, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& wellpi);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
 
@@ -523,7 +524,7 @@ namespace Opm
                            const FieldPropsManager* fp,
                            const std::vector<std::string>& matching_wells,
                            bool runtime,
-                           std::unordered_set<std::string> * affected_wells,
+                           SimulatorUpdate * sim_update,
                            const std::unordered_map<std::string, double> * target_wellpi);
 
         static std::string formatDate(std::time_t t);
@@ -532,7 +533,7 @@ namespace Opm
         bool must_write_rst_file(std::size_t report_step) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
-        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {}, std::unordered_set<std::string> * affected_wells = nullptr);
+        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {}, SimulatorUpdate * sim_update = nullptr);
 
         struct HandlerContext {
             const ScheduleBlock& block;
@@ -540,7 +541,7 @@ namespace Opm
             const std::size_t currentStep;
             const std::vector<std::string>& matching_wells;
             const bool actionx_mode;
-            std::unordered_set<std::string> * affected_wells;
+            SimulatorUpdate * sim_update;
             const std::unordered_map<std::string, double> * target_wellpi;
             const ScheduleGrid& grid;
             const FieldPropsManager* fp_ptr;
@@ -551,22 +552,22 @@ namespace Opm
                            const std::size_t currentStep_,
                            const std::vector<std::string>& matching_wells_,
                            bool actionx_mode_,
-                           std::unordered_set<std::string> * affected_wells_,
+                           SimulatorUpdate * sim_update_,
                            const std::unordered_map<std::string, double> * target_wellpi_)
             : block(block_)
             , keyword(keyword_)
             , currentStep(currentStep_)
             , matching_wells(matching_wells_)
             , actionx_mode(actionx_mode_)
-            , affected_wells(affected_wells_)
+            , sim_update(sim_update_)
             , target_wellpi(target_wellpi_)
             , grid(grid_)
             , fp_ptr(nullptr)
             {}
 
             void affected_well(const std::string& well_name) {
-                if (this->affected_wells)
-                    this->affected_wells->insert(well_name);
+                if (this->sim_update)
+                    this->sim_update->affected_wells.insert(well_name);
             }
 
         };
