@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from opm._common import EModel, eclArrType
 from opm._common import calc_cell_vol
 
