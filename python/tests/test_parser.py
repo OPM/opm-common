@@ -8,10 +8,8 @@ from opm.io.parser import Builtin
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
 from opm.io.deck import DeckKeyword
-try:
-    from tests.utils import test_path
-except ImportError:
-    from utils import test_path
+
+from .utils import test_path
 
 
 unit_foot = 0.3048 #meters

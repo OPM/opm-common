@@ -4,10 +4,8 @@ import numpy as np
 import io
 
 from opm.io.ecl import ERst, eclArrType, EclOutput
-try:
-    from tests.utils import test_path
-except ImportError:
-    from utils import test_path
+
+from .utils import test_path
 
 
 class TestERst(unittest.TestCase):
