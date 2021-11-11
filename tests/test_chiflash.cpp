@@ -46,15 +46,13 @@ void testChiFlash()
     using FluidSystem = Opm::TwoPhaseThreeComponentFluidSystem<Scalar>;
 
     constexpr auto numComponents = FluidSystem::numComponents;
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FluidState;
+    using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
+    typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
+    typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
 
     // From co2-compositional branch, it uses
-    // typename FluidSystem::template ParameterCache<Evaluation> paramCache;
-    typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
-    using ComponentVector = Dune::FieldVector<Scalar, numComponents>;
-    using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
-
+    typename FluidSystem::template ParameterCache<Evaluation> paramCache;
+    // typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
 
     FluidState fs;
     // TODO: no capillary pressure for now
@@ -73,7 +71,7 @@ void testChiFlash()
 
     fs.setTemperature(303);
 
-    ParameterCache paramCache;
+    // ParameterCache paramCache;
     paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
     paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
     fs.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::oilPhaseIdx));
@@ -86,10 +84,10 @@ void testChiFlash()
 
     // Set initial K and L
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Scalar Ktmp = fs.wilsonK_(compIdx);
+        const Evaluation Ktmp = fs.wilsonK_(compIdx);
         fs.setKvalue(compIdx, Ktmp);
     }
-    const Scalar Ltmp = -1.0;
+    const Evaluation Ltmp = -1.0;
     fs.setLvalue(Ltmp);
 
     const int spatialIdx = 0;
