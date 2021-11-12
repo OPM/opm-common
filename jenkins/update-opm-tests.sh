@@ -22,6 +22,7 @@ upstreamRev[opm-grid]=master
 upstreamRev[opm-models]=master
 upstreamRev[opm-simulators]=master
 upstreamRev[opm-upscaling]=master
+upstreamRev[opm-tests]=master
 
 # Setup revision tables
 parseRevisions
@@ -43,6 +44,12 @@ done
 
 # Do the commit
 export REASON
+if [ "${upstreamRev[opm-tests]}" == "master" ]
+then
+  export BRANCH_BASE=origin/master
+else
+  export BRANCH_BASE=${upstreamRev[opm-tests]}
+fi
 export BRANCH_NAME
 $WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_TESTS_ROOT $WORKSPACE/$configuration/build-opm-simulators $WORKSPACE/$configuration/install/bin/convertECL
 if test $? -eq 5

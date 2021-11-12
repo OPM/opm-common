@@ -33,7 +33,7 @@ else
   then
     cp $OPM_TESTS_ROOT $WORKSPACE/deps/opm-tests -R
     pushd $WORKSPACE/deps/opm-tests
-    echo "opmt-tests-revision: `git rev-parse HEAD`"
+    echo "opm-tests-revision: `git rev-parse HEAD`"
     popd
   fi
 fi
