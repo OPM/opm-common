@@ -41,6 +41,13 @@ namespace {
         else
             throw std::logic_error(fmt::format("FieldPropsManager is missing keyword '{}'", kw));
     }
+
+    double try_get_ntg_value(const Opm::FieldPropsManager& fp, const std::string& kw, std::size_t active_index){
+        if (fp.has_double(kw))
+            return fp.try_get<double>(kw)->at(active_index);
+        else
+            return 1.0;
+    }
 }
 
 const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const {
@@ -56,7 +63,9 @@ const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std:
                 props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
                 props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
                 props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
-                //props.satnum = this->fp->int("SATNUM");
+                props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
+                props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
+                props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
                 cell.props = props;
             }
         }

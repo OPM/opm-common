@@ -506,7 +506,6 @@ namespace Opm
                                     ErrorGuard& errors,
                                     const ScheduleGrid& grid,
                                     const std::unordered_map<std::string, double> * target_wellpi,
-                                    const FieldPropsManager* fp,
                                     const std::string& prefix);
         void addACTIONX(const Action::ActionX& action);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group);
@@ -521,7 +520,6 @@ namespace Opm
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const ScheduleGrid& grid,
-                           const FieldPropsManager* fp,
                            const std::vector<std::string>& matching_wells,
                            bool runtime,
                            SimulatorUpdate * sim_update,
@@ -544,7 +542,6 @@ namespace Opm
             SimulatorUpdate * sim_update;
             const std::unordered_map<std::string, double> * target_wellpi;
             const ScheduleGrid& grid;
-            const FieldPropsManager* fp_ptr;
 
             HandlerContext(const ScheduleBlock& block_,
                            const DeckKeyword& keyword_,
@@ -562,7 +559,6 @@ namespace Opm
             , sim_update(sim_update_)
             , target_wellpi(target_wellpi_)
             , grid(grid_)
-            , fp_ptr(nullptr)
             {}
 
             void affected_well(const std::string& well_name) {

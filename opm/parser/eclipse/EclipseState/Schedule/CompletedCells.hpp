@@ -37,15 +37,41 @@ public:
             double permx;
             double permy;
             double permz;
-            //int satnum;
+            int satnum;
+            int pvtnum;
+            double ntg;
 
             bool operator==(const Props& other) const{
                 return this->active_index == other.active_index &&
                        this->permx == other.permx &&
                        this->permy == other.permy &&
-                       this->permz == other.permz;
+                       this->permz == other.permz &&
+                       this->satnum == other.satnum &&
+                       this->pvtnum == other.pvtnum &&
+                       this->ntg == other.ntg;
             }
 
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(this->permx);
+                serializer(this->permy);
+                serializer(this->permz);
+                serializer(this->satnum);
+                serializer(this->pvtnum);
+                serializer(this->ntg);
+            }
+
+            static Props serializeObject(){
+                Props props;
+                props.permx = 10.0;
+                props.permy = 78.0;
+                props.permz = 45.4;
+                props.satnum = 3;
+                props.pvtnum = 5;
+                props.ntg = 45.1;
+                return props;
+            }
         };
 
         std::optional<Props> props;

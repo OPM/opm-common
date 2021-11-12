@@ -457,6 +457,24 @@ BOOST_AUTO_TEST_CASE(UDA) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(COMPDAT) {
+#include "compdat.include"
+    test_data td( compdat_deck );
+    msim sim(td.state);
+    EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+    sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+    sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+    sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+    sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+    sim.well_rate("INJ", data::Rates::opt::wat, inj_wir_INJ);
+    {
+        WorkArea work_area("compdat_sim");
+
+        BOOST_CHECK_NO_THROW(sim.run(td.schedule, io, true));
+    }
+}
+
 #ifdef EMBEDDED_PYTHON
 
 BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
