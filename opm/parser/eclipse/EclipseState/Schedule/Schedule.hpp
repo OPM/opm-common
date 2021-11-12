@@ -525,6 +525,7 @@ namespace Opm
                            SimulatorUpdate * sim_update,
                            const std::unordered_map<std::string, double> * target_wellpi);
 
+        void inspect_actionx_keyword(const ScheduleGrid& grid, const DeckKeyword& keyword);
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
 

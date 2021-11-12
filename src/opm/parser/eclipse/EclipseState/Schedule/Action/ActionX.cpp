@@ -60,7 +60,7 @@ std::string dequote(const std::string& token, const std::optional<KeywordLocatio
 
 bool ActionX::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> actionx_allowed_list = {
-        "COMPLUMP",
+        "COMPLUMP", "COMPDAT",
         "EXIT",
         "GCONINJE", "GCONPROD", "GCONSUMP", "GLIFTOPT", "GRUPNET", "GRUPTARG", "GRUPTREE", "GSATINJE", "GSATPROD",
         "UDQ",
