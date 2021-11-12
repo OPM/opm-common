@@ -191,10 +191,13 @@ public:
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
             // molar volume of liquid is the smallest one
+#warning HACK, should investigate why
             if (isGasPhase)
-                Vm = Z[2]*RT/p;
+                //  Vm = Z[2]*RT/p;
+                Vm = max(1e-7, Z[2]*RT/p);
             else
-                Vm = Z[0]*RT/p;
+                //  Vm = Z[2]*RT/p;
+                Vm = max(1e-7, Z[0]*RT/p);
         }
         else if (numSol == 1) {
             // the EOS only has one intersection with the pressure,
@@ -203,27 +206,28 @@ public:
             Evaluation VmCubic = Z[0]*RT/p;
             Vm = VmCubic;
 
+#warning, should investigate why here
             // find the extrema (if they are present)
-            Evaluation Vmin, Vmax, pmin, pmax;
-            if (findExtrema_(Vmin, Vmax,
-                             pmin, pmax,
-                             a, b, T))
-            {
-                if (isGasPhase)
-                    Vm = std::max(Vmax, VmCubic);
-                else {
-                    if (Vmin > 0)
-                        Vm = std::min(Vmin, VmCubic);
-                    else
-                        Vm = VmCubic;
-                }
-            }
-            else {
-                // the EOS does not exhibit any physically meaningful
-                // extrema, and the fluid is critical...
-                Vm = VmCubic;
-                handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
-            }
+            // Evaluation Vmin, Vmax, pmin, pmax;
+            // if (findExtrema_(Vmin, Vmax,
+            //                  pmin, pmax,
+            //                  a, b, T))
+            // {
+            //     if (isGasPhase)
+            //         Vm = std::max(Vmax, VmCubic);
+            //     else {
+            //         if (Vmin > 0)
+            //             Vm = std::min(Vmin, VmCubic);
+            //         else
+            //             Vm = VmCubic;
+            //     }
+            // }
+            // else {
+            //     // the EOS does not exhibit any physically meaningful
+            //     // extrema, and the fluid is critical...
+            //     Vm = VmCubic;
+            //     handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
+            // }
         }
 
         Valgrind::CheckDefined(Vm);

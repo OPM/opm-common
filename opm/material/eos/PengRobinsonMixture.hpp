@@ -87,12 +87,28 @@ public:
       * R. Reid, et al.: The Properties of Gases and Liquids,
       * 4th edition, McGraw-Hill, 1987, pp. 42-44, 143-145
       */
+#warning should check why this function is changed
     template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
-    static LhsEval computeFugacityCoefficient(const FluidState& fs,
-                                              const Params& params,
+    static LhsEval computeFugacityCoefficient(const FluidState& fs2,
+                                              const Params& params2,
                                               unsigned phaseIdx,
                                               unsigned compIdx)
     {
+#warning also a HACK, should investigate why
+        auto fs = fs2;
+        double sumx = 0.0;
+        for (int i = 0; i < FluidState::numComponents; ++i)
+            sumx += Opm::scalarValue(fs.moleFraction(phaseIdx, i));
+        if (sumx < 0.95)  {
+            double alpha = 0.95/sumx;
+            std::cerr << "normalize: " << sumx
+                      << " alpha: " << alpha << "\n";
+            for (int i = 0; i < FluidState::numComponents; ++i)
+                fs.setMoleFraction(phaseIdx, i, alpha*fs.moleFraction(phaseIdx, i));
+        }
+
+        auto params = params2;
+        params.updatePhase(fs, phaseIdx);
         // note that we normalize the component mole fractions, so
         // that their sum is 100%. This increases numerical stability
         // considerably if the fluid state is not physical.
