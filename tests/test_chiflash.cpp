@@ -51,7 +51,6 @@ void testChiFlash()
     typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
 
     // From co2-compositional branch, it uses
-    typename FluidSystem::template ParameterCache<Evaluation> paramCache;
     // typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
 
     FluidState fs;
@@ -72,10 +71,13 @@ void testChiFlash()
     fs.setTemperature(303);
 
     // ParameterCache paramCache;
-    paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
-    paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
-    fs.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::oilPhaseIdx));
-    fs.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx));
+    {
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
+        paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
+        paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
+        fs.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::oilPhaseIdx));
+        fs.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx));
+    }
 
     ComponentVector zInit(0.); // TODO; zInit needs to be normalized.
     {
