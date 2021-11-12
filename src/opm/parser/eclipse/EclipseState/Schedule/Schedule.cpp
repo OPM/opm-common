@@ -47,6 +47,7 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
@@ -1561,6 +1562,45 @@ namespace {
 
         if (!rst_state.wlists.empty())
             this->snapshots.back().wlist_manager.update( WListManager(rst_state) );
+
+        if (rst_state.network.isActive()) {
+            auto network = this->snapshots.back().network();
+
+            // Note: We presently support only the default value of BRANPROP(4).
+            const auto alq_value =
+                ParserKeywords::BRANPROP::ALQ::defaultValue;
+
+            const auto& rst_nodes = rst_state.network.nodes();
+            for (const auto& rst_branch : rst_state.network.branches()) {
+                if ((rst_branch.down < 0) || (rst_branch.up < 0)) {
+                    // Prune branches to non-existent nodes.
+                    continue;
+                }
+
+                const auto& downtree_node = rst_nodes[rst_branch.down].name;
+                const auto& uptree_node = rst_nodes[rst_branch.up].name;
+
+                network.add_branch({ downtree_node, uptree_node, rst_branch.vfp, alq_value });
+            }
+
+            for (const auto& rst_node : rst_nodes) {
+                auto node = Network::Node { rst_node.name };
+
+                if (rst_node.terminal_pressure.has_value()) {
+                    node.terminal_pressure(rst_node.terminal_pressure.value());
+                }
+
+                if (rst_node.as_choke.has_value()) {
+                    node.as_choke(rst_node.as_choke.value());
+                }
+
+                node.add_gas_lift_gas(rst_node.add_lift_gas);
+
+                network.add_node(std::move(node));
+            }
+
+            this->snapshots.back().network.update(std::move(network));
+        }
     }
 
     std::shared_ptr<const Python> Schedule::python() const
