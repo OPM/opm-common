@@ -47,6 +47,7 @@
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -154,16 +155,17 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
         const auto& init_config = this->getInitConfig();
         if (init_config.restartRequested()) {
+            const auto& restart_keyword = deck.getKeyword<ParserKeywords::RESTART>();
             const auto& io_config = this->getIOConfig();
             const int report_step = init_config.getRestartStep();
             const auto& restart_file = io_config.getRestartFileName( init_config.getRestartRootName(), report_step, false);
             if (!std::filesystem::exists(restart_file))
-                throw std::logic_error(fmt::format("The restart file: {} does not exist", restart_file));
+                throw OpmInputError(fmt::format("The restart file: {} does not exist", restart_file), restart_keyword.location());
 
             if (io_config.getUNIFIN()) {
                 EclIO::ERst rst{restart_file};
                 if (!rst.hasReportStepNumber(report_step))
-                    throw std::logic_error(fmt::format("Report step: {} not found in restart file: {}", report_step, restart_file));
+                    throw OpmInputError(fmt::format("Report step: {} not found in restart file: {}", report_step, restart_file), restart_keyword.location());
             }
         }
     }
