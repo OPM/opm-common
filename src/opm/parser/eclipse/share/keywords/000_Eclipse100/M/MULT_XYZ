@@ -2,7 +2,8 @@
   "name": "MULT_XYZ",
   "sections": [
     "GRID",
-    "EDIT"
+    "EDIT",
+    "SCHEDULE"
   ],
   "deck_names": [
     "MULTTHT",

@@ -18,6 +18,7 @@
 
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -44,6 +45,10 @@ FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, con
 
 void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
     this->fp->reset_actnum(actnum);
+}
+
+void FieldPropsManager::apply_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
+    this->fp->handle_schedule_keywords(keywords);
 }
 
 

@@ -791,7 +791,7 @@ void FieldProps::handle_double_keyword(Section section, const Fieldprops::keywor
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
 
-    if (section == Section::EDIT && kw_info.multiplier)
+    if ((section == Section::EDIT || section == Section::SCHEDULE) && kw_info.multiplier)
         multiply_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
     else
         assign_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
@@ -1272,21 +1272,31 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
     }
 }
 
-void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
+void FieldProps::handle_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
     Box box(*this->grid_ptr);
-    for (const auto& keyword : schedule_section) {
+
+    // When called in the SCHEDULE section the context is that the scaling factors
+    // have already been applied.
+    for (const auto& [kw, _] : Fieldprops::keywords::SCHEDULE::double_keywords) {
+        (void)_;
+        if (this->has<double>(kw)) {
+            auto& field_data = this->init_get<double>(kw);
+            field_data.default_assign(1.0);
+        }
+    }
+
+
+    for (const auto& keyword : keywords) {
         const std::string& name = keyword.name();
         if (Fieldprops::keywords::SCHEDULE::double_keywords.count(name) == 1) {
             this->handle_double_keyword(Section::SCHEDULE, Fieldprops::keywords::SCHEDULE::double_keywords.at(name), keyword, box);
             continue;
         }
 
-        if (Fieldprops::keywords::SCHEDULE::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(Fieldprops::keywords::SCHEDULE::int_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::box_keywords.count(name) == 1) {
+            handle_box_keyword(keyword, box);
             continue;
         }
-
-        this->handle_keyword(keyword, box);
     }
 }
 

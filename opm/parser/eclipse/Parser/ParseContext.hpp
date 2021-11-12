@@ -235,17 +235,6 @@ class KeywordLocation;
         */
         const static std::string UNIT_SYSTEM_MISMATCH;
 
-        /*
-          Some property modfiers can be modified in the Schedule
-          section; this effectively means that Eclipse supports time
-          dependent geology. This is marked as an exocit special
-          feature in Eclipse, and not supported at all in the
-          EclipseState object of opm-parser. If these modifiers are
-          encountered in the Schedule section the behavior is
-          regulated by this setting.
-        */
-        const static std::string UNSUPPORTED_SCHEDULE_GEO_MODIFIER;
-
 
         /*
           If the third item in the THPRES keyword is defaulted the

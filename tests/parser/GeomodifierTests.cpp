@@ -88,7 +88,6 @@ TSTEP  -- 3,4
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
 
-    parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {
         Runspec runspec ( deck );
         Schedule schedule( deck, grid , fp, runspec , parseContext, errors, python);
