@@ -30,122 +30,58 @@ namespace fs = std::filesystem;
 
 namespace Opm {
 
-    bool DeckViewInternal::hasKeyword( const std::string& keyword ) const {
-        return this->keywordMap.find( keyword ) != this->keywordMap.end();
+    std::vector< const DeckKeyword* > Deck::getKeywordList( const std::string& keyword ) const {
+        std::vector<const DeckKeyword *> pointers;
+        auto view = this->global_view().operator[](keyword);
+        for (const auto& kw : view)
+            pointers.push_back(&kw);
+        return pointers;
     }
 
-    const DeckKeyword& DeckViewInternal::getKeyword( const std::string& keyword, size_t index ) const {
-        if( !this->hasKeyword( keyword ) )
-            throw std::invalid_argument("Keyword " + keyword + " not in deck.");
-
-        return this->getKeyword( this->offsets( keyword ).at( index ) );
+    Deck::const_iterator Deck::begin() const {
+        return this->keywordList.begin();
     }
 
-    const DeckKeyword& DeckViewInternal::getKeyword( const std::string& keyword ) const {
-        if( !this->hasKeyword( keyword ) )
-            throw std::invalid_argument("Keyword " + keyword + " not in deck.");
-
-        return this->getKeyword( this->offsets( keyword ).back() );
-    }
-
-    const DeckKeyword& DeckViewInternal::getKeyword( size_t index ) const {
-        if( index >= this->size() )
-            throw std::out_of_range("Keyword index " + std::to_string( index ) + " is out of range.");
-
-        return *( this->begin() + index );
-    }
-
-    const DeckKeyword& DeckViewInternal::operator[](std::size_t index) const {
-        return this->getKeyword(index);
+    Deck::const_iterator Deck::end() const {
+        return this->keywordList.end();
     }
 
 
-    size_t DeckViewInternal::count( const std::string& keyword ) const {
-        if( !this->hasKeyword( keyword ) ) return 0;
+std::size_t Deck::count(const std::string& keyword) const {
+    return this->global_view().count(keyword);
+}
 
-        return this->offsets( keyword ).size();
+const DeckView& Deck::global_view() const {
+    if (!this->m_global_view) {
+        this->m_global_view = std::make_unique<DeckView>();
+        for (const auto& kw : this->keywordList)
+            this->m_global_view->add_keyword(kw);
+    }
+    return *this->m_global_view;
+}
+
+
+
+    const DeckKeyword& Deck::getKeyword( const std::string& keyword, size_t index ) const {
+        return this->global_view().operator[](keyword)[index];
     }
 
-    const std::vector< const DeckKeyword* > DeckViewInternal::getKeywordList( const std::string& keyword ) const {
-        if( !hasKeyword( keyword ) ) return {};
-
-        const auto& indices = this->offsets( keyword );
-
-        std::vector< const DeckKeyword* > ret;
-        ret.reserve( indices.size() );
-
-        for( size_t i : indices )
-            ret.push_back( &this->getKeyword( i ) );
-
-        return ret;
+    const DeckKeyword& Deck::getKeyword( const std::string& keyword ) const {
+        return this->global_view().operator[](keyword).back();
     }
 
-    size_t DeckViewInternal::size() const {
-        return std::distance( this->begin(), this->end() );
+    const DeckKeyword& Deck::getKeyword( size_t index ) const {
+        return this->operator[](index);
     }
 
-    DeckViewInternal::const_iterator DeckViewInternal::begin() const {
-        return this->first;
+    const DeckKeyword& Deck::operator[](std::size_t index) const {
+        return this->keywordList.at(index);
     }
 
-    DeckViewInternal::const_iterator DeckViewInternal::end() const {
-        return this->last;
-    }
 
-    void DeckViewInternal::add( const DeckKeyword* kw, const_iterator f, const_iterator l ) {
-        this->keywordMap[ kw->name() ].push_back( std::distance( f, l ) - 1 );
-        this->first = f;
-        this->last = l;
-    }
-
-    static const std::vector< size_t > empty_indices = {};
-    const std::vector< size_t >& DeckViewInternal::offsets( const std::string& keyword ) const {
-        if( !hasKeyword( keyword ) ) return empty_indices;
-
-        return this->keywordMap.find( keyword )->second;
-    }
-
-    DeckViewInternal::DeckViewInternal( const_iterator first_arg, const_iterator last_arg)
-    {
-        this->init(first_arg, last_arg);
-    }
-
-    void DeckViewInternal::init( const_iterator first_arg, const_iterator last_arg ) {
-        this->first = first_arg;
-        this->last = last_arg;
-
-        this->keywordMap.clear();
-
-        size_t index = 0;
-        for( const auto& kw : *this )
-            this->keywordMap[ kw.name() ].push_back( index++ );
-    }
-
-    DeckViewInternal::DeckViewInternal( std::pair< const_iterator, const_iterator > limits ) :
-        DeckViewInternal( limits.first, limits.second )
-    {}
-
-    Deck::Deck() :
-        Deck( std::vector<DeckKeyword>() )
-    {}
-
-    /*
-      This constructor should be ssen as a technical implemtation detail of the
-      default constructor, and not something which should be invoked directly.
-      The point is that the derived class DeckViewInternal contains iterators to the
-      keywordList member in the base class - this represents some ordering
-      challenges in the construction phase.
-    */
-    Deck::Deck( std::vector<DeckKeyword>&& x) :
-        DeckViewInternal(x.begin(), x.end()),
-        keywordList(std::move(x)),
-        defaultUnits( UnitSystem::newMETRIC() )
-    {
-    }
 
     Deck::Deck( const Deck& d )
-        : DeckViewInternal(d.begin(), d.end())
-        , keywordList( d.keywordList )
+        : keywordList( d.keywordList )
         , defaultUnits( d.defaultUnits )
         , activeUnits( d.activeUnits )
         , m_dataFile( d.m_dataFile )
@@ -153,12 +89,10 @@ namespace Opm {
         , file_tree( d.file_tree )
         , unit_system_access_count(d.unit_system_access_count)
     {
-        this->init(this->keywordList.begin(), this->keywordList.end());
     }
 
     Deck::Deck( Deck&& d )
-        : DeckViewInternal(d.begin(), d.end())
-        , keywordList( std::move(d.keywordList) )
+        : keywordList( std::move(d.keywordList) )
         , defaultUnits( d.defaultUnits )
         , activeUnits( d.activeUnits )
         , m_dataFile( d.m_dataFile )
@@ -166,7 +100,6 @@ namespace Opm {
         , file_tree( std::move(d.file_tree) )
         , unit_system_access_count(d.unit_system_access_count)
     {
-        this->init(this->keywordList.begin(), this->keywordList.end());
     }
 
     Deck Deck::serializeObject()
@@ -193,9 +126,7 @@ namespace Opm {
             this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_PVT_M );
 
         this->keywordList.push_back( std::move( keyword ) );
-        auto fst = this->keywordList.begin();
-        auto lst = this->keywordList.end();
-        this->add( &this->keywordList.back(), fst, lst );
+        this->m_global_view = nullptr;
     }
 
     void Deck::addKeyword( const DeckKeyword& keyword ) {
@@ -311,7 +242,6 @@ namespace Opm {
         m_dataFile = data.m_dataFile;
         input_path = data.input_path;
         unit_system_access_count = data.unit_system_access_count;
-        this->init(this->keywordList.begin(), this->keywordList.end());
         activeUnits = data.activeUnits;
 
         return *this;
@@ -344,4 +274,9 @@ namespace Opm {
     bool Deck::empty() const {
         return this->keywordList.size() == 0;
     }
+
+    bool Deck::hasKeyword(const std::string& keyword) const {
+        return this->global_view().has_keyword(keyword);
+    }
+
 }
