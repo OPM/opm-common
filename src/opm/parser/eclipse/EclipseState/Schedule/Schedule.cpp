@@ -528,7 +528,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     void Schedule::inspect_actionx_keyword(const ScheduleGrid& grid, const DeckKeyword& keyword){
         static std::unordered_set<std::string> keyword_list = {"COMPDAT"};
 
-        if(keyword_list.count(keyword.name())){
+        if (keyword_list.count(keyword.name()) == 0)
+            return;
+
+        if(keyword.name() == "COMPDAT"){
             for (auto record : keyword){
                 const auto& itemI = record.getItem("I");
                 const auto& itemJ = record.getItem("J");
@@ -536,7 +539,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 bool defaulted_J = itemJ.defaultApplied(0) || itemJ.get<int>(0) == 0;
 
                 if (defaulted_I || defaulted_J)
-                    throw std::logic_error(fmt::format("Defaulted grid coordinates not allowed: {}, {}", defaulted_I, defaulted_J));
+                    throw std::logic_error(fmt::format("Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX"));
 
                 const int I = itemI.get<int>(0) - 1;
                 const int J = itemJ.get<int>(0) - 1;
