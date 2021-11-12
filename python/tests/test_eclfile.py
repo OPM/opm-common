@@ -3,10 +3,7 @@ import sys
 import numpy as np
 
 from opm.io.ecl import EclFile, eclArrType
-try:
-    from tests.utils import test_path
-except ImportError:
-    from utils import test_path
+from .utils import test_path
 
 
 

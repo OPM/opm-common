@@ -1,3 +1,4 @@
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -5,6 +6,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
@@ -166,7 +168,8 @@ void python::common::export_DeckKeyword(py::module& module) {
                      try {
                          int val_int = value_obj.cast<int>();
                          if (parser_item.dataType() == type_tag::uda) {
-                             value_record.push_back( DeckValue(UDAValue(val_int)) );
+                             auto dim = active_system.parse(parser_item.dimensions()[0]);
+                             value_record.push_back( DeckValue(UDAValue(static_cast<double>(val_int), dim)));
                          }
                          else {
                              value_record.push_back( DeckValue( val_int) );
@@ -178,7 +181,8 @@ void python::common::export_DeckKeyword(py::module& module) {
                      try {
                          double val_double = value_obj.cast<double>();
                          if (parser_item.dataType() == type_tag::uda) {
-                             value_record.push_back( DeckValue(UDAValue(val_double)));
+                             auto dim = active_system.parse(parser_item.dimensions()[0]);
+                             value_record.push_back( DeckValue(UDAValue(val_double, dim)));
                          }
                          else {
                              value_record.push_back( DeckValue(val_double) );
@@ -241,6 +245,7 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_str", &DeckItem::get<std::string>)
         .def("get_int", &DeckItem::get<int>)
         .def("get_raw", &DeckItem::get<double>)
+        .def("get_uda", &DeckItem::get<UDAValue>)
         .def("get_SI", &DeckItem::getSIDouble)
         .def("get_data_list", &item_to_pylist)
         .def("get_raw_data_list", &raw_data_to_pylist)
@@ -252,6 +257,24 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("__uda_str", &get_uda_str)
         .def("name", &DeckItem::name)
         ;
+
+
+    py::class_< UDAValue >(module, "UDAValue")
+        .def(py::init<double, const Dimension& >())
+        .def(py::init<const std::string&, const Dimension&>())
+        .def("dimension", &UDAValue::get_dim)
+        .def("is_double", &UDAValue::is<double>)
+        .def("is_string", &UDAValue::is<std::string>)
+        .def("get_string", &UDAValue::get<std::string>)
+        .def("get_double", &UDAValue::get<double>)
+        .def("__repr__", [](const UDAValue& value) {
+            if (value.is<double>())
+                return fmt::format("UDAValue(value = {})", value.get<double>());
+            else
+                return fmt::format("UDAValue(value = {})", value.get<std::string>());
+        })
+        ;
+
 
 
 }

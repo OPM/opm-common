@@ -8,10 +8,8 @@ from opm.io.parser import Builtin
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
 from opm.io.deck import DeckKeyword
-try:
-    from tests.utils import test_path
-except ImportError:
-    from utils import test_path
+
+from .utils import test_path
 
 
 unit_foot = 0.3048 #meters
@@ -190,22 +188,22 @@ FIPNUM
         self.assertEqual(record[2].get_str(0), "ORAT")
         self.assertEqual(record[3].name(), "ORAT")
         self.assertTrue(record[3].is_uda())
-        self.assertEqual(record[3].value, 30000)
+        self.assertEqual(record[3].value.value, 30000)
         self.assertEqual(record[4].name(), "WRAT")
         self.assertTrue(record[4].is_uda())
-        self.assertEqual(record[4].value, 0)
+        self.assertEqual(record[4].value.value, 0)
         self.assertEqual(record[5].name(), "GRAT")
         self.assertTrue(record[5].is_uda())
-        self.assertEqual(record[5].value, 0)
+        self.assertEqual(record[5].value.value, 0)
         self.assertEqual(record[6].name(), "LRAT")
         self.assertTrue(record[6].is_uda())
-        self.assertEqual(record[6].value, 0)
+        self.assertEqual(record[6].value.value, 0)
         self.assertEqual(record[7].name(), "RESV")
         self.assertTrue(record[7].is_uda())
-        self.assertEqual(record[7].value, 0)
+        self.assertEqual(record[7].value.value, 0)
         self.assertEqual(record[8].name(), "BHP")
         self.assertTrue(record[8].is_uda())
-        self.assertEqual(record[8].value, 1000)
+        self.assertEqual(record[8].value.value, 1000)
 
     def test_deck_kw_vector(self):
         parser = Parser()

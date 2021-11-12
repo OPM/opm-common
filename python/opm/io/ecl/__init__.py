@@ -16,16 +16,6 @@ import datetime
 # ensure the EclFile class returns normal Python strings in the case of CHAR
 # arrays. The return value is normal Python list of strings.
 
-@property
-def eclfile_get_list_of_arrays(self):
-
-    if sys.version_info.major == 2:
-        rawData = self.__get_list_of_arrays()
-        return [ ( x[0].encode("utf-8"), x[1], x[2] ) for x in rawData ]
-    else:
-        return self.__get_list_of_arrays()
-
-
 def getitem_eclfile(self, arg):
 
     if isinstance(arg, tuple):
@@ -37,15 +27,6 @@ def getitem_eclfile(self, arg):
         return [ x.decode("utf-8") for x in data ]
 
     return data
-
-
-def erst_get_list_of_arrays(self, arg):
-
-    if sys.version_info.major==2:
-        rawData = self.__get_list_of_arrays(arg)
-        return [ ( x[0].encode("utf-8"), x[1], x[2] ) for x in rawData ]
-    else:
-        return self.__get_list_of_arrays(arg)
 
 
 def getitem_erst(self, arg):
@@ -121,15 +102,6 @@ def contains_erft(self, arg):
         raise ValueError("expecting tuple (wellname, year, month, day) or \
                 (arrayName, wellname, year, month, day) or (arrayName, report_index)")
 
-@property
-def erft_list_of_rfts(self):
-
-    if sys.version_info.major==2:
-        data = self.__get_list_of_rfts()
-        return [ ( x[0].encode("utf-8"), x[1], x[2] ) for x in data ]
-    else:
-        return self.__get_list_of_rfts()
-
 
 def erft_list_of_arrays(self, arg1, arg2 = None):
 
@@ -138,10 +110,7 @@ def erft_list_of_arrays(self, arg1, arg2 = None):
     else:
         data = self.__get_list_of_arrays(str(arg1), int(arg2[0]), int(arg2[1]), int(arg2[2]))
 
-    if sys.version_info.major==2:
-        return [ ( x[0].encode("utf-8"), x[1], x[2] ) for x in data ]
-    else:
-        return data
+    return data
 
 
 def getitem_erft(self, arg):
@@ -207,17 +176,14 @@ def ecloutput_write(self, name, array, C0nn=False):
 
 
 setattr(EclFile, "__getitem__", getitem_eclfile)
-setattr(EclFile, "arrays", eclfile_get_list_of_arrays)
 
 setattr(ERst, "__contains__", contains_erst)
-setattr(ERst, "arrays", erst_get_list_of_arrays)
 setattr(ERst, "__getitem__", getitem_erst)
 
 setattr(ESmry, "end_date", esmry_end_date)
 setattr(ESmry, "__getitem__", getitem_esmry)
 
 setattr(ERft, "__contains__", contains_erft)
-setattr(ERft, "list_of_rfts", erft_list_of_rfts)
 setattr(ERft, "arrays", erft_list_of_arrays)
 setattr(ERft, "__getitem__",getitem_erft)
 

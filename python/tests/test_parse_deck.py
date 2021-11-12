@@ -133,8 +133,8 @@ FIPNUM
 
         welln= dkw_wconprod[0][0].value
         self.assertEqual(dkw_wconprod[0][2].value, "ORAT")
-        self.assertEqual(dkw_wconprod[0][3].value, "WUOPRL")
-        self.assertEqual(dkw_wconprod[0][5].value, 1.5e5)
+        self.assertEqual(dkw_wconprod[0][3].value.value, "WUOPRL")
+        self.assertEqual(dkw_wconprod[0][5].value.value, 1.5e5)
 
         dkw_permx = self.deck_spe1case1["PERMX"]
         permx =  dkw_permx.get_raw_array()

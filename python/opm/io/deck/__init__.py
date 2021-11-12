@@ -1,5 +1,16 @@
 from opm._common import DeckKeyword
 from opm._common import DeckItem
+from opm._common import UDAValue
+
+
+@property
+def uda_value(self):
+    if self.is_double():
+        return self.get_double()
+    else:
+        return self.get_string()
+
+setattr(UDAValue, "value", uda_value)
 
 
 # in prinsiple it should be possible to use the  has_value(int) function
@@ -27,10 +38,7 @@ def get_item_deckitem(self):
     elif self.is_double():
         return self.get_raw(0)
     elif self.is_uda():
-        if self.__is_numeric():
-            return self.__uda_double()
-        else:
-            return self.__uda_str()
+        return self.get_uda(0)
     else:
         raise ValueError("Deck Item, unknown type")
 

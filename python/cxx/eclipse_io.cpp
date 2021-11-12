@@ -394,7 +394,7 @@ void python::common::export_IO(py::module& m) {
 
     py::class_<Opm::EclIO::EclFile>(m, "EclFile")
         .def(py::init<const std::string &, bool>(), py::arg("filename"), py::arg("preload") = false)
-        .def("__get_list_of_arrays", &Opm::EclIO::EclFile::getList)
+        .def_property_readonly("arrays", &Opm::EclIO::EclFile::getList)
         .def("__contains__", &Opm::EclIO::EclFile::hasKey)
         .def("__len__", &Opm::EclIO::EclFile::size)
         .def("count", &Opm::EclIO::EclFile::count)
@@ -410,10 +410,10 @@ void python::common::export_IO(py::module& m) {
         .def("__len__", &Opm::EclIO::ERst::numberOfReportSteps)
         .def("count", &Opm::EclIO::ERst::occurrence_count)
         .def("__contains", &erst_contains)
-        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                                     (Opm::EclIO::ERst::*)(int) ) &Opm::EclIO::ERst::listOfRstArrays)
-        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                                     (Opm::EclIO::ERst::*)(int, const std::string&) ) &Opm::EclIO::ERst::listOfRstArrays)
+        .def("arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
+                        (Opm::EclIO::ERst::*)(int) ) &Opm::EclIO::ERst::listOfRstArrays)
+        .def("arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
+                        (Opm::EclIO::ERst::*)(int, const std::string&) ) &Opm::EclIO::ERst::listOfRstArrays)
         .def("__get_data", &get_erst_by_index)
         .def("__get_data", &get_erst_vector);
 
@@ -446,14 +446,14 @@ void python::common::export_IO(py::module& m) {
 
    py::class_<Opm::EclIO::ERft>(m, "ERft")
         .def(py::init<const std::string &>())
-        .def("__get_list_of_rfts", &Opm::EclIO::ERft::listOfRftReports)
+        .def_property_readonly("list_of_rfts", &Opm::EclIO::ERft::listOfRftReports)
 
         .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                                     (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays)
+                                      (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays)
 
         .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                                     (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const)
-                                      &Opm::EclIO::ERft::listOfRftArrays)
+                                      (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const)
+             &Opm::EclIO::ERft::listOfRftArrays)
 
         .def("__get_data", &get_rft_vector_WellDate)
         .def("__get_data", &get_rft_vector_Index)
