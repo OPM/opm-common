@@ -78,7 +78,18 @@ void testChiFlash()
     fs.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx));
 
     ComponentVector zInit(0.); // TODO; zInit needs to be normalized.
-    const double flash_tolerance = 1.e-8;
+    {
+        Scalar sumMoles = 0.0;
+        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                Scalar tmp = Opm::getValue(fs.molarity(phaseIdx, compIdx) * fs.saturation(phaseIdx));
+                zInit[compIdx] += Opm::max(tmp, 1e-8);
+                sumMoles += tmp;
+            }
+        }
+        zInit /= sumMoles;
+    }
+    const double flash_tolerance = -1.; // just to test the setup in co2-compositional
     const int flash_verbosity = 1;
     const std::string flash_twophase_method = "ssi";
 
