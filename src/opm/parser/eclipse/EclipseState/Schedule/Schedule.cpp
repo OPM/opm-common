@@ -1278,7 +1278,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         ParseContext parseContext;
         ErrorGuard errors;
         ScheduleGrid grid(this->completed_cells);
-        std::unordered_set<std::string> affected_wells;
+        SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> target_wellpi;
         std::vector<std::string> matching_wells;
         const std::string prefix = "| "; /* logger prefix string */
@@ -1295,7 +1295,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 /*FieldPropsManager *fp=*/nullptr,
                                 matching_wells,
                                 /*actionx_mode=*/false,
-                                &affected_wells,
+                                &sim_update,
                                 &target_wellpi);
         }
         this->end_report(reportStep);

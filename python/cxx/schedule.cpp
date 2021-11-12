@@ -111,6 +111,10 @@ namespace {
         sch.applyKeywords(keywords, index);
     }
 
+    // NOTE: this overload does currently not work, see PR #2833. The plan
+    //  is to fix this in a later commit. For now, the overload insert_keywords()
+    //  above taking a deck_string (std::string) instead of a list of DeckKeywords
+    //  has to be used instead.
     void insert_keywords(
         Schedule& sch, py::list& deck_keywords, std::size_t index)
     {
