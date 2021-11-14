@@ -1292,7 +1292,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 parseContext,
                                 errors,
                                 grid,
-                                /*FieldPropsManager *fp=*/nullptr,
                                 matching_wells,
                                 /*actionx_mode=*/false,
                                 &sim_update,
@@ -1307,7 +1306,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 errors,
                 grid,
                 &target_wellpi,
-                /*FieldPropsManager *fp=*/nullptr,
                 prefix);
         }
     }
