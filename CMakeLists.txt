@@ -243,10 +243,6 @@ if (ENABLE_MOCKSIM)
   endif()
 endif()
 
-if (ENABLE_SCHEDULE_DEBUG)
-  add_compile_definitions( SCHEDULE_DEBUG )
-endif()
-
 # Build the compare utilities
 if(ENABLE_ECL_INPUT)
   add_executable(compareECL
