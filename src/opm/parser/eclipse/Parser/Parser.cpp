@@ -952,7 +952,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
     if (ignore.size() > 0)
         if (!parserState.check_section_keywords())
-            throw std::runtime_error("Parsing individual sections not posible when section keywords in root input file");
+            throw std::runtime_error("Parsing individual sections not possible when section keywords in root input file");
 
     bool ignore_grid = ignore.find(Opm::Ecl::GRID) !=ignore.end()  ? true : false;
     bool ignore_props = ignore.find(Opm::Ecl::PROPS) !=ignore.end()  ? true : false;
