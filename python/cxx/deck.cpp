@@ -45,7 +45,7 @@ namespace {
 
 void python::common::export_Deck(py::module &module) {
 
-    // Note: In the below class we std::shared_ptr as the holder type, see:
+    // Note: In the below class we use std::shared_ptr as the holder type, see:
     //
     //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
     //

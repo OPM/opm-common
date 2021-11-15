@@ -1273,6 +1273,43 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
 
+    void Schedule::applyKeywords(
+             std::vector<DeckKeyword*>& keywords, std::size_t reportStep) {
+        ParseContext parseContext;
+        ErrorGuard errors;
+        ScheduleGrid grid(this->completed_cells);
+        SimulatorUpdate sim_update;
+        std::unordered_map<std::string, double> target_wellpi;
+        std::vector<std::string> matching_wells;
+        const std::string prefix = "| "; /* logger prefix string */
+        this->snapshots.resize(reportStep + 1);
+        auto& input_block = this->m_sched_deck[reportStep];
+        for (auto keyword : keywords) {
+            input_block.push_back(*keyword);
+            this->handleKeyword(reportStep,
+                                input_block,
+                                *keyword,
+                                parseContext,
+                                errors,
+                                grid,
+                                matching_wells,
+                                /*actionx_mode=*/false,
+                                &sim_update,
+                                &target_wellpi);
+        }
+        this->end_report(reportStep);
+        if (reportStep < this->m_sched_deck.size() - 1) {
+            iterateScheduleSection(
+                reportStep + 1,
+                this->m_sched_deck.size(),
+                parseContext,
+                errors,
+                grid,
+                &target_wellpi,
+                prefix);
+        }
+    }
+
 
     SimulatorUpdate Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         const std::string prefix = "| ";
