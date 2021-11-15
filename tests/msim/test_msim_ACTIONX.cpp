@@ -45,7 +45,7 @@
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 
 using namespace Opm;
 

@@ -47,7 +47,7 @@
 #include <tuple>
 #include <stdio.h>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 void verifyWellState(const std::string& rst_filename, const Opm::Schedule& schedule) {
 

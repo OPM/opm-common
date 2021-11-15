@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <tuple>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 using namespace Opm::EclIO;
 

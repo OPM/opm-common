@@ -53,7 +53,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {

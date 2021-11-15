@@ -31,7 +31,7 @@
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #include <iomanip>
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 using Opm::EclIO::EGrid;
 using Opm::EclIO::ESmry;

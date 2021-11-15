@@ -54,7 +54,7 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 
 using namespace Opm;
 using rt = data::Rates::opt;

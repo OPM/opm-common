@@ -22,7 +22,7 @@
 
 #include <fstream>
 #include <opm/io/eclipse/ERsm.hpp>
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 
 Opm::EclIO::ERsm create(const std::string& rsm_data) {
