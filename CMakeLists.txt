@@ -357,7 +357,12 @@ if (OPM_ENABLE_PYTHON)
     endif()
 
     if (BUILD_SHARED_LIBS)
-      list(APPEND _python_rpath_list "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+      if (OPM_INSTALL_PYTHON)
+        list(APPEND _python_rpath_list "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+        list(APPEND _python_rpath_list "${PROJECT_BINARY_DIR}/lib")
+      else()
+        list(APPEND _python_rpath_list "${PROJECT_BINARY_DIR}/lib")
+      endif()
     endif()
 
     if (_python_rpath_list)
