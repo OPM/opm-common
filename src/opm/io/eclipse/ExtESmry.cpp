@@ -317,7 +317,7 @@ uint64_t ExtESmry::open_esmry(std::filesystem::path& inputFileName, LodsmryHeadT
     auto units = Opm::EclIO::readBinaryC0nnArray(fileH, arr_size, sizeOfElement);
 
     if (keywords.size() != units.size())
-        throw std::runtime_error("invalied LODSMRY file, size of units not equal size of keywords");
+        throw std::runtime_error("invalid LODSMRY file, size of units not equal size of keywords");
 
     Opm::EclIO::readBinaryHeader(fileH, arrName, arr_size, arrType, sizeOfElement);
 

@@ -532,7 +532,7 @@ UDAControl udaControl(int uda_code) {
     case 600004:
         return UDAControl::WCONPROD_LRAT;
     case 999999:
-        throw std::logic_error("UDA code 999999 is ambigous");
+        throw std::logic_error("UDA code 999999 is ambiguous");
     case 400003:
         return UDAControl::WCONINJE_RATE;
     case 500003:

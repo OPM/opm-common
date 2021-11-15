@@ -316,10 +316,10 @@ void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& arrName,
         readBinaryHeader(fileH, tmpStrName, tmpSize, tmpStrType);
 
         if (x231ArrayName != tmpStrName)
-            OPM_THROW(std::runtime_error, "Invalied X231 header, name should be same in both headers'");
+            OPM_THROW(std::runtime_error, "Invalid X231 header, name should be same in both headers'");
 
         if (x231exp < 0)
-            OPM_THROW(std::runtime_error, "Invalied X231 header, size of array should be negative'");
+            OPM_THROW(std::runtime_error, "Invalid X231 header, size of array should be negative'");
 
         size = static_cast<int64_t>(tmpSize) + static_cast<int64_t>(x231exp) * pow(2,31);
     } else {
