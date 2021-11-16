@@ -36,7 +36,7 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
     if (enabledChecks & UnknownKeywords) {
         size_t keywordIdx = 0;
         for (; keywordIdx < deck.size(); keywordIdx++) {
-            const auto& keyword = deck.getKeyword(keywordIdx);
+            const auto& keyword = deck[keywordIdx];
             if (!parser.isRecognizedKeyword( keyword.name() ) ) {
                 std::string msg("Keyword '" + keyword.name() + "' is unknown.");
                 const auto& location = keyword.location();

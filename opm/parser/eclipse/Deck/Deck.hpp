@@ -101,8 +101,6 @@ namespace Opm {
 
             const DeckKeyword& getKeyword( const std::string& keyword, size_t index ) const;
             const DeckKeyword& getKeyword( const std::string& keyword ) const;
-            const DeckKeyword& getKeyword( size_t index ) const;
-            DeckKeyword& getKeyword( size_t index );
 
             const DeckKeyword& operator[](std::size_t index) const;
 
