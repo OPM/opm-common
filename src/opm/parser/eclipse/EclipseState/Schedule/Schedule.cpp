@@ -526,7 +526,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     void Schedule::inspect_actionx_keyword(const ScheduleGrid& grid, const DeckKeyword& keyword){
-        static std::unordered_set<std::string> keyword_list = {"COMPDAT"};
+        static std::unordered_set<std::string> keyword_list = {"COMPDAT", "COMPSEGS"};
 
         if (keyword_list.count(keyword.name()) == 0)
             return;
@@ -551,6 +551,20 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     (void) cell;
                     //Only interested in activating the cells.
                 }
+            }
+        }
+        else if (keyword.name() == "COMPSEGS"){
+            for (auto record : keyword){
+                const auto& itemI = record.getItem("I");
+                const auto& itemJ = record.getItem("J");
+                const auto& itemK = record.getItem("K");
+
+                const int I = itemI.get<int>(0) - 1;
+                const int J = itemJ.get<int>(0) - 1;
+                const int K = itemK.get<int>(0) - 1;
+
+                auto cell = grid.get_cell(I, J, K);
+                (void) cell;
             }
         }
     }
