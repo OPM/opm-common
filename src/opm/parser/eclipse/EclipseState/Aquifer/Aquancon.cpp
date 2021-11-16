@@ -145,7 +145,7 @@ namespace Opm {
         std::map<std::size_t, Aquancon::AquancCell> work;
         const std::vector<int>& actnum = grid.getACTNUM();
         for (std::size_t iaq = 0; iaq < deck.count("AQUANCON"); iaq++) {
-            const auto& aquanconKeyword = deck.getKeyword("AQUANCON", iaq);
+            const auto& aquanconKeyword = deck["AQUANCON"][iaq];
             OpmLog::info(OpmInputError::format("Initializing aquifer connections from {keyword} in {file} line {line}", aquanconKeyword.location()));
             for (const auto& aquanconRecord : aquanconKeyword) {
                 const int aquiferID = aquanconRecord.getItem("AQUIFER_ID").get<int>(0);

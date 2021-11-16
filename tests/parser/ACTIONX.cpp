@@ -1179,14 +1179,14 @@ WELPI
     Action::ActionX action("NAME", 1, 1, 0);
     NameOrder well_order({"W1", "W2", "P1", "P2", "P3"});
     WellMatcher well_matcher( well_order );
-    action.addKeyword(deck.getKeyword("WELPI", 0));
+    action.addKeyword(deck["WELPI"][0]);
     {
         auto wells = action.wellpi_wells(well_matcher, {});
         BOOST_CHECK_EQUAL( wells.size(), 2 );
         has_well(wells, "W1");
         has_well(wells, "W2");
     }
-    action.addKeyword(deck.getKeyword("WELPI", 1));
+    action.addKeyword(deck["WELPI"][1]);
     {
         auto wells = action.wellpi_wells(well_matcher, {});
         BOOST_CHECK_EQUAL( wells.size(), 5 );

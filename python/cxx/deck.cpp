@@ -24,7 +24,7 @@ namespace {
     const DeckKeyword& getKeyword_tuple( const Deck& deck, py::tuple kw_index ) {
         const std::string kw = py::cast<const std::string>(kw_index[0]);
         const size_t index = py::cast<size_t>(kw_index[1]);
-        return deck.getKeyword(kw, index);
+        return deck[kw][index];
     }
 
     const DeckKeyword& getKeyword_string( const Deck& deck, const std::string& kw ) {

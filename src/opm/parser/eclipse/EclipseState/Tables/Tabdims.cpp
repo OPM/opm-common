@@ -40,7 +40,7 @@ Tabdims::Tabdims(const Deck& deck) :
     Tabdims()
 {
     if (deck.hasKeyword("TABDIMS")) {
-        const auto& record = deck.getKeyword( "TABDIMS" , 0 ).getRecord( 0 );
+        const auto& record = deck["TABDIMS"][0].getRecord(0);
         m_ntsfun = record.getItem("NTSFUN").get<int>(0);
         m_ntpvt  = record.getItem("NTPVT").get<int>(0);
         m_nssfun = record.getItem("NSSFUN").get<int>(0);

@@ -4469,10 +4469,10 @@ END
     auto       sched = Schedule{ deck, es };
 
     PAvg pavg0;
-    PAvg pavg1( deck.getKeyword("WPAVE", 0).getRecord(0) );
-    PAvg pavg2( deck.getKeyword("WWPAVE", 0).getRecord(0) );
-    PAvg pavg3( deck.getKeyword("WWPAVE", 0).getRecord(1) );
-    PAvg pavg4( deck.getKeyword("WPAVE", 1).getRecord(0) );
+    PAvg pavg1( deck["WPAVE"][0].getRecord(0) );
+    PAvg pavg2( deck["WWPAVE"][0].getRecord(0) );
+    PAvg pavg3( deck["WWPAVE"][0].getRecord(1) );
+    PAvg pavg4( deck["WPAVE"][1].getRecord(0) );
 
     {
         const auto& w1 = sched.getWell("P1", 0);

@@ -242,7 +242,7 @@ WellSegmentDims::WellSegmentDims() :
 WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
 {
     if (deck.hasKeyword("WSEGDIMS")) {
-        const auto& wsd = deck.getKeyword("WSEGDIMS", 0).getRecord(0);
+        const auto& wsd = deck["WSEGDIMS"][0].getRecord(0);
 
         this->nSegWellMax   = wsd.getItem("NSWLMX").get<int>(0);
         this->nSegmentMax   = wsd.getItem("NSEGMX").get<int>(0);
@@ -276,7 +276,7 @@ NetworkDims::NetworkDims() :
 NetworkDims::NetworkDims(const Deck& deck) : NetworkDims()
 {
     if (deck.hasKeyword("NETWORK")) {
-        const auto& wsd = deck.getKeyword("NETWORK", 0).getRecord(0);
+        const auto& wsd = deck["NETWORK"][0].getRecord(0);
 
         this->nMaxNoNodes   = wsd.getItem("NODMAX").get<int>(0);
         this->nMaxNoBranches   = wsd.getItem("NBRMAX").get<int>(0);
