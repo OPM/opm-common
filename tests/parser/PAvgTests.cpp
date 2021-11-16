@@ -47,13 +47,13 @@ BOOST_AUTO_TEST_CASE(DEFAULT_PAVG) {
 void invalid_deck(const std::string& deck_string, const std::string& kw) {
     Parser parser;
     auto deck = parser.parseString(deck_string);
-    BOOST_CHECK_THROW( PAvg(deck.getKeyword(kw).getRecord(0)), std::exception );
+    BOOST_CHECK_THROW( PAvg(deck[kw].back().getRecord(0)), std::exception );
 }
 
 void valid_deck(const std::string& deck_string, const std::string& kw) {
     Parser parser;
     auto deck = parser.parseString(deck_string);
-    BOOST_CHECK_NO_THROW( PAvg(deck.getKeyword(kw).getRecord(0)));
+    BOOST_CHECK_NO_THROW( PAvg(deck[kw].back().getRecord(0)));
 }
 
 
@@ -94,7 +94,7 @@ WWPAVE
     valid_deck(valid_input, "WWPAVE");
 
     Parser parser;
-    PAvg pavg( parser.parseString(valid_input).getKeyword("WPAVE").getRecord(0) );
+    PAvg pavg( parser.parseString(valid_input)["WPAVE"].back().getRecord(0) );
     BOOST_CHECK_EQUAL( pavg.inner_weight(), 0.25);
     BOOST_CHECK_EQUAL( pavg.conn_weight(), 0.5);
     BOOST_CHECK( pavg.use_porv() );

@@ -142,7 +142,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
             OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
 
         if (deck.hasKeyword( "TITLE" )) {
-            const auto& titleKeyword = deck.getKeyword( "TITLE" );
+            const auto& titleKeyword = deck["TITLE"].back();
             const auto& item = titleKeyword.getRecord( 0 ).getItem( 0 );
             std::vector<std::string> itemValue = item.getData<std::string>();
             for (const auto& entry : itemValue)
@@ -155,7 +155,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
         const auto& init_config = this->getInitConfig();
         if (init_config.restartRequested()) {
-            const auto& restart_keyword = deck.getKeyword<ParserKeywords::RESTART>();
+            const auto& restart_keyword = deck.getKeyword<ParserKeywords::RESTART>().back();
             const auto& io_config = this->getIOConfig();
             const int report_step = init_config.getRestartStep();
             const auto& restart_file = io_config.getRestartFileName( init_config.getRestartRootName(), report_step, false);

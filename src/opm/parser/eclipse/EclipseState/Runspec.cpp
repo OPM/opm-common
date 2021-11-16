@@ -111,7 +111,7 @@ namespace {
 
 std::time_t create_start_time(const Opm::Deck& deck) {
     if (deck.hasKeyword("START")) {
-        const auto& keyword = deck.getKeyword("START");
+        const auto& keyword = deck["START"].back();
         return Opm::TimeService::timeFromEclipse(keyword.getRecord(0));
     } else
         // The default start date is not specified in the Eclipse
@@ -342,7 +342,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         if (!deck.hasKeyword("SATOPTS"))
             return;
 
-        const auto& satoptsItem = deck.getKeyword("SATOPTS").getRecord(0).getItem(0);
+        const auto& satoptsItem = deck["SATOPTS"].back().getRecord(0).getItem(0);
         for (unsigned i = 0; i < satoptsItem.data_size(); ++i) {
             std::string satoptsValue = satoptsItem.get< std::string >(0);
             std::transform(satoptsValue.begin(),
@@ -373,7 +373,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
 	* 1: use the Carlson model for relative permeability hysteresis of the non-wetting
 	*    phase and the imbibition curve for the relperm of the wetting phase
 	*/
-        const auto& ehystrKeyword = deck.getKeyword("EHYSTR");
+        const auto& ehystrKeyword = deck["EHYSTR"].back();
         if (deck.hasKeyword("NOHYKR"))
             krHystMod = -1;
         else {

@@ -696,7 +696,7 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
     auto size_type = parserKeyword.isTableCollection() ? Raw::TABLE_COLLECTION : Raw::FIXED;
 
     if( deck.hasKeyword(keyword_size.keyword() ) ) {
-        const auto& sizeDefinitionKeyword = deck.getKeyword(keyword_size.keyword());
+        const auto& sizeDefinitionKeyword = deck[keyword_size.keyword()].back();
         const auto& record = sizeDefinitionKeyword.getRecord(0);
         auto targetSize = record.getItem( keyword_size.item() ).get< int >( 0 ) + keyword_size.size_shift();
         if (parserKeyword.isAlternatingKeyword())

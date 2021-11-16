@@ -100,13 +100,13 @@ namespace Opm {
             const_iterator end() const;
 
             const DeckKeyword& getKeyword( const std::string& keyword, size_t index ) const;
-            const DeckKeyword& getKeyword( const std::string& keyword ) const;
 
+            Opm::DeckView operator[](const std::string& keyword) const;
             const DeckKeyword& operator[](std::size_t index) const;
 
             template< class Keyword >
-            const DeckKeyword& getKeyword() const {
-                return getKeyword( Keyword::keywordName );
+            Opm::DeckView getKeyword() const {
+                return this->operator[](Keyword::keywordName);
             }
             template< class Keyword >
             const DeckKeyword& getKeyword( size_t index ) const {

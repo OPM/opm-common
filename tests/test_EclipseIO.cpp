@@ -157,13 +157,13 @@ void checkInitFile( const Deck& deck, const data::Solution& simProps) {
 
     if (initFile.hasKey("PORO")) {
         const auto& poro   = initFile.get<float>("PORO");
-        const auto& expect = deck.getKeyword("PORO").getSIDoubleData();
+        const auto& expect = deck["PORO"].back().getSIDoubleData();
 
         compareErtData(expect, poro, 1e-4);
     }
 
     if (initFile.hasKey("PERMX")) {
-        const auto& expect = deck.getKeyword("PERMX").getSIDoubleData();
+        const auto& expect = deck["PERMX"].back().getSIDoubleData();
         auto        permx  = initFile.get<float>("PERMX");
 
         for (auto& kx : permx) {

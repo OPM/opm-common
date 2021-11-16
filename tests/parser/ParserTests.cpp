@@ -344,8 +344,8 @@ BOOST_AUTO_TEST_CASE( handle_empty_title ) {
 
     Parser parser;
     const auto deck = parser.parseString( input_deck);
-    BOOST_CHECK_EQUAL( "opm/flow", deck.getKeyword( "TITLE" ).getStringData().front() );
-    BOOST_CHECK_EQUAL( "simulation", deck.getKeyword( "TITLE" ).getStringData().back() );
+    BOOST_CHECK_EQUAL( "opm/flow", deck["TITLE"].back().getStringData().front() );
+    BOOST_CHECK_EQUAL( "simulation", deck[ "TITLE" ].back().getStringData().back() );
  }
 
 BOOST_AUTO_TEST_CASE( deck_comma_separated_fields ) {
@@ -1902,7 +1902,7 @@ AQUTAB
 
   Parser parser;
   const auto deck = parser.parseString( deck_string);
-  const auto& aqutab = deck.getKeyword("AQUTAB");
+  const auto& aqutab = deck["AQUTAB"].back();
   BOOST_CHECK_EQUAL( 1, aqutab.size());
 }
 
@@ -1915,7 +1915,7 @@ BOOST_AUTO_TEST_CASE(ParseRAW_STRING) {
 )";
     Parser parser;
     const auto deck = parser.parseString( deck_string);
-    const auto& udq = deck.getKeyword("UDQ");
+    const auto& udq = deck["UDQ"].back();
     const std::vector<std::string> expected0 = {"'P*X*'"};
     const std::vector<std::string> expected1 = {"'P*X*'", "5*(1", "+", "LOG(WBHP))"};
     const auto& data0 = RawString::strings( udq.getRecord(0).getItem("DATA").getData<RawString>() );
@@ -2007,7 +2007,7 @@ DENSITY
 
     BOOST_CHECK( deck.hasKeyword( "RSCONST" ) );
 
-    const auto& rsconst = deck.getKeyword("RSCONST");
+    const auto& rsconst = deck["RSCONST"].back();
     BOOST_CHECK_EQUAL( rsconst.size( ), 1 );
 
     const auto& rec = rsconst.getRecord( 0 );
@@ -2054,7 +2054,7 @@ DENSITY
 
     BOOST_CHECK( deck.hasKeyword( "RSCONST" ) );
 
-    const auto& rsconst = deck.getKeyword("RSCONST");
+    const auto& rsconst = deck["RSCONST"].back();
     BOOST_CHECK_EQUAL( rsconst.size( ), 1 );
 
     const auto& rec = rsconst.getRecord( 0 );
@@ -2136,7 +2136,7 @@ DENSITY
 
     BOOST_CHECK( deck.hasKeyword( "RSCONSTT" ) );
 
-    const auto& rsconstt = deck.getKeyword( "RSCONSTT" );
+    const auto& rsconstt = deck[ "RSCONSTT" ].back();
     BOOST_CHECK_EQUAL( rsconstt.size( ), 2 );
 
     // First Record (ID = 0)
@@ -2224,9 +2224,9 @@ PLAT-B 15 /
     BOOST_CHECK( deck.hasKeyword("CECONT") );
     BOOST_CHECK( deck.hasKeyword("GCONSUMP") );
 
-    auto kw_density = deck.getKeyword("DENSITY");
+    auto kw_density = deck["DENSITY"].back();
 
-    auto kw = deck.getKeyword("CECONT");
+    auto kw = deck["CECONT"].back();
     BOOST_CHECK( kw.isDoubleRecordKeyword() );
 
     auto record00 = kw.getRecord(0);
@@ -2316,12 +2316,12 @@ This keyword will not be finished
 Parser parser;
 auto deck = parser.parseString(deck_string);
 BOOST_CHECK( deck.hasKeyword("GCUTBACK") );
-auto kw = deck.getKeyword("GCUTBACK");
+auto kw = deck["GCUTBACK"].back();
 BOOST_CHECK_EQUAL( kw.size(), 2 );
 auto record = kw.getRecord(1);
 BOOST_CHECK_EQUAL( record.getItem(5).get<double>(0), 0.9 );
 BOOST_CHECK( !deck.hasKeyword("LANGMUIR") );
- const auto& tracerkm = deck.getKeyword<ParserKeywords::TRACERKM>();
+ const auto& tracerkm = deck.getKeyword<ParserKeywords::TRACERKM>().back();
 BOOST_CHECK_EQUAL(tracerkm.size(), 5);
  BOOST_CHECK_EQUAL(deck.count<ParserKeywords::SAVE>(), 2);
 }

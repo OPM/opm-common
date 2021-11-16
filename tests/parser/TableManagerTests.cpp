@@ -271,8 +271,8 @@ SWOF
 END
 )");
 
-    Opm::SwofTable swof1Table(deck.getKeyword("SWOF").getRecord(0).getItem(0), false);
-    Opm::SwofTable swof2Table(deck.getKeyword("SWOF").getRecord(1).getItem(0), false);
+    Opm::SwofTable swof1Table(deck["SWOF"].back().getRecord(0).getItem(0), false);
+    Opm::SwofTable swof2Table(deck["SWOF"].back().getRecord(1).getItem(0), false);
 
     BOOST_CHECK_EQUAL(swof1Table.numRows(), 2U);
     BOOST_CHECK_EQUAL(swof2Table.numRows(), 3U);
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(PbvdTable_Tests) {
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
 
-    Opm::PbvdTable pbvdTable1(deck.getKeyword("PBVD").getRecord(0).getItem(0));
+    Opm::PbvdTable pbvdTable1(deck["PBVD"].back().getRecord(0).getItem(0));
 
     BOOST_CHECK_EQUAL(pbvdTable1.numRows(), 2U);
     BOOST_CHECK_EQUAL(pbvdTable1.numColumns(), 2U);
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(PbvdTable_Tests) {
     BOOST_CHECK_EQUAL(pbvdTable1.getPbubColumn().front(), 100000); // 1 barsa
 
     // depth must be increasing down the column.
-    BOOST_CHECK_THROW(Opm::PbvdTable pbvdTable2(deck.getKeyword("PBVD").getRecord(1).getItem(0)), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::PbvdTable pbvdTable2(deck["PBVD"].back().getRecord(1).getItem(0)), std::invalid_argument);
 }
 
 
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(PdvdTable_Tests) {
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
 
-    Opm::PdvdTable pdvdTable1(deck.getKeyword("PDVD").getRecord(0).getItem(0));
+    Opm::PdvdTable pdvdTable1(deck["PDVD"].back().getRecord(0).getItem(0));
 
     BOOST_CHECK_EQUAL(pdvdTable1.numRows(), 2U);
     BOOST_CHECK_EQUAL(pdvdTable1.numColumns(), 2U);
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(PdvdTable_Tests) {
     BOOST_CHECK_EQUAL(pdvdTable1.getPdewColumn().front(), 100000); // 1 barsa
 
     // depth must be increasing down the column.
-    BOOST_CHECK_THROW(Opm::PdvdTable pdvdTable2(deck.getKeyword("PDVD").getRecord(1).getItem(0)), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::PdvdTable pdvdTable2(deck["PDVD"].back().getRecord(1).getItem(0)), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
@@ -369,8 +369,8 @@ BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
     auto deck = parser.parseString(deckData);
 
 
-    Opm::SgwfnTable sgwfn1Table(deck.getKeyword("SGWFN").getRecord(0).getItem(0));
-    Opm::SgwfnTable sgwfn2Table(deck.getKeyword("SGWFN").getRecord(1).getItem(0));
+    Opm::SgwfnTable sgwfn1Table(deck["SGWFN"].back().getRecord(0).getItem(0));
+    Opm::SgwfnTable sgwfn2Table(deck["SGWFN"].back().getRecord(1).getItem(0));
 
     BOOST_CHECK_EQUAL(sgwfn1Table.numRows(), 2U);
     BOOST_CHECK_EQUAL(sgwfn2Table.numRows(), 3U);
@@ -414,8 +414,8 @@ SGOF
 END
 )");
 
-    Opm::SgofTable sgof1Table(deck.getKeyword("SGOF").getRecord(0).getItem(0), false);
-    Opm::SgofTable sgof2Table(deck.getKeyword("SGOF").getRecord(1).getItem(0), false);
+    Opm::SgofTable sgof1Table(deck["SGOF"].back().getRecord(0).getItem(0), false);
+    Opm::SgofTable sgof2Table(deck["SGOF"].back().getRecord(1).getItem(0), false);
 
     BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2U);
     BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3U);
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
             "3.00    0.000030 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(correctDeckData);
-        const auto& plyadsKeyword = deck.getKeyword("PLYADS");
+        const auto& plyadsKeyword = deck["PLYADS"].back();
         Opm::PlyadsTable plyadsTable(plyadsKeyword.getRecord(0).getItem(0));
 
 
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
             "3.00    0.000030 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(incorrectDeckData);
-        const auto& plyadsKeyword = deck.getKeyword("PLYADS");
+        const auto& plyadsKeyword = deck["PLYADS"].back();
 
         BOOST_CHECK_THROW(Opm::PlyadsTable(plyadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
             "3.00    0.000029 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(incorrectDeckData);
-        const auto& plyadsKeyword = deck.getKeyword("PLYADS");
+        const auto& plyadsKeyword = deck["PLYADS"].back();
 
         BOOST_CHECK_THROW(Opm::PlyadsTable(plyadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
             "3.00    0.000030 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(correctDeckData);
-        const auto& foamadsKeyword = deck.getKeyword("FOAMADS");
+        const auto& foamadsKeyword = deck["FOAMADS"].back();
         Opm::FoamadsTable foamadsTable(foamadsKeyword.getRecord(0).getItem(0));
 
 
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
             "3.00    0.000030 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(incorrectDeckData);
-        const auto& foamadsKeyword = deck.getKeyword("FOAMADS");
+        const auto& foamadsKeyword = deck["FOAMADS"].back();
 
         BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
             "3.00    0.000029 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(incorrectDeckData);
-        const auto& foamadsKeyword = deck.getKeyword("FOAMADS");
+        const auto& foamadsKeyword = deck["FOAMADS"].back();
 
         BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
             "0.03    0.1 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(correctDeckData);
-        const auto& foammobKeyword = deck.getKeyword("FOAMMOB");
+        const auto& foammobKeyword = deck["FOAMMOB"].back();
         Opm::FoammobTable foammobTable(foammobKeyword.getRecord(0).getItem(0));
 
 
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
             "0.02    0.1 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(incorrectDeckData);
-        const auto& foammobKeyword = deck.getKeyword("FOAMMOB");
+        const auto& foammobKeyword = deck["FOAMMOB"].back();
 
         BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
             "0.03    0.11 /\n";
         Opm::Parser parser;
         auto deck = parser.parseString(incorrectDeckData);
-        const auto& foammobKeyword = deck.getKeyword("FOAMMOB");
+        const auto& foammobKeyword = deck["FOAMMOB"].back();
 
         BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
@@ -694,7 +694,7 @@ VFPPROD \n\
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
     auto units = Opm::UnitSystem::newMETRIC();
-    const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
+    const auto& vfpprodKeyword = deck["VFPPROD"].back();
 
     BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
@@ -817,7 +817,7 @@ VFPPROD \n\
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
-    const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
+    const auto& vfpprodKeyword = deck["VFPPROD"].back();
     auto units = Opm::UnitSystem::newMETRIC();
 
     BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
@@ -963,7 +963,7 @@ VFPPROD \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values);
-        const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
+        const auto& vfpprodKeyword = deck["VFPPROD"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
@@ -997,7 +997,7 @@ VFPPROD \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values);
-        const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
+        const auto& vfpprodKeyword = deck["VFPPROD"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
@@ -1029,7 +1029,7 @@ VFPPROD \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_metadata);
-        const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
+        const auto& vfpprodKeyword = deck["VFPPROD"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
@@ -1062,7 +1062,7 @@ VFPPROD \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(wrong_metadata);
-        const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
+        const auto& vfpprodKeyword = deck["VFPPROD"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
@@ -1095,7 +1095,7 @@ VFPPROD \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_axes);
-        const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
+        const auto& vfpprodKeyword = deck["VFPPROD"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
@@ -1126,7 +1126,7 @@ VFPINJ \n\
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
-    const auto& vfpprodKeyword = deck.getKeyword("VFPINJ");
+    const auto& vfpprodKeyword = deck["VFPINJ"].back();
     auto units = Opm::UnitSystem::newMETRIC();
 
     BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
@@ -1224,7 +1224,7 @@ VFPINJ \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values);
-        const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
+        const auto& vfpinjKeyword = deck["VFPINJ"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
@@ -1252,7 +1252,7 @@ VFPINJ \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values);
-        const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
+        const auto& vfpinjKeyword = deck["VFPINJ"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
@@ -1279,7 +1279,7 @@ VFPINJ \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_metadata);
-        const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
+        const auto& vfpinjKeyword = deck["VFPINJ"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
@@ -1307,7 +1307,7 @@ VFPINJ \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(wrong_metadata);
-        const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
+        const auto& vfpinjKeyword = deck["VFPINJ"].back();
         auto units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
@@ -1335,7 +1335,7 @@ VFPINJ \n\
 
         Opm::Parser parser;
         auto deck = parser.parseString(missing_axes);
-        const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
+        const auto& vfpinjKeyword = deck["VFPINJ"].back();
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
@@ -1850,8 +1850,8 @@ OILDENT
     Opm::Parser parser;
     const auto& deck = parser.parseString(deck_string);
     Opm::TableManager tables(deck);
-    Opm::DenT gd(deck.getKeyword("GASDENT"));
-    Opm::DenT od(deck.getKeyword("OILDENT"));
+    Opm::DenT gd(deck["GASDENT"].back());
+    Opm::DenT od(deck["OILDENT"].back());
     const auto& wd = tables.WatDenT();
 
     BOOST_CHECK_EQUAL(gd.size(), 3U);

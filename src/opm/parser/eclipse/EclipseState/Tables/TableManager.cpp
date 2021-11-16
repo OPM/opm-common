@@ -187,36 +187,36 @@ DensityTable make_density_table(const GravityTable& gravity) {
            initFullTables(deck, "PVTSOL", m_pvtsolTables);
 
         if( deck.hasKeyword( "PVTW" ) )
-            this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
+            this->m_pvtwTable = PvtwTable( deck["PVTW"].back() );
 
         if( deck.hasKeyword( "PVCDO" ) )
-            this->m_pvcdoTable = PvcdoTable( deck.getKeyword( "PVCDO" ) );
+            this->m_pvcdoTable = PvcdoTable( deck["PVCDO"].back() );
 
         if( deck.hasKeyword( "DENSITY" ) )
-            this->m_densityTable = DensityTable( deck.getKeyword( "DENSITY" ) );
+            this->m_densityTable = DensityTable( deck["DENSITY"].back() );
 
         else if( deck.hasKeyword( "GRAVITY" ) )
-            this->m_densityTable = make_density_table( GravityTable ( deck.getKeyword( "GRAVITY" ) ) );
+            this->m_densityTable = make_density_table( GravityTable ( deck["GRAVITY"].back() ) );
 
         if( deck.hasKeyword( "DIFFC" ) )
-            this->m_diffCoeffTable = DiffCoeffTable( deck.getKeyword( "DIFFC" ) );
+            this->m_diffCoeffTable = DiffCoeffTable( deck["DIFFC"].back() );
 
         if( deck.hasKeyword( "ROCK" ) )
-            this->m_rockTable = RockTable( deck.getKeyword( "ROCK" ) );
+            this->m_rockTable = RockTable( deck["ROCK"].back() );
 
         if( deck.hasKeyword( "VISCREF" ) )
-            this->m_viscrefTable = ViscrefTable( deck.getKeyword( "VISCREF" ) );
+            this->m_viscrefTable = ViscrefTable( deck["VISCREF"].back() );
 
         if( deck.hasKeyword( "WATDENT" ) )
-            this->m_watdentTable = WatdentTable( deck.getKeyword( "WATDENT" ) );
+            this->m_watdentTable = WatdentTable( deck["WATDENT"].back() );
 
         if( deck.hasKeyword( "RTEMP" ) )
-            m_rtemp = deck.getKeyword("RTEMP").getRecord(0).getItem("TEMP").getSIDouble( 0 );
+            m_rtemp = deck["RTEMP"].back().getRecord(0).getItem("TEMP").getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
-            m_rtemp = deck.getKeyword("RTEMPA").getRecord(0).getItem("TEMP").getSIDouble( 0 );
+            m_rtemp = deck["RTEMPA"].back().getRecord(0).getItem("TEMP").getSIDouble( 0 );
 
         if( deck.hasKeyword( "SALINITY" ) )
-            m_salinity = deck.getKeyword("SALINITY").getRecord(0).getItem("MOLALITY").get<double>( 0 ); //unit independent of unit systems
+            m_salinity = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>( 0 ); //unit independent of unit systems
 
         if ( deck.hasKeyword( "ROCK2D") )
             initRockTables(deck, "ROCK2D", m_rock2dTables );
@@ -237,41 +237,41 @@ DensityTable make_density_table(const GravityTable& gravity) {
             initSolventTables(deck, m_sdensityTables );
 
         if (deck.hasKeyword<ParserKeywords::GASDENT>())
-            this->gasDenT = DenT( deck.getKeyword<ParserKeywords::GASDENT>());
+            this->gasDenT = DenT( deck.getKeyword<ParserKeywords::GASDENT>().back());
 
         if (deck.hasKeyword<ParserKeywords::OILDENT>())
-            this->oilDenT = DenT( deck.getKeyword<ParserKeywords::OILDENT>());
+            this->oilDenT = DenT( deck.getKeyword<ParserKeywords::OILDENT>().back());
 
         if (deck.hasKeyword<ParserKeywords::WATDENT>())
-            this->watDenT = DenT( deck.getKeyword<ParserKeywords::WATDENT>());
+            this->watDenT = DenT( deck.getKeyword<ParserKeywords::WATDENT>().back());
 
         if (deck.hasKeyword<ParserKeywords::STCOND>()) {
-            auto stcondKeyword = deck.getKeyword("STCOND");
+            auto stcondKeyword = deck["STCOND"].back();
             this->stcond.temperature = stcondKeyword.getRecord(0).getItem("TEMPERATURE").getSIDouble(0);
             this->stcond.pressure = stcondKeyword.getRecord(0).getItem("PRESSURE").getSIDouble(0);
         }
 
         if (deck.hasKeyword<ParserKeywords::PLMIXPAR>()) {
-            this->m_plmixparTable = PlmixparTable(deck.getKeyword("PLMIXPAR"));
+            this->m_plmixparTable = PlmixparTable(deck["PLMIXPAR"].back());
         }
 
         if (deck.hasKeyword<ParserKeywords::SHRATE>()) {
-            this->m_shrateTable = ShrateTable(deck.getKeyword("SHRATE"));
+            this->m_shrateTable = ShrateTable(deck["SHRATE"].back());
             hasShrate = true;
         }
 
         if (deck.hasKeyword<ParserKeywords::STONE1EX>()) {
-            this->m_stone1exTable = Stone1exTable(deck.getKeyword("STONE1EX"));
+            this->m_stone1exTable = Stone1exTable(deck["STONE1EX"].back());
             hasShrate = true;
         }
 
         if (deck.hasKeyword<ParserKeywords::PLYVMH>()) {
-            this->m_plyvmhTable = PlyvmhTable(deck.getKeyword("PLYVMH"));
+            this->m_plyvmhTable = PlyvmhTable(deck["PLYVMH"].back());
         }
 
         using GC = ParserKeywords::GCOMPIDX;
         if (deck.hasKeyword<GC>())
-            this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
+            this->m_gas_comp_index = deck.getKeyword<GC>().back().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
     }
 
 
@@ -326,7 +326,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         using namespace Opm::ParserKeywords;
 
         if (deck.hasKeyword<EQLDIMS>()) {
-            const auto& keyword = deck.getKeyword<EQLDIMS>();
+            const auto& keyword = deck.getKeyword<EQLDIMS>().back();
             const auto& record = keyword.getRecord(0);
             int ntsequl   = record.getItem<EQLDIMS::NTEQUL>().get< int >(0);
             int nodes_p   = record.getItem<EQLDIMS::DEPTH_NODES_P>().get< int >(0);
@@ -338,7 +338,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         }
 
         if (deck.hasKeyword<REGDIMS>()) {
-            const auto& keyword = deck.getKeyword<REGDIMS>();
+            const auto& keyword = deck.getKeyword<REGDIMS>().back();
             const auto& record = keyword.getRecord(0);
             int ntfip  = record.getItem<REGDIMS::NTFIP>().get< int >(0);
             int nmfipr = record.getItem<REGDIMS::NMFIPR>().get< int >(0);
@@ -448,7 +448,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         {
             size_t numMiscibleTables = ParserKeywords::MISCIBLE::NTMISC::defaultValue;
             if (deck.hasKeyword<ParserKeywords::MISCIBLE>()) {
-                const auto& keyword = deck.getKeyword<ParserKeywords::MISCIBLE>();
+                const auto& keyword = deck.getKeyword<ParserKeywords::MISCIBLE>().back();
                 const auto& record = keyword.getRecord(0);
                 numMiscibleTables =  static_cast<size_t>(record.getItem<ParserKeywords::MISCIBLE::NTMISC>().get< int >(0));
             }
@@ -463,7 +463,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
-                const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>().back();
                 const auto& record = keyword.getRecord(0);
                 numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NTENDP>().get< int >(0));
             }
@@ -477,7 +477,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             size_t numRocktabTables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
-                const auto& keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+                const auto& keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>().back();
                 const auto& record = keyword.getRecord(0);
                 numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
             }
@@ -513,7 +513,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
-                const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>().back();
                 const auto& record = keyword.getRecord(0);
                 numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NTENDP>().get< int >(0));
             }
@@ -527,7 +527,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         {
             size_t numMiscibleTables = ParserKeywords::MISCIBLE::NTMISC::defaultValue;
             if (deck.hasKeyword<ParserKeywords::MISCIBLE>()) {
-                const auto& keyword = deck.getKeyword<ParserKeywords::MISCIBLE>();
+                const auto& keyword = deck.getKeyword<ParserKeywords::MISCIBLE>().back();
                 const auto& record = keyword.getRecord(0);
                 numMiscibleTables =  static_cast<size_t>(record.getItem<ParserKeywords::MISCIBLE::NTMISC>().get< int >(0));
             }
@@ -542,7 +542,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             size_t numRocktabTables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
-                const auto& keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+                const auto& keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>().back();
                 const auto& record = keyword.getRecord(0);
                 numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
             }
@@ -587,7 +587,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             hasRTEMPVD { deck.hasKeyword<ParserKeywords::RTEMPVD>() } ;
 
         if (hasTEMPVD && hasRTEMPVD) {
-            throw OpmInputError("The TEMPVD and RTEMPVD tables are mutually exclusive.", deck.getKeyword<ParserKeywords::TEMPVD>().location(), deck.getKeyword<ParserKeywords::RTEMPVD>().location());
+            throw OpmInputError("The TEMPVD and RTEMPVD tables are mutually exclusive.", deck.getKeyword<ParserKeywords::TEMPVD>().back().location(), deck.getKeyword<ParserKeywords::RTEMPVD>().back().location());
         } else if (hasTEMPVD) {
             initSimpleTableContainer<RtempvdTable>(deck,  "TEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
         } else if (hasRTEMPVD) {
@@ -611,7 +611,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
-        const auto& tableKeyword = deck.getKeyword(keywordName);
+        const auto& tableKeyword = deck[keywordName].back();
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& tableRecord = tableKeyword.getRecord( tableIdx );
             const auto& dataItem = tableRecord.getItem( 0 );
@@ -636,7 +636,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         }
         size_t numTables = m_tabdims.getNumPVTTables();
         auto& container = forceGetTables(keywordName , numTables);
-        const auto& tableKeyword = deck.getKeyword(keywordName);
+        const auto& tableKeyword = deck[keywordName].back();
 
         if (tableKeyword.size() > 2) {
             const std::string reason {
@@ -759,7 +759,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
-        const auto& keyword = deck.getKeyword<ParserKeywords::PLYROCK>();
+        const auto& keyword = deck.getKeyword<ParserKeywords::PLYROCK>().back();
         auto& container = forceGetTables(keywordName , numTables);
         for (size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
             const auto& tableRecord = keyword.getRecord( tableIdx );
@@ -781,7 +781,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
-        const auto& keyword = deck.getKeyword<ParserKeywords::PLYMAX>();
+        const auto& keyword = deck.getKeyword<ParserKeywords::PLYMAX>().back();
         auto& container = forceGetTables(keywordName , numTables);
         for (size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
             const auto& tableRecord = keyword.getRecord( tableIdx );
@@ -800,15 +800,15 @@ DensityTable make_density_table(const GravityTable& gravity) {
             complainAboutAmbiguousKeyword(deck, "ROCKTAB");
             return;
         }
-        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>().back();
         const auto& record = rockcompKeyword.getRecord( 0 );
         size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
         auto& container = forceGetTables("ROCKTAB" , numTables);
-        const auto rocktabKeyword = deck.getKeyword("ROCKTAB");
+        const auto rocktabKeyword = deck["ROCKTAB"].back();
 
         bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
         if (isDirectional) {
-            const auto& keyword = deck.getKeyword<ParserKeywords::RKTRMDIR>();
+            const auto& keyword = deck.getKeyword<ParserKeywords::RKTRMDIR>().back();
             const std::string reason {
                 "RKTRMDIR is in the deck. Flow does not support directional rock compaction mulipliers.\n"
                 "Make sure that your ROCKTAB table only has 3 columns)"
@@ -819,7 +819,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
 
         bool useStressOption = false;
         if (deck.hasKeyword<ParserKeywords::ROCKOPTS>()) {
-            const auto rockoptsKeyword = deck.getKeyword<ParserKeywords::ROCKOPTS>();
+            const auto rockoptsKeyword = deck.getKeyword<ParserKeywords::ROCKOPTS>().back();
             const auto& rockoptsRecord = rockoptsKeyword.getRecord(0);
             const auto& item = rockoptsRecord.getItem<ParserKeywords::ROCKOPTS::METHOD>();
             useStressOption = (item.getTrimmedString(0) == "STRESS");
@@ -1264,7 +1264,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         size_t numTables = m_tabdims.getNumPVTTables();
         solventtables.resize(numTables);
 
-        const auto& keyword = deck.getKeyword("SDENSITY");
+        const auto& keyword = deck["SDENSITY"].back();
         size_t numEntries = keyword.size();
         assert(numEntries == numTables);
         for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
@@ -1424,12 +1424,12 @@ DensityTable make_density_table(const GravityTable& gravity) {
             OpmLog::error("ROCKWNOD must be present if ROCK2DTR is used");
         }
 
-        const auto& rockcompKeyword = deck.getKeyword("ROCKCOMP");
+        const auto& rockcompKeyword = deck["ROCKCOMP"].back();
         const auto& record = rockcompKeyword.getRecord( 0 );
         size_t numTables = record.getItem("NTROCC").get< int >(0);
         rocktable.resize(numTables);
 
-        const auto& keyword = deck.getKeyword(keywordName);
+        const auto& keyword = deck[keywordName].back();
         size_t numEntries = keyword.size();
         size_t regionIdx = 0;
         size_t tableIdx = 0;
@@ -1451,7 +1451,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         size_t numTables = m_tabdims.getNumPVTTables();
         pvtwtables.resize(numTables);
 
-        const auto& keyword = deck.getKeyword("PVTWSALT");
+        const auto& keyword = deck["PVTWSALT"].back();
         size_t numEntries = keyword.size();
         size_t regionIdx = 0;
         for (unsigned lineIdx = 0; lineIdx < numEntries; lineIdx += 2) {
@@ -1467,7 +1467,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         size_t numTables = m_tabdims.getNumPVTTables();
         rwgtables.resize(numTables);
 
-        const auto& keyword = deck.getKeyword("RWGSALT");
+        const auto& keyword = deck["RWGSALT"].back();
         size_t regionIdx = 0;
         for (const auto& record : keyword) {
             rwgtables[regionIdx].init(record);
@@ -1483,7 +1483,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         size_t numTables = m_tabdims.getNumPVTTables();
         brinetables.resize(numTables);
 
-        const auto& keyword = deck.getKeyword("BDENSITY");
+        const auto& keyword = deck["BDENSITY"].back();
         size_t numEntries = keyword.size();
         assert(numEntries == numTables);
         for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
@@ -1506,7 +1506,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
-        const auto& tableKeyword = deck.getKeyword(keywordName);
+        const auto& tableKeyword = deck[keywordName].back();
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
@@ -1531,7 +1531,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
-        const auto& tableKeyword = deck.getKeyword(keywordName);
+        const auto& tableKeyword = deck[keywordName].back();
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
@@ -1568,7 +1568,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
-        const auto& tableKeyword = deck.getKeyword(keywordName);
+        const auto& tableKeyword = deck[keywordName].back();
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() == 0) {
@@ -1601,7 +1601,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
-        const auto& tableKeyword = deck.getKeyword(keywordName);
+        const auto& tableKeyword = deck[keywordName].back();
 
         int numTables = TableType::numTables( tableKeyword );
         for (int tableIdx = 0; tableIdx < numTables; ++tableIdx)

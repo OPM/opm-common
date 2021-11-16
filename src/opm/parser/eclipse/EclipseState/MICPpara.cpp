@@ -51,7 +51,7 @@ Opm::MICPpara::MICPpara( const Opm::Deck& deck)
     if (!deck.hasKeyword<MICPPARA>())
         return;
 
-    const auto& keyword = deck.getKeyword<MICPPARA>();
+    const auto& keyword = deck.getKeyword<MICPPARA>().back();
     const auto& record = keyword.getRecord(0);
     this->m_density_biofilm = record.getItem<MICPPARA::DENSITY_BIOFILM>().getSIDouble(0);
     this->m_density_calcite = record.getItem<MICPPARA::DENSITY_CALCITE>().getSIDouble(0);

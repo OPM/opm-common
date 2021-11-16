@@ -76,7 +76,7 @@ ACTIONX
     BOOST_CHECK_EQUAL(action1.name(), "NAME");
 
     const auto deck = Parser{}.parseString( action_kw );
-    const auto& kw = deck.getKeyword("ACTIONX");
+    const auto& kw = deck["ACTIONX"].back();
 
     Action::ActionX action2(kw, {}, 0);
     BOOST_CHECK_EQUAL(action2.name(), "ACTION");
@@ -870,7 +870,7 @@ TSTEP
         rdeck_string += strings[i] + "\n";
 
     auto deck2 = parser.parseString(rdeck_string);
-    BOOST_CHECK(deck2.getKeyword("WELSPECS") == deck.getKeyword("WELSPECS"));
+    BOOST_CHECK(deck2["WELSPECS"].back() == deck["WELSPECS"].back());
 
 
     const auto& conditions = act1.conditions();

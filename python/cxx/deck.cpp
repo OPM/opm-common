@@ -28,11 +28,11 @@ namespace {
     }
 
     const DeckKeyword& getKeyword_string( const Deck& deck, const std::string& kw ) {
-        return deck.getKeyword(kw);
+        return deck[kw].back();
     }
 
     const DeckKeyword& getKeyword_int( const Deck& deck, size_t index ) {
-        return deck.getKeyword(index);
+        return deck[index];
     }
 
     //This adds a keyword by copy

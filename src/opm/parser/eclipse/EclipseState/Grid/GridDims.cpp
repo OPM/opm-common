@@ -55,9 +55,9 @@ namespace Opm {
 
     GridDims::GridDims(const Deck& deck) {
         if (deck.hasKeyword("SPECGRID"))
-            init(deck.getKeyword("SPECGRID"));
+            init(deck["SPECGRID"].back());
         else if (deck.hasKeyword("DIMENS"))
-            init(deck.getKeyword("DIMENS"));
+            init(deck["DIMENS"].back());
         else if (deck.hasKeyword("GDFILE"))
             binary_init(deck);
         else
@@ -148,7 +148,7 @@ namespace Opm {
     }
 
     void GridDims::binary_init(const Deck& deck) {
-        const DeckKeyword& gdfile_kw = deck.getKeyword("GDFILE");
+        const DeckKeyword& gdfile_kw = deck["GDFILE"].back();
         const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
         const EclIO::EGrid egrid( deck.makeDeckPath(gdfile_arg) );
         const auto& dimens = egrid.dimension();
