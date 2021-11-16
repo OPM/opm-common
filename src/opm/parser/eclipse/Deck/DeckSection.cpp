@@ -88,7 +88,7 @@ const std::unordered_map<std::string, std::size_t> section_index = {
     {
         auto [start_index, end_index] = index_pair(deck, section);
         for (std::size_t index = start_index; index < end_index; index++)
-            this->add_keyword(deck.getKeyword(index));
+            this->add_keyword(deck[index]);
     }
 
 

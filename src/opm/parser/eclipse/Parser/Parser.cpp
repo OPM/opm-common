@@ -1414,17 +1414,17 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
         bool deckValid = true;
 
-        if( deck.getKeyword(0).name() != "RUNSPEC" ) {
+        if( deck[0].name() != "RUNSPEC" ) {
             std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
-            auto curKeyword = deck.getKeyword(0);
+            auto curKeyword = deck[0];
             OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
             deckValid = false;
         }
 
-        std::string curSectionName = deck.getKeyword(0).name();
+        std::string curSectionName = deck[0].name();
         size_t curKwIdx = 1;
         for (; curKwIdx < deck.size(); ++curKwIdx) {
-            const auto& curKeyword = deck.getKeyword(curKwIdx);
+            const auto& curKeyword = deck[curKwIdx];
             const std::string& curKeywordName = curKeyword.name();
 
             if (!isSectionDelimiter( curKeyword )) {
@@ -1526,7 +1526,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
         // SCHEDULE is the last section and it is mandatory, so make sure it is there
         if (curSectionName != "SCHEDULE") {
-            const auto& curKeyword = deck.getKeyword(deck.size() - 1);
+            const auto& curKeyword = deck[deck.size() - 1];
             std::string msg =
                 "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
             OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );

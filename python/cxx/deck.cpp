@@ -32,7 +32,7 @@ namespace {
     }
 
     const DeckKeyword& getKeyword_int( const Deck& deck, size_t index ) {
-        return deck.getKeyword(index);
+        return deck[index];
     }
 
     //This adds a keyword by copy
