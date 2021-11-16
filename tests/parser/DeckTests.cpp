@@ -46,7 +46,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
     Deck deck;
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("Bjarne"));
-    BOOST_CHECK_THROW( deck.getKeyword("Bjarne") , std::exception);
+    BOOST_CHECK_THROW( deck["Bjarne"].back() , std::exception);
 }
 
 std::pair<std::vector<Dimension>, std::vector<Dimension>> make_dims() {

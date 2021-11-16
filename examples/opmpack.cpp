@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 
             using GDFILE = Opm::ParserKeywords::GDFILE;
             if (deck.hasKeyword<GDFILE>()) {
-                const auto& gdfile_keyword = deck.getKeyword<GDFILE>();
+                const auto& gdfile_keyword = deck.getKeyword<GDFILE>().back();
                 const auto& fname = gdfile_keyword.getRecord(0).getItem<GDFILE::filename>().get<std::string>(0);
                 copy_file(input_arg.parent_path(), fname, output_dir);
             }

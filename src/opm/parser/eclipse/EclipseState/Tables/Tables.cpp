@@ -856,7 +856,7 @@ const TableColumn& WatvisctTable::getWaterViscosityColumn() const {
 }
 
 GasvisctTable::GasvisctTable( const Deck& deck, const DeckItem& deckItem ) {
-    int numComponents = deck.getKeyword<ParserKeywords::COMPS>().getRecord(0).getItem(0).get< int >(0);
+    int numComponents = deck.getKeyword<ParserKeywords::COMPS>().back().getRecord(0).getItem(0).get< int >(0);
 
     auto temperatureDimension = deck.getActiveUnitSystem().getDimension("Temperature");
     auto viscosityDimension = deck.getActiveUnitSystem().getDimension("Viscosity");

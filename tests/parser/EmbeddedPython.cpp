@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(PYINPUT_BASIC) {
     BOOST_CHECK( deck.hasKeyword("FIELD") );
     BOOST_CHECK( deck.hasKeyword("DIMENS") );
     BOOST_CHECK( deck.hasKeyword("DX") );
-    auto DX = deck.getKeyword("DX");
+    auto DX = deck["DX"].back();
     std::vector<double> dx_data = DX.getSIDoubleData();
     BOOST_CHECK_EQUAL( dx_data.size(), 4 );
     BOOST_CHECK_EQUAL( dx_data[2], 0.25 * 0.3048 );

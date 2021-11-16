@@ -154,7 +154,7 @@ namespace {
  */
 std::string default_region_keyword(const Deck& deck) {
     if (deck.hasKeyword("GRIDOPTS")) {
-        const auto& gridOpts = deck.getKeyword("GRIDOPTS");
+        const auto& gridOpts = deck["GRIDOPTS"].back();
         const auto& record = gridOpts.getRecord(0);
         const auto& nrmult_item = record.getItem("NRMULT");
 
@@ -451,7 +451,7 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
     this->tran.emplace( "TRANZ", Fieldprops::TranCalculator("TRANZ") );
 
     if (deck.hasKeyword<ParserKeywords::MULTREGP>()) {
-        const DeckKeyword& multregpKeyword = deck.getKeyword("MULTREGP");
+        const DeckKeyword& multregpKeyword = deck["MULTREGP"].back();
         for (const auto& record : multregpKeyword) {
             int region_value = record.getItem("REGION").get<int>(0);
             if (region_value <= 0)

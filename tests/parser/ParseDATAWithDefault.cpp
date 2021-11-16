@@ -70,7 +70,7 @@ ENKRVD\n\
 BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     Parser parser;
     auto deck = parser.parseString( data );
-    const auto& keyword = deck.getKeyword( "ENKRVD" );
+    const auto& keyword = deck["ENKRVD"].back();
     const auto& rec0 = keyword.getRecord(0);
     const auto& rec1 = keyword.getRecord(1);
     const auto& rec2 = keyword.getRecord(2);

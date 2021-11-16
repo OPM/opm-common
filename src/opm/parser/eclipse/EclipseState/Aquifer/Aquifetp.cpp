@@ -141,7 +141,7 @@ Aquifetp::Aquifetp(const TableManager& tables, const Deck& deck)
     if (!deck.hasKeyword<AQUFETP>())
         return;
 
-    const auto& aqufetpKeyword = deck.getKeyword<AQUFETP>();
+    const auto& aqufetpKeyword = deck.getKeyword<AQUFETP>().back();
     OpmLog::info(OpmInputError::format("Initializing Fetkovich aquifers from {keyword} in {file} line {line}", aqufetpKeyword.location()));
     for (auto& record : aqufetpKeyword)
         this->m_aqufetp.emplace_back(record, tables);
