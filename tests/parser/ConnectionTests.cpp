@@ -55,7 +55,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::Parser parser;
     const auto deck = parser.parseString(compdat_keyword);
     Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
-    const auto& keyword = deck.getKeyword("COMPDAT", 0);
+    const auto& keyword = deck["COMPDAT"][0];
     Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
     Opm::CompletedCells cells(grid);
     for (const auto& rec : keyword)

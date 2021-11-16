@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE( DENSITY ) {
     Parser parser;
     std::string file(pathprefix() + "DENSITY/DENSITY1");
     auto deck =  parser.parseFile(file);
-    const auto& densityKw = deck.getKeyword("DENSITY" , 0);
+    const auto& densityKw = deck["DENSITY"][0];
 
 
     BOOST_CHECK_EQUAL( 2U , densityKw.size());
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE( EQUIL_MISSING_DIMS ) {
     const std::string equil = "EQUIL\n"
         "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /";
     auto deck = parser.parseString(equil, parseContext, errors);
-    const auto& kw1 = deck.getKeyword("EQUIL" , 0);
+    const auto& kw1 = deck["EQUIL"][0];
     BOOST_CHECK_EQUAL( 1U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE( EQUIL ) {
     Parser parser;
     std::string pvtgFile(pathprefix() + "EQUIL/EQUIL1");
     auto deck =  parser.parseFile(pvtgFile);
-    const auto& kw1 = deck.getKeyword("EQUIL" , 0);
+    const auto& kw1 = deck["EQUIL"][0];
     BOOST_CHECK_EQUAL( 3U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
@@ -712,8 +712,8 @@ BOOST_AUTO_TEST_CASE( PORO_PERMX ) {
     Parser parser;
     std::string poroFile(pathprefix() + "PORO/PORO1");
     auto deck =  parser.parseFile(poroFile);
-    const auto& kw1 = deck.getKeyword("PORO" , 0);
-    const auto& kw2 = deck.getKeyword("PERMX" , 0);
+    const auto& kw1 = deck["PORO"][0];
+    const auto& kw2 = deck["PERMX"][0];
 
     BOOST_CHECK_THROW( kw1.getIntData() , std::logic_error );
     BOOST_CHECK_THROW( kw1.getStringData() , std::logic_error );
@@ -752,7 +752,7 @@ BOOST_AUTO_TEST_CASE( RSVD ) {
     Parser parser;
     std::string pvtgFile(pathprefix() + "RSVD/RSVD.txt");
     auto deck =  parser.parseFile(pvtgFile);
-    const auto& kw1 = deck.getKeyword("RSVD" , 0);
+    const auto& kw1 = deck["RSVD"][0];
     BOOST_CHECK_EQUAL( 6U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
@@ -791,7 +791,7 @@ PVTG
 
     Parser parser;
     auto deck =  parser.parseString(pvtgData);
-    const auto& kw1 = deck.getKeyword("PVTG" , 0);
+    const auto& kw1 = deck["PVTG"][0];
     BOOST_CHECK_EQUAL(5U , kw1.size());
 
     const auto& record0 = kw1.getRecord(0);
@@ -883,7 +883,7 @@ PVTO
 
     Parser parser;
     auto deck =  parser.parseString(pvtoData);
-    const auto& kw1 = deck.getKeyword("PVTO" , 0);
+    const auto& kw1 = deck["PVTO"][0];
     BOOST_CHECK_EQUAL(5U , kw1.size());
 
     const auto& record0 = kw1.getRecord(0);
@@ -1176,9 +1176,9 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
     BOOST_CHECK( parser.isRecognizedKeyword("VFPPROD"));
 
     auto deck =  parser.parseFile(file);
-    const auto& VFPPROD1 = deck.getKeyword("VFPPROD" , 0);
-    const auto& BPR = deck.getKeyword("BPR" , 0);
-    const auto& VFPPROD2 = deck.getKeyword("VFPPROD" , 1);
+    const auto& VFPPROD1 = deck["VFPPROD"][0];
+    const auto& BPR = deck["BPR"][0];
+    const auto& VFPPROD2 = deck["VFPPROD"][1];
 
     BOOST_CHECK_EQUAL( 573U  , VFPPROD1.size() );
     BOOST_CHECK_EQUAL( 1U    , BPR.size());
@@ -1305,7 +1305,7 @@ BOOST_AUTO_TEST_CASE( WCHONHIST ) {
     Parser parser;
     std::string wconhistFile(pathprefix() + "WCONHIST/WCONHIST1");
     auto deck =  parser.parseFile(wconhistFile);
-    const auto& kw1 = deck.getKeyword("WCONHIST" , 0);
+    const auto& kw1 = deck["WCONHIST"][0];
     BOOST_CHECK_EQUAL( 3U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
@@ -1320,7 +1320,7 @@ BOOST_AUTO_TEST_CASE( WCHONHIST ) {
     BOOST_CHECK_EQUAL( &item1  , &item1_index );
     BOOST_CHECK_EQUAL( "OP_1" , item1.get< std::string >(0));
 
-    const auto& kw2 = deck.getKeyword( "WCONHIST", 1 );
+    const auto& kw2 = deck["WCONHIST"][1];
     BOOST_CHECK_EQUAL( "OP_3" , rec3.getItem("WELL").get< std::string >(0));
     BOOST_CHECK_EQUAL( 2U , deck.count("WCONHIST"));
     BOOST_CHECK_EQUAL( "OP_3_B" , kw2.getRecord( 2 ).getItem("WELL").get< std::string >(0));

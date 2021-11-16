@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     std::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
     auto deck = parser.parseFile(singleKeywordFile.string());
-    BOOST_CHECK_EQUAL("WELL-1", deck.getKeyword("WWCT" , 0).getRecord(0).getItem(0).get< std::string >(0));
-    BOOST_CHECK_EQUAL("WELL-2", deck.getKeyword("WWCT" , 0).getRecord(0).getItem(0).get< std::string >(1));
+    BOOST_CHECK_EQUAL("WELL-1", deck["WWCT"][0].getRecord(0).getItem(0).get< std::string >(0));
+    BOOST_CHECK_EQUAL("WELL-2", deck["WWCT"][0].getRecord(0).getItem(0).get< std::string >(1));
 }
 
 BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     auto parser = createBPRParser();
     auto deck =  parser.parseFile(singleKeywordFile.string());
 
-    const auto& keyword = deck.getKeyword("BPR" , 0);
+    const auto& keyword = deck["BPR"][0];
     BOOST_CHECK_EQUAL(2U, keyword.size());
 
     const auto& record1 = keyword.getRecord(0);
@@ -237,8 +237,8 @@ RADFIN4
 
     auto deck =  parser.parseString(deck_string);
     BOOST_CHECK_EQUAL(3U, deck.size());
-    const auto& radfin4_0_full= deck.getKeyword("RADFIN4", 0);
-    const auto& radfin4_1_partial= deck.getKeyword("RADFIN4", 1);
+    const auto& radfin4_0_full= deck["RADFIN4"][0];
+    const auto& radfin4_1_partial= deck["RADFIN4"][1];
 
     // Specified in datafile
     BOOST_CHECK_EQUAL("NAME", radfin4_0_full.getRecord(0).getItem(0).get< std::string >(0));

@@ -38,7 +38,7 @@ Regdims::Regdims(const Deck& deck) :
     Regdims()
 {
     if (deck.hasKeyword("REGDIMS")) {
-        const auto& record = deck.getKeyword( "REGDIMS" , 0 ).getRecord( 0 );
+        const auto& record = deck["REGDIMS"][0].getRecord( 0 );
         m_NTFIP   = record.getItem("NTFIP").get<int>(0);
         m_NMFIPR  = record.getItem("NMFIPR").get<int>(0);
         m_NRFREG  = record.getItem("NRFREG").get<int>(0);

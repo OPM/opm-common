@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_outRange_throws) {
     Deck deck;
     Parser parser;
     deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    BOOST_CHECK_THROW(deck.getKeyword("GRID" , 10) , std::exception);
+    BOOST_CHECK_THROW(deck["GRID"][10], std::exception);
 }
 
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
     deck.addKeyword(keyword);
     BOOST_CHECK_EQUAL(2U , deck.size());
 
-    BOOST_CHECK_THROW( deck.getKeyword("GRID" , 3) , std::exception);
+    BOOST_CHECK_THROW( deck["GRID"][3], std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(getKeywordList_OK) {
