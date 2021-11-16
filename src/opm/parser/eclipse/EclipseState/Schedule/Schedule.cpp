@@ -484,7 +484,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
                         if (Action::ActionX::valid_keyword(action_keyword.name())){
                             action.addKeyword(action_keyword);
-                            this->inspect_actionx_keyword(grid, action_keyword);
+                            this->prefetch_cell_properties(grid, action_keyword);
                         }
                         else {
                             std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
@@ -525,7 +525,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         this->snapshots.back().actions.update( std::move(new_actions) );
     }
 
-    void Schedule::inspect_actionx_keyword(const ScheduleGrid& grid, const DeckKeyword& keyword){
+    void Schedule::prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword){
         static std::unordered_set<std::string> keyword_list = {"COMPDAT", "COMPSEGS"};
 
         if (keyword_list.count(keyword.name()) == 0)
