@@ -362,6 +362,13 @@ if(ENABLE_ECL_INPUT)
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
+    tests/test_EclIO.cpp
+    tests/test_EGrid.cpp
+    tests/test_ERft.cpp
+    tests/test_ERst.cpp
+    tests/test_ESmry.cpp
+    tests/test_EInit.cpp
+    tests/test_ExtESmry.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
