@@ -46,8 +46,8 @@ inline void loadDeck( const char * deck_file) {
         }
 
         for (size_t index=0; index < deck.size(); index++) {
-            const auto& kw1 = deck.getKeyword( index );
-            const auto& kw2 = deck2.getKeyword( index );
+            const auto& kw1 = deck[index];
+            const auto& kw2 = deck2[index];
 
             if (!kw1.equal( kw2 , true , true)) {
                 std::cerr << "Keyword " << index << " different " << kw1.name() << " " << kw2.name() << std::endl;

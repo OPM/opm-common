@@ -70,14 +70,9 @@ const DeckView& Deck::global_view() const {
         return this->global_view().operator[](keyword).back();
     }
 
-    const DeckKeyword& Deck::getKeyword( size_t index ) const {
-        return this->operator[](index);
-    }
-
     const DeckKeyword& Deck::operator[](std::size_t index) const {
         return this->keywordList.at(index);
     }
-
 
 
     Deck::Deck( const Deck& d )
@@ -132,11 +127,6 @@ const DeckView& Deck::global_view() const {
     void Deck::addKeyword( const DeckKeyword& keyword ) {
         DeckKeyword kw = keyword;
         this->addKeyword( std::move( kw ) );
-    }
-
-
-    DeckKeyword& Deck::getKeyword( size_t index ) {
-        return this->keywordList.at( index );
     }
 
     UnitSystem& Deck::getDefaultUnitSystem() {

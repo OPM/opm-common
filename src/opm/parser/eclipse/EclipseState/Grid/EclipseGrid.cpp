@@ -442,7 +442,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         keywordList.reserve(deck.size());
 
         for (size_t n=0;n<deck.size();n++){
-            DeckKeyword kw = deck.getKeyword( n );
+            DeckKeyword kw = deck[n];
             keywordList.push_back(kw.name());
         }
 
