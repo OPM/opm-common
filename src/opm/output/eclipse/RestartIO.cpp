@@ -566,7 +566,8 @@ namespace {
         vectors.reserve(value.solution.size());
 
         for (const auto& [name, vector] : value.solution) {
-            if (vector.target == data::TargetType::RESTART_SOLUTION) {
+            if ((vector.target == data::TargetType::RESTART_SOLUTION) ||
+                (vector.target == data::TargetType::RESTART_TRACER_SOLUTION)) {
                 vectors.push_back(name);
             }
         }
