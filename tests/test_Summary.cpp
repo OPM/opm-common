@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <cctype>
 #include <ctime>
+#include <filesystem>
 
 #include <fmt/format.h>
 
@@ -54,6 +55,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/ERsm.hpp>
 
 #include <tests/WorkArea.cpp>
 
@@ -927,6 +929,16 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close) {
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 0, "W_2", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 2, "W_2", "WTHPH" ), 1e-5 );
+
+    // Dump summary object as RSM file, load the new RSM file and compare.
+    {
+        std::string rsm_file = "TEST.RSM";
+        std::filesystem::path rsm_path{rsm_file};
+        resp->write_rsm_file(rsm_path);
+
+        Opm::EclIO::ERsm rsm(rsm_file);
+        BOOST_CHECK(cmp(*resp, rsm));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(udq_keywords) {
