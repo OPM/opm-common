@@ -35,6 +35,7 @@
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/eclipse/WStat.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
@@ -791,6 +792,11 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 1, "W_1", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2.2, ecl_sum_get_well_var( resp, 1, "W_3", "WTHPH" ), 1e-5 );
+
+    /* State */
+    BOOST_CHECK_CLOSE( WStat::numeric::PROD, ecl_sum_get_well_var(resp, 1,"W_1", "WSTAT"), 1e-5 );
+    BOOST_CHECK_CLOSE( WStat::numeric::PROD, ecl_sum_get_well_var(resp, 1,"W_2", "WSTAT"), 1e-5 );
+    BOOST_CHECK_CLOSE( WStat::numeric::INJ, ecl_sum_get_well_var(resp, 1,"W_3", "WSTAT"), 1e-5 );
 }
 
 BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close) {
@@ -818,6 +824,10 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close) {
 
     auto res = readsum( cfg.name );
     const auto* resp = res.get();
+
+    /* State */
+    BOOST_CHECK_CLOSE( WStat::numeric::SHUT, ecl_sum_get_well_var(resp, 1,"W_2", "WSTAT"), 1e-5 );
+    BOOST_CHECK_CLOSE( WStat::numeric::PROD, ecl_sum_get_well_var(resp, 2,"W_2", "WSTAT"), 1e-5 );
 
     /* Production rates */
     BOOST_CHECK_CLOSE(  0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPR" ), 1e-5 );
