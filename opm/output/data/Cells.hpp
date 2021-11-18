@@ -62,6 +62,7 @@ namespace data {
     enum class TargetType {
         RESTART_SOLUTION,
         RESTART_AUXILIARY,
+        RESTART_TRACER_SOLUTION,
         SUMMARY,
         INIT,
         RESTART_OPM_EXTENDED,
