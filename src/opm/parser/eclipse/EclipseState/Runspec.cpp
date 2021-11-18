@@ -284,6 +284,11 @@ NetworkDims::NetworkDims(const Deck& deck) : NetworkDims()
     }
 }
 
+bool NetworkDims::active() const {
+    return this->nMaxNoNodes > 0;
+}
+
+
 NetworkDims NetworkDims::serializeObject()
 {
     NetworkDims result;
