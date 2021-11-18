@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
-
+#include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/common/utility/TimeService.hpp>
@@ -142,8 +142,8 @@ namespace {
                 balancingInterval = units.from_si(M::time, sched[lookup_step].network_balance().interval());
                 convTolNodPres = units.from_si(M::pressure, sched[lookup_step].network_balance().pressure_tolerance());
                 convTolTHPCalc = sched[lookup_step].network_balance().thp_tolerance();
-                targBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().target_balance_error());
-                maxBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().max_balance_error());
+                targBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().target_balance_error().value_or(Opm::ParserKeywords::NETBALAN::TARGET_BALANCE_ERROR::defaultValue));
+                maxBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().max_balance_error().value_or(Opm::ParserKeywords::NETBALAN::MAX_BALANCE_ERROR::defaultValue));
                 minTimeStepSize = units.from_si(M::time, sched[lookup_step].network_balance().min_tstep());
             }
         }

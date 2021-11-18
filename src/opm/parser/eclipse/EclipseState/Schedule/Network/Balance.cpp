@@ -83,11 +83,11 @@ std::size_t Balance::pressure_max_iter() const {
     return this->m_pressure_max_iter;
 }
 
-double Balance::target_balance_error() const {
+std::optional<double> Balance::target_balance_error() const {
     return this->target_branch_balance_error;
 }
 
-double Balance::max_balance_error() const {
+std::optional<double> Balance::max_balance_error() const {
     return this->max_branch_balance_error;
 }
 
