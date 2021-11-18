@@ -49,7 +49,7 @@ namespace Opm {
 
         //Is THPRES option set?
         if( runspecSection.hasKeyword<ParserKeywords::EQLOPTS>() ) {
-            const auto& eqlopts = runspecSection.getKeyword<ParserKeywords::EQLOPTS>( );
+            const auto& eqlopts = runspecSection.get<ParserKeywords::EQLOPTS>().back();
             const auto& rec = eqlopts.getRecord(0);
             for( const auto& item : rec ) {
                 if( !item.hasValue( 0 ) ) continue;
@@ -103,7 +103,7 @@ namespace Opm {
 
 
             // Fill threshold pressure table.
-            const auto& thpres = solutionSection.getKeyword<ParserKeywords::THPRES>( );
+            const auto& thpres = solutionSection.get<ParserKeywords::THPRES>().back();
 
             for( const auto& rec : thpres ) {
                 const auto& region1Item = rec.getItem<ParserKeywords::THPRES::REGION1>();

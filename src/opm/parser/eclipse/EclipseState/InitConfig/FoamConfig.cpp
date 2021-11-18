@@ -132,7 +132,7 @@ FoamConfig::FoamConfig(const Deck& deck)
         // We only support the default (GAS transport phase, TAB mobility reduction model)
         // setup for foam at this point, so we detect and deal with it here even though we
         // do not store any data related to it.
-        const auto& kw_foamopts = deck.getKeyword<ParserKeywords::FOAMOPTS>().back();
+        const auto& kw_foamopts = deck.get<ParserKeywords::FOAMOPTS>().back();
         this->transport_phase_ = get_phase(kw_foamopts.getRecord(0).getItem(0).get<std::string>(0));
         if (!(this->transport_phase_ == Phase::GAS || this->transport_phase_ == Phase::WATER))
             throw OpmInputError("Only WATER and GAS phases are allowed for foam transport", kw_foamopts.location());
@@ -146,8 +146,8 @@ FoamConfig::FoamConfig(const Deck& deck)
     }
 
     if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
-        const auto& kw_foamfsc = deck.getKeyword<ParserKeywords::FOAMFSC>().back();
-        const auto& kw_foamrock = deck.getKeyword<ParserKeywords::FOAMROCK>().back();
+        const auto& kw_foamfsc = deck.get<ParserKeywords::FOAMFSC>().back();
+        const auto& kw_foamrock = deck.get<ParserKeywords::FOAMROCK>().back();
         if (kw_foamfsc.size() != kw_foamrock.size()) {
             throw std::runtime_error("FOAMFSC and FOAMROCK keywords have different number of records.");
         }
@@ -157,7 +157,7 @@ FoamConfig::FoamConfig(const Deck& deck)
         }
     } else if (deck.hasKeyword<ParserKeywords::FOAMROCK>()) {
         // We have FOAMROCK, but not FOAMFSC.
-        const auto& kw_foamrock = deck.getKeyword<ParserKeywords::FOAMROCK>().back();
+        const auto& kw_foamrock = deck.get<ParserKeywords::FOAMROCK>().back();
         for (const auto& record : kw_foamrock) {
             this->data_.emplace_back(record);
         }

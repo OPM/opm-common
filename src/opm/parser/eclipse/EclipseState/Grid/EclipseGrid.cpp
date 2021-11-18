@@ -265,7 +265,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             // actnum already reset in initBinaryGrid
         } else {
             if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-                const auto& actnumData = deck.getKeyword<ParserKeywords::ACTNUM>().back().getIntData();
+                const auto& actnumData = deck.get<ParserKeywords::ACTNUM>().back().getIntData();
                 /*
                   Would have liked to fail hard in the case where the size of the
                   ACTNUM array disagrees with nx*ny*nz; but it is possible to embed
@@ -299,7 +299,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     */
 
     if (deck.hasKeyword<ParserKeywords::GRIDUNIT>()) {
-        const auto& kw = deck.getKeyword<ParserKeywords::GRIDUNIT>(0);
+        const auto& kw = deck.get<ParserKeywords::GRIDUNIT>().front();
         const auto& length_unit = trim_copy(kw.getRecord(0).getItem(0).get<std::string>(0));
         auto grid_units = make_grid_units(length_unit);
         if (!grid_units.has_value())
@@ -338,7 +338,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         if (deck.hasKeyword<ParserKeywords::PINCH>()) {
-            const auto& record = deck.getKeyword<ParserKeywords::PINCH>( ).back().getRecord(0);
+            const auto& record = deck.get<ParserKeywords::PINCH>( ).back().getRecord(0);
             const auto& item = record.getItem<ParserKeywords::PINCH::THRESHOLD_THICKNESS>( );
             m_pinch = item.getSIDouble(0);
 
@@ -357,13 +357,13 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         m_minpvVector.resize(getCartesianSize(), 0.0);
         if (deck.hasKeyword<ParserKeywords::MINPV>()) {
-            const auto& record = deck.getKeyword<ParserKeywords::MINPV>( ).back().getRecord(0);
+            const auto& record = deck.get<ParserKeywords::MINPV>( ).back().getRecord(0);
             const auto& item = record.getItem<ParserKeywords::MINPV::VALUE>( );
             std::fill(m_minpvVector.begin(), m_minpvVector.end(), item.getSIDouble(0));
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         } else if(deck.hasKeyword<ParserKeywords::MINPVV>()) {
             // We should use the grid properties to support BOX, but then we need the eclipseState
-            const auto& record = deck.getKeyword<ParserKeywords::MINPVV>( ).back().getRecord(0);
+            const auto& record = deck.get<ParserKeywords::MINPVV>( ).back().getRecord(0);
             m_minpvVector =record.getItem(0).getSIDoubleData();
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
@@ -561,10 +561,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     void EclipseGrid::initDVDEPTHZGrid(const Deck& deck) {
       OpmLog::info(fmt::format("\nCreating grid from keywords DXV, DYV, DZV and DEPTHZ"));
-        const std::vector<double>& DXV = deck.getKeyword<ParserKeywords::DXV>().back().getSIDoubleData();
-        const std::vector<double>& DYV = deck.getKeyword<ParserKeywords::DYV>().back().getSIDoubleData();
-        const std::vector<double>& DZV = deck.getKeyword<ParserKeywords::DZV>().back().getSIDoubleData();
-        const std::vector<double>& DEPTHZ = deck.getKeyword<ParserKeywords::DEPTHZ>().back().getSIDoubleData();
+        const std::vector<double>& DXV = deck.get<ParserKeywords::DXV>().back().getSIDoubleData();
+        const std::vector<double>& DYV = deck.get<ParserKeywords::DYV>().back().getSIDoubleData();
+        const std::vector<double>& DZV = deck.get<ParserKeywords::DZV>().back().getSIDoubleData();
+        const std::vector<double>& DEPTHZ = deck.get<ParserKeywords::DEPTHZ>().back().getSIDoubleData();
         auto nx = this->getNX();
         auto ny = this->getNY();
         auto nz = this->getNZ();
@@ -1003,9 +1003,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         if (!(deck.hasKeyword<ParserKeywords::DZ>() || deck.hasKeyword<ParserKeywords::DZV>()) || !deck.hasKeyword<ParserKeywords::TOPS>())
             throw std::logic_error("The vertical cell size must be specified using the DZ or DZV, and the TOPS keywords");
 
-        const std::vector<double>& drv     = deck.getKeyword<ParserKeywords::DRV>().back().getSIDoubleData();
-        const std::vector<double>& dthetav = deck.getKeyword<ParserKeywords::DTHETAV>().back().getSIDoubleData();
-        const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().back().getSIDoubleData();
+        const std::vector<double>& drv     = deck.get<ParserKeywords::DRV>().back().getSIDoubleData();
+        const std::vector<double>& dthetav = deck.get<ParserKeywords::DTHETAV>().back().getSIDoubleData();
+        const std::vector<double>& tops    = deck.get<ParserKeywords::TOPS>().back().getSIDoubleData();
         OpmLog::info(fmt::format("\nCreating {} grid from keywords DRV, DTHETAV, DZV and TOPS", kind));
 
         if (drv.size() != this->getNX())
@@ -1019,12 +1019,12 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         std::vector<double> dz(volume);
         if (deck.hasKeyword<ParserKeywords::DZ>()) {
-            const std::vector<double>& dz_deck = deck.getKeyword<ParserKeywords::DZ>().back().getSIDoubleData();
+            const std::vector<double>& dz_deck = deck.get<ParserKeywords::DZ>().back().getSIDoubleData();
             if (dz_deck.size() != volume)
                 throw std::invalid_argument("DZ keyword should have exactly " + std::to_string( volume ) + " elements");
             dz = dz_deck;
         } else {
-            const std::vector<double>& dzv = deck.getKeyword<ParserKeywords::DZV>().back().getSIDoubleData();
+            const std::vector<double>& dzv = deck.get<ParserKeywords::DZV>().back().getSIDoubleData();
             if (dzv.size() != this->getNZ())
                 throw std::invalid_argument("DZV keyword should have exactly " + std::to_string( this->getNZ() ) + " elements");
             for (std::size_t k= 0; k < this->getNZ(); k++)
@@ -1077,7 +1077,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 std::vector<double> tj(this->getNY() + 1);
                 double z1 = *std::min_element( zcorn.begin() , zcorn.end());
                 double z2 = *std::max_element( zcorn.begin() , zcorn.end());
-                ri[0] = deck.getKeyword<ParserKeywords::INRAD>().back().getRecord(0).getItem(0).getSIDouble( 0 );
+                ri[0] = deck.get<ParserKeywords::INRAD>().back().getRecord(0).getItem(0).getSIDouble( 0 );
                 for (std::size_t i = 1; i <= this->getNX(); i++)
                     ri[i] = ri[i - 1] + drv[i - 1];
 
@@ -1138,8 +1138,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     void EclipseGrid::initCornerPointGrid(const Deck& deck) {
         assertCornerPointKeywords(deck);
         {
-            const auto& ZCORNKeyWord = deck.getKeyword<ParserKeywords::ZCORN>().back();
-            const auto& COORDKeyWord = deck.getKeyword<ParserKeywords::COORD>().back();
+            const auto& ZCORNKeyWord = deck.get<ParserKeywords::ZCORN>().back();
+            const auto& COORDKeyWord = deck.get<ParserKeywords::COORD>().back();
 
             const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
             const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
@@ -1148,7 +1148,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             std::vector<int> actnumVector;
 
             if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-                 const auto& actnumKeyword = deck.getKeyword<ParserKeywords::ACTNUM>().back();
+                 const auto& actnumKeyword = deck.get<ParserKeywords::ACTNUM>().back();
                 actnumVector = actnumKeyword.getIntData();
 
                 if (actnumVector.size() != this->getCartesianSize())
@@ -1178,7 +1178,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         const int ny = this->getNY();
         const int nz = this->getNZ();
         {
-            const auto& ZCORNKeyWord = deck.getKeyword<ParserKeywords::ZCORN>().back();
+            const auto& ZCORNKeyWord = deck.get<ParserKeywords::ZCORN>().back();
 
             if (ZCORNKeyWord.getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
                 const std::string msg =
@@ -1191,7 +1191,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         {
-            const auto& COORDKeyWord = deck.getKeyword<ParserKeywords::COORD>().back();
+            const auto& COORDKeyWord = deck.get<ParserKeywords::COORD>().back();
             if (COORDKeyWord.getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
                 const std::string msg =
                     "Wrong size of the COORD keyword: Expected 6*(nx + 1)*(ny + 1) = "
@@ -1292,7 +1292,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         double z_tolerance = 1e-6;
         size_t volume = dims[0] * dims[1] * dims[2];
         size_t area = dims[0] * dims[1];
-        const auto& TOPSKeyWord = deck.getKeyword<ParserKeywords::TOPS>().back();
+        const auto& TOPSKeyWord = deck.get<ParserKeywords::TOPS>().back();
         std::vector<double> TOPS = TOPSKeyWord.getSIDoubleData();
 
         if (TOPS.size() >= area) {

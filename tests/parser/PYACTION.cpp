@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION) {
     auto python = std::make_shared<Python>();
     auto deck = parser.parseFile("PYACTION.DATA");
 
-    auto keyword = deck.getKeyword<ParserKeywords::PYACTION>(0);
+    auto keyword = deck.get<ParserKeywords::PYACTION>().front();
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Modules) {
     Parser parser;
     auto python = std::make_shared<Python>();
     auto deck = parser.parseFile("PYACTION.DATA");
-    auto keyword = deck.getKeyword<ParserKeywords::PYACTION>(0);
+    auto keyword = deck.get<ParserKeywords::PYACTION>().front();
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 

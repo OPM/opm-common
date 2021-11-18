@@ -70,7 +70,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 {
     using TR = ParserKeywords::TRACER;
     if (deck.hasKeyword<TR>()) {
-        const auto& keyword = deck.getKeyword<TR>().back();
+        const auto& keyword = deck.get<TR>().back();
         OpmLog::info( keyword.location().format("\nInitializing tracers from {keyword} in {file} line {line}") );
         InfoLogger logger("Tracer tables", 3);
         for (const auto& record : keyword) {

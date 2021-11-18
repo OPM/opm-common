@@ -154,16 +154,14 @@ int main(int argc, char** argv) {
             }
 
             using IMPORT = Opm::ParserKeywords::IMPORT;
-            for (std::size_t import_index = 0; import_index < deck.count<IMPORT>(); import_index++) {
-                const auto& import_keyword = deck.getKeyword<IMPORT>(import_index);
+            for (const auto& import_keyword : deck.get<IMPORT>()) {
                 const auto& fname = import_keyword.getRecord(0).getItem<IMPORT::FILE>().get<std::string>(0);
                 copy_file(input_arg.parent_path(), fname, output_dir);
             }
 
 
             using PYACTION = Opm::ParserKeywords::PYACTION;
-            for (std::size_t pyaction_index = 0; pyaction_index < deck.count<PYACTION>(); pyaction_index++) {
-                const auto& pyaction_keyword = deck.getKeyword<PYACTION>(pyaction_index);
+            for (const auto& pyaction_keyword : deck.get<PYACTION>()) {
                 const auto& fname = pyaction_keyword.getRecord(1).getItem<PYACTION::FILENAME>().get<std::string>(0);
                 copy_file(input_arg.parent_path(), fname, output_dir);
             }
@@ -171,7 +169,7 @@ int main(int argc, char** argv) {
 
             using GDFILE = Opm::ParserKeywords::GDFILE;
             if (deck.hasKeyword<GDFILE>()) {
-                const auto& gdfile_keyword = deck.getKeyword<GDFILE>().back();
+                const auto& gdfile_keyword = deck.get<GDFILE>().back();
                 const auto& fname = gdfile_keyword.getRecord(0).getItem<GDFILE::filename>().get<std::string>(0);
                 copy_file(input_arg.parent_path(), fname, output_dir);
             }

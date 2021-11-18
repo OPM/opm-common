@@ -76,13 +76,6 @@ class DeckSection : public DeckView {
             return view.back();
         }
 
-        template<class Keyword>
-        const DeckKeyword& getKeyword() const {
-            auto view = this->operator[](Keyword::keywordName);
-            return view.back();
-        }
-
-
 
         std::vector<const DeckKeyword*> getKeywordList(const std::string& keyword) const {
             std::vector<const DeckKeyword*> kw_list;

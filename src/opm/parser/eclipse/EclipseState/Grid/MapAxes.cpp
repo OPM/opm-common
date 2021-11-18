@@ -107,11 +107,11 @@ MapAxes::MapAxes(const Deck& deck)
     if (!deck.hasKeyword<ParserKeywords::MAPAXES>())
         throw std::logic_error("Can not instantiate MapAxes object without MAPAXES keyword in deck");
 
-    const auto& mapaxes_kw = deck.getKeyword<ParserKeywords::MAPAXES>().back();
+    const auto& mapaxes_kw = deck.get<ParserKeywords::MAPAXES>().back();
     const auto& mapaxes_data = mapaxes_kw.getRawDoubleData();
     double lf = 1.0;
     if (deck.hasKeyword<ParserKeywords::MAPUNITS>()) {
-        this->map_units = deck.getKeyword<ParserKeywords::MAPUNITS>().back().getRecord(0).getItem(0).get<std::string>(0);
+        this->map_units = deck.get<ParserKeywords::MAPUNITS>().back().getRecord(0).getItem(0).get<std::string>(0);
         lf = length_factor(this->map_units.value());
     }
 
