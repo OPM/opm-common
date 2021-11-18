@@ -4613,7 +4613,7 @@ END
 
 
     auto netbalan0 = sched[0].network_balance();
-    BOOST_CHECK(netbalan0.mode() == Network::Balance::CalcMode::None);
+    BOOST_CHECK(netbalan0.mode() == Network::Balance::CalcMode::TimeStepStart);
 
     auto netbalan1 = sched[1].network_balance();
     BOOST_CHECK(netbalan1.mode() == Network::Balance::CalcMode::TimeInterval);

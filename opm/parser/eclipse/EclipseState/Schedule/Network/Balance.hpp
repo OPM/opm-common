@@ -40,6 +40,7 @@ enum class CalcMode {
 };
 
     Balance() = default;
+    Balance(bool network_active, const Tuning& tuning);
     Balance(const Tuning& tuning, const DeckKeyword& keyword);
 
     CalcMode mode() const;
