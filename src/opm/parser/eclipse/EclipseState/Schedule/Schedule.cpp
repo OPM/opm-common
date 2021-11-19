@@ -47,7 +47,9 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
@@ -113,9 +115,9 @@ namespace {
 
         // Last on/off keyword entry "wins".
         for (const auto& keyword : section) {
-            if (keyword.name() == On::keywordName)
+            if (keyword.is<On>())
                 rptonly = true;
-            else if (keyword.name() == Off::keywordName)
+            else if (keyword.is<Off>())
                 rptonly = false;
         }
 
@@ -316,7 +318,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
 
-        if (keyword.name() == "PYACTION")
+        if (keyword.is<ParserKeywords::PYACTION>())
             handlePYACTION(keyword);
     }
 
@@ -469,7 +471,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 const auto& location = keyword.location();
                 logger.location(keyword.location());
 
-                if (keyword.name() == "ACTIONX") {
+                if (keyword.is<ParserKeywords::ACTIONX>()) {
                     Action::ActionX action(keyword,
                                            this->m_static.m_runspec.actdims(),
                                            std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
@@ -479,7 +481,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                             throw OpmInputError("Missing keyword ENDACTIO", keyword.location());
 
                         const auto& action_keyword = block[keyword_index];
-                        if (action_keyword.name() == "ENDACTIO")
+                        if (action_keyword.is<ParserKeywords::ENDACTIO>())
                             break;
 
                         if (Action::ActionX::valid_keyword(action_keyword.name())){
@@ -531,7 +533,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         if (keyword_list.count(keyword.name()) == 0)
             return;
 
-        if(keyword.name() == "COMPDAT"){
+        if(keyword.is<ParserKeywords::COMPDAT>()){
             for (auto record : keyword){
                 const auto& itemI = record.getItem("I");
                 const auto& itemJ = record.getItem("J");

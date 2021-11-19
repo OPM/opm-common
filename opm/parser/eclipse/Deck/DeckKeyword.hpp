@@ -77,8 +77,8 @@ namespace Opm {
         void write_TITLE( DeckOutput& output ) const;
 
         template <class Keyword>
-        bool isKeyword() const {
-            if (Keyword::keywordName == m_keywordName)
+        bool is() const {
+            if (Keyword::keywordName == this->m_keywordName)
                 return true;
             else
                 return false;

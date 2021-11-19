@@ -380,7 +380,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         using namespace ParserKeywords;
         static const std::unordered_set<std::string> multipliers = {"MULTFLT", "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
         for (const auto& keyword : keywords) {
-            if (keyword.isKeyword<MULTFLT>()) {
+            if (keyword.is<MULTFLT>()) {
                 for (const auto& record : keyword) {
                     const std::string& faultName = record.getItem<MULTFLT::fault>().get< std::string >(0);
                     auto& fault = m_faults.getFault( faultName );
