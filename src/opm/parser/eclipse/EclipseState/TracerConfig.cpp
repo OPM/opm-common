@@ -50,6 +50,10 @@ Phase phase_from_string(const std::string& phase_string) {
 
 }
 
+const TracerConfig::TracerEntry& TracerConfig::operator[](std::size_t index) const {
+    return this->tracers.at(index);
+}
+
 const TracerConfig::TracerEntry& TracerConfig::operator[](const std::string& name) const {
     auto iter = std::find_if(this->tracers.begin(), this->tracers.end(), [&name](const TracerEntry& tracer) {
             return tracer.name == name;
