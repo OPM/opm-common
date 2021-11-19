@@ -401,6 +401,41 @@ private:
 };
 
 
+class Tracers {
+public:
+
+    Tracers() = default;
+
+    explicit Tracers(const Deck& );
+    int water_tracers() const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer) {
+        serializer(this->m_oil_tracers);
+        serializer(this->m_water_tracers);
+        serializer(this->m_gas_tracers);
+        serializer(this->m_env_tracers);
+        serializer(this->diffusion_control);
+        serializer(this->max_iter);
+        serializer(this->min_iter);
+    }
+
+    static Tracers serializeObject();
+    bool operator==(const Tracers& data) const;
+
+private:
+    int m_oil_tracers;
+    int m_water_tracers;
+    int m_gas_tracers;
+    int m_env_tracers;
+    bool diffusion_control;
+    int max_iter;
+    int min_iter;
+    // The TRACERS keyword has some additional options which seem quite arcane,
+    // for now not included here.
+};
+
+
 class Runspec {
 public:
     Runspec() = default;
@@ -423,6 +458,7 @@ public:
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
     const Nupcol& nupcol() const noexcept;
+    const Tracers& tracers() const noexcept;
     bool co2Storage() const noexcept;
     bool micp() const noexcept;
 
@@ -446,6 +482,7 @@ public:
         m_actdims.serializeOp(serializer);
         m_sfuncctrl.serializeOp(serializer);
         m_nupcol.serializeOp(serializer);
+        m_tracers.serializeOp(serializer);
         serializer(m_co2storage);
         serializer(m_micp);
     }
@@ -465,6 +502,7 @@ private:
     Actdims m_actdims;
     SatFuncControls m_sfuncctrl;
     Nupcol m_nupcol;
+    Tracers m_tracers;
     bool m_co2storage;
     bool m_micp;
 };
