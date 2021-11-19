@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     BOOST_CHECK(tw == std::vector<std::string>{"OP_1"});
 
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep, action_state, wtest_state, smry, ih.value);
+                                simCase.es.tracer(), rptStep, action_state, wtest_state, smry, ih.value);
 
     // IWEL (OP_1)
     {
@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     //smry = sim_state();
     awd = Opm::RestartIO::Helpers::AggregateWellData{ih_8.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep_8, action_state, wtest_state, smry, ih_8.value);
+                                simCase.es.tracer(), rptStep_8, action_state, wtest_state, smry, ih_8.value);
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
 
@@ -879,7 +879,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data_MSW_well_data)
 
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep, action_state, wtest_state, smry, ih.value);
+                                simCase.es.tracer(), rptStep, action_state, wtest_state, smry, ih.value);
 
     // IWEL (PROD1)
     {
@@ -1278,7 +1278,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
                                                             sim_step);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, action_state, wtest_state, sumState, ih);
+    wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step, action_state, wtest_state, sumState, ih);
     wellData.captureDynamicWellData(simCase.sched, sim_step, xw , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);

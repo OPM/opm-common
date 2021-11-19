@@ -34,6 +34,7 @@ namespace Opm {
     class SummaryState;
     class UnitSystem;
     class WellTestState;
+    class TracerConfig;
     namespace Action {
         class State;
     }
@@ -51,7 +52,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         explicit AggregateWellData(const std::vector<int>& inteHead);
 
         void captureDeclaredWellData(const Schedule&   	       sched,
-                                     const UnitSystem& 		     units,
+                                     const TracerConfig&       tracer,
                                      const std::size_t 		     sim_step,
                                      const Opm::Action::State& action_state,
                                      const Opm::WellTestState& wtest_state,

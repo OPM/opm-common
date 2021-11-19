@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             }
             {
                 auto well_aggregator = Opm::RestartIO::Helpers::AggregateWellData(ih);
-                well_aggregator.captureDeclaredWellData(sched, es.getUnits(), rptStep-1, {}, {}, st, ih);
+                well_aggregator.captureDeclaredWellData(sched, es.tracer(), rptStep-1, {}, {}, st, ih);
                 rstFile.write("IWEL", well_aggregator.getIWell());
                 rstFile.write("SWEL", well_aggregator.getSWell());
                 rstFile.write("XWEL", well_aggregator.getXWell());

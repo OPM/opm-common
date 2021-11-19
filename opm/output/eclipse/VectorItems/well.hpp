@@ -183,6 +183,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             LOweightFac       = 57, // Well's wighting factor for preferential allocation of lift gas
             LOminRate         = 67, // Well's mimimum lift gas rate
             LOincFac          =115,
+
+            TracerOffset      = 122, // Tracer data start at this index
         };
     } // SWell
 

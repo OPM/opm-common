@@ -40,9 +40,12 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cassert>
@@ -518,18 +521,36 @@ namespace {
             return rLimit;
         }
 
+
+        template <class SWellArray>
+        void assignTracerData(const Opm::TracerConfig& tracers,
+                              const Opm::SummaryState& smry,
+                              const std::string& wname,
+                              SWellArray &sWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+            std::fill(sWell.begin() + Ix::TracerOffset, sWell.end(), 0);
+
+            std::size_t output_index = Ix::TracerOffset;
+            for (const auto& tracer : tracers) {
+                sWell[output_index] = smry.get_well_var(wname, fmt::format("WTIC{}", tracer.name), 0);
+                output_index++;
+            }
+        }
+
         template <class SWellArray>
         void staticContrib(const Opm::Well&             well,
                            const Opm::GasLiftOpt& glo,
-                           const Opm::UnitSystem&       units,
                            const std::size_t            sim_step,
                            const Opm::Schedule&         sched,
+                           const Opm::TracerConfig&     tracers,
                            const Opm::WellTestState&    wtest_state,
                            const ::Opm::SummaryState&   smry,
                            SWellArray&                  sWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
             using M = ::Opm::UnitSystem::measure;
+            const auto& units = sched.getUnits();
 
             auto swprop = [&units](const M u, const double x) -> float
             {
@@ -691,6 +712,8 @@ namespace {
                 sWell[Ix::WTestInterval] = units.from_si(Opm::UnitSystem::measure::time, wtest_rst->test_interval);
                 sWell[Ix::WTestStartupTime] = units.from_si(Opm::UnitSystem::measure::time, wtest_rst->startup_time);
             }
+
+            assignTracerData(tracers, smry, well.name(), sWell);
         }
     } // SWell
 
@@ -980,7 +1003,7 @@ AggregateWellData(const std::vector<int>& inteHead)
 void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDeclaredWellData(const Schedule&   sched,
-                        const UnitSystem& units,
+                        const TracerConfig& tracers,
                         const std::size_t sim_step,
                         const ::Opm::Action::State& action_state,
                         const Opm::WellTestState& wtest_state,
@@ -1008,21 +1031,21 @@ captureDeclaredWellData(const Schedule&   sched,
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, sched, sim_step, [&units, &step_glo, &sim_step, &sched, &wtest_state, &smry, this]
+    wellLoop(wells, sched, sim_step, [&step_glo, &sim_step, &sched, &tracers, &wtest_state, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
 
-        SWell::staticContrib(well, step_glo, units, sim_step, sched, wtest_state, smry, sw);
+        SWell::staticContrib(well, step_glo, sim_step, sched, tracers, wtest_state, smry, sw);
     });
 
     // Static contributions to XWEL array.
-    wellLoop(wells, sched, sim_step, [&units, &smry, this]
+    wellLoop(wells, sched, sim_step, [&sched, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xw = this->xWell_[wellID];
 
-        XWell::staticContrib(well, smry, units, xw);
+        XWell::staticContrib(well, smry,sched.getUnits(), xw);
     });
 
     {
