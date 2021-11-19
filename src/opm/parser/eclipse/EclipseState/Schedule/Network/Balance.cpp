@@ -26,8 +26,9 @@
 namespace Opm {
 namespace Network {
 
+using NB = ParserKeywords::NETBALAN;
+
 Balance::Balance(const Tuning& tuning, const DeckKeyword& keyword) {
-    using NB = ParserKeywords::NETBALAN;
     const auto& record = keyword[0];
     double interval = record.getItem<NB::TIME_INTERVAL>().getSIDouble(0);
 
@@ -59,6 +60,24 @@ Balance::Balance(const Tuning& tuning, const DeckKeyword& keyword) {
         this->m_min_tstep = record.getItem<NB::MIN_TIME_STEP>().getSIDouble(0);
 }
 
+
+Balance::Balance(bool network_active, const Tuning& tuning)
+    : calc_mode(CalcMode::TimeStepStart)
+    , calc_interval(0)
+    , m_thp_tolerance( NB::THP_CONVERGENCE_LIMIT::defaultValue )
+    , m_thp_max_iter( NB::MAX_ITER_THP::defaultValue )
+{
+    if (network_active) {
+        this->ptol = NB::PRESSURE_CONVERGENCE_LIMIT::defaultValue;
+        this->m_pressure_max_iter = NB::MAX_ITER::defaultValue;
+        this->m_min_tstep = tuning.TSMINZ;
+    } else {
+        this->ptol = 0;
+        this->m_pressure_max_iter = 0;
+        this->m_min_tstep = 0;
+    }
+}
+
 Balance::CalcMode Balance::mode() const {
     return this->calc_mode;
 }
@@ -83,11 +102,11 @@ std::size_t Balance::pressure_max_iter() const {
     return this->m_pressure_max_iter;
 }
 
-double Balance::target_balance_error() const {
+std::optional<double> Balance::target_balance_error() const {
     return this->target_branch_balance_error;
 }
 
-double Balance::max_balance_error() const {
+std::optional<double> Balance::max_balance_error() const {
     return this->max_branch_balance_error;
 }
 

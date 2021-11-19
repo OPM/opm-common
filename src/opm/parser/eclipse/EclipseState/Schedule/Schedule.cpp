@@ -1952,9 +1952,10 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     else
         this->snapshots.emplace_back(start_time);
 
+    const auto& runspec = this->m_static.m_runspec;
     auto& sched_state = snapshots.back();
-    sched_state.init_nupcol( this->m_static.m_runspec.nupcol() );
-    sched_state.update_oilvap( OilVaporizationProperties( this->m_static.m_runspec.tabdims().getNumPVTTables() ));
+    sched_state.init_nupcol( runspec.nupcol() );
+    sched_state.update_oilvap( OilVaporizationProperties( runspec.tabdims().getNumPVTTables() ));
     sched_state.update_message_limits( this->m_static.m_deck_message_limits );
     sched_state.pavg.update( PAvg() );
     sched_state.wtest_config.update( WellTestConfig() );
@@ -1966,13 +1967,13 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.actions.update( Action::Actions() );
     sched_state.udq_active.update( UDQActive() );
     sched_state.well_order.update( NameOrder() );
-    sched_state.group_order.update( GroupOrder( this->m_static.m_runspec.wellDimensions().maxGroupsInField()) );
-    sched_state.udq.update( UDQConfig( this->m_static.m_runspec.udqParams() ));
+    sched_state.group_order.update( GroupOrder( runspec.wellDimensions().maxGroupsInField()) );
+    sched_state.udq.update( UDQConfig( runspec.udqParams() ));
     sched_state.glo.update( GasLiftOpt() );
     sched_state.guide_rate.update( GuideRateConfig() );
     sched_state.rft_config.update( RFTConfig() );
     sched_state.rst_config.update( RSTConfig::first( this->m_static.rst_config ) );
-    sched_state.network_balance.update( Network::Balance() );
+    sched_state.network_balance.update( Network::Balance(runspec.networkDimensions().active(), sched_state.tuning()) );
     sched_state.update_sumthin(this->m_static.sumthin);
     sched_state.rptonly(this->m_static.rptonly);
     //sched_state.update_date( start_time );

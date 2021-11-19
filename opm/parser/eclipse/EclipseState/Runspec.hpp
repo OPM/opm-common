@@ -223,6 +223,8 @@ public:
         return this->nMaxNoBranchesConToNode;
     }
 
+    bool active() const;
+
     bool operator==(const NetworkDims& data) const;
 
     template<class Serializer>

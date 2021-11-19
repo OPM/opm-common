@@ -40,6 +40,7 @@ enum class CalcMode {
 };
 
     Balance() = default;
+    Balance(bool network_active, const Tuning& tuning);
     Balance(const Tuning& tuning, const DeckKeyword& keyword);
 
     CalcMode mode() const;
@@ -48,8 +49,8 @@ enum class CalcMode {
     std::size_t pressure_max_iter() const;
     double thp_tolerance() const;
     std::size_t thp_max_iter() const;
-    double target_balance_error() const;
-    double max_balance_error() const;
+    std::optional<double> target_balance_error() const;
+    std::optional<double> max_balance_error() const;
     double min_tstep() const;
 
     static Balance serializeObject();
@@ -79,8 +80,8 @@ private:
     double m_thp_tolerance;
     std::size_t m_thp_max_iter;
 
-    double target_branch_balance_error;
-    double max_branch_balance_error;
+    std::optional<double> target_branch_balance_error;
+    std::optional<double> max_branch_balance_error;
     double m_min_tstep;
 };
 
