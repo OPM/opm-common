@@ -374,6 +374,7 @@ namespace {
         rstFile.write("SACN", actionxData.getSACN());
     }
 
+
     void writeWell(int                             sim_step,
                    const bool                      ecl_compatible_rst,
                    const Phases&                   phases,
@@ -566,8 +567,7 @@ namespace {
         vectors.reserve(value.solution.size());
 
         for (const auto& [name, vector] : value.solution) {
-            if ((vector.target == data::TargetType::RESTART_SOLUTION) ||
-                (vector.target == data::TargetType::RESTART_TRACER_SOLUTION)) {
+            if (vector.target == data::TargetType::RESTART_SOLUTION) {
                 vectors.push_back(name);
             }
         }
@@ -665,9 +665,38 @@ namespace {
         }
     }
 
+    void writeTracerVectors(const UnitSystem&               unit_system,
+                            const TracerConfig&             tracer_config,
+                            const RestartValue&             value,
+                            const bool                      write_double,
+                            EclIO::OutputStream::Restart& rstFile)
+    {
+        for (const auto& [tracer_name, vector] : value.solution) {
+            if (vector.target != data::TargetType::RESTART_TRACER_SOLUTION)
+                continue;
+
+            const auto& tracer = tracer_config[tracer_name];
+            std::vector<std::string> ztracer;
+            ztracer.push_back(tracer_name + 'F');
+            ztracer.push_back(fmt::format("{}/{}", tracer.unit_string, unit_system.name( UnitSystem::measure::volume )));
+            rstFile.write("ZTRACER", ztracer);
+
+            const auto& data = vector.data;
+            if (write_double) {
+                rstFile.write(tracer_name, data);
+            }
+            else {
+                rstFile.write(tracer_name, std::vector<float> {
+                        data.begin(), data.end()
+                    });
+            }
+        }
+    }
+
     void writeSolution(const RestartValue&           value,
                        const Schedule&               schedule,
                        const UDQState&               udq_state,
+                       const TracerConfig&           tracer_config,
                        int                           report_step,
                        int                           sim_step,
                        const bool                    ecl_compatible_rst,
@@ -693,7 +722,7 @@ namespace {
         rstFile.message("STARTSOL");
 
         writeRegularSolutionVectors(value, write_double_arg, write);
-
+        writeTracerVectors(schedule.getUnits(), tracer_config, value, write_double_arg, rstFile);
         writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
 
         writeExtraVectors(value, write);
@@ -792,7 +821,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
 
     writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
 
-    writeSolution(value, schedule, udqState, report_step, sim_step,
+    writeSolution(value, schedule, udqState, es.tracer(), report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {
