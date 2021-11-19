@@ -512,6 +512,56 @@ bool Nupcol::operator==(const Nupcol& data) const {
 }
 
 
+bool Tracers::operator==(const Tracers& other) const {
+    return
+        this->m_oil_tracers == other.m_oil_tracers &&
+        this->m_water_tracers == other.m_water_tracers &&
+        this->m_gas_tracers == other.m_gas_tracers &&
+        this->m_env_tracers == other.m_env_tracers &&
+        this->diffusion_control == other.diffusion_control &&
+        this->max_iter == other.max_iter &&
+        this->min_iter == other.min_iter;
+}
+
+Tracers Tracers::serializeObject() {
+    Tracers tracers;
+    tracers.m_oil_tracers = 123;
+    tracers.m_gas_tracers = 77;
+    tracers.max_iter = 11;
+    return tracers;
+}
+
+int Tracers::water_tracers() const {
+    return this->m_water_tracers;
+}
+
+
+Tracers::Tracers(const Deck& deck) {
+    using TR = ParserKeywords::TRACERS;
+
+    if (deck.hasKeyword<TR>()) {
+        const auto& record = deck.getKeyword<TR>()[0];
+        this->m_oil_tracers = record.getItem<TR::MAX_OIL_TRACERS>().get<int>(0);
+        this->m_water_tracers = record.getItem<TR::MAX_WATER_TRACERS>().get<int>(0);
+        this->m_gas_tracers = record.getItem<TR::MAX_GAS_TRACERS>().get<int>(0);
+        this->m_env_tracers = record.getItem<TR::MAX_ENV_TRACERS>().get<int>(0);
+        this->max_iter = record.getItem<TR::MAX_ITER>().get<int>(0);
+        this->min_iter = record.getItem<TR::MIN_ITER>().get<int>(0);
+
+        const auto& diff_control = record.getItem<TR::NUMERIC_DIFF>().get<std::string>(0);
+        this->diffusion_control = (diff_control == "DIFF" || diff_control == "SPECIAL");
+    } else {
+        this->m_oil_tracers = TR::MAX_OIL_TRACERS::defaultValue;
+        this->m_water_tracers = TR::MAX_WATER_TRACERS::defaultValue;
+        this->m_gas_tracers = TR::MAX_GAS_TRACERS::defaultValue;
+        this->m_env_tracers = TR::MAX_ENV_TRACERS::defaultValue;
+        this->diffusion_control = false;
+        this->max_iter = TR::MAX_ITER::defaultValue;
+        this->min_iter = TR::MIN_ITER::defaultValue;
+    }
+}
+
+
 Runspec::Runspec( const Deck& deck )
     : m_start_time( create_start_time(deck) )
     , active_phases( inferActivePhases(deck) )
@@ -527,6 +577,7 @@ Runspec::Runspec( const Deck& deck )
     , m_actdims( deck )
     , m_sfuncctrl( deck )
     , m_nupcol( )
+    , m_tracers( deck )
     , m_co2storage (false)
     , m_micp (false)
 {
