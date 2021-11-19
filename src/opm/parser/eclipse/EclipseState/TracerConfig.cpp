@@ -168,6 +168,11 @@ size_t TracerConfig::size() const {
     return this->tracers.size();
 }
 
+bool TracerConfig::empty() const {
+    return this->tracers.empty();
+}
+
+
 const std::vector<TracerConfig::TracerEntry>::const_iterator TracerConfig::begin() const {
     return this->tracers.begin();
 }

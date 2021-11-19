@@ -103,6 +103,7 @@ public:
     static TracerConfig serializeObject();
 
     size_t size() const;
+    bool empty() const;
 
     const std::vector<TracerEntry>::const_iterator begin() const;
     const std::vector<TracerEntry>::const_iterator end() const;

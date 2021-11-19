@@ -60,6 +60,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                      const std::vector<int>& 	 inteHead);
 
         void captureDynamicWellData(const Opm::Schedule&        sched,
+                                    const TracerConfig&       tracer,
                                     const std::size_t           sim_step,
                                     const Opm::data::Wells&     xw,
                                     const Opm::SummaryState&    smry);

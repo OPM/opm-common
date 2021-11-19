@@ -941,7 +941,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     Opm::WellTestState wtest_state;
 
-    awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
+    awd.captureDynamicWellData(simCase.sched, simCase.es.tracer(), rptStep, xw, smry);
 
     // IWEL (OP_1)
     {
@@ -1085,7 +1085,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     Opm::WellTestState wtest_state;
 
-    awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
+    awd.captureDynamicWellData(simCase.sched, simCase.es.tracer(), rptStep, xw, smry);
 
     // IWEL (OP_1) -- closed producer
     {
@@ -1279,7 +1279,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
     wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step, action_state, wtest_state, sumState, ih);
-    wellData.captureDynamicWellData(simCase.sched, sim_step, xw , sumState);
+    wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(), sim_step, xw , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
     connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, xw , sumState, sim_step);

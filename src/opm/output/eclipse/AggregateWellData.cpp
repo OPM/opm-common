@@ -911,7 +911,75 @@ namespace {
         }
 
         template <class XWellArray>
-        void dynamicContrib(const ::Opm::Well&        well,
+        void assignTracerData(const Opm::TracerConfig& tracers,
+                              const Opm::Tracers& tracer_dims,
+                              const Opm::SummaryState& smry,
+                              const Opm::Well& well,
+                              XWellArray& xWell)
+        {
+            if (tracers.empty())
+                return;
+
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+            std::fill(xWell.begin() + Ix::TracerOffset, xWell.end(), 0);
+
+
+            for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {
+                const auto& tracer = tracers[tracer_index];
+                std::size_t output_index = Ix::TracerOffset + tracer_index;
+                if (well.isInjector()) {
+                    const auto& wtir = smry.get_well_var(well.name(), fmt::format("WTIR{}", tracer.name), 0);
+                    xWell[output_index] = -wtir;
+                } else {
+                    const auto& wtpr = smry.get_well_var(well.name(), fmt::format("WTPR{}", tracer.name), 0);
+                    xWell[output_index] = wtpr;
+                }
+                output_index++;
+            }
+
+
+            for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {
+                const auto& tracer = tracers[tracer_index];
+                std::size_t output_index = Ix::TracerOffset + tracer_dims.water_tracers() + tracer_index;
+                if (well.isProducer()) {
+                    const auto& wtpr = smry.get_well_var(well.name(), fmt::format("WTPT{}", tracer.name), 0);
+                    xWell[output_index] = wtpr;
+                }
+                output_index++;
+            }
+
+            for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {
+                const auto& tracer = tracers[tracer_index];
+                std::size_t output_index = Ix::TracerOffset + 2*tracer_dims.water_tracers() + tracer_index;
+                if (well.isInjector()) {
+                    const auto& wtir = smry.get_well_var(well.name(), fmt::format("WTIT{}", tracer.name), 0);
+                    xWell[output_index] = -wtir;
+                }
+            }
+
+            for (std::size_t n=0; n < 2; n++) {
+                for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {
+                    const auto& tracer = tracers[tracer_index];
+                    std::size_t output_index = Ix::TracerOffset + (3 + n)*tracer_dims.water_tracers() + tracer_index;
+                    const auto& wtic = smry.get_well_var(well.name(), fmt::format("WTIC{}", tracer.name), 0);
+                    const auto& wtpc = smry.get_well_var(well.name(), fmt::format("WTPC{}", tracer.name), 0);
+
+                    if (std::abs(wtic) > 0)
+                        xWell[output_index] = wtic;
+                    else
+                        xWell[output_index] = wtpc;
+                }
+            }
+
+            std::size_t output_index = Ix::TracerOffset + 5*tracer_dims.water_tracers();
+            xWell[output_index] = 0;
+            xWell[output_index + 1] = 0;
+        }
+
+        template <class XWellArray>
+        void dynamicContrib(const ::Opm::Well&         well,
+                            const Opm::TracerConfig&   tracers,
+                            const Opm::Tracers&        tracer_dims,
                             const ::Opm::SummaryState& smry,
                             XWellArray&                xWell)
         {
@@ -942,6 +1010,7 @@ namespace {
                 }
             }
             assignCumulatives(well.name(), smry, xWell);
+            assignTracerData(tracers, tracer_dims, smry, well, xWell);
         }
     } // XWell
 
@@ -1064,6 +1133,7 @@ captureDeclaredWellData(const Schedule&   sched,
 void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDynamicWellData(const Opm::Schedule&        sched,
+                       const TracerConfig&         tracers,
                        const std::size_t           sim_step,
                        const Opm::data::Wells& xw,
                        const ::Opm::SummaryState&  smry)
@@ -1089,11 +1159,11 @@ captureDynamicWellData(const Opm::Schedule&        sched,
     });
 
     // Dynamic contributions to XWEL array.
-    wellLoop(wells, sched, sim_step, [this, &smry]
+    wellLoop(wells, sched, sim_step, [this, &sched, &tracers, &smry]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xwell = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, smry, xwell);
+        XWell::dynamicContrib(well, tracers, sched.runspec().tracers(), smry, xwell);
     });
 }

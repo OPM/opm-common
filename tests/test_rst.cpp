@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
     wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step, action_state, wtest_state, sumState, ih);
-    wellData.captureDynamicWellData(simCase.sched, sim_step, {} , sumState);
+    wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(), sim_step, {} , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
     connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, {} , sumState, sim_step);

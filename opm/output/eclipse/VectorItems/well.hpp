@@ -247,6 +247,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             WatVoidPrRate = 122, // Well's voidage production rate
             GasVoidPrRate = 123, // Well's voidage production rate
+
+            TracerOffset  = 130, // Tracer data start at this index
         };
     } // XWell
 

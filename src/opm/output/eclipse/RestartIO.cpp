@@ -392,7 +392,7 @@ namespace {
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, tracers, sim_step, action_state, wtest_state, sumState, ih);
-        wellData.captureDynamicWellData(schedule, sim_step, wells, sumState);
+        wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
 
         rstFile.write("IWEL", wellData.getIWell());
         rstFile.write("SWEL", wellData.getSWell());
