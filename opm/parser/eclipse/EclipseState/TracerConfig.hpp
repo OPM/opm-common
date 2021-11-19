@@ -106,6 +106,7 @@ public:
 
     const std::vector<TracerEntry>::const_iterator begin() const;
     const std::vector<TracerEntry>::const_iterator end() const;
+    const TracerEntry& operator[](const std::string& name) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

@@ -16,6 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <fmt/format.h>
+#include <algorithm>
+
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/InfoLogger.hpp>
@@ -45,6 +49,18 @@ Phase phase_from_string(const std::string& phase_string) {
 }
 
 }
+
+const TracerConfig::TracerEntry& TracerConfig::operator[](const std::string& name) const {
+    auto iter = std::find_if(this->tracers.begin(), this->tracers.end(), [&name](const TracerEntry& tracer) {
+            return tracer.name == name;
+        });
+
+    if (iter == this->tracers.end())
+        throw std::logic_error(fmt::format("No such tracer: {}", name));
+
+    return *iter;
+}
+
 
 TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 {
