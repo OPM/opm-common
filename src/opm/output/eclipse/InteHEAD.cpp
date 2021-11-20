@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -822,6 +823,24 @@ Opm::RestartIO::InteHEAD::netBalanceData(const NetBalanceDims& nwbaldim)
     return *this;
 }
 
+int Opm::RestartIO::InteHEAD::numRsegElem(const ::Opm::Phases& phase)
+{
+    const auto nact = phase.active(::Opm::Phase::OIL)
+        + phase.active(::Opm::Phase::GAS)
+        + phase.active(::Opm::Phase::WATER);
+
+    switch (nact) {
+    case 1: return 126;
+    case 2: return 134;
+    case 3: return 146;
+    }
+
+    throw std::invalid_argument {
+        "NRSEGZ is not supported for " +
+            std::to_string(nact) +
+            " active phases"
+            };
+}
 
 // =====================================================================
 

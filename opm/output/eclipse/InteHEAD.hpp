@@ -31,7 +31,7 @@ namespace Opm {
 class EclipseGrid;
 class EclipseState;
 class UnitSystem;
-
+class Phases;
 }
 
 namespace Opm { namespace RestartIO {
@@ -228,6 +228,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& whistControlMode(int mode);
         InteHEAD& liftOptParam(int in_enc);
 
+        static int numRsegElem(const Opm::Phases& phase);
         const std::vector<int>& data() const
         {
             return this->data_;
