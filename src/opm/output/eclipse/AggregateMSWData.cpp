@@ -454,6 +454,16 @@ namespace {
         }
 
         template <class ISegArray>
+        void assignValveCharacteristics(const std::size_t   baseIndex,
+                                        ISegArray&          iSeg)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::
+                VectorItems::ISeg::index;
+
+            iSeg[baseIndex + Ix::ICDScalingMode] = 1;
+        }
+
+        template <class ISegArray>
         void assignSegmentTypeCharacteristics(const Opm::Segment& segment,
                                               const std::size_t   baseIndex,
                                               ISegArray&          iSeg)
@@ -463,6 +473,9 @@ namespace {
             }
             if (segment.isAICD()) {
                 assignAICDCharacteristics(segment, baseIndex, iSeg);
+            }
+            if (segment.isValve()) {
+                assignValveCharacteristics(baseIndex, iSeg);
             }
         }
 
