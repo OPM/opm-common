@@ -295,6 +295,9 @@ namespace {
             xConn[Ix::OilRate_Copy] = xConn[Ix::OilRate];
             xConn[Ix::GasRate_Copy] = xConn[Ix::GasRate];
             xConn[Ix::WaterRate_Copy] = xConn[Ix::WaterRate];
+
+            // Pad the connection array with tracer values
+            std::fill(xConn.begin() + Ix::TracerOffset, xConn.end(), 0);
         }
     } // XConn
 } // Anonymous
