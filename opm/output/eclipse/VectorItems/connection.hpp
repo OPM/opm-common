@@ -86,6 +86,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             ResVRate     = 49,  // Reservoir voidage rate
             VoidPrTotal  = 50,  // Total cumulative reservoir voidage volume production
             VoidInjTotal = 51,  // Total cumulative reservoir voidage volume injection
+
+            TracerOffset = 58,  // Tracer data starts after this index
         };
     } // XConn
 }}}} // Opm::RestartIO::Helpers::VectorItems
