@@ -158,6 +158,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                                    // production (observed/historical rates)
             HistGasInjTotal = 144, // Group's total cumulative gas injection
                                    // (observed/historical rates)
+
+            TracerOffset = 180,    // Tracer data starts here
         };
     } // XGroup
 
