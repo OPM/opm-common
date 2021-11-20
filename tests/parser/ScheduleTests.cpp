@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -70,6 +71,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletedCells.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
 
+#include "tests/WorkArea.cpp"
 
 using namespace Opm;
 
@@ -4950,8 +4952,75 @@ END
 
     BOOST_CHECK_MESSAGE(! sched[3].rptonly(),
                         R"("RPTONLY" must NOT be configured on report step 4)");
+
+
 }
 
+BOOST_AUTO_TEST_CASE(DUMP_DECK) {
+    const std::string part1 = R"(
+DIMENS
+  10 10 10 /
+
+START             -- 0
+10 MAI 2007 /
+
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+SUMMARY
+RPTONLY
+)";
+    const std::string schedule_string = R"(
+SCHEDULE
+WELSPECS
+     'W_1'  'OP'   30   37  3.33 'OIL'  7* /
+/
+DATES             -- 1, 2
+  10  'JUN'  2007 /
+  10  JLY 2007 /
+/
+WELSPECS
+     'WX2'        'OP'   30   37  3.33       'OIL'  7* /
+     'W_3'        'OP'   20   51  3.92       'OIL'  7* /
+/
+RPTONLYO
+DATES             -- 3, 4
+  10  AUG 2007 /
+  10  SEP 2007 /
+/
+END
+)";
+
+    WorkArea wa;
+    {
+        std::ofstream stream{"CASE1.DATA"};
+        stream << part1 << std::endl << schedule_string;
+    }
+    const auto& deck1 = Parser{}.parseFile("CASE1.DATA");
+    const auto es1 = EclipseState { deck1 };
+    const auto sched1 = Schedule { deck1, es1, std::make_shared<const Python>() };
+
+
+    {
+        std::ofstream stream{"CASE2.DATA"};
+        stream << part1 << std::endl << sched1;
+    }
+    const auto& deck2 = Parser{}.parseFile("CASE2.DATA");
+    const auto es2 = EclipseState { deck2 };
+    const auto sched2 = Schedule { deck2, es2, std::make_shared<const Python>() };
+
+    // Can not do a full sched == sched2 because the Deck member will have embedded
+    // keyword location information.
+    for (std::size_t step = 0; step < sched1.size(); step++)
+        BOOST_CHECK(sched1[step] == sched2[step]);
+}
 
 
 BOOST_AUTO_TEST_CASE(TestScheduleGrid) {

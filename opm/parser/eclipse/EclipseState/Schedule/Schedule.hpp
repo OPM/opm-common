@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -467,7 +468,8 @@ namespace Opm
             }
         }
 
-
+        friend std::ostream& operator<<(std::ostream& os, const Schedule& sched);
+        void dump_deck(std::ostream& os) const;
 
     private:
         ScheduleStatic m_static;

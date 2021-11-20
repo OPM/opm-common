@@ -22,6 +22,7 @@
 #include <chrono>
 #include <cstddef>
 #include <optional>
+#include <ostream>
 #include <vector>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -42,6 +43,7 @@ namespace Opm {
 
 
     class Deck;
+    class DeckOutput;
     struct ScheduleDeckContext;
     class Runspec;
 
@@ -76,6 +78,8 @@ namespace Opm {
             serializer.vector(m_keywords);
             m_location.serializeOp(serializer);
         }
+
+        void dump_deck(DeckOutput& output, time_point& current_time) const;
     private:
         ScheduleTimeType m_time_type;
         time_point m_start_time;
@@ -142,6 +146,8 @@ namespace Opm {
             serializer.vector(m_blocks);
             m_location.serializeOp(serializer);
         }
+
+        void dump_deck(std::ostream& os) const;
 
     private:
         time_point m_restart_time;
