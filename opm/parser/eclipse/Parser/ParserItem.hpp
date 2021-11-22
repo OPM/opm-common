@@ -103,11 +103,11 @@ namespace Opm {
                                     const std::string* defaultValue = nullptr ) const;
 
     private:
-        double dval;
-        int ival;
-        std::string sval;
-        RawString rsval;
-        UDAValue uval;
+        double dval{0};
+        int ival{0};
+        std::string sval{};
+        RawString rsval{};
+        UDAValue uval{};
         std::vector< std::string > m_dimensions;
 
         std::string m_name;
