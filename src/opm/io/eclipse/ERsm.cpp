@@ -31,6 +31,7 @@
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/output/eclipse/WStat.hpp>
 
 namespace Opm {
 namespace EclIO {
@@ -140,6 +141,20 @@ std::vector<double> make_multiplier(std::deque<std::string>& lines) {
 
     return multiplier;
 }
+
+double convert_wstat(const std::string& symbolic_wstat) {
+    static const std::unordered_map<std::string, int> wstat_map = {
+        {Opm::WStat::symbolic::UNKNOWN, Opm::WStat::numeric::UNKNOWN},
+        {Opm::WStat::symbolic::PROD,    Opm::WStat::numeric::PROD},
+        {Opm::WStat::symbolic::INJ,     Opm::WStat::numeric::INJ},
+        {Opm::WStat::symbolic::SHUT,    Opm::WStat::numeric::SHUT},
+        {Opm::WStat::symbolic::STOP,    Opm::WStat::numeric::STOP},
+        {Opm::WStat::symbolic::PSHUT,   Opm::WStat::numeric::PSHUT},
+        {Opm::WStat::symbolic::PSTOP,   Opm::WStat::numeric::PSTOP},
+    };
+    return static_cast<double>(wstat_map.at(symbolic_wstat));
+}
+
 }
 
 void ERsm::load_block(std::deque<std::string>& lines, std::size_t& vector_length) {
@@ -194,7 +209,12 @@ void ERsm::load_block(std::deque<std::string>& lines, std::size_t& vector_length
 
         auto data_row = split_line(pop_return(lines));
         for (std::size_t data_index = 0; data_index < num_rows; data_index++) {
-            double value = std::stod(data_row[data_index + 1]) * mult_list[data_index + 1];
+            const auto& keyword = kw_list[data_index + 1];
+            double value;
+            if (keyword == "WSTAT")
+                value = convert_wstat(data_row[data_index + 1]);
+            else
+                value = std::stod(data_row[data_index + 1]) * mult_list[data_index + 1];
             block_data[data_index].data.push_back(value);
         }
 

@@ -77,7 +77,11 @@ struct SummaryNode {
 
     bool is_user_defined() const;
 
-    static Category category_from_keyword(const std::string&, const std::unordered_set<std::string> &miscellaneous_keywords = {});
+    static Category category_from_keyword(const std::string&);
+
+    // Return true for keywords which should be Miscellaneous, although the
+    // naive first-character-based classification suggests something else.
+    static bool miscellaneous_exception(const std::string& keyword);
 
     std::optional<std::string> display_name() const;
     std::optional<std::string> display_number() const;

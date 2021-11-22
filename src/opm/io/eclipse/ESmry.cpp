@@ -125,12 +125,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     std::set<std::string> keywList;
     std::vector<std::pair<std::string,int>> smryArray;
 
-    const std::unordered_set<std::string> segmentExceptions {
-        "SEPARATE",
-        "STEPTYPE",
-        "SUMTHIN",
-    } ;
-
     std::vector<EclFile> smspecList;
     std::vector<std::string> vectList = {"DIMENS", "RESTART", "KEYWORDS", "NUMS", "UNITS"};
 
@@ -194,7 +188,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
                         keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::category_from_keyword(keywords[i]),
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -215,7 +209,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
                         keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::category_from_keyword(keywords[i]),
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -326,7 +320,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
                         keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::category_from_keyword(keywords[i]),
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -349,7 +343,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
                         keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                        SummaryNode::category_from_keyword(keywords[i]),
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -1218,10 +1212,7 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
     }
 
     if (first == 'S') {
-        const std::vector<std::string> segmExcep= {"STEPTYPE", "SEPARATE", "SUMTHIN"};
-
-        auto it = std::find(segmExcep.begin(), segmExcep.end(), keywordArg);
-        if (it != segmExcep.end()) {
+        if (SummaryNode::miscellaneous_exception(keywordArg)) {
             return keywordArg;
         }
 

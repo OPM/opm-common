@@ -146,17 +146,29 @@ bool Opm::EclIO::SummaryNode::is_user_defined() const {
     return matched && !blacklisted;
 }
 
+
+/*
+  Observe that this function started out as a slight generalisation of the
+  special case handling of segment variables; i.e. variables starting with 'S'.
+  In general there are many other expecptions e.g. 'NEWTON' is an Miscellaneous
+  variable and not a network variable - but they will be added when/if required.
+*/
+bool Opm::EclIO::SummaryNode::miscellaneous_exception(const std::string& keyword) {
+    static const std::unordered_set<std::string> miscellaneous_keywords = {"SEPARATE", "STEPTYPE", "SUMTHIN"};
+    return miscellaneous_keywords.count(keyword) == 1;
+}
+
+
 Opm::EclIO::SummaryNode::Category Opm::EclIO::SummaryNode::category_from_keyword(
-    const std::string& keyword,
-    const std::unordered_set<std::string>& miscellaneous_keywords
+    const std::string& keyword
 ) {
+    static const std::unordered_set<std::string> miscellaneous_keywords = {"SEPARATE", "STEPTYPE", "SUMTHIN"};
     if (keyword.length() == 0) {
         return Category::Miscellaneous;
     }
 
-    if (miscellaneous_keywords.find(keyword) != miscellaneous_keywords.end()) {
+    if (Opm::EclIO::SummaryNode::miscellaneous_exception(keyword))
         return Category::Miscellaneous;
-    }
 
     switch (keyword[0]) {
     case 'A': return Category::Aquifer;

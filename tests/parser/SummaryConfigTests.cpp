@@ -20,7 +20,7 @@
 #define BOOST_TEST_MODULE SummaryConfigTests
 
 #include <boost/test/unit_test.hpp>
-
+#include <fmt/format.h>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/io/eclipse/SummaryNode.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
@@ -208,6 +208,16 @@ BOOST_AUTO_TEST_CASE(wells_all) {
             wells.begin(), wells.end(),
             names.begin(), names.end() );
 }
+
+BOOST_AUTO_TEST_CASE(WSTATE) {
+    const auto input = "WSTAT\n/\n";
+    const auto summary = createSummary( input );
+
+    const auto wells = { "PRODUCER", "WX2", "W_1", "W_3" };
+    for (const auto& well : wells)
+        BOOST_CHECK(summary.hasSummaryKey(fmt::format("WSTAT:{}", well)));
+}
+
 
 BOOST_AUTO_TEST_CASE(EMPTY) {
     auto deck = createDeck_no_wells( "" );

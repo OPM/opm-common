@@ -963,6 +963,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/Summary.hpp
         opm/output/eclipse/Tables.hpp
         opm/output/eclipse/UDQDims.hpp
+        opm/output/eclipse/WStat.hpp
         opm/output/eclipse/WindowedArray.hpp
         opm/output/eclipse/WriteInit.hpp
         opm/output/eclipse/WriteRFT.hpp

@@ -748,6 +748,9 @@ COPRL
   W_2 /
 /
 
+WSTAT
+/
+
 
 -- Water injection per connection
 CWIR

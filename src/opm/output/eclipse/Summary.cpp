@@ -20,6 +20,7 @@
 */
 
 #include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/WStat.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -1064,6 +1065,25 @@ inline quantity segpress ( const fn_args& args )
     return { segment->second.pressures[ix], measure::pressure };
 }
 
+inline quantity wstat( const fn_args& args ) {
+    const quantity zero = { Opm::WStat::numeric::UNKNOWN, measure::identity};
+    if (args.schedule_wells.empty())
+        return zero;
+    const auto& sched_well = args.schedule_wells.front();
+    const auto& arg_well = args.wells.find(sched_well->name());
+
+    if (arg_well == args.wells.end() || arg_well->second.dynamicStatus == Opm::Well::Status::SHUT)
+        return {Opm::WStat::numeric::SHUT, measure::identity};
+
+    if (arg_well->second.dynamicStatus == Opm::Well::Status::STOP)
+        return {Opm::WStat::numeric::STOP, measure::identity};
+
+    if (sched_well->isInjector())
+        return {Opm::WStat::numeric::INJ, measure::identity};
+
+    return {Opm::WStat::numeric::PROD, measure::identity};
+}
+
 inline quantity bhp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
     if (args.schedule_wells.empty())
@@ -1676,6 +1696,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WGLR", div( rate< rt::gas, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
 
+    { "WSTAT", wstat },
     { "WBHP", bhp },
     { "WTHP", thp },
     { "WTPCHEA", temperature< producer >},
