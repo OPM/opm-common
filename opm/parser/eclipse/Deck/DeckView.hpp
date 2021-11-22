@@ -22,6 +22,8 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
+#include <unordered_map>
+
 namespace Opm {
 
 
