@@ -33,6 +33,7 @@
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/AggregateActionxData.hpp>
+#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -378,9 +379,9 @@ namespace {
     void writeWell(int                             sim_step,
                    const bool                      ecl_compatible_rst,
                    const Phases&                   phases,
-                   const UnitSystem&               units,
                    const EclipseGrid&              grid,
                    const Schedule&                 schedule,
+                   const TracerConfig&             tracers,
                    const std::vector<std::string>& well_names,
                    const data::Wells&              wells,
                    const Opm::Action::State&       action_state,
@@ -390,8 +391,8 @@ namespace {
                    EclIO::OutputStream::Restart&   rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellData(schedule, units, sim_step, action_state, wtest_state, sumState, ih);
-        wellData.captureDynamicWellData(schedule, sim_step, wells, sumState);
+        wellData.captureDeclaredWellData(schedule, tracers, sim_step, action_state, wtest_state, sumState, ih);
+        wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
 
         rstFile.write("IWEL", wellData.getIWell());
         rstFile.write("SWEL", wellData.getSWell());
@@ -418,7 +419,7 @@ namespace {
         }
 
         auto connectionData = Helpers::AggregateConnectionData(ih);
-        connectionData.captureDeclaredConnData(schedule, grid, units,
+        connectionData.captureDeclaredConnData(schedule, grid, schedule.getUnits(),
                                                wells, sumState, sim_step);
 
         rstFile.write("ICON", connectionData.getIConn());
@@ -477,7 +478,6 @@ namespace {
     void writeDynamicData(const int                                     sim_step,
                           const bool                                    ecl_compatible_rst,
                           const Phases&                                 phases,
-                          const UnitSystem&                             units,
                           const EclipseGrid&                            grid,
                           const EclipseState&                           es,
                           const Schedule&                               schedule,
@@ -490,13 +490,13 @@ namespace {
                           std::optional<Helpers::AggregateAquiferData>& aquiferData,
                           EclIO::OutputStream::Restart&                 rstFile)
     {
-        writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
+        writeGroup(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
 
         // Write network data if the network option is used and network defined
         if ((es.runspec().networkDimensions().maxNONodes() >= 1) &&
             schedule[sim_step].network().active())
         {
-            writeNetwork(es, sim_step, units, schedule, sumState, inteHD, rstFile);
+            writeNetwork(es, sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
         }
 
         // Write well and MSW data only when applicable (i.e., when present)
@@ -511,11 +511,11 @@ namespace {
                 });
 
             if (haveMSW) {
-                writeMSWData(sim_step, units, schedule, grid,
+                writeMSWData(sim_step, schedule.getUnits(), schedule, grid,
                              sumState, wellSol, inteHD, rstFile);
             }
 
-            writeWell(sim_step, ecl_compatible_rst, phases, units, grid, schedule,
+            writeWell(sim_step, ecl_compatible_rst, phases, grid, schedule, es.tracer(),
                       wells, wellSol, action_state, wtest_state, sumState, inteHD, rstFile);
         }
 
@@ -523,7 +523,7 @@ namespace {
             aquiferData.has_value())
         {
             updateAndWriteAquiferData(es.aquifer(), aquDynData, sumState,
-                                      units, aquiferData.value(), rstFile);
+                                      schedule.getUnits(), aquiferData.value(), rstFile);
         }
     }
 
@@ -815,7 +815,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
 
     if (report_step > 0) {
         writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
-                         units, grid, es, schedule, value.wells, action_state, wtest_state,
+                         grid, es, schedule, value.wells, action_state, wtest_state,
                          sumState, inteHD, value.aquifer, aquiferData, rstFile);
     }
 

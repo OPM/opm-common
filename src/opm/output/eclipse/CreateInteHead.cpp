@@ -577,11 +577,7 @@ createInteHead(const EclipseState& es,
     const auto& rdim  = tdim.getRegdims();
     const auto& rckcfg = es.getSimulationConfig().rock_config();
     auto num_water_tracer = es.runspec().tracers().water_tracers();
-    int nxwelz_tracer_shift;
-    if (num_water_tracer > 1)
-        nxwelz_tracer_shift = 7 + (num_water_tracer - 1)*5;
-    else
-        nxwelz_tracer_shift = 7*num_water_tracer;
+    int nxwelz_tracer_shift = num_water_tracer*5 + 2 * (num_water_tracer > 0);
 
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())

@@ -10,6 +10,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(liftGasOptimzation_data)
     const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep, simStep+1, secs_elapsed, next_step_size);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(sched, es.getUnits(), simStep, action_state, {}, st, ih);
+    wellData.captureDeclaredWellData(sched, Opm::TracerConfig{}, simStep, action_state, {}, st, ih);
 
     // intehead data
     auto eachnc = Opm::RestartIO::Helpers::VectorItems::intehead::EACHNCITS;

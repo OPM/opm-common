@@ -565,7 +565,6 @@ const Tracers& Runspec::tracers() const {
     return this->m_tracers;
 }
 
-
 Runspec::Runspec( const Deck& deck )
     : m_start_time( create_start_time(deck) )
     , active_phases( inferActivePhases(deck) )
