@@ -18,7 +18,7 @@
 */
 
 #include <opm/output/eclipse/AggregateMSWData.hpp>
-
+#include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -722,7 +722,19 @@ namespace {
         }
 
         template <class RSegArray>
-        void staticContrib_useMSW(const Opm::Well&           well,
+        void assignTracerData(std::size_t segment_offset,
+                              const Opm::Runspec& runspec,
+                              RSegArray& rSeg)
+        {
+            auto tracer_offset = segment_offset + Opm::RestartIO::InteHEAD::numRsegElem(runspec.phases());
+            auto tracer_end    = tracer_offset + runspec.tracers().water_tracers() * 8;
+
+            std::fill(rSeg.begin() + tracer_offset, rSeg.begin() + tracer_end, 0.0);
+        }
+
+        template <class RSegArray>
+        void staticContrib_useMSW(const Opm::Runspec&         runspec,
+                                  const Opm::Well&            well,
                                   const std::vector<int>&     inteHead,
                                   const Opm::EclipseGrid&     grid,
                                   const Opm::UnitSystem&      units,
@@ -820,6 +832,8 @@ namespace {
                     rSeg[iS + Ix::flowFractionOilViscosityExponent]     = 1.0;
                     rSeg[iS + Ix::flowFractionWaterViscosityExponent]   = 1.0;
                     rSeg[iS + Ix::flowFractionGasViscosityExponent]     = 1.0;
+
+                    assignTracerData(iS, runspec, rSeg);
                 }
 
                 //Treat subsequent segments
@@ -879,6 +893,8 @@ namespace {
                     if (! segment.isRegular()) {
                         assignSegmentTypeCharacteristics(segment, units, iS, rSeg);
                     }
+
+                    assignTracerData(iS, runspec, rSeg);
                 }
             }
             else {
@@ -1016,12 +1032,11 @@ captureDeclaredMSWData(const Schedule&         sched,
     }
     // Extract Contributions to RSeg Array
     {
-        MSWLoop(msw, [&units, &inteHead, &grid, &smry, this, &wr]
+        MSWLoop(msw, [&units, &inteHead, &sched, &grid, &smry, this, &wr]
             (const Well& well, const std::size_t mswID) -> void
         {
             auto rmsw = this->rSeg_[mswID];
-
-            RSeg::staticContrib_useMSW(well, inteHead, grid, units, smry, wr, rmsw);
+            RSeg::staticContrib_useMSW(sched.runspec(), well, inteHead, grid, units, smry, wr, rmsw);
         });
     }
     // Extract Contributions to ILBS Array
