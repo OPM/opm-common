@@ -763,70 +763,74 @@ namespace {
                     sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
                 }
 
-                std::string stringSegNum = std::to_string(segment0.segmentNumber());
-                auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
+                auto get = [&smry, &wname](const std::string& vector, const std::string& segment_nr)
                 {
-                    // 'stringSegNum' is one-based (1 .. #segments inclusive)
-                    const auto key = vector + ':' + wname + ':' + stringSegNum;
-                    return smry.has(key) ? smry.get(key) : 0.0;
+                    const auto key = vector + ':' + wname + ':' + segment_nr;
+                    return smry.get(key, 0.0);
                 };
 
-                auto iS = (segment0.segmentNumber() - 1)*noElmSeg;
+
                 // Treat the top segment individually
-                rSeg[iS + Ix::DistOutlet]      = units.from_si(M::length, welSegSet.lengthTopSegment());
-                rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, welSegSet.depthTopSegment());
-                rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv*welSegSet.volumeTopSegment();
-                rSeg[iS + Ix::DistBHPRef]      = rSeg[iS + Ix::DistOutlet];
-                rSeg[iS + Ix::DepthBHPRef]     = rSeg[iS + Ix::OutletDepthDiff];
-                //
-                // branch according to whether multisegment well calculations are switched on or not
+                {
+                    const int segNumber = segment0.segmentNumber();
+                    const auto& segment_string = std::to_string(segNumber);
+                    auto iS = (segNumber - 1)*noElmSeg;
+
+                    rSeg[iS + Ix::DistOutlet]      = units.from_si(M::length, welSegSet.lengthTopSegment());
+                    rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, welSegSet.depthTopSegment());
+                    rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv*welSegSet.volumeTopSegment();
+                    rSeg[iS + Ix::DistBHPRef]      = rSeg[iS + Ix::DistOutlet];
+                    rSeg[iS + Ix::DepthBHPRef]     = rSeg[iS + Ix::OutletDepthDiff];
+                    //
+                    // branch according to whether multisegment well calculations are switched on or not
 
 
-                if (haveWellRes && wRatesIt->second.segments.size() < 2) {
-                    // Note: Segment flow rates and pressure from 'smry' have correct
-                    // output units and sign conventions.
-                    temp_o = sSFR.sofr[0];
-                    temp_w = sSFR.swfr[0]*0.1;
-                    temp_g = sSFR.sgfr[0]*gfactor;
-                    //Item 12 Segment pressure - use well flow bhp
-                    rSeg[iS + Ix::Pressure] = smry.get_well_var(wname, "WBHP", 0);
+                    if (haveWellRes && wRatesIt->second.segments.size() < 2) {
+                        // Note: Segment flow rates and pressure from 'smry' have correct
+                        // output units and sign conventions.
+                        temp_o = sSFR.sofr[0];
+                        temp_w = sSFR.swfr[0]*0.1;
+                        temp_g = sSFR.sgfr[0]*gfactor;
+                        //Item 12 Segment pressure - use well flow bhp
+                        rSeg[iS + Ix::Pressure] = smry.get_well_var(wname, "WBHP", 0);
+                    }
+                    else {
+                        // Note: Segment flow rates and pressure from 'smry' have correct
+                        // output units and sign conventions.
+                        temp_o = get("SOFR", segment_string);
+                        temp_w = get("SWFR", segment_string)*0.1;
+                        temp_g = get("SGFR", segment_string)*gfactor;
+                        //Item 12 Segment pressure
+                        rSeg[iS + Ix::Pressure] = get("SPR", segment_string);
+                    }
+
+                    rSeg[iS + Ix::TotFlowRate] = temp_o + temp_w + temp_g;
+                    rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
+                    rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
+
+
+                    rSeg[iS + Ix::item31] = rSeg[iS + Ix::WatFlowFract];
+
+                    //  value is 1. based on tests on several data sets
+                    rSeg[iS + Ix::item40] = 1.;
+
+                    rSeg[iS + Ix::flowFractionOilDensityExponent]       = 1.0;
+                    rSeg[iS + Ix::flowFractionWaterDensityExponent]     = 1.0;
+                    rSeg[iS + Ix::flowFractionGasDensityExponent]       = 1.0;
+                    rSeg[iS + Ix::flowFractionOilViscosityExponent]     = 1.0;
+                    rSeg[iS + Ix::flowFractionWaterViscosityExponent]   = 1.0;
+                    rSeg[iS + Ix::flowFractionGasViscosityExponent]     = 1.0;
                 }
-                else {
-                    // Note: Segment flow rates and pressure from 'smry' have correct
-                    // output units and sign conventions.
-                    temp_o = get("SOFR");
-                    temp_w = get("SWFR")*0.1;
-                    temp_g = get("SGFR")*gfactor;
-                    //Item 12 Segment pressure
-                    rSeg[iS + Ix::Pressure] = get("SPR");
-                }
-
-                rSeg[iS + Ix::TotFlowRate] = temp_o + temp_w + temp_g;
-                rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
-                rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
-
-
-                rSeg[iS + Ix::item31] = rSeg[iS + Ix::WatFlowFract];
-
-                //  value is 1. based on tests on several data sets
-                rSeg[iS + Ix::item40] = 1.;
-
-                rSeg[iS + Ix::flowFractionOilDensityExponent]       = 1.0;
-                rSeg[iS + Ix::flowFractionWaterDensityExponent]     = 1.0;
-                rSeg[iS + Ix::flowFractionGasDensityExponent]       = 1.0;
-                rSeg[iS + Ix::flowFractionOilViscosityExponent]     = 1.0;
-                rSeg[iS + Ix::flowFractionWaterViscosityExponent]   = 1.0;
-                rSeg[iS + Ix::flowFractionGasViscosityExponent]     = 1.0;
 
                 //Treat subsequent segments
                 for (std::size_t segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
                     const auto& segment = welSegSet[segIndex];
                     const auto& outlet_segment = welSegSet.getFromSegmentNumber( segment.outletSegment() );
                     const int segNumber = segment.segmentNumber();
-                    stringSegNum = std::to_string(segNumber);
+                    const auto& segment_string = std::to_string(segNumber);
 
                     // set the elements of the rSeg array
-                    iS = (segNumber - 1)*noElmSeg;
+                    auto iS = (segNumber - 1)*noElmSeg;
                     rSeg[iS + Ix::DistOutlet]      = units.from_si(M::length, (segment.totalLength() - outlet_segment.totalLength()));
                     rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, (segment.depth() - outlet_segment.depth()));
                     rSeg[iS + Ix::SegDiam]         = units.from_si(M::length, (segment.internalDiameter()));
@@ -850,11 +854,11 @@ namespace {
                     else {
                         // Note: Segment flow rates and pressure from 'smry' have correct
                         // output units and sign conventions.
-                        temp_o = get("SOFR");
-                        temp_w = get("SWFR")*0.1;
-                        temp_g = get("SGFR")*gfactor;
+                        temp_o = get("SOFR", segment_string);
+                        temp_w = get("SWFR", segment_string)*0.1;
+                        temp_g = get("SGFR", segment_string)*gfactor;
                         //Item 12 Segment pressure
-                        rSeg[iS +  Ix::Pressure] = get("SPR");
+                        rSeg[iS +  Ix::Pressure] = get("SPR", segment_string);
                     }
 
                     rSeg[iS + Ix::TotFlowRate] = temp_o + temp_w + temp_g;
