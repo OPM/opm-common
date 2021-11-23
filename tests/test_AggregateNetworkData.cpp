@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getINobr().size()), ih[VI::NINOBR]);
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getZNode().size()), ih[VI::NZNODE] * ih[VI::NODMAX]);
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getRNode().size()), ih[VI::NRNODE] * ih[VI::NODMAX]);
-    BOOST_CHECK_EQUAL(static_cast<int>(networkData.getRBran().size()), ih[VI::NRBRAN] * ih[VI::NODMAX]);
+    BOOST_CHECK_EQUAL(static_cast<int>(networkData.getRBran().size()), ih[VI::NRBRAN] * ih[VI::NBRMAX]);
 
     //INode-parameters
     const auto& iNode = networkData.getINode();
