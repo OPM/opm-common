@@ -367,24 +367,6 @@ namespace {
         };
     }
 
-    int numRsegElem(const ::Opm::Phases& phase)
-    {
-        const auto nact = phase.active(::Opm::Phase::OIL)
-            + phase.active(::Opm::Phase::GAS)
-            + phase.active(::Opm::Phase::WATER);
-
-        switch (nact) {
-        case 1: return 126;
-        case 2: return 134;
-        case 3: return 146;
-        }
-
-        throw std::invalid_argument {
-            "NRSEGZ is not supported for " +
-            std::to_string(nact) +
-            " active phases"
-        };
-    }
 
     Opm::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const int              num_water_tracer,
@@ -401,7 +383,7 @@ namespace {
             wsd.maxSegmentsPerWell(),
             wsd.maxLateralBranchesPerWell(),
             22,           // Number of entries per segment in ISEG (2017.2)
-            numRsegElem(rspec.phases()) + 8*num_water_tracer, // Number of entries per segment in RSEG
+            Opm::RestartIO::InteHEAD::numRsegElem(rspec.phases()) + 8*num_water_tracer, // Number of entries per segment in RSEG
             10            // Number of entries per segment in ILBR (2017.2)
         };
     }

@@ -975,6 +975,8 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
     xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
 
     xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
+
+    std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
 }
 } // XGrp
 
