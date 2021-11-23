@@ -125,19 +125,19 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
     using rockopts = ParserKeywords::ROCKOPTS;
     using rockcomp = ParserKeywords::ROCKCOMP;
     if (deck.hasKeyword<rock>()) {
-        const auto& rock_kw = deck.getKeyword<rock>();
+        const auto& rock_kw = deck.get<rock>().back();
         for (const auto& record : rock_kw)
             this->m_comp.emplace_back( record.getItem<rock::PREF>().getSIDouble(0),
                                        record.getItem<rock::COMPRESSIBILITY>().getSIDouble(0));
     }
 
     if (deck.hasKeyword<rockopts>()) {
-        const auto& record = deck.getKeyword<rockopts>().getRecord(0);
+        const auto& record = deck.get<rockopts>().back().getRecord(0);
         this->num_property = num_prop( record.getItem<rockopts::TABLE_TYPE>().getTrimmedString(0) );
     }
 
     if (deck.hasKeyword<rockcomp>()) {
-        const auto& record = deck.getKeyword<rockcomp>().getRecord(0);
+        const auto& record = deck.get<rockcomp>().back().getRecord(0);
         if (fp.has_int("ROCKNUM"))
             this->num_property = "ROCKNUM";
 

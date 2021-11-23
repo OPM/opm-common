@@ -60,15 +60,9 @@ const DeckView& Deck::global_view() const {
     return *this->m_global_view;
 }
 
-
-
-    const DeckKeyword& Deck::getKeyword( const std::string& keyword, size_t index ) const {
-        return this->global_view().operator[](keyword)[index];
-    }
-
-    const DeckKeyword& Deck::getKeyword( const std::string& keyword ) const {
-        return this->global_view().operator[](keyword).back();
-    }
+    Opm::DeckView Deck::operator[](const std::string& keyword) const {
+        return this->global_view()[keyword];
+    } 
 
     const DeckKeyword& Deck::operator[](std::size_t index) const {
         return this->keywordList.at(index);

@@ -220,7 +220,7 @@ AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
     if (!deck.hasKeyword<AQUCT>())
         return;
 
-    const auto& aquctKeyword = deck.getKeyword<AQUCT>();
+    const auto& aquctKeyword = deck.get<AQUCT>().back();
     OpmLog::info(OpmInputError::format("Initializing Carter Tracey aquifers from {keyword} in {file} line {line}", aquctKeyword.location()));
     for (auto& record : aquctKeyword)
         this->m_aquct.emplace_back(record, tables);

@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     Runspec runspec ( deck );
     Schedule schedule(deck, grid , fp, runspec, python);
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
-    const auto& keyword = deck.getKeyword("WTRACER");
+    const auto& keyword = deck["WTRACER"].back();
     BOOST_CHECK_EQUAL(keyword.size(),1U);
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);

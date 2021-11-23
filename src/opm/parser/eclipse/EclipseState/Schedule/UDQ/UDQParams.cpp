@@ -59,7 +59,7 @@ namespace Opm {
         UDQParams()
     {
         if (deck.hasKeyword("UDQDIMS")) {
-            const auto& record = deck.getKeyword("UDQDIMS").getRecord(0);
+            const auto& record = deck["UDQDIMS"].back().getRecord(0);
             const auto& item = record.getItem("RESTART_NEW_SEED");
             const auto& bool_string = item.get<std::string>(0);
 
@@ -67,7 +67,7 @@ namespace Opm {
         }
 
         if (deck.hasKeyword("UDQPARAM")) {
-            const auto& record = deck.getKeyword("UDQPARAM").getRecord(0);
+            const auto& record = deck["UDQPARAM"].back().getRecord(0);
             random_seed = record.getItem("RANDOM_SEED").get<int>(0);
             value_range = record.getItem("RANGE").get<double>(0);
             undefined_value = record.getItem("UNDEFINED_VALUE").get<double>(0);

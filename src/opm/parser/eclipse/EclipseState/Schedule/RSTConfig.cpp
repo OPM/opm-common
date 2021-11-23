@@ -465,7 +465,7 @@ RSTConfig::RSTConfig(const SOLUTIONSection& solution_section, const ParseContext
       write_rst_file(false)
 {
     if (solution_section.hasKeyword<ParserKeywords::RPTRST>()) {
-        const auto& keyword = solution_section.getKeyword<ParserKeywords::RPTRST>();
+        const auto& keyword = solution_section.get<ParserKeywords::RPTRST>().back();
         this->handleRPTRST(keyword, parseContext, errors);
 
         // Guessing on eclipse rules for write of initial RESTART file (at time 0):
@@ -479,7 +479,7 @@ RSTConfig::RSTConfig(const SOLUTIONSection& solution_section, const ParseContext
     }
 
     if (solution_section.hasKeyword<ParserKeywords::RPTSOL>()) {
-        const auto& keyword = solution_section.getKeyword<ParserKeywords::RPTSOL>();
+        const auto& keyword = solution_section.get<ParserKeywords::RPTSOL>().back();
         this->handleRPTSOL(keyword);
     }
 }

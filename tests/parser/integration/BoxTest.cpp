@@ -155,8 +155,8 @@ BOOST_AUTO_TEST_CASE( OPERATE ) {
 BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
     auto deck = makeDeck( prefix() + "BOX/BOXTEST1" );
     EclipseGrid grid(deck);
-    const auto& box_keyword = deck.getKeyword("BOX", 0);
-    const auto& operate_keyword = deck.getKeyword("OPERATE");
+    const auto& box_keyword = deck["BOX"][0];
+    const auto& operate_keyword = deck["OPERATE"].back();
     Box box(grid);
     box.update(box_keyword.getRecord(0));
     BOOST_CHECK_EQUAL(box.size(), 8);

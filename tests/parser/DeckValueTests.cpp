@@ -201,7 +201,7 @@ PERMX
 
     Parser parser;
     Deck deck = parser.parseString(deck_string);
-    const auto& permx = deck.getKeyword("PERMX");
+    const auto& permx = deck["PERMX"].back();
     const auto& status = permx.getValueStatus();
     BOOST_CHECK_EQUAL(status.size(), 100U);
     for (const auto& vs : status) {

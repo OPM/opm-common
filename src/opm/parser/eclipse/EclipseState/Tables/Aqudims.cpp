@@ -42,7 +42,7 @@ Aqudims::Aqudims(const Deck& deck) :
     Aqudims()
 {
     if (deck.hasKeyword("AQUDIMS")) {
-        const auto& record = deck.getKeyword( "AQUDIMS" , 0 ).getRecord( 0 );
+        const auto& record = deck[ "AQUDIMS" ][0].getRecord( 0 );
         m_mxnaqn  = record.getItem("MXNAQN").get<int>(0);
         m_mxnaqc  = record.getItem("MXNAQC").get<int>(0);
         m_niftbl  = record.getItem("NIFTBL").get<int>(0);

@@ -36,7 +36,7 @@ Actdims::Actdims(const Deck& deck)
     : Actdims()
 {
     if (deck.hasKeyword<ParserKeywords::ACTDIMS>()) {
-        const auto& keyword = deck.getKeyword<ParserKeywords::ACTDIMS>();
+        const auto& keyword = deck.get<ParserKeywords::ACTDIMS>().back();
         const auto& record = keyword.getRecord(0);
 
         this->keywords   = record.getItem<ParserKeywords::ACTDIMS::MAX_ACTION>().get<int>(0);

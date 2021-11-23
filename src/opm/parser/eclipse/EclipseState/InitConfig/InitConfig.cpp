@@ -35,7 +35,7 @@ namespace Opm {
 
     static inline Equil equils( const Deck& deck ) {
         if( !deck.hasKeyword<ParserKeywords::EQUIL>( ) ) return {};
-        return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
+        return Equil( deck.get<ParserKeywords::EQUIL>( ).back() );
     }
 
     InitConfig::InitConfig()
@@ -59,7 +59,7 @@ namespace Opm {
 
         m_gravity = !deck.hasKeyword("NOGRAV");
 
-        const auto& record = deck.getKeyword( "RESTART" ).getRecord(0);
+        const auto& record = deck["RESTART"].back().getRecord(0);
         const auto& save_item = record.getItem(2);
 
         if( save_item.hasValue( 0 ) ) {

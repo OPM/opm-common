@@ -590,7 +590,7 @@ namespace {
             Opm::Parser parser;
             Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
-            const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
+            const auto& record = deck["WCONHIST"].back().getRecord(0);
             Opm::Well::WellProductionProperties hist(unit_system, "W");
             hist.handleWCONHIST(alq_type, unit_system, record);
 
@@ -642,7 +642,7 @@ namespace {
         {
             Opm::Parser parser;
             auto deck = parser.parseString(input);
-            const auto& kwd     = deck.getKeyword("WCONPROD");
+            const auto& kwd     = deck["WCONPROD"].back();
             const auto&  record = kwd.getRecord(0);
             Opm::Well::WellProductionProperties pred(unit_system, "W");
             pred.handleWCONPROD(alq_type, unit_system, "WELL", record);

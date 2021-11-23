@@ -53,7 +53,7 @@ namespace Opm {
     {
         EDITSection edit_section(deck);
         if (edit_section.hasKeyword<ParserKeywords::MULTREGT>()) {
-            auto& keyword = edit_section.getKeyword<ParserKeywords::MULTREGT>();
+            const auto& keyword = edit_section.get<ParserKeywords::MULTREGT>().back();
             std::string msg_fmt = "The {keyword} located in the EDIT section\n"
                                   "In {file} line {line}\n"
                                   "The MULTREGT keyword will be applied, but it is recommended to place MULTREGT in the GRID section.";

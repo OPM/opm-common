@@ -29,7 +29,7 @@ TLMixpar::TLMixpar(const Deck& deck) {
     if (!deck.hasKeyword<TLM>())
         return;
 
-    const auto& keyword = deck.getKeyword<TLM>();
+    const auto& keyword = deck.get<TLM>().back();
     for (const auto& record : keyword) {
         const double viscosity_parameter = record.getItem<TLM::TL_VISCOSITY_PARAMETER>().getSIDouble(0);
         double density_parameter = viscosity_parameter;

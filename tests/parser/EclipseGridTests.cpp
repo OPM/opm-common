@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
 
     Opm::Parser parser;
     auto deck = parser.parseString( deckData) ;
-    const auto& zcorn = deck.getKeyword("ZCORN");
+    const auto& zcorn = deck["ZCORN"].back();
     BOOST_CHECK_EQUAL( 8000U , zcorn.getDataSize( ));
 
     BOOST_CHECK_THROW(Opm::EclipseGrid{ deck }, std::invalid_argument);

@@ -76,7 +76,7 @@ ACTIONX
     BOOST_CHECK_EQUAL(action1.name(), "NAME");
 
     const auto deck = Parser{}.parseString( action_kw );
-    const auto& kw = deck.getKeyword("ACTIONX");
+    const auto& kw = deck["ACTIONX"].back();
 
     Action::ActionX action2(kw, {}, 0);
     BOOST_CHECK_EQUAL(action2.name(), "ACTION");
@@ -870,7 +870,7 @@ TSTEP
         rdeck_string += strings[i] + "\n";
 
     auto deck2 = parser.parseString(rdeck_string);
-    BOOST_CHECK(deck2.getKeyword("WELSPECS") == deck.getKeyword("WELSPECS"));
+    BOOST_CHECK(deck2["WELSPECS"].back() == deck["WELSPECS"].back());
 
 
     const auto& conditions = act1.conditions();
@@ -1179,14 +1179,14 @@ WELPI
     Action::ActionX action("NAME", 1, 1, 0);
     NameOrder well_order({"W1", "W2", "P1", "P2", "P3"});
     WellMatcher well_matcher( well_order );
-    action.addKeyword(deck.getKeyword("WELPI", 0));
+    action.addKeyword(deck["WELPI"][0]);
     {
         auto wells = action.wellpi_wells(well_matcher, {});
         BOOST_CHECK_EQUAL( wells.size(), 2 );
         has_well(wells, "W1");
         has_well(wells, "W2");
     }
-    action.addKeyword(deck.getKeyword("WELPI", 1));
+    action.addKeyword(deck["WELPI"][1]);
     {
         auto wells = action.wellpi_wells(well_matcher, {});
         BOOST_CHECK_EQUAL( wells.size(), 5 );

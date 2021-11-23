@@ -109,10 +109,10 @@ WSEGAICD
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(compsegs_string);
 
-    const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
+    const Opm::DeckKeyword compsegs = deck["COMPSEGS"].back();
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+    const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
@@ -126,7 +126,7 @@ WSEGAICD
     const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
 
     // checking the ICD segment
-    const Opm::DeckKeyword wsegaicd = deck.getKeyword("WSEGAICD");
+    const Opm::DeckKeyword wsegaicd = deck["WSEGAICD"].back();
     const auto aicd_map = Opm::AutoICD::fromWSEGAICD(wsegaicd);
     BOOST_CHECK_EQUAL(1U, aicd_map.size());
 
@@ -268,10 +268,10 @@ WSEGSICD
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(compsegs_string);
 
-    const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
+    const Opm::DeckKeyword compsegs = deck["COMPSEGS"].back();
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+    const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
@@ -285,7 +285,7 @@ WSEGSICD
     const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
 
     // checking the ICD segment
-    const Opm::DeckKeyword wsegsicd = deck.getKeyword("WSEGSICD");
+    const Opm::DeckKeyword wsegsicd = deck["WSEGSICD"].back();
     BOOST_CHECK_EQUAL(1U, wsegsicd.size());
     const Opm::DeckRecord& record = wsegsicd.getRecord(0);
     const int start_segment = record.getItem("SEGMENT1").get< int >(0);
@@ -427,10 +427,10 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(compsegs_string);
 
-    const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
+    const Opm::DeckKeyword compsegs = deck["COMPSEGS"].back();
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+    const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
@@ -496,10 +496,10 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(compsegs_string);
 
-    const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
+    const Opm::DeckKeyword compsegs = deck["COMPSEGS"].back();
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+    const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
@@ -571,10 +571,10 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(compsegs_string);
 
-    const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
+    const Opm::DeckKeyword compsegs = deck["COMPSEGS"].back();
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+    const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(8U, segment_set.size());
@@ -588,7 +588,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard));
 
     // checking the WSEGVALV segment
-    const Opm::DeckKeyword wsegvalv = deck.getKeyword("WSEGVALV");
+    const Opm::DeckKeyword wsegvalv = deck["WSEGVALV"].back();
     BOOST_CHECK_EQUAL(2U, wsegvalv.size());
 
     const Opm::DeckRecord& record1 = wsegvalv.getRecord(0);

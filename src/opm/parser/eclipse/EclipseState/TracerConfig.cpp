@@ -70,7 +70,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 {
     using TR = ParserKeywords::TRACER;
     if (deck.hasKeyword<TR>()) {
-        const auto& keyword = deck.getKeyword<TR>();
+        const auto& keyword = deck.get<TR>().back();
         OpmLog::info( keyword.location().format("\nInitializing tracers from {keyword} in {file} line {line}") );
         InfoLogger logger("Tracer tables", 3);
         for (const auto& record : keyword) {
@@ -106,7 +106,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 
             std::string tracer_field = "TBLKF" + name;
             if (deck.hasKeyword(tracer_field)) {
-                const auto& tracer_keyword = deck.getKeyword(tracer_field);
+                const auto& tracer_keyword = deck[tracer_field].back();
                 auto free_concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
                 logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
@@ -115,7 +115,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 
                 std::string tracer_field_solution = "TBLKS" + name;
                 if (deck.hasKeyword(tracer_field_solution)) {
-                    const auto& tracer_keyword_solution = deck.getKeyword(tracer_field_solution);
+                    const auto& tracer_keyword_solution = deck[tracer_field_solution].back();
                     auto solution_concentration = tracer_keyword_solution.getRecord(0).getItem(0).getData<double>();
                     logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
@@ -132,13 +132,13 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 
             std::string tracer_table = "TVDPF" + name;
             if (deck.hasKeyword(tracer_table)) {
-                const auto& tracer_keyword = deck.getKeyword(tracer_table);
+                const auto& tracer_keyword = deck[tracer_table].back();
                 const auto& deck_item = tracer_keyword.getRecord(0).getItem(0);
                 logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
                 std::string tracer_table_solution = "TVDPS" + name;
                 if (deck.hasKeyword(tracer_table_solution)) {
-                    const auto& tracer_keyword_solution = deck.getKeyword(tracer_table_solution);
+                    const auto& tracer_keyword_solution = deck[tracer_table_solution].back();
                     const auto& deck_item_solution = tracer_keyword_solution.getRecord(0).getItem(0);
                     logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 

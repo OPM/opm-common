@@ -150,7 +150,8 @@ bool threepoint_scaling( const Deck& deck ) {
      * this behaviour
      */
     const auto value = std::toupper(
-        deck.getKeyword<ScaleCRS>()
+        deck.get<ScaleCRS>()
+            .back()
             .getRecord(0)
             .getItem<ScaleCRS::VALUE>()
             .get<std::string>(0).front());
@@ -217,7 +218,7 @@ EndpointScaling::EndpointScaling( const Deck& deck ) {
         bool reversible_ = true;
 
         if (has_endscale) {
-            const auto& endscale = deck.getKeyword<ParserKeywords::ENDSCALE>();
+            const auto& endscale = deck.get<ParserKeywords::ENDSCALE>().back();
             direct_ = !endscale_nodir( endscale );
             reversible_ = endscale_revers( endscale );
         }

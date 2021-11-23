@@ -111,7 +111,7 @@ namespace {
 
 std::time_t create_start_time(const Opm::Deck& deck) {
     if (deck.hasKeyword("START")) {
-        const auto& keyword = deck.getKeyword("START");
+        const auto& keyword = deck["START"].back();
         return Opm::TimeService::timeFromEclipse(keyword.getRecord(0));
     } else
         // The default start date is not specified in the Eclipse
@@ -196,7 +196,7 @@ Welldims::Welldims(const Deck& deck)
 {
     using WD = ParserKeywords::WELLDIMS;
     if (deck.hasKeyword<WD>()) {
-        const auto& keyword = deck.getKeyword<WD>(0);
+        const auto& keyword = deck.get<WD>().front();
         const auto& wd = keyword.getRecord(0);
 
         this->nCWMax = wd.getItem<WD::MAXCONN>().get<int>(0);
@@ -208,7 +208,7 @@ Welldims::Welldims(const Deck& deck)
         //
         // i.e., the maximum of item 1 and item 4 here.
         this->nGMax = wd.getItem<WD::MAXGROUPS>().get<int>(0);
-	    this->nWMax = wd.getItem<WD::MAXWELLS>().get<int>(0);
+        this->nWMax = wd.getItem<WD::MAXWELLS>().get<int>(0);
 
         // maximum number of well lists pr well
         this->nWlistPrWellMax = wd.getItem<WD::MAX_WELLIST_PR_WELL>().get<int>(0);
@@ -242,7 +242,7 @@ WellSegmentDims::WellSegmentDims() :
 WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
 {
     if (deck.hasKeyword("WSEGDIMS")) {
-        const auto& wsd = deck.getKeyword("WSEGDIMS", 0).getRecord(0);
+        const auto& wsd = deck["WSEGDIMS"][0].getRecord(0);
 
         this->nSegWellMax   = wsd.getItem("NSWLMX").get<int>(0);
         this->nSegmentMax   = wsd.getItem("NSEGMX").get<int>(0);
@@ -276,7 +276,7 @@ NetworkDims::NetworkDims() :
 NetworkDims::NetworkDims(const Deck& deck) : NetworkDims()
 {
     if (deck.hasKeyword("NETWORK")) {
-        const auto& wsd = deck.getKeyword("NETWORK", 0).getRecord(0);
+        const auto& wsd = deck["NETWORK"][0].getRecord(0);
 
         this->nMaxNoNodes   = wsd.getItem("NODMAX").get<int>(0);
         this->nMaxNoBranches   = wsd.getItem("NBRMAX").get<int>(0);
@@ -317,7 +317,7 @@ AquiferDimensions::AquiferDimensions(const Deck& deck)
     using AD = ParserKeywords::AQUDIMS;
 
     if (deck.hasKeyword<AD>()) {
-        const auto& keyword = deck.getKeyword<AD>(0);
+        const auto& keyword = deck.get<AD>().front();
         const auto& ad = keyword.getRecord(0);
 
         this->maxNumAnalyticAquifers    = ad.getItem<AD::NANAQU>().get<int>(0);
@@ -347,7 +347,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         if (!deck.hasKeyword("SATOPTS"))
             return;
 
-        const auto& satoptsItem = deck.getKeyword("SATOPTS").getRecord(0).getItem(0);
+        const auto& satoptsItem = deck["SATOPTS"].back().getRecord(0).getItem(0);
         for (unsigned i = 0; i < satoptsItem.data_size(); ++i) {
             std::string satoptsValue = satoptsItem.get< std::string >(0);
             std::transform(satoptsValue.begin(),
@@ -378,7 +378,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
 	* 1: use the Carlson model for relative permeability hysteresis of the non-wetting
 	*    phase and the imbibition curve for the relperm of the wetting phase
 	*/
-        const auto& ehystrKeyword = deck.getKeyword("EHYSTR");
+        const auto& ehystrKeyword = deck["EHYSTR"].back();
         if (deck.hasKeyword("NOHYKR"))
             krHystMod = -1;
         else {
@@ -449,7 +449,7 @@ SatFuncControls::SatFuncControls(const Deck& deck)
     if (deck.hasKeyword<TolCrit>()) {
         // SIDouble doesn't perform any unit conversions here since
         // TOLCRIT is a pure scalar (Dimension = 1).
-        this->tolcrit = deck.getKeyword<TolCrit>(0).getRecord(0)
+        this->tolcrit = deck.get<TolCrit>().front().getRecord(0)
             .getItem<TolCrit::VALUE>().getSIDouble(0);
     }
 
@@ -540,7 +540,8 @@ Tracers::Tracers(const Deck& deck) {
     using TR = ParserKeywords::TRACERS;
 
     if (deck.hasKeyword<TR>()) {
-        const auto& record = deck.getKeyword<TR>()[0];
+        const auto& keyword = deck.get<TR>().back();
+        const auto& record = keyword[0];
         this->m_oil_tracers = record.getItem<TR::MAX_OIL_TRACERS>().get<int>(0);
         this->m_water_tracers = record.getItem<TR::MAX_WATER_TRACERS>().get<int>(0);
         this->m_gas_tracers = record.getItem<TR::MAX_GAS_TRACERS>().get<int>(0);
@@ -587,14 +588,14 @@ Runspec::Runspec( const Deck& deck )
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
         if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
-            const auto& min_item = runspecSection.getKeyword<ParserKeywords::MINNPCOL>().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
+            const auto& min_item = runspecSection.get<ParserKeywords::MINNPCOL>().back().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
             auto min_value = min_item.get<int>(0);
             this->m_nupcol = Nupcol(min_value);
         }
 
         using NC = ParserKeywords::NUPCOL;
         if (runspecSection.hasKeyword<NC>()) {
-            const auto& item = runspecSection.getKeyword<NC>().getRecord(0).getItem<NC::NUM_ITER>();
+            const auto& item = runspecSection.get<NC>().back()[0].getItem<NC::NUM_ITER>();
             if (item.defaultApplied(0)) {
                 std::string msg = fmt::format("OPM Flow uses {} as default NUPCOL value", NC::NUM_ITER::defaultValue);
                 OpmLog::note(msg);

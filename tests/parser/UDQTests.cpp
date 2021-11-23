@@ -535,7 +535,7 @@ UDQ
 )";
     Parser parser;
     auto deck = parser.parseString(input);
-    const auto& udq = deck.getKeyword("UDQ");
+    const auto& udq = deck["UDQ"].back();
     const auto& record = udq.getRecord(0);
     const auto& data_item = record.getItem("DATA");
     const auto& data = RawString::strings( data_item.getData<RawString>() );

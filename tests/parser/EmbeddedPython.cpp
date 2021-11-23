@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(PYINPUT_BASIC) {
     BOOST_CHECK( deck.hasKeyword("FIELD") );
     BOOST_CHECK( deck.hasKeyword("DIMENS") );
     BOOST_CHECK( deck.hasKeyword("DX") );
-    auto DX = deck.getKeyword("DX");
+    auto DX = deck["DX"].back();
     std::vector<double> dx_data = DX.getSIDoubleData();
     BOOST_CHECK_EQUAL( dx_data.size(), 4 );
     BOOST_CHECK_EQUAL( dx_data[2], 0.25 * 0.3048 );
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
     auto schedule = Schedule(deck, ecl_state, python);
 
     SummaryState st(TimeService::now());
-    const auto& pyaction_kw = deck.getKeyword<ParserKeywords::PYACTION>(0);
+    const auto& pyaction_kw = deck.get<ParserKeywords::PYACTION>().front();
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
     Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));
     st.update_well_var("PROD1", "WWCT", 0);

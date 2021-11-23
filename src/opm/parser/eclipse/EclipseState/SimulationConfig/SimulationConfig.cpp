@@ -76,9 +76,9 @@ namespace Opm {
         if (DeckSection::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
             if (runspec.hasKeyword<ParserKeywords::CPR>()) {
-                const auto& cpr = runspec.getKeyword<ParserKeywords::CPR>();
+                const auto& cpr = runspec.get<ParserKeywords::CPR>().back();
                 if (cpr.size() > 0)
-                    throw std::invalid_argument("ERROR: In the RUNSPEC section the CPR keyword should EXACTLY one empty record.");
+                    throw std::invalid_argument("ERROR: In the RUNSPEC section the CPR keyword should contain EXACTLY one empty record.");
 
                 m_useCPR = true;
             }

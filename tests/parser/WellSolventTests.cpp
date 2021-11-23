@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     Runspec runspec(deck);
     Schedule schedule(deck, grid , fp, runspec, python);
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
-    const auto& keyword = deck.getKeyword("WSOLVENT");
+    const auto& keyword = deck["WSOLVENT"].back();
     BOOST_CHECK_EQUAL(keyword.size(),1U);
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);

@@ -77,6 +77,11 @@ public:
         return this->has_keyword( Keyword::keywordName );
     }
 
+    template<class Keyword>
+    DeckView get() const {
+        return this->operator[](Keyword::keywordName);
+    }
+
 private:
     storage_type keywords;
     std::unordered_map<std::string, std::vector<std::size_t>> keyword_index;
