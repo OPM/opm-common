@@ -34,10 +34,10 @@ public:
         std::string name;
         std::string unit_string;
         Phase phase = Phase::OIL;
-        std::vector<double> free_concentration;
-        std::vector<double> solution_concentration;
-        TracerVdTable free_tvdp;
-        TracerVdTable solution_tvdp;
+        std::optional<std::vector<double>> free_concentration;
+        std::optional<std::vector<double>> solution_concentration;
+        std::optional<TracerVdTable> free_tvdp;
+        std::optional<TracerVdTable> solution_tvdp;
 
         TracerEntry() = default;
         TracerEntry(const std::string& name_, const std::string& unit_string_,
@@ -92,8 +92,8 @@ public:
             serializer(phase);
             serializer(free_concentration);
             serializer(solution_concentration);
-            free_tvdp.serializeOp(serializer);
-            solution_tvdp.serializeOp(serializer);
+            serializer(this->free_tvdp);
+            serializer(this->solution_tvdp);
         }
     };
 
