@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/Balance.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 namespace Network {
@@ -64,11 +65,15 @@ Balance::Balance(const Tuning& tuning, const DeckKeyword& keyword) {
 Balance::Balance(bool network_active, const Tuning& tuning)
     : calc_mode(CalcMode::TimeStepStart)
     , calc_interval(0)
-    , m_thp_tolerance( NB::THP_CONVERGENCE_LIMIT::defaultValue )
+    , m_thp_tolerance(NB::THP_CONVERGENCE_LIMIT::defaultValue)
     , m_thp_max_iter( NB::MAX_ITER_THP::defaultValue )
 {
+    NB parser_keyword{};
+    UnitSystem default_units(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+
     if (network_active) {
-        this->ptol = NB::PRESSURE_CONVERGENCE_LIMIT::defaultValue;
+        const auto& item = parser_keyword.getRecord(0).get(NB::PRESSURE_CONVERGENCE_LIMIT::itemName);
+        this->ptol = default_units.to_si( item.dimensions()[0], item.getDefault<double>());
         this->m_pressure_max_iter = NB::MAX_ITER::defaultValue;
         this->m_min_tstep = tuning.TSMINZ;
     } else {
