@@ -781,19 +781,20 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get_well_var(well, vector, 0);
+                return smry.get_well_var(well, vector, 0.0);
             };
 
-            /*
-              Since a well can change between producer and injector in the
-              lifetime of the field we output both production and injection
-              cumulatives.
-            */
+            // Since a well can change between producer and injector in the
+            // lifetime of the field we output both production and injection
+            // cumulatives.
 
             xWell[Ix::OilPrTotal]  = get("WOPT");
             xWell[Ix::WatPrTotal]  = get("WWPT");
             xWell[Ix::GasPrTotal]  = get("WGPT");
             xWell[Ix::VoidPrTotal] = get("WVPT");
+
+            xWell[Ix::OilPrTotalSolution] = get("WOPTS");
+            xWell[Ix::GasPrTotalSolution] = get("WGPTS");
 
             xWell[Ix::HistOilPrTotal] = get("WOPTH");
             xWell[Ix::HistWatPrTotal] = get("WWPTH");

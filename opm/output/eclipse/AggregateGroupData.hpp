@@ -71,8 +71,9 @@ public:
 
     const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
                                                          "GVPR", "GWIR", "GGIR", "GWCT", "GGOR",
-                                                         "GOPT", "GWPT", "GGPT", "GVPT", "GWIT",
-                                                         "GGIT", "GVIT",
+                                                         "GOPT", "GWPT", "GGPT", "GVPT",
+                                                         "GOPTS", "GGPTS",
+                                                         "GWIT" , "GGIT" , "GVIT",
                                                          "GOPTH", "GWPTH", "GGPTH",
                                                          "GWITH", "GGITH",
                                                          "GOPGR", "GWPGR", "GGPGR", "GVPGR",
@@ -82,8 +83,9 @@ public:
     // Note: guide rates don't exist at the FIELD level.
     const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR",
                                                          "FVPR", "FWIR", "FGIR", "FWCT", "FGOR",
-                                                         "FOPT", "FWPT", "FGPT", "FVPT", "FWIT",
-                                                         "FGIT", "FVIT",
+                                                         "FOPT", "FWPT", "FGPT", "FVPT",
+                                                         "FOPTS", "FGPTS",
+                                                         "FWIT" , "FGIT" , "FVIT",
                                                          "FOPTH", "FWPTH", "FGPTH",
                                                          "FWITH", "FGITH"};
 
@@ -105,6 +107,8 @@ public:
                                                            {"GVIT", 17},
                                                            {"GOPP", 22},
                                                            {"GWPP", 23},
+                                                           {"GOPTS", 73},
+                                                           {"GGPTS", 74},
                                                            {"GOPGR", 85},
                                                            {"GWPGR", 86},
                                                            {"GGPGR", 87},
@@ -137,6 +141,8 @@ public:
                                                            {"FVIT", 17},
                                                            {"FOPP", 22},
                                                            {"FWPP", 23},
+                                                           {"FOPTS", 73},
+                                                           {"FGPTS", 74},
                                                            {"FOPTH", 135},
                                                            {"FWPTH", 139},
                                                            {"FWITH", 140},
