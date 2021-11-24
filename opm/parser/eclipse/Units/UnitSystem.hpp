@@ -110,6 +110,8 @@ namespace Opm {
 
         Dimension parse(const std::string& dimension) const;
 
+        double from_si( const std::string& dimension, double );
+        double to_si( const std::string& dimension, double );
         double from_si( measure, double ) const;
         double to_si( measure, double ) const;
         void from_si( measure, std::vector<double>& ) const;

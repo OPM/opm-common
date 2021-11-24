@@ -1437,6 +1437,16 @@ namespace {
             + this->measure_table_to_si_offset[ static_cast< int >( m ) ];
     }
 
+    double UnitSystem::from_si( const std::string& dimension, double value) {
+        const auto& dim = this->parse(dimension);
+        return dim.convertSiToRaw(value);
+    }
+
+    double UnitSystem::to_si( const std::string& dimension, double value) {
+        const auto& dim = this->parse(dimension);
+        return dim.convertRawToSi(value);
+    }
+
     void UnitSystem::from_si( measure m, std::vector<double>& data ) const {
         double factor = this->measure_table_from_si[ static_cast< int >( m ) ];
         double offset = this->measure_table_to_si_offset[ static_cast< int >( m ) ];
