@@ -671,22 +671,28 @@ namespace {
                             const bool                      write_double,
                             EclIO::OutputStream::Restart& rstFile)
     {
-        for (const auto& [tracer_name, vector] : value.solution) {
+        for (const auto& [tracer_rst_name, vector] : value.solution) {
             if (vector.target != data::TargetType::RESTART_TRACER_SOLUTION)
                 continue;
 
-            const auto& tracer = tracer_config[tracer_name];
+            /*
+              The tracer name used in the RestartValue coming from the simulator
+              has an additional trailing 'F', need to remove that in order to
+              look up in the tracer configuration.
+            */
+            const auto& tracer_input_name = tracer_rst_name.substr(0, tracer_rst_name.size() - 1);
+            const auto& tracer = tracer_config[tracer_rst_name];
             std::vector<std::string> ztracer;
-            ztracer.push_back(tracer_name + 'F');
+            ztracer.push_back(tracer_rst_name);
             ztracer.push_back(fmt::format("{}/{}", tracer.unit_string, unit_system.name( UnitSystem::measure::volume )));
             rstFile.write("ZTRACER", ztracer);
 
             const auto& data = vector.data;
             if (write_double) {
-                rstFile.write(tracer_name, data);
+                rstFile.write(tracer_rst_name, data);
             }
             else {
-                rstFile.write(tracer_name, std::vector<float> {
+                rstFile.write(tracer_rst_name, std::vector<float> {
                         data.begin(), data.end()
                     });
             }
