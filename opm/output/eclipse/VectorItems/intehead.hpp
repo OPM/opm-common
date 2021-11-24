@@ -94,6 +94,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         WHISTC = 71, //  Calendar year of report step
 
+        ACTNETWRK = 74, //  Indicator for active external network (= 0: no active network, = 2 Active network)
+
         NETBALAN_5 = 77, // NETBALAN, Item5
         NETBALAN_3 = 79, // NETBALAN, Item3
 

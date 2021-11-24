@@ -599,7 +599,7 @@ allocate(const std::vector<int>& inteHead)
     using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
 
     return WV {
-        WV::NumWindows{ nodmax(inteHead) },
+        WV::NumWindows{ nbrmax(inteHead) },
         WV::WindowSize{ entriesPerRbran(inteHead) }
     };
 }

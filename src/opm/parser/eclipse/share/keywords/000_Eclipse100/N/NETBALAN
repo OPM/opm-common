@@ -15,7 +15,7 @@
     {
       "name": "PRESSURE_CONVERGENCE_LIMIT",
       "value_type": "DOUBLE",
-      "default": 1e-01,
+      "default": 1.e-01,
       "dimension" : "Pressure"
     },
     {
