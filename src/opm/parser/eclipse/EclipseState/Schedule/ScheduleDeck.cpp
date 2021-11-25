@@ -22,6 +22,7 @@
 #include <unordered_set>
 
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -109,6 +110,46 @@ bool ScheduleBlock::operator==(const ScheduleBlock& other) const {
            this->m_location == other.m_location &&
            this->m_time_type == other.m_time_type &&
            this->m_keywords == other.m_keywords;
+}
+
+namespace {
+
+void dump_time(time_point tp, ScheduleTimeType time_type, time_point current_time, DeckOutput& output) {
+    if (time_type == ScheduleTimeType::START)
+        return;
+
+    if (time_type == ScheduleTimeType::DATES) {
+        TimeStampUTC ts(TimeService::to_time_t(tp));
+        auto ecl_month = TimeService::eclipseMonthNames().at(ts.month());
+        std::string dates_string = fmt::format(R"(
+DATES
+   {} '{}' {} /
+/
+)", ts.day(), ecl_month, ts.year());
+        output.write_string(dates_string);
+    } else {
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(tp - current_time);
+        double days = seconds.count() / 86400.0;
+        std::string tstep_string = fmt::format(R"(
+TSTEP
+   {} /
+)", days);
+        output.write_string(tstep_string);
+    }
+}
+
+}
+
+
+void ScheduleBlock::dump_deck(DeckOutput& output, time_point& current_time) const {
+    dump_time(this->start_time(), this->m_time_type, current_time, output);
+    if (!this->end_time().has_value())
+        return;
+
+    for (const auto& keyword : this->m_keywords)
+        keyword.write(output);
+
+    current_time = this->end_time().value();
 }
 
 
@@ -306,5 +347,15 @@ ScheduleDeck ScheduleDeck::serializeObject() {
     deck.m_blocks = { ScheduleBlock::serializeObject(), ScheduleBlock::serializeObject() };
     return deck;
 }
+
+void ScheduleDeck::dump_deck(std::ostream& os) const {
+    DeckOutput output(os);
+
+    output.write_string("SCHEDULE\n");
+    auto current_time = this->m_blocks[0].start_time();
+    for (const auto& block : this->m_blocks)
+        block.dump_deck(output, current_time);
+}
+
 
 }
