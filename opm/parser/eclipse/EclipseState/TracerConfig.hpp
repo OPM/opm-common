@@ -38,6 +38,10 @@ public:
         std::optional<std::vector<double>> solution_concentration;
         std::optional<TracerVdTable> free_tvdp;
         std::optional<TracerVdTable> solution_tvdp;
+        std::string fname() const {
+            return this->name + "F";
+        }
+
 
         TracerEntry() = default;
         TracerEntry(const std::string& name_, const std::string& unit_string_,
