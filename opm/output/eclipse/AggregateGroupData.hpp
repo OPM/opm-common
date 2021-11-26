@@ -81,8 +81,8 @@ public:
 
     // Note: guide rates don't exist at the FIELD level.
     const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR",
-                                                         "FVPR", "FWIR", "FGIR", "FWCT", "FGOR",
-                                                         "FOPT", "FWPT", "FGPT", "FVPT", "FWIT",
+                                                         "FVPR", "FOIR", "FWIR", "FGIR", "FVIR", "FWCT", "FGOR",
+                                                         "FOPT", "FWPT", "FGPT", "FVPT", "FOIT", "FWIT",
                                                          "FGIT", "FVIT",
                                                          "FOPTH", "FWPTH", "FGPTH",
                                                          "FWITH", "FGITH"};
@@ -124,14 +124,17 @@ public:
                                                            {"FWPR",  1},
                                                            {"FGPR",  2},
                                                            {"FVPR",  3},
+                                                           {"FOIR",  4},
                                                            {"FWIR",  5},
                                                            {"FGIR",  6},
+                                                           {"FVIR",  7},
                                                            {"FWCT",  8},
                                                            {"FGOR",  9},
                                                            {"FOPT", 10},
                                                            {"FWPT", 11},
                                                            {"FGPT", 12},
                                                            {"FVPT", 13},
+                                                           {"FOIT", 14},
                                                            {"FWIT", 15},
                                                            {"FGIT", 16},
                                                            {"FVIT", 17},
