@@ -95,7 +95,8 @@ public:
         using InputEval = typename FluidState::Scalar;
         using Matrix = Dune::FieldMatrix<InputEval, numEq, numEq>;
         using Vetor = Dune::FieldVector<InputEval, numEq>;
-        using FlashEval = Opm::DenseAd::Evaluation</*Scalar=*/InputEval, /*numDerivs=*/numEq>;
+        //using FlashEval = Opm::DenseAd::Evaluation</*Scalar=*/InputEval, /*numDerivs=*/numEq>;
+        using FlashEval = typename FluidState::Scalar;
         using FlashDefectVector = Dune::FieldVector<FlashEval, numEq>;
         using FlashFluidState = Opm::CompositionalFluidState<FlashEval, FluidSystem, /*energy=*/false>;
         
@@ -149,8 +150,9 @@ public:
                 if (verbosity >= 1) {
                     std::cout << "Calculate composition using Newton." << std::endl;
                 }
-                newtonCompositionUpdate_(K, static_cast<DenseAd::Evaluation<double, 2>&>(L), fluidState, globalComposition, verbosity);
-                
+                //newtonCompositionUpdate_(K, static_cast<DenseAd::Evaluation<double, 2>&>(L), fluidState, globalComposition, verbosity);
+                newtonCompositionUpdate_(K, L, fluidState, globalComposition, verbosity);
+                //throw std::runtime_error(" Newton not implemented for now" );
             }
 
             // Successive substitution
