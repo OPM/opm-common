@@ -112,14 +112,12 @@ bool ScheduleBlock::operator==(const ScheduleBlock& other) const {
            this->m_keywords == other.m_keywords;
 }
 
-namespace {
-
-void dump_time(time_point tp, ScheduleTimeType time_type, time_point current_time, DeckOutput& output) {
-    if (time_type == ScheduleTimeType::START)
+void ScheduleBlock::dump_time(time_point current_time, DeckOutput& output) const {
+    if (this->m_time_type == ScheduleTimeType::START)
         return;
 
-    if (time_type == ScheduleTimeType::DATES) {
-        TimeStampUTC ts(TimeService::to_time_t(tp));
+    if (this->m_time_type == ScheduleTimeType::DATES) {
+        TimeStampUTC ts(TimeService::to_time_t(this->start_time()));
         auto ecl_month = TimeService::eclipseMonthNames().at(ts.month());
         std::string dates_string = fmt::format(R"(
 DATES
@@ -128,7 +126,7 @@ DATES
 )", ts.day(), ecl_month, ts.year());
         output.write_string(dates_string);
     } else {
-        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(tp - current_time);
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(this->start_time() - current_time);
         double days = seconds.count() / 86400.0;
         std::string tstep_string = fmt::format(R"(
 TSTEP
@@ -138,11 +136,9 @@ TSTEP
     }
 }
 
-}
-
 
 void ScheduleBlock::dump_deck(DeckOutput& output, time_point& current_time) const {
-    dump_time(this->start_time(), this->m_time_type, current_time, output);
+    this->dump_time(current_time, output);
     if (!this->end_time().has_value())
         return;
 

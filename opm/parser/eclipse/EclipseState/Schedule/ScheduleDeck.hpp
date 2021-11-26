@@ -79,6 +79,7 @@ namespace Opm {
             m_location.serializeOp(serializer);
         }
 
+        void dump_time(time_point current_time, DeckOutput& output) const;
         void dump_deck(DeckOutput& output, time_point& current_time) const;
     private:
         ScheduleTimeType m_time_type;
