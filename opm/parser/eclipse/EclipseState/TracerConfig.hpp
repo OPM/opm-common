@@ -74,6 +74,12 @@ public:
             , solution_tvdp(std::move(solution_tvdp_))
         {}
 
+        TracerEntry(const std::string& name_, const std::string& unit_string_, Phase phase_)
+            : name(name_)
+            , unit_string(unit_string_)
+            , phase(phase_)
+        {}
+
         bool operator==(const TracerEntry& data) const {
             return this->name == data.name &&
                    this->unit_string == data.unit_string &&

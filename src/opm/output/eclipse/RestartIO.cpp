@@ -681,7 +681,7 @@ namespace {
               look up in the tracer configuration.
             */
             const auto& tracer_input_name = tracer_rst_name.substr(0, tracer_rst_name.size() - 1);
-            const auto& tracer = tracer_config[tracer_rst_name];
+            const auto& tracer = tracer_config[tracer_input_name];
             std::vector<std::string> ztracer;
             ztracer.push_back(tracer_rst_name);
             ztracer.push_back(fmt::format("{}/{}", tracer.unit_string, unit_system.name( UnitSystem::measure::volume )));
