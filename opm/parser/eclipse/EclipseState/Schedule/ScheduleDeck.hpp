@@ -79,6 +79,7 @@ namespace Opm {
             m_location.serializeOp(serializer);
         }
 
+        void dump_time(time_point current_time, DeckOutput& output) const;
         void dump_deck(DeckOutput& output, time_point& current_time) const;
     private:
         ScheduleTimeType m_time_type;
@@ -123,7 +124,7 @@ namespace Opm {
 
     class ScheduleDeck {
     public:
-        explicit ScheduleDeck(const Runspec& runspec, const Deck& deck, const ScheduleRestartInfo& rst_info);
+        explicit ScheduleDeck(time_point start_time, const Deck& deck, const ScheduleRestartInfo& rst_info);
         ScheduleDeck();
         void add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);

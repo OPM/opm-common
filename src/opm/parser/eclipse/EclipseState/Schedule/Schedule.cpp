@@ -158,7 +158,7 @@ namespace Opm {
                         const RestartIO::RstState * rst)
     try :
         m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
-        m_sched_deck(runspec, deck, m_static.rst_info ),
+        m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info ),
         completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
     {
         this->restart_output.resize(this->m_sched_deck.size());

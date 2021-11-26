@@ -142,14 +142,17 @@ namespace Opm {
     }
 
 
-    void DeckRecord::write_data(DeckOutput& writer) const {
-        for (const auto& item : *this)
+    void DeckRecord::write_data(DeckOutput& writer, std::size_t item_offset) const {
+        for (std::size_t item_index = item_offset; item_index < this->size(); item_index++) {
+            const auto& item = this->getItem(item_index);
             item.write( writer );
+        }
     }
 
-    void DeckRecord::write(DeckOutput& writer) const {
-        writer.start_record( );
-        this->write_data( writer );
+    void DeckRecord::write(DeckOutput& writer, std::size_t item_offset) const {
+        if (item_offset == 0)
+            writer.start_record( );
+        this->write_data( writer, item_offset );
         writer.end_record( );
     }
 
