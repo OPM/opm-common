@@ -151,7 +151,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                 continue;
             }
 
-            throw std::runtime_error("Uninitialized tracer concentration for tracer " + name);
+            this->tracers.emplace_back(name, unit_string, phase);
         }
     }
 }
