@@ -199,9 +199,8 @@ std::size_t ScheduleDeck::restart_offset() const {
 }
 
 
-ScheduleDeck::ScheduleDeck(const Runspec& runspec, const Deck& deck, const ScheduleRestartInfo& rst_info) {
+ScheduleDeck::ScheduleDeck(time_point start_time, const Deck& deck, const ScheduleRestartInfo& rst_info) {
     const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
-    time_point start_time = TimeService::from_time_t(runspec.start_time());
 
     this->m_restart_time = TimeService::from_time_t(rst_info.time);
     this->m_restart_offset = rst_info.report_step;

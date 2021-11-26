@@ -123,7 +123,7 @@ namespace Opm {
 
     class ScheduleDeck {
     public:
-        explicit ScheduleDeck(const Runspec& runspec, const Deck& deck, const ScheduleRestartInfo& rst_info);
+        explicit ScheduleDeck(time_point start_time, const Deck& deck, const ScheduleRestartInfo& rst_info);
         ScheduleDeck();
         void add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);
