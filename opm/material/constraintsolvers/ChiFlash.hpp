@@ -93,13 +93,6 @@ public:
     {
 
         using InputEval = typename FluidState::Scalar;
-        using Matrix = Dune::FieldMatrix<InputEval, numEq, numEq>;
-        using Vetor = Dune::FieldVector<InputEval, numEq>;
-        //using FlashEval = Opm::DenseAd::Evaluation</*Scalar=*/InputEval, /*numDerivs=*/numEq>;
-        using FlashEval = typename FluidState::Scalar;
-        using FlashDefectVector = Dune::FieldVector<FlashEval, numEq>;
-        using FlashFluidState = Opm::CompositionalFluidState<FlashEval, FluidSystem, /*energy=*/false>;
-        
         using ComponentVector = Dune::FieldVector<typename FluidState::Scalar, numComponents>;
 
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,7)
@@ -239,7 +232,6 @@ protected:
     template <class FlashFluidState>
     static typename FlashFluidState::Scalar wilsonK_(const FlashFluidState& fluidState, int compIdx)
     {
-        using FlashEval = typename FlashFluidState::Scalar;
         const auto& acf = FluidSystem::acentricFactor(compIdx);
         const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
         const auto& T = fluidState.temperature(0);
