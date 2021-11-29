@@ -50,6 +50,7 @@ namespace Opm { namespace RestartIO {
 
 struct RstState {
     RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
+             const Runspec& runspec,
              const ::Opm::EclipseGrid*               grid);
 
     static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView,

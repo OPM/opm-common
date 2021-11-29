@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
     for (const auto& s8: zgrp8)
         zgrp.push_back(s8.c_str());
 
-    Opm::RestartIO::RstHeader header(unit_system,ih,lh,dh);
+    Opm::RestartIO::RstHeader header(simCase.es.runspec(), unit_system,ih,lh,dh);
     for (int ig=0; ig < header.ngroup; ig++) {
         std::size_t zgrp_offset = ig * header.nzgrpz;
         std::size_t igrp_offset = ig * header.nigrpz;

@@ -1293,7 +1293,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     const auto& scon = connectionData.getSConn();
     const auto& xcon = connectionData.getXConn();
 
-    Opm::RestartIO::RstHeader header(units, ih, std::vector<bool>(100), std::vector<double>(1000));
+    Opm::RestartIO::RstHeader header(simCase.es.runspec(), units, ih, std::vector<bool>(100), std::vector<double>(1000));
     std::vector<Opm::RestartIO::RstWell> wells;
     std::vector<std::string> zwel;
     for (const auto& s8: zwel8)

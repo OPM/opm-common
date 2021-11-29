@@ -82,9 +82,10 @@ namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 namespace Opm { namespace RestartIO {
 
 RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
+                   const Runspec& runspec,
                    const ::Opm::EclipseGrid*               grid)
     : unit_system(rstView->intehead()[VI::intehead::UNIT])
-    , header(unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead())
+    , header(runspec, unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead())
     , aquifers(rstView, grid, unit_system)
     , network(rstView, unit_system)
 {
@@ -407,7 +408,7 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
                         const Parser& parser,
                         const ::Opm::EclipseGrid*               grid)
 {
-    RstState state(rstView, grid);
+    RstState state(rstView, runspec, grid);
 
     // At minimum we need any applicable constraint data for FIELD.  Load
     // groups unconditionally.

@@ -126,6 +126,7 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     water_void_rate(     unit_system.to_si(M::liquid_surface_volume, xwel[VI::XWell::WatVoidPrRate])),
     gas_void_rate(       unit_system.to_si(M::gas_surface_volume,    xwel[VI::XWell::GasVoidPrRate]))
 {
+
     for (int ic = 0; ic < iwel[VI::IWell::NConn]; ic++) {
         std::size_t icon_offset = ic * header.niconz;
         std::size_t scon_offset = ic * header.nsconz;
