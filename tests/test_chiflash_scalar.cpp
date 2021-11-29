@@ -55,7 +55,8 @@ void testChiFlash()
     // input
     Scalar p_init = 100.*1.e5; // 100 bar
     ComponentVector comp;
-    comp(0) = MFCOMP0;comp(1) = MFCOMP1;
+    comp[0] = MFCOMP0;
+    comp[1] = MFCOMP1;
     ComponentVector sat;
     sat[0] = 1.0; sat[1] = 1.0-sat[0];
     Scalar temp = 303.0;
