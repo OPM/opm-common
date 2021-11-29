@@ -149,7 +149,8 @@ namespace Opm
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
                  const std::optional<int>& output_interval = {},
-                 const RestartIO::RstState* rst = nullptr);
+                 const RestartIO::RstState* rst = nullptr,
+                 const TracerConfig* tracer_config = nullptr);
 
         template<typename T>
         Schedule(const Deck& deck,
@@ -160,7 +161,8 @@ namespace Opm
                  T&& errors,
                  std::shared_ptr<const Python> python,
                  const std::optional<int>& output_interval = {},
-                 const RestartIO::RstState* rst = nullptr);
+                 const RestartIO::RstState* rst = nullptr,
+                 const TracerConfig* tracer_config = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
@@ -168,7 +170,8 @@ namespace Opm
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
                  const std::optional<int>& output_interval = {},
-                 const RestartIO::RstState* rst = nullptr);
+                 const RestartIO::RstState* rst = nullptr,
+                 const TracerConfig* tracer_config = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseState& es,
@@ -480,6 +483,7 @@ namespace Opm
         CompletedCells completed_cells;
 
         void load_rst(const RestartIO::RstState& rst,
+                      const TracerConfig& tracer_config,
                       const ScheduleGrid& grid,
                       const FieldPropsManager& fp);
         void addWell(Well well);

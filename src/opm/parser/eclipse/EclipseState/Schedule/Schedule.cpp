@@ -56,6 +56,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
@@ -155,7 +156,8 @@ namespace Opm {
                         ErrorGuard& errors,
                         std::shared_ptr<const Python> python,
                         const std::optional<int>& output_interval,
-                        const RestartIO::RstState * rst)
+                        const RestartIO::RstState * rst,
+                        const TracerConfig * tracer_config)
     try :
         m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
         m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info ),
@@ -168,9 +170,12 @@ namespace Opm {
         ScheduleGrid grid(ecl_grid, fp, this->completed_cells);
 
         if (rst) {
+            if (!tracer_config)
+                throw std::logic_error("Bug: when loading from restart a valid TracerConfig object must be supplied");
+
             auto restart_step = this->m_static.rst_info.report_step;
             this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, "");
-            this->load_rst(*rst, grid, fp);
+            this->load_rst(*rst, *tracer_config, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
@@ -202,8 +207,9 @@ namespace Opm {
                         T&& errors,
                         std::shared_ptr<const Python> python,
                         const std::optional<int>& output_interval,
-                        const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors, python, output_interval, rst)
+                        const RestartIO::RstState * rst,
+                        const TracerConfig* tracer_config) :
+        Schedule(deck, grid, fp, runspec, parseContext, errors, python, output_interval, rst, tracer_config)
     {}
 
 
@@ -213,8 +219,9 @@ namespace Opm {
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
                         const std::optional<int>& output_interval,
-                        const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, output_interval, rst)
+                        const RestartIO::RstState * rst,
+                        const TracerConfig* tracer_config) :
+        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, output_interval, rst, tracer_config)
     {}
 
 
@@ -227,7 +234,8 @@ namespace Opm {
                  errors,
                  python,
                  output_interval,
-                 rst)
+                 rst,
+                 &es.tracer())
     {}
 
 
@@ -241,7 +249,8 @@ namespace Opm {
                  errors,
                  python,
                  output_interval,
-                 rst)
+                 rst,
+                 &es.tracer())
     {}
 
 
@@ -1469,7 +1478,7 @@ namespace {
     }
 }
 
-    void Schedule::load_rst(const RestartIO::RstState& rst_state, const ScheduleGrid& grid, const FieldPropsManager& fp)
+    void Schedule::load_rst(const RestartIO::RstState& rst_state, const TracerConfig& tracer_config, const ScheduleGrid& grid, const FieldPropsManager& fp)
     {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;
@@ -1514,7 +1523,7 @@ namespace {
         }
 
         for (const auto& rst_well : rst_state.wells) {
-            Opm::Well well(rst_well, report_step, this->m_static.m_unit_system, udq_undefined);
+            Opm::Well well(rst_well, report_step, tracer_config, this->m_static.m_unit_system, udq_undefined);
             std::vector<Opm::Connection> rst_connections;
 
             for (const auto& rst_conn : rst_well.connections)
