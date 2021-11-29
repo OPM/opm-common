@@ -62,7 +62,6 @@ class TwoPhaseThreeComponentFluidSystem
 {
     using ThisType = TwoPhaseThreeComponentFluidSystem<Scalar>;
     using Base = Opm::BaseFluidSystem<Scalar, ThisType>;
-    using PengRobinson = typename Opm::PengRobinson<Scalar>;
     using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThisType>;
     using LBCviscosity = typename Opm::LBCviscosity<Scalar, ThisType>;
     using H2O = typename Opm::H2O<Scalar>;
