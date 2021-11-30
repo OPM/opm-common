@@ -484,7 +484,7 @@ void FileDeck::skip(int report_step) {
 
 
 
-const std::unordered_set<std::string> FileDeck::rst_keep_in_solution = {"ABC"};
+const std::unordered_set<std::string> FileDeck::rst_keep_in_solution = {"RPTRST"};
 const std::unordered_set<std::string> FileDeck::rst_keep_in_schedule = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
 
 }
