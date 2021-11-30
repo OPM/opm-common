@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 
 #include "../MSW/Compsegs.hpp"
 
@@ -168,6 +169,7 @@ constexpr double def_solvent_fraction = 0;
 
 Well::Well(const RestartIO::RstWell& rst_well,
            int report_step,
+           const TracerConfig& tracer_config,
            const UnitSystem& unit_system_arg,
            double udq_undefined_arg) :
     wname(rst_well.name),
@@ -313,6 +315,16 @@ Well::Well(const RestartIO::RstWell& rst_well,
             i->addInjectionControl(Well::InjectorCMode::GRUP);
 
         this->updateInjection(std::move(i));
+
+        if (!rst_well.tracer_concentration_injection.empty()) {
+            auto tracer = std::make_shared<WellTracerProperties>(this->getTracerProperties());
+            for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); tracer_index++) {
+                const auto& name = tracer_config[tracer_index].name;
+                const auto concentration = rst_well.tracer_concentration_injection[tracer_index];
+                tracer->setConcentration(name, concentration);
+            }
+            this->updateTracer(tracer);
+        }
     }
 }
 

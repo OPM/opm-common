@@ -126,6 +126,11 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     water_void_rate(     unit_system.to_si(M::liquid_surface_volume, xwel[VI::XWell::WatVoidPrRate])),
     gas_void_rate(       unit_system.to_si(M::gas_surface_volume,    xwel[VI::XWell::GasVoidPrRate]))
 {
+
+    for (std::size_t tracer_index = 0; tracer_index < static_cast<std::size_t>(header.runspec.tracers().water_tracers()); tracer_index++)
+        this->tracer_concentration_injection.push_back( swel[VI::SWell::TracerOffset + tracer_index] );
+
+
     for (int ic = 0; ic < iwel[VI::IWell::NConn]; ic++) {
         std::size_t icon_offset = ic * header.niconz;
         std::size_t scon_offset = ic * header.nsconz;

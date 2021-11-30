@@ -67,6 +67,7 @@ class SICD;
 class SummaryState;
 class UDQActive;
 class UDQConfig;
+class TracerConfig;
 
 namespace RestartIO {
 struct RstWell;
@@ -495,6 +496,7 @@ public:
 
     Well(const RestartIO::RstWell& rst_well,
          int report_step,
+         const TracerConfig& tracer_config,
          const UnitSystem& unit_system,
          double udq_undefined);
 

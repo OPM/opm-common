@@ -23,14 +23,17 @@
 #include <ctime>
 #include <cstddef>
 
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+
 namespace Opm {
 class UnitSystem;
 
 namespace RestartIO {
 
 struct RstHeader {
-    RstHeader(const UnitSystem& unit_system, const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead);
+    RstHeader(const Runspec& runspec, const UnitSystem& unit_system, const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead);
 
+    Runspec runspec;
     int nx;
     int ny;
     int nz;

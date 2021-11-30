@@ -44,6 +44,7 @@
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
@@ -70,6 +71,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <fmt/format.h>
 
 #include <boost/range.hpp>
 
@@ -1434,6 +1436,8 @@ namespace {
 
     void assign_well_cumulatives(const std::string& well,
                                  const std::size_t  wellID,
+                                 const Opm::Tracers& tracer_dims,
+                                 const Opm::TracerConfig& tracer_config,
                                  const WellVectors& wellData,
                                  Opm::SummaryState& smry)
     {
@@ -1466,6 +1470,15 @@ namespace {
 
         smry.update_well_var(well, "WWITH", xwel[VI::XWell::index::HistWatInjTotal]);
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
+
+        for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); tracer_index++) {
+            const auto& tracer_name = tracer_config[tracer_index].name;
+            auto wtpt_offset = VI::XWell::index::TracerOffset +   tracer_dims.water_tracers();
+            auto wtit_offset = VI::XWell::index::TracerOffset + 2*tracer_dims.water_tracers();
+
+            smry.update_well_var(well, fmt::format("WTPT{}", tracer_name), xwel[wtpt_offset + tracer_index]);
+            smry.update_well_var(well, fmt::format("WTIT{}", tracer_name), xwel[wtit_offset + tracer_index]);
+        }
     }
 
     void assign_group_cumulatives(const std::string&  group,
@@ -1558,6 +1571,7 @@ namespace {
 
     void restore_cumulative(::Opm::SummaryState&                         smry,
                             const ::Opm::Schedule&                       schedule,
+                            const Opm::TracerConfig&                     tracer_config,
                             std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
         const auto  sim_step = rst_view->simStep();
@@ -1573,7 +1587,7 @@ namespace {
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
             {
-                assign_well_cumulatives(wells[wellID], wellID, wellData, smry);
+                assign_well_cumulatives(wells[wellID], wellID, schedule.runspec().tracers(), tracer_config, wellData, smry);
             }
         }
 
@@ -1645,7 +1659,7 @@ namespace Opm { namespace RestartIO  {
         }
 
         restore_udq(summary_state, schedule, rst_view);
-        restore_cumulative(summary_state, schedule, std::move(rst_view));
+        restore_cumulative(summary_state, schedule, es.tracer(), std::move(rst_view));
 
         return rst_value;
     }

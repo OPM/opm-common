@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 using M = ::Opm::UnitSystem::measure;
@@ -31,7 +32,8 @@ using M = ::Opm::UnitSystem::measure;
 namespace Opm {
 namespace RestartIO {
 
-RstHeader::RstHeader(const Opm::UnitSystem& unit_system, const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead) :
+RstHeader::RstHeader(const Runspec& runspec_, const Opm::UnitSystem& unit_system, const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead) :
+    runspec(runspec_),
     nx(intehead[VI::intehead::NX]),
     ny(intehead[VI::intehead::NY]),
     nz(intehead[VI::intehead::NZ]),

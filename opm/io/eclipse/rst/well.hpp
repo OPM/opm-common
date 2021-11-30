@@ -102,6 +102,7 @@ struct RstWell {
     float glift_min_rate;
     float glift_weight_factor;
     float glift_inc_weight_factor;
+    std::vector<float> tracer_concentration_injection;
 
     double oil_rate;
     double water_rate;
