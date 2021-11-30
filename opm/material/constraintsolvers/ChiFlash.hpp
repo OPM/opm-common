@@ -41,6 +41,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
+#include <dune/common/classname.hh>
 
 #include <limits>
 #include <iostream>
@@ -53,7 +54,7 @@ namespace Opm {
  *        given the total mass of all components for the chiwoms problem.
  *
  */
-template <class Scalar, class Evaluation, class FluidSystem>
+template <class Scalar, class FluidSystem>
 class ChiFlash
 {
     //using Problem = GetPropType<TypeTag, Properties::Problem>;
@@ -168,20 +169,21 @@ public:
         }
 
         // Update phases
-        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
+        typename FluidSystem::template ParameterCache<InputEval> paramCache;
         paramCache.updatePhase(fluidState, oilPhaseIdx);
         paramCache.updatePhase(fluidState, gasPhaseIdx);
 
         // Calculate compressibility factor
         const Scalar R = Opm::Constants<Scalar>::R;
-        Evaluation Z_L = (paramCache.molarVolume(oilPhaseIdx) * fluidState.pressure(oilPhaseIdx) )/
+        InputEval Z_L = (paramCache.molarVolume(oilPhaseIdx) * fluidState.pressure(oilPhaseIdx) )/
                 (R * fluidState.temperature(oilPhaseIdx));
-        Evaluation Z_V = (paramCache.molarVolume(gasPhaseIdx) * fluidState.pressure(gasPhaseIdx) )/
+        InputEval Z_V = (paramCache.molarVolume(gasPhaseIdx) * fluidState.pressure(gasPhaseIdx) )/
                 (R * fluidState.temperature(gasPhaseIdx));
 
+        std::cout << " the type of InputEval here is " << Dune::className<InputEval>() << std::endl;
         // Update saturation
-        Evaluation So = L*Z_L/(L*Z_L+(1-L)*Z_V);
-        Evaluation Sg = 1-So;
+        InputEval So = L*Z_L/(L*Z_L+(1-L)*Z_V);
+        InputEval Sg = 1-So;
         
         fluidState.setSaturation(oilPhaseIdx, So);
         fluidState.setSaturation(gasPhaseIdx, Sg);
@@ -270,7 +272,7 @@ protected:
         const auto& T = fluidState.temperature(0);
         
         // If temperature is below estimated critical temperature --> phase = liquid; else vapor
-        Evaluation L;
+        typename Vector::field_type L;
         if (T < Tc_est) {
             // Liquid
             L = 1.0;
@@ -294,8 +296,9 @@ protected:
         return L;
     }
 
+    // TODO: not totally sure whether ValueType can be obtained from Vector::field_type
     template <class Vector>
-    static typename Vector::field_type rachfordRice_g_(const Vector& K, const Evaluation L, const Vector& globalComposition)
+    static typename Vector::field_type rachfordRice_g_(const Vector& K, typename Vector::field_type L, const Vector& globalComposition)
     {
         typename Vector::field_type g=0;
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -305,7 +308,7 @@ protected:
     }
 
     template <class Vector>
-    static typename Vector::field_type rachfordRice_dg_dL_(const Vector& K, const Evaluation L, const Vector& globalComposition)
+    static typename Vector::field_type rachfordRice_dg_dL_(const Vector& K, const typename Vector::field_type L, const Vector& globalComposition)
     {
         typename Vector::field_type dg=0;
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -319,8 +322,8 @@ protected:
     {
         // Find min and max K. Have to do a laborious for loop to avoid water component (where K=0)
         // TODO: Replace loop with Dune::min_value() and Dune::max_value() when water component is properly handled
-        Evaluation Kmin = K[0];
-        Evaluation Kmax = K[0];
+        typename Vector::field_type Kmin = K[0];
+        typename Vector::field_type Kmax = K[0];
         for (int compIdx=1; compIdx<numComponents; ++compIdx){
             if (K[compIdx] < Kmin)
                 Kmin = K[compIdx];
@@ -329,19 +332,19 @@ protected:
         }
 
         // Lower and upper bound for solution
-        Evaluation Lmin = (Kmin / (Kmin - 1));
-        Evaluation Lmax = Kmax / (Kmax - 1);
+        auto Lmin = (Kmin / (Kmin - 1));
+        auto Lmax = Kmax / (Kmax - 1);
 
         // Check if Lmin < Lmax, and switch if not
         if (Lmin > Lmax)
         {
-            Evaluation Ltmp = Lmin;
+            auto Ltmp = Lmin;
             Lmin = Lmax;
             Lmax = Ltmp;
         }
 
         // Initial guess
-        Evaluation L = (Lmin + Lmax)/2;
+        auto L = (Lmin + Lmax)/2;
 
         // Print initial guess and header
         if (verbosity == 3 || verbosity == 4) {
@@ -352,11 +355,11 @@ protected:
         // Newton-Raphson loop
         for (int iteration=1; iteration<100; ++iteration){
             // Calculate function and derivative values
-            Evaluation g = rachfordRice_g_(K, L, globalComposition);
-            Evaluation dg_dL = rachfordRice_dg_dL_(K, L, globalComposition);
+            auto g = rachfordRice_g_(K, L, globalComposition);
+            auto dg_dL = rachfordRice_dg_dL_(K, L, globalComposition);
 
             // Lnew = Lold - g/dg;
-            Evaluation delta = g/dg_dL;
+            auto delta = g/dg_dL;
             L -= delta;
 
             // Check if L is within the bounds, and if not, we apply bisection method
@@ -401,10 +404,11 @@ protected:
     }
 
     template <class Vector>
-    static typename Vector::field_type bisection_g_(const Vector& K, Evaluation Lmin, Evaluation Lmax, const Vector& globalComposition, int verbosity)
+    static typename Vector::field_type bisection_g_(const Vector& K, typename Vector::field_type Lmin,
+                                                    typename Vector::field_type Lmax, const Vector& globalComposition, int verbosity)
     {
         // Calculate for g(Lmin) for first comparison with gMid = g(L)
-        Evaluation gLmin = rachfordRice_g_(K, Lmin, globalComposition);
+        typename Vector::field_type gLmin = rachfordRice_g_(K, Lmin, globalComposition);
       
         // Print new header
         if (verbosity == 3 || verbosity == 4) {
@@ -414,8 +418,8 @@ protected:
         // Bisection loop
         for (int iteration=1; iteration<100; ++iteration){
             // New midpoint
-            Evaluation L = (Lmin + Lmax) / 2;
-            Evaluation gMid = rachfordRice_g_(K, L, globalComposition);
+            auto L = (Lmin + Lmax) / 2;
+            auto gMid = rachfordRice_g_(K, L, globalComposition);
             if (verbosity == 3 || verbosity == 4) {
                 std::cout << std::setw(10) << iteration << std::setw(16) << gMid << std::setw(16) << L << std::endl;
             }
@@ -445,7 +449,7 @@ protected:
         // Declarations
         bool isTrivialL, isTrivialV;
         ComponentVector x, y;
-        Evaluation S_l, S_v;
+        typename FlashFluidState::Scalar S_l, S_v;
         ComponentVector K0 = K;
         ComponentVector K1 = K;
 
@@ -482,7 +486,8 @@ protected:
     }
 
     template <class FlashFluidState, class ComponentVector>
-    static void checkStability_(const FlashFluidState& fluidState, bool& isTrivial, ComponentVector& K, ComponentVector& xy_loc, Evaluation& S_loc, const ComponentVector& globalComposition, bool isGas, int verbosity)
+    static void checkStability_(const FlashFluidState& fluidState, bool& isTrivial, ComponentVector& K, ComponentVector& xy_loc,
+                                typename FlashFluidState::Scalar& S_loc, const ComponentVector& globalComposition, bool isGas, int verbosity)
     {
         using FlashEval = typename FlashFluidState::Scalar;
         using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, FluidSystem>;
@@ -586,14 +591,15 @@ protected:
         throw std::runtime_error(" Stability test did not converge");
     }//end checkStability
 
+    // TODO: basically FlashFluidState and ComponentVector are both depending on the one Scalar type
     template <class FlashFluidState, class ComponentVector>
-    static void computeLiquidVapor_(FlashFluidState& fluidState, Evaluation& L, ComponentVector& K, const ComponentVector& globalComposition)
+    static void computeLiquidVapor_(FlashFluidState& fluidState, typename FlashFluidState::Scalar& L, ComponentVector& K, const ComponentVector& globalComposition)
     {
         // Calculate x and y, and normalize
         ComponentVector x;
         ComponentVector y;
-        Evaluation sumx=0;
-        Evaluation sumy=0;
+        typename FlashFluidState::Scalar sumx=0;
+        typename FlashFluidState::Scalar sumy=0;
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
             x[compIdx] = globalComposition[compIdx]/(L + (1-L)*K[compIdx]);
             sumx += x[compIdx];
@@ -612,12 +618,14 @@ protected:
     }
 
     template <class FlashFluidState, class ComponentVector>
-    static void newtonCompositionUpdate_(ComponentVector& K, Evaluation& L, FlashFluidState& fluidState, const ComponentVector& globalComposition,
+    static void newtonCompositionUpdate_(ComponentVector& K, typename FlashFluidState::Scalar& L,
+                                         FlashFluidState& fluidState, const ComponentVector& globalComposition,
                                          int verbosity)
     {
         // Newton declarations
-        using NewtonVector = Dune::FieldVector<Evaluation, numMisciblePhases*numMiscibleComponents+1>;
-        using NewtonMatrix = Dune::FieldMatrix<Evaluation, numMisciblePhases*numMiscibleComponents+1, numMisciblePhases*numMiscibleComponents+1>;
+        using ValueType = typename FlashFluidState::Scalar;
+        using NewtonVector = Dune::FieldVector<ValueType, numMisciblePhases*numMiscibleComponents+1>;
+        using NewtonMatrix = Dune::FieldMatrix<ValueType, numMisciblePhases*numMiscibleComponents+1, numMisciblePhases*numMiscibleComponents+1>;
         NewtonVector newtonX;
         NewtonVector newtonB;
         NewtonMatrix newtonA;
@@ -777,12 +785,13 @@ protected:
         
 
         // Compute fugacities
+        using ValueType = typename FluidState::Scalar;
         using ParamCache = typename FluidSystem::template ParameterCache<typename FluidState::Scalar>;
         ParamCache paramCache;
         for (int phaseIdx=0; phaseIdx<numPhases; ++phaseIdx){
             paramCache.updatePhase(fluidState, phaseIdx);
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                Evaluation phi = FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+                ValueType phi = FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
                 fluidState.setFugacityCoefficient(phaseIdx, compIdx, phi);
             }
         }
@@ -790,7 +799,7 @@ protected:
         // Compute residuals for Newton update. Primary variables are: x, y, and L
         // TODO: Make this AD
         // Extract L
-        Evaluation L = x[numMiscibleComponents*numMisciblePhases];
+        ValueType L = x[numMiscibleComponents*numMisciblePhases];
         
         // Residuals
         // OBS: the residuals are negative in the newton system!
@@ -841,11 +850,13 @@ protected:
             }
         }
     }//end evalJacobian
-    
+
+    // TODO: or use typename FlashFluidState::Scalar
     template <class FlashFluidState, class ComponentVector>
-    static void successiveSubstitutionComposition_(ComponentVector& K, Evaluation& L, FlashFluidState& fluidState, const ComponentVector& globalComposition, 
+    static void successiveSubstitutionComposition_(ComponentVector& K, typename ComponentVector::field_type& L, FlashFluidState& fluidState, const ComponentVector& globalComposition,
                                                    bool standAlone, int verbosity)
     {
+        // std::cout << " Evaluation in successiveSubstitutionComposition_  is " << Dune::className(L) << std::endl;
         // Determine max. iterations based on if it will be used as a standalone flash or as a pre-process to Newton (or other) method.
         int maxIterations;
         if (standAlone == true)
@@ -879,7 +890,7 @@ protected:
             for (int phaseIdx=0; phaseIdx<numPhases; ++phaseIdx){
                 paramCache.updatePhase(fluidState, phaseIdx);
                 for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                    Evaluation phi = FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+                    auto phi = FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
                     fluidState.setFugacityCoefficient(phaseIdx, compIdx, phi);
                 }
             }

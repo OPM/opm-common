@@ -104,7 +104,7 @@ void testChiFlash()
     fs.setLvalue(Ltmp);
 
     const int spatialIdx = 0;
-    using Flash = Opm::ChiFlash<double, Evaluation, FluidSystem>;
+    using Flash = Opm::ChiFlash<double, FluidSystem>;
     Flash::solve(fs, zInit, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
 
 }
