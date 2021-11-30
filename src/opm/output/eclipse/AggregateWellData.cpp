@@ -953,7 +953,7 @@ namespace {
                 std::size_t output_index = Ix::TracerOffset + 2*tracer_dims.water_tracers() + tracer_index;
                 if (well.isInjector()) {
                     const auto& wtir = smry.get_well_var(well.name(), fmt::format("WTIT{}", tracer.name), 0);
-                    xWell[output_index] = -wtir;
+                    xWell[output_index] = wtir;
                 }
             }
 
