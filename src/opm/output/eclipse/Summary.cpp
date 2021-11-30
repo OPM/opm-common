@@ -120,11 +120,14 @@ namespace {
             ParamCTorArgs{ "GOR" , Type::Ratio },
 
             // injection
+            ParamCTorArgs{ "OIR" , Type::Rate },
             ParamCTorArgs{ "WIR" , Type::Rate },
             ParamCTorArgs{ "GIR" , Type::Rate },
+            ParamCTorArgs{ "VIR" , Type::Rate },
             ParamCTorArgs{ "OPI" , Type::Rate },
             ParamCTorArgs{ "WPI" , Type::Rate },
             ParamCTorArgs{ "GPI" , Type::Rate },
+            ParamCTorArgs{ "OIT" , Type::Total },
             ParamCTorArgs{ "WIT" , Type::Total },
             ParamCTorArgs{ "GIT" , Type::Total },
             ParamCTorArgs{ "VIT" , Type::Total },
