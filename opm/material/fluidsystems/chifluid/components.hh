@@ -203,6 +203,78 @@ public:
         static Scalar criticalVolume() {return 5.595e-2; }
 };
 
+// TODO: creating some fluid components to debugging against the examples from the Julia test
+// TODO: to make the parameter exactly same, we create some temporary component here
+
+template <class Scalar>
+class JuliaCO2 : public Opm::Component<Scalar, JuliaCO2<Scalar>>
+{
+public:
+    /// Chemical name
+    static const char* name() { return "CO2"; }
+
+    /// Molar mass in \f$\mathrm{[kg/mol]}\f$
+    static Scalar molarMass() { return 0.0440; }
+
+    /// Critical temperature in \f$\mathrm[K]}\f$
+    static Scalar criticalTemperature() { return 304.1; }
+
+    /// Critical pressure in \f$\mathrm[Pa]}\f$
+    static Scalar criticalPressure() { return 7.38e6; }
+
+    /// Acentric factor
+    static Scalar acentricFactor() { return 0.224; }
+
+    // Critical volume [m3/kmol]
+    static Scalar criticalVolume() {return 9.412e-5; }
+};
+
+template <class Scalar>
+class JuliaC1: public Opm::Component<Scalar, JuliaC1<Scalar>>
+{
+public:
+    /// Chemical name
+    static const char* name() { return "C1"; }
+
+    /// Molar mass in \f$\mathrm{[kg/mol]}\f$
+    static Scalar molarMass() { return 0.0160; }
+
+    /// Critical temperature in \f$\mathrm[K]}\f$
+    static Scalar criticalTemperature() { return 190.6; }
+
+    /// Critical pressure in \f$\mathrm[Pa]}\f$
+    static Scalar criticalPressure() { return 4.60e6; }
+
+    /// Acentric factor
+    static Scalar acentricFactor() { return 0.011; }
+
+    // Critical volume [m3/kmol]
+    static Scalar criticalVolume() {return 9.863e-5; }
+};
+
+template <class Scalar>
+class JuliaC10: public Opm::Component<Scalar, JuliaC10<Scalar>>
+{
+public:
+    /// Chemical name
+    static const char* name() { return "C10"; }
+
+    /// Molar mass in \f$\mathrm{[kg/mol]}\f$
+    static Scalar molarMass() { return 0.0142; }
+
+    /// Critical temperature in \f$\mathrm[K]}\f$
+    static Scalar criticalTemperature() { return 617.7; }
+
+    /// Critical pressure in \f$\mathrm[Pa]}\f$
+    static Scalar criticalPressure() { return 2.10e6; }
+
+    /// Acentric factor
+    static Scalar acentricFactor() { return 0.488; }
+
+    // Critical volume [m3/kmol]
+    static Scalar criticalVolume() {return 6.098e-4; }
+};
+
 struct EOS
 {
         template<typename LhsEval>
