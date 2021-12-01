@@ -61,11 +61,8 @@ class TwoPhaseThreeComponentFluidSystem
         : public Opm::BaseFluidSystem<Scalar, TwoPhaseThreeComponentFluidSystem<Scalar> >
 {
     using ThisType = TwoPhaseThreeComponentFluidSystem<Scalar>;
-    using Base = Opm::BaseFluidSystem<Scalar, ThisType>;
     using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThisType>;
     using LBCviscosity = typename Opm::LBCviscosity<Scalar, ThisType>;
-    using H2O = typename Opm::H2O<Scalar>;
-    using Brine = typename Opm::Brine<Scalar, H2O>;
 
 public:
         //! \copydoc BaseFluidSystem::ParameterCache
@@ -347,7 +344,7 @@ public:
      * \brief Returns the interaction coefficient for two components.
      *.
      */
-    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
+    static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/)
     {
         return 0.0; //-0.101;//0.1089;
     }
