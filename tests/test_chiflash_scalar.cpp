@@ -45,7 +45,7 @@ void testChiFlash()
     
     
     using Scalar = double;
-    using FluidSystem = Opm::TwoPhaseThreeComponentFluidSystem<Scalar>;
+    using FluidSystem = Opm::TwoPhaseTwoComponentFluidSystem<Scalar>;
 
     constexpr auto numComponents = FluidSystem::numComponents;
     //using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
