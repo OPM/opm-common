@@ -64,7 +64,7 @@ class ChiFlash
     // enum { Comp1Idx = FluidSystem::Comp1Idx }; //rename for generic ?
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx};
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx};
-    enum { numMiscibleComponents = 2}; //octane, co2
+    enum { numMiscibleComponents = 2}; //octane, co2 // should be brine instead of brine here.
     enum { numMisciblePhases = 2}; //oil, gas
     enum {
         numEq =
@@ -72,12 +72,12 @@ class ChiFlash
         numMisciblePhases*numMiscibleComponents
     };//pressure, saturation, composition
 
-    enum {
-        p0PvIdx = 0, // pressure first phase primary variable index
-        S0PvIdx = 1, // saturation first phase primary variable index
-        x00PvIdx = S0PvIdx + 1, // molefraction first phase first component primary variable index
+    /* enum {
+        // p0PvIdx = 0, // pressure first phase primary variable index
+        // S0PvIdx = 1, // saturation first phase primary variable index
+        // x00PvIdx = S0PvIdx + 1, // molefraction first phase first component primary variable index
         //numMiscibleComponennets*numMisciblePhases-1 molefractions/primvar follow
-    };
+    }; */
 
 public:
     /*!
@@ -526,8 +526,8 @@ protected:
                 }
             }
 
-            int phaseIdx = (isGas?gasPhaseIdx:oilPhaseIdx);
-            int phaseIdx2 = (isGas?oilPhaseIdx:gasPhaseIdx);
+            int phaseIdx = (isGas ? static_cast<int>(gasPhaseIdx) : static_cast<int>(oilPhaseIdx));
+            int phaseIdx2 = (isGas ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx));
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 fluidState_global.setMoleFraction(phaseIdx2, compIdx, globalComposition[compIdx]);
             }
@@ -739,13 +739,13 @@ protected:
     {
         // Find smallest percentage update
         Scalar w = 1.0;
-        for (int i=0; i<x.size(); ++i){
+        for (size_t i=0; i<x.size(); ++i){
             Scalar w_tmp = Opm::getValue(Opm::min(Opm::max(x[i] + d[i], 0.0), 1.0) - x[i]) / Opm::getValue(d[i]);
             w = Opm::min(w, w_tmp);
         }
 
         // Loop over the solution vector and apply the smallest percentage update
-        for (int i=0; i<x.size(); ++i){
+        for (size_t i=0; i<x.size(); ++i){
             x[i] += w*d[i];
         }
     }
@@ -825,7 +825,7 @@ protected:
         // Calculate response of current state x
         DefectVector x;
         DefectVector b0;
-        for(int j=0; j<xIn.size(); ++j){
+        for(size_t j=0; j<xIn.size(); ++j){
             x[j] = xIn[j];
         }
         
@@ -833,7 +833,7 @@ protected:
 
         // Make the jacobian A in Newton system Ax=b
         Scalar epsilon = 1e-10;
-        for(int i=0; i<b0.size(); ++i){
+        for(size_t i=0; i<b0.size(); ++i){
             // Permutate x and calculate response
             x[i] += epsilon;
             DefectVector bEps;
@@ -842,7 +842,7 @@ protected:
 
             // Forward difference of all eqs wrt primary variable i
             DefectVector derivI;
-            for(int j=0; j<b0.size(); ++j){
+            for(size_t j=0; j<b0.size(); ++j){
                 derivI[j] = bEps[j];
                 derivI[j] -= b0[j];
                 derivI[j] /= epsilon;
