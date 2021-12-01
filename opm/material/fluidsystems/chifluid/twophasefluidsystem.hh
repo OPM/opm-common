@@ -57,10 +57,10 @@ namespace Opm {
  * \brief A two-phase fluid system with three components
  */
 template <class Scalar>
-class TwoPhaseThreeComponentFluidSystem
-        : public Opm::BaseFluidSystem<Scalar, TwoPhaseThreeComponentFluidSystem<Scalar> >
+class TwoPhaseTwoComponentFluidSystem
+        : public Opm::BaseFluidSystem<Scalar, TwoPhaseTwoComponentFluidSystem<Scalar> >
 {
-    using ThisType = TwoPhaseThreeComponentFluidSystem<Scalar>;
+    using ThisType = TwoPhaseTwoComponentFluidSystem<Scalar>;
     using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThisType>;
     using LBCviscosity = typename Opm::LBCviscosity<Scalar, ThisType>;
 
@@ -123,56 +123,6 @@ public:
         using Comp0 = Opm::ChiwomsBrine<Scalar>;
         using Comp1 = Opm::ChiwomsCO2<Scalar>;
 
-    static void init(Scalar minT = 273.15,
-                     Scalar maxT = 373.15,
-                     Scalar minP = 1e4,
-                     Scalar maxP = 100e6)
-    {
-        Opm::PengRobinsonParamsMixture<Scalar, ThisType, oilPhaseIdx, /*useSpe5=*/false> prParams;
-
-        // find envelopes of the 'a' and 'b' parameters for the range
-        // minT <= T <= maxT and minP <= p <= maxP. For
-        // this we take advantage of the fact that 'a' and 'b' for
-        // mixtures is just a convex combination of the attractive and
-        // repulsive parameters of the pure components
-
-        Scalar minA = 1e30, maxA = -1e30;
-        Scalar minB = 1e30, maxB = -1e30;
-
-        prParams.updatePure(minT, minP);
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            minA = std::min(prParams.pureParams(compIdx).a(), minA);
-            maxA = std::max(prParams.pureParams(compIdx).a(), maxA);
-            minB = std::min(prParams.pureParams(compIdx).b(), minB);
-            maxB = std::max(prParams.pureParams(compIdx).b(), maxB);
-        };
-
-        prParams.updatePure(maxT, minP);
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            minA = std::min(prParams.pureParams(compIdx).a(), minA);
-            maxA = std::max(prParams.pureParams(compIdx).a(), maxA);
-            minB = std::min(prParams.pureParams(compIdx).b(), minB);
-            maxB = std::max(prParams.pureParams(compIdx).b(), maxB);
-        };
-
-        prParams.updatePure(minT, maxP);
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            minA = std::min(prParams.pureParams(compIdx).a(), minA);
-            maxA = std::max(prParams.pureParams(compIdx).a(), maxA);
-            minB = std::min(prParams.pureParams(compIdx).b(), minB);
-            maxB = std::max(prParams.pureParams(compIdx).b(), maxB);
-        };
-
-        prParams.updatePure(maxT, maxP);
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            minA = std::min(prParams.pureParams(compIdx).a(), minA);
-            maxA = std::max(prParams.pureParams(compIdx).a(), maxA);
-            minB = std::min(prParams.pureParams(compIdx).b(), minB);
-            maxB = std::max(prParams.pureParams(compIdx).b(), maxB);
-        };
-      //  PengRobinson::init(/*aMin=*/minA, /*aMax=*/maxA, /*na=*/100,
-      //                     /*bMin=*/minB, /*bMax=*/maxB, /*nb=*/200);
-    }
 
         //! \copydoc BaseFluidSystem::componentName
         static const char* componentName(unsigned compIdx)
