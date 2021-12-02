@@ -141,15 +141,7 @@ namespace Opm {
                                  unsigned phaseIdx)
         {
             // Use LBC method to calculate viscosity
-            LhsEval mu;
-            // if (phaseIdx == gasPhaseIdx) {
-            mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
-            // }
-            // else {
-            //     const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
-            //     const auto& p = Opm::decay<LhsEval>(fluidState.pressure(0));
-            //     mu = Brine::liquidViscosity(T, p);
-            // }
+            LhsEval mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
             return mu;
 
         }
@@ -167,9 +159,6 @@ namespace Opm {
             Scalar phi = Opm::getValue(
                     PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
             return phi;
-
-
-            throw std::invalid_argument("crap!");
         }
 
     };
