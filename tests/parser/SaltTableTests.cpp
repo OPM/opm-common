@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PermfactTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes
@@ -80,7 +81,12 @@ BOOST_AUTO_TEST_CASE( Brine ) {
         "\n"
         "SALTPVD\n"
         "500 0\n"
-        "550 0.5/\n";
+        "550 0.5/\n"
+        "\n"
+        "SALTSOL\n"
+        "8.0/\n"
+        "\n"
+        ;
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
@@ -145,7 +151,11 @@ BOOST_AUTO_TEST_CASE( Brine ) {
     BOOST_CHECK_EQUAL(permfactTable.getPorosityChangeColumn().size(), 4U);
     BOOST_CHECK_CLOSE(permfactTable.getPermeabilityMultiplierColumn() [3],1.5, 1e-5);
 
+    const Opm::TableContainer& saltsolTables = tables.getSaltsolTables();
+    const auto& saltsolTable = saltsolTables.getTable<Opm::SaltsolTable>(0);
 
+    BOOST_CHECK_EQUAL(saltsolTable.getSaltsolColumn().size(), 1U);
+    BOOST_CHECK_CLOSE(saltsolTable.getSaltsolColumn() [0], 8.0, 1e-5);
 }
 
 
