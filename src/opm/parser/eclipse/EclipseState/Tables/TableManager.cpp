@@ -434,6 +434,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
 
         addTables( "OILVISCT", m_tabdims.getNumPVTTables());
         addTables( "WATVISCT", m_tabdims.getNumPVTTables());
+        addTables( "GASVISCT", m_tabdims.getNumPVTTables());
 
         addTables( "PLYMAX", m_regdims.getNPLMIX());
         addTables( "RSVD", m_eqldims.getNumEquilRegions());
@@ -442,7 +443,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         addTables( "PDVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTPVD", m_eqldims.getNumEquilRegions());
-        addTables( "SALTSOL", m_eqldims.getNumEquilRegions());
+        addTables( "SALTSOL", m_tabdims.getNumPVTTables());
         addTables( "PERMFACT", m_eqldims.getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
@@ -508,7 +509,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltpvdTable>(deck, "SALTPVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
-        initSimpleTableContainer<SaltsolTable>(deck, "SALTSOL" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<SaltsolTable>(deck, "SALTSOL" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<SaltvdTable>(deck, "PERMFACT" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
