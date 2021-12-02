@@ -28,24 +28,23 @@
 #include "config.h"
 
 #include <opm/material/constraintsolvers/ChiFlash.hpp>
-#include <opm/material/fluidsystems/chifluid/twophasefluidsystem.hh>
+#include <opm/material/fluidsystems/chifluid/juliathreecomponentfluidsystem.hh>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
-// #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-// #include <opm/material/fluidsystems/Spe5FluidSystem.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
-// #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 
 #include <dune/common/parallel/mpihelper.hh>
+// the following include should be removed later
+// #include <opm/material/fluidsystems/chifluid/chiwoms.h>
 
 void testChiFlash()
 {
     
     
     using Scalar = double;
-    using FluidSystem = Opm::TwoPhaseTwoComponentFluidSystem<Scalar>;
+    using FluidSystem = Opm::JuliaThreeComponentFluidSystem<Scalar>;
 
     constexpr auto numComponents = FluidSystem::numComponents;
     //using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
@@ -53,13 +52,14 @@ void testChiFlash()
     typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
     // input
-    Scalar p_init = 100.*1.e5; // 100 bar
+    Scalar p_init = 10e5; // 10 bar
     ComponentVector comp;
-    comp[0] = MFCOMP0;
-    comp[1] = MFCOMP1;
+    comp[0] = 0.5;
+    comp[1] = 0.3;
+    comp[2] = 0.2;
     ComponentVector sat;
     sat[0] = 1.0; sat[1] = 1.0-sat[0];
-    Scalar temp = 303.0;
+    Scalar temp = 300.0;
     // From co2-compositional branch, it uses
     // typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
 
@@ -71,9 +71,11 @@ void testChiFlash()
 
     fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
     fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
     fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
     fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
     fs.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
     fs.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);

@@ -1,8 +1,6 @@
 #ifndef COMPONENTS_HH
 #define COMPONENTS_HH
 
-#include "chiwoms.h"
-
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
