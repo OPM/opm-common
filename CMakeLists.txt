@@ -259,11 +259,15 @@ if(ENABLE_ECL_INPUT)
     test_util/summary.cpp
     )
 
+  add_executable(arraylist
+    test_util/arraylist.cpp
+    )
+
   add_executable(rewriteEclFile
     test_util/rewriteEclFile.cpp
     )
 
-  foreach(target compareECL convertECL summary rewriteEclFile)
+  foreach(target compareECL convertECL summary rewriteEclFile arraylist)
     target_link_libraries(${target} opmcommon)
     install(TARGETS ${target} DESTINATION bin)
   endforeach()
