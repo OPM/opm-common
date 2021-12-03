@@ -263,6 +263,8 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
             this->THPTarget.update_value( new_arg );
             this->addProductionControl( ProducerCMode::THP );
         }
+        else if (cmode == WELTARGCMode::LIFT)
+            this->ALQValue.update_value( new_arg );
         else if (cmode == WELTARGCMode::VFP) {
             OpmLog::warning("When using WELTARG to change VFP table it is assumed that ALQ type is the same for the new and old table");
             this->VFPTableNumber = static_cast<int>( new_arg.get<double>() );
