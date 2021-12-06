@@ -93,6 +93,11 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
     m_inputFileName { filename },
     m_loadBaseRun(loadBaseRunData)
 {
+    m_io_opening = 0.0;
+    m_io_loading = 0.0;
+
+    auto start = std::chrono::system_clock::now();
+
     if (m_inputFileName.extension()=="")
         m_inputFileName+=".ESMRY";
 
@@ -222,6 +227,9 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
     for (size_t m = 0; m < m_rstep.size(); m++)
         if (m_rstep[m] == 1)
             m_seqIndex.push_back(m);
+
+    std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
+    m_io_opening += elapsed_seconds.count();
 }
 
 
@@ -357,6 +365,8 @@ void ExtESmry::updatePathAndRootName(std::filesystem::path& dir, std::filesystem
 
 void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 {
+    auto start = std::chrono::system_clock::now();
+
     std::vector<int> keyIndexVect;
 
     for (const auto& key: stringVect)
@@ -419,6 +429,9 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 
     for (auto kind : keyIndexVect)
         m_vectorLoaded[kind] = true;
+
+    std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
+    m_io_loading += elapsed_seconds.count();
 }
 
 void ExtESmry::loadData()
@@ -464,6 +477,12 @@ std::vector<std::string> ExtESmry::keywordList(const std::string& pattern) const
 bool ExtESmry::hasKey(const std::string &key) const
 {
     return std::find(m_keyword.begin(), m_keyword.end(), key) != m_keyword.end();
+}
+
+std::tuple<double, double> ExtESmry::get_io_elapsed() const
+{
+    std::tuple<double, double> duration = std::make_tuple(m_io_opening, m_io_loading);
+    return duration;
 }
 
 
