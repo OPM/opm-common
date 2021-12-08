@@ -85,6 +85,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PermfactTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -442,6 +443,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         addTables( "PDVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTPVD", m_eqldims.getNumEquilRegions());
+        addTables( "SALTSOL", m_tabdims.getNumPVTTables());
         addTables( "PERMFACT", m_eqldims.getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
@@ -507,6 +509,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltpvdTable>(deck, "SALTPVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<SaltsolTable>(deck, "SALTSOL" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<SaltvdTable>(deck, "PERMFACT" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
@@ -932,6 +935,10 @@ DensityTable make_density_table(const GravityTable& gravity) {
         return getTables("SALTPVD");
     }
 
+   const TableContainer& TableManager::getSaltsolTables() const {
+        return getTables("SALTSOL");
+    }
+    
     const TableContainer& TableManager::getPermfactTables() const {
         return getTables("PERMFACT");
     }
@@ -1475,7 +1482,6 @@ DensityTable make_density_table(const GravityTable& gravity) {
         }
         assert(regionIdx == numTables);
     }
-
 
     template <class TableType>
     void TableManager::initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables ) {

@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef OPM_PARSER_SOLVENTDENSITY_TABLE_HPP
-#define	OPM_PARSER_SOLVENTDENSITY_TABLE_HPP
+#define OPM_PARSER_SOLVENTDENSITY_TABLE_HPP
 
 namespace Opm {
 

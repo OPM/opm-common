@@ -97,6 +97,7 @@ namespace Opm {
         const TableContainer& getPdvdTables() const;
         const TableContainer& getSaltvdTables() const;
         const TableContainer& getSaltpvdTables() const;
+        const TableContainer& getSaltsolTables() const;
         const TableContainer& getPermfactTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;

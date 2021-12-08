@@ -67,6 +67,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PermfactTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -1077,6 +1078,18 @@ const TableColumn& SaltpvdTable::getDepthColumn() const {
 const TableColumn& SaltpvdTable::getSaltpColumn() const {
     return SimpleTable::getColumn(1); 
 }
+
+
+SaltsolTable::SaltsolTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "SALTSOLUBILITY" , Table::RANDOM , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+const TableColumn& SaltsolTable::getSaltsolColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
 
 PermfactTable::PermfactTable( const DeckItem& item ) {
     m_schema.addColumn( ColumnSchema( "POROSITYCHANGE" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));

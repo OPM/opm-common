@@ -711,6 +711,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PermfactTable.hpp
        opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp
