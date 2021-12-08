@@ -48,10 +48,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             waterResRateLimit       =  16, // Group's water reservoir volume injection rate target/limit
             waterReinjectionLimit   =  17, // Group's water reinjection fraction target/limit
             waterVoidageLimit       =  18, // Group's water voidage injection fraction target/limit
+            waterGuideRate          =  19,
             gasSurfRateLimit        =  20, // Group's gas surface volume injection rate target/limit
             gasResRateLimit         =  21, // Group's gas reservoir volume injection rate target/limit
             gasReinjectionLimit     =  22, // Group's gas reinjection fraction target/limit
             gasVoidageLimit         =  23, // Group's gas voidage injection fraction target/limit
+            gasGuideRate            =  24,
         };
     } // SGroup
 
@@ -69,9 +71,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         WInjActiveCMode = 16,
         WInjHighLevCtrl = 17,
         GConInjeWInjCMode = 19,
+        GConInjeWaterGuideRateMode = 20,
         GInjActiveCMode = 21,
         GInjHighLevCtrl = 22,
         GConInjeGInjCMode = 24,
+        GConInjeGasGuideRateMode = 25,
         GroupType = 26,
         GroupLevel = 27,
         ParentGroup = 28,

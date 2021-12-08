@@ -1119,6 +1119,22 @@ Group::GuideRateInjTarget Group::GuideRateInjTargetFromString( const std::string
         return GuideRateInjTarget::NO_GUIDE_RATE;
 }
 
+int Group::GuideRateInjTargetToInt(GuideRateInjTarget target) {
+    switch (target) {
+    case GuideRateInjTarget::RATE:
+        return 1;
+    case GuideRateInjTarget::RESV:
+        return 2;
+    case GuideRateInjTarget::VOID:
+        return 3;
+    case GuideRateInjTarget::NETV:
+        return 4;
+    default:
+        return 0;
+    }
+}
+
+
 Group::GuideRateProdTarget Group::GuideRateProdTargetFromString( const std::string& stringValue ) {
     if (stringValue == "OIL")
         return GuideRateProdTarget::OIL;
