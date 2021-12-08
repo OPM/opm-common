@@ -537,11 +537,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     void Schedule::prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword){
-        static std::unordered_set<std::string> keyword_list = {"COMPDAT", "COMPSEGS"};
-
-        if (keyword_list.count(keyword.name()) == 0)
-            return;
-
         if(keyword.is<ParserKeywords::COMPDAT>()){
             for (auto record : keyword){
                 const auto& itemI = record.getItem("I");
@@ -563,8 +558,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     //Only interested in activating the cells.
                 }
             }
+            return;
         }
-        else if (keyword.name() == "COMPSEGS"){
+
+        if (keyword.is<ParserKeywords::COMPSEGS>()) {
             for (auto record : keyword){
                 const auto& itemI = record.getItem("I");
                 const auto& itemJ = record.getItem("J");
