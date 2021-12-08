@@ -61,12 +61,12 @@ std::string dequote(const std::string& token, const std::optional<KeywordLocatio
 bool ActionX::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> actionx_allowed_list = {
         "BOX",
-        "COMPLUMP", "COMPDAT",
+        "COMPLUMP", "COMPDAT", "COMPSEGS",
         "ENDBOX", "EXIT",
         "GCONINJE", "GCONPROD", "GCONSUMP", "GLIFTOPT", "GRUPNET", "GRUPTARG", "GRUPTREE", "GSATINJE", "GSATPROD",
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "UDQ",
-        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELSPECS","WELOPEN", "WELPI", "WGRUPCON", "WPIMULT", "WTEST", "TEST"
+        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELPI", "WGRUPCON", "WPIMULT", "WELSEGS", "WELSPECS", "WSEGVALV", "WTEST", "TEST"
     };
     return (actionx_allowed_list.find(keyword) != actionx_allowed_list.end());
 }
