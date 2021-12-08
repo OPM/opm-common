@@ -128,7 +128,7 @@ namespace {
         production.liquid_target.update(rst_group.liquid_rate_limit);
         production.cmode = Opm::Group::ProductionCModeFromInt(rst_group.prod_cmode);
         production.exceed_action = Opm::Group::ExceedActionFromInt(rst_group.exceed_action);
-        production.guide_rate_def = Group::GuideRateProdTargetFromInt(rst_group.prod_guide_rate_def);
+        production.guide_rate_def = Opm::Group::GuideRateProdTargetFromInt(rst_group.prod_guide_rate_def);
 
         if ((production.cmode == Opm::Group::ProductionCMode::ORAT) ||
             (production.cmode == Opm::Group::ProductionCMode::WRAT) ||
@@ -167,6 +167,8 @@ namespace {
         injection.target_void_fraction.update(rst_group.gas_voidage_limit);
         injection.phase = Opm::Phase::GAS;
         injection.cmode = Opm::Group::InjectionCModeFromInt(rst_group.ginj_cmode);
+        injection.guide_rate_def = Opm::Group::GuideRateInjTargetFromInt(rst_group.inj_gas_guide_rate_def);
+        injection.guide_rate = rst_group.inj_gas_guide_rate;
 
         assign_injection_controls(active, injection);
 
@@ -185,6 +187,8 @@ namespace {
         injection.target_void_fraction.update(rst_group.water_voidage_limit);
         injection.phase = Opm::Phase::WATER;
         injection.cmode = Opm::Group::InjectionCModeFromInt(rst_group.winj_cmode);
+        injection.guide_rate_def = Opm::Group::GuideRateInjTargetFromInt(rst_group.inj_water_guide_rate_def);
+        injection.guide_rate = rst_group.inj_water_guide_rate;
 
         assign_injection_controls(active, injection);
 
@@ -1133,6 +1137,23 @@ int Group::GuideRateInjTargetToInt(GuideRateInjTarget target) {
         return 0;
     }
 }
+
+Group::GuideRateInjTarget Group::GuideRateInjTargetFromInt(int ecl_id) {
+    switch (ecl_id) {
+    case 1:
+        return GuideRateInjTarget::RATE;
+    case 2:
+        return GuideRateInjTarget::RESV;
+    case 3:
+        return GuideRateInjTarget::VOID;
+    case 4:
+        return GuideRateInjTarget::NETV;
+    default:
+        return GuideRateInjTarget::NO_GUIDE_RATE;
+    }
+}
+
+
 
 
 Group::GuideRateProdTarget Group::GuideRateProdTargetFromString( const std::string& stringValue ) {
