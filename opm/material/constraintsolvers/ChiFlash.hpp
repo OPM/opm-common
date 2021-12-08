@@ -663,7 +663,7 @@ protected:
             newtonX[compIdx] = Opm::getValue(fluidState.moleFraction(oilPhaseIdx, compIdx));
             newtonX[compIdx + numMiscibleComponents] = Opm::getValue(fluidState.moleFraction(gasPhaseIdx, compIdx));
         }
-        newtonX[numMiscibleComponents*numMiscibleComponents] = Opm::getValue(L);
+        newtonX[numMisciblePhases*numMiscibleComponents] = Opm::getValue(L);
 
         // 
         // Main Newton loop
