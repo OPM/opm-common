@@ -28,47 +28,59 @@
 #include "config.h"
 
 #include <opm/material/constraintsolvers/ChiFlash.hpp>
-#include <opm/material/fluidsystems/chifluid/twophasefluidsystem.hh>
+#include <opm/material/fluidsystems/chifluid/juliathreecomponentfluidsystem.hh>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
-// #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-// #include <opm/material/fluidsystems/Spe5FluidSystem.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
-// #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 
 #include <dune/common/parallel/mpihelper.hh>
+// the following include should be removed later
+// #include <opm/material/fluidsystems/chifluid/chiwoms.h>
 
 void testChiFlash()
 {
+    
+    
     using Scalar = double;
-    using FluidSystem = Opm::TwoPhaseTwoComponentFluidSystem<Scalar>;
+    using FluidSystem = Opm::JuliaThreeComponentFluidSystem<Scalar>;
 
     constexpr auto numComponents = FluidSystem::numComponents;
     using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
     typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
     typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
 
+    // input
+    Evaluation p_init = Evaluation::createVariable(10e5, 0); // 10 bar
+    ComponentVector comp;
+    comp[0] = Evaluation::createVariable(0.5, 1);
+    comp[1] = Evaluation::createVariable(0.3, 2);
+    comp[2] = 1. - comp[0] - comp[1];
+    ComponentVector sat;
+    sat[0] = 1.0; sat[1] = 1.0-sat[0];
+    Scalar temp = 300.0;
     // From co2-compositional branch, it uses
     // typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
 
     FluidState fs;
     // TODO: no capillary pressure for now
-    const Scalar p_init = 100.*1.e5; // 100 bar
+    
     fs.setPressure(FluidSystem::oilPhaseIdx, p_init);
     fs.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
-    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, MFCOMP0);
-    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, MFCOMP1);
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
-    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, MFCOMP0);
-    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, MFCOMP1);
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
-    fs.setSaturation(FluidSystem::oilPhaseIdx, 1.0);
-    fs.setSaturation(FluidSystem::gasPhaseIdx, 0.0);
+    fs.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
+    fs.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
 
-    fs.setTemperature(303);
+    fs.setTemperature(temp);
 
     // ParameterCache paramCache;
     {
@@ -91,7 +103,7 @@ void testChiFlash()
         }
         zInit /= sumMoles;
     }
-    const double flash_tolerance = -1.; // just to test the setup in co2-compositional
+    const double flash_tolerance = 1.e-8; // just to test the setup in co2-compositional
     const int flash_verbosity = 1;
     const std::string flash_twophase_method = "ssi";
 
@@ -100,7 +112,7 @@ void testChiFlash()
         const Evaluation Ktmp = fs.wilsonK_(compIdx);
         fs.setKvalue(compIdx, Ktmp);
     }
-    const Evaluation Ltmp = -1.0;
+    const Evaluation Ltmp = 1.;
     fs.setLvalue(Ltmp);
 
     const int spatialIdx = 0;
