@@ -52,7 +52,7 @@ RstGroup::RstGroup(const ::Opm::UnitSystem& unit_system,
     prod_cmode(igrp[header.nwgmax + VI::IGroup::GConProdCMode]),
     winj_cmode(igrp[header.nwgmax + VI::IGroup::GConInjeWInjCMode]),
     ginj_cmode(igrp[header.nwgmax + VI::IGroup::GConInjeGInjCMode]),
-    guide_rate_def(igrp[header.nwgmax + VI::IGroup::GuideRateDef]),
+    prod_guide_rate_def(igrp[header.nwgmax + VI::IGroup::GuideRateDef]),
     exceed_action(igrp[header.nwgmax + VI::IGroup::ExceedAction]),
     // The values oil_rate_limit -> gas_voidage_limit will be used in UDA
     // values. The UDA values are responsible for unit conversion and raw values

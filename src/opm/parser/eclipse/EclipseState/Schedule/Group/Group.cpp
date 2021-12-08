@@ -127,8 +127,8 @@ namespace {
         production.water_target.update(rst_group.water_rate_limit);
         production.liquid_target.update(rst_group.liquid_rate_limit);
         production.cmode = Opm::Group::ProductionCModeFromInt(rst_group.prod_cmode);
-        production.guide_rate_def = Opm::Group::GuideRateProdTargetFromInt(rst_group.guide_rate_def);
         production.exceed_action = Opm::Group::ExceedActionFromInt(rst_group.exceed_action);
+        production.guide_rate_def = Group::GuideRateProdTargetFromInt(rst_group.prod_guide_rate_def);
 
         if ((production.cmode == Opm::Group::ProductionCMode::ORAT) ||
             (production.cmode == Opm::Group::ProductionCMode::WRAT) ||
