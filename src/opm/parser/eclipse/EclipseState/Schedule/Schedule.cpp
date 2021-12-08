@@ -562,7 +562,12 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         if (keyword.is<ParserKeywords::COMPSEGS>()) {
+            bool first_record = true;
             for (auto record : keyword){
+                if (first_record) {
+                    first_record = false;
+                    continue;
+                }
                 const auto& itemI = record.getItem("I");
                 const auto& itemJ = record.getItem("J");
                 const auto& itemK = record.getItem("K");
