@@ -96,15 +96,16 @@ const std::string& inputStr_cpr_BOTH = "RUNSPEC\n"
     "CPR\n"
     "well1 10 20 30/\n/\n";
 
-const std::string& inputStr_vap_dis = "RUNSPEC\n"
-                                      "VAPOIL\n"
-                                      "DISGAS\n"
-                                      "DIMENS\n"
-                                      "10 3 4 /\n"
-                                      "\n"
-                                      "GRID\n"
-                                      "REGIONS\n"
-                                      "\n";
+const std::string& inputStr_vap_dis = R"(
+RUNSPEC
+VAPOIL
+DISGAS
+VAPWAT
+DIMENS
+ 10 3 4 /
+GRID
+REGIONS
+)";
 
 namespace {
     std::string simDeckStringTEMP()
@@ -214,24 +215,26 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRRUnspecWithData) {
 }
 
 
-BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
+BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS_VAPWAT) {
+
+    EclipseGrid eg(10, 3, 4);
+
     auto deck = createDeck(inputStr);
     TableManager tm(deck);
-    EclipseGrid eg(10, 3, 4);
     FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK_EQUAL( false , simulationConfig.hasDISGAS());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPOIL());
+    BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPWAT());
 
     auto deck_vd = createDeck(inputStr_vap_dis);
-    TableManager tm_vd(deck_vd);
-    EclipseGrid eg_vd(10, 3, 4);
     FieldPropsManager fp_vd(deck_vd, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig_vd(false, deck_vd, fp_vd);
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
+    BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPWAT());
+    
 }
-
 
 BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
 {
