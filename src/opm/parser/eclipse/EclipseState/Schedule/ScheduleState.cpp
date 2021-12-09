@@ -264,6 +264,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->gconsump.get() == other.gconsump.get() &&
            this->wlist_manager.get() == other.wlist_manager.get() &&
            this->rpt_config.get() == other.rpt_config.get() &&
+           this->actions.get() == other.actions.get() &&
            this->udq_active.get() == other.udq_active.get() &&
            this->glo.get() == other.glo.get() &&
            this->guide_rate.get() == other.guide_rate.get() &&
