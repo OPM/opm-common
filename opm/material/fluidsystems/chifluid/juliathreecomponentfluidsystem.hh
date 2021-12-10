@@ -141,7 +141,9 @@ namespace Opm {
                                  unsigned phaseIdx)
         {
             // Use LBC method to calculate viscosity
-            LhsEval mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
+            // LhsEval mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
+            // LhsEval mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
+            LhsEval mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx);
             return mu;
 
         }
