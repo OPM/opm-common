@@ -125,6 +125,15 @@ public:
         }
     }
 
+    void setCompressFactor(unsigned phaseIdx, const Scalar& value) {
+        Valgrind::CheckDefined(value);
+        Z_[phaseIdx] = value;
+    }
+
+    Scalar compressFactor(unsigned phaseIdx) const {
+        return Z_[phaseIdx];
+    }
+
     /*!
      * \brief Retrieve all parameters from an arbitrary fluid
      *        state.
@@ -209,7 +218,7 @@ public:
         const auto& p_crit = FluidSystem::criticalPressure(compIdx);
         const auto& p = asImp_().pressure(0); //for now assume no capillary pressure
 
-        const auto& tmp = exp(5.3727 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
+        const auto& tmp = exp(5.37 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
         return tmp;
     }
 
@@ -220,6 +229,7 @@ protected:
     std::array<std::array<Scalar,numComponents>,numPhases> moleFraction_;
     std::array<Scalar,numPhases> averageMolarMass_;
     std::array<Scalar,numPhases> sumMoleFractions_;
+    std::array<Scalar,numPhases> Z_;
     std::array<Scalar,numComponents> K_;
     Scalar L_;
     bool twophaseflag_;
