@@ -126,7 +126,6 @@ public:
                           unsigned phaseIdx)
     {
         const Scalar MPa_atm = 0.101325;
-        const Scalar R = 8.3144598e-3;//Mj/kmol*K
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
         const auto& rho = Opm::decay<LhsEval>(fluidState.density(phaseIdx));
 
@@ -204,6 +203,69 @@ public:
         }
 
         return (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot -1.8366e-8*Opm::pow(rho_r,13.992))/1e3; // mPas-> Pas
+    }
+
+
+    // translation of the viscosity code from the Julia code
+    template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
+    static LhsEval LBCJulia(const FluidState& fluidState,
+                            const Params& /*paramCache*/,
+                            unsigned phaseIdx) {
+        constexpr Scalar mol_factor = 1000.;
+        constexpr Scalar rankine = 5. / 9.;
+        constexpr Scalar psia = 6.894757293168360e+03;
+        constexpr Scalar R = 8.3144598;
+        const Scalar T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
+        const Scalar P = Opm::decay<LhsEval>(fluidState.pressure(phaseIdx));
+        const Scalar Z = Opm::decay<LhsEval>(fluidState.compressFactor(phaseIdx));
+        const Scalar rho = P / (R * T * Z);
+
+        Scalar P_pc = 0.;
+        Scalar T_pc = 0.;
+        Scalar Vc = 0.;
+        Scalar mwc = 0.;
+        Scalar a = 0.;
+        Scalar b = 0.;
+        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+            const Scalar mol_frac = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
+            const Scalar mol_weight = FluidSystem::molarMass(compIdx); // TODO: check values
+            const Scalar p_c = FluidSystem::criticalPressure(compIdx);
+            const Scalar T_c = FluidSystem::criticalTemperature(compIdx);
+            const Scalar v_c = FluidSystem::criticalVolume(compIdx);
+            mwc += mol_frac * mol_weight;
+            P_pc += mol_frac * p_c;
+            T_pc += mol_frac * T_c;
+            Vc += mol_frac * v_c;
+
+            const Scalar tr = T / T_c;
+            const Scalar Tc = T_c / rankine;
+            const Scalar Pc = p_c / psia;
+
+            const Scalar mwi = Opm::sqrt(mol_factor * mol_weight);
+            const Scalar e_i = 5.4402 * Opm::pow(Tc, 1./6.) / (mwi * Opm::pow(Pc, 2./3.) * 1.e-3);
+
+            Scalar mu_i;
+            if (tr > 1.5) {
+                mu_i = 17.78e-5 * Opm::pow(4.58*tr - 1.67, 0.625) / e_i;
+            } else {
+                mu_i = 34.e-5 * Opm::pow(tr, 0.94) / e_i;
+            }
+            a += mol_frac * mu_i * mwi;
+            b += mol_frac * mwi;
+        }
+        const Scalar mu_atm = a / b;
+        const Scalar e_mix = 5.4402 * Opm::pow(T_pc/rankine, 1./6.) /
+                (Opm::sqrt(mol_factor * mwc) * Opm::pow(P_pc/psia, 2./3.) * (1e-3));
+        const Scalar rhor = Vc * rho;
+
+        Scalar corr = 0.;
+        const std::vector<Scalar> LBC{0.10230, 0.023364, 0.058533, -0.040758, 0.0093324};
+        const Scalar shift = -1.e-4;
+        for (unsigned i = 0; i < 5; ++i) {
+            corr += LBC[i] * Opm::pow(rhor, i);
+        }
+        LhsEval mu = mu_atm + (corr * corr * corr * corr + shift)/e_mix;
+        return mu;
     }
 };
 
