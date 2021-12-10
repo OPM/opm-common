@@ -140,14 +140,21 @@ namespace Opm {
         this->ignore_keywords.insert(keyword);
     }
 
+    void ParseContext::handleError(const std::string& errorKey,
+                                   const std::string& msg_fmt,
+                                   const std::optional<KeywordLocation>& location,
+                                   ErrorGuard& errors) const {
+        InputError::Action action = this->get( errorKey );
+        ParseContext::handleError(action, errorKey, msg_fmt, location, errors);
+    }
 
-    void ParseContext::handleError(
-            const std::string& errorKey,
-            const std::string& msg_fmt,
-            const std::optional<KeywordLocation>& location,
-            ErrorGuard& errors) const {
 
-        InputError::Action action = get( errorKey );
+    void ParseContext::handleError(InputError::Action action,
+                                   const std::string& errorKey,
+                                   const std::string& msg_fmt,
+                                   const std::optional<KeywordLocation>& location,
+                                   ErrorGuard& errors) {
+
         std::string msg = location ? OpmInputError::format(msg_fmt, *location) : msg_fmt;
 
         if (action == InputError::IGNORE) {

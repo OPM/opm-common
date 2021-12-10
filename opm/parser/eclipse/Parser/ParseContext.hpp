@@ -92,6 +92,11 @@ class KeywordLocation;
         explicit ParseContext(const std::vector<std::pair<std::string , InputError::Action>>& initial);
 
         void handleError( const std::string& errorKey, const std::string& msg, const std::optional<KeywordLocation>& location, ErrorGuard& errors)  const;
+        static void handleError(InputError::Action action,
+                                const std::string& errorKey,
+                                const std::string& msg_fmt,
+                                const std::optional<KeywordLocation>& location,
+                                ErrorGuard& errors);
         void handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const;
         bool hasKey(const std::string& key) const;
         ParseContext  withKey(const std::string& key, InputError::Action action = InputError::WARN) const;
