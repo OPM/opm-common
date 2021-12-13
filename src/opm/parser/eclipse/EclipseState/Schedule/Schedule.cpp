@@ -496,6 +496,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                         if (Action::ActionX::valid_keyword(action_keyword.name())){
                             action.addKeyword(action_keyword);
                             this->prefetch_cell_properties(grid, action_keyword);
+                            this->store_wgnames(action_keyword);
                         }
                         else {
                             std::string msg_fmt = fmt::format("The keyword {} is not supported in the ACTIONX block", action_keyword.name());
@@ -534,6 +535,19 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         new_actions.add( action );
         this->snapshots.back().actions.update( std::move(new_actions) );
     }
+
+
+    void Schedule::store_wgnames(const DeckKeyword& keyword) {
+        if(keyword.is<ParserKeywords::WELSPECS>()) {
+            for (const auto& record : keyword) {
+                const auto& wname = record.getItem<ParserKeywords::WELSPECS::WELL>().get<std::string>(0);
+                const auto& gname = record.getItem<ParserKeywords::WELSPECS::GROUP>().get<std::string>(0);
+                this->action_wgnames.add_well(wname);
+                this->action_wgnames.add_group(gname);
+            }
+        }
+    }
+
 
     void Schedule::prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword){
         if(keyword.is<ParserKeywords::COMPDAT>()){
@@ -987,9 +1001,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         std::vector<std::string> valid_names;
         const auto& report_step = context.currentStep;
         auto names = this->wellNames(pattern, report_step, context.matching_wells);
-        if (names.empty())
-            this->invalidNamePattern(pattern, context);
-
+        if (names.empty()) {
+            const auto& location = context.keyword.location();
+            if (this->action_wgnames.has_well(pattern)) {
+                std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
+Expecting well to be defined with WELSPECS in ACTIONX before actual use.
+File {} line {}.)", pattern, location.keyword, location.filename, location.lineno);
+                OpmLog::warning(msg);
+            } else
+                this->invalidNamePattern(pattern, context);
+        }
         return names;
     }
 

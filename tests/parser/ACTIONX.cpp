@@ -1312,6 +1312,14 @@ ENDACTIO
 TSTEP
 10 /
 
+WELOPEN
+  'PROD1' 'OPEN' 5* /
+/
+
+TSTEP
+10/
+
+
         )"};
 
     const auto st = SummaryState{ TimeService::now() };
