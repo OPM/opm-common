@@ -110,6 +110,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Enums.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/State.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/WGNames.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/CompletedCells.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/eval_uda.cpp
@@ -800,6 +801,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/SimulatorUpdate.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/WGNames.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
        opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/Balance.hpp

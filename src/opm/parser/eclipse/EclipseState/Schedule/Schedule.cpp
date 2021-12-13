@@ -1381,6 +1381,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                this->m_sched_deck == data.m_sched_deck &&
                this->snapshots == data.snapshots &&
                this->restart_output == data.restart_output &&
+               this->action_wgnames == data.action_wgnames &&
                this->completed_cells == data.completed_cells;
      }
 

@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/WGNames.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -1264,6 +1265,18 @@ TSTEP
         BOOST_CHECK(!plat_group.max_total_gas().has_value());
     }
 
+}
+
+BOOST_AUTO_TEST_CASE(ACTIONX_WGNAME) {
+    Action::WGNames wgnames;
+
+    wgnames.add_well("W1");
+    BOOST_CHECK(wgnames.has_well("W1"));
+    BOOST_CHECK(!wgnames.has_well("W2"));
+
+    wgnames.add_group("G1");
+    BOOST_CHECK(wgnames.has_group("G1"));
+    BOOST_CHECK(!wgnames.has_group("G2"));
 }
 
 BOOST_AUTO_TEST_CASE(Action_COMPDAT_ACTION) {
