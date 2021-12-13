@@ -168,7 +168,7 @@ namespace Opm {
             // when it goes out of scope.
             errors.clear();
 
-            throw OpmInputError(msg_fmt, location.value_or(KeywordLocation{}));
+            throw OpmInputError(msg, location.value_or(KeywordLocation{}));
         }
 
         if (action == InputError::EXIT1) {

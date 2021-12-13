@@ -498,8 +498,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                             this->prefetch_cell_properties(grid, action_keyword);
                         }
                         else {
-                            std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
-                                "In {file} line {line}.";
+                            std::string msg_fmt = fmt::format("The keyword {} is not supported in the ACTIONX block", action_keyword.name());
                             parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
                         }
                     }
