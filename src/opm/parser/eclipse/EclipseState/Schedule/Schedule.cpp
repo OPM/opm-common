@@ -319,12 +319,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, sim_update, target_wellpi};
+        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, parseContext, errors, sim_update, target_wellpi};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
         */
-        if (handleNormalKeyword(handlerContext, parseContext, errors))
+        if (handleNormalKeyword(handlerContext))
             return;
 
         if (keyword.is<ParserKeywords::PYACTION>())
@@ -679,83 +679,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
 
 
-     void Schedule::applyWELOPEN(const DeckKeyword& keyword,
-                                 std::size_t currentStep,
-                                 const ParseContext& parseContext,
-                                 ErrorGuard& errors,
-                                 const std::vector<std::string>& matching_wells,
-                                 SimulatorUpdate * sim_update) {
-
-        auto conn_defaulted = []( const DeckRecord& rec ) {
-            auto defaulted = []( const DeckItem& item ) {
-                return item.defaultApplied( 0 );
-            };
-
-            return std::all_of( rec.begin() + 2, rec.end(), defaulted );
-        };
-
-        constexpr auto open = Well::Status::OPEN;
-
-        for (const auto& record : keyword) {
-            const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
-            const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
-            const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
-            if (well_names.empty())
-                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
-
-            /* if all records are defaulted or just the status is set, only
-             * well status is updated
-             */
-            if (conn_defaulted( record )) {
-                const auto well_status = Well::StatusFromString( status_str );
-                for (const auto& wname : well_names) {
-                    {
-                        const auto& well = this->getWell(wname, currentStep);
-                        if( well_status == open && !well.canOpen() ) {
-                            auto elapsed = this->snapshots[currentStep].start_time() - this->snapshots[0].start_time();
-                            auto days = std::chrono::duration_cast<std::chrono::hours>(elapsed).count() / 24;
-                            std::string msg = "Well " + wname
-                                + " where crossflow is banned has zero total rate."
-                                + " This well is prevented from opening at "
-                                + std::to_string( days ) + " days";
-                            OpmLog::note(msg);
-                        } else {
-                            this->updateWellStatus( wname, currentStep, well_status);
-                            if (sim_update)
-                                sim_update->affected_wells.insert(wname);
-                        }
-                    }
-                }
-
-                continue;
-            }
-
-            /*
-              Some of the connection information has been entered, in this case
-              we *only* update the status of the connections, and not the well
-              itself. Unless all connections are shut - then the well is also
-              shut.
-             */
-            for (const auto& wname : well_names) {
-                {
-                    auto well = this->snapshots[currentStep].wells.get(wname);
-                    this->snapshots[currentStep].wells.update( std::move(well) );
-                }
-
-                const auto connection_status = Connection::StateFromString( status_str );
-                {
-                    auto well = this->snapshots[currentStep].wells.get(wname);
-                    well.handleWELOPENConnections(record, connection_status);
-                    this->snapshots[currentStep].wells.update( std::move(well) );
-                }
-
-                if (sim_update)
-                    sim_update->affected_wells.insert(wname);
-                this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
-            }
-        }
-    }
-
 
     std::optional<std::size_t> Schedule::first_RFT() const {
         for (std::size_t report_step = 0; report_step < this->snapshots.size(); report_step++) {
@@ -765,10 +688,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return {};
     }
 
-
-    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
+    void Schedule::invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const {
         std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
-        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, keyword.location(), errors );
+        context.parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, context.keyword.location(), context.errors);
     }
 
     GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
@@ -1059,6 +981,17 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             : wm.wells(pattern);      // Normal well name pattern matching
     }
 
+
+
+    std::vector<std::string> Schedule::wellNames(const std::string& pattern, const HandlerContext& context) {
+        std::vector<std::string> valid_names;
+        const auto& report_step = context.currentStep;
+        auto names = this->wellNames(pattern, report_step, context.matching_wells);
+        if (names.empty())
+            this->invalidNamePattern(pattern, context);
+
+        return names;
+    }
 
     WellMatcher Schedule::wellMatcher(std::size_t report_step) const {
         const ScheduleState * sched_state;
