@@ -515,7 +515,6 @@ set( keywords
      000_Eclipse100/N/NETCOMPA
      000_Eclipse100/N/NETWORK
      000_Eclipse100/N/NEWTRAN
-     000_Eclipse100/N/NEXT
      000_Eclipse100/N/NEXTSTEP
      000_Eclipse100/N/NEXTSTPL
      000_Eclipse100/N/NINENUM

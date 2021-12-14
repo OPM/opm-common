@@ -2154,6 +2154,7 @@ namespace {
             { "MULTZ"   , &Schedule::handleGEOKeyword},
             { "MULTZ-"  , &Schedule::handleGEOKeyword},
             { "NETBALAN", &Schedule::handleNETBALAN  },
+            { "NEXT",     &Schedule::handleNEXTSTEP  },
             { "NEXTSTEP", &Schedule::handleNEXTSTEP  },
             { "NODEPROP", &Schedule::handleNODEPROP  },
             { "NUPCOL"  , &Schedule::handleNUPCOL    },

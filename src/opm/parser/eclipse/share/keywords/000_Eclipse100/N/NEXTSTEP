@@ -15,5 +15,6 @@
       "value_type": "STRING",
       "default": "NO"
     }
-  ]
+  ],
+  "deck_names" : ["NEXT", "NEXTSTEP"]
 }
