@@ -28,7 +28,7 @@
 #include <vector>
 #include <algorithm>
 
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {

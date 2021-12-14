@@ -26,8 +26,8 @@
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -42,10 +42,10 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>

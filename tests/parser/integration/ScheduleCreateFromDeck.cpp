@@ -28,16 +28,16 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
 
 using namespace Opm;
 

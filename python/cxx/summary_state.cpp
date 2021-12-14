@@ -18,7 +18,7 @@
 */
 #include <chrono>
 
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <pybind11/stl.h>

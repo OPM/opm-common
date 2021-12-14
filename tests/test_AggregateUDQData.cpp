@@ -6,8 +6,8 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
@@ -19,14 +19,14 @@
 #include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -34,7 +34,7 @@
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>

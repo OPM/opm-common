@@ -29,15 +29,15 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Well/Connection.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>

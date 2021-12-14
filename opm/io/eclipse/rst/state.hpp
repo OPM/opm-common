@@ -33,7 +33,7 @@
 #include <opm/io/eclipse/rst/well.hpp>
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 

@@ -42,13 +42,13 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>

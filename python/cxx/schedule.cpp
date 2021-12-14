@@ -7,7 +7,7 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <pybind11/stl.h>
 #include <pybind11/chrono.h>

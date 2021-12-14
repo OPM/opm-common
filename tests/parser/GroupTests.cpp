@@ -30,16 +30,16 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 using namespace Opm;

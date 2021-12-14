@@ -27,20 +27,20 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 

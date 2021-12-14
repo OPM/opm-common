@@ -23,14 +23,14 @@
 #include <opm/output/eclipse/WindowedArray.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <cstddef>
 #include <string>

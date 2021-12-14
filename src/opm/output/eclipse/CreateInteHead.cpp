@@ -27,13 +27,13 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/ArrayDimChecker.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 

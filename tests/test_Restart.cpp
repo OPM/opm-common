@@ -35,16 +35,16 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Utility/Functional.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>

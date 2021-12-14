@@ -25,7 +25,7 @@
 #include <variant>
 #include <vector>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Enums.hpp>
+#include <opm/input/eclipse/Schedule/Action/Enums.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {

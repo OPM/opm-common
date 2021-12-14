@@ -21,7 +21,7 @@
 
 #include <array>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 
 namespace Opm {
 class UnitSystem;

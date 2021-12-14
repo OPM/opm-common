@@ -26,7 +26,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
+#include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 
 using namespace Opm;
 

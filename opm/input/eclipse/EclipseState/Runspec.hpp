@@ -27,8 +27,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/EndpointScaling.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 
 namespace Opm {
 class Deck;

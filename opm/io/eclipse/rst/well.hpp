@@ -27,7 +27,7 @@
 
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/segment.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 
 namespace Opm {
 class UnitSystem;

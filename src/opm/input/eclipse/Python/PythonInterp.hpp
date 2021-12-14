@@ -25,9 +25,9 @@
 #include <stdexcept>
 #include <memory>
 
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 

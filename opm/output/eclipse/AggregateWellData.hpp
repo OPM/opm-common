@@ -23,7 +23,7 @@
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 
 #include <cstddef>
 #include <string>

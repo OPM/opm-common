@@ -32,8 +32,8 @@
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Condition.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/Schedule/Action/Condition.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>

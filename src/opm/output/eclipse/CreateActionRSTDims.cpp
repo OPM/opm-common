@@ -25,13 +25,13 @@
 #include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/action.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>

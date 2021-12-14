@@ -43,16 +43,16 @@
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/NameOrder.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -64,12 +64,12 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 #include "tests/WorkArea.cpp"
 

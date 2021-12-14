@@ -25,7 +25,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>

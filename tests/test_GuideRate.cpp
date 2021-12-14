@@ -21,7 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
@@ -31,9 +31,9 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 

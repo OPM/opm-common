@@ -20,7 +20,7 @@
 #define BOOST_TEST_MODULE Restart File Events
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/WriteRestartFileEvents.hpp>
+#include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 
 #include <cstddef>
 

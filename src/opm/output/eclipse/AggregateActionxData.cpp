@@ -24,23 +24,23 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/common/utility/String.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Enums.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/Schedule/Action/Enums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/output/eclipse/VectorItems/action.hpp>
 
 #include <algorithm>

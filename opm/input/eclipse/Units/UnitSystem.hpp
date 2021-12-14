@@ -26,7 +26,7 @@
 #include <memory>
 
 #include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 
 
 namespace Opm {

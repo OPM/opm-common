@@ -23,9 +23,9 @@
 #include <exception>
 #include <boost/test/unit_test.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/common/utility/Serializer.hpp>
 

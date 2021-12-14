@@ -44,8 +44,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>

@@ -26,7 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
@@ -38,8 +38,8 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/common/utility/TimeService.hpp>

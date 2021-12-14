@@ -26,14 +26,14 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Network/Branch.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Network/Node.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Network/Branch.hpp>
+#include <opm/input/eclipse/Schedule/Network/Node.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>

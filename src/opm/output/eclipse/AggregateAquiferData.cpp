@@ -32,7 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 

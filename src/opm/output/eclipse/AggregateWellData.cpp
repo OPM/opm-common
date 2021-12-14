@@ -27,19 +27,19 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>

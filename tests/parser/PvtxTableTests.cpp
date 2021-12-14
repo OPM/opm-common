@@ -36,8 +36,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
