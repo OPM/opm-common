@@ -29,21 +29,21 @@
 #include <opm/output/eclipse/VectorItems/aquifer.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 

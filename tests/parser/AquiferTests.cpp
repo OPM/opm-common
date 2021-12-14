@@ -19,17 +19,17 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <cstddef>
 #include <initializer_list>

@@ -18,9 +18,9 @@
 */
 
 #include <opm/output/eclipse/DoubHEAD.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/output/eclipse/InteHEAD.hpp> // Opm::RestartIO::makeUTCTime()
 

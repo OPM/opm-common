@@ -1,5 +1,5 @@
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>
 
 #include "export.hpp"

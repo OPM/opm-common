@@ -24,9 +24,9 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/output/data/Wells.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Well/WList.hpp>
 
 #include <cstddef>
 #include <cstring>

@@ -23,8 +23,8 @@
 #include <opm/output/eclipse/VectorItems/logihead.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/common/utility/TimeService.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 using M = ::Opm::UnitSystem::measure;

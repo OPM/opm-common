@@ -25,8 +25,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/BoxManager.hpp>
 
 BOOST_AUTO_TEST_CASE(CreateBox) {
     Opm::EclipseGrid grid(4,3,2);

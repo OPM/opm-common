@@ -23,7 +23,7 @@
 #define BOOST_TEST_MODULE EventTests
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Events.hpp>
 
 
 

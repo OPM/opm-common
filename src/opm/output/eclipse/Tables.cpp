@@ -21,22 +21,22 @@
 
 #include <opm/output/eclipse/Tables.hpp>
 
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO
-#include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO
+#include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvtgTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/output/eclipse/VectorItems/tabdims.hpp>
 #include <opm/output/eclipse/LinearisedOutputTable.hpp>

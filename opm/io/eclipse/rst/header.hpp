@@ -23,7 +23,7 @@
 #include <ctime>
 #include <cstddef>
 
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
 class UnitSystem;

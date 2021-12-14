@@ -28,8 +28,8 @@
 #include <vector>
 #include <algorithm>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
 

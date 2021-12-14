@@ -1,5 +1,5 @@
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <pybind11/pybind11.h>
 #include "converters.hpp"

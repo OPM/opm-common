@@ -32,11 +32,11 @@
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Action/Condition.hpp>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <opm/output/eclipse/UDQDims.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>

@@ -1,4 +1,4 @@
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
 #include "export.hpp"
 

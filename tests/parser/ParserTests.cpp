@@ -24,22 +24,22 @@
 #include <iostream>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
-#include <opm/parser/eclipse/Utility/Typetools.hpp>
+#include <opm/input/eclipse/Utility/Typetools.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/Builtin.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp>
+#include <opm/input/eclipse/Parser/ParserRecord.hpp>
 
-#include "src/opm/parser/eclipse/Parser/raw/RawKeyword.hpp"
-#include "src/opm/parser/eclipse/Parser/raw/RawRecord.hpp"
+#include "src/opm/input/eclipse/Parser/raw/RawKeyword.hpp"
+#include "src/opm/input/eclipse/Parser/raw/RawRecord.hpp"
 
 #include <filesystem>
 #include <iostream>

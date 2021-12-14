@@ -1,27 +1,27 @@
 set(genkw_SOURCES src/opm/json/JsonObject.cpp
-                  src/opm/parser/eclipse/Parser/createDefaultKeywordList.cpp
-                  src/opm/parser/eclipse/Deck/UDAValue.cpp
-                  src/opm/parser/eclipse/Deck/DeckTree.cpp
-                  src/opm/parser/eclipse/Deck/DeckValue.cpp
-                  src/opm/parser/eclipse/Deck/Deck.cpp
-                  src/opm/parser/eclipse/Deck/DeckView.cpp
-                  src/opm/parser/eclipse/Deck/DeckItem.cpp
-                  src/opm/parser/eclipse/Deck/DeckKeyword.cpp
-                  src/opm/parser/eclipse/Deck/DeckRecord.cpp
-                  src/opm/parser/eclipse/Deck/DeckOutput.cpp
-                  src/opm/parser/eclipse/Generator/KeywordGenerator.cpp
-                  src/opm/parser/eclipse/Generator/KeywordLoader.cpp
-                  src/opm/parser/eclipse/Parser/ErrorGuard.cpp
-                  src/opm/parser/eclipse/Parser/ParseContext.cpp
-                  src/opm/parser/eclipse/Parser/ParserEnums.cpp
-                  src/opm/parser/eclipse/Parser/ParserItem.cpp
-                  src/opm/parser/eclipse/Parser/ParserKeyword.cpp
-                  src/opm/parser/eclipse/Parser/ParserRecord.cpp
-                  src/opm/parser/eclipse/Parser/raw/RawKeyword.cpp
-                  src/opm/parser/eclipse/Parser/raw/RawRecord.cpp
-                  src/opm/parser/eclipse/Parser/raw/StarToken.cpp
-                  src/opm/parser/eclipse/Units/Dimension.cpp
-                  src/opm/parser/eclipse/Units/UnitSystem.cpp
+                  src/opm/input/eclipse/Parser/createDefaultKeywordList.cpp
+                  src/opm/input/eclipse/Deck/UDAValue.cpp
+                  src/opm/input/eclipse/Deck/DeckTree.cpp
+                  src/opm/input/eclipse/Deck/DeckValue.cpp
+                  src/opm/input/eclipse/Deck/Deck.cpp
+                  src/opm/input/eclipse/Deck/DeckView.cpp
+                  src/opm/input/eclipse/Deck/DeckItem.cpp
+                  src/opm/input/eclipse/Deck/DeckKeyword.cpp
+                  src/opm/input/eclipse/Deck/DeckRecord.cpp
+                  src/opm/input/eclipse/Deck/DeckOutput.cpp
+                  src/opm/input/eclipse/Generator/KeywordGenerator.cpp
+                  src/opm/input/eclipse/Generator/KeywordLoader.cpp
+                  src/opm/input/eclipse/Parser/ErrorGuard.cpp
+                  src/opm/input/eclipse/Parser/ParseContext.cpp
+                  src/opm/input/eclipse/Parser/ParserEnums.cpp
+                  src/opm/input/eclipse/Parser/ParserItem.cpp
+                  src/opm/input/eclipse/Parser/ParserKeyword.cpp
+                  src/opm/input/eclipse/Parser/ParserRecord.cpp
+                  src/opm/input/eclipse/Parser/raw/RawKeyword.cpp
+                  src/opm/input/eclipse/Parser/raw/RawRecord.cpp
+                  src/opm/input/eclipse/Parser/raw/StarToken.cpp
+                  src/opm/input/eclipse/Units/Dimension.cpp
+                  src/opm/input/eclipse/Units/UnitSystem.cpp
                   src/opm/common/utility/OpmInputError.cpp
                   src/opm/common/OpmLog/OpmLog.cpp
                   src/opm/common/OpmLog/Logger.cpp
@@ -37,9 +37,9 @@ add_executable(genkw ${genkw_SOURCES})
 target_link_libraries(genkw ${opm-common_LIBRARIES})
 
 # Generate keyword list
-include(src/opm/parser/eclipse/share/keywords/keyword_list.cmake)
-string(REGEX REPLACE "([^;]+)" "${PROJECT_SOURCE_DIR}/src/opm/parser/eclipse/share/keywords/\\1" keyword_files "${keywords}")
-configure_file(src/opm/parser/eclipse/keyword_list.argv.in keyword_list.argv)
+include(src/opm/input/eclipse/share/keywords/keyword_list.cmake)
+string(REGEX REPLACE "([^;]+)" "${PROJECT_SOURCE_DIR}/src/opm/input/eclipse/share/keywords/\\1" keyword_files "${keywords}")
+configure_file(src/opm/input/eclipse/keyword_list.argv.in keyword_list.argv)
 
 # Generate keyword source
 
@@ -47,7 +47,7 @@ set( genkw_argv keyword_list.argv
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/include/
-  opm/parser/eclipse/Parser/ParserKeywords
+  opm/input/eclipse/Parser/ParserKeywords
   ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp)
 
 set( _tmp_output
@@ -123,7 +123,7 @@ endif()
 add_custom_command( OUTPUT
   ${_tmp_output}
   COMMAND genkw ${genkw_argv}
-  DEPENDS genkw ${keyword_files} src/opm/parser/eclipse/share/keywords/keyword_list.cmake)
+  DEPENDS genkw ${keyword_files} src/opm/input/eclipse/share/keywords/keyword_list.cmake)
 
 # To avoid some rebuilds
 add_custom_command(OUTPUT

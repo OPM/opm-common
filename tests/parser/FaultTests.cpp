@@ -24,10 +24,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaultFace.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 
 

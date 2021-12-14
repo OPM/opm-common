@@ -25,16 +25,16 @@
 #include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/action.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
 
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <chrono>
 #include <cstddef>

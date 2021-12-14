@@ -29,7 +29,7 @@
 
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/json/JsonObject.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
 namespace Opm { namespace data {
 

@@ -24,20 +24,20 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 
 #include <algorithm>
 #include <cstddef>

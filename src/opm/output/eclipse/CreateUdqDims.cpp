@@ -19,8 +19,8 @@
 */
 
 #include <opm/output/eclipse/UDQDims.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 

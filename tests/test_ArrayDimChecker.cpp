@@ -21,17 +21,17 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/version.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/parser/eclipse/Python/Python.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
 #include <iostream>
 #include <string>

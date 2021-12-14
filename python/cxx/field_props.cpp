@@ -1,6 +1,6 @@
 #include <string>
 
-#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
 #include <pybind11/stl.h>
 

@@ -24,7 +24,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/Utility/Functional.hpp>
+#include <opm/input/eclipse/Utility/Functional.hpp>
 
 
 using namespace Opm;
