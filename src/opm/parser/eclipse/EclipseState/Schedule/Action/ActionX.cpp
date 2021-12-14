@@ -65,7 +65,7 @@ bool ActionX::valid_keyword(const std::string& keyword) {
         "ENDBOX", "EXIT",
         "GCONINJE", "GCONPROD", "GCONSUMP", "GLIFTOPT", "GRUPNET", "GRUPTARG", "GRUPTREE", "GSATINJE", "GSATPROD",
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
-        "NEXSTEP",
+        "NEXTSTEP",
         "UDQ",
         "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELPI", "WELTARG", "WGRUPCON", "WPIMULT", "WELSEGS", "WELSPECS", "WSEGVALV", "WTEST",
         "TEST"
