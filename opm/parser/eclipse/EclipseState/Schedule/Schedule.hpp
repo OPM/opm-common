@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/WGNames.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
@@ -314,6 +315,7 @@ namespace Opm
             m_static.serializeOp(serializer);
             restart_output.serializeOp(serializer);
             this->completed_cells.serializeOp(serializer);
+            this->action_wgnames.serializeOp(serializer);
 
             pack_unpack<PAvg, Serializer>(serializer);
             pack_unpack<WellTestConfig, Serializer>(serializer);
@@ -517,6 +519,7 @@ namespace Opm
 
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
+        Action::WGNames action_wgnames;
         std::optional<int> exit_status;
         std::vector<ScheduleState> snapshots;
         WriteRestartFileEvents restart_output;
@@ -573,6 +576,7 @@ namespace Opm
                            const std::unordered_map<std::string, double> * target_wellpi);
 
         void prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword);
+        void store_wgnames(const DeckKeyword& keyword);
         std::vector<std::string> wellNames(const std::string& pattern, const HandlerContext& context);
         std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputError::Action error_action, ErrorGuard& errors, const KeywordLocation& location) const;
         void invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const;
