@@ -59,6 +59,7 @@ void testChiFlash()
     comp[2] = 1. - comp[0] - comp[1];
     ComponentVector sat;
     sat[0] = 1.0; sat[1] = 1.0-sat[0];
+    // TODO: should we put the derivative against the temperature here?
     Scalar temp = 300.0;
     // From co2-compositional branch, it uses
     // typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
@@ -77,6 +78,7 @@ void testChiFlash()
     fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
     fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
+    // TODO: why we need this one? But without this, it caused problem for the ParamCache
     fs.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
     fs.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
 
@@ -103,10 +105,14 @@ void testChiFlash()
         }
         zInit /= sumMoles;
     }
-    const double flash_tolerance = 1.e-8; // just to test the setup in co2-compositional
+
+    // TODO: only, p, z need the derivatives.
+    const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
     const int flash_verbosity = 1;
+    // const std::string flash_twophase_method = "newton"; // "ssi"
     const std::string flash_twophase_method = "ssi";
 
+    // TODO: should we set these?
     // Set initial K and L
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
         const Evaluation Ktmp = fs.wilsonK_(compIdx);
@@ -117,6 +123,7 @@ void testChiFlash()
 
     const int spatialIdx = 0;
     using Flash = Opm::ChiFlash<double, FluidSystem>;
+    // TODO: here the zInit does not have the proper derivatives
     Flash::solve(fs, zInit, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
 
 }
