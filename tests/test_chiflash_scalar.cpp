@@ -103,8 +103,8 @@ void testChiFlash()
         }
         zInit /= sumMoles;
     }
-    const double flash_tolerance = -1.; // just to test the setup in co2-compositional
-    const int flash_verbosity = 1;
+    const double flash_tolerance = 1.e-8; // just to test the setup in co2-compositional
+    const int flash_verbosity = 6;
     const std::string flash_twophase_method = "ssi";
 
     // Set initial K and L
@@ -112,7 +112,7 @@ void testChiFlash()
         const Scalar Ktmp = fs.wilsonK_(compIdx);
         fs.setKvalue(compIdx, Ktmp);
     }
-    const Scalar Ltmp = -1.0;
+    const Scalar Ltmp = 1.;
     fs.setLvalue(Ltmp);
 
     const int spatialIdx = 0;
