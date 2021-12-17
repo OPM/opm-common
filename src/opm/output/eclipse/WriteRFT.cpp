@@ -375,9 +375,8 @@ namespace {
         const auto rft =
             createWellRFT(reportStep, wname, usys, grid, sched, xcon);
 
-        writeWellHeader(elapsed, wname, sched, usys, rftFile);
-
         if (rft.nConn() > std::size_t{0}) {
+            writeWellHeader(elapsed, wname, sched, usys, rftFile);
             write(rft, rftFile);
         }
     }
