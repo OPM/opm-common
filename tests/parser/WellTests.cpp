@@ -1578,3 +1578,76 @@ END
     BOOST_CHECK_EQUAL(w5.getRefDepth(), grid.getCellDepth(0,0,0));
     BOOST_CHECK_EQUAL(w5.getWPaveRefDepth(), 0);
 }
+
+BOOST_AUTO_TEST_CASE(Missing_RefDepth) {
+      const auto deck = Parser{}.parseString(R"(RUNSPEC
+START
+17 DEC 2021 /
+
+DIMENS
+  10 10 4 /
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  4*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  400*100.0 /
+PERMY
+  400*100.0 /
+PERMZ
+  400*10.0 /
+PORO
+  400*0.3 /
+
+-- Deactivate Cells (1,1,3) And (1,1,4)
+ACTNUM
+  1 99*1
+  1 99*1
+  0 99*1
+  0 99*1
+/
+
+SCHEDULE
+
+WELSPECS
+     'W1'   'G' 1  1  1*       'OIL'  2*      'STOP'  4* /
+/
+
+COMPDAT
+     'W1'   1 1 4 4      'OPEN'  1*     34.720      0.216   3095.832  2*         'Y'     12.828 /
+     'W1'   1 1 3 3      'OPEN'  1*     34.720      0.216   3095.832  2*         'Y'     12.828 /
+/
+
+TSTEP
+  1 /
+
+COMPDAT
+     'W1'   1 1 2 2      'OPEN'  1*     25.620      0.216   2086.842  2*         'Y'      8.486 /
+/
+
+TSTEP
+  1 /
+
+END
+)");
+
+    const auto es    = EclipseState{ deck };
+    const auto sched = Schedule{ deck, es };
+
+    const auto& w0 = sched[0].wells("W1");
+    BOOST_CHECK_MESSAGE(! w0.hasRefDepth(),
+                        R"(Well "W1" must NOT have a BHP reference depth at report=1)");
+    BOOST_CHECK_THROW(w0.getRefDepth(), std::logic_error);
+
+    const auto& w1 = sched[1].wells("W1");
+    BOOST_CHECK_MESSAGE(w1.hasRefDepth(),
+                        R"(Well "W1" must have a BHP reference depth at report=2)");
+    BOOST_CHECK_CLOSE(w1.getRefDepth(), es.getInputGrid().getCellDepth(0, 0, 1), 1.0e-8);
+}

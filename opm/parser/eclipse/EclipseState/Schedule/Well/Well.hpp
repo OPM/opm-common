@@ -526,6 +526,7 @@ public:
     int getHeadI() const;
     int getHeadJ() const;
     double getWPaveRefDepth() const;
+    bool hasRefDepth() const;
     double getRefDepth() const;
     double getDrainageRadius() const;
     double getEfficiencyFactor() const;

@@ -847,8 +847,13 @@ bool Well::getAllowCrossFlow() const {
     return this->allow_cross_flow;
 }
 
+bool Well::hasRefDepth() const
+{
+    return this->ref_depth.has_value();
+}
+
 double Well::getRefDepth() const {
-    if (!this->ref_depth.has_value())
+    if (!this->hasRefDepth())
         throw std::logic_error(fmt::format("Well: {} - tried to access not initialized well reference depth", this->name()));
     return *this->ref_depth;
 }
@@ -1637,7 +1642,8 @@ bool Well::cmp_structure(const Well& other) const {
         && (this->seqIndex() == other.seqIndex())
         && (this->getHeadI() == other.getHeadI())
         && (this->getHeadJ() == other.getHeadJ())
-        && (this->getRefDepth() == other.getRefDepth())
+        && (this->hasRefDepth() == other.hasRefDepth())
+        && (!this->hasRefDepth() || (this->getRefDepth() == other.getRefDepth()))
         && (this->getPreferredPhase() == other.getPreferredPhase())
         && (this->unit_system == other.unit_system)
         && (this->udq_undefined == other.udq_undefined)
