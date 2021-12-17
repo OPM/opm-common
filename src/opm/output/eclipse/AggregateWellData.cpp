@@ -54,6 +54,7 @@
 #include <exception>
 #include <iterator>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -435,7 +436,7 @@ namespace {
             return inteHead[VI::intehead::NSWELZ];
         }
 
-        float datumDepth(const Opm::Well&  well)
+        std::optional<float> datumDepth(const Opm::Well& well)
         {
             if (well.isMultiSegment()) {
                 // Datum depth for multi-segment wells is
@@ -443,9 +444,14 @@ namespace {
                 return well.getSegments().depthTopSegment();
             }
 
-            // Not a multi-segment well--i.e., this is a regular
-            // well.  Use well's reference depth.
-            return well.getRefDepth();
+            // Not a multi-segment well--i.e., this is a regular well.  Use
+            // well's reference depth if available.  Otherwise signal a
+            // missing value by std::nullopt.  Missing values *might* come
+            // from WELSPECS(5) being defaulted in wells with no active
+            // reservoir connections.
+            return well.hasRefDepth()
+                ? std::optional<float>{ well.getRefDepth() }
+                : std::nullopt;
         }
 
         Opm::RestartIO::Helpers::WindowedArray<float>
@@ -508,7 +514,9 @@ namespace {
             std::copy(b, e, std::begin(sWell));
         }
 
-        float getRateLimit(const Opm::UnitSystem& units, Opm::UnitSystem::measure u, const double& rate)
+        float getRateLimit(const Opm::UnitSystem&         units,
+                           const Opm::UnitSystem::measure u,
+                           const double                   rate)
         {
             float rLimit = 1.0e+20f;
             if (rate > 0.0) {
@@ -520,7 +528,6 @@ namespace {
 
             return rLimit;
         }
-
 
         template <class SWellArray>
         void assignTracerData(const Opm::TracerConfig& tracers,
@@ -539,14 +546,14 @@ namespace {
         }
 
         template <class SWellArray>
-        void staticContrib(const Opm::Well&             well,
-                           const Opm::GasLiftOpt& glo,
-                           const std::size_t            sim_step,
-                           const Opm::Schedule&         sched,
-                           const Opm::TracerConfig&     tracers,
-                           const Opm::WellTestState&    wtest_state,
-                           const ::Opm::SummaryState&   smry,
-                           SWellArray&                  sWell)
+        void staticContrib(const Opm::Well&           well,
+                           const Opm::GasLiftOpt&     glo,
+                           const std::size_t          sim_step,
+                           const Opm::Schedule&       sched,
+                           const Opm::TracerConfig&   tracers,
+                           const Opm::WellTestState&  wtest_state,
+                           const ::Opm::SummaryState& smry,
+                           SWellArray&                sWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
             using M = ::Opm::UnitSystem::measure;
@@ -694,15 +701,27 @@ namespace {
                 sWell[Ix::LOincFac] = static_cast<float>(w_glo.inc_weight_factor());
             }
 
-            sWell[Ix::DatumDepth] = swprop(M::length, datumDepth(well));
+            if (const auto depth = datumDepth(well); depth.has_value()) {
+                sWell[Ix::DatumDepth] = swprop(M::length, depth.value());
+            }
+            else {
+                // BHP reference depth missing for this well.  Typically
+                // caused by defaulted WELSPECS(5) and no active reservoir
+                // connections from which to infer the depth.  Output
+                // sentinel value.
+                //
+                // Note: All unit systems get the *same* sentinel value so
+                // we intentionally omit unit conversion here.
+                sWell[Ix::DatumDepth] = -1.0e+20f;
+            }
+
             sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
-            /*
-              Restart files from Eclipse indicate that the efficiency factor is
-              found in two items in the restart file; since only one of the
-              items is needed in the OPM restart, and we are not really certain
-              that the two values are equal by construction we have only
-              assigned one of the items explicitly here.
-            */
+
+            // Restart files from Eclipse indicate that the efficiency
+            // factor is found in two items in the restart file; since only
+            // one of the items is needed in the OPM restart, and we are not
+            // really certain that the two values are equal by construction
+            // we have only assigned one of the items explicitly here.
             sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
             sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
 
