@@ -1621,48 +1621,52 @@ Well::GuideRateTarget Well::GuideRateTargetFromString( const std::string& string
 
 
 bool Well::cmp_structure(const Well& other) const {
-    if ((segments && !other.segments) || (!segments && other.segments)) {
+    if ((this->segments && !other.segments) ||
+        (!this->segments && other.segments))
+    {
         return false;
     }
 
-    if (segments && (this->getSegments() != other.getSegments()))  {
+    if (this->segments && (this->getSegments() != other.getSegments())) {
         return false;
     }
 
-    return this->name() == other.name() &&
-        this->groupName() == other.groupName() &&
-        this->firstTimeStep() == other.firstTimeStep() &&
-        this->seqIndex() == other.seqIndex() &&
-        this->getHeadI() == other.getHeadI() &&
-        this->getHeadJ() == other.getHeadJ() &&
-        this->getRefDepth() == other.getRefDepth() &&
-        this->getPreferredPhase() == other.getPreferredPhase() &&
-        this->unit_system == other.unit_system &&
-        this->udq_undefined == other.udq_undefined &&
-        this->getConnections() == other.getConnections() &&
-        this->getDrainageRadius() == other.getDrainageRadius() &&
-        this->getAllowCrossFlow() == other.getAllowCrossFlow() &&
-        this->getAutomaticShutIn() == other.getAutomaticShutIn() &&
-        this->getEfficiencyFactor() == other.getEfficiencyFactor();
+    return (this->name() == other.name())
+        && (this->groupName() == other.groupName())
+        && (this->firstTimeStep() == other.firstTimeStep())
+        && (this->seqIndex() == other.seqIndex())
+        && (this->getHeadI() == other.getHeadI())
+        && (this->getHeadJ() == other.getHeadJ())
+        && (this->getRefDepth() == other.getRefDepth())
+        && (this->getPreferredPhase() == other.getPreferredPhase())
+        && (this->unit_system == other.unit_system)
+        && (this->udq_undefined == other.udq_undefined)
+        && (this->getConnections() == other.getConnections())
+        && (this->getDrainageRadius() == other.getDrainageRadius())
+        && (this->getAllowCrossFlow() == other.getAllowCrossFlow())
+        && (this->getAutomaticShutIn() == other.getAutomaticShutIn())
+        && (this->getEfficiencyFactor() == other.getEfficiencyFactor())
+        ;
 }
 
 
 bool Well::operator==(const Well& data) const {
-    return this->cmp_structure(data) &&
-           this->getSolventFraction() == data.getSolventFraction() &&
-           this->getEconLimits() == data.getEconLimits() &&
-           this->isProducer() == data.isProducer() &&
-           this->getFoamProperties() == data.getFoamProperties() &&
-           this->getStatus() == data.getStatus() &&
-           this->guide_rate == data.guide_rate &&
-           this->solvent_fraction == data.solvent_fraction &&
-           this->hasProduced() == data.hasProduced() &&
-           this->hasInjected() == data.hasInjected() &&
-           this->predictionMode() == data.predictionMode() &&
-           this->getTracerProperties() == data.getTracerProperties() &&
-           this->getProductionProperties() == data.getProductionProperties() &&
-           this->m_pavg == data.m_pavg &&
-           this->getInjectionProperties() == data.getInjectionProperties();
+    return this->cmp_structure(data)
+        && (this->getSolventFraction() == data.getSolventFraction())
+        && (this->getEconLimits() == data.getEconLimits())
+        && (this->isProducer() == data.isProducer())
+        && (this->getFoamProperties() == data.getFoamProperties())
+        && (this->getStatus() == data.getStatus())
+        && (this->guide_rate == data.guide_rate)
+        && (this->solvent_fraction == data.solvent_fraction)
+        && (this->hasProduced() == data.hasProduced())
+        && (this->hasInjected() == data.hasInjected())
+        && (this->predictionMode() == data.predictionMode())
+        && (this->getTracerProperties() == data.getTracerProperties())
+        && (this->getProductionProperties() == data.getProductionProperties())
+        && (this->m_pavg == data.m_pavg)
+        && (this->getInjectionProperties() == data.getInjectionProperties())
+        ;
 }
 
 
