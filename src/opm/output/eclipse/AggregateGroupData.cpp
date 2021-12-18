@@ -458,12 +458,12 @@ void productionGroup(const Opm::Schedule&     sched,
         } else if (cgroup && ((active_cmode == Opm::Group::ProductionCMode::FLD) || (active_cmode == Opm::Group::ProductionCMode::NONE))) {
             //a higher level group control is active constraint
             if ((deck_cmode != Opm::Group::ProductionCMode::FLD) && (deck_cmode != Opm::Group::ProductionCMode::NONE)) {
-                iGrp[nwgmax + IGroup::ProdHighLevCtrl] = cgroup->insert_index();
+                iGrp[nwgmax + IGroup::ProdHighLevCtrl] = (cgroup->name() == "FIELD") ? nwgmax : static_cast<int>(cgroup->insert_index());
             } else if ((deck_cmode == Opm::Group::ProductionCMode::FLD) && (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE)) {
-                iGrp[nwgmax + IGroup::ProdHighLevCtrl] = cgroup->insert_index();
+                iGrp[nwgmax + IGroup::ProdHighLevCtrl] = (cgroup->name() == "FIELD") ? nwgmax : static_cast<int>(cgroup->insert_index());
             } else if ((deck_cmode == Opm::Group::ProductionCMode::NONE) && group.productionGroupControlAvailable() &&
                     (prod_guide_rate_def != Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE)) {
-                iGrp[nwgmax + IGroup::ProdHighLevCtrl] = cgroup->insert_index();
+                iGrp[nwgmax + IGroup::ProdHighLevCtrl] = (cgroup->name() == "FIELD") ? nwgmax : static_cast<int>(cgroup->insert_index());
                 //group is directly under higher level controlGroup
             } else if ((deck_cmode == Opm::Group::ProductionCMode::FLD) && (prod_guide_rate_def == Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE)) {
                 iGrp[nwgmax + IGroup::ProdHighLevCtrl] = 1;
@@ -485,6 +485,7 @@ void productionGroup(const Opm::Schedule&     sched,
 
 std::tuple<int, int, int, int> injectionGroup(const Opm::Schedule&     sched,
                                               const Opm::Group&        group,
+                                              const int                nwgmax,
                                               const std::size_t        simStep,
                                               const Opm::SummaryState& sumState,
                                               const Opm::Phase         phase)
@@ -522,7 +523,7 @@ std::tuple<int, int, int, int> injectionGroup(const Opm::Schedule&     sched,
             if ((active_cmode == Opm::Group::InjectionCMode::FLD) || (active_cmode == Opm::Group::InjectionCMode::NONE)) {
                 //a higher level group control is active constraint
                 if ((deck_cmode != Opm::Group::InjectionCMode::FLD) && (deck_cmode != Opm::Group::InjectionCMode::NONE)) {
-                    high_level_ctrl = cgroup->insert_index();
+                    high_level_ctrl = (cgroup->name() == "FIELD") ? nwgmax : static_cast<int>(cgroup->insert_index());
                 } else {
                     if (deck_guide_rate_def == Opm::Group::GuideRateInjTarget::NO_GUIDE_RATE) {
                         if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
@@ -532,9 +533,9 @@ std::tuple<int, int, int, int> injectionGroup(const Opm::Schedule&     sched,
                         }
                     } else {
                         if (deck_cmode == Opm::Group::InjectionCMode::FLD) {
-                            high_level_ctrl = cgroup->insert_index();
+                            high_level_ctrl = (cgroup->name() == "FIELD") ? nwgmax : static_cast<int>(cgroup->insert_index());
                         } else if ((deck_cmode == Opm::Group::InjectionCMode::NONE) && group_control_available) {
-                            high_level_ctrl = cgroup->insert_index();
+                            high_level_ctrl = (cgroup->name() == "FIELD") ? nwgmax : static_cast<int>(cgroup->insert_index());
                         }
                     }
                 }
@@ -605,7 +606,7 @@ void injectionGroup(const Opm::Schedule&     sched,
 
     {
         if (group.hasInjectionControl(Opm::Phase::WATER)) {
-            auto [high_level_ctrl, active_cmode, gconinje_cmode, guide_rate_def] = injectionGroup(sched, group, simStep, sumState, Opm::Phase::WATER);
+            auto [high_level_ctrl, active_cmode, gconinje_cmode, guide_rate_def] = injectionGroup(sched, group, nwgmax, simStep, sumState, Opm::Phase::WATER);
             iGrp[nwgmax + IGroup::WInjHighLevCtrl] = high_level_ctrl;
             iGrp[nwgmax + IGroup::WInjActiveCMode] = active_cmode;
             iGrp[nwgmax + IGroup::GConInjeWInjCMode] = gconinje_cmode;
@@ -613,7 +614,7 @@ void injectionGroup(const Opm::Schedule&     sched,
         }
     }
     {
-        auto [high_level_ctrl, active_cmode, gconinje_cmode, guide_rate_def] = injectionGroup(sched, group, simStep, sumState, Opm::Phase::GAS);
+        auto [high_level_ctrl, active_cmode, gconinje_cmode, guide_rate_def] = injectionGroup(sched, group, nwgmax, simStep, sumState, Opm::Phase::GAS);
         iGrp[nwgmax + IGroup::GInjHighLevCtrl] = high_level_ctrl;
         iGrp[nwgmax + IGroup::GInjActiveCMode] = active_cmode;
         iGrp[nwgmax + IGroup::GConInjeGInjCMode] = gconinje_cmode;
