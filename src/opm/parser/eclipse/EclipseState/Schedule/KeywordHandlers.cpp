@@ -205,15 +205,27 @@ namespace {
 
     void Schedule::handleCOMPSEGS(HandlerContext& handlerContext) {
         const auto& record1 = handlerContext.keyword.getRecord(0);
-        const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
+        const std::string& wname = record1.getItem("WELL").getTrimmedString(0);
 
-        auto well = this->snapshots.back().wells.get( well_name );
+        if (!this->hasWell(wname, handlerContext.currentStep)) {
+            const auto& location = handlerContext.keyword.location();
+            if (this->action_wgnames.has_well(wname)) {
+                std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
+Expecting well to be defined with WELSPECS in ACTIONX before actual use.
+File {} line {}.)", wname, location.keyword, location.filename, location.lineno);
+                OpmLog::warning(msg);
+            } else
+                throw OpmInputError(fmt::format("No such well: ", wname), location);
+            return;
+        }
+
+        auto well = this->snapshots.back().wells.get( wname );
 
         if (well.getConnections().empty()) {
             const auto& location = handlerContext.keyword.location();
             auto msg = fmt::format("Problem with COMPSEGS/{0}\n"
                                    "In {1} line {2}\n"
-                                   "Well {0} is not connected to grid - COMPSEGS will be ignored", well_name, location.filename, location.lineno);
+                                   "Well {0} is not connected to grid - COMPSEGS will be ignored", wname, location.filename, location.lineno);
             OpmLog::warning(msg);
             return;
         }
@@ -1361,10 +1373,20 @@ namespace {
     void Schedule::handleWELSEGS(HandlerContext& handlerContext) {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
-
-        auto well = this->snapshots.back().wells.get(wname);
-        if (well.handleWELSEGS(handlerContext.keyword))
-            this->snapshots.back().wells.update( std::move(well) );
+        if (this->hasWell(wname, handlerContext.currentStep)) {
+            auto well = this->snapshots.back().wells.get(wname);
+            if (well.handleWELSEGS(handlerContext.keyword))
+                this->snapshots.back().wells.update( std::move(well) );
+        } else {
+            const auto& location = handlerContext.keyword.location();
+            if (this->action_wgnames.has_well(wname)) {
+                std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
+Expecting well to be defined with WELSPECS in ACTIONX before actual use.
+File {} line {}.)", wname, location.keyword, location.filename, location.lineno);
+                OpmLog::warning(msg);
+            } else
+                throw OpmInputError(fmt::format("No such well: ", wname), location);
+        }
     }
 
     void Schedule::handleWELSPECS(HandlerContext& handlerContext) {
