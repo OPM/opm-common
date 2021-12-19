@@ -67,7 +67,7 @@ bool ActionX::valid_keyword(const std::string& keyword) {
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
         "UDQ",
-        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELPI", "WELTARG", "WGRUPCON", "WPIMULT", "WELSEGS", "WELSPECS", "WSEGVALV", "WTEST",
+        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELPI", "WELTARG", "WGRUPCON", "WPIMULT", "WELSEGS", "WELSPECS", "WSEGVALV", "WTEST", "WTMULT",
         "TEST"
     };
     return (actionx_allowed_list.find(keyword) != actionx_allowed_list.end());
