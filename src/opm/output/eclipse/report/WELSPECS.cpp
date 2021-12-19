@@ -291,7 +291,8 @@ namespace {
         }
 
         std::string wellhead_location(const context&, std::size_t, std::size_t) const {
-            auto i { std::to_string(well.getHeadI() + 1) }, j { std::to_string(well.getHeadJ() + 1) } ;
+            auto i = std::to_string(well.getHeadI() + 1);
+            auto j = std::to_string(well.getHeadJ() + 1);
 
             right_align(i, 3);
             right_align(j, 3);
@@ -300,7 +301,10 @@ namespace {
         }
 
         std::string reference_depth(const context& ctx, std::size_t, std::size_t) const {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getRefDepth(), 6);
+            if (well.hasRefDepth())
+                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getRefDepth(), 6);
+            else
+                return format_number(ctx.unit_system, Opm::UnitSystem::measure::identity, -1.0e+20, 9);
         }
 
         std::string preferred_phase(const context&, std::size_t, std::size_t) const {
@@ -327,10 +331,8 @@ namespace {
             return well.segmented_density_calculation() ? "SEG" : "AVG";
         }
 
-        /*
-          Don't know what the D-FACTOR represents, but all examples just show 0;
-          we have therefor hardcoded that for now.
-        */
+        // Don't know what the D-FACTOR represents, but all examples just
+        // show 0; we have therefore hardcoded that for now.
         std::string D_factor(const context&, std::size_t, std::size_t) const {
             return "0";
         }
@@ -363,8 +365,8 @@ namespace {
        {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
        {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc        ,             },
        {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number    ,             },
-       { 11, { "WELL"       , "D-FACTOR 1" , "DAY/SM3"     }, &WellWrapper::D_factor         ,             }};
-
+       { 11, { "WELL"       , "D-FACTOR 1" , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
+    };
 
 
 void report_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data, const context& ctx) {

@@ -27,6 +27,26 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <cmath>
+
+namespace {
+    bool is_sentinel(const float raw_value)
+    {
+        const auto infty = 1.0e+20f;
+        return ! (std::abs(raw_value) < infty);
+    }
+
+    double swel_value(const float raw_value)
+    {
+        return is_sentinel(raw_value) ? 0.0 : raw_value;
+    }
+
+    template <typename Convert>
+    double keep_sentinel(const float raw_value, Convert&& convert)
+    {
+        return is_sentinel(raw_value) ? raw_value : convert(raw_value);
+    }
+}
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
@@ -37,14 +57,6 @@ constexpr int def_ecl_phase = 1;
 constexpr int def_pvt_table = 0;
 
 using M  = ::Opm::UnitSystem::measure;
-
-double swel_value(float raw_value) {
-    const auto infty = 1.0e+20f;
-    if (std::abs(raw_value) == infty)
-        return 0;
-    else
-        return raw_value;
-}
 
 RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
                  const RstHeader& header,
@@ -89,7 +101,7 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     hist_lrat_target(    unit_system.to_si(M::liquid_surface_rate,   swel[VI::SWell::HistLiqRateTarget])),
     hist_grat_target(    unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::HistGasRateTarget])),
     hist_bhp_target(     unit_system.to_si(M::pressure,              swel[VI::SWell::HistBHPTarget])),
-    datum_depth(         unit_system.to_si(M::length,                swel[VI::SWell::DatumDepth])),
+    datum_depth(         keep_sentinel(swel[VI::SWell::DatumDepth], [&unit_system](const double depth) { return unit_system.to_si(M::length, depth); })),
     drainage_radius(     unit_system.to_si(M::length,                swel_value(swel[VI::SWell::DrainageRadius]))),
     efficiency_factor(   unit_system.to_si(M::identity,              swel[VI::SWell::EfficiencyFactor1])),
     alq_value(                                                       swel[VI::SWell::Alq_value]),
