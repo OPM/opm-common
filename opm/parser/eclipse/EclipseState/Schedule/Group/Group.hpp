@@ -125,6 +125,7 @@ enum class GuideRateInjTarget {
 };
 static GuideRateInjTarget GuideRateInjTargetFromString( const std::string& stringValue );
 static GuideRateInjTarget GuideRateInjTargetFromInt(int ecl_id);
+static int                GuideRateInjTargetToInt(GuideRateInjTarget target);
 
 
 struct GroupInjectionProperties {
