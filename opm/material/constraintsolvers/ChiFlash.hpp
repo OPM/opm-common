@@ -133,30 +133,7 @@ public:
 
         // Update the composition if cell is two-phase
         if ( !isStable) {
-            // Print info
-            if (verbosity >= 1) {
-                std::cout << "Cell is two-phase! Solve Rachford-Rice with initial K = [" << K << "]" << std::endl;
-            }
-
-            // Rachford Rice equation to get initial L for composition solver
-            L = solveRachfordRice_g_(K, globalComposition, verbosity);
-
-            // Calculate composition using nonlinear solver
-            // Newton
-            if (twoPhaseMethod == "newton") {
-                if (verbosity >= 1) {
-                    std::cout << "Calculate composition using Newton." << std::endl;
-                }
-                //newtonCompositionUpdate_(K, static_cast<DenseAd::Evaluation<double, 2>&>(L), fluidState, globalComposition, verbosity);
-                newtonCompositionUpdate_(K, L, fluidState, globalComposition, verbosity);
-                //throw std::runtime_error(" Newton not implemented for now" );
-            } else if (twoPhaseMethod == "ssi"){
-                // Successive substitution
-                if (verbosity >= 1) {
-                    std::cout << "Calculate composition using Succcessive Substitution." << std::endl;
-                }
-                successiveSubstitutionComposition_(K, L, fluidState, globalComposition, /*standAlone=*/true, verbosity);
-            }
+            flash_2ph(globalComposition, twoPhaseMethod, K, L, fluidState, verbosity);
         } else {
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
             L = li_single_phase_label_(fluidState, globalComposition, verbosity);
@@ -689,24 +666,46 @@ protected:
         }
     }
 
+    // TODO: refactoring the template parameter later
+    // For the function flash_2ph, we should carry the derivatives in, and
+    // return with the correct and updated derivatives
+    template <class FluidState, class ComponentVector>
+    static void flash_2ph(const ComponentVector& z,
+                          const std::string& flash_2p_method,
+                          ComponentVector& K,
+                          typename FluidState::Scalar& L,
+                          FluidState& fluid_state,
+                          int verbosity = 0) {
+        if (verbosity >= 1) {
+            std::cout << "Cell is two-phase! Solve Rachford-Rice with initial K = [" << K << "]" << std::endl;
+        }
+
+        // Rachford Rice equation to get initial L for composition solver
+        L = solveRachfordRice_g_(K, z, verbosity);
+
+        // Calculate composition using nonlinear solver
+        // Newton
+        if (flash_2p_method == "newton") {
+            if (verbosity >= 1) {
+                std::cout << "Calculate composition using Newton." << std::endl;
+            }
+            newtonCompositionUpdate_(K, L, fluid_state, z, verbosity);
+        } else if (flash_2p_method == "ssi") {
+            // Successive substitution
+            if (verbosity >= 1) {
+                std::cout << "Calculate composition using Succcessive Substitution." << std::endl;
+            }
+            successiveSubstitutionComposition_(K, L, fluid_state, z, /*standAlone=*/true, verbosity);
+        } else {
+            throw std::runtime_error("unknown two phase flash method " + flash_2p_method + " is specified");
+        }
+    }
+
     template <class FlashFluidState, class ComponentVector>
     static void newtonCompositionUpdate_(ComponentVector& K, typename FlashFluidState::Scalar& L,
                                          FlashFluidState& fluidState, const ComponentVector& globalComposition,
                                          int verbosity)
     {
-        // Newton declarations
-        // using ValueType = typename FlashFluidState::Scalar;
-        // using the following to check whether it is an AD type.
-        // std::is_same<ValueType, DenseAd::Evaluation<Scalar, numComponents> >::value;
-        // std::cout << " is ValueType is a double ? " << std::is_class
-        // TODO: the following should only use Scalar types
-        /* using NewtonVector = Dune::FieldVector<ValueType, numMisciblePhases*numMiscibleComponents+1>;
-        using NewtonMatrix = Dune::FieldMatrix<ValueType, numMisciblePhases*numMiscibleComponents+1, numMisciblePhases*numMiscibleComponents+1>;
-        NewtonVector newtonX;
-        NewtonVector newtonB;
-        NewtonMatrix newtonA;
-        NewtonVector newtonDelta; */
-
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
         using NewtonVector = Dune::FieldVector<Scalar, num_equations>;
         using NewtonMatrix = Dune::FieldMatrix<Scalar, num_equations, num_equations>;
@@ -835,7 +834,7 @@ protected:
             }
 
             jac.solve(soln, res);
-            constexpr Scalar damping_factor = 0.9;
+            constexpr Scalar damping_factor = 1.0;
             // updating x and y
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 x[compIdx] -= soln[compIdx] * damping_factor;
@@ -859,7 +858,9 @@ protected:
                 }
             }
         }
-        if (!converged) throw std::runtime_error(" Newton composition update did not converge within maxIterations");
+        if (!converged) {
+            throw std::runtime_error(" Newton composition update did not converge within maxIterations");
+        }
         // TODO: we need to update the K, L, fluidState, not sure about the derivatives
     }
 
@@ -1043,8 +1044,6 @@ protected:
         else
             maxIterations = 10;
 
-        maxIterations = 3;
-        
         // Store cout format before manipulation
         std::ios_base::fmtflags f(std::cout.flags());
         
