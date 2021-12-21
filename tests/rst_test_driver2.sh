@@ -11,11 +11,11 @@ single_rst_file=$6
 pushd $(mktemp -d)
 
 # Happy path using unified restart file from source location
-${rst_deck} ${unif_deck} ${unified_rst_file}:10 output/RESTART_UNIF.DATA -s
+${rst_deck} -s ${unif_deck} ${unified_rst_file}:10 output/RESTART_UNIF.DATA
 ${opmi} output/RESTART_UNIF.DATA
 
 # Happy path using single restart file with absolute path
-${rst_deck} ${single_deck} ${single_rst_file} output/RESTART_SINGLE_ABS.DATA -s
+${rst_deck} -s ${single_deck} ${single_rst_file} output/RESTART_SINGLE_ABS.DATA
 ${opmi} output/RESTART_SINGLE_ABS.DATA
 
 mkdir rst
@@ -23,7 +23,7 @@ cp ${single_rst_file} rst/.
 single_rst_file="$(basename -- ${single_rst_file})"
 
 # Happy path using single restart file wth relative path from rst/
-${rst_deck} ${single_deck} rst/${single_rst_file} output/RESTART_SINGLE_RELATIVE.DATA -s
+${rst_deck} -s ${single_deck} rst/${single_rst_file} output/RESTART_SINGLE_RELATIVE.DATA
 ${opmi} output/RESTART_SINGLE_RELATIVE.DATA
 
 
@@ -40,11 +40,11 @@ set +e
 # Test two error conditions
 
 # Deck with UNIFIN and pass a single .X0010 restart file
-${rst_deck} ${unif_deck} rst/${single_rst_file} output/RESTART_SINGLE_RELATIVE.DATA -s
+${rst_deck} -s ${unif_deck} rst/${single_rst_file} output/RESTART_SINGLE_RELATIVE.DATA
 assert_error
 
 # Ask for wrong restart number from unified restart file
-${rst_deck} ${unif_deck} ${unified_rst_file}:20 output/RESTART_ERROR.DATA -s
+${rst_deck} -s ${unif_deck} ${unified_rst_file}:20 output/RESTART_ERROR.DATA
 ${opmi} output/RESTART_ERROR.DATA
 assert_error
 
