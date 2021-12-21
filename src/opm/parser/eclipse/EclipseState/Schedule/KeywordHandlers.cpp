@@ -145,7 +145,8 @@ namespace {
     }
 
     void Schedule::handleCOMPDAT(HandlerContext& handlerContext)  {
-        std::unordered_set<std::string> wells;
+        std::unordered_set<std::string> updated_wells;
+        std::unordered_set<std::string> maybe_unconnected_wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, handlerContext );
@@ -156,15 +157,11 @@ namespace {
                 connections->loadCOMPDAT(record, handlerContext.grid, name, handlerContext.keyword.location());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
                     this->snapshots.back().wells.update( well2 );
-                    wells.insert( name );
+                    updated_wells.insert( name );
                 }
 
                 if (connections->empty() && well2.getConnections().empty()) {
-                    const auto& location = handlerContext.keyword.location();
-                    auto msg = fmt::format("Problem with COMPDAT/{}\n"
-                                           "In {} line {}\n"
-                                           "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
-                    OpmLog::warning(msg);
+                    maybe_unconnected_wells.insert( name );
                 }
                 this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
             }
@@ -175,10 +172,25 @@ namespace {
         // WELSPECS keyword we need to force a calculation of the wells
         // reference depth exactly when the COMPDAT keyword has been completely
         // processed.
-        for (const auto& wname : wells) {
+        for (const auto& wname : updated_wells) {
             auto& well = this->snapshots.back().wells.get( wname );
             well.updateRefDepth();
             this->snapshots.back().wells.update( std::move(well));
+        }
+
+        // Log a warning for wells that remain unconnected after the COMPDAT keyword
+        // despite having records referring to it.
+        for (const auto& wname : maybe_unconnected_wells) {
+            auto& well = this->snapshots.back().wells.get( wname );
+            if (well.getConnections().empty()) {
+                const auto& location = handlerContext.keyword.location();
+                auto msg = fmt::format("Problem with COMPDAT/{}\n"
+                                       "In {} line {}\n"
+                                       "Well {} is not connected to grid - will remain SHUT",
+                                       wname, location.filename, location.lineno, wname);
+                OpmLog::warning(msg);
+
+            }
         }
     }
 
