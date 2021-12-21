@@ -702,12 +702,11 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
 }
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const ScheduleGrid& grid) {
-    bool update = this->updateConnections(connections_arg, false);
-    if (this->pvt_table == 0 && !this->connections->empty()) {
+    const bool update = this->updateConnections(connections_arg, false);
+    if (update && this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
         const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK()).props;
         this->pvt_table = props->pvtnum;
-        update = true;
     }
     return update;
 }
