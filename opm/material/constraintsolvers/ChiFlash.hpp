@@ -86,8 +86,8 @@ public:
      *
      */
     template <class FluidState>
-    static void solve(FluidState& fluidState,
-                      const Dune::FieldVector<typename FluidState::Scalar, numComponents>& globalComposition,
+    static void solve(FluidState& fluid_state,
+                      const Dune::FieldVector<typename FluidState::Scalar, numComponents>& z,
                       int spatialIdx,
                       int verbosity,
                       std::string twoPhaseMethod,
@@ -107,39 +107,72 @@ public:
         //K and L from previous timestep (wilson and -1 initially)
         ComponentVector K;
         for(int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            K[compIdx] = fluidState.K(compIdx);
+            K[compIdx] = fluid_state.K(compIdx);
         }
         InputEval L;
-        L = fluidState.L(0);
+        L = fluid_state.L(0);
 
         // Print header
         if (verbosity >= 1) {
             std::cout << "********" << std::endl;
             std::cout << "Flash calculations on Cell " << spatialIdx << std::endl;
-            std::cout << "Inputs are K = [" << K << "], L = [" << L << "], z = [" << globalComposition << "], P = " << fluidState.pressure(0) << ", and T = " << fluidState.temperature(0) << std::endl;
+            std::cout << "Inputs are K = [" << K << "], L = [" << L << "], z = [" << z << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
         }
-       
+
+        using ScalarVector = Dune::FieldVector<Scalar, numComponents>;
+        Scalar L_scalar = Opm::getValue(L);
+        ScalarVector z_scalar;
+        ScalarVector K_scalar;
+        for (unsigned i = 0; i < numComponents; ++i) {
+            z_scalar[i] = Opm::getValue(z[i]);
+            K_scalar[i] = Opm::getValue(K[i]);
+        }
+        using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
+        ScalarFluidState fluid_state_scalar;
+
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fluid_state_scalar.setMoleFraction(oilPhaseIdx, compIdx, Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx)));
+            fluid_state_scalar.setMoleFraction(gasPhaseIdx, compIdx, Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx)));
+            fluid_state_scalar.setKvalue(compIdx, Opm::getValue(fluid_state.K(compIdx)));
+        }
+
+        fluid_state_scalar.setLvalue(L_scalar);
+        // other values need to be Scalar, but I guess the fluidstate does not support it yet.
+        fluid_state_scalar.setPressure(FluidSystem::oilPhaseIdx,
+                                       Opm::getValue(fluid_state.pressure(FluidSystem::oilPhaseIdx)));
+        fluid_state_scalar.setPressure(FluidSystem::gasPhaseIdx,
+                                       Opm::getValue(fluid_state.pressure(FluidSystem::gasPhaseIdx)));
+
+        // TODO: not sure whether we need to set the saturations
+        fluid_state_scalar.setSaturation(FluidSystem::gasPhaseIdx,
+                                         Opm::getValue(fluid_state_scalar.saturation(FluidSystem::gasPhaseIdx)));
+        fluid_state_scalar.setSaturation(FluidSystem::oilPhaseIdx,
+                                         Opm::getValue(fluid_state_scalar.saturation(FluidSystem::oilPhaseIdx)));
+        fluid_state_scalar.setTemperature(Opm::getValue(fluid_state.temperature(0)));
+
+        // Rachford Rice equation to get initial L for composition solver
+        L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+
+
         // Do a stability test to check if cell is single-phase (do for all cells the first time).
         bool isStable = false;
         if ( L <= 0 || L == 1 ) {
              if (verbosity >= 1) {
                  std::cout << "Perform stability test (L <= 0 or L == 1)!" << std::endl;
              }
-            phaseStabilityTest_(isStable, K, fluidState, globalComposition, verbosity);
+            phaseStabilityTest_(isStable, K_scalar, fluid_state_scalar, z_scalar, verbosity);
         }
         if (verbosity >= 1) {
-            std::cout << "Inputs after stability test are K = [" << K << "], L = [" << L << "], z = [" << globalComposition << "], P = " << fluidState.pressure(0) << ", and T = " << fluidState.temperature(0) << std::endl;
+            std::cout << "Inputs after stability test are K = [" << K_scalar << "], L = [" << L_scalar << "], z = [" << z_scalar << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
         }
 
         // Update the composition if cell is two-phase
         if ( !isStable) {
-            flash_2ph(globalComposition, twoPhaseMethod, K, L, fluidState, verbosity);
+            flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state_scalar, verbosity);
         } else {
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
-            L = li_single_phase_label_(fluidState, globalComposition, verbosity);
+            L = li_single_phase_label_(fluid_state, z, verbosity);
         }
-
-        newtonCompositionUpdate_(K, L, fluidState, globalComposition, verbosity);
 
         // Print footer
         if (verbosity >= 1) {
@@ -147,73 +180,73 @@ public:
         }
 
         // Update phases
-        typename FluidSystem::template ParameterCache<InputEval> paramCache;
-        paramCache.updatePhase(fluidState, oilPhaseIdx);
-        paramCache.updatePhase(fluidState, gasPhaseIdx);
+        /* typename FluidSystem::template ParameterCache<InputEval> paramCache;
+        paramCache.updatePhase(fluid_state, oilPhaseIdx);
+        paramCache.updatePhase(fluid_state, gasPhaseIdx); */
 
-        // Calculate compressibility factor
+        /* // Calculate compressibility factor
         const Scalar R = Opm::Constants<Scalar>::R;
-        InputEval Z_L = (paramCache.molarVolume(oilPhaseIdx) * fluidState.pressure(oilPhaseIdx) )/
-                (R * fluidState.temperature(oilPhaseIdx));
-        InputEval Z_V = (paramCache.molarVolume(gasPhaseIdx) * fluidState.pressure(gasPhaseIdx) )/
-                (R * fluidState.temperature(gasPhaseIdx));
+        InputEval Z_L = (paramCache.molarVolume(oilPhaseIdx) * fluid_state.pressure(oilPhaseIdx) ) /
+                        (R * fluid_state.temperature(oilPhaseIdx));
+        InputEval Z_V = (paramCache.molarVolume(gasPhaseIdx) * fluid_state.pressure(gasPhaseIdx) ) /
+                        (R * fluid_state.temperature(gasPhaseIdx));
 
         std::cout << " the type of InputEval here is " << Dune::className<InputEval>() << std::endl;
         // Update saturation
         InputEval So = L*Z_L/(L*Z_L+(1-L)*Z_V);
         InputEval Sg = 1-So;
         
-        fluidState.setSaturation(oilPhaseIdx, So);
-        fluidState.setSaturation(gasPhaseIdx, Sg);
+        fluid_state.setSaturation(oilPhaseIdx, So);
+        fluid_state.setSaturation(gasPhaseIdx, Sg);
 
         //Update L and K to the problem for the next flash
         for (int compIdx = 0; compIdx < numComponents; ++compIdx){
-            fluidState.setKvalue(compIdx, K[compIdx]);
+            fluid_state.setKvalue(compIdx, K[compIdx]);
         }
-        fluidState.setCompressFactor(oilPhaseIdx, Z_L);
-        fluidState.setCompressFactor(gasPhaseIdx, Z_V);
-        fluidState.setLvalue(L);
+        fluid_state.setCompressFactor(oilPhaseIdx, Z_L);
+        fluid_state.setCompressFactor(gasPhaseIdx, Z_V);
+        fluid_state.setLvalue(L); */
 
 
         // Print saturation
 
         /* std::cout << " output the molefraction derivatives" << std::endl;
         std::cout << " for vapor comp 1 "  << std::endl;
-        fluidState.moleFraction(gasPhaseIdx, 0).print();
+        fluid_state.moleFraction(gasPhaseIdx, 0).print();
         std::cout << std::endl << " for vapor comp 2 " << std::endl;
-        fluidState.moleFraction(gasPhaseIdx, 1).print();
+        fluid_state.moleFraction(gasPhaseIdx, 1).print();
         std::cout << std::endl << " for vapor comp 3 " << std::endl;
-        fluidState.moleFraction(gasPhaseIdx, 2).print();
+        fluid_state.moleFraction(gasPhaseIdx, 2).print();
         std::cout << std::endl;
         std::cout << " for oil comp 1 "  << std::endl;
-        fluidState.moleFraction(oilPhaseIdx, 0).print();
+        fluid_state.moleFraction(oilPhaseIdx, 0).print();
         std::cout << std::endl << " for oil comp 2 " << std::endl;
-        fluidState.moleFraction(oilPhaseIdx, 1).print();
+        fluid_state.moleFraction(oilPhaseIdx, 1).print();
         std::cout << std::endl << " for oil comp 3 " << std::endl;
-        fluidState.moleFraction(oilPhaseIdx, 2).print();
+        fluid_state.moleFraction(oilPhaseIdx, 2).print();
         std::cout << std::endl;
         std::cout << " for pressure " << std::endl;
-        fluidState.pressure(0).print();
+        fluid_state.pressure(0).print();
         std::cout<< std::endl;
-        fluidState.pressure(1).print();
+        fluid_state.pressure(1).print();
         std::cout<< std::endl; */
 
         // Update densities
-        fluidState.setDensity(oilPhaseIdx, FluidSystem::density(fluidState, paramCache, oilPhaseIdx));
-        fluidState.setDensity(gasPhaseIdx, FluidSystem::density(fluidState, paramCache, gasPhaseIdx));
+       //  fluid_state.setDensity(oilPhaseIdx, FluidSystem::density(fluid_state, paramCache, oilPhaseIdx));
+       //  fluid_state.setDensity(gasPhaseIdx, FluidSystem::density(fluid_state, paramCache, gasPhaseIdx));
 
         // check the residuals of the equations
-        using NewtonVector = Dune::FieldVector<InputEval, numMisciblePhases*numMiscibleComponents+1>;
+        /* using NewtonVector = Dune::FieldVector<InputEval, numMisciblePhases*numMiscibleComponents+1>;
         NewtonVector newtonX;
         NewtonVector newtonB;
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            newtonX[compIdx] = Opm::getValue(fluidState.moleFraction(oilPhaseIdx, compIdx));
-            newtonX[compIdx + numMiscibleComponents] = Opm::getValue(fluidState.moleFraction(gasPhaseIdx, compIdx));
+            newtonX[compIdx] = Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx));
+            newtonX[compIdx + numMiscibleComponents] = Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx));
         }
         newtonX[numMisciblePhases*numMiscibleComponents] = Opm::getValue(L);
 
-        evalDefect_(newtonB, newtonX, fluidState, globalComposition);
-        std::cout << " the residuals of the equations is " << std::endl;
+        evalDefect_(newtonB, newtonX, fluid_state, z); */
+        /* std::cout << " the residuals of the equations is " << std::endl;
         for (unsigned i = 0; i < newtonB.N(); ++i) {
             std::cout << newtonB[i] << std::endl;
         }
@@ -221,11 +254,11 @@ public:
         if (verbosity >= 5) {
             std::cout << " mole fractions for oil " << std::endl;
             for (int i = 0; i < numComponents; ++i) {
-                std::cout << " i " << i << "  " << fluidState.moleFraction(oilPhaseIdx, i) << std::endl;
+                std::cout << " i " << i << "  " << fluid_state.moleFraction(oilPhaseIdx, i) << std::endl;
             }
             std::cout << " mole fractions for gas " << std::endl;
             for (int i = 0; i < numComponents; ++i) {
-                std::cout << " i " << i << "  " << fluidState.moleFraction(gasPhaseIdx, i) << std::endl;
+                std::cout << " i " << i << "  " << fluid_state.moleFraction(gasPhaseIdx, i) << std::endl;
             }
             std::cout << " K " << std::endl;
             for (int i = 0; i < numComponents; ++i) {
@@ -235,25 +268,25 @@ public:
             std::cout << "Z_V = " << Z_V <<std::endl;
             std::cout << " fugacity for oil phase " << std::endl;
             for (int i = 0; i < numComponents; ++i) {
-                auto phi = FluidSystem::fugacityCoefficient(fluidState, paramCache, oilPhaseIdx, i);
+                auto phi = FluidSystem::fugacityCoefficient(fluid_state, paramCache, oilPhaseIdx, i);
                 std::cout << " i " << i << " " << phi << std::endl;
             }
             std::cout << " fugacity for gas phase " << std::endl;
             for (int i = 0; i < numComponents; ++i) {
-                auto phi = FluidSystem::fugacityCoefficient(fluidState, paramCache, gasPhaseIdx, i);
+                auto phi = FluidSystem::fugacityCoefficient(fluid_state, paramCache, gasPhaseIdx, i);
                 std::cout << " i " << i << " " << phi << std::endl;
             }
             std::cout << " density for oil phase " << std::endl;
-            std::cout << FluidSystem::density(fluidState, paramCache, oilPhaseIdx) << std::endl;
+            std::cout << FluidSystem::density(fluid_state, paramCache, oilPhaseIdx) << std::endl;
             std::cout << " density for gas phase " << std::endl;
-            std::cout << FluidSystem::density(fluidState, paramCache, gasPhaseIdx) << std::endl;
+            std::cout << FluidSystem::density(fluid_state, paramCache, gasPhaseIdx) << std::endl;
             std::cout << " viscosities for oil " << std::endl;
-            std::cout << FluidSystem::viscosity(fluidState, paramCache, oilPhaseIdx) << std::endl;
+            std::cout << FluidSystem::viscosity(fluid_state, paramCache, oilPhaseIdx) << std::endl;
             std::cout << " viscosities for gas " << std::endl;
-            std::cout << FluidSystem::viscosity(fluidState, paramCache, gasPhaseIdx) << std::endl;
+            std::cout << FluidSystem::viscosity(fluid_state, paramCache, gasPhaseIdx) << std::endl;
             std::cout << "So = " << So <<std::endl;
             std::cout << "Sg = " << Sg <<std::endl;
-        }
+        } */
     }//end solve
 
     /*!
@@ -670,18 +703,15 @@ protected:
     // For the function flash_2ph, we should carry the derivatives in, and
     // return with the correct and updated derivatives
     template <class FluidState, class ComponentVector>
-    static void flash_2ph(const ComponentVector& z,
+    static void flash_2ph(const ComponentVector& z_scalar,
                           const std::string& flash_2p_method,
-                          ComponentVector& K,
-                          typename FluidState::Scalar& L,
-                          FluidState& fluid_state,
+                          ComponentVector& K_scalar,
+                          typename FluidState::Scalar& L_scalar,
+                          FluidState& fluid_state_scalar,
                           int verbosity = 0) {
         if (verbosity >= 1) {
-            std::cout << "Cell is two-phase! Solve Rachford-Rice with initial K = [" << K << "]" << std::endl;
+            std::cout << "Cell is two-phase! Solve Rachford-Rice with initial K = [" << K_scalar << "]" << std::endl;
         }
-
-        // Rachford Rice equation to get initial L for composition solver
-        L = solveRachfordRice_g_(K, z, verbosity);
 
         // Calculate composition using nonlinear solver
         // Newton
@@ -689,13 +719,16 @@ protected:
             if (verbosity >= 1) {
                 std::cout << "Calculate composition using Newton." << std::endl;
             }
-            newtonCompositionUpdate_(K, L, fluid_state, z, verbosity);
+            newtonCompositionUpdate_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
         } else if (flash_2p_method == "ssi") {
             // Successive substitution
             if (verbosity >= 1) {
                 std::cout << "Calculate composition using Succcessive Substitution." << std::endl;
             }
-            successiveSubstitutionComposition_(K, L, fluid_state, z, /*standAlone=*/true, verbosity);
+            successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, verbosity);
+        } else if (flash_2p_method == "ssi+newton") {
+            successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, verbosity);
+            newtonCompositionUpdate_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
         } else {
             throw std::runtime_error("unknown two phase flash method " + flash_2p_method + " is specified");
         }
@@ -717,6 +750,7 @@ protected:
 
         // Compute x and y from K, L and Z
         computeLiquidVapor_(fluidState, L, K, globalComposition);
+        std::cout << " the current L is " << Opm::getValue(L) << std::endl;
 
         // Print initial condition
         if (verbosity >= 1) {
@@ -1034,15 +1068,11 @@ protected:
     // TODO: or use typename FlashFluidState::Scalar
     template <class FlashFluidState, class ComponentVector>
     static void successiveSubstitutionComposition_(ComponentVector& K, typename ComponentVector::field_type& L, FlashFluidState& fluidState, const ComponentVector& globalComposition,
-                                                   bool standAlone, int verbosity)
+                                                   const bool newton_afterwards, const int verbosity)
     {
         // std::cout << " Evaluation in successiveSubstitutionComposition_  is " << Dune::className(L) << std::endl;
         // Determine max. iterations based on if it will be used as a standalone flash or as a pre-process to Newton (or other) method.
-        int maxIterations;
-        if (standAlone == true)
-            maxIterations = 100;
-        else
-            maxIterations = 10;
+        const int maxIterations = newton_afterwards ? 3 : 10;
 
         // Store cout format before manipulation
         std::ios_base::fmtflags f(std::cout.flags());
