@@ -1,0 +1,163 @@
+\newcommand{\actionx}{\kw{ACTIONX}}
+\chapter{Programming in the deck: \actionx}
+\label{actionx}
+The \actionx{} keyword is the most direct way to \emph{program} in the deck. The
+\actionx{} functionality consist of the \actionx{} keyword itself, with some
+metadata and a condition and then a list of keywords which are injected into
+Schedule section at the point in time where the condition evaluates to true.
+
+\begin{deck}
+ACTIONX
+INJECTION 10 0 /
+WBHP P1 < 200.0 /
+/
+
+WELOPEN
+  'WI1' 'OPEN' 5* /
+/
+
+ENDACTIO
+\end{deck}
+The \actionx{} statement is evaluated at the end of every timestep, and if it
+evaluates to true the new keywords should take effect immediately.
+
+
+
+\section{Interaction with the simulator}
+
+\begin{enumerate}
+\item WELPI
+\item General changes in well status
+\item Changes in geo properties
+\end{enumerate}
+
+The actionx implementation is in the module opm-common, whereas when the
+simulation is proceeding it is the simulator code which is clearly in control.
+If an action has evaluated to true and new keyword must be injected in the
+Schedule object and thereby the complete simulator state is updated. This is
+complex, and many of the bugs in \actionx{} functionality have been in the
+interaction between the simulator and opm-common, in particular when an action
+has evaluated to true.
+
+
+
+\section{Forward references of wells and groups}
+When a well or group is defined as an \actionx{} keyword and then
+unconditionally refered to in the deck we get a problem at the first pass
+through the Schedule section:
+
+\begin{deck}
+ACTIONX
+   'ACTION' /
+   WWCT OPX  > 0.75 /
+/
+
+WELSPECS
+  'W1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ENDACTIO
+
+TSTEP
+  10*30 /
+
+WCONPROD
+ 'W1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+
+TSTEP
+  10*30 /
+
+\end{deck}
+
+In \flow{} this is ``solved'' by inspecting the keywords in \actionx{} block at
+first pass and internalizing the name of wells\footnote{This functionality is
+not yet implemented for groups.}, the wells which \emph{will} appear at a later
+stage are internalized in a custom container and when that well is referenced
+later in e.g. the \kw{WCONPROD} keyword only a warning is issued instead of a
+hard failure due to invalid well name. If the \actionx{} has not evaluated to
+true before the execution reaches the \kw{WCONPROD} keyword it will be silently
+ignored.
+
+\section{Implemenation details}
+The \actionx{} implementation is located in
+\path{opm/input/eclipse/Schedule/Action} and all the classes are in namespace
+\inlinecode{Action::}. As with the \udq{} the input parser needs some special
+case to handle '/' and '*' as division operator and multiplier respectively, but
+that is the only code shared between the \udq{} and the \actionx{}
+implementation\footnote{It might be possible to share more code between the two,
+in particular both have an internal recursive descent parser, but both \udq{}
+and \actionx{} have so much ``personality'' that at least initially separate
+implementations was the simplest.}.
+
+\subsection*{The \inlinecode{Schedule} implementation}
+\flow{} internalizes all keywords from the input deck and passes datastructures
+to the simulator, whereas the impression is that \eclipse{} works more like an
+interepreter executing the keywords one at a time. Mostly the \flow{} approach
+of internalizing everything before simulation actually starts has worked out
+well, however for the \actionx{} functionality the difference in execution model
+is quite acute, and the needs of \actionx{} has had quite strong influence on
+the final Schedule implementation. Although not required for use of \actionx{}
+it is valuable to understand how the \actionx{} functionality has influenced the
+design of the Schedule class, that way you will hopefully better understand
+problems or bugs which might arise in the future.
+
+At the very first pass the \kw{SCHEDULE} section is split in \emph{blocks}, with
+one blocks for each report step. The blocks are implemented with the class
+\inlinecode{ScheduleBlock}. Each block has a starting time and a list of
+keywords, the keywords are maintained in the input format
+\inlinecode{DeckKeyword}. Then the entire \kw{SCHEDULE} section is internalized
+in the class \inlinecode{ScheduleDeck} which essentially contains a list of
+\inlinecode{ScheduleBlock} instances. Consider the \kw{SCHEDULE} section
+\begin{deck}
+START
+  1 'JAN' 2020 /
+
+...
+...
+
+SCHEDULE
+
+WELSPECS
+	'PROD'	'G1'	10	10	8400	'OIL' /
+	'INJ'	'G1'	1	1	8335	'GAS' /
+/
+
+COMPDAT
+	'PROD'	10	10	3	3	'OPEN'	1*	1*	0.5 /
+	'INJ'	1	1	1	1	'OPEN'	1*	1*	0.5 /
+/
+
+DATES
+   1 'FEB' 2020 /
+/
+
+WCONPROD
+	'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+/
+
+WCONINJE
+	'INJ'	'GAS'	'OPEN'	'RATE'	100000 1* 9014 /
+/
+
+DATES
+  1 'MAR' 2020 /
+/
+
+END
+
+\end{deck}
+
+
+\section{To enable a new keyword for \actionx}
+The keywords must be explicitly enabled to be usable in an \actionx{} block, and
+enabling a new keyword requires recompiling \flow{}. The hardcoded list of
+keywords avaiailable as \actionx{} keywords are listed in the static method
+\inlinecode{ActionX::valid\_keyword()} in
+\path{opm/input/eclipse/Schedule/Action/ActionX.cpp}. In principle it should
+just be to add the keyword to the \inlinecode{ActionX::valid\_keyword()} method
+and rebuild \flow{}, but experience has unfortunately shown that problems of
+various kinds have had a tendency to pop up when new keywords are tried out as
+\actionx{} keywords.
+
+
