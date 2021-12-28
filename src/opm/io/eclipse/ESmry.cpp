@@ -376,11 +376,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     for (int i = 0; i < nSpecFiles; i++)
         arrayPos.push_back({});
 
+    // tskille: testing
     std::map<std::string, int> keyIndex;
     {
         size_t m = 0;
         for (auto key : keywList)
-            keyIndex[key] = m++;
+            if (!key.empty())
+                keyIndex[key] = m++;
     }
 
     int specInd = nSpecFiles - 1;
@@ -443,13 +445,18 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     int toReportStepNumber;
     int step = 0;
     specInd = nSpecFiles - 1;
-    nVect = keywList.size();
+
+    //nVect = keywList.size();
 
     int index = 0;
-    for (const auto& keyw : keywList){
-        keyword.push_back(keyw);
-        keyword_index[keyw] = index++;
+    for (const auto& keyw : keywList) {
+        if (!keyw.empty()) {
+            keyword.push_back(keyw);
+            keyword_index[keyw] = index++;
+        }
     }
+
+    nVect = keyword.size();
 
     vectorData.reserve(nVect);
     vectorLoaded.reserve(nVect);
