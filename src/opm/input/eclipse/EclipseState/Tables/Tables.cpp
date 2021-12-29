@@ -1551,5 +1551,6 @@ template FlatTable< ShrateRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< Stone1exRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< TlmixparRecord>::FlatTable( const DeckKeyword& );
 template FlatTable< WATDENTRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< SatFuncLETRecord >::FlatTable( const DeckKeyword& );
 
 } // namespace Opm

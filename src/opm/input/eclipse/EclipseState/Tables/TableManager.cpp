@@ -211,6 +211,12 @@ DensityTable make_density_table(const GravityTable& gravity) {
         if( deck.hasKeyword( "WATDENT" ) )
             this->m_watdentTable = WatdentTable( deck["WATDENT"].back() );
 
+        if( deck.hasKeyword( "SGOFLET" ) )
+            this->m_sgofletTable = SgofletTable( deck["SGOFLET"].back() );
+
+        if( deck.hasKeyword( "SWOFLET" ) )
+            this->m_swofletTable = SwofletTable( deck["SWOFLET"].back() );
+
         if( deck.hasKeyword( "RTEMP" ) )
             m_rtemp = deck["RTEMP"].back().getRecord(0).getItem("TEMP").getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
@@ -297,6 +303,8 @@ DensityTable make_density_table(const GravityTable& gravity) {
         result.m_stone1exTable = Stone1exTable::serializeObject();
         result.m_viscrefTable = ViscrefTable::serializeObject();
         result.m_watdentTable = WatdentTable::serializeObject();
+        result.m_sgofletTable = SgofletTable::serializeObject();
+        result.m_swofletTable = SwofletTable::serializeObject();
         result.m_pvtwsaltTables = {PvtwsaltTable::serializeObject()};
         result.m_rwgsaltTables = {RwgsaltTable::serializeObject()};
         result.m_bdensityTables = {BrineDensityTable::serializeObject()};
@@ -1117,6 +1125,14 @@ DensityTable make_density_table(const GravityTable& gravity) {
         return this->m_watdentTable;
     }
 
+    const SgofletTable& TableManager::getSgofletTable() const {
+        return this->m_sgofletTable;
+    }
+
+    const SwofletTable& TableManager::getSwofletTable() const {
+        return this->m_swofletTable;
+    }
+
     const TableContainer& TableManager::getMsfnTables() const {
         return getTables("MSFN");
     }
@@ -1241,6 +1257,8 @@ DensityTable make_density_table(const GravityTable& gravity) {
                m_stone1exTable == data.m_stone1exTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
+               m_sgofletTable == data.m_sgofletTable &&
+               m_swofletTable == data.m_swofletTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
                m_rwgsaltTables == data.m_rwgsaltTables &&
                m_bdensityTables == data.m_bdensityTables &&

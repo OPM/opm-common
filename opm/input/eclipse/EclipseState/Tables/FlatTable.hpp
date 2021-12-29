@@ -426,6 +426,89 @@ struct WatdentTable : public FlatTable< WATDENTRecord > {
     }
 };
 
+struct SatFuncLETRecord {
+    static constexpr std::size_t size = 17;
+
+    double s1_residual;
+    double s1_critical;
+    double l1_relperm;
+    double e1_relperm;
+    double t1_relperm;
+    double krt1_relperm;
+    double s2_residual;
+    double s2_critical;
+    double l2_relperm;
+    double e2_relperm;
+    double t2_relperm;
+    double krt2_relperm;
+    double l_pc;
+    double e_pc;
+    double t_pc;
+    double pcir_pc;
+    double pct_pc;
+
+    bool operator==(const SatFuncLETRecord& data) const {
+        return s1_residual == data.s1_residual &&
+               s1_critical == data.s1_critical &&
+               l1_relperm == data.l1_relperm &&
+               e1_relperm == data.e1_relperm &&
+               t1_relperm == data.t1_relperm &&
+               krt1_relperm == data.krt1_relperm &&
+               s2_residual == data.s2_residual &&
+               s2_critical == data.s2_critical &&
+               l2_relperm == data.l2_relperm &&
+               e2_relperm == data.e2_relperm &&
+               t2_relperm == data.t2_relperm &&
+               krt2_relperm == data.krt2_relperm &&
+               l_pc == data.l_pc &&
+               e_pc == data.e_pc &&
+               t_pc == data.t_pc &&
+               pcir_pc == data.pcir_pc &&
+               pct_pc == data.pct_pc;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(s1_residual);
+        serializer(s1_critical);
+        serializer(l1_relperm);
+        serializer(e1_relperm);
+        serializer(t1_relperm);
+        serializer(krt1_relperm);
+        serializer(s2_residual);
+        serializer(s2_critical);
+        serializer(l2_relperm);
+        serializer(e2_relperm);
+        serializer(t2_relperm);
+        serializer(krt2_relperm);
+        serializer(l_pc);
+        serializer(e_pc);
+        serializer(t_pc);
+        serializer(pcir_pc);
+        serializer(pct_pc);
+    }
+};
+
+struct SwofletTable : public FlatTable< SatFuncLETRecord > {
+    using FlatTable< SatFuncLETRecord >::FlatTable;
+
+    static SwofletTable serializeObject()
+    {
+        return SwofletTable({{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0}});
+    }
+};
+
+
+struct SgofletTable : public FlatTable< SatFuncLETRecord > {
+    using FlatTable< SatFuncLETRecord >::FlatTable;
+
+    static SgofletTable serializeObject()
+    {
+        return SgofletTable({{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0}});
+    }
+};
+
 }
 
 #endif //OPM_FLAT_TABLE_HPP
