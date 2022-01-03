@@ -27,8 +27,8 @@
 #include <string>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>

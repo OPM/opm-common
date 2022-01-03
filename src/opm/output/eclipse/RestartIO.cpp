@@ -33,7 +33,7 @@
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/AggregateActionxData.hpp>
-#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -42,14 +42,14 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 

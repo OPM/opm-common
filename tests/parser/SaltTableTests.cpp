@@ -21,21 +21,21 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 // generic table classes
-#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PermfactTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SaltvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PermfactTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes
 

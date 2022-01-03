@@ -29,24 +29,24 @@
 #include <string>
 
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
-#include "src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp"
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletedCells.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include "src/opm/input/eclipse/Schedule/MSW/Compsegs.hpp"
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 
 BOOST_AUTO_TEST_CASE(AICDWellTest) {

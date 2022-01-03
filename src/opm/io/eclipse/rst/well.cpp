@@ -25,7 +25,7 @@
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <cmath>
 

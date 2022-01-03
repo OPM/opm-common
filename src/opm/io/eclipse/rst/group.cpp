@@ -22,7 +22,7 @@
 #include <opm/io/eclipse/rst/group.hpp>
 
 #include <opm/output/eclipse/VectorItems/group.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;

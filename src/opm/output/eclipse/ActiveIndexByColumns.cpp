@@ -19,7 +19,7 @@
 
 #include <opm/output/eclipse/ActiveIndexByColumns.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <algorithm>
 #include <array>

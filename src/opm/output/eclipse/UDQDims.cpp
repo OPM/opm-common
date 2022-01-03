@@ -19,7 +19,7 @@
 
 #include <opm/output/eclipse/UDQDims.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;

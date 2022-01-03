@@ -24,7 +24,7 @@
 #include <ctime>
 #include <string>
 #include <unordered_map>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 
 namespace Opm {

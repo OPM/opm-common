@@ -5,11 +5,11 @@
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -17,24 +17,24 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
-#include <opm/parser/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>

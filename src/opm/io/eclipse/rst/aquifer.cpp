@@ -24,10 +24,10 @@
 #include <opm/output/eclipse/VectorItems/aquifer.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <cstddef>
 #include <memory>

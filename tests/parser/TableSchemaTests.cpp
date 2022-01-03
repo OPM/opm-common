@@ -22,9 +22,9 @@
 #include <boost/test/unit_test.hpp>
 
 
-#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 using namespace Opm;
 

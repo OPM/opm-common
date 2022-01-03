@@ -20,7 +20,7 @@
 #ifndef OPM_RESTART_AQUIFER_HPP
 #define OPM_RESTART_AQUIFER_HPP
 
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 #include <cstddef>
 #include <memory>

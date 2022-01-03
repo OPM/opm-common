@@ -21,20 +21,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/io/eclipse/EclOutput.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/ImportContainer.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/ImportContainer.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <tests/WorkArea.cpp>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/Z.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/Z.hpp>
 
 using namespace Opm;
 namespace fs = std::filesystem;

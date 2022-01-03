@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 
 namespace Opm {
 

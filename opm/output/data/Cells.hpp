@@ -23,7 +23,7 @@
 #include <map>
 #include <vector>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 

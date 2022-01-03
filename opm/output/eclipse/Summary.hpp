@@ -20,8 +20,8 @@
 #ifndef OPM_OUTPUT_SUMMARY_HPP
 #define OPM_OUTPUT_SUMMARY_HPP
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/output/data/Aquifer.hpp>
 
 #include <map>

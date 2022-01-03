@@ -32,7 +32,7 @@
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 namespace Opm {
 

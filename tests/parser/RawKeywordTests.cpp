@@ -23,9 +23,9 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
-#include "src/opm/parser/eclipse/Parser/raw/RawEnums.hpp"
-#include "src/opm/parser/eclipse/Parser/raw/RawKeyword.hpp"
-#include "src/opm/parser/eclipse/Parser/raw/RawRecord.hpp"
+#include "src/opm/input/eclipse/Parser/raw/RawEnums.hpp"
+#include "src/opm/input/eclipse/Parser/raw/RawKeyword.hpp"
+#include "src/opm/input/eclipse/Parser/raw/RawRecord.hpp"
 
 
 using namespace Opm;

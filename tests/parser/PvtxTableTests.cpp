@@ -21,23 +21,23 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 // generic table classes
-#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvtxTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes
-//#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+//#include <opm/input/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 

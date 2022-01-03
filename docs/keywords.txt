@@ -297,7 +297,7 @@ composite units based on the dimension of the composite quantity. As a
 consequence the list of dimensions supported by the parser is long,
 and growing. The current list can be found in the source file:
 
-   opm/parser/eclipse/Units/UnitSystem.cpp
+   opm/input/eclipse/Units/UnitSystem.cpp
 
 
 

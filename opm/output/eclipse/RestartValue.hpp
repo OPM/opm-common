@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/output/data/Aquifer.hpp>
 #include <opm/output/data/Solution.hpp>

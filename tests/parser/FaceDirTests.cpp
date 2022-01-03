@@ -24,7 +24,7 @@
 #define BOOST_TEST_MODULE FaceDirTests
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 
 namespace Opm {

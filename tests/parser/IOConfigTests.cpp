@@ -26,9 +26,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 #include "tests/WorkArea.cpp"
 namespace fs = std::filesystem;

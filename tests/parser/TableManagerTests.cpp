@@ -21,34 +21,34 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 // generic table classes
-#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes
-#include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/FoammobTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/DenT.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlyrockTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/FoamadsTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/FoammobTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TLMixpar.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <stdexcept>
 #include <iostream>

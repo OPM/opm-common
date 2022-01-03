@@ -23,8 +23,8 @@
 #define BOOST_TEST_MODULE ScheduleTests
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
+#include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
+#include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
 
 
 BOOST_AUTO_TEST_CASE( check_empty) {

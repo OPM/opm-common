@@ -21,7 +21,7 @@
 #include <opm/io/eclipse/ExtSmryOutput.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 

@@ -1,6 +1,6 @@
 #include <tuple>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <pybind11/stl.h>
 #include "export.hpp"
 

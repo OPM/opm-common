@@ -1,6 +1,6 @@
 #include <fmt/format.h>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include "export.hpp"
 
