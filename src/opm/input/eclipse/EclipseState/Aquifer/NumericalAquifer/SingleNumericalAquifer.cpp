@@ -105,29 +105,43 @@ namespace Opm {
             const auto& cell_dims = grid.getCellDims(gc2);
             double face_area = 0;
             std::string perm_string;
+            std::string mult_string;
             double d = 0.;
             if (con.face_dir == FaceDir::XPlus || con.face_dir == FaceDir::XMinus) {
                 face_area = cell_dims[1] * cell_dims[2];
                 perm_string = "PERMX";
                 d = cell_dims[0];
+                mult_string = "MULTX";
+                if (con.face_dir == FaceDir::XMinus)
+                    mult_string = mult_string + "-";
             }
             if (con.face_dir == FaceDir::YMinus || con.face_dir == FaceDir::YPlus) {
                 face_area = cell_dims[0] * cell_dims[2];
                 perm_string = "PERMY";
                 d = cell_dims[1];
+                mult_string = "MULTY";
+                if (con.face_dir == FaceDir::YMinus)
+                    mult_string = mult_string + "-";
             }
 
             if (con.face_dir == FaceDir::ZMinus || con.face_dir == FaceDir::ZPlus) {
                 face_area = cell_dims[0] * cell_dims[1];
                 perm_string = "PERMZ";
                 d = cell_dims[2];
+                mult_string = "MULTZ";
+                if (con.face_dir == FaceDir::ZMinus)
+                    mult_string = mult_string + "-";
             }
 
             const double trans_cell = (con.trans_option == 0) ?
                                       cell1.transmissiblity() : (2 * cell1.permeability * face_area / cell1.length);
 
             const double cell_perm = (fp.get_double(perm_string))[grid.activeIndex(gc2)];
-            const double trans_con = 2 * cell_perm * face_area * ntg[grid.activeIndex(con.global_index)] / d;
+            double cell_multxyz = 1.0;
+            if (fp.has_double(mult_string))
+                cell_multxyz = (fp.get_double(mult_string))[grid.activeIndex(gc2)];
+
+            const double trans_con = 2 * cell_multxyz * cell_perm * face_area * ntg[grid.activeIndex(con.global_index)] / d;
 
             const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
             if (gc1 < gc2) {

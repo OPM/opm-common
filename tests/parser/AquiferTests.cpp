@@ -684,6 +684,15 @@ PERMY
     360*1000./
 PERMZ
     360*10./
+
+BOX
+1	8 15 15 3 3 /
+
+MULTY
+ 1e9 1e-9 1.0 2.0 3.0 4.0 5.0 6.0/
+
+ENDBOX
+
 -- setting the three cells for numerical aquifer to be inactive
 ACTNUM
 0 1 0 0 356*1 /
@@ -790,6 +799,18 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest)
     BOOST_CHECK(aquifer.numCells() == 3);
     BOOST_CHECK(aquifer.numConnections() == 8 );
 
+    const auto& nncs = aquifer.aquiferConnectionNNCs(grid, ecl_state.fieldProps());
+    BOOST_CHECK(nncs.size() == 8 );
+    // get the half transmissibilites by using small/large multipler m
+    // mab/(ma+b) -> b for ma >> b and -> ma for ma << b
+    const double taq = nncs[0].trans;
+    const double tcell = nncs[1].trans*1.0e9;
+    // now check the multiplier for the rest of the connection i > 2 where m = 1->6
+    for (int i = 2; i < 8; ++i) {
+      const double mult = (i - 1);
+      const double t = mult*tcell*taq / (taq + mult*tcell);
+      BOOST_CHECK_CLOSE(t, nncs[i].trans, 1.0e-6);
+    }
     BOOST_CHECK(grid.getNumActive() == 360);
     // the three aquifer cells are active
     BOOST_CHECK(grid.cellActive(0, 0, 0));
