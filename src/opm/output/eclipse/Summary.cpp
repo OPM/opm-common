@@ -503,6 +503,9 @@ template<> constexpr
 measure rate_unit< Opm::Phase::GAS >() { return measure::gas_surface_rate; }
 
 template<> constexpr
+measure rate_unit< rt::dissolved_gas >() { return measure::gas_surface_rate; }
+
+template<> constexpr
 measure rate_unit< rt::solvent >() { return measure::gas_surface_rate; }
 
 template<> constexpr
