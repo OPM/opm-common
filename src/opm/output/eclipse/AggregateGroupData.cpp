@@ -854,8 +854,22 @@ void staticContrib(const Opm::Group&        group,
 
     if (glo.has_group(group.name())) {
         const auto& glo_group = glo.group(group.name());
-        sGrp[Isp::GLOMaxSupply] = sgprop(M::gas_surface_rate, glo_group.max_lift_gas().value());
-        sGrp[Isp::GLOMaxRate]   = sgprop(M::gas_surface_rate, glo_group.max_total_gas().value());
+
+        const auto no_limit = -10.0f;
+
+        if (const auto& max_supply = glo_group.max_lift_gas(); max_supply.has_value()) {
+            sGrp[Isp::GLOMaxSupply] = sgprop(M::gas_surface_rate, max_supply.value());
+        }
+        else {
+            sGrp[Isp::GLOMaxSupply] = no_limit;
+        }
+
+        if (const auto& max_total = glo_group.max_total_gas(); max_total.has_value()) {
+            sGrp[Isp::GLOMaxRate] = sgprop(M::gas_surface_rate, max_total.value());
+        }
+        else {
+            sGrp[Isp::GLOMaxRate] = no_limit;
+        }
     }
 
     if ((group.name() == "FIELD") && (group.getGroupType() == Opm::Group::GroupType::NONE)) {
