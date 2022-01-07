@@ -70,14 +70,25 @@ TSTEP
 
 \end{deck}
 
-In \flow{} this is ``solved'' by inspecting the keywords in \actionx{} block at
-first pass and internalizing the name of wells\footnote{This functionality is
-not yet implemented for groups.}, the wells which \emph{will} appear at a later
-stage are internalized in a custom container and when that well is referenced
-later in e.g. the \kw{WCONPROD} keyword only a warning is issued instead of a
-hard failure due to invalid well name. If the \actionx{} has not evaluated to
-true before the execution reaches the \kw{WCONPROD} keyword it will be silently
-ignored.
+In \flow{} this is ``solved'' in the following way:
+\begin{enumerate}
+\item At first pass we inspect the keywords inside the \actionx{} block and if
+  we discover \kw{WELSPECS} we store the name of the well which will be defined
+  at a later stage through \actionx{}.
+\item When we parse further on as part of the first pass and said well is
+  referenced e.g. in a \kw{WCONPROD} we verify that the well will eventually
+  appear via \actionx{} - we issue a warning and ignore the \kw{WCONPROD}
+  keyword\footnote{If the well is not registered as ``will appear through
+  \actionx{} there will be a runtime error with unknown well name when parsing
+  \kw{WCONPROD}.}.
+\item When the \actionx{} evaluates to true the well will be properly defined,
+  and when reiterating over the Schedule keywords the \kw{WCONPROD} keyword will
+  now be properly internalized.
+
+  If the \actionx{} never evaluates to true the \kw{WCONPROD} keyword will
+  silently be ignored. This is probably not what the user wanted, but it is also
+  not a bug?
+\end{enumerate}
 
 \section{Implemenation details}
 The \actionx{} implementation is located in
