@@ -544,3 +544,19 @@ While evaluating the \udq{} expressions the results will be instances of
 well/group names and whether a value is defined or not. The \inlinecode{UDQSet}
 class overrides the arithmetic operators like \inlinecode{UDQSet::operator+()}
 so that expressions like \kw{2 * WOPR 'OP*'} can be easily evaluated in code.
+
+\subsection*{Paralell awareness?}
+The opm-common code where the \udq{} functionality is implemented is totally
+ignorant of parallel execution, so to be certain that this works in parallel
+care must be taken. In flow this is handled as:
+\begin{enumerate}
+  \item The \inlinecode{Schedule} class as a whole is identical on all
+    processes.
+  \item The state variables \inlinecode{UDQState} and \inlinecode{SummaryState}
+    are distributed so they are equal on all processes before the \udq{}
+    evaluation. This communication is performed in the simulator.
+\end{enumerate}
+
+
+
+
