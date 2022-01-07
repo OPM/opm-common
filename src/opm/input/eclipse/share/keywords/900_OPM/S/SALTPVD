@@ -14,7 +14,6 @@
       "size_type": "ALL",
       "dimension": [
         "Length",
-        "Density",
         "1"
       ]
     }
