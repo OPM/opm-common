@@ -9,7 +9,7 @@ variables, and they can be used as controls in keywords like \kw{WCONPROD} and
 \kw{GCONINJE}. When used as controls the \udq{} variables are called \emph{User
 Defined Arguments} (UDA).
 
-For both the the \udq{} and \kw{ACTIONX} keywords evaluating an arithmetic
+For both the \udq{} and \kw{ACTIONX} keywords evaluating an arithmetic
 expression based on the current results of the ongoing simulation is an
 important part of the concept, and they are often referenced in pair as
 \udq{}/\kw{ACTIONX}, this is slightly misleading as the two are fully
@@ -506,10 +506,10 @@ The \inlinecode{UDQDefine} manages a parsed \udq{} expresssion along with a
 chunck of metadata. The parsed \udq{} expression is in managed in an instance of
 \inlinecode{UDQASTNode}. The \inlinecode{UDQASTNode} contains a parsed tree
 representation of the \udq{} input expression. The parsing of \udq{} expressions
-happens at input time, and for the rest of the simulation the the
+happens at input time, and for the rest of the simulation the
 \inlinecode{UDQASTnode} instances are immutable.
 
-Many scalar \udq{} types are define in the file \path{UDQEenums.hpp} and in the
+Many scalar \udq{} types are defined in the file \path{UDQEenums.hpp} and in the
 namespace \inlinecode{UDQ} there are many small utility functions to work with
 these enums.
 
