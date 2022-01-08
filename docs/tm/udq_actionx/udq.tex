@@ -556,7 +556,9 @@ care must be taken. In flow this is handled as:
     are distributed so they are equal on all processes before the \udq{}
     evaluation. This communication is performed in the simulator.
 \end{enumerate}
-
+The \udq{} evaluation is invoked from
+\path{opm-simualtors/ebos/eclgenericwriter.cc} function
+\inlinecode{evalSummary()}.
 
 
 
