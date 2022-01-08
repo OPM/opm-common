@@ -89,6 +89,12 @@ In \flow{} this is ``solved'' in the following way:
   silently be ignored. This is probably not what the user wanted, but it is also
   not a bug?
 \end{enumerate}
+It should be mentioned that the functionality with forward referencing of well
+names is quite new, there might very well well keywords in the \kw{SCHEDULE}
+section which is not prepared for this. Furthermore the forward referencing is
+not at all implemented for the groups yet. The releavnt data structure is the
+member \inlinecode{Action::WGNames action\_wgnames} in the \inlinecode{Schedule}
+class.
 
 \section{Implemenation details}
 The \actionx{} implementation is located in
