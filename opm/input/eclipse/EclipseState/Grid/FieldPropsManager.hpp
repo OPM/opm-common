@@ -51,6 +51,9 @@ public:
 
     void apply_schedule_keywords(const std::vector<DeckKeyword>& keywords);
 
+    /// \brief Whether we can call methods on the manager
+    bool is_usable() const;
+
     /*
      The number of cells in the fields managed by this FieldPropsManager.
      Initially this will correspond to the number of active cells in the grid

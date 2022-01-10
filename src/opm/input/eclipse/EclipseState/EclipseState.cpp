@@ -395,8 +395,15 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
                 OpmLog::info(fmt::format("Apply transmissibility multiplier: {}", keyword.name()));
         }
 
-        this->field_props.apply_schedule_keywords(keywords);
-        this->applyMULTXYZ();
+        // After loadbalancing field_props is a nullptr on all processes except
+        // the one with rank zero. Currently, the simulator should to take care
+        // about communicating the field properties. I does not seem to do that,
+        // though. Only the transmissibility multipliers will get broadcasted.
+        if (this->field_props.is_usable())
+        {
+            this->field_props.apply_schedule_keywords(keywords);
+            this->applyMULTXYZ();
+        }
     }
 
 
