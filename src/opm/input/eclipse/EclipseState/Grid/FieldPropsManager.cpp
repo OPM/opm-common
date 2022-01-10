@@ -47,6 +47,11 @@ void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
     this->fp->reset_actnum(actnum);
 }
 
+bool FieldPropsManager::is_usable() const
+{
+    return static_cast<bool>(this->fp);
+}
+
 void FieldPropsManager::apply_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
     this->fp->handle_schedule_keywords(keywords);
 }
