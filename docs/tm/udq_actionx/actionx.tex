@@ -5,22 +5,41 @@ The \actionx{} keyword is the most direct way to \emph{program} in the deck. The
 \actionx{} functionality consist of the \actionx{} keyword itself, with some
 metadata and a condition and then a list of keywords which are injected into
 Schedule section at the point in time where the condition evaluates to true.
-
-\begin{deck}
-ACTIONX
-INJECTION 10 0 /
-WBHP P1 < 200.0 /
-/
-
-WELOPEN
-  'WI1' 'OPEN' 5* /
-/
-
-ENDACTIO
-\end{deck}
 The \actionx{} statement is evaluated at the end of every timestep, and if it
 evaluates to true the new keywords should take effect immediately.
 
+\section{Structure of the \actionx{} keyword}
+The \actionx{} keyword itself consist of multiple records. The first record is
+metadata with the name of action, the number of times the action can be
+triggered and the minimum time elapsed before an action is eligible for a second
+run.
+
+The subsequent records are \emph{conditions}, all the conditions are of the same
+form
+\begin{code}
+  lhs condition rhs
+\end{code}
+if there are more conditions they must be joined with a trailing \kw{AND} or
+\kw{OR}, conditions can be grouped with paranthesis. The quantatites in an
+\actionx{} expression must be ``quite simple'', for more advanced expressions
+the natural way is to first define a \udq{} and then use the \udq{symbol} in the
+\actionx{}, this is illustrated in section \ref{uda}.
+
+
+
+
+\begin{deck}
+ACTIONX
+  INJECTION 10 0 /
+  WBHP P1 < 200.0 /
+  /
+
+  WELOPEN
+  'WI1' 'OPEN' 5* /
+  /
+
+  ENDACTIO
+\end{deck}
 
 
 
@@ -191,6 +210,14 @@ With this in mind the essence of the implementation of \actionx{} is just to
 append the \actionx{} keywords in the right \inlinecode{ScheduleBlock} instance
 and then rerun the \inlinecode{Schedule::iterateScheduleSection} from the
 correct report step.
+
+\subsection*{\actionx{} input}
+While parsing the \kw{SCHEDULE} section the \actionx{} keywords are somewhat
+special cased - the keywords are not internalized but rather tucked away for
+future injection. The keywords in the \actionx{} are parsed and stored in a
+class \inlinecode{Action::ActionX} and all of these instances are in a vector
+\inlinecode{Action::Actions}.
+
 
 \section{Interaction with the simulator}
 

@@ -393,6 +393,7 @@ two sets, only well OP1 would have a defined value in this case.
 
 
 \section{Used as a control: UDA}
+\label{uda}
 Probably one of the most important uses of the \udq{} functionality is the
 ability to use a \udq{} as control in e.g. the \kw{WCONINJE} keyword. In the
 example below we calculate the produced liquid volume from a group of wells and
@@ -520,11 +521,14 @@ The \inlinecode{SummaryState} class is not part of the \udq{} implementation,
 but it is a very important class for the \udq{} functionality. At the end of
 every timestep the simulator will call the method \inlinecode{evalSummary} which
 will call into opm-common and evaluate all summary variables and store them in a
-\inlinecode{SummaryState} instance. The \inlinecode{SummaryState} class manages
-a set of maps with well, group and field variables, when evaluating e.g. the
-\kw{WOPR} the results will be stored in a two level map first indexed with
-keyword \kw{WOPR} and then with well name. Afterwards the \udq{} layer can fetch
-values with \inlinecode{SummaryState::get\_well\_var()}. The values in the
+\inlinecode{SummaryState} instance\footnote{Observe that during initialization
+the \udq{} expressions are inspected, and we make sure that all summary
+variables needed to evaulate \udq{} expressions are evaluated in the Summary
+evaluation.}. The \inlinecode{SummaryState} class manages a set of maps with
+well, group and field variables, when evaluating e.g. the \kw{WOPR} the results
+will be stored in a two level map first indexed with keyword \kw{WOPR} and then
+with well name. Afterwards the \udq{} layer can fetch values with
+\inlinecode{SummaryState::get\_well\_var()}. The values in the
 \inlinecode{SummaryState} have been converted to output units, this is important
 for the \kw{UDA} evaluation.
 
