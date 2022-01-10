@@ -439,7 +439,7 @@ WCONPROD
 \end{deck}
 One point about this example is that when the \udq{} variable used as control in
 e.g. \kw{WCONPROD} is a well set the lookup machinery will automatically use the
-correct well index when assign control value to a particular well.
+correct well index when assigning control value to a particular well.
 
 From an implementation point of view the \kw{UDA} functionality creates a
 significant complexity, because the actual rate to use in the simulation can not
@@ -514,7 +514,20 @@ namespace \inlinecode{UDQ} there are many small utility functions to work with
 these enums.
 
 
-\subsection*{Runtime evaluation of \udq{} expressions}
+\subsection*{\inlinecode{SummaryState}}
+\label{summarystate}
+The \inlinecode{SummaryState} class is not part of the \udq{} implementation,
+but it is a very important class for the \udq{} functionality. At the end of
+every timestep the simulator will call the method \inlinecode{evalSummary} which
+will call into opm-common and evaluate all summary variables and store them in a
+\inlinecode{SummaryState} instance. The \inlinecode{SummaryState} class manages
+a set of maps with well, group and field variables, when evaluating e.g. the
+\kw{WOPR} the results will be stored in a two level map first indexed with
+keyword \kw{WOPR} and then with well name. Afterwards the \udq{} layer can fetch
+values with \inlinecode{SummaryState::get\_well\_var()}. The values in the
+\inlinecode{SummaryState} have been converted to output units, this is important
+for the \kw{UDA} evaluation.
+
 At the end of every timestep the \inlinecode{UDQConfig::eval()} method is called
 to evaluate all the \udq{} expressions, the evaluated values will end up in the
 active \inlinecode{SummaryState} instance, i.e. for this \udq{}
@@ -545,10 +558,10 @@ well/group names and whether a value is defined or not. The \inlinecode{UDQSet}
 class overrides the arithmetic operators like \inlinecode{UDQSet::operator+()}
 so that expressions like \kw{2 * WOPR 'OP*'} can be easily evaluated in code.
 
-\subsection*{Paralell awareness?}
+\subsection*{Paralell awareness}
 The opm-common code where the \udq{} functionality is implemented is totally
-ignorant of parallel execution, so to be certain that this works in parallel
-care must be taken. In flow this is handled as:
+unaware of parallel execution, so to be certain that this works for a parallel
+simulator care must be taken. In flow this is handled as:
 \begin{enumerate}
   \item The \inlinecode{Schedule} class as a whole is identical on all
     processes.
@@ -557,7 +570,7 @@ care must be taken. In flow this is handled as:
     evaluation. This communication is performed in the simulator.
 \end{enumerate}
 The \udq{} evaluation is invoked from
-\path{opm-simualtors/ebos/eclgenericwriter.cc} function
+\path{opm-simulators/ebos/eclgenericwriter.cc} function
 \inlinecode{evalSummary()}.
 
 
