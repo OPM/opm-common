@@ -23,22 +23,6 @@ evaluates to true the new keywords should take effect immediately.
 
 
 
-\section{Interaction with the simulator}
-
-\begin{enumerate}
-\item WELPI
-\item General changes in well status
-\item Changes in geo properties
-\end{enumerate}
-
-The actionx implementation is in the module opm-common, whereas when the
-simulation is proceeding it is the simulator code which is clearly in control.
-If an action has evaluated to true and new keyword must be injected in the
-Schedule object and thereby the complete simulator state is updated. This is
-complex, and many of the bugs in \actionx{} functionality have been in the
-interaction between the simulator and opm-common, in particular when an action
-has evaluated to true.
-
 
 
 \section{Forward references of wells and groups}
@@ -96,6 +80,19 @@ not at all implemented for the groups yet. The releavnt data structure is the
 member \inlinecode{Action::WGNames action\_wgnames} in the \inlinecode{Schedule}
 class.
 
+
+
+\section{To enable a new keyword for \actionx}
+The keywords must be explicitly enabled to be usable in an \actionx{} block, and
+enabling a new keyword requires recompiling \flow{}. The hardcoded list of
+keywords avaiailable as \actionx{} keywords are listed in the static method
+\inlinecode{ActionX::valid\_keyword()} in
+\path{opm/input/eclipse/Schedule/Action/ActionX.cpp}. In principle it should
+just be to add the keyword to the \inlinecode{ActionX::valid\_keyword()} method
+and rebuild \flow{}, but experience has unfortunately shown that problems of
+various kinds have had a tendency to pop up when new keywords are tried out as
+\actionx{} keywords.
+
 \section{Implemenation details}
 The \actionx{} implementation is located in
 \path{opm/input/eclipse/Schedule/Action} and all the classes are in namespace
@@ -145,6 +142,8 @@ COMPDAT
 	'INJ'	1	1	1	1	'OPEN'	1*	1*	0.5 /
 /
 
+-- End of block 0
+
 DATES
    1 'FEB' 2020 /
 /
@@ -157,24 +156,62 @@ WCONINJE
 	'INJ'	'GAS'	'OPEN'	'RATE'	100000 1* 9014 /
 /
 
+-- End of block 1
+
 DATES
   1 'MAR' 2020 /
 /
 
+-- End of block 2
 END
 
 \end{deck}
 
+When this is internalized we get a \inlinecode{ScheduleDeck} instance with three
+\inlinecode{ScheduleBlock} instances:
 
-\section{To enable a new keyword for \actionx}
-The keywords must be explicitly enabled to be usable in an \actionx{} block, and
-enabling a new keyword requires recompiling \flow{}. The hardcoded list of
-keywords avaiailable as \actionx{} keywords are listed in the static method
-\inlinecode{ActionX::valid\_keyword()} in
-\path{opm/input/eclipse/Schedule/Action/ActionX.cpp}. In principle it should
-just be to add the keyword to the \inlinecode{ActionX::valid\_keyword()} method
-and rebuild \flow{}, but experience has unfortunately shown that problems of
-various kinds have had a tendency to pop up when new keywords are tried out as
-\actionx{} keywords.
+\begin{code}
+ScheduleDeck sched_deck = [
+  ScheduleBlock{start = "2020-01-01", keywords = ["WELSPECS","COMPDAT"]},
+  ScheduleBlock{start = "2020-02-01", keywords = ["WCONPROD","WCONINJE"]},
+  ScheduleBlock{start = "2020-03-01", keywords = []}
+]
+\end{code}
 
+The \inlinecode{Schedule} class has a \inlinecode{ScheduleDeck} member. The
+processed content of the \inlinecode{ScheduleClass} is managed in vector of
+\inlinecode{ScheduleState} instances, where one \inlinecode{ScheduleState}
+represents the complete dynamic input state at a particular report step. The
+processed \kw{SCHEDULE} code is created with the method
+\inlinecode{Schedule::iterateScheduleSection()}. The important point is that the
+\inlinecode{Schedule::iterateScheduleSection} method is idempotent - it can can
+be called repeatedly.
+
+With this in mind the essence of the implementation of \actionx{} is just to
+append the \actionx{} keywords in the right \inlinecode{ScheduleBlock} instance
+and then rerun the \inlinecode{Schedule::iterateScheduleSection} from the
+correct report step.
+
+\section{Interaction with the simulator}
+
+\begin{enumerate}
+\item WELPI
+\item General changes in well status
+\item Changes in geo properties
+\end{enumerate}
+
+The actionx implementation is in the module opm-common, whereas when the
+simulation is proceeding it is the simulator code which is clearly in control.
+If an action has evaluated to true and new keyword must be injected in the
+Schedule object and thereby the complete simulator state is updated. This is
+complex, and many of the bugs in \actionx{} functionality have been in the
+interaction between the simulator and opm-common, in particular when an action
+has evaluated to true.
+
+Another challenge is that the simulator code makes \emph{copies} of many of the
+objects like wells and connections from the \inlinecode{Schedule} class. Some of
+the interaction between the simulator and the input layer could probably be
+simplified if the simulator would call the \inlinecode{Schedule} object when
+e.g. a well or connection is needed, instead of storing references or copies
+internally.
 
