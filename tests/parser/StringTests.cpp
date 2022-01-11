@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/shmatch.hpp>
 
 using namespace Opm;
 
@@ -132,3 +133,20 @@ BOOST_AUTO_TEST_CASE(parse_double) {
     auto d3 = try_parse_double("-1.5");
     BOOST_CHECK_EQUAL( d3.value(), -1.50 );
 }
+
+BOOST_AUTO_TEST_CASE(match_test) {
+    BOOST_CHECK( shmatch("NAME*", "NAME") );
+    BOOST_CHECK( shmatch("NAME*", "NAMEABC") );
+    BOOST_CHECK( !shmatch("NAME", "NONAMEABC") );
+    BOOST_CHECK( !shmatch("NAME?ABC", "NAMEABC") );
+    BOOST_CHECK( shmatch("NAME?ABC", "NAMEXABC") );
+    BOOST_CHECK( shmatch("NAME[0-9][0-9]", "NAME13") );
+    BOOST_CHECK( !shmatch("NAME[0-9][0-9]", "NAME13X") );
+    BOOST_CHECK( !shmatch("NAME[0-4][0-4]", "NAME77") );
+
+    BOOST_CHECK( shmatch("NAME.*", "NAME.EXT") );
+    BOOST_CHECK( !shmatch("NAME.?", "NAME.") );
+    BOOST_CHECK( !shmatch("NAME.*", "NAME") );
+}
+
+

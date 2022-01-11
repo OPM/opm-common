@@ -17,13 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fnmatch.h>
 #include <cmath>
 
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 #include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/common/utility/shmatch.hpp>
 
 #include <stdexcept>
 
@@ -120,9 +120,8 @@ Action::Value ASTNode::value(const Action::Context& context) const {
                 const auto& wlm = context.wlist_manager();
                 wnames = wlm.wells(well_arg);
             } else {
-                int fnmatch_flags = 0;
                 for (const auto& well : context.wells(this->func)) {
-                    if (fnmatch(well_arg.c_str(), well.c_str(), fnmatch_flags) == 0)
+                    if (shmatch(well_arg, well))
                         wnames.push_back(well);
                 }
             }

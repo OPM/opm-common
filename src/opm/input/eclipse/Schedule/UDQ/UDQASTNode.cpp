@@ -16,8 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fnmatch.h>
-
 #include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>

@@ -30,12 +30,12 @@
 #include <vector>
 
 #include <fmt/format.h>
-#include <fnmatch.h>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/io/eclipse/rst/state.hpp>
@@ -94,8 +94,7 @@
 namespace {
 
     bool name_match(const std::string& pattern, const std::string& name) {
-        int flags = 0;
-        return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
+        return Opm::shmatch(pattern, name);
     }
 
     double sumthin_summary_section(const Opm::SUMMARYSection& section) {

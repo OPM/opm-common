@@ -17,8 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fnmatch.h>
-
 #include <stdexcept>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>

@@ -16,8 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fnmatch.h>
-
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -34,6 +32,7 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/shmatch.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -1630,9 +1629,8 @@ const SummaryConfigNode& SummaryConfig::operator[](std::size_t index) const {
 
 
 bool SummaryConfig::match(const std::string& keywordPattern) const {
-    int flags = 0;
     for (const auto& keyword : this->short_keywords) {
-        if (fnmatch(keywordPattern.c_str(), keyword.c_str(), flags) == 0)
+        if (shmatch(keywordPattern, keyword))
             return true;
     }
     return false;
@@ -1640,9 +1638,8 @@ bool SummaryConfig::match(const std::string& keywordPattern) const {
 
 SummaryConfig::keyword_list SummaryConfig::keywords(const std::string& keywordPattern) const {
     keyword_list kw_list;
-    int flags = 0;
     for (const auto& keyword : this->m_keywords) {
-        if (fnmatch(keywordPattern.c_str(), keyword.keyword().c_str(), flags) == 0)
+        if (shmatch(keywordPattern, keyword.keyword()))
             kw_list.push_back(keyword);
     }
     return kw_list;

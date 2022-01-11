@@ -32,10 +32,10 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+#include <opm/common/utility/shmatch.hpp>
 
 #include "../MSW/Compsegs.hpp"
 
-#include <fnmatch.h>
 #include <cmath>
 #include <ostream>
 #include <stdexcept>
@@ -1342,7 +1342,7 @@ double Well::injection_rate(const SummaryState& st, Phase phase_arg) const {
 
 bool Well::wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern) {
     bool wellNameInPattern = false;
-    if (fnmatch( wellNamePattern.c_str() , wellName.c_str() , 0 ) == 0) {
+    if (shmatch( wellNamePattern, wellName)) {
         wellNameInPattern = true;
     }
     return wellNameInPattern;

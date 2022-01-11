@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <utility>
 
-#include <fnmatch.h>
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
 namespace Opm {
@@ -68,8 +68,7 @@ std::vector<std::string> WellMatcher::wells(const std::string& pattern) const {
     if (star_pos != std::string::npos) {
         std::vector<std::string> names;
         for (const auto& wname : this->m_well_order) {
-            int flags = 0;
-            if (fnmatch(pattern.c_str(), wname.c_str(), flags) == 0)
+            if (shmatch(pattern, wname))
                 names.push_back(wname);
         }
         return names;
