@@ -16,7 +16,7 @@ triggered and the minimum time elapsed before an action is eligible for a second
 run. The subsequent records are \emph{conditions}, all the conditions are of the
 same form
 \begin{code}
-  lhs comparison rhs.
+  lhs comparison rhs
 \end{code}
 The \inlinecode{lhs} is a field, well or group quantity, in addition you can
 use time variables \kw{DAY}, \kw{MNTH} and \kw{YEAR} as left hand
@@ -25,11 +25,11 @@ block and aquifer quantities on the left hand side.}. As with the \udq{}
 variables the well and group variables are \emph{sets}, and the evaluation
 status is maintained individually for each well and group.
 
-The condition is one of the ordinary mathematical comparison operators
-\inlinecode{>,<,=,!=, <=} and \inlinecode{>=}. Observe that numerical
-comparisons are done with the corresponding plain C++ operators, this is in
-contrast to the \udq{} implementation where an epsilon defined in \kw{UDQPARAMS}
-is used for floating point comparisons.
+The comparison is one of the ordinary mathematical comparison operators
+\inlinecode{>,<,=,!=, <=} and \inlinecode{>=}. Numerical comparisons are done
+with the corresponding plain C++ operators, this is in contrast to the \udq{}
+implementation where an epsilon defined in \kw{UDQPARAMS} is used in floating
+point comparisons.
 
 The \inlinecode{rhs} is a numerical scalar, or a field, well or group quantity.
 If your \inlinecode{rhs} is a well or group quantity the \inlinecode{lhs} and
@@ -54,27 +54,46 @@ wells the matching wells can subsequently be accessed with wellname '?' in the
 with highest watercut.
 
 If there are more conditions they must be joined with a trailing \kw{AND} or
-\kw{OR}, conditions can be grouped with paranthesis. The quantatites in an
-\actionx{} expression must be ``quite simple'', for more advanced expressions
-the natural way is to first define a \udq{} and then use the \udq{symbol} in the
-\actionx{}, this is illustrated in section \ref{uda}.
-
-
-
-
+\kw{OR}, furthermore conditions can be grouped with paranthesis. The quantities
+in an \actionx{} expression must be ``quite simple'', for more advanced
+expressions the natural way is to first define a \udq{} and then use the
+\udq{symbol} in the \actionx{}, this is illustrated in section \ref{uda}. When
+one multiple conditions involving the same well set are evaluated, the list of
+matching wells available in '?' will only contain the wells from the final
+condition, i.e. for
+\begin{code}
+ WWCT = {"OP1": 0.25, "OP2": 0.50, "OP3": 0.75}
+\end{code}
+and the action
 \begin{deck}
 ACTIONX
-  INJECTION 10 0 /
-  WBHP P1 < 200.0 /
-  /
-
-  WELOPEN
-  'WI1' 'OPEN' 5* /
-  /
-
-  ENDACTIO
+  WWCT /
+  WWCT > 0.33 AND /
+  WWCT < 0.66 /
+/
+...
+ENDACTIO
 \end{deck}
+the set of wells available for further use in '?' are \emph{all} the wells
+matching the condition \inlinecode{WWCT < 0.66} i.e. OP1 and OP2 and \emph{not}
+the wells matching the combined expression \inlinecode{0.33 < WWCT < 0.66} which
+would only be OP2. In order select wells in a range as attempted here you will
+have to create an indicator variable with \udq{} first and then select based on
+that indicator - e.g. something like
+\begin{deck}
+UDQ
+  DEFINE WUCTR (WWCT < 0.66) * (WWCT > 0.33) /
+/
 
+ACTIONX
+  WUCTR /
+  WUCTR = 1 /
+/
+
+...
+
+ENDACTIO
+\end{deck}
 
 
 
@@ -127,12 +146,11 @@ In \flow{} this is ``solved'' in the following way:
   not a bug?
 \end{enumerate}
 It should be mentioned that the functionality with forward referencing of well
-names is quite new, there might very well well keywords in the \kw{SCHEDULE}
-section which is not prepared for this. Furthermore the forward referencing is
-not at all implemented for the groups yet. The releavnt data structure is the
-member \inlinecode{Action::WGNames action\_wgnames} in the \inlinecode{Schedule}
-class.
-
+names is quite new, there might very well be well keywords in the \kw{SCHEDULE}
+section where the implementation is not yet prepared for this. Furthermore the
+forward referencing is not at all implemented for groups. The releavnt data
+structure is the member \inlinecode{Action::WGNames action\_wgnames} in the
+\inlinecode{Schedule} class.
 
 
 \section{To enable a new keyword for \actionx}
@@ -263,7 +281,7 @@ class \inlinecode{Action::ActionX} and all of these instances are in a vector
 
 The actionx implementation is in the module opm-common, whereas when the
 simulation is proceeding it is the simulator code which is clearly in control.
-If an action has evaluated to true and new keyword must be injected in the
+If an action has evaluated to true and new keywords should be injected in the
 Schedule object and thereby the complete simulator state is updated. This is
 complex, and many of the bugs in \actionx{} functionality have been in the
 interaction between the simulator and opm-common, in particular when an action
@@ -273,6 +291,6 @@ Another challenge is that the simulator code makes \emph{copies} of many of the
 objects like wells and connections from the \inlinecode{Schedule} class. Some of
 the interaction between the simulator and the input layer could probably be
 simplified if the simulator would call the \inlinecode{Schedule} object when
-e.g. a well or connection is needed, instead of storing references or copies
-internally.
+e.g. a well or connection is needed, instead of storing references or copies to
+the \inlinecode{Schedule} objects internally.
 
