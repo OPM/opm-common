@@ -20,6 +20,7 @@
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 
@@ -33,7 +34,6 @@
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <fnmatch.h>
 #include <fstream>
 #include <cmath>
 #include <cstring>
@@ -468,7 +468,7 @@ std::vector<std::string> ExtESmry::keywordList(const std::string& pattern) const
     std::vector<std::string> list;
 
     for (const auto& key : m_keyword)
-        if (fnmatch( pattern.c_str(), key.c_str(), 0 ) == 0 )
+        if (shmatch( pattern, key) )
             list.push_back(key);
 
     return list;

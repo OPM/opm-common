@@ -19,6 +19,7 @@
 #include <opm/io/eclipse/ESmry.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
@@ -37,8 +38,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-
-#include <fnmatch.h>
 
 #include <fmt/format.h>
 
@@ -1346,7 +1345,7 @@ std::vector<std::string> ESmry::keywordList(const std::string& pattern) const
     std::vector<std::string> list;
 
     for (auto key : keyword)
-        if (fnmatch( pattern.c_str(), key.c_str(), 0 ) == 0 )
+        if (shmatch(pattern, key))
             list.push_back(key);
 
     return list;

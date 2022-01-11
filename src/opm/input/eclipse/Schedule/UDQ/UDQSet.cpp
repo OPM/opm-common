@@ -16,11 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fnmatch.h>
 #include <algorithm>
 #include <cmath>
 #include <fmt/format.h>
 
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/common/utility/Serializer.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
@@ -256,8 +256,7 @@ std::size_t UDQSet::size() const {
 void UDQSet::assign(const std::string& wgname, double value) {
     bool assigned = false;
     for (auto& udq_value : this->values) {
-        int flags = 0;
-        if (fnmatch(wgname.c_str(), udq_value.wgname().c_str(), flags) == 0) {
+        if (shmatch(wgname, udq_value.wgname())) {
             udq_value.assign( value );
             assigned = true;
         }
@@ -269,8 +268,7 @@ void UDQSet::assign(const std::string& wgname, double value) {
 void UDQSet::assign(const std::string& wgname, const std::optional<double>& value) {
     bool assigned = false;
     for (auto& udq_value : this->values) {
-        int flags = 0;
-        if (fnmatch(wgname.c_str(), udq_value.wgname().c_str(), flags) == 0) {
+        if (shmatch(wgname, udq_value.wgname())) {
             udq_value.assign( value );
             assigned = true;
         }

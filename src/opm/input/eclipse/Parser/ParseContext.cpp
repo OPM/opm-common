@@ -20,13 +20,12 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <fnmatch.h>
-
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 namespace Opm {
@@ -274,10 +273,9 @@ namespace Opm {
 
 
     void ParseContext::patternUpdate( const std::string& pattern , InputError::Action action) {
-        const char * c_pattern = pattern.c_str();
         for (const auto& pair : m_errorContexts) {
             const std::string& key = pair.first;
-            if (fnmatch( c_pattern , key.c_str() , 0 ) == 0)
+            if (shmatch( pattern , key))
                 updateKey( key , action );
          }
     }

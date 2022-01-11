@@ -18,7 +18,6 @@
  */
 
 #include <exception>
-#include <fnmatch.h>
 #include <functional>
 #include <iostream>
 #include <memory>

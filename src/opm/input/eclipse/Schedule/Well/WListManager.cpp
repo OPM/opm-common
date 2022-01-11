@@ -16,11 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fnmatch.h>
 
 #include <unordered_set>
 #include <algorithm>
 
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
@@ -183,8 +183,7 @@ namespace Opm {
             auto pattern = wlist_pattern.substr(1);
             for (const auto& [name, wlist] : this->wlists) {
                 auto wlist_name = name.substr(1);
-                int flags = 0;
-                if (fnmatch(pattern.c_str(), wlist_name.c_str(), flags) == 0) {
+                if (shmatch(pattern, wlist_name)) {
                     const auto& well_names = wlist.wells();
                     for ( auto it = well_names.begin(); it != well_names.end(); it++ ) {
                        if (std::count(well_set.begin(), well_set.end(), *it) == 0)
