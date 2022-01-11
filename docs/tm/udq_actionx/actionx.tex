@@ -3,23 +3,57 @@
 \label{actionx}
 The \actionx{} keyword is the most direct way to \emph{program} in the deck. The
 \actionx{} functionality consist of the \actionx{} keyword itself, with some
-metadata and a condition and then a list of keywords which are injected into
-Schedule section at the point in time where the condition evaluates to true.
-The \actionx{} statement is evaluated at the end of every timestep, and if it
-evaluates to true the new keywords should take effect immediately.
+metadata and a condition and then a list of keywords which are injected into the
+in-memory representation of the \kw{SCHEDULE} section at the point in time where
+the condition evaluates to true. The \actionx{} statement is evaluated at the
+end of every timestep, and if it evaluates to true the new keywords should take
+effect immediately.
 
 \section{Structure of the \actionx{} keyword}
 The \actionx{} keyword itself consist of multiple records. The first record is
 metadata with the name of action, the number of times the action can be
 triggered and the minimum time elapsed before an action is eligible for a second
-run.
-
-The subsequent records are \emph{conditions}, all the conditions are of the same
-form
+run. The subsequent records are \emph{conditions}, all the conditions are of the
+same form
 \begin{code}
-  lhs condition rhs
+  lhs comparison rhs.
 \end{code}
-if there are more conditions they must be joined with a trailing \kw{AND} or
+The \inlinecode{lhs} is a field, well or group quantity, in addition you can
+use time variables \kw{DAY}, \kw{MNTH} and \kw{YEAR} as left hand
+side\footnote{\eclipse{} supports a wider list of summary variables like region,
+block and aquifer quantities on the left hand side.}. As with the \udq{}
+variables the well and group variables are \emph{sets}, and the evaluation
+status is maintained individually for each well and group.
+
+The condition is one of the ordinary mathematical comparison operators
+\inlinecode{>,<,=,!=, <=} and \inlinecode{>=}. Observe that numerical
+comparisons are done with the corresponding plain C++ operators, this is in
+contrast to the \udq{} implementation where an epsilon defined in \kw{UDQPARAMS}
+is used for floating point comparisons.
+
+The \inlinecode{rhs} is a numerical scalar, or a field, well or group quantity.
+If your \inlinecode{rhs} is a well or group quantity the \inlinecode{lhs} and
+\inlinecode{rhs} must be of the same type. If you use the symbol \kw{MNTH} as
+\inlinecode{lhs} you can compare with named months, i.e. the following will
+trigger on leap days
+\begin{deck}
+ACTIONX
+  LEAP 1000 /
+  MNTH=FEB AND /
+  DAY=29 /
+/
+...
+...
+ENDACTIO
+\end{deck}
+When there is a well/group quantity as \inlinecode{lhs} the evaluation status is
+maintained individually for each well/group. The complete condition evaluates to
+true if \emph{any} of the wells/groups satisfy the condition, in the case of
+wells the matching wells can subsequently be accessed with wellname '?' in the
+\kw{ACTIONX} keywords, this is a quite common pattern to e.g. close the well
+with highest watercut.
+
+If there are more conditions they must be joined with a trailing \kw{AND} or
 \kw{OR}, conditions can be grouped with paranthesis. The quantatites in an
 \actionx{} expression must be ``quite simple'', for more advanced expressions
 the natural way is to first define a \udq{} and then use the \udq{symbol} in the
