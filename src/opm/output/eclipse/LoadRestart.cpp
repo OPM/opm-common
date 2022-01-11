@@ -1464,6 +1464,19 @@ namespace {
         smry.update_well_var(well, "WGIT", xwel[VI::XWell::index::GasInjTotal]);
         smry.update_well_var(well, "WVIT", xwel[VI::XWell::index::VoidInjTotal]);
 
+        smry.update_well_var(well, "WOPTS", xwel[VI::XWell::index::OilPrTotalSolution]);
+        smry.update_well_var(well, "WGPTS", xwel[VI::XWell::index::GasPrTotalSolution]);
+
+        // Free oil cumulative production = WOPT - WOPTS
+        smry.update_well_var(well, "WOPTF",
+                             xwel[VI::XWell::index::OilPrTotal] -
+                             xwel[VI::XWell::index::OilPrTotalSolution]);
+
+        // Free gas cumulative production = WGPT - WGPTS
+        smry.update_well_var(well, "WGPTF",
+                             xwel[VI::XWell::index::GasPrTotal] -
+                             xwel[VI::XWell::index::GasPrTotalSolution]);
+
         smry.update_well_var(well, "WOPTH", xwel[VI::XWell::index::HistOilPrTotal]);
         smry.update_well_var(well, "WWPTH", xwel[VI::XWell::index::HistWatPrTotal]);
         smry.update_well_var(well, "WGPTH", xwel[VI::XWell::index::HistGasPrTotal]);
@@ -1520,6 +1533,19 @@ namespace {
         update("WIT", xgrp[VI::XGroup::index::WatInjTotal]);
         update("GIT", xgrp[VI::XGroup::index::GasInjTotal]);
         update("VIT", xgrp[VI::XGroup::index::VoidInjTotal]);
+
+        update("OPTS", xgrp[VI::XGroup::index::OilPrTotalSolution]);
+        update("GPTS", xgrp[VI::XGroup::index::GasPrTotalSolution]);
+
+        // Free oil cumulative production = xOPT - xOPTS
+        update("OPTF",
+               xgrp[VI::XGroup::index::OilPrTotal] -
+               xgrp[VI::XGroup::index::OilPrTotalSolution]);
+
+        // Free gas cumulative production = xGPT - xGPTS
+        update("GPTF",
+               xgrp[VI::XGroup::index::GasPrTotal] -
+               xgrp[VI::XGroup::index::GasPrTotalSolution]);
 
         update("OPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
         update("WPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);

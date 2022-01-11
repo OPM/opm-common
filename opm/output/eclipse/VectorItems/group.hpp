@@ -132,6 +132,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             OilPrPot = 22, // Group's oil production potential
             WatPrPot = 23, // Group's water production potential
 
+            OilPrTotalSolution = 73, // Group's total cumulative oil production in solution
+            GasPrTotalSolution = 74, // Group's total cumulative gas production in solution
+
             OilPrGuideRate  = 85, // Group's producer guide rate for oil.
             WatPrGuideRate  = 86, // Group's producer guide rate for water.
             GasPrGuideRate  = 87, // Group's producer guide rate for gas.

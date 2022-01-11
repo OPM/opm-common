@@ -224,6 +224,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             GasPrGuideRate  = 50, // Well's producer guide rate for gas
             VoidPrGuideRate = 68, // Well's producer guide rate for reservoir voidag volume
 
+            OilPrTotalSolution = 73, // Well's total cumulative oil production in solution
+            GasPrTotalSolution = 74, // Well's total cumulative gas production in solution
+
             HistOilPrTotal  = 75, // Well's total cumulative oil production
                                   // (observed/historical rates)
             HistWatPrTotal  = 76, // Well's total cumulative water

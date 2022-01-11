@@ -111,6 +111,8 @@ namespace {
             ParamCTorArgs{ "WPT" , Type::Total },
             ParamCTorArgs{ "GPT" , Type::Total },
             ParamCTorArgs{ "VPT" , Type::Total },
+            ParamCTorArgs{ "OPTS", Type::Total },
+            ParamCTorArgs{ "GPTS", Type::Total },
             ParamCTorArgs{ "OPTH", Type::Total },
             ParamCTorArgs{ "WPTH", Type::Total },
             ParamCTorArgs{ "GPTH", Type::Total },
