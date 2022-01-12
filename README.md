@@ -20,3 +20,4 @@ Requirements
 
 - C++17 compatible compiler
 - CMake >= 3.10
+- Posix compatibility
