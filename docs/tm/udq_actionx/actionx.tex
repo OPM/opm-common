@@ -177,18 +177,18 @@ implementations was the simplest.}.
 
 \subsection*{The \inlinecode{Schedule} implementation}
 \flow{} internalizes all keywords from the input deck and passes datastructures
-to the simulator, whereas the impression is that \eclipse{} works more like an
-interepreter executing the keywords one at a time. Mostly the \flow{} approach
-of internalizing everything before simulation actually starts has worked out
-well, however for the \actionx{} functionality the difference in execution model
-is quite acute, and the needs of \actionx{} has had quite strong influence on
-the final Schedule implementation. Although not required for use of \actionx{}
-it is valuable to understand how the \actionx{} functionality has influenced the
-design of the Schedule class, that way you will hopefully better understand
-problems or bugs which might arise in the future.
+to the simulator, whereas the impression is that \eclipse{} works more like a
+reservoir model interepreter, executing one keywords at a time. Mostly the
+\flow{} approach has worked out well, however for the \actionx{} functionality
+the difference in execution model is quite acute, and the needs of \actionx{}
+has had quite strong influence on the final Schedule implementation. Although
+not required for use of \actionx{} it is valuable to understand how the
+\actionx{} functionality has influenced the design of the Schedule class, that
+way you will hopefully better understand problems or bugs which might arise in
+the future.
 
 At the very first pass the \kw{SCHEDULE} section is split in \emph{blocks}, with
-one blocks for each report step. The blocks are implemented with the class
+one block for each report step. The blocks are implemented with the class
 \inlinecode{ScheduleBlock}. Each block has a starting time and a list of
 keywords, the keywords are maintained in the input format
 \inlinecode{DeckKeyword}. Then the entire \kw{SCHEDULE} section is internalized
@@ -243,9 +243,18 @@ When this is internalized we get a \inlinecode{ScheduleDeck} instance with three
 
 \begin{code}
 ScheduleDeck sched_deck = [
-  ScheduleBlock{start = "2020-01-01", keywords = ["WELSPECS","COMPDAT"]},
-  ScheduleBlock{start = "2020-02-01", keywords = ["WCONPROD","WCONINJE"]},
-  ScheduleBlock{start = "2020-03-01", keywords = []}
+  ScheduleBlock {
+    start = "2020-01-01",
+    keywords = ["WELSPECS","COMPDAT"]
+  },
+  ScheduleBlock {
+    start = "2020-02-01",
+    keywords = ["WCONPROD","WCONINJE"]
+  },
+  ScheduleBlock {
+    start = "2020-03-01",
+    keywords = []
+  }
 ]
 \end{code}
 
@@ -255,13 +264,14 @@ processed content of the \inlinecode{ScheduleClass} is managed in vector of
 represents the complete dynamic input state at a particular report step. The
 processed \kw{SCHEDULE} code is created with the method
 \inlinecode{Schedule::iterateScheduleSection()}. The important point is that the
-\inlinecode{Schedule::iterateScheduleSection} method is idempotent - it can can
-be called repeatedly.
+\inlinecode{Schedule::iterateScheduleSection()} method is idempotent - it can be
+called repeatedly.
 
-With this in mind the essence of the implementation of \actionx{} is just to
-append the \actionx{} keywords in the right \inlinecode{ScheduleBlock} instance
-and then rerun the \inlinecode{Schedule::iterateScheduleSection} from the
-correct report step.
+With this in mind the essence of how \actionx{} keywords are injected into the
+\inlinecode{Schedule} class is just to append the \actionx{} keywords in the
+\inlinecode{ScheduleBlock} instance corresponding to the current report step and
+then rerun the \inlinecode{Schedule::iterateScheduleSection} from this report
+step.
 
 \subsection*{\actionx{} input}
 While parsing the \kw{SCHEDULE} section the \actionx{} keywords are somewhat
