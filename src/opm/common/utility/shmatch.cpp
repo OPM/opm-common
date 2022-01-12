@@ -17,9 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fnmatch.h>
-#include <opm/common/utility/shmatch.hpp>
 #include <regex>
+
+#include <opm/common/utility/shmatch.hpp>
 
 
 bool Opm::shmatch(const std::string& pattern, const std::string& symbol) {
