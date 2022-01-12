@@ -7,7 +7,10 @@ metadata and a condition and then a list of keywords which are injected into the
 in-memory representation of the \kw{SCHEDULE} section at the point in time where
 the condition evaluates to true. The \actionx{} statement is evaluated at the
 end of every timestep, and if it evaluates to true the new keywords should take
-effect immediately.
+effect immediately. The \actionx{} conditions are less sophisticated than the
+expressions used in \udq{}, this implies that a common pattern is to make
+involved calculations as \udq{} expressions, and then use a simple test as
+\actionx{} condition.
 
 \section{Structure of the \actionx{} keyword}
 The \actionx{} keyword itself consist of multiple records. The first record is
@@ -273,12 +276,51 @@ With this in mind the essence of how \actionx{} keywords are injected into the
 then rerun the \inlinecode{Schedule::iterateScheduleSection} from this report
 step.
 
-\subsection*{\actionx{} input}
+\subsection{\actionx{} input}
 While parsing the \kw{SCHEDULE} section the \actionx{} keywords are somewhat
 special cased - the keywords are not internalized but rather tucked away for
 future injection. The keywords in the \actionx{} are parsed and stored in a
-class \inlinecode{Action::ActionX} and all of these instances are in a vector
+class \inlinecode{Action::ActionX} and all of these instances are in a container
 \inlinecode{Action::Actions}.
+
+\section{Running \actionx{} during simulation}
+At runtime the \actionx{} behavior consists of three distinct parts, taking
+place in the simulator, in opm-common and again in the simulator. The simulator
+will manage an instance of \inlinecode{Action::State} which will hold on to the
+time of last run and the latest results for the various actions.
+
+\subsection{Prepare and evaluate}
+As with \udq{} the \inlinecode{SummaryState} instance is the most important
+variable to provide context to the \actionx{} evaluation, i.e. the
+\inlinecode{SummaryState} variable must be evaluated before \actionx{}. In
+addition the \udq{} variable must be evaluated and available in the
+\inlinecode{SummaryState} instance before we invoke the \actionx{}
+functionality.
+
+The evaluation of actions is called from the method \inlinecode{applyActions()}
+in \path{eclproblem.hh}. The method will evaluate which actions are eligible for
+running and call the \inlinecode{ActionX::eval()} method.
+
+\subsection{Recreate \inlinecode{Schedule} instance}
+When an \actionx{} has evaluated to \inlinecode{true} the simulator will call
+into the opm-common method \inlinecode{Schedule::applyAction()}. That function
+will add the keywords from the \actionx{} keyword to the
+\inlinecode{ScheduleBlock} for the correct report step, and then reiterate
+through all the keywords to the end of the simulation.
+
+NB: Observe that this reiterate process will recreate all internal members in
+the \inlinecode{Schedule} class, i.e. if external scope was holding on to a
+reference to an internal \inlinecode{Schedule} datastructure that will be
+invalidated.
+
+While recreating the \inlinecode{Schedule} instance there is some book keeping
+as to which datastructures need to be recalculated in the simulator as a
+consequence of the \actionx{}. That information is maintained in the data
+structure \inlinecode{SimulatorUpdate}.
+
+
+\subsection{Updating simulator data structures}
+
 
 
 \section{Interaction with the simulator}
@@ -304,3 +346,15 @@ simplified if the simulator would call the \inlinecode{Schedule} object when
 e.g. a well or connection is needed, instead of storing references or copies to
 the \inlinecode{Schedule} objects internally.
 
+\section{\actionx{} restart output}
+As with the \udq{} variable some of the structure and complexity of the
+\actionx{} datastructures are there primarily to enable \eclipse{} compatible
+restart. Regarding restart of \actionx{} related data:
+\begin{enumerate}
+  \item The restart output contains the result of parsing an \actionx{}
+    condition in an intermediate representation, this is complex and might not
+    be 100\% correct.
+  \item When restarting \flow{} from an \eclipse{} formatted restart file the
+    \actionx{} conditions are reparsed based on string data in the restart file
+    and the intermediate representation mentioned in point 1 is not required.
+\end{enumerate}
