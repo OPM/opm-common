@@ -16,10 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <algorithm>
 #include <array>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -291,14 +293,15 @@ struct SummaryConfigContext {
         return keyword == "WPIL";
     }
 
-    bool is_region_to_region(const std::string& keyword) {
-        using sz_t = std::string::size_type;
-        if ((keyword.size() == sz_t{3}) && keyword[2] == 'F') return true;
-        if ((keyword == "RNLF") || (keyword == "RORFR")) return true;
-        if ((keyword.size() >= sz_t{4}) && ((keyword[2] == 'F') && ((keyword[3] == 'T') || (keyword[3] == 'R')))) return true;
-        if ((keyword.size() >= sz_t{5}) && ((keyword[3] == 'F') && ((keyword[4] == 'T') || (keyword[4] == 'R')))) return true;
+    bool is_region_to_region(const std::string& keyword)
+    {
+        static const auto rate = std::regex { R"(R[OGWEK]F[RT][-+GL]?)" };
+        static const auto ngl  = std::regex { R"(RNLF[RT][-+]?)" };
 
-        return false;
+        // R[OGW]F[RT][-+GL]? (e.g., "ROFTG", "RGFR+", or "RWFT")
+        // RNLF[RT].? (e.g., "RNLFR-" or "RNLFT")
+        return std::regex_match(keyword, rate)
+            || std::regex_match(keyword, ngl);
     }
 
     bool is_aquifer(const std::string& keyword)

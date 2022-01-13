@@ -1,17 +1,10 @@
 {
-  "name": "REGION2REGION_PROBE",
+  "name": "REGION2REGION_PROBE_E300",
   "sections": [
     "SUMMARY"
   ],
-  "deck_names": [
-    "ROFT",
-    "ROFTL",
-    "ROFTG",
-    "RGFT",
-    "RGFTL",
-    "RGFTG",
-    "RWFT"
-  ],
+  "comment": "E300 only",
+  "deck_name_regex": "R[OGWEK]F(R[-+]?|T[-+])",
   "items": [
     {
       "name": "REGION1",
