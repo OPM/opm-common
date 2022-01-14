@@ -103,6 +103,18 @@ bool Opm::EclIO::isEOF(std::fstream* fileH)
     }
 }
 
+int Opm::EclIO::combineSummaryNumbers(const int n1, const int n2)
+{
+    return n1 + (1 << 15)*(n2 + 10);
+}
+
+std::tuple<int, int> Opm::EclIO::splitSummaryNumber(const int n)
+{
+    const auto n1 =  n % (1 << 15);
+    const auto n2 = (n / (1 << 15)) - 10;
+
+    return { n1, n2 };
+}
 
 std::tuple<int, int> Opm::EclIO::block_size_data_binary(eclArrType arrType)
 {
