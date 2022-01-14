@@ -357,17 +357,91 @@ BOOST_AUTO_TEST_CASE(regions) {
 }
 
 BOOST_AUTO_TEST_CASE(region2region) {
-  const auto input = "ROFT\n"
-    "1 2/\n"
-    "3 4/\n"
-    "/\n"
-    "RWIP\n"
-    "/\n"
-    "RGFT\n"
-    "5 6/\n"
-    "7 8/\n"
-    "/\n";
-
+    const auto input = std::string { R"(ROFT
+1 2/
+3 4/
+/
+ROFT+
+1 2/
+3 4/
+/
+ROFT-
+1 2/
+3 4/
+/
+ROFR
+1 2/
+3 4/
+/
+ROFR+
+1 2/
+3 4/
+/
+ROFR-
+1 2/
+3 4/
+/
+ROFTL
+1 2/
+3 4/
+/
+ROFTG
+1 2/
+3 4/
+/
+RGFT
+5 6/
+7 8/
+/
+RGFT+
+5 6/
+7 8/
+/
+RGFT-
+5 6/
+7 8/
+/
+RGFR
+5 6/
+7 8/
+/
+RGFR+
+5 6/
+7 8/
+/
+RGFR-
+5 6/
+7 8/
+/
+RGFTL
+1 2 /
+1 3 /
+/
+RGFTG
+1 2 /
+1 3 /
+/
+RWFT
+2 3 /
+/
+RWFT+
+2 3 /
+/
+RWFT-
+2 3 /
+/
+RWFR
+2 3 /
+/
+RWFR+
+2 3 /
+/
+RWFR-
+2 3 /
+/
+RWIP
+/
+)" };
 
   ParseContext parseContext;
   parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
