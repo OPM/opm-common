@@ -17,6 +17,34 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/io/eclipse/EclUtil.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/shmatch.hpp>
+
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -25,36 +53,13 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
-
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/utility/shmatch.hpp>
-
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-
 
 namespace Opm {
 
@@ -218,6 +223,11 @@ struct SummaryConfigContext {
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
+
+            "OFR", "OFR+", "OFR-",
+            "GFR", "GFR+", "GFR-",
+            "WFR", "WFR+", "WFR-",
+
             "OPGR", "GPGR", "WPGR", "VPGR",
             "OPRH", "GPRH", "WPRH", "LPRH",
             "OVPR", "GVPR", "WVPR",
@@ -233,7 +243,10 @@ struct SummaryConfigContext {
             "AQR", "AQRG", "NQR",
         };
 
-        return is_in_set(ratekw, keyword.substr(1)) || (keyword.length() > 4 && is_in_set({"TPR","TPC","TIR","TIC"}, keyword.substr(1,3)));;
+        return is_in_set(ratekw, keyword.substr(1))
+            || ((keyword.length() > 4) &&
+                is_in_set({ "TPR", "TPC", "TIR", "TIC" },
+                          keyword.substr(1, 3)));
     }
 
     bool is_ratio(const std::string& keyword) {
@@ -252,13 +265,20 @@ struct SummaryConfigContext {
             "WPTH", "OPTH", "GPTH", "LPTH",
             "GPTS", "OPTS", "GPTF", "OPTF",
 
+            "OFT", "OFT+", "OFT-", "OFTL", "OFTG",
+            "GFT", "GFT+", "GFT-", "GFTL", "GFTG",
+            "WFT", "WFT+", "WFT-",
+
             "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT", "TIT",
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
 
             "AQT", "AQTG", "NQT",
         };
 
-        return is_in_set(totalkw, keyword.substr(1)) || (keyword.length() > 4 && is_in_set({"TPT","TIT"}, keyword.substr(1,3)));
+        return is_in_set(totalkw, keyword.substr(1))
+            || ((keyword.length() > 4) &&
+                is_in_set({ "TPT", "TIT" },
+                          keyword.substr(1, 3)));
     }
 
     bool is_count(const std::string& keyword) {
@@ -293,15 +313,27 @@ struct SummaryConfigContext {
         return keyword == "WPIL";
     }
 
-    bool is_region_to_region(const std::string& keyword)
+    bool is_supported_region_to_region(const std::string& keyword)
     {
-        static const auto rate = std::regex { R"(R[OGWEK]F[RT][-+GL]?)" };
-        static const auto ngl  = std::regex { R"(RNLF[RT][-+]?)" };
+        static const auto supported_kw = std::regex { R"(R[OGW]F[RT][-+GL]?)" };
 
         // R[OGW]F[RT][-+GL]? (e.g., "ROFTG", "RGFR+", or "RWFT")
-        // RNLF[RT].? (e.g., "RNLFR-" or "RNLFT")
-        return std::regex_match(keyword, rate)
-            || std::regex_match(keyword, ngl);
+        return std::regex_match(keyword, supported_kw);
+    }
+
+    bool is_unsupported_region_to_region(const std::string& keyword)
+    {
+        static const auto unsupported_kw = std::regex { R"(R([EK]|NL)F[RT][-+]?)" };
+
+        // R[EK]F[RT][-+]? (e.g., "REFT" or "RKFR+")
+        // RNLF[RT][-+]? (e.g., "RNLFR-" or "RNLFT")
+        return std::regex_match(keyword, unsupported_kw);
+    }
+
+    bool is_region_to_region(const std::string& keyword)
+    {
+        return is_supported_region_to_region  (keyword)
+            || is_unsupported_region_to_region(keyword);
     }
 
     bool is_aquifer(const std::string& keyword)
@@ -799,51 +831,128 @@ inline void keywordB( SummaryConfig::keyword_list& list,
   }
 }
 
-inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
-                        const ParseContext& parseContext,
-                        ErrorGuard& errors,
-                        const DeckKeyword& keyword)
+inline std::optional<std::string>
+establishRegionContext(const DeckKeyword&       keyword,
+                       const FieldPropsManager& field_props,
+                       const ParseContext&      parseContext,
+                       ErrorGuard&              errors,
+                       SummaryConfigContext&    context)
 {
-    const auto& location = keyword.location();
-    std::string msg_fmt = "Region to region summary keyword {keyword} is ignored\n"
-                          "In {file} line {line}";
-    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg_fmt, location, errors);
+    auto region_name = std::string { "FIPNUM" };
+
+    if (keyword.name().size() > 5) {
+        region_name = "FIP" + keyword.name().substr(5, 3);
+
+        if (! field_props.has_int(region_name)) {
+            const auto msg_fmt =
+                fmt::format("Problem with summary keyword {{keyword}}\n"
+                            "In {{file}} line {{line}}\n"
+                            "FIP region {} not defined in "
+                            "REGIONS section - {{keyword}} ignored", region_name);
+
+            parseContext.handleError(ParseContext::SUMMARY_INVALID_FIPNUM,
+                                     msg_fmt, keyword.location(), errors);
+            return std::nullopt;
+        }
+    }
+
+    if (context.regions.count(region_name) == 0) {
+        const auto& fipnum = field_props.get_int(region_name);
+        context.regions.emplace(std::piecewise_construct,
+                                std::forward_as_tuple(region_name),
+                                std::forward_as_tuple(fipnum.begin(), fipnum.end()));
+    }
+
+    return { region_name };
+}
+
+inline void keywordR2R_unsupported(const DeckKeyword&  keyword,
+                                   const ParseContext& parseContext,
+                                   ErrorGuard&         errors)
+{
+    const auto msg_fmt = std::string {
+        "Region to region summary keyword {keyword} is ignored\n"
+        "In {file} line {line}"
+    };
+
+    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD,
+                             msg_fmt, keyword.location(), errors);
+}
+
+inline void keywordR2R(const DeckKeyword&           keyword,
+                       const FieldPropsManager&     field_props,
+                       const ParseContext&          parseContext,
+                       ErrorGuard&                  errors,
+                       SummaryConfigContext&        context,
+                       SummaryConfig::keyword_list& list)
+{
+    if (is_unsupported_region_to_region(keyword.name())) {
+        keywordR2R_unsupported(keyword, parseContext, errors);
+    }
+
+    if (is_udq(keyword.name())) {
+        throw std::invalid_argument {
+            "Inter-Region quantity '"
+           + keyword.name() + "' "
+           + "cannot be a user-defined quantity"
+        };
+    }
+
+    const auto region_name = establishRegionContext(keyword, field_props,
+                                                    parseContext, errors,
+                                                    context);
+
+    if (! region_name.has_value()) {
+        return;
+    }
+
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Region, keyword.location()
+    }
+    .parameterType(parseKeywordType(keyword.name()))
+    .fip_region(region_name.value())
+    .isUserDefined(false);
+
+    // Expected format:
+    //
+    //   ROFT
+    //     1 2 /
+    //     1 4 /
+    //   /
+    for (const auto& record : keyword) {
+        // We *intentionally* record/use one-based region IDs here.
+        const auto r1 = record.getItem("REGION1").get<int>(0);
+        const auto r2 = record.getItem("REGION2").get<int>(0);
+
+        list.push_back(param.number(EclIO::combineSummaryNumbers(r1, r2)));
+    }
 }
 
 
-inline void keywordR( SummaryConfig::keyword_list& list,
-                      SummaryConfigContext& context,
-                      const DeckKeyword& deck_keyword,
-                      const Schedule& schedule,
-                      const FieldPropsManager& field_props,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors ) {
-
-    auto keyword = deck_keyword.name();
-    if( is_region_to_region(keyword) ) {
-        keywordR2R( list, parseContext, errors, deck_keyword );
+inline void keywordR(SummaryConfig::keyword_list& list,
+                     SummaryConfigContext&        context,
+                     const DeckKeyword&           deck_keyword,
+                     const Schedule&              schedule,
+                     const FieldPropsManager&     field_props,
+                     const ParseContext&          parseContext,
+                     ErrorGuard&                  errors)
+{
+    const auto keyword = deck_keyword.name();
+    if (is_region_to_region(keyword)) {
+        keywordR2R(deck_keyword, field_props, parseContext, errors, context, list);
         return;
     }
-    std::string region_name = "FIPNUM";
-    if (keyword.size() > 5) {
-        region_name = "FIP" + keyword.substr(5,3);
-        if (!field_props.has_int(region_name)) {
-            std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
-                                              "In {{file}} line {{line}}\n"
-                                              "FIP region {} not defined in REGIONS section - {{keyword}} ignored", region_name);
-            parseContext.handleError(ParseContext::SUMMARY_INVALID_FIPNUM, msg_fmt, deck_keyword.location(), errors);
-            return;
-        }
-    }
-    if (context.regions.count(region_name) == 0) {
-        const auto& fipnum = field_props.get_int(region_name);
-        context.regions.emplace( region_name, std::set<int>{ fipnum.begin(), fipnum.end()});
+
+    const auto region_name = establishRegionContext(deck_keyword, field_props,
+                                                    parseContext, errors,
+                                                    context);
+
+    if (! region_name.has_value()) {
+        return;
     }
 
     const auto& item = deck_keyword.getDataRecord().getDataItem();
     std::vector<int> regions;
-
-
 
     /*
       Assume that the FIPNUM array contains the values {1,2,4}; i.e. the maximum
@@ -863,12 +972,12 @@ inline void keywordR( SummaryConfig::keyword_list& list,
 
     if (item.data_size() > 0) {
         for (const auto& region_id : item.getData<int>()) {
-            const auto& region_set = context.regions.at(region_name);
+            const auto& region_set = context.regions.at(region_name.value());
             auto max_iter = region_set.rbegin();
             if (region_id > *max_iter) {
                 std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
                                                   "In {{file}} line {{line}}\n"
-                                                  "FIP region {} not present in {} - ignored", region_id, region_name);
+                                                  "FIP region {} not present in {} - ignored", region_id, region_name.value());
                 parseContext.handleError(ParseContext::SUMMARY_REGION_TOO_LARGE, msg_fmt, deck_keyword.location(), errors);
                 continue;
             }
@@ -876,14 +985,15 @@ inline void keywordR( SummaryConfig::keyword_list& list,
             if (region_set.count(region_id) == 0) {
                 std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
                                                   "In {{file}} line {{line}}\n"
-                                                  "FIP region {} not present in {} - will use 0", region_id, region_name);
+                                                  "FIP region {} not present in {} - will use 0", region_id, region_name.value());
                 parseContext.handleError(ParseContext::SUMMARY_EMPTY_REGION, msg_fmt, deck_keyword.location(), errors);
             }
 
             regions.push_back( region_id );
         }
-    } else {
-        for (const auto& region_id : context.regions.at(region_name))
+    }
+    else {
+        for (const auto& region_id : context.regions.at(region_name.value()))
             regions.push_back( region_id );
     }
 
@@ -899,17 +1009,16 @@ inline void keywordR( SummaryConfig::keyword_list& list,
                 list.push_back( copt_node );
             }
         }
-
     }
-
 
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
     }
-    .fip_region( region_name )
+    .parameterType(parseKeywordType(keyword))
+    .fip_region( region_name.value() )
     .isUserDefined( is_udq(keyword) );
 
-    for( const auto& region : regions )
+    for (const auto& region : regions)
         list.push_back( param.number( region ) );
 }
 

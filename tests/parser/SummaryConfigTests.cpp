@@ -388,6 +388,7 @@ ROFTL
 ROFTG
 1 2/
 3 4/
+1 3/
 /
 RGFT
 5 6/
@@ -443,15 +444,116 @@ RWIP
 /
 )" };
 
+    ParseContext parseContext;
+
+    const auto summary = createSummary(input, parseContext);
+
+    {
+        const auto expect_kw = std::vector<std::string> {
+            "ROFT", "ROFT+", "ROFT-", "ROFR", "ROFR+", "ROFR-", "ROFTL", "ROFTG",
+            "RGFT", "RGFT+", "RGFT-", "RGFR", "RGFR+", "RGFR-", "RGFTL", "RGFTG",
+            "RGFT", "RGFT+", "RGFT-", "RGFR", "RGFR+", "RGFR-",
+        };
+
+        for (const auto& kw : expect_kw) {
+            BOOST_CHECK_MESSAGE(summary.hasKeyword(kw),
+                                "SummaryConfig MUST have keyword '" << kw << "'");
+        }
+    }
+
+    {
+        const auto kw = summary.keywords("ROFT");
+        BOOST_CHECK_EQUAL(kw.size(), 2);
+
+        BOOST_CHECK_MESSAGE(kw[1].namedEntity().empty(),
+                            "ROFT vector must NOT have an associated named entity");
+
+        BOOST_CHECK_MESSAGE(kw[0].type() == SummaryConfigNode::Type::Total,
+                            "ROFT must be a Cumulative Total");
+
+        BOOST_CHECK_MESSAGE(kw[1].category() == SummaryConfigNode::Category::Region,
+                            "ROFT must be a Region vector");
+
+        const auto expect_number = std::vector<int> {
+            393'217, // 1 2
+            458'755, // 3 4
+        };
+
+        const auto n1 = kw[0].number();
+        const auto n2 = kw[1].number();
+
+        BOOST_CHECK_MESSAGE(((n1 == expect_number[0]) && (n2 == expect_number[1])) ||
+                            ((n2 == expect_number[0]) && (n1 == expect_number[1])),
+                            R"(ROFT 'NUMS' must match expected set)");
+    }
+
+    {
+        const auto kw = summary.keywords("RGFR-");
+        BOOST_CHECK_EQUAL(kw.size(), 2);
+
+        BOOST_CHECK_MESSAGE(kw[1].namedEntity().empty(),
+                            "RGFR- vector must NOT have an associated named entity");
+
+        BOOST_CHECK_MESSAGE(kw[0].type() == SummaryConfigNode::Type::Rate,
+                            "RGFR- must be a Rate");
+
+        BOOST_CHECK_MESSAGE(kw[1].category() == SummaryConfigNode::Category::Region,
+                            "RGFR- must be a Region vector");
+
+        const auto expect_number = std::vector<int> {
+            524'293, // 5 6
+            589'831, // 7 8
+        };
+
+        const auto n1 = kw[0].number();
+        const auto n2 = kw[1].number();
+
+        BOOST_CHECK_MESSAGE(((n1 == expect_number[0]) && (n2 == expect_number[1])) ||
+                            ((n2 == expect_number[0]) && (n1 == expect_number[1])),
+                            R"(RGFR- 'NUMS' must match expected set)");
+    }
+
+    {
+        const auto kw = summary.keywords("ROFTG");
+        BOOST_CHECK_EQUAL(kw.size(), 3);
+
+        BOOST_CHECK_MESSAGE(kw[1].namedEntity().empty(),
+                            "ROFTG vector must NOT have an associated named entity");
+
+        BOOST_CHECK_MESSAGE(kw[0].type() == SummaryConfigNode::Type::Total,
+                            "ROFTG must be a Cumulative Total");
+
+        BOOST_CHECK_MESSAGE(kw[1].category() == SummaryConfigNode::Category::Region,
+                            "ROFTG must be a Region vector");
+
+        const auto expect_number = std::vector<int> {
+            393'217, // 1 2
+            458'755, // 3 4
+            425'985, // 1 3
+        };
+
+        const auto actual = std::vector<int> {
+            kw[0].number(),
+            kw[1].number(),
+            kw[2].number(),
+        };
+
+        BOOST_CHECK_MESSAGE(std::is_permutation(actual       .begin(), actual       .end(),
+                                                expect_number.begin(), expect_number.end()),
+                            R"(ROFTG 'NUMS' must match expected set)");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(region2region_unsupported) {
+    const auto input = std::string { R"(REFR-
+2 3 /
+/
+RKFT
+2 3 /
+/
+)" };
+
   ParseContext parseContext;
-  parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
-
-  const auto summary = createSummary( input, parseContext );
-  const auto keywords = { "RWIP", "RWIP", "RWIP" };
-  const auto names = sorted_keywords( summary );
-
-  BOOST_CHECK_EQUAL_COLLECTIONS(keywords.begin(), keywords.end(),
-                                names.begin(), names.end() );
 
   parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
   BOOST_CHECK_THROW( createSummary(input, parseContext), OpmInputError);
