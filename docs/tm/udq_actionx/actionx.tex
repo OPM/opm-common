@@ -12,6 +12,9 @@ expressions used in \udq{}, this implies that a common pattern is to make
 involved calculations as \udq{} expressions, and then use a simple test as
 \actionx{} condition.
 
+The \actionx{} keyword is also documented in section 12.3.6 in the \flow{}
+reference manual.
+
 \section{Structure of the \actionx{} keyword}
 The \actionx{} keyword itself consist of multiple records. The first record is
 metadata with name of the action, the number of times the action can be
@@ -339,22 +342,24 @@ object the complete simulator state is updated. This is complex, and many of the
 bugs in \actionx{} functionality have been in the interaction between the
 simulator and opm-common, in particular when an action has evaluated to true.
 
-There are currently three categories of changes that can take place due to
-\actionx{}:
-
-\subsubsection{WELPI}
-
-\subsubsection{General changes in well status}
-
-\subsubsection{Changes in geo properties}
-
-
 The simulator code makes \emph{copies} of many of the objects like wells and
 connections from the \inlinecode{Schedule} class. Some of the interaction
 between the simulator and the input layer could probably be simplified if the
 simulator would call the \inlinecode{Schedule} object when e.g. a well or
 connection is needed, instead of storing references or copies to the
 \inlinecode{Schedule} objects internally.
+
+There are currently three categories of changes that can take place due to
+\actionx{}:
+
+
+\subsubsection{General changes in well status}
+
+\subsubsection{Changes in geo properties}
+
+\subsubsection{WELPI}
+
+
 
 \section{\actionx{} restart output}
 As with the \udq{} keyword some of the structure and complexity of the
