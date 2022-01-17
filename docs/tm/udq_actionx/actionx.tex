@@ -99,8 +99,25 @@ ACTIONX
 ENDACTIO
 \end{deck}
 
+The \actionx{} implementation is located in
+\path{opm/input/eclipse/Schedule/Action} and all the classes are in namespace
+\inlinecode{Action::}. As with the \udq{} the input parser needs some special
+case to handle '/' and '*' as division operator and multiplier respectively, but
+that is the only code shared between the \udq{} and the \actionx{}
+implementation\footnote{It might be possible to share more code between the two,
+in particular both have an internal recursive descent parser, but both \udq{}
+and \actionx{} have so much ``personality'' that at least initially separate
+implementations was the simplest.}.
 
-\section{The \inlinecode{Schedule} implementation}
+The condition part of the \actionx{} keyword is internalized while the
+\kw{SCHEDULE} section is parsed, the final product is maintained in a class
+\inlinecode{Action::ActionX} which has a \inlinecode{eval()} method waiting to
+be called. The keywords in the \actionx{} block are stored in the
+\inlinecode{Action::ActionX} keyword for future use. All of the \actionx{}
+keywords are stored in a container \inlinecode{Action::Actions} which will
+eventually manage the book keeping of which actions are eligible for evaluation.
+
+\section{The structure of the \inlinecode{Schedule} implementation}
 \flow{} internalizes all keywords from the input deck and passes fully baked
 datastructures to the simulator, whereas our impression is that \eclipse{} works
 more like a reservoir model interepreter, executing one keywords at a time.
@@ -192,7 +209,6 @@ processed \kw{SCHEDULE} code is created with the method
 \inlinecode{Schedule::iterateScheduleSection()} method is idempotent - it can be
 called repeatedly, from an arbitray point in the time series.
 
-With this in mind the essence of how \actionx{} keywords are injected into the
 \inlinecode{Schedule} class is just to append the \actionx{} keywords in the
 \inlinecode{ScheduleBlock} instance corresponding to the current report step and
 then rerun the \inlinecode{Schedule::iterateScheduleSection()} from this report
@@ -266,34 +282,16 @@ for groups. The releavnt data structure is the member
 
 
 \section{To enable a new keyword for \actionx}
-The keywords must be explicitly enabled to be usable in an \actionx{} block, and
-enabling a new keyword requires recompiling \flow{}. The hardcoded list of
-keywords available as \actionx{} keywords are listed in the static method
+The keywords must be explicitly enabled to be available in an \actionx{} block,
+and enabling a new keyword requires recompiling \flow{}. The keywords available
+as \actionx{} keywords are listed in the static method
 \inlinecode{ActionX::valid\_keyword()} in
 \path{opm/input/eclipse/Schedule/Action/ActionX.cpp}. In principle it should
 just be to add the keyword to the \inlinecode{ActionX::valid\_keyword()} method
 and rebuild \flow{}, but experience has unfortunately shown that problems of
 various kinds have had a tendency to pop up when new keywords are tried out as
-\actionx{} keywords, most commonly the problems are in the interaction between
-the \inlinecode{Schedule} class in opm-common and the simulator.
-
-\section{Implemenation details}
-The \actionx{} implementation is located in
-\path{opm/input/eclipse/Schedule/Action} and all the classes are in namespace
-\inlinecode{Action::}. As with the \udq{} the input parser needs some special
-case to handle '/' and '*' as division operator and multiplier respectively, but
-that is the only code shared between the \udq{} and the \actionx{}
-implementation\footnote{It might be possible to share more code between the two,
-in particular both have an internal recursive descent parser, but both \udq{}
-and \actionx{} have so much ``personality'' that at least initially separate
-implementations was the simplest.}.
-
-\subsection{\actionx{} input}
-While parsing the \kw{SCHEDULE} section the \actionx{} keywords are somewhat
-special cased - the keywords are not internalized but rather tucked away for
-future injection. The keywords in the \actionx{} are parsed and stored in a
-class \inlinecode{Action::ActionX} and all of these instances are in a container
-\inlinecode{Action::Actions}.
+\actionx{} keywords. Most commonly the problems have been in the interaction
+between the \inlinecode{Schedule} class in opm-common and the simulator.
 
 
 \section{Running \actionx{} during simulation}
@@ -312,55 +310,54 @@ functionality.
 
 The evaluation of actions is called from the method \inlinecode{applyActions()}
 in \path{eclproblem.hh}. The method will evaluate which actions are eligible for
-running and call the \inlinecode{ActionX::eval()} method.
+running by inspecting the \inlinecode{Action::Actions} variable and call the
+\inlinecode{ActionX::eval()} method.
 
-\subsection{Recreate \inlinecode{Schedule} instance}
+\subsection{Recreate \inlinecode{Schedule}}
 When an \actionx{} has evaluated to \inlinecode{true} the simulator will call
-into the opm-common method \inlinecode{Schedule::applyAction()}. That function
-will add the keywords from the \actionx{} keyword to the
+into the opm-common method \inlinecode{Schedule::applyAction(report\_step)}.
+That function will add the keywords from the \actionx{} keyword to the
 \inlinecode{ScheduleBlock} for the correct report step, and then reiterate
-through all the keywords to the end of the simulation.
+through the \kw{SCHEDULE} section to the end of the simulation.
 
-NB: Observe that this reiterate process will recreate all internal members in
-the \inlinecode{Schedule} class, i.e. if external scope was holding on to a
+This reiterate process will recreate all internal members in the
+\inlinecode{Schedule} class, i.e. if external scope was holding on to a
 reference to an internal \inlinecode{Schedule} datastructure that will be
 invalidated.
 
 While recreating the \inlinecode{Schedule} instance there is some book keeping
 as to which datastructures need to be recalculated in the simulator as a
 consequence of the \actionx{}. That information is maintained in the data
-structure \inlinecode{SimulatorUpdate}.
+structure \inlinecode{Action::SimulatorUpdate}.
 
 
 \subsection{Updating simulator data structures}
-
-
-
-\section{Interaction with the simulator}
-
-\begin{enumerate}
-\item WELPI
-\item General changes in well status
-\item Changes in geo properties
-\end{enumerate}
-
 The actionx implementation is in the module opm-common, whereas when the
 simulation is proceeding it is the simulator code which is clearly in control.
-If an action has evaluated to true and new keywords should be injected in the
-Schedule object and thereby the complete simulator state is updated. This is
-complex, and many of the bugs in \actionx{} functionality have been in the
-interaction between the simulator and opm-common, in particular when an action
-has evaluated to true.
+If an action has evaluated to true and new keywords are injected in the Schedule
+object the complete simulator state is updated. This is complex, and many of the
+bugs in \actionx{} functionality have been in the interaction between the
+simulator and opm-common, in particular when an action has evaluated to true.
 
-Another challenge is that the simulator code makes \emph{copies} of many of the
-objects like wells and connections from the \inlinecode{Schedule} class. Some of
-the interaction between the simulator and the input layer could probably be
-simplified if the simulator would call the \inlinecode{Schedule} object when
-e.g. a well or connection is needed, instead of storing references or copies to
-the \inlinecode{Schedule} objects internally.
+There are currently three categories of changes that can take place due to
+\actionx{}:
+
+\subsubsection{WELPI}
+
+\subsubsection{General changes in well status}
+
+\subsubsection{Changes in geo properties}
+
+
+The simulator code makes \emph{copies} of many of the objects like wells and
+connections from the \inlinecode{Schedule} class. Some of the interaction
+between the simulator and the input layer could probably be simplified if the
+simulator would call the \inlinecode{Schedule} object when e.g. a well or
+connection is needed, instead of storing references or copies to the
+\inlinecode{Schedule} objects internally.
 
 \section{\actionx{} restart output}
-As with the \udq{} variable some of the structure and complexity of the
+As with the \udq{} keyword some of the structure and complexity of the
 \actionx{} datastructures are there primarily to enable \eclipse{} compatible
 restart. Regarding restart of \actionx{} related data:
 \begin{enumerate}
