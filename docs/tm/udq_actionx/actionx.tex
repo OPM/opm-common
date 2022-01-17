@@ -342,24 +342,55 @@ object the complete simulator state is updated. This is complex, and many of the
 bugs in \actionx{} functionality have been in the interaction between the
 simulator and opm-common, in particular when an action has evaluated to true.
 
+An assumption permeating the simulator code is that changes to the well and
+group configuration only take place at report steps, and in between those the
+simulator ``owns'' the well and group data. Unfortunately this is no longer the
+case when \actionx{} is active, and depending on the keywords in the \actionx{}
+block we need to update the simulator data structures after \actionx{} has been
+evaluated to true. This complex, and most of the bugs in the \actionx{}
+implementation have been in this interface. There are probably more bugs waiting
+here.
+
 The simulator code makes \emph{copies} of many of the objects like wells and
-connections from the \inlinecode{Schedule} class. Some of the interaction
-between the simulator and the input layer could probably be simplified if the
-simulator would call the \inlinecode{Schedule} object when e.g. a well or
-connection is needed, instead of storing references or copies to the
-\inlinecode{Schedule} objects internally.
+connections from the \inlinecode{Schedule} class, and also assembles many
+simulator specific data structures which to a large extent are assembled by
+copying information from the internals of the \inlinecode{Schedule} object. Some
+of the interaction between the simulator and the input layer could probably be
+simplified if the simulator would call the \inlinecode{Schedule} object when
+e.g. a well or connection is needed, instead of storing references or copies to
+the \inlinecode{Schedule} objects internally.
 
 There are currently three categories of changes that can take place due to
 \actionx{}:
 
 
 \subsubsection{General changes in well status}
+When there is well related keyword in the \actionx{} block - e.g. \kw{WELOPEN}
+to open or close a well or \kw{WCONPROD} to adjust rates the simulator must
+update it's internal data structures with the updated inut information. This
+will be communicated by flagging all the wells which need an update in the
+\inlinecode{Action::SimulatorUpdate} instance which is passed from the
+simulator.
+
+
 
 \subsubsection{Changes in geo properties}
+The grid keywords are in general not permitted in the \kw{SCHEDULE} section,
+however there are a few geo multipliers like \kw{MULTZ} and \kw{MULTFLT} which
+are allowed in the \kw{SCHEDULE} section, and thereby also in \actionx{}. If one
+of these keywords are encountered in the \actionx{} block we set the flag
+\inlinecode{Action::SimulatorUpdate::tran\_update = true} to encourage the
+simulator to recalculate the transmissibilities.
+
 
 \subsubsection{WELPI}
+The \kw{WELPI} keyword is quite complex anyhow, when it is included as an
+\actionx{} keyword it gets even more complex. In the case the \actionx{} keyword
+contains \kw{WELPI} the simulator must first fetch the PI values and pass them
+to the \inlinecode{Schedule::applyAction()} function.
 
 
+\section{Problems in parallel}
 
 \section{\actionx{} restart output}
 As with the \udq{} keyword some of the structure and complexity of the
