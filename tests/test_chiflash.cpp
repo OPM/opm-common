@@ -78,7 +78,7 @@ void testChiFlash()
     fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
     fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
-    // TODO: why we need this one? But without this, it caused problem for the ParamCache
+    // It is used here only for calculate the z
     fs.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
     fs.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
 

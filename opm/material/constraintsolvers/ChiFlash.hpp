@@ -143,11 +143,6 @@ public:
         fluid_state_scalar.setPressure(FluidSystem::gasPhaseIdx,
                                        Opm::getValue(fluid_state.pressure(FluidSystem::gasPhaseIdx)));
 
-        // TODO: not sure whether we need to set the saturations
-        fluid_state_scalar.setSaturation(FluidSystem::gasPhaseIdx,
-                                         Opm::getValue(fluid_state_scalar.saturation(FluidSystem::gasPhaseIdx)));
-        fluid_state_scalar.setSaturation(FluidSystem::oilPhaseIdx,
-                                         Opm::getValue(fluid_state_scalar.saturation(FluidSystem::oilPhaseIdx)));
         fluid_state_scalar.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
         // Rachford Rice equation to get initial L for composition solver
@@ -169,6 +164,9 @@ public:
         // Update the composition if cell is two-phase
         if ( !isStable) {
             flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state_scalar, verbosity);
+
+
+            // TODO: update the fluid_state, and also get the derivatives correct.
         } else {
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
             L = li_single_phase_label_(fluid_state, z, verbosity);
@@ -719,7 +717,7 @@ protected:
             if (verbosity >= 1) {
                 std::cout << "Calculate composition using Newton." << std::endl;
             }
-            newtonCompositionUpdate_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
+            newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
         } else if (flash_2p_method == "ssi") {
             // Successive substitution
             if (verbosity >= 1) {
@@ -728,20 +726,23 @@ protected:
             successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, verbosity);
         } else if (flash_2p_method == "ssi+newton") {
             successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, verbosity);
-            newtonCompositionUpdate_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
+            newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
         } else {
             throw std::runtime_error("unknown two phase flash method " + flash_2p_method + " is specified");
         }
     }
 
     template <class FlashFluidState, class ComponentVector>
-    static void newtonCompositionUpdate_(ComponentVector& K, typename FlashFluidState::Scalar& L,
-                                         FlashFluidState& fluidState, const ComponentVector& globalComposition,
-                                         int verbosity)
+    static void newtonComposition_(ComponentVector& K, typename FlashFluidState::Scalar& L,
+                                   FlashFluidState& fluidState, const ComponentVector& globalComposition,
+                                   int verbosity)
     {
+        // Note: due to the need for inverse flash update for derivatives, the following two can be different
+        // Looking for a good way to organize them
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
+        constexpr size_t num_primary_variables = numMisciblePhases * numMiscibleComponents + 1;
         using NewtonVector = Dune::FieldVector<Scalar, num_equations>;
-        using NewtonMatrix = Dune::FieldMatrix<Scalar, num_equations, num_equations>;
+        using NewtonMatrix = Dune::FieldMatrix<Scalar, num_equations, num_primary_variables>;
         constexpr Scalar tolerance = 1.e-8;
 
         NewtonVector soln(0.);
@@ -777,9 +778,9 @@ protected:
         }
 
         // AD type
-        using Eval = DenseAd::Evaluation<Scalar, num_equations>;
+        using Eval = DenseAd::Evaluation<Scalar, num_primary_variables>;
         // TODO: we might need to use numMiscibleComponents here
-        std::vector<Eval> x(num_equations), y(num_equations);
+        std::vector<Eval> x(numComponents), y(numComponents);
         Eval l;
 
         // TODO: I might not need to set soln anything here.
@@ -818,6 +819,7 @@ protected:
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             paramCache.updatePhase(flash_fluid_state, phaseIdx);
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                // TODO: will phi here carry the correct derivatives?
                 Eval phi = FluidSystem::fugacityCoefficient(flash_fluid_state, paramCache, phaseIdx, compIdx);
                 flash_fluid_state.setFugacityCoefficient(phaseIdx, compIdx, phi);
             }
@@ -825,7 +827,7 @@ protected:
         bool converged = false;
         unsigned iter = 0;
         constexpr unsigned max_iter = 1000;
-        while (!converged && iter < max_iter) {
+        while (iter < max_iter) {
 
             // assembling the Jacobian and residuals
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -833,7 +835,7 @@ protected:
                     // z - L*x - (1-L) * y
                     auto local_res = -Opm::getValue(globalComposition[compIdx]) + l * x[compIdx] + (1 - l) * y[compIdx];
                     res[compIdx] = Opm::getValue(local_res);
-                    for (unsigned i = 0; i < num_equations; ++i) {
+                    for (unsigned i = 0; i < num_primary_variables; ++i) {
                         jac[compIdx][i] = local_res.derivative(i);
                     }
                 }
