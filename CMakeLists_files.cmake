@@ -460,6 +460,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
           tests/test_InteHEAD.cpp
+          tests/test_data_InterRegFlow.cpp
           tests/test_LinearisedOutputTable.cpp
           tests/test_LogiHEAD.cpp
           tests/test_LGOData.cpp
@@ -935,6 +936,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Cells.hpp
         opm/output/data/GuideRateValue.hpp
         opm/output/data/Groups.hpp
+        opm/output/data/InterRegFlow.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
         opm/output/eclipse/VectorItems/action.hpp
