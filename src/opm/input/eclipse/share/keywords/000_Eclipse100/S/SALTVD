@@ -15,7 +15,7 @@
       "size_type": "ALL",
       "dimension": [
         "Length",
-        "Density"
+        "Salinity"
       ]
     }
   ]
