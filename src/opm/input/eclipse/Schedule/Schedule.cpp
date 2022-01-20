@@ -1290,7 +1290,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
 
-    SimulatorUpdate Schedule::applyAction(std::size_t reportStep, const time_point&, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
+    SimulatorUpdate Schedule::applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result, const std::unordered_map<std::string, double>& target_wellpi) {
         const std::string prefix = "| ";
         ParseContext parseContext;
         ErrorGuard errors;

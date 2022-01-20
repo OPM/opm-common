@@ -157,9 +157,8 @@ TSTEP
     BOOST_CHECK( sched.hasWell("W2"));
 
     Action::Result action_result(true);
-    auto sim_time = TimeService::now();
     const auto& action1 = sched[0].actions.get()["ACTION"];
-    auto sim_update = sched.applyAction(0, sim_time, action1, action_result, {});
+    auto sim_update = sched.applyAction(0, action1, action_result, {});
     const auto& affected_wells = sim_update.affected_wells;
     std::vector<std::string> expected_wells{"W0", "W1", "W3"};
     BOOST_CHECK( std::is_permutation(affected_wells.begin(), affected_wells.end(),
@@ -224,9 +223,8 @@ COMPDAT
 
     Schedule sched = make_schedule(TRAILING_COMPDAT);
     Action::Result action_result(true);
-    auto sim_time = TimeService::now();
     const auto& action1 = sched[0].actions.get()["ACTION"];
-    BOOST_CHECK_NO_THROW( sched.applyAction(0, sim_time, action1, Action::Result{true}, {}));
+    BOOST_CHECK_NO_THROW( sched.applyAction(0, action1, Action::Result{true}, {}));
 }
 
 
@@ -1139,8 +1137,7 @@ TSTEP
 
 
     Action::Result action_result(true);
-    auto sim_time = TimeService::now();
-    sched.applyAction(0, sim_time, action1, action_result, {});
+    sched.applyAction(0, action1, action_result, {});
 
     {
         const auto& group = sched.getGroup("G1", 1);
@@ -1255,7 +1252,7 @@ TSTEP
 
 
     Action::Result action_result(true);
-    const auto& sim_update = sched.applyAction(0, TimeService::now(), action1, action_result, {});
+    const auto& sim_update = sched.applyAction(0, action1, action_result, {});
     BOOST_CHECK( sim_update.affected_wells.empty() );
     {
         const auto& glo = sched.glo(0);
@@ -1329,7 +1326,7 @@ TSTEP
     BOOST_CHECK(!sched.hasWell("PROD1"));
 
     Action::Result action_result(true);
-    sched.applyAction(0, TimeService::now(), action1, action_result, {});
+    sched.applyAction(0, action1, action_result, {});
 
     const auto& well = sched.getWell("PROD1", 1);
     const auto& connections = well.getConnections();
@@ -1391,10 +1388,10 @@ TSTEP
 
 
     Action::Result action_result(true);
-    BOOST_CHECK_THROW( sched.applyAction(0, TimeService::now(), action1, action_result, {}), std::exception);
+    BOOST_CHECK_THROW( sched.applyAction(0, action1, action_result, {}), std::exception);
     {
         const auto& well = sched.getWell("PROD1", 0);
-        const auto& sim_update = sched.applyAction(0, TimeService::now(), action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
+        const auto& sim_update = sched.applyAction(0, action1, action_result, {{"PROD1", well.convertDeckPI(500)}});
         BOOST_CHECK_EQUAL( sim_update.affected_wells.count("PROD1"), 1);
         BOOST_CHECK_EQUAL( sim_update.affected_wells.size(), 1);
     }
@@ -1464,7 +1461,7 @@ TSTEP
     BOOST_CHECK(sched[0].geo_keywords().empty());
 
     Action::Result action_result(true);
-    auto sim_update = sched.applyAction(0, TimeService::now(), action1, action_result, {});
+    auto sim_update = sched.applyAction(0, action1, action_result, {});
     BOOST_CHECK( sim_update.tran_update );
     BOOST_CHECK_EQUAL(sched[0].geo_keywords().size(), 3);
 }
