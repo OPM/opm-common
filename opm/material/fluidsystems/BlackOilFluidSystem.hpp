@@ -124,7 +124,7 @@ LhsEval getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<Flu
 
 template <class FluidSystem, class FluidState, class LhsEval>
 auto getSaltSaturation_(typename std::enable_if<HasMember_saltSaturation<FluidState>::value, const FluidState&>::type fluidState,
-            unsigned regionIdx OPM_UNUSED)
+            unsigned)
     -> decltype(decay<LhsEval>(fluidState.saltSaturation()))
 { return decay<LhsEval>(fluidState.saltSaturation()); }
 
