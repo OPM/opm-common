@@ -344,7 +344,7 @@ public:
             case FieldProps::GetStatus::MISSING_KEYWORD:
                 throw std::out_of_range("No such keyword in deck: " + keyword);
             case FieldProps::GetStatus::NOT_SUPPPORTED_KEYWORD:
-                throw std::logic_error("The kewyord  " + keyword + " is not supported");
+                throw std::logic_error("The keyword  " + keyword + " is not supported");
             }
         }
 

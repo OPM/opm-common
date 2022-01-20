@@ -1220,8 +1220,7 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
         if ((str34 == "FR") || (str34 == "FT") || (str45 == "FR") || (str45 == "FT")) {
 
             // NUMS = R1 + 32768*(R2 + 10)
-            const auto r1 =  num % (1UL << 15);
-            const auto r2 = (num / (1UL << 15)) - 10;
+            const auto& [r1, r2] = splitSummaryNumber(num);
 
             return fmt::format("{}:{}-{}", keywordArg, r1, r2);
         }

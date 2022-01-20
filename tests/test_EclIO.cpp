@@ -530,3 +530,20 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
         BOOST_CHECK(std::get<1>(arrayList[0]) == Opm::EclIO::C0NN);
     }
 }
+
+BOOST_AUTO_TEST_CASE(CombinedVectorID) {
+    BOOST_CHECK_EQUAL(combineSummaryNumbers(1, 2), 393'217);
+    BOOST_CHECK_EQUAL(combineSummaryNumbers(10, 1), 360'458);
+
+    {
+        const auto [n1, n2] = splitSummaryNumber(393'217);
+        BOOST_CHECK_EQUAL(n1, 1);
+        BOOST_CHECK_EQUAL(n2, 2);
+    }
+
+    {
+        const auto [n1, n2] = splitSummaryNumber(360'458);
+        BOOST_CHECK_EQUAL(n1, 10);
+        BOOST_CHECK_EQUAL(n2,  1);
+    }
+}
