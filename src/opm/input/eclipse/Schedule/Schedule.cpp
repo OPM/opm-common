@@ -1332,6 +1332,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
 
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, EclipseState& ecl_state, SummaryState& summary_state) {
+        SimulatorUpdate sim_update;
+        pyaction.run(ecl_state, *this, reportStep, summary_state);
+        return sim_update;
+    }
+
     void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double newWellPI) {
         if (reportStep >= this->snapshots.size())
             return;

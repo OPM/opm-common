@@ -280,6 +280,7 @@ namespace Opm
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
 
         SimulatorUpdate applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells, const std::unordered_map<std::string, double>& wellpi);
+        SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, EclipseState& ecl_state, SummaryState& summary_state);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
 
