@@ -554,7 +554,7 @@ UDAControl udaControl(int uda_code) {
     case 600017:
         return UDAControl::GCONINJE_TARGET_VOID_FRACTION;
     default:
-        throw std::logic_error("Unknonw UDA integer control code");
+        throw std::logic_error("Unknown UDA integer control code");
     }
 }
 
