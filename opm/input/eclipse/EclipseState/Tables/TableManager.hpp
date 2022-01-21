@@ -381,8 +381,8 @@ namespace Opm {
         DenT watDenT;
         StandardCond stcond;
         std::size_t m_gas_comp_index = 77;
-        double m_rtemp;
-        double m_salinity;
+        double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
+        double m_salinity {0.0};
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;
