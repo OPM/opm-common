@@ -91,7 +91,8 @@ int nwgmax(const std::vector<int>& inteHead)
             return value::GuideRateMode::None;
 
         default:
-            throw std::logic_error(fmt::format("Not recognized value: {} for GuideRateProdTarget", grpt));
+            throw std::logic_error(fmt::format("Not recognized value: {} for GuideRateProdTarget",
+                                               static_cast<int>(grpt)));
     }
 }
 

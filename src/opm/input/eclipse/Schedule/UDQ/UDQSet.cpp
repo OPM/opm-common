@@ -519,8 +519,8 @@ std::pair<UDQSet, UDQSet> udq_cast(const UDQSet& lhs, const UDQSet& rhs)
     }
 
     auto msg = fmt::format("Type/size mismatch when combining UDQs {}(size={}, type={}) and {}(size={}, type={})",
-                           lhs.name(), lhs.size(), lhs.var_type(),
-                           rhs.name(), rhs.size(), rhs.var_type());
+                           lhs.name(), lhs.size(), static_cast<int>(lhs.var_type()),
+                           rhs.name(), rhs.size(), static_cast<int>(rhs.var_type()));
     throw std::logic_error(msg);
 }
 
