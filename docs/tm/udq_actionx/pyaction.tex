@@ -42,6 +42,12 @@ perceived as a Python plugin. To really interact with the state of the \flow{}
 simulation the plugin needs to utilize the functionality which wraps the C++
 functionality.
 
+Exporting more functionality from C++ to Python is a quite simple and mechanical
+process, if you need a particular functionality which is already available in
+C++ also in Python it will probably be a quite limited effort for someone who is
+already familiar with the code.
+
+
 \section{The \pyaction{} keyword}
 The \pyaction{} keyword is in the \kw{SCHEDULE} section like \actionx{}. The
 first record is the name of the action and a string identifier for how many
@@ -121,10 +127,95 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
            print('All good - sky is the limit!')
 \end{code}
 
+\subsection{Changing the \inlinecode{Schedule} object - using a ``normal'' \actionx{}}
 
 \subsection{Implementing \udq{} like behavior}
+The \udq{} keyword has three different purposes - all based on defining 
+complex quantities from the current state of the simulation:
 
-\subsection{Changing the \inlinecode{Schedule} object - using a ``normal'' \actionx{}}
+\begin{enumerate}
+\item Define a complex quantity to be used in a \actionx{} condition.
+\item Define a complex quantity for reporting in the summary file.
+\item Define a quantity which can used as a control in \kw{UDA}.
+\end{enumerate}
+
+All of these can be achieved by using the \pyaction{} keyword, although for the
+two latter alternatives you must specify the \udq{} keyword in the deck first,
+but you can let the \pyaction{} implementation override the value:
+\begin{deck}
+-- Observe that this UDQ will be assigned from a PYACTION keyword,
+-- the value used in the ASSIGN statement below is pure dummy.
+UDQ
+  ASSIGN WUGOOD 1 /
+  ASSIGN FUGOOD 1 /
+/
+\end{deck}
+
+\subsubsection{Using \pyaction{} instead of \udq{} + \actionx{}}
+
+\subsubsection{Using \pyaction{} to report to the summary file}
+The important point when using \pyaction{} to report complex results to the
+summary file is just that the \inlinecode{summary\_state} argument to the
+\inlinecode{run()} function is \emph{writable} with \inlinecode{updata\_xxx}
+calls. Assuming dummy \udq{} variables \kw{WUGOOD} and \kw{FUGOOD} have been
+defined as per the example above, we can use \pyaction{} to set variable
+\kw{FUGOOD} to one for all wells with rate above a limit, and the \kw{FUGOOD}
+variable can be the count of such wells:
+\begin{code}
+def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+    good_count = 0
+    opr_limit = 1000
+    for wname in schedule.well_names():
+        if summary_state.well_var(wname, 'FOPR') > opr_limit:
+            good_count += 1
+            summary_state.update_well_var(wname, 'WUGOOD', 1)
+        else:
+            summary_state.update_well_var(wname, 'WUGOOD', 0)
+
+    summary_state.update_var('FUGOOD', good_count)
+\end{code}
+
+
+
+\subsubsection{Using \pyaction{} to set a \kw{UDA} control}
+Using \pyaction{} to set \kw{UDA} controls is quite simple. Again the \udq{}
+keyword must have been defined with a dummy value in the \kw{SCHEDULE} section,
+and the \kw{UDA} keyword used in e.g. a \kw{WCONDPROD} keyword. Then the
+\inlinecode{run()} function can just be used to assign to the \udq{} variable.
+In the example below we use a \kw{UDA} to control the oil production rate, and
+the value is set to the average value of the producing wells:
+\begin{deck}
+-- Define dummy UDQ WUOPR to be used as control in the WCONPROD
+-- keyword. The actual value for this UDQ is assigned in a PYACTION
+-- keyword
+UDQ
+   ASSIGN WUOPR 0 /
+/
+...
+...
+-- Need to define a well list with all the production wells.
+-- This is to ensur that the WCONPROD keyword is only applied
+-- to producers.
+WLIST
+  'PROD'  P1 P2 P3 .../
+
+WCONPROD
+   '*PROD'  'OPEN'  'ORAT'  'WUOPR' /
+/
+\end{deck}
+This can then be combined with the python code:
+\begin{code}
+def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+    num_prod_wells = 0
+    for wname in schedule.well_names():
+        if summary_state.well_var(wname, 'WOPR') > 0:
+            num_prod_wells += 1
+ 
+    fopr = summary_state['FOPR']
+    new_rate = fopr / num_prod_wells
+    for wname in schedule.well_names():
+        summary_state.update_well_var(wname, 'WUOPR', new_rate)
+\end{code}
 
 
 \section{Security implications of \pyaction{}}
