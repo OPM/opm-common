@@ -1,0 +1,137 @@
+\newcommand{\pyaction}{\kw{PYACTION}}
+\chapter{Programming in the deck: \pyaction{}}
+\label{pyaction}
+The \pyaction{} keyword is a \flow{} specific keyword which allows for Python
+programming in the \kw{SCHEDULE} section. The \pyaction{} keyword is inspired by
+the \actionx{} keyword, but instead of a \inlinecode{.DATA} formatted condition
+you are allowed to evaluate the condition with a general Python script. In
+principle the script can run arbitrary code, but due to the complexity of the
+\kw{SCHEDULE} datamodel the ``best'' way to actually change the course of the
+simulation is through the use of an additional dummy \actionx{} keyword.
+
+In order to enable the \pyaction{} keyword \flow{} must be compiled with the
+\path{cmake} switch \inlinecode{-DOPM\_ENABLE\_EMBEDDED\_PYTHON=ON}, the default is
+to build with \inlinecode{-DOPM\_ENABLE\_EMBEDDED\_PYTHON=OFF}.
+
+\section{Python - wrapping and embedding}
+Python is present in the \flow{} codebase in two different ways. For many of
+the classes in the \flow{} codebase - in particular in opm-common, there are
+\emph{Python wrappers} available. That means that you can invoke the C++
+functionality in \flow{} classes from Python - e.g. this Python script can be used to
+load a deck and print all the keywords:
+
+\begin{code}
+import sys
+from opm.io.parser import Parser
+
+input_file = sys.argv[1]
+parser = Parser()
+
+deck = parser.parse_file(input_file)
+for kw in deck:
+    print(kw.name)
+\end{code}
+ 
+When used this way the Python interpreter is the main program running, and the
+\flow{} classes like \inlinecode{Opm::Parser} are loaded to extend the Python
+interpreter. This can also be flipped around, the Python interpreter can be
+\emph{embedded} in the \flow{} executable. When Python is embedded, \flow{} is
+the main program running, and with help of the embedded interpreter the \flow{}
+program can be extended with Python plugins. The \pyaction{} keyword can be
+perceived as a Python plugin. To really interact with the state of the \flow{}
+simulation the plugin needs to utilize the functionality which wraps the C++
+functionality.
+
+\section{The \pyaction{} keyword}
+The \pyaction{} keyword is in the \kw{SCHEDULE} section like \actionx{}. The
+first record is the name of the action and a string identifier for how many
+times the action should run, then there is a path to Python module:
+
+\begin{deck}
+PYACTION
+  PYTEST 'FIRST_TRUE' /
+  'pytest.py' /
+\end{deck}
+
+This keyword defines a \pyaction{} called \kw{PYTEST} which will run at the end
+of every timestep until the first time a \inlinecode{true} value is returned. In
+addition to \kw{FIRST\_TRUE} you can choose \kw{SINGLE} to run exactly once and
+\kw{UNLIMITED} to continue running at the end of every timestep for the entire
+simulation. The second record is the path to a file with Python code which will
+run when this \pyaction{} is invoked. The path to the module will be interpreted
+relative to the location of the \path{.DATA} file.
+
+The python module can be quite arbitrary, but it must contain a function
+\inlinecode{run} with the correct signature:
+\begin{code}
+def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+    print('Running python code in PYACTION')
+    return True
+\end{code}
+The \pyaction{} machinery is not as robust as the simulator proper: while
+loading the \kw{PYACTION} keyword \flow{} will check that the Python module
+contains syntactically valid Python code, and that it contains a
+\inlinecode{run()} function, but it will \emph{not} check the signature of the
+\inlinecode{run()} function. If the signature is wrong you will get a hard to
+diagnose runtime error.
+
+When the Python module is loaded it does so in an environment where the path to
+the \path{.DATA} file has been appended to the Python load path by manipulating
+the internal \inlinecode{sys.path} variable.
+
+ 
+\subsection{The different arguments}
+
+\subsection{Holding state}
+The \pyaction{} keywords will often be invoked multiple times, a Python
+dictionary \inlinecode{state} has been injected in the module - that dictionary
+can be used to maintain state between invocations. Let ut assume we want to
+detect when the field oil production starts curving down - i.e. when
+$\partial^2_{t} \mathrm{FOPR} < 0$, in order to calculate that we need to keep
+track of the timesteps and the $\mathrm{FOPR}$ as function of time - this is one
+possible implementation:
+\begin{code}
+def diff(pair1, pair2):
+    return (pair1[0] - pair2[0], pair1[1] - pair12[1])   
+
+def fopr_diff2(summary_state):
+    fopr = summary_state.get('FOPR')
+    sim_time = summary_state.get('TIME')
+    fopr_series = state.get('fopr', [])
+    fopr_series.append( (sim_time, fopr) )
+
+    if len(fopr_series) < 2:
+       return None
+
+    pair0 = fopr_series[-1]
+    pair1 = fopr_series[-2]
+    pair2 = fopr_series[-3]
+
+    dt1, df1 = diff(pair0, pair1)
+    dt2, df2 = diff(pair1, pair2)
+
+    return 2*(df1/dt1 - df2/dt2)/(dt1 + dt2)
+
+def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+    fopr_d2 = fopr_diff2(summary_state)
+    if not fopr_d2 is None:
+       if fopr_d2 < 0:
+           print('Hmmm - this is going the wrong way')
+       else:
+           print('All good - sky is the limit!')
+\end{code}
+
+
+\subsection{Implementing \udq{} like behavior}
+
+\subsection{Changing the \inlinecode{Schedule} object - using a ``normal'' \actionx{}}
+
+
+\section{Security implications of \pyaction{}}
+The \pyaction{} keyword allows for execution of arbitrary user supplied Python
+code, with the priveliges of the user actually running \flow{}. If you have a
+setup where \flow{} runs with a different user account than the person
+submitting the simulation you should be \emph{very careful} about enabling the
+embedded Python functionality and the \pyaction{} keyword.
+
+
