@@ -87,6 +87,56 @@ the internal \inlinecode{sys.path} variable.
 
  
 \subsection{The different arguments}
+The \inlinecode{run()} function will be called with exactly five arguments which
+your implementation can use. The five arguments are:
+\begin{description}
+\item[\inlinecode{ecl\_state}:] An instance of the \inlinecode{Opm::EclipseState}
+  class - this is a representation of \emph{all static properties} in the model,
+  ranging from porosity to relperm tables. The content of the
+  \inlinecode{ecl\_state} is immutable - you are not allowed to change the static
+  properties at runtime\footnote{This could certainly be interesting, but this
+  is beyond the scope of the \pyaction{} keyword.}.
+\item[\inlinecode{schedule}:] An instance of the \inlinecode{Opm::Schedule}
+  class - this is a representation of all the content from the \kw{SCHEDULE}
+  section, notably all well and group information and the timestepping. Being
+  able to change the \kw{SCHEDULE} information runtime is certainly one of the
+  main motivations for this functionality, however due to the complexity of
+  the \inlinecode{Opm::Schedule} class (section \ref{schedule_design})
+  the recommended way to actually mutate the \inlinecode{Opm::Schedule} is
+  through the use of a dummy \actionx{} keyword (section
+  \ref{pyaction_actionx}).
+\item[\inlinecode{report\_step}:] This is an integer for the report step we
+  are currently working on. Observe that the \pyaction{} is called for every
+  simulator timestep, i.e. it will typically be called multiple time with
+  the same value for the $\mathrm{report\_step}$ argument.
+\item[\inlinecode{summary\_state}:] An instance of the
+  \inlinecode{Opm::SummaryState} class, this is where the current summary
+  results of the simulator are stored. The \inlinecode{SummaryState} class has
+  methods to get hold of well, group and general variables
+  \begin{code}
+    # Print all well names
+    for well in summary_state.wells:
+        print(well)
+
+    # Assign all wells to list variable group_names
+    group_names = summary_state.groups
+
+    # Sum the oil rate from all wells.
+    sum_wopr = 0
+    for well in summary_state.wells:
+        sum_wopr += summary_state.well_var(well, 'WOPR')
+
+    # Directly fetch the FOPR from the summary_state
+    fopr = summary_state['FOPR'] 
+  \end{code}
+  The \inlinecode{summary\_state} variable can also be updated with the
+  \inlinecode{update()}, \inlinecode{update\_well\_var()} and
+  \inlinecode{update\_group\_var()} methods.
+\item[\inlinecode{actionx\_callback}:] The \inlinecode{actionx\_callback} is a
+  specialized function which is used to update the \inlinecode{Schedule} object
+  by applying the keywords from a normal \actionx{} keyword. This is described
+  in detail in section \ref{pyaction_actionx}.
+\end{description}
 
 \subsection{Holding state}
 The \pyaction{} keywords will often be invoked multiple times, a Python
@@ -127,9 +177,11 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
            print('All good - sky is the limit!')
 \end{code}
 
-\subsection{Changing the \inlinecode{Schedule} object - using a ``normal'' \actionx{}}
+\section{Changing the \inlinecode{Schedule} object - using a ``normal'' \actionx{}}
+Before reading this section you should make sure to understand section \ref{schedule_design}.
 
-\subsection{Implementing \udq{} like behavior}
+
+\section{Implementing \udq{} like behavior}
 The \udq{} keyword has three different purposes - all based on defining 
 complex quantities from the current state of the simulation:
 
@@ -151,9 +203,10 @@ UDQ
 /
 \end{deck}
 
-\subsubsection{Using \pyaction{} instead of \udq{} + \actionx{}}
+\subsection{Using \pyaction{} instead of \udq{} + \actionx{}}
+\label{pyaction_actionx}
 
-\subsubsection{Using \pyaction{} to report to the summary file}
+\subsection{Using \pyaction{} to report to the summary file}
 The important point when using \pyaction{} to report complex results to the
 summary file is just that the \inlinecode{summary\_state} argument to the
 \inlinecode{run()} function is \emph{writable} with \inlinecode{updata\_xxx}
@@ -177,7 +230,7 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
 
 
 
-\subsubsection{Using \pyaction{} to set a \kw{UDA} control}
+\subsection{Using \pyaction{} to set a \kw{UDA} control}
 Using \pyaction{} to set \kw{UDA} controls is quite simple. Again the \udq{}
 keyword must have been defined with a dummy value in the \kw{SCHEDULE} section,
 and the \kw{UDA} keyword used in e.g. a \kw{WCONDPROD} keyword. Then the
