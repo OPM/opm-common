@@ -56,7 +56,7 @@
 #include <utility>
 #include <vector>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 struct MockIH
 {

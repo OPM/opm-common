@@ -30,7 +30,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 namespace fs = std::filesystem;
 
 using namespace Opm;

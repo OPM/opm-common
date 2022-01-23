@@ -31,7 +31,7 @@
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
-#include "WorkArea.cpp"
+#include "WorkArea.hpp"
 
 #include <opm/io/eclipse/EclOutput.hpp>
 

@@ -55,7 +55,7 @@
 
 #include <time.h>
 
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 
 using namespace Opm;
 

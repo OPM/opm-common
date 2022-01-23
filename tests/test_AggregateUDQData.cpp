@@ -47,7 +47,7 @@
 #include <string>
 #include <vector>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 namespace {
 

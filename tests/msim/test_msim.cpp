@@ -44,7 +44,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 
 using namespace Opm;
 

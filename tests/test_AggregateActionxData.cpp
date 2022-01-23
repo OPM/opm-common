@@ -51,7 +51,7 @@
 #include <vector>
 #include <fmt/format.h>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 namespace {
 

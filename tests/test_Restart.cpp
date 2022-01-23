@@ -55,7 +55,7 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 
 using namespace Opm;
 

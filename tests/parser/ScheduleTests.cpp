@@ -71,7 +71,7 @@
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 using namespace Opm;
 

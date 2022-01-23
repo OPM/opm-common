@@ -55,7 +55,7 @@
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 
 namespace {
     Opm::Deck first_sim()

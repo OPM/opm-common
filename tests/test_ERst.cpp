@@ -41,7 +41,7 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 
-#include "tests/WorkArea.cpp"
+#include "tests/WorkArea.hpp"
 
 using namespace Opm::EclIO;
 

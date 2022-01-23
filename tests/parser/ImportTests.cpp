@@ -26,7 +26,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/ImportContainer.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <tests/WorkArea.cpp>
+#include <tests/WorkArea.hpp>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
