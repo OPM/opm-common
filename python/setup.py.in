@@ -19,7 +19,7 @@ setupdir = os.path.dirname(__file__)
 if setupdir != '':
   os.chdir( setupdir )
 
-cc = os.environ.get("CC", "c++")
+cc = "@CMAKE_CXX_COMPILER@"
 try:
     subprocess.call(['ccache', '--version'])
     os.environ['CC'] = 'ccache {}'.format(cc)
