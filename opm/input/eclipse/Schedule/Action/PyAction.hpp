@@ -22,9 +22,10 @@
 #define PYACTION_HPP_
 
 
-#include <string>
+#include <functional>
 #include <memory>
-
+#include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -49,7 +50,8 @@ public:
     static PyAction serializeObject();
     PyAction() = default;
     PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, const std::string& module_file);
-    bool run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const;
+    bool run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st,
+             const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) const;
     const std::string& name() const;
     bool active() const;
     bool operator==(const PyAction& other) const;

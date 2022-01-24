@@ -526,5 +526,51 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(PYTHON_ACTIONX) {
+    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_ACTIONX.DATA");
+    test_data td( deck );
+    msim sim(td.state);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P4", data::Rates::opt::oil, prod_opr);
+
+        sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+        sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+        sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+        sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+
+        {
+            const auto& w1 = td.schedule.getWell("P1", 0);
+            const auto& w2 = td.schedule.getWell("P2", 0);
+            const auto& w3 = td.schedule.getWell("P3", 0);
+            const auto& w4 = td.schedule.getWell("P4", 0);
+
+            BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w2.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w3.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w4.getStatus() == Well::Status::OPEN );
+        }
+
+
+        sim.run(td.schedule, io, false);
+
+        {
+            const auto& w1 = td.schedule.getWell("P1", 1);
+            const auto& w2 = td.schedule.getWell("P2", 2);
+            const auto& w3 = td.schedule.getWell("P3", 3);
+            const auto& w4 = td.schedule.getWell("P4", 4);
+            BOOST_CHECK(w1.getStatus() ==  Well::Status::SHUT );
+            BOOST_CHECK(w2.getStatus() ==  Well::Status::SHUT );
+            BOOST_CHECK(w3.getStatus() ==  Well::Status::SHUT );
+            BOOST_CHECK(w4.getStatus() ==  Well::Status::SHUT );
+        }
+    }
+}
+
 #endif
 

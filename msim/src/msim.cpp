@@ -90,7 +90,7 @@ void msim::post_step(Schedule& schedule, SummaryState& st, data::Solution& /* so
     }
 
     for (const auto& pyaction : actions.pending_python())
-        pyaction->run(this->state, schedule, report_step, st);
+        schedule.runPyAction(report_step, *pyaction, this->state, st);
 }
 
 
