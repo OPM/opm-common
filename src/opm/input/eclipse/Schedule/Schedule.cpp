@@ -703,7 +703,17 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     void Schedule::invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const {
         std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
-        context.parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, context.keyword.location(), context.errors);
+        if (namePattern == "?") {
+            /*
+              In particular when an ACTIONX keyword is called via PYACTION
+              coming in here with an empty list of matching wells is not
+              entirely unheard of. It is probably not what the user wanted and
+              we give a warning, but the simulation continues.
+            */
+            auto msg = OpmInputError::format("No matching wells for ACTIONX {keyword} in {file} line {line}.", context.keyword.location());
+            OpmLog::warning(msg);
+        } else
+            context.parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, context.keyword.location(), context.errors);
     }
 
     GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
