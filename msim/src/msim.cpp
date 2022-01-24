@@ -86,7 +86,7 @@ void msim::post_step(Schedule& schedule, SummaryState& st, data::Solution& /* so
     for (const auto& action : actions.pending(this->action_state, std::chrono::system_clock::to_time_t(sim_time))) {
         auto result = action->eval(context);
         if (result)
-            schedule.applyAction(report_step, sim_time, *action, result, {});
+            schedule.applyAction(report_step, *action, result.wells(), {});
     }
 
     for (const auto& pyaction : actions.pending_python())
