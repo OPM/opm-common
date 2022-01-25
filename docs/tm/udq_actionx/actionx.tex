@@ -348,9 +348,11 @@ group configuration only take place at report steps, and in between those the
 simulator ``owns'' the well and group data. Unfortunately this is no longer the
 case when \actionx{} is active, and depending on the keywords in the \actionx{}
 block we need to update the simulator data structures after \actionx{} has been
-evaluated to true. This complex, and most of the bugs in the \actionx{}
-implementation have been in this interface. There are probably more bugs waiting
-here.
+evaluated to true. This is complex, and most of the bugs in the \actionx{}
+implementation have been in this interface. Some details of what is currently
+updated is decsribed in sections \ref{actionx_change_well} -
+\ref{actionx_welpi}. This update mechanism will probably need to be continously
+updated in the future.
 
 The simulator code makes \emph{copies} of many of the objects like wells and
 connections from the \inlinecode{Schedule} class, and also assembles many
