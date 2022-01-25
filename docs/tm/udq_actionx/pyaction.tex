@@ -6,12 +6,13 @@ programming in the \kw{SCHEDULE} section. The \pyaction{} keyword is inspired by
 the \actionx{} keyword, but instead of a \inlinecode{.DATA} formatted condition
 you are allowed to evaluate the condition with a general Python script. In
 principle the script can run arbitrary code, but due to the complexity of the
-\kw{SCHEDULE} datamodel the ``best'' way to actually change the course of the
-simulation is through the use of an additional dummy \actionx{} keyword.
+\kw{SCHEDULE} datamodel the ``current best'' way to actually change the course
+of the simulation is through the use of an additional dummy \actionx{} keyword.
 
 In order to enable the \pyaction{} keyword \flow{} must be compiled with the
-\path{cmake} switch \inlinecode{-DOPM\_ENABLE\_EMBEDDED\_PYTHON=ON}, the default is
-to build with \inlinecode{-DOPM\_ENABLE\_EMBEDDED\_PYTHON=OFF}.
+\path{cmake} switches \inlinecode{-DOPM\_ENABLE\_EMBEDDED\_PYTHON=ON} and
+\inlinecode{-DOPM\_ENABLE\_PYTHON=ON}, the default is to build with these switches
+set to \inlinecode{OFF}.
 
 \section{Python - wrapping and embedding}
 Python is present in the \flow{} codebase in two different ways. For many of
@@ -178,7 +179,60 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
 \end{code}
 
 \section{Changing the \inlinecode{Schedule} object - using a ``normal'' \actionx{}}
-Before reading this section you should make sure to understand section \ref{schedule_design}.
+\label{pyaction_actionx}
+Before reading this section you should make sure to understand the
+\inlinecode{Schedule} design described in section \ref{schedule_design}. The
+initial plan when implementing the \pyaction{} keyword was to be able to make
+function calls like
+\begin{code}
+  schedule.close_well(w1, report_step)
+  schedule.set_orat(w2, 1000, report_step)
+\end{code}
+to close a well and set the oil rate of another well. Unfortunately it proved
+very complex to get good semantics for combining such runtime changes with the
+keyword based model for \kw{SCHEDULE} section, so the current recommendation is
+actually to apply the keywords from \kw{ACTIONX} from the Python module when a
+change to the \kw{SCHEDULE} section is desired\footnote{Yes, from a programmers
+point of view this is a very unsatisfactory solution, but it seems to work.
+If/when the underlying \inlinecode{Schedule} implementation changes there is
+nothing per se in the \pyaction{} design which inhibits use of a better
+\inlinecode{Schedule} api in the future.}.
+
+The recommended way to achieve this is to create a normal \actionx{} keyword
+which is set up to run zero times, and then explicitly invoke that from the
+Python \inlinecode{run()} function. In the example below we create an \actionx{}
+\inlinecode{CLOSEWELLS} which will close all matching wells (the wellname '?')
+\begin{deck}
+ACTIONX
+  CLOSEWELLS 0 /
+  DAY = 1 /
+/
+
+WELOPEN
+  '?' 'CLOSE' /
+/
+
+ENDACTIO
+\end{deck}
+The \inlinecode{CLOSEWELLS} action is set up to run zero times, so the normal
+\actionx{} machinery will never run this action\footnote{The condition
+\inlinecode{DAY=1} is completely dummy, in the future the \actionx{}
+implementation should be improved to handle empty conditions.}. Then in the
+Python run function we go through all the wells and call the
+\inlinecode{CLOSEWELL} action to close those with \inlinecode{OPR < 1000}:
+\begin{code}
+def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+    close_wells = []
+    for well in summary_state.wells:
+        if summary_state.well_var(well, 'WOPR') < 1000:
+           close_wells.append(well)
+
+    if close_wells:
+        actionx_callback('CLOSEWELLS', close_wells)
+\end{code}
+The implementation of this is quite complex with thread of execution going from
+C++ to Python and back to C++ again.
+
 
 
 \section{Implementing \udq{} like behavior}
@@ -204,7 +258,8 @@ UDQ
 \end{deck}
 
 \subsection{Using \pyaction{} instead of \udq{} + \actionx{}}
-\label{pyaction_actionx}
+
+
 
 \subsection{Using \pyaction{} to report to the summary file}
 The important point when using \pyaction{} to report complex results to the
