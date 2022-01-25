@@ -48,7 +48,7 @@ the main program running, and with help of the embedded interpreter the \flow{}
 program can be extended with Python plugins. The \pyaction{} keyword can be
 perceived as a Python plugin. To really interact with the state of the \flow{}
 simulation the plugin needs to utilize the functionality which wraps the C++
-functionality.
+functionality, so for \pyaction{} both wrapping and embedding is at play.
 
 Exporting more functionality from C++ to Python is a quite simple and mechanical
 process, if you need a particular functionality which is already available in
