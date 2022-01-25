@@ -4,15 +4,22 @@
 The \pyaction{} keyword is a \flow{} specific keyword which allows for Python
 programming in the \kw{SCHEDULE} section. The \pyaction{} keyword is inspired by
 the \actionx{} keyword, but instead of a \inlinecode{.DATA} formatted condition
-you are allowed to evaluate the condition with a general Python script. In
-principle the script can run arbitrary code, but due to the complexity of the
-\kw{SCHEDULE} datamodel the ``current best'' way to actually change the course
-of the simulation is through the use of an additional dummy \actionx{} keyword.
+you are allowed to implement the condition with a general Python script. The
+\actionx{} keywords are very clearly separated in a condition part and an action
+part in the form of a list of keywords which are effectively injected in the
+\kw{SCHEDULE} section when the condition evaluates to true. This is not so for
+\pyaction{} where there is only one Python script which can both evaluate
+conditions and apply changes. In principle the script can run arbitrary code,
+but due to the complexity of the \kw{SCHEDULE} datamodel the ``current best''
+way to actually change the course of the simulation is through the use of an
+additional dummy \actionx{} keyword.
 
 In order to enable the \pyaction{} keyword \flow{} must be compiled with the
 \path{cmake} switches \inlinecode{-DOPM\_ENABLE\_EMBEDDED\_PYTHON=ON} and
 \inlinecode{-DOPM\_ENABLE\_PYTHON=ON}, the default is to build with these switches
-set to \inlinecode{OFF}.
+set to \inlinecode{OFF}. Before you enable \pyaction{} in your \flow{}
+installation please read carefully through section \ref{pyaction_security} for
+security implications of \pyaction{}.
 
 \section{Python - wrapping and embedding}
 Python is present in the \flow{} codebase in two different ways. For many of
@@ -327,10 +334,17 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
 
 
 \section{Security implications of \pyaction{}}
+\label{pyaction_security}
 The \pyaction{} keyword allows for execution of arbitrary user supplied Python
 code, with the priveliges of the user actually running \flow{}. If you have a
 setup where \flow{} runs with a different user account than the person
 submitting the simulation you should be \emph{very careful} about enabling the
-embedded Python functionality and the \pyaction{} keyword.
+embedded Python functionality and the \pyaction{} keyword. As a scary example
+this script will wipe your disks:
+\begin{code}
+import shutil
 
+def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+    shutil.rmtree('/')
+\end{code}
 
