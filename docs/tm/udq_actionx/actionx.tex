@@ -368,6 +368,7 @@ There are currently three categories of changes that can take place due to
 
 
 \subsubsection{General changes in well status}
+\label{actionx_change_well}
 When there is well related keyword in the \actionx{} block - e.g. \kw{WELOPEN}
 to open or close a well or \kw{WCONPROD} to adjust rates the simulator must
 update it's internal data structures with the updated inut information. This
@@ -387,6 +388,7 @@ simulator to recalculate the transmissibilities.
 
 
 \subsubsection{WELPI}
+\label{actionx_welpi}
 The \kw{WELPI} keyword is quite complex from the outset, when it is included as
 an \actionx{} keyword it gets even more complicated. In the case the \actionx{}
 keyword contains \kw{WELPI} the simulator must first fetch the PI values and
