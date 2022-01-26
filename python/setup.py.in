@@ -25,6 +25,7 @@ try:
     os.environ['CC'] = 'ccache {}'.format(cc)
     print("Using 'ccache {}' as compiler".format(cc))
 except OSError as e:
+    os.environ['CC'] = cc
     print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
 
 # This is very hacky but so is the entire setup.py buildsystem.
