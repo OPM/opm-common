@@ -390,9 +390,13 @@ simulator to recalculate the transmissibilities.
 \subsubsection{WELPI}
 \label{actionx_welpi}
 The \kw{WELPI} keyword is quite complex from the outset, when it is included as
-an \actionx{} keyword it gets even more complicated. In the case the \actionx{}
-keyword contains \kw{WELPI} the simulator must first fetch the PI values and
-pass them to the \inlinecode{Schedule::applyAction()} function.
+an \actionx{} keyword it gets even more complicated. In order to support
+\kw{WELPI} in \actionx{} the simulator needs to inspect the \actionx{} keywords
+before invoking them, and if \kw{WELPI} is included the PI values must be
+assembled from the simulator and passed to the
+\inlinecode{Schedule::applyAction()}. This is implemented and works, but it is
+complex and the special treatment in order to support the combination \kw{WELPI}
++ \actionx{} is quite considerable.
 
 
 \section{Problems in parallel}
