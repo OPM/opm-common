@@ -29,6 +29,7 @@ error BUG: The PyRunModule.hpp header should *not* be included in a configuratio
 
 #include <filesystem>
 
+#include <pybind11/stl.h>
 namespace Opm {
 
 namespace fs = std::filesystem;
@@ -73,9 +74,17 @@ PyRunModule::PyRunModule(std::shared_ptr<const Python> python, const std::string
     this->module.attr("storage") = this->storage;
 }
 
+namespace {
 
-bool PyRunModule::run(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st) {
-    py::object result = this->run_function(&ecl_state, &sched, report_step, &st);
+py::cpp_function py_actionx_callback(const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) {
+    return py::cpp_function( actionx_callback );
+}
+
+}
+
+bool PyRunModule::run(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) {
+    auto cpp_callback = py_actionx_callback(actionx_callback);
+    py::object result = this->run_function(&ecl_state, &sched, report_step, &st, cpp_callback);
     return result.cast<bool>();
 }
 

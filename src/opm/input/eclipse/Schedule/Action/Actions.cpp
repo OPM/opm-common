@@ -82,6 +82,12 @@ const ActionX& Actions::operator[](const std::string& name) const {
     return *iter;
 }
 
+bool Actions::has(const std::string& name) const {
+    const auto iter = std::find_if( this->actions.begin(), this->actions.end(), [&name](const ActionX& action) { return action.name() == name; });
+    return (iter != this->actions.end());
+}
+
+
 const ActionX& Actions::operator[](std::size_t index) const {
     return this->actions[index];
 }

@@ -547,8 +547,10 @@ if(ENABLE_ECL_OUTPUT)
           tests/ACTIONX_M1.X0010
           tests/wclose.py
           tests/msim/MSIM_PYACTION.DATA
+          tests/msim/MSIM_PYACTION_ACTIONX.DATA
           tests/msim/action1.py
           tests/msim/action2.py
+          tests/msim/action3.py
           tests/VFP_CASE.DATA)
 endif()
 

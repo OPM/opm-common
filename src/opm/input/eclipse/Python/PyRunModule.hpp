@@ -27,6 +27,7 @@ error BUG: The PyRunModule.hpp header should *not* be included in a configuratio
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <opm/input/eclipse/Python/Python.hpp>
@@ -42,7 +43,7 @@ class __attribute__((visibility("default"))) PyRunModule {
 public:
     PyRunModule(std::shared_ptr<const Python> python, const std::string& fname);
 
-    bool run(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st);
+    bool run(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
 
 private:
     py::object run_function = py::none();

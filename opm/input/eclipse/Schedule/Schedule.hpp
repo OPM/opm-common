@@ -256,6 +256,7 @@ namespace Opm
         void shut_well(const std::string& well_name, std::size_t report_step);
         void stop_well(const std::string& well_name, std::size_t report_step);
         void open_well(const std::string& well_name, std::size_t report_step);
+        void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
@@ -279,9 +280,22 @@ namespace Opm
         bool write_rst_file(std::size_t report_step) const;
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
 
+        /*
+          The applyAction() is invoked from the simulator *after* an ACTIONX has
+          evaluated to true. The return value is a small structure with
+          'information' which the simulator should take into account when
+          updating internal datastructures after the ACTIONX keywords have been
+          applied.
+        */
         SimulatorUpdate applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells, const std::unordered_map<std::string, double>& wellpi);
+        /*
+          The runPyAction() will run the Python script in a PYACTION keyword. In
+          the case of Schedule updates the recommended way of doing that from
+          PYACTION is to invoke a "normal" ACTIONX keyword internally from the
+          Python code. he return value from runPyAction() comes from such a
+          internal ACTIONX.
+        */
         SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, EclipseState& ecl_state, SummaryState& summary_state);
-        void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
 
         const GasLiftOpt& glo(std::size_t report_step) const;
@@ -587,6 +601,7 @@ namespace Opm
         bool must_write_rst_file(std::size_t report_step) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
+        SimulatorUpdate applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells);
 
         /**
          * Handles a "normal" keyword. A normal keyword is one that can be handled by a function with the standard set of arguments (the ones that are passed to this function).
