@@ -566,6 +566,7 @@ class overrides the arithmetic operators like \inlinecode{UDQSet::operator+()}
 so that expressions like \kw{2 * WOPR 'OP*'} can be easily evaluated in code.
 
 \subsection*{Paralell awareness}
+\label{udq_parallel}
 The opm-common code where the \udq{} functionality is implemented is totally
 unaware of parallel execution, so to be certain that this works for a parallel
 simulator care must be taken. In flow this is handled as:

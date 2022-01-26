@@ -400,6 +400,14 @@ complex and the special treatment in order to support the combination \kw{WELPI}
 
 
 \section{Problems in parallel}
+\label{actionx_paralle}
+The operation environment for \actionx{} is quite similar to \udq{} when it
+comes to parallel behavior - see section \ref{udq_parallel}, in addition we
+need to be aware of parallel challenges after the \actionx{} has completed. If
+the \actionx{} keyword changes the well structure there will be problems with
+with the parallel well distribution in the simulator. \emph{As of Januarry 2022
+this will fail undetected.}
+
 
 \section{\actionx{} restart output}
 As with the \udq{} keyword some of the structure and complexity of the
