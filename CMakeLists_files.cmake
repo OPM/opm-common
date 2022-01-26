@@ -306,6 +306,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/rst/state.cpp
           src/opm/io/eclipse/rst/well.cpp
           src/opm/output/data/Aquifer.cpp
+          src/opm/output/data/InterRegFlowMap.cpp
           src/opm/output/data/Solution.cpp
           src/opm/output/eclipse/ActiveIndexByColumns.cpp
           src/opm/output/eclipse/AggregateActionxData.cpp
@@ -461,6 +462,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_DoubHEAD.cpp
           tests/test_InteHEAD.cpp
           tests/test_data_InterRegFlow.cpp
+          tests/test_data_InterRegFlowMap.cpp
           tests/test_LinearisedOutputTable.cpp
           tests/test_LogiHEAD.cpp
           tests/test_LGOData.cpp
@@ -937,6 +939,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/GuideRateValue.hpp
         opm/output/data/Groups.hpp
         opm/output/data/InterRegFlow.hpp
+        opm/output/data/InterRegFlowMap.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
         opm/output/eclipse/VectorItems/action.hpp
