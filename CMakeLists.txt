@@ -80,6 +80,13 @@ if(ENABLE_ECL_INPUT)
   endif()
 endif()
 
+if(OPM_ENABLE_EMBEDDED_PYTHON AND NOT OPM_ENABLE_PYTHON)
+  # This needs to be here to run before source_hook
+  message(WARNING "Inconsistent settings: OPM_ENABLE_PYTHON=OFF and "
+    "OPM_ENABLE_EMBEDDED_PYTHON=ON. Please use OPM_ENABLE_PYTHON=ON to "
+    "activate. Will disable embedded python in this run.")
+  set(OPM_ENABLE_EMBEDDED_PYTHON OFF CACHE BOOL "Enable embedded python?" FORCE)
+endif()
 # read the list of components from this file (in the project directory);
 # it should set various lists with the names of the files to include
 include (CMakeLists_files.cmake)
@@ -478,11 +485,6 @@ if (OPM_ENABLE_PYTHON)
   if (OPM_ENABLE_EMBEDDED_PYTHON)
     target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY})
     add_definitions(-DEMBEDDED_PYTHON)
-  endif()
-else()
-  if (OPM_ENABLE_EMBEDDED_PYTHON)
-    message(WARNING "Inconsistent settings OPM_ENABLE_PYTHON / OPM_ENABLE_EMBEDDED_PYTHON")
-    set(OPM_ENABLE_EMBEDDED_PYTHON OFF CACHE BOOL "Enable embedded python?" FORCE)
   endif()
 endif()
 
