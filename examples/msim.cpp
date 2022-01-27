@@ -51,8 +51,8 @@ int main(int /* argc */, char** argv) {
         error_guard.terminate();
     }
 
-    Opm::msim msim(state);
+    Opm::msim msim(state, schedule);
     Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
-    msim.run(schedule, io, false);
+    msim.run(io, false);
 }
 

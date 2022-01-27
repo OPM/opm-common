@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
     EclipseState state(deck);
     Schedule schedule(deck, state, python);
     SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
-    msim msim(state);
+    msim msim(state, schedule);
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
     msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
         const WorkArea work_area("test_msim");
         EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
 
-        msim.run(schedule, io, false);
+        msim.run(io, false);
 
         for (const auto& fname : {"SPE1CASE1.INIT", "SPE1CASE1.UNRST", "SPE1CASE1.EGRID", "SPE1CASE1.SMSPEC", "SPE1CASE1.UNSMRY", "SPE1CASE1.RSM"})
             BOOST_CHECK( is_file( fname ));
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(RUN_SUMTHIN) {
     EclipseState state(deck);
     Schedule schedule(deck, state, python);
     SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
-    msim msim(state);
+    msim msim(state, schedule);
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
     msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(RUN_SUMTHIN) {
         EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
 
         // TSTEP = N*7
-        msim.run(schedule, io, false);
+        msim.run(io, false);
 
         // clang-format off
         const auto expect_smry_time = std::vector<double> {
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(RUN_RPTONLY) {
     Schedule schedule(deck, state, std::make_shared<Python>());
     const SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
 
-    msim msim(state);
+    msim msim(state, schedule);
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
     msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(RUN_RPTONLY) {
         EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
 
         // TSTEP = N*7
-        msim.run(schedule, io, false);
+        msim.run(io, false);
 
         // clang-format off
         const auto expect_smry_time = std::vector<double> {
