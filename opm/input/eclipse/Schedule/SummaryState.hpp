@@ -75,8 +75,10 @@ public:
     explicit SummaryState(std::time_t sim_start_arg);
 
     /*
-      The set() function has to be retained temporarily to support updating of
-      cumulatives from restart files.
+      The canonical way to update the SummaryState is through the update_xxx()
+      methods which will inspect the variable and either accumulate or just
+      assign, depending on whether it represents a total or not. The set()
+      method is low level and unconditionally do an assignment. 
     */
     void set(const std::string& key, double value);
 

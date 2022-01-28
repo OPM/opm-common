@@ -551,6 +551,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/action1.py
           tests/msim/action2.py
           tests/msim/action3.py
+          tests/msim/action_count.py
           tests/VFP_CASE.DATA)
 endif()
 

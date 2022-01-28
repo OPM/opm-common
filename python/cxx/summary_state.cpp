@@ -55,5 +55,6 @@ void python::common::export_SummaryState(py::module& module) {
         .def("__contains__", &SummaryState::has)
         .def("has_well_var", py::overload_cast<const std::string&, const std::string&>(&SummaryState::has_well_var, py::const_))
         .def("has_group_var", py::overload_cast<const std::string&, const std::string&>(&SummaryState::has_group_var, py::const_))
+        .def("__setitem__", &SummaryState::set)
         .def("__getitem__", py::overload_cast<const std::string&>(&SummaryState::get, py::const_));
 }

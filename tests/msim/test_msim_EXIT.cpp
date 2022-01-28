@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST) {
 
     {
         WorkArea work_area("test_msim");
-        Opm::msim msim(state);
+        Opm::msim msim(state, schedule);
         Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
         msim.well_rate("P1", Opm::data::Rates::opt::oil, Opm::prod_opr);
         msim.well_rate("P2", Opm::data::Rates::opt::oil, Opm::prod_opr);
@@ -99,9 +99,10 @@ BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST) {
         msim.well_rate("P2", Opm::data::Rates::opt::wat, Opm::prod_wpr_P2);
         msim.well_rate("P3", Opm::data::Rates::opt::wat, Opm::prod_wpr_P3);
         msim.well_rate("P4", Opm::data::Rates::opt::wat, Opm::prod_wpr_P4);
-        msim.run(schedule, io, false);
+        msim.run(io, false);
+
+        auto exit_status = msim.schedule.exitStatus();
+        BOOST_CHECK( exit_status.has_value() );
+        BOOST_CHECK_EQUAL(exit_status.value(), 99);
     }
-    auto exit_status = schedule.exitStatus();
-    BOOST_CHECK( exit_status.has_value() );
-    BOOST_CHECK_EQUAL(exit_status.value(), 99);
 }

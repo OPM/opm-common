@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
 #include "actionx2.include"
 
     test_data td( actionx );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
@@ -184,16 +184,16 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
         sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
         sim.well_rate("P4", data::Rates::opt::oil, prod_opr_low);
 
-        sim.run(td.schedule, io, false);
+        sim.run(io, false);
         {
-            const auto& w1 = td.schedule.getWell("P1", 1);
-            const auto& w4 = td.schedule.getWell("P4", 1);
+            const auto& w1 = sim.schedule.getWell("P1", 1);
+            const auto& w4 = sim.schedule.getWell("P4", 1);
             BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w4.getStatus() == Well::Status::OPEN );
         }
         {
-            const auto& w1 = td.schedule.getWellatEnd("P1");
-            const auto& w4 = td.schedule.getWellatEnd("P4");
+            const auto& w1 = sim.schedule.getWellatEnd("P1");
+            const auto& w4 = sim.schedule.getWellatEnd("P4");
             BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w4.getStatus() == Well::Status::SHUT );
         }
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
 #include "actionx1.include"
 
     test_data td( actionx1 );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
@@ -221,10 +221,10 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
         {
-            const auto& w1 = td.schedule.getWell("P1", 15);
-            const auto& w2 = td.schedule.getWell("P2", 15);
-            const auto& w3 = td.schedule.getWell("P3", 15);
-            const auto& w4 = td.schedule.getWell("P4", 15);
+            const auto& w1 = sim.schedule.getWell("P1", 15);
+            const auto& w2 = sim.schedule.getWell("P2", 15);
+            const auto& w3 = sim.schedule.getWell("P3", 15);
+            const auto& w4 = sim.schedule.getWell("P4", 15);
 
             BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w2.getStatus() == Well::Status::OPEN );
@@ -233,19 +233,19 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
         }
 
 
-        sim.run(td.schedule, io, false);
+        sim.run(io, false);
         {
-            const auto& w1 = td.schedule.getWell("P1", 15);
-            const auto& w3 = td.schedule.getWell("P3", 15);
+            const auto& w1 = sim.schedule.getWell("P1", 15);
+            const auto& w3 = sim.schedule.getWell("P3", 15);
             BOOST_CHECK(w1.getStatus() ==  Well::Status::OPEN );
             BOOST_CHECK(w3.getStatus() ==  Well::Status::OPEN );
         }
         {
-            const auto& w2_6 = td.schedule.getWell("P2", 6);
+            const auto& w2_6 = sim.schedule.getWell("P2", 6);
             BOOST_CHECK(w2_6.getStatus() == Well::Status::SHUT );
         }
         {
-            const auto& w4_11 = td.schedule.getWell("P4", 11);
+            const auto& w4_11 = sim.schedule.getWell("P4", 11);
             BOOST_CHECK(w4_11.getStatus() == Well::Status::SHUT );
         }
     }
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
 #include "actionx1.include"
 
     test_data td( actionx1 );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
         sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
-        sim.run(td.schedule, io, false);
+        sim.run(io, false);
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
 
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
 #include "actionx1.include"
 
     test_data td( actionx1 );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
         sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
-        sim.run(td.schedule, io, false);
+        sim.run(io, false);
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
         const EclIO::ESmry ecl_sum(base_name + ".SMSPEC");
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
 BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
 #include "udq_in_actionx.include"
     test_data td( actionx1 );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
@@ -384,26 +384,26 @@ BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
         sim.well_rate("P4", data::Rates::opt::gas, prod_gpr);
 
         {
-            const auto& w1 = td.schedule.getWell("P1", 15);
+            const auto& w1 = sim.schedule.getWell("P1", 15);
             BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
 
-            const auto& udq1 = td.schedule.getUDQConfig(15);
+            const auto& udq1 = sim.schedule.getUDQConfig(15);
             BOOST_CHECK(!udq1.has_keyword("FUNEW"));
 
-            const auto& udq2 = td.schedule.getUDQConfig(25);
+            const auto& udq2 = sim.schedule.getUDQConfig(25);
             BOOST_CHECK(udq2.has_keyword("FUPROD"));
         }
 
 
-        sim.run(td.schedule, io, false);
+        sim.run(io, false);
         {
-            const auto& w1 = td.schedule.getWell("P1", 15);
+            const auto& w1 = sim.schedule.getWell("P1", 15);
             BOOST_CHECK(w1.getStatus() ==  Well::Status::OPEN );
 
-            const auto& udq1 = td.schedule.getUDQConfig(15);
+            const auto& udq1 = sim.schedule.getUDQConfig(15);
             BOOST_CHECK(udq1.has_keyword("FUNEW"));
 
-            const auto& udq2 = td.schedule.getUDQConfig(25);
+            const auto& udq2 = sim.schedule.getUDQConfig(25);
             BOOST_CHECK(udq2.has_keyword("FUPROD"));
             BOOST_CHECK(udq2.has_keyword("FUNEW"));
         }
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
 BOOST_AUTO_TEST_CASE(UDA) {
 #include "uda.include"
     test_data td( uda_deck );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     auto eps_lim = sim.uda_val().epsilonLimit();
 
     EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(UDA) {
     {
         WorkArea work_area("uda_sim");
 
-        sim.run(td.schedule, io, true);
+        sim.run(io, true);
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
         const EclIO::ESmry ecl_sum(base_name + ".SMSPEC");
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(UDA) {
 BOOST_AUTO_TEST_CASE(COMPDAT) {
 #include "compdat.include"
     test_data td( compdat_deck );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
     sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
     {
         WorkArea work_area("compdat_sim");
 
-        BOOST_CHECK_NO_THROW(sim.run(td.schedule, io, true));
+        BOOST_CHECK_NO_THROW(sim.run(io, true));
     }
 }
 
@@ -480,10 +480,10 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
 BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
     const auto& deck = Parser().parseFile("msim/MSIM_PYACTION.DATA");
     test_data td( deck );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
-        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
 
         sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
         sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
@@ -496,10 +496,10 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
         {
-            const auto& w1 = td.schedule.getWell("P1", 15);
-            const auto& w2 = td.schedule.getWell("P2", 15);
-            const auto& w3 = td.schedule.getWell("P3", 15);
-            const auto& w4 = td.schedule.getWell("P4", 15);
+            const auto& w1 = sim.schedule.getWell("P1", 15);
+            const auto& w2 = sim.schedule.getWell("P2", 15);
+            const auto& w3 = sim.schedule.getWell("P3", 15);
+            const auto& w4 = sim.schedule.getWell("P4", 15);
 
             BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w2.getStatus() == Well::Status::OPEN );
@@ -508,31 +508,32 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
         }
 
 
-        sim.run(td.schedule, io, false);
+        sim.run(io, false);
         {
-            const auto& w1 = td.schedule.getWell("P1", 15);
-            const auto& w3 = td.schedule.getWell("P3", 15);
+            const auto& w1 = sim.schedule.getWell("P1", 15);
+            const auto& w3 = sim.schedule.getWell("P3", 15);
             BOOST_CHECK(w1.getStatus() ==  Well::Status::OPEN );
             BOOST_CHECK(w3.getStatus() ==  Well::Status::OPEN );
         }
         {
-            const auto& w2_6 = td.schedule.getWell("P2", 6);
+            const auto& w2_6 = sim.schedule.getWell("P2", 6);
             BOOST_CHECK(w2_6.getStatus() == Well::Status::SHUT );
         }
         {
-            const auto& w4_11 = td.schedule.getWell("P4", 11);
+            const auto& w4_11 = sim.schedule.getWell("P4", 11);
             BOOST_CHECK(w4_11.getStatus() == Well::Status::SHUT );
         }
     }
+    BOOST_CHECK_EQUAL( sim.st.get("run_count"), 13);
 }
 
 BOOST_AUTO_TEST_CASE(PYTHON_ACTIONX) {
     const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_ACTIONX.DATA");
     test_data td( deck );
-    msim sim(td.state);
+    msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
-        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
 
         sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
         sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
@@ -545,10 +546,10 @@ BOOST_AUTO_TEST_CASE(PYTHON_ACTIONX) {
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
         {
-            const auto& w1 = td.schedule.getWell("P1", 0);
-            const auto& w2 = td.schedule.getWell("P2", 0);
-            const auto& w3 = td.schedule.getWell("P3", 0);
-            const auto& w4 = td.schedule.getWell("P4", 0);
+            const auto& w1 = sim.schedule.getWell("P1", 0);
+            const auto& w2 = sim.schedule.getWell("P2", 0);
+            const auto& w3 = sim.schedule.getWell("P3", 0);
+            const auto& w4 = sim.schedule.getWell("P4", 0);
 
             BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
             BOOST_CHECK(w2.getStatus() == Well::Status::OPEN );
@@ -557,13 +558,13 @@ BOOST_AUTO_TEST_CASE(PYTHON_ACTIONX) {
         }
 
 
-        sim.run(td.schedule, io, false);
+        sim.run(io, false);
 
         {
-            const auto& w1 = td.schedule.getWell("P1", 1);
-            const auto& w2 = td.schedule.getWell("P2", 2);
-            const auto& w3 = td.schedule.getWell("P3", 3);
-            const auto& w4 = td.schedule.getWell("P4", 4);
+            const auto& w1 = sim.schedule.getWell("P1", 1);
+            const auto& w2 = sim.schedule.getWell("P2", 2);
+            const auto& w3 = sim.schedule.getWell("P3", 3);
+            const auto& w4 = sim.schedule.getWell("P4", 4);
             BOOST_CHECK(w1.getStatus() ==  Well::Status::SHUT );
             BOOST_CHECK(w2.getStatus() ==  Well::Status::SHUT );
             BOOST_CHECK(w3.getStatus() ==  Well::Status::SHUT );

@@ -55,7 +55,7 @@ public:
     const ActionX& operator[](const std::string& name) const;
     const ActionX& operator[](std::size_t index) const;
     std::vector<const ActionX *> pending(const State& state, std::time_t sim_time) const;
-    std::vector<const PyAction *> pending_python() const;
+    std::vector<const PyAction *> pending_python(const State& state) const;
 
     bool has(const std::string& name) const;
     std::vector<ActionX>::const_iterator begin() const;

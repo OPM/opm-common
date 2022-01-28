@@ -58,6 +58,7 @@
 
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
@@ -1428,14 +1429,15 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     */
 
 
-    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, EclipseState& ecl_state, SummaryState& summary_state) {
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state) {
         SimulatorUpdate sim_update;
 
         auto apply_action_callback = [&sim_update, &reportStep, this](const std::string& action_name, const std::vector<std::string>& matching_wells) {
             sim_update = this->applyAction(reportStep, action_name, matching_wells);
         };
 
-        pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
+        auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
+        action_state.add_run(pyaction, result);
         return sim_update;
     }
 

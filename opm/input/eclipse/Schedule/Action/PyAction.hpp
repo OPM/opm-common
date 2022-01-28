@@ -36,6 +36,7 @@ class SummaryState;
 class PyRunModule;
 
 namespace Action {
+class State;
 
 class PyAction {
 public:
@@ -53,7 +54,7 @@ public:
     bool run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st,
              const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) const;
     const std::string& name() const;
-    bool active() const;
+    bool ready(const State& state) const;
     bool operator==(const PyAction& other) const;
 
     template<class Serializer>
