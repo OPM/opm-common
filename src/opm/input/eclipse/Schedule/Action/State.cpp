@@ -59,6 +59,10 @@ void State::add_run(const ActionX& action, std::time_t run_time, Result result) 
     this->last_result.insert_or_assign(action.name(), std::move(result));
 }
 
+void State::add_run(const PyAction& action, bool result) {
+    this->m_python_result.insert_or_assign( action.name(), result );
+}
+
 
 std::optional<Result> State::result(const std::string& action) const {
     auto iter = this->last_result.find(action);
@@ -67,6 +71,16 @@ std::optional<Result> State::result(const std::string& action) const {
 
     return iter->second;
 }
+
+
+std::optional<bool> State::python_result(const std::string& action) const {
+    auto iter = this->m_python_result.find(action);
+    if (iter == this->m_python_result.end())
+        return std::nullopt;
+
+    return iter->second;
+}
+
 
 
 /*
@@ -86,7 +100,8 @@ void State::load_rst(const Actions& action_config, const RestartIO::RstState& rs
 
 bool State::operator==(const State& other) const {
     return this->run_state == other.run_state &&
-           this->last_result == other.last_result;
+           this->last_result == other.last_result &&
+           this->m_python_result == other.m_python_result;
 }
 
 
@@ -94,6 +109,7 @@ State State::serializeObject() {
     State st;
     st.run_state.insert(std::make_pair( std::make_pair("ACTION", 100), RunState::serializeObject()));
     st.last_result.insert( std::make_pair("ACTION", Result::serializeObject()));
+    st.m_python_result.insert( std::make_pair("PYACTION", false) );
     return st;
 }
 

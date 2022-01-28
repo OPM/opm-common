@@ -89,8 +89,8 @@ void msim::post_step(data::Solution& /* sol */, data::Wells& /* well_data */, da
             this->schedule.applyAction(report_step, *action, result.wells(), {});
     }
 
-    for (const auto& pyaction : actions.pending_python())
-        this->schedule.runPyAction(report_step, *pyaction, this->state, this->st);
+    for (const auto& pyaction : actions.pending_python(this->action_state))
+        this->schedule.runPyAction(report_step, *pyaction, this->action_state, this->state, this->st);
 }
 
 

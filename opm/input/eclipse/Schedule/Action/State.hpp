@@ -35,6 +35,8 @@ namespace Action {
 
 class ActionX;
 class Actions;
+class PyAction;
+
 class State {
 
 struct RunState {
@@ -79,9 +81,11 @@ struct RunState {
 
 public:
     void add_run(const ActionX& action, std::time_t sim_time, Result result);
+    void add_run(const PyAction& action, bool result);
     std::size_t run_count(const ActionX& action) const;
     std::time_t run_time(const ActionX& action) const;
     std::optional<Result> result(const std::string& action) const;
+    std::optional<bool> python_result(const std::string& action) const;
     void load_rst(const Actions& action_config, const RestartIO::RstState& rst_state);
 
     template<class Serializer>
@@ -89,6 +93,7 @@ public:
     {
         serializer.map(this->run_state);
         serializer.map(this->last_result);
+        serializer.template map<std::map<std::string,bool>, false>(this->m_python_result);
     }
 
 
@@ -100,6 +105,7 @@ private:
     static action_id make_id(const ActionX& action);
     std::map<action_id, RunState> run_state;
     std::map<std::string, Result> last_result;
+    std::map<std::string, bool> m_python_result;
 };
 
 

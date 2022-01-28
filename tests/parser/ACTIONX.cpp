@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     BOOST_CHECK(!action2.eval(context));
 
 
-    const auto& python_actions = config.pending_python();
+    const auto& python_actions = config.pending_python(action_state);
     BOOST_CHECK_EQUAL(python_actions.size(), 2U);
 }
 
@@ -977,6 +977,7 @@ BOOST_AUTO_TEST_CASE(ActionState) {
 
     auto res = st.result("NAME-HIDDEN");
     BOOST_CHECK(!res.has_value());
+
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL4_QUOTE) {

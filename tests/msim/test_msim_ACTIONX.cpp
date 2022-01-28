@@ -524,6 +524,7 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
             BOOST_CHECK(w4_11.getStatus() == Well::Status::SHUT );
         }
     }
+    BOOST_CHECK_EQUAL( sim.st.get("run_count"), 13);
 }
 
 BOOST_AUTO_TEST_CASE(PYTHON_ACTIONX) {

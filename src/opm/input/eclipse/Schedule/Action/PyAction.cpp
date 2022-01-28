@@ -31,6 +31,7 @@ namespace py = pybind11;
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 
@@ -64,8 +65,18 @@ PyAction PyAction::serializeObject()
     return result;
 }
 
-bool PyAction::active() const {
-    return this->m_active;
+bool PyAction::ready(const State& state) const {
+    if (this->m_run_count == RunCount::unlimited)
+        return true;
+
+    auto last_result = state.python_result(this->m_name);
+    if (!last_result.has_value())
+        return true;
+
+    if (this->m_run_count == RunCount::first_true && last_result.value() == false)
+        return true;
+
+    return false;
 }
 
 
@@ -73,13 +84,6 @@ const std::string& PyAction::name() const {
     return this->m_name;
 }
 
-void PyAction::update(bool result) const {
-    if (this->m_run_count == RunCount::single)
-        this->m_active = false;
-
-    if (this->m_run_count == RunCount::first_true && result)
-        this->m_active = false;
-}
 
 bool PyAction::operator==(const PyAction& other) const {
     return this->m_name == other.m_name &&

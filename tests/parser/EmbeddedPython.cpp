@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
 
 using namespace Opm;
 
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
     Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));
     auto actionx_callback = [] (const std::string&, const std::vector<std::string>&) { ;};
-
+    Action::State action_state;
 
     st.update_well_var("PROD1", "WWCT", 0);
     py_action.run(ecl_state, schedule, 10, st, actionx_callback);
@@ -141,6 +142,32 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
     BOOST_CHECK( well1.getStatus() == Well::Status::SHUT );
     BOOST_CHECK( well2.getStatus() == Well::Status::OPEN );
     BOOST_CHECK( st.has("RUN_COUNT") );
+
+    std::map<std::string, Action::PyAction> action_map;
+    for (const auto * p : schedule[0].actions().pending_python(action_state))
+        action_map.emplace( p->name(), *p );
+
+    const auto& pyaction_unlimited  = action_map.at("UNLIMITED");
+    const auto& pyaction_single     = action_map.at("SINGLE");
+    const auto& pyaction_first_true = action_map.at("FIRST_TRUE");
+
+    auto actions = schedule[0].actions();
+    BOOST_CHECK( actions.pending_python(action_state).size() == 4);
+
+    action_state.add_run( py_action, true);
+    BOOST_CHECK( actions.pending_python(action_state).size() == 4);
+
+    action_state.add_run( pyaction_unlimited, true);
+    BOOST_CHECK( actions.pending_python(action_state).size() == 4);
+
+    action_state.add_run( pyaction_single, false);
+    BOOST_CHECK( actions.pending_python(action_state).size() == 3);
+
+    action_state.add_run( pyaction_first_true, false);
+    BOOST_CHECK( actions.pending_python(action_state).size() == 3);
+
+    action_state.add_run( pyaction_first_true, true);
+    BOOST_CHECK( actions.pending_python(action_state).size() == 2);
 }
 
 

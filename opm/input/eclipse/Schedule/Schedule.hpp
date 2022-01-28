@@ -295,7 +295,7 @@ namespace Opm
           Python code. he return value from runPyAction() comes from such a
           internal ACTIONX.
         */
-        SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, EclipseState& ecl_state, SummaryState& summary_state);
+        SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state);
 
 
         const GasLiftOpt& glo(std::size_t report_step) const;

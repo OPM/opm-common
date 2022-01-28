@@ -109,10 +109,10 @@ bool Actions::ready(const State& state, std::time_t sim_time) const {
     return false;
 }
 
-std::vector<const PyAction *> Actions::pending_python() const {
+std::vector<const PyAction *> Actions::pending_python(const State& state) const {
     std::vector<const PyAction *> pyaction_vector;
     for (const auto& pyaction : this->pyactions) {
-        if (pyaction.active())
+        if (pyaction.ready(state))
             pyaction_vector.push_back( &pyaction );
     }
     return pyaction_vector;
