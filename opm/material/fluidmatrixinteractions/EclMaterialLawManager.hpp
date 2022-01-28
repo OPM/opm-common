@@ -758,7 +758,7 @@ private:
                                                            static_cast<Scalar>(letSgofTab.krt2_relperm)};
                 realParams.setKrwSamples(letCoeffsOil, dum);
 
-                // S=(1-Sg-Sgcr-Swco)/(1-Sogcr-Sgcr-Swco), krg = Krt*S^L/[S^L+E*(1.0-S)^T]
+                // S=(1-So-Sgcr-Swco)/(1-Sogcr-Sgcr-Swco), krg = Krt*S^L/[S^L+E*(1.0-S)^T]
                 const Scalar s_min_nw = letSgofTab.s1_critical+Swco;
                 const Scalar s_max_nw = 1.0-letSgofTab.s2_critical;
                 const std::vector<Scalar>& letCoeffsGas = {s_min_nw, s_max_nw,
@@ -773,7 +773,7 @@ private:
                                                           static_cast<Scalar>(letSgofTab.s1_residual+Swco),
                                                           static_cast<Scalar>(letSgofTab.l_pc),
                                                           static_cast<Scalar>(letSgofTab.e_pc),
-                                                          static_cast<Scalar>(letSgofTab.t_pc), 
+                                                          static_cast<Scalar>(letSgofTab.t_pc),
                                                           static_cast<Scalar>(letSgofTab.pcir_pc),
                                                           static_cast<Scalar>(letSgofTab.pct_pc)};
                 realParams.setPcnwSamples(letCoeffsPc, dum);
@@ -939,7 +939,7 @@ private:
                 // S=(So-Sowcr)/(1-Sowcr-Swcr), krow = Krt*S^L/[S^L+E*(1.0-S)^T]
                 const Scalar s_min_nw = letTab.s2_critical;
                 const Scalar s_max_nw = 1.0-letTab.s1_critical;
-                const std::vector<Scalar>& letCoeffsOil = {s_min_nw, s_max_nw, 
+                const std::vector<Scalar>& letCoeffsOil = {s_min_nw, s_max_nw,
                                                            static_cast<Scalar>(letTab.l2_relperm),
                                                            static_cast<Scalar>(letTab.e2_relperm),
                                                            static_cast<Scalar>(letTab.t2_relperm),

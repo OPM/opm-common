@@ -93,7 +93,7 @@ public:
      * \brief The capillary pressure-saturation curves.
      */
     template <class Container, class FluidState>
-    static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
+    static void capillaryPressures(Container& /* values */, const Params& /* params */, const FluidState& /* fs */)
     {
         throw std::invalid_argument("The capillaryPressures(fs) method is not yet implemented");
     }
@@ -103,7 +103,7 @@ public:
      *        their pressure differences.
      */
     template <class Container, class FluidState>
-    static void saturations(Container& values, const Params& params, const FluidState& fs)
+    static void saturations(Container& /* pc */, const Params& /* params */, const FluidState& /* fs */)
     {
         throw std::invalid_argument("The saturations(fs) method is not yet implemented");
     }
@@ -119,7 +119,7 @@ public:
      *           ought to be calculated
      */
     template <class Container, class FluidState>
-    static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
+    static void relativePermeabilities(Container& /* pc */, const Params& /* params */, const FluidState& /* fs */)
     {
         throw std::invalid_argument("The relativePermeabilities(fs) method is not yet implemented");
     }
@@ -130,8 +130,8 @@ public:
      * \param params The parameters of the capillary pressure curve
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation pcnw(const Params& params, const FluidState& fs)
-    {        
+    static Evaluation pcnw(const Params& /* params */, const FluidState& /* fs */)
+    {
         throw std::logic_error("TwoPhaseLETCurves::pcnw"
                                " not implemented!");
 
@@ -144,7 +144,7 @@ public:
         if (Ss < 0.0) {
             Ss -= (Opm::decay<Scalar>(Ss));
         } else if (Ss > 1.0) {
-            Ss -= (Opm::decay<Scalar>(Ss)-1.0);
+            Ss -= (Opm::decay<Scalar>(Ss-1.0));
         }
 
         const Evaluation powS = Opm::pow(Ss,params.Tpc());
@@ -157,32 +157,32 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatPcnwInv(const Params& params, const Evaluation& pcnw)
+    static Evaluation twoPhaseSatPcnwInv(const Params& /* params */, const Evaluation& pcnw)
     {
         throw std::logic_error("TwoPhaseLETCurves::twoPhaseSatPcnwInv"
                                " not implemented!");
     }
 
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation Sw(const Params& params, const FluidState& fs)
+    static Evaluation Sw(const Params& /* params */, const FluidState& /* fs */)
     {
         throw std::invalid_argument("The Sw(fs) method is not yet implemented");
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatSw(const Params& params, const Evaluation& pc)
+    static Evaluation twoPhaseSatSw(const Params& /* params */, const Evaluation& /* pc */)
     {
         throw std::invalid_argument("The twoPhaseSatSw(fs) method is not yet implemented");
     }
 
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation Sn(const Params& params, const FluidState& fs)
+    static Evaluation Sn(const Params& /* params */, const FluidState& /* fs */)
     {
         throw std::invalid_argument("The Sn(fs) method is not yet implemented");
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatSn(const Params& params, const Evaluation& pc)
+    static Evaluation twoPhaseSatSn(const Params& /* params */, const Evaluation& /* pc */)
     {
         throw std::invalid_argument("The twoPhaseSatSn(fs) method is not yet implemented");
     }
@@ -193,8 +193,8 @@ public:
      * \param params The parameters of the relative permeability curve
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation krw(const Params& params, const FluidState& fs)
-    {        
+    static Evaluation krw(const Params& /* params */, const FluidState& /* fs */)
+    {
         throw std::logic_error("TwoPhaseLETCurves::krw"
                                " not implemented!");
     }
@@ -224,7 +224,7 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krw)
+    static Evaluation twoPhaseSatKrwInv(const Params& /* params */, const Evaluation& /* krw */)
     {
         throw std::logic_error("TwoPhaseLETCurves::twoPhaseSatKrwInv"
                                " not implemented!");
@@ -237,8 +237,8 @@ public:
      * \param params The parameters of the capillary pressure curve
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation krn(const Params& params, const FluidState& fs)
-    {        
+    static Evaluation krn(const Params& /* params */, const FluidState& /* fs */)
+    {
         throw std::logic_error("TwoPhaseLETCurves::krn"
                                " not implemented!");
     }
