@@ -22,15 +22,17 @@ reference manual.
 \section{Defining a new \udq{} keyword}
 New \udq{} variables are defined with the \udq{} keyword in the \kw{SCHEDULE}
 section. The \udq{} keyword is a sort of a super keyword with four additional
-subcommands: \kw{ASSIGN}, \kw{DEFINE}, \kw{UNIT} and \kw{UPDATE}. The
-\kw{ASSIGN} subcommand is used to define a \udq{} variable with a constant
-numerical value. \kw{DEFINE} is used to define an arithmetic expression for a
-\udq{} variable, this expression is evaluated at the end of every simulator time
-step. The \kw{UNIT} command is used to assign a unit string to a \udq{}
-variable, see section \ref{udq_units} for more details about \udq{} variables and
-units. The \kw{UPDATE ON} and \kw{UPDATE OFF} commands can be used to switch
-updating of \udq{} variables on and off. The \udq{} variables are created in
-mode \kw{ON}.
+subcommands: \kw{DEFINE}, \kw{ASSIGN}, \kw{UNIT} and \kw{UPDATE}. The
+\kw{DEFINE} subcommand is the most important command, that is used to
+\emph{define} an arithmetic expression for a \udq{} variable, which is evaluated
+at the end of every simulator time step. \kw{ASSIGN} is used to define a \udq{}
+variable with a constant numerical value, in addition the \kw{ASSIGN} subcommand
+is often used as a ``forward reference'' to enable using a \udq{} keyword in
+another \kw{DEFINE} expression. The \kw{UNIT} command is used to assign a unit
+string to a \udq{} variable, see section \ref{udq_units} for more details about
+\udq{} variables and units. The \kw{UPDATE ON} and \kw{UPDATE OFF} commands can
+be used to switch updating of \udq{} variables on and off. The \udq{} variables
+are created in mode \kw{ON}.
 
 All \udq{} keywords must have the letter \emph{U} as their second character, the
 first character should be 'F', 'G' or 'W' to indicate whether this is a field,
@@ -88,14 +90,13 @@ defintion of \kw{FU2}. As used in this example the \kw{ASSIGN FU 100} can be
 seen as a \emph{forward reference}. When we have completed the first timestep
 and it is time evalute the \udq{} expressions they will be evaluated in order
 \{\kw{FU1}, \kw{FU2}\}, at this stage the active definition of \kw{FU1} is
-\inlinecode{FU1 = FWPR}, i.e. the initial definition \inlinecode{FU1 = 100} has
-been completely obliterated.
-
+\inlinecode{FU1 = FWPR}, i.e. the value \inlinecode{100} from the initial
+definition \inlinecode{FU1 = 100} is actually never dereferenced.
 
 \section{Different types of \udq{} - field, group and well}
 The \udq{} keywords can be of different types, \flow{} supports \emph{field},
 \emph{well} and \emph{group} keywords\footnote{\eclipse{} also supports
-connection variables and segment variables.}. The field keywords are scalar,
+connection, segment and aquifer variables.}. The field keywords are scalar,
 whereas the well and group keywords are sets with values for every well/group.
 
 The type of a \udq{} keyword is inferred from the name in the same manner as the
@@ -107,13 +108,14 @@ UDQ
   ASSIGN GU1 300 /
 /
 \end{deck}
-we will define one scalar keyword \kw{FU1}, one well set \kw{WU1} and one
-group set \kw{GU1}. The well sets will have one slot for each well in the model,
-it is not possible to create a well set with only a subset of wells, but the
-well set can have \emph{undefined} value for a subset of wells. The set
-maintains a \inlinecode{is\_defined()} status and most operations
-only apply to the defined elements\footnote{The essence of the C++
-implementation is \texttt{std::map<std::string, std::optional<double>>}.}.
+we will define one scalar keyword \kw{FU1}, one well set \kw{WU1} and one group
+set \kw{GU1}. The well sets will have one slot for each well in the model, it is
+not possible to create a well set with only a subset of wells, but the well set
+can have \emph{undefined} value for a subset of wells. The set maintains a
+\inlinecode{is\_defined()} status for each element and most operations only
+apply to the defined elements\footnote{The C++ implementation of the \udq{}
+value set is the equivalent of \texttt{std::map<std::string,
+  std::optional<double>>}.}.
 
 As indicated with \kw{ASSIGN WU1 200} you can assign a scalar value to a set
 keyword, then all elements in the set will have the same value. Assuming we have
@@ -123,8 +125,8 @@ a model with wells OP1, OP2, WI and GI the \kw{WU1} will look like
 \end{code}
 When defining a well \udq{} it is natural to refer to well summary variables, in
 the example below we define \kw{WUBHP} which is the bottom hole pressure
-for each well, and \kw{WUOPR} which is the oil production rate for a subset of
-wells:
+for each well, \kw{WUOPR1} which is the oil production rate for a subset of
+wells and \kw{WUOPR2} which is the oil production rate for well OP1 \emph{broadcasted to all wells}.
 \begin{deck}
 UDQ
   DEFINE WUBHP  WBHP     / 
@@ -171,28 +173,33 @@ see however section \ref{udq_union_functions} for a collection of functions
 which operate on the union of values.
 
 When an undefined variable is output to the summary file it will get a value
-given as item 3 of the \kw{UDQPARAM} keyword, observe that summary output is the
-\emph{only} point where the undefined value can be dereferenced, the numerical
-value given in \kw{UDQPARAM} will not be available either for \udq{} nor
-\kw{ACTIONX} evaluations.
+given as item 3 of the \kw{UDQPARAM} keyword. Summary output is the \emph{only}
+point where the undefined value can be dereferenced, the numerical value given
+in \kw{UDQPARAM} will not be available either for \udq{} nor \kw{ACTIONX}
+evaluations.
 
 
 \section{Functions available in \udq{} defintions}
 \label{udq_functions}
-\flow{} supports all the \udq{} functions available in \eclipse{}, it would be a
-quite simple C++ task to extend the list of available functions. If you use a
-new \flow{} specific function in your deck it will no longer be \eclipse{}
-compatible.
+\flow{} supports all the \udq{} functions available in \eclipse{}, for the
+future it would be a quite simple C++ task to extend the list of available
+functions, although that will affect \eclipse{} compatibility.
 
 \subsection{Ordinary binary functions}
 The \udq{} framework supports all the ordinary arithmetic operators +,-,*,/ and
 \^{} and the comparison operators $>, \ge, <, \le, \ne, ==$. For all of these
-operations the rules for argument types and results are as follows:
-\begin{enumerate}
-\item Scalar and scalar gives a scalar result.
-\item Scalar and set or set and scalar gives a set as result.
-\item Set and set gives a set as result.
-\end{enumerate}
+operations sets and scalars can be combined freely. When combining a scalar and
+a set the scalar will be promoted to a set with all values equal, i.e. for
+\begin{deck}
+UDQ
+  ASSIGN WULIMIT 100 /
+/
+\end{deck}
+the numerical value 100 will be broadcasted to all wells:
+\begin{code}
+  WULIMIT = {"OP1": 100, "OP2": 100, "WI": 100,  "GI": 100}.
+\end{code}
+
 In the case of set arguments the operations are only applied to the union of
 values which are defined in both argument sets. The comparison operators produce
 numerical 0 or 1 depending on the result of the comparison, the result from a
@@ -220,7 +227,7 @@ UDQ
 \end{deck}
 The scalar variable \kw{FU1} will be equal to the sum of oil production rates
 for all wells matching the pattern \kw{OP*}, the wells with a name not matching
-\kw{OP*} will not contribute to the sum.The complete list of functions iterating
+\kw{OP*} will not contribute to the sum. The complete list of functions iterating
 over a set and returning a scalar are:
 
 \begin{description}
@@ -269,10 +276,9 @@ The available elemental functions of this kind come in different categories:
 The \udq{} functionality supports functions \kw{SORTA} and \kw{SORTD} to sort a
 set in ascending or descending order respectively. Observe that these functions
 do not sort the sets in place - the udqset does not have any notion of ordering,
-rather they create a permutation set with values 1,2,3, ...
-
-The following combination of \udq{} and \kw{ACTIONX} will use the \kw{SORTD}
-function to close the two wells with the highest watercut:
+rather they create a permutation set with values 1,2,3, ... The following
+combination of \udq{} and \kw{ACTIONX} will use the \kw{SORTD} function to close
+the two wells with the highest watercut:
 \begin{deck}
 UDQ
   DEFINE WUWCTS SORTD(WWCT OP*) /
@@ -441,21 +447,22 @@ WCONPROD
  '*P' 'OPEN' 'ORAT'  'WUOPR' /
 /
 \end{deck}
-One point about this example is that when the \udq{} variable used as control in
-e.g. \kw{WCONPROD} is a well set the lookup machinery will automatically use the
-correct well index when assigning control value to a particular well.
+One point about this example is that when the \udq{} variable which is used as
+control in e.g. \kw{WCONPROD} is a well set, the lookup machinery will
+automatically use the correct well index when assigning control value to a
+particular well.
 
 From an implementation point of view the \kw{UDA} functionality creates a
-significant complexity, because the actual rate to use in the simulation can not
-be determined before the simulation has reached the time.
-
+significant complexity, because the actual rate to use in the simulation must be
+evaluated \emph{just in time}.
 
 \section{\udq{} units}
 \label{udq_units}
 The \udq{} subcommand \kw{UNIT} can be used to assign a string which is used as
 output unit when the \udq{} variable is output to the summary file. This is
 \emph{only} a string, and no unit conversion is applied to the \udq{} variables.
-All \udq{} evaluations are in terms of deck units. Consider the following
+All \udq{} evaluations are in terms of the corre deck units - irrespective of the
+\kw{UNIT} subcommand. Consider the following
 \begin{deck}
 RUNSPEC
 
@@ -477,14 +484,15 @@ UDQ
 \item As part of the summary evaluation the \inlinecode{SummaryState} will
   contain the water injection rate converted to field units.
 \item The \udq{} variable \kw{WUI} is evaluated as the water injection rate from
-  \inlinecode{SummaryState} subtracted 100.
+  \inlinecode{SummaryState} subtracted numerical value 100, it is the users sole
+  responsability that the numerical value 100 represents water injection rate in
+  field units.
 \end{enumerate}
 
-Observe that the units are slightly complicated, and non intuitive for \kw{UDA}
-values. Here the complete evaluation is performed in deck units, and then
-converted to SI for the simulator at the very final step. This is unfortunate,
-and the only place in the code where we hold on to deck units for an unhealthy
-long time.
+Observe that the units are complicated, and non intuitive for \kw{UDA} values.
+Here the complete evaluation is performed in deck units, and then converted to
+SI for the simulator at the very final step. This is unfortunate, and the only
+place in the code where we hold on to deck units for an unhealthy long time.
 
 
 \section{Implementation details}
