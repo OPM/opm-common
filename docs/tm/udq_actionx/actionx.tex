@@ -55,10 +55,10 @@ ENDACTIO
 \end{deck}
 When there is a well/group quantity as \inlinecode{lhs} the evaluation status is
 maintained individually for each well/group. The complete condition evaluates to
-true if \emph{any} of the wells/groups satisfy the condition, in the case of
-wells the matching wells can subsequently be accessed with wellname '?' in the
-\kw{ACTIONX} keywords, this is a quite common pattern to e.g. close the well
-with highest watercut.
+true if \emph{any} of the wells/groups satisfy the condition. In the case of
+wells the wells matching the condition can subsequently be accessed with
+wellname '?' in the \kw{ACTIONX} keywords, this is a quite common pattern to
+e.g. close the well with highest watercut.
 
 If there are more conditions they must be joined with a trailing \kw{AND} or
 \kw{OR}, furthermore conditions can be grouped with paranthesis. The \actionx{}
@@ -67,7 +67,7 @@ mathematical functions like $\log()$, for more advanced expressions the natural
 approach is to first define a \udq{} and then use the \udq{} symbol in the
 \actionx{}, this is illustrated in section \ref{uda}. When multiple conditions
 involving the same well set are evaluated, the list of matching wells available
-in '?' will only contain the wells from the final condition, i.e. for
+in '?' will contain all the wells from the final condition, i.e. for
 \begin{code}
  WWCT = {"OP1": 0.25, "OP2": 0.50, "OP3": 0.75}
 \end{code}
@@ -126,12 +126,12 @@ eventually manage the book keeping of which actions are eligible for evaluation.
 datastructures to the simulator, whereas our impression is that \eclipse{} works
 more like a reservoir model interepreter, executing one keywords at a time.
 Mostly the \flow{} approach has worked out well, however for the \actionx{}
-functionality the difference in execution model is quite acute, and the needs of
-\actionx{} has had quite strong influence on the final Schedule implementation.
-Although not required for use of \actionx{} it is valuable to understand how the
-\actionx{} functionality has influenced the design of the Schedule class, that
-way you will hopefully better understand problems or bugs which might arise in
-the future.
+functionality the difference in execution model is quite acute, and the nature
+of the \actionx{} keyword has had quite strong influence on the final Schedule
+implementation. Although not required for use of \actionx{} it is valuable to
+understand how the \actionx{} functionality has influenced the design of the
+Schedule class, that way you will hopefully better understand problems or bugs
+which might arise in the future.
 
 At the very first pass the \kw{SCHEDULE} section is split in \emph{blocks}, with
 one block for each report step. The blocks are implemented with the class
@@ -213,6 +213,8 @@ processed \kw{SCHEDULE} code is created with the method
 \inlinecode{Schedule::iterateScheduleSection()} method is idempotent - it can be
 called repeatedly, from an arbitray point in the time series.
 
+CONTINUE HERE
+
 \inlinecode{Schedule} class is just to append the \actionx{} keywords in the
 \inlinecode{ScheduleBlock} instance corresponding to the current report step and
 then rerun the \inlinecode{Schedule::iterateScheduleSection()} from this report
@@ -227,9 +229,9 @@ through the \kw{SCHEDULE} section. In the example below a new well \kw{W1} is
 defined with the \kw{WELSPECS} keyword when the action \inlinecode{NEW\_WELL}
 evaluates to true. At 1.st of January 2025 the well \kw{W1} is opened with the
 \kw{WCONPROD} keyword. The enginer making this model assumes that the
-\inlinecode{NEW\_WELL} will evaluate to true sometime before 1.st of January
-2025, so that the well is fully defined when it is eventually opened with
-\kw{WCONPROD}:
+\inlinecode{NEW\_WELL} action will evaluate to true sometime before 1.st of
+January 2025, to ensure that the well is fully defined when it is eventually
+opened with \kw{WCONPROD}:
 \begin{deck}
 ACTIONX
    'NEW_WELL/
