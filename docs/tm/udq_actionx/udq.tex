@@ -437,8 +437,8 @@ UDQ
   DEFINE WUOPR FOPR * WURAND / SUM(WURAND) /
 /
 
--- Need to have a well list or similar to select all producers for the WCONPROD
--- keyword.
+-- Need to have a well list or similar to select all producers for 
+-- the WCONPROD keyword.
 WLIST
   'P' 'ADD' ..... /
 
@@ -447,8 +447,8 @@ WCONPROD
  '*P' 'OPEN' 'ORAT'  'WUOPR' /
 /
 \end{deck}
-One point about this example is that when the \udq{} variable which is used as
-control in e.g. \kw{WCONPROD} is a well set, the lookup machinery will
+One point about this example is that the \udq{} variable \kw{WUOPR} which is
+used as as control in the \kw{WCONPROD} is a well set, the lookup machinery will
 automatically use the correct well index when assigning control value to a
 particular well.
 
@@ -460,9 +460,9 @@ evaluated \emph{just in time}.
 \label{udq_units}
 The \udq{} subcommand \kw{UNIT} can be used to assign a string which is used as
 output unit when the \udq{} variable is output to the summary file. This is
-\emph{only} a string, and no unit conversion is applied to the \udq{} variables.
-All \udq{} evaluations are in terms of the corre deck units - irrespective of the
-\kw{UNIT} subcommand. Consider the following
+\emph{only} a string and does not induce any unit conversion. All \udq{}
+evaluations are in terms of the corre deck units - irrespective of the \kw{UNIT}
+subcommand. Consider the following
 \begin{deck}
 RUNSPEC
 
@@ -484,24 +484,27 @@ UDQ
 \item As part of the summary evaluation the \inlinecode{SummaryState} will
   contain the water injection rate converted to field units.
 \item The \udq{} variable \kw{WUI} is evaluated as the water injection rate from
-  \inlinecode{SummaryState} subtracted numerical value 100, it is the users sole
+  \inlinecode{SummaryState} subtracted numerical value 100, \emph{it is solely the users 
   responsability that the numerical value 100 represents water injection rate in
-  field units.
+  field units.}
 \end{enumerate}
 
 Observe that the units are complicated, and non intuitive for \kw{UDA} values.
-Here the complete evaluation is performed in deck units, and then converted to
-SI for the simulator at the very final step. This is unfortunate, and the only
-place in the code where we hold on to deck units for an unhealthy long time.
+The \kw{UDA} evaluation is based on the \inlinecode{SummaryState} class which is
+in deck units, the controls determined by \kw{UDA} evaluation must therefor be
+converted to SI units just when it is passed to the simulator. The initial
+design ambition was to block the deck units at the IO boundary, keeping the
+internals fully in SI. The \kw{UDA} concept is the exception which manages to
+inject deck units quite far into the code.
 
 
 \section{Implementation details}
 The significant part of the UDQ implementation is in classes located in
 \path{opm/input/eclipse/Schedule/UDQ}, in addition the restart output of
-\udq{}/\kw{UDA} values is in \path{opm/output/eclipse/AggregateUDQData.cpp} and
-the \udq{} parser makes use of the type \inlinecode{RawString} to treat literal
-``/'' and ``*'' different from ordinary parsing where ``/'' signifies end of
-line and ``*'' is either a default or part of a multiplier expression.
+\udq{}/\kw{UDA} values is in \path{opm/output/eclipse/AggregateUDQData.cpp}.
+Finally the \udq{} parser makes use of the type \inlinecode{RawString} to treat
+literal ``/'' and ``*'' different from ordinary parsing where ``/'' signifies
+end of line and ``*'' is either a default or part of a multiplier expression.
 
 \subsection*{\inlinecode{UDQConfig}}
 The class \inlinecode{UDQConfig} internalizes the parsing of the \udq{} keywords
