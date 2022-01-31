@@ -209,16 +209,20 @@ processed content of the \inlinecode{Schedule} class is managed in vector of
 \inlinecode{ScheduleState} instances, where one \inlinecode{ScheduleState}
 represents the complete dynamic input state at a particular report step. The
 processed \kw{SCHEDULE} code is created with the method
-\inlinecode{Schedule::iterateScheduleSection()}. The important point is that the
-\inlinecode{Schedule::iterateScheduleSection()} method is idempotent - it can be
-called repeatedly, from an arbitray point in the time series.
+\inlinecode{Schedule::iterateScheduleSection()}.
 
-CONTINUE HERE
+When \inlinecode{Schedule::iterateScheduleSection(report\_step)} is called it
+starts by clearing the vector of \inlinecode{ScheduleState} instances from
+\inlinecode{report\_step} to the end of the simulation, and then recreates those
+by treating the \inlinecode{ScheduleBlock}. The advantage of this approach is
+that the \inlinecode{Schedule::iterateScheduleSection(report\_step)} method is
+idempotent - it can be called repeatedly, from an arbitrary point in the
+timeseries.
 
-\inlinecode{Schedule} class is just to append the \actionx{} keywords in the
-\inlinecode{ScheduleBlock} instance corresponding to the current report step and
-then rerun the \inlinecode{Schedule::iterateScheduleSection()} from this report
-step.
+The implementation of the \actionx{} functionality is just to append the
+\actionx{} keywords in the \inlinecode{ScheduleBlock} instance corresponding to
+the current report step and then rerun the
+\inlinecode{Schedule::iterateScheduleSection()} from this report step.
 
 
 
@@ -230,8 +234,8 @@ defined with the \kw{WELSPECS} keyword when the action \inlinecode{NEW\_WELL}
 evaluates to true. At 1.st of January 2025 the well \kw{W1} is opened with the
 \kw{WCONPROD} keyword. The enginer making this model assumes that the
 \inlinecode{NEW\_WELL} action will evaluate to true sometime before 1.st of
-January 2025, to ensure that the well is fully defined when it is eventually
-opened with \kw{WCONPROD}:
+January 2025, and thereby ensure that the well is fully defined when it is
+eventually opened with \kw{WCONPROD}:
 \begin{deck}
 ACTIONX
    'NEW_WELL/
@@ -261,8 +265,8 @@ TSTEP
 \end{deck}
 
 For \flow{} this creates problems because the entire \kw{SCHEDULE} section is
-parsed when the simulator starts, and then the well \kw{W1} is unknown in the
-\kw{WCONPROD} keyword. This is ``solved'' in the following way:
+parsed when the simulator starts, and at first pass the well \kw{W1} is unknown
+in the \kw{WCONPROD} keyword. This is ``solved'' in the following way:
 \begin{enumerate}
 \item At first pass we inspect the keywords inside the \actionx{} block and if
   we discover \kw{WELSPECS} we store the name of the well which will be defined
@@ -280,11 +284,11 @@ parsed when the simulator starts, and then the well \kw{W1} is unknown in the
   be the only trace of this well.
 \end{enumerate}
 It should be mentioned that the functionality with forward referencing of well
-names is quite new\footnote{In January 2022}, there might very well be well
-keywords in the \kw{SCHEDULE} section where the implementation is not yet
-prepared for this. Furthermore the forward referencing is not at all implemented
-for groups. The releavnt data structure is the member
-\inlinecode{Action::WGNames action\_wgnames} in the \inlinecode{Schedule} class.
+names is quite new\footnote{In January 2022}, there might be well keywords in
+the \kw{SCHEDULE} section where the implementation is not yet prepared for this.
+Furthermore the forward referencing is not at all implemented for groups. The
+relevant data structure is the member \inlinecode{Action::WGNames
+  action\_wgnames} in the \inlinecode{Schedule} class.
 
 
 \section{To enable a new keyword for \actionx}
@@ -297,20 +301,28 @@ just be to add the keyword to the \inlinecode{ActionX::valid\_keyword()} method
 and rebuild \flow{}, but experience has unfortunately shown that problems of
 various kinds have had a tendency to pop up when new keywords are tried out as
 \actionx{} keywords. Most commonly the problems have been in the interaction
-between the \inlinecode{Schedule} class in opm-common and the simulator.
+between the \inlinecode{Schedule} class in opm-common and the simulator - things
+have a tendency to go out of sync.
 
 
 \section{Running \actionx{} during simulation}
-At runtime the \actionx{} behavior consists of three distinct parts, taking
-place in the simulator, in opm-common and again in the simulator. The simulator
-will manage an instance of \inlinecode{Action::State} which will hold on to the
-time of last run and the latest results for the various actions.
+The first part of the \actionx{} treatment is parsing the keyword and conditions
+and assemble a syntax tree which can be used to evaluate the conditions. This
+parsing takes place when the \kw{SCHEDULE} section is parsed for the first time.
+This takes place fully within the realms of the opm-common codebase, and is
+quite mature.
+
+When the simulation actually runs the \actionx{} behavior consists of three
+distinct parts, taking place in the simulator, in opm-common and again in the
+simulator. The simulator will manage an instance of \inlinecode{Action::State}
+which will hold on to the time of last run and the latest results for the
+various actions.
 
 \subsection{Prepare and evaluate}
 As with \udq{} the \inlinecode{SummaryState} instance is the most important
 variable to provide context to the \actionx{} evaluation, i.e. the
 \inlinecode{SummaryState} variable must be evaluated before \actionx{}. In
-addition the \udq{} variable must be evaluated and available in the
+addition the \udq{} variables must be evaluated and available in the
 \inlinecode{SummaryState} instance before we invoke the \actionx{}
 functionality.
 
@@ -327,18 +339,18 @@ That function will add the keywords from the \actionx{} keyword to the
 through the \kw{SCHEDULE} section to the end of the simulation.
 
 This reiterate process will recreate all internal members in the
-\inlinecode{Schedule} class, i.e. if external scope was holding on to a
-reference to an internal \inlinecode{Schedule} datastructure that will be
-invalidated.
+\inlinecode{Schedule} class, i.e. if the simulator was holding on to a reference
+to an internal \inlinecode{Schedule} datastructure that will be invalidated.
 
 While recreating the \inlinecode{Schedule} instance there is some book keeping
 as to which datastructures need to be recalculated in the simulator as a
 consequence of the \actionx{}. That information is maintained in the data
-structure \inlinecode{Action::SimulatorUpdate}.
+structure \inlinecode{Action::SimulatorUpdate} which is returned back to the
+simulator.
 
 
 \subsection{Updating simulator data structures}
-The actionx implementation is in the module opm-common, whereas when the
+The \actionx{} implementation is in the module opm-common, whereas when the
 simulation is proceeding it is the simulator code which is clearly in control.
 If an action has evaluated to true and new keywords are injected in the Schedule
 object the complete simulator state is updated. This is complex, and many of the
@@ -350,17 +362,15 @@ group configuration only take place at report steps, and in between those the
 simulator ``owns'' the well and group data. Unfortunately this is no longer the
 case when \actionx{} is active, and depending on the keywords in the \actionx{}
 block we need to update the simulator data structures after \actionx{} has been
-evaluated to true. This is complex, and most of the bugs in the \actionx{}
-implementation have been in this interface. Some details of what is currently
-updated is decsribed in sections \ref{actionx_change_well} -
-\ref{actionx_welpi}. This update mechanism will probably need to be continously
-updated in the future.
+evaluated to true. Some details of what is currently updated is decsribed below.
+This update mechanism will probably need to be continously updated in the
+future.
 
 The simulator code makes \emph{copies} of many of the objects like wells and
 connections from the \inlinecode{Schedule} class, and also assembles many
-simulator specific data structures which to a large extent are assembled by
-copying information from the internals of the \inlinecode{Schedule} object. Some
-of the interaction between the simulator and the input layer could probably be
+simulator specific data structures which to a large extent consist of extracts
+of information from the internals of the \inlinecode{Schedule} object. Some of
+the interaction between the simulator and the input layer could probably be
 simplified if the simulator would call the \inlinecode{Schedule} object when
 e.g. a well or connection is needed, instead of storing references or copies to
 the \inlinecode{Schedule} objects internally.
@@ -372,12 +382,11 @@ There are currently three categories of changes that can take place due to
 \subsubsection{General changes in well status}
 \label{actionx_change_well}
 When there is well related keyword in the \actionx{} block - e.g. \kw{WELOPEN}
-to open or close a well or \kw{WCONPROD} to adjust rates the simulator must
-update it's internal data structures with the updated inut information. This
-will be communicated by flagging all the wells which need an update in the
+to open or close a well or \kw{WCONPROD} to adjust rates, the simulator is
+required update it's internal data structures with the updated input information.
+This will be communicated by flagging all the wells which need an update in the
 \inlinecode{Action::SimulatorUpdate} instance which is passed from the
 simulator.
-
 
 
 \subsubsection{Changes in geo properties}
@@ -417,8 +426,8 @@ As with the \udq{} keyword some of the structure and complexity of the
 restart. Regarding restart of \actionx{} related data:
 \begin{enumerate}
   \item The restart output contains the result of parsing an \actionx{}
-    condition in an intermediate representation, this is complex and might not
-    be 100\% correct.
+    condition in an intermediate representation which has been reverse
+    engineered, this is complex and might not be 100\% correct.
   \item When restarting \flow{} from an \eclipse{} formatted restart file the
     \actionx{} conditions are reparsed based on string data in the restart file
     and the intermediate representation mentioned in point 1 is not utilised.
