@@ -28,6 +28,8 @@ public:
     FuncType func_type;
     void add_child(const ASTNode& child);
     size_t size() const;
+    bool empty() const;
+
     std::string func;
     void required_summary(std::unordered_set<std::string>& required_summary) const;
 

@@ -89,6 +89,9 @@ size_t ASTNode::size() const {
     return this->children.size();
 }
 
+bool ASTNode::empty() const {
+    return this->size() == 0;
+}
 
 void ASTNode::add_child(const ASTNode& child) {
     this->children.push_back(child);
