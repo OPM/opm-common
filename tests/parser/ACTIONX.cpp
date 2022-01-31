@@ -227,6 +227,38 @@ COMPDAT
     BOOST_CHECK_NO_THROW( sched.applyAction(0, action1, {}, {}));
 }
 
+BOOST_AUTO_TEST_CASE(EMPTY) {
+
+    const auto EMPTY_ACTION = std::string{ R"(
+GRID
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
+SCHEDULE
+
+ACTIONX
+   'ACTION' /
+/
+
+ENDACTIO
+)"};
+
+    Schedule sched = make_schedule(EMPTY_ACTION);
+    Action::Result action_result(true);
+    const auto& action1 = sched[0].actions.get()["ACTION"];
+    Opm::SummaryState st(TimeService::now());
+    Opm::WListManager wlm;
+    Opm::Action::Context context(st, wlm);
+    BOOST_CHECK( !action1.eval(context) );
+}
+
 
 BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::SummaryState st(TimeService::now());

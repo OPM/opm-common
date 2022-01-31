@@ -265,7 +265,9 @@ Action::ASTNode Parser::parse_or() {
 
 Action::ASTNode Parser::parse(const std::vector<std::string>& tokens) {
     Parser parser(tokens);
-    parser.next();
+    auto start_node = parser.next();
+    if (start_node.type == TokenType::end)
+        return ASTNode( start_node.type );
 
     auto tree = parser.parse_or();
     auto current = parser.current();
