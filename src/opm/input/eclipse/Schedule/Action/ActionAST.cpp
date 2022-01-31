@@ -47,10 +47,10 @@ AST AST::serializeObject()
 }
 
 Action::Result AST::eval(const Action::Context& context) const {
-    if (this->condition)
-        return this->condition->eval(context);
-    else
+    if (!this->condition || this->condition->empty())
         return Action::Result(false);
+    else
+        return this->condition->eval(context);
 }
 
 

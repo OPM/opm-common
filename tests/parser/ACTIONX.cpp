@@ -227,6 +227,38 @@ COMPDAT
     BOOST_CHECK_NO_THROW( sched.applyAction(0, action1, {}, {}));
 }
 
+BOOST_AUTO_TEST_CASE(EMPTY) {
+
+    const auto EMPTY_ACTION = std::string{ R"(
+GRID
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
+SCHEDULE
+
+ACTIONX
+   'ACTION' /
+/
+
+ENDACTIO
+)"};
+
+    Schedule sched = make_schedule(EMPTY_ACTION);
+    Action::Result action_result(true);
+    const auto& action1 = sched[0].actions.get()["ACTION"];
+    Opm::SummaryState st(TimeService::now());
+    Opm::WListManager wlm;
+    Opm::Action::Context context(st, wlm);
+    BOOST_CHECK( !action1.eval(context) );
+}
+
 
 BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::SummaryState st(TimeService::now());
@@ -302,29 +334,6 @@ BOOST_AUTO_TEST_CASE(TestContext) {
 }
 
 
-
-Opm::Schedule make_action(const std::string& action_string) {
-    std::string start = std::string{ R"(
-SCHEDULE
-)"};
-    std::string end = std::string{ R"(
-ENDACTIO
-
-TSTEP
-   10 /
-)"};
-
-    std::string deck_string = start + action_string + end;
-    Opm::Parser parser;
-    auto deck = parser.parseString(deck_string);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid1(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    Runspec runspec(deck);
-
-    return Schedule(deck, grid1, fp, runspec, python);
-}
 
 
 BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
