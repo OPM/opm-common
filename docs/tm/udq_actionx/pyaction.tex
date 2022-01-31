@@ -50,16 +50,16 @@ perceived as a Python plugin. To really interact with the state of the \flow{}
 simulation the plugin needs to utilize the functionality which wraps the C++
 functionality, so for \pyaction{} both wrapping and embedding is at play.
 
-Exporting more functionality from C++ to Python is a quite simple and mechanical
-process, if you need a particular functionality which is already available in
-C++ also in Python it will probably be a quite limited effort for someone who is
-already familiar with the code.
+Exporting more functionality from C++ to Python in the form of new and updated
+wrappers is a quite simple and mechanical process. If you need a particular
+functionality which is already available in C++ also in Python it will probably
+be a quite limited effort for a developer who is already familiar with the code.
 
 
 \section{The \pyaction{} keyword}
 The \pyaction{} keyword is in the \kw{SCHEDULE} section like \actionx{}. The
 first record is the name of the action and a string identifier for how many
-times the action should run, then there is a path to Python module:
+times the action should run, then there is a path to a Python module:
 
 \begin{deck}
 PYACTION
@@ -96,7 +96,9 @@ the internal \inlinecode{sys.path} variable.
  
 \subsection{The different arguments}
 The \inlinecode{run()} function will be called with exactly five arguments which
-your implementation can use. The five arguments are:
+your implementation can use. These arguments point to datastructures in the
+simulator, and is the way to interact with the state of the simulation. The five
+arguments are:
 \begin{description}
 \item[\inlinecode{ecl\_state}:] An instance of the \inlinecode{Opm::EclipseState}
   class - this is a representation of \emph{all static properties} in the model,
@@ -126,7 +128,7 @@ your implementation can use. The five arguments are:
     for well in summary_state.wells:
         print(well)
 
-    # Assign all wells to list variable group_names
+    # Assign all group names to the variable group_names
     group_names = summary_state.groups
 
     # Sum the oil rate from all wells.
@@ -161,7 +163,9 @@ def diff(pair1, pair2):
 def fopr_diff2(summary_state):
     fopr = summary_state.get('FOPR')
     sim_time = summary_state.get('TIME')
-    fopr_series = state.get('fopr', [])
+    if not 'fopr' in state:
+        state['fopr'] = []
+    fopr_series = state['fopr']
     fopr_series.append( (sim_time, fopr) )
 
     if len(fopr_series) < 2:
@@ -238,8 +242,12 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
         actionx_callback('CLOSEWELLS', close_wells)
 \end{code}
 The implementation of this is quite complex with thread of execution going from
-C++ to Python and back to C++ again.
-
+C++ to Python, then invoking a callback to C++ which will call
+\inlinecode{Schedule::iterateScheduleSection()}, going back to Python to
+complete the \inlinecode{run()} method before the function pointers pops back to
+C++ and continues the simulator execution\footnote{This is documented in some
+detail as code comments of \inlinecode{Schedule::applyPyAction()} in the
+\path{Schedule.cpp} file.}.
 
 
 \section{Implementing \udq{} like behavior}
@@ -265,7 +273,9 @@ UDQ
 \end{deck}
 
 \subsection{Using \pyaction{} instead of \udq{} + \actionx{}}
-
+Towards the end of section \ref{actionx_structure} it is demonstrated how \udq{}
+and \actionx{} can be combined to implement an action in case a complicated
+condition applies. The same goal can be achivede using \pyaction{}.
 
 
 \subsection{Using \pyaction{} to report to the summary file}
@@ -348,3 +358,5 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
     shutil.rmtree('/')
 \end{code}
 
+If the user running \flow{} has different security credentials than the user
+submits the job, this has significant security implications.
