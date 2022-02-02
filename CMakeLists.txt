@@ -404,6 +404,12 @@ if (OPM_ENABLE_PYTHON)
     list(APPEND opm-common_PYTHON_LINKAGE "'${cjson_LIBRARIES}'")
   endif()
 
+  # opm-common_PYTHON_LINKAGE is used verbatim in a listin python.
+  # Hence items need to be comma separated.
+  if (opm-common_PYTHON_LINKAGE)
+    string(REPLACE ";" "," SETUP_PY_LINKAGE "${opm-common_PYTHON_LINKAGE}")
+  endif()
+
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
   file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
   execute_process(COMMAND ${Python3_EXECUTABLE} target_name.py

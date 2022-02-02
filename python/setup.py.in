@@ -70,7 +70,7 @@ ext_modules = [
         undef_macros=["NDEBUG"],
         include_dirs=[@SETUP_PY_PYBIND_INCLUDE_DIR@],
         extra_compile_args=['-std=c++17', '-fopenmp', @SETUP_PY_FMT_FLAGS@],
-        extra_link_args=['-fopenmp', @opm-common_PYTHON_LINKAGE@]
+        extra_link_args=['-fopenmp', @SETUP_PY_LINKAGE@]
     )
 ]
 
