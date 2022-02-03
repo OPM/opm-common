@@ -315,7 +315,9 @@ struct SummaryConfigContext {
 
     bool is_supported_region_to_region(const std::string& keyword)
     {
-        static const auto supported_kw = std::regex { R"(R[OGW]F[RT][-+GL]?)" };
+        static const auto supported_kw = std::regex {
+            R"~~(R[OGW]F[RT][-+GL_]?([A-Z0-9_]{3})?)~~"
+        };
 
         // R[OGW]F[RT][-+GL]? (e.g., "ROFTG", "RGFR+", or "RWFT")
         return std::regex_match(keyword, supported_kw);
@@ -323,7 +325,9 @@ struct SummaryConfigContext {
 
     bool is_unsupported_region_to_region(const std::string& keyword)
     {
-        static const auto unsupported_kw = std::regex { R"(R([EK]|NL)F[RT][-+]?)" };
+        static const auto unsupported_kw = std::regex {
+            R"~~(R([EK]|NL)F[RT][-+_]?([A-Z0-9_]{3})?)~~"
+        };
 
         // R[EK]F[RT][-+]? (e.g., "REFT" or "RKFR+")
         // RNLF[RT][-+]? (e.g., "RNLFR-" or "RNLFT")

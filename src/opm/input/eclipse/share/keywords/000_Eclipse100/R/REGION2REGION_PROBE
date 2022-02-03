@@ -3,15 +3,7 @@
   "sections": [
     "SUMMARY"
   ],
-  "deck_names": [
-    "ROFT",
-    "ROFTL",
-    "ROFTG",
-    "RGFT",
-    "RGFTL",
-    "RGFTG",
-    "RWFT"
-  ],
+  "deck_name_regex": "(R[OG]FT[GL]?|RWFT)(_?[A-Z0-9_]{3})?",
   "items": [
     {
       "name": "REGION1",
