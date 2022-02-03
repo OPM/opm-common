@@ -81,7 +81,7 @@ RUNSPEC
 DIMENS
  10 10 10 /
 REGDIMS
-  3/
+  3 3 /
 AQUDIMS
 4 4 1* 1* 3 200 1* 1* /
 GRID
@@ -119,6 +119,8 @@ FIPNUM
 200*1 300*2 500*3 /
 FIPREG
 200*10 300*20 500*30 /
+FIPXYZ
+200*2 300*3 500*1 /
 SOLUTION
 AQUCT
 1    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /
@@ -1484,6 +1486,55 @@ RHPV_REG
 
     // See comment on the roew() function in Summary.cpp for this uglyness.
     BOOST_CHECK(summary_config.hasKeyword("COPT"));
+}
+
+BOOST_AUTO_TEST_CASE(InterReg_Flows) {
+    const auto deck_string = std::string { R"(
+ROFT
+1 2 /
+/
+
+ROFTGXYZ
+1 2 /
+/
+
+RGFT_XYZ
+1 2 /
+/
+
+RWFR-XYZ
+1 3 /
+2 3 /
+/
+
+RGFR+XYZ
+1 3 /
+2 3 /
+/
+
+RGFTL
+2 3 /
+/
+)" };
+
+    const auto summary_config = createSummary(deck_string);
+
+    BOOST_CHECK_EQUAL(summary_config.size(), 8);
+    BOOST_CHECK(summary_config.hasKeyword("ROFT"));
+    BOOST_CHECK(summary_config.hasKeyword("ROFTGXYZ"));
+    BOOST_CHECK(summary_config.hasKeyword("RGFT_XYZ"));
+    BOOST_CHECK(summary_config.hasKeyword("RWFR-XYZ"));
+    BOOST_CHECK(summary_config.hasKeyword("RGFR+XYZ"));
+    BOOST_CHECK(summary_config.hasKeyword("RGFTL"));
+
+    const auto fip_regions_ireg = summary_config.fip_regions_interreg_flow();
+    const auto expect = std::vector<std::string> {
+        "FIPNUM", "FIPXYZ",
+    };
+
+    BOOST_CHECK_MESSAGE(std::is_permutation(fip_regions_ireg.begin(), fip_regions_ireg.end(),
+                                            expect.begin(), expect.end()),
+                        "Inter-regional arrays must match expected set");
 }
 
 BOOST_AUTO_TEST_CASE( WOPRL ) {

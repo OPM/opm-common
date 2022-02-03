@@ -1808,6 +1808,22 @@ std::set<std::string> SummaryConfig::fip_regions() const {
     return reg_set;
 }
 
+std::set<std::string> SummaryConfig::fip_regions_interreg_flow() const
+{
+    using Category = EclIO::SummaryNode::Category;
+
+    auto reg_set = std::set<std::string>{};
+
+    for (const auto& node : this->m_keywords) {
+        if ((node.category() == Category::Region) &&
+            is_region_to_region(node.keyword()))
+        {
+            reg_set.insert(node.fip_region());
+        }
+    }
+
+    return reg_set;
+}
 
 bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
     return this->m_keywords == data.m_keywords &&

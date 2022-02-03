@@ -198,6 +198,7 @@ namespace Opm {
             */
             bool require3DField( const std::string& keyword) const;
             std::set<std::string> fip_regions() const;
+            std::set<std::string> fip_regions_interreg_flow() const;
             std::unordered_set<std::string> wbp_wells() const;
 
             bool operator==(const SummaryConfig& data) const;
