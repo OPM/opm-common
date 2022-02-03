@@ -2103,6 +2103,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
   {"NLINSMIN" , Opm::UnitSystem::measure::identity },
   {"NLINSMAX" , Opm::UnitSystem::measure::identity },
   {"MLINEARS" , Opm::UnitSystem::measure::identity },
+  {"NLINEARS" , Opm::UnitSystem::measure::identity },
   {"MSUMLINS" , Opm::UnitSystem::measure::identity },
   {"MSUMNEWT" , Opm::UnitSystem::measure::identity },
   {"TCPUTS"   , Opm::UnitSystem::measure::identity },
