@@ -10,14 +10,6 @@ import os
 import re
 import subprocess
 
-class custom_build_ext(build_ext):
-    def build_extensions(self):
-        # Make sure that ccache is not in self.compiler.compiler_cxx
-        # as self.compiler.compiler_cxx[0] will be used as
-        # linker command for c++ and that should not be ccache
-        self.compiler.compiler_cxx[0]="@CMAKE_CXX_COMPILER@"
-        build_ext.build_extensions(self)
-
 try:
     from importlib.machinery import EXTENSION_SUFFIXES
     suffix = EXTENSION_SUFFIXES[0]
@@ -28,16 +20,18 @@ setupdir = os.path.dirname(__file__)
 if setupdir != '':
   os.chdir( setupdir )
 
-cc = "@CMAKE_C_COMPILER@"
-cxx = "@CMAKE_CXX_COMPILER@"
+cc = "@CMAKE_CXX_COMPILER@"
+# setuptools will use the first path as the linker.
+# This should not be ccache as this will fail.
+# CXX is used for linking and CC for compilation
+os.environ['CXX'] = cc
+
 try:
     subprocess.call(['ccache', '--version'])
     os.environ['CC'] = 'ccache {}'.format(cc)
-    os.environ['CXX'] = 'ccache {}'.format(cxx)
     print("Using 'ccache {}' as compiler".format(cc))
 except OSError as e:
     os.environ['CC'] = cc
-    os.environ['CXX'] = cxx
     print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
 
 # This is very hacky but so is the entire setup.py buildsystem.
@@ -120,5 +114,4 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
-    cmdclass={"build_ext": custom_build_ext},
 )
