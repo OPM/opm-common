@@ -9,6 +9,7 @@ import glob
 import os
 import re
 import subprocess
+
 try:
     from importlib.machinery import EXTENSION_SUFFIXES
     suffix = EXTENSION_SUFFIXES[0]
@@ -20,6 +21,11 @@ if setupdir != '':
   os.chdir( setupdir )
 
 cc = "@CMAKE_CXX_COMPILER@"
+# setuptools will use the first path as the linker.
+# This should not be ccache as this will fail.
+# CXX is used for linking and CC for compilation
+os.environ['CXX'] = cc
+
 try:
     subprocess.call(['ccache', '--version'])
     os.environ['CC'] = 'ccache {}'.format(cc)
