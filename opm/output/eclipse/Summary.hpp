@@ -15,15 +15,18 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_OUTPUT_SUMMARY_HPP
 #define OPM_OUTPUT_SUMMARY_HPP
 
-#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/output/data/Aquifer.hpp>
+#include <opm/output/data/InterRegFlowMap.hpp>
 
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
+
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
@@ -43,6 +46,7 @@ namespace Opm {
 namespace Opm { namespace data {
     class Wells;
     class GroupAndNetworkValues;
+    class InterRegFlowMap;
 }} // namespace Opm::data
 
 namespace Opm { namespace out {
@@ -52,14 +56,14 @@ public:
     using GlobalProcessParameters = std::map<std::string, double>;
     using RegionParameters = std::map<std::string, std::vector<double>>;
     using BlockValues = std::map<std::pair<std::string, int>, double>;
+    using InterRegFlowValues = std::unordered_map<std::string, data::InterRegFlowMap>;
 
     Summary(const EclipseState&  es,
             const SummaryConfig& sumcfg,
             const EclipseGrid&   grid,
             const Schedule&      sched,
             const std::string&   basename = "",
-            const bool& writeEsmry = false
-           );
+            const bool           writeEsmry = false);
 
     ~Summary();
 
@@ -76,7 +80,8 @@ public:
               const PAvgCalculatorCollection&    ,
               const RegionParameters&            region_values = {},
               const BlockValues&                 block_values  = {},
-              const data::Aquifers&              aquifers_values = {}) const;
+              const data::Aquifers&              aquifers_values = {},
+              const InterRegFlowValues&          interreg_flows = {}) const;
 
     void write() const;
 

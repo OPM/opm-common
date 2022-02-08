@@ -62,7 +62,6 @@
 #include <opm/output/eclipse/Inplace.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
-#include <fmt/format.h>
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -85,6 +84,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <fmt/format.h>
 
 namespace {
     struct ParamCTorArgs
@@ -2457,6 +2458,7 @@ namespace Evaluator {
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
         const Opm::data::Aquifers& aquifers;
+        const std::unordered_map<std::string, Opm::data::InterRegFlowMap>& ireg;
     };
 
     class Base
@@ -3304,12 +3306,10 @@ void validateElapsedTime(const double             secs_elapsed,
     const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
 
     throw std::invalid_argument {
-        "Elapsed time ("
-            + std::to_string(elapsed) + ' ' + unt
-            + ") must not precede previous elapsed time ("
-            + std::to_string(prev_el) + ' ' + unt
-            + "). Incorrect restart time?"
-            };
+        fmt::format("Elapsed time ({} {}) "
+                    "must not precede previous elapsed time ({} {}). "
+                    "Incorrect restart time?", elapsed, unt, prev_el, unt)
+    };
 }
 
 } // Anonymous namespace
@@ -3322,8 +3322,7 @@ public:
                                    const EclipseGrid&   grid,
                                    const Schedule&      sched,
                                    const std::string&   basename,
-                                   const bool writeEsmry
-                                  );
+                                   const bool           writeEsmry);
 
     SummaryImplementation(const SummaryImplementation& rhs) = delete;
     SummaryImplementation(SummaryImplementation&& rhs) = default;
@@ -3332,7 +3331,7 @@ public:
 
     void eval(const int                          sim_step,
               const double                       secs_elapsed,
-              const data::Wells&             well_solution,
+              const data::Wells&                 well_solution,
               const data::GroupAndNetworkValues& grp_nwrk_solution,
               GlobalProcessParameters&           single_values,
               const Inplace&                     initial_inplace,
@@ -3340,6 +3339,7 @@ public:
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
               const data::Aquifers&              aquifer_values,
+              const InterRegFlowValues&          interreg_flows,
               SummaryState&                      st) const;
 
     void internal_store(const SummaryState& st, const int report_step, bool isSubstep);
@@ -3415,8 +3415,7 @@ SummaryImplementation(const EclipseState&  es,
                       const EclipseGrid&   grid,
                       const Schedule&      sched,
                       const std::string&   basename,
-                      const bool writeEsmry
-                     )
+                      const bool           writeEsmry)
     : grid_          (std::cref(grid))
     , es_            (std::cref(es))
     , sched_         (std::cref(sched))
@@ -3503,6 +3502,7 @@ eval(const int                          sim_step,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
      const data::Aquifers&              aquifer_values,
+     const InterRegFlowValues&          interreg_flows,
      Opm::SummaryState&                 st) const
 {
     validateElapsedTime(secs_elapsed, this->es_, st);
@@ -3516,7 +3516,8 @@ eval(const int                          sim_step,
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, grp_nwrk_solution, single_values, inplace, region_values, block_values, aquifer_values
+        well_solution, grp_nwrk_solution, single_values, inplace,
+        region_values, block_values, aquifer_values, interreg_flows
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -3939,15 +3940,14 @@ Summary::Summary(const EclipseState&  es,
                  const EclipseGrid&   grid,
                  const Schedule&      sched,
                  const std::string&   basename,
-                 const bool& writeEsmry
-                )
+                 const bool           writeEsmry)
     : pImpl_(new SummaryImplementation(es, sumcfg, grid, sched, basename, writeEsmry))
 {}
 
 void Summary::eval(SummaryState&                      st,
                    const int                          report_step,
                    const double                       secs_elapsed,
-                   const data::Wells&             well_solution,
+                   const data::Wells&                 well_solution,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
                    const Inplace&                     initial_inplace,
@@ -3955,7 +3955,8 @@ void Summary::eval(SummaryState&                      st,
                    const PAvgCalculatorCollection&    ,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
-                   const Opm::data::Aquifers&         aquifer_values) const
+                   const Opm::data::Aquifers&         aquifer_values,
+                   const InterRegFlowValues&          interreg_flows) const
 {
     // Report_step is the one-based sequence number of the containing report.
     // Report_step = 0 for the initial condition, before simulation starts.
@@ -3966,12 +3967,13 @@ void Summary::eval(SummaryState&                      st,
     // Sim_step is the timestep which has been effective in the simulator,
     // and as such is the value necessary to use when looking up active
     // wells, groups, connections &c in the Schedule object.
-    const auto sim_step = std::max( 0, report_step - 1 );
+    const auto sim_step = std::max(0, report_step - 1);
 
     this->pImpl_->eval(sim_step, secs_elapsed,
                        well_solution, grp_nwrk_solution, single_values,
                        initial_inplace, inplace,
-                       region_values, block_values, aquifer_values, st);
+                       region_values, block_values,
+                       aquifer_values, interreg_flows, st);
 }
 
 PAvgCalculatorCollection
