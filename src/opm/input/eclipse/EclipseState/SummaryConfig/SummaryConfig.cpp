@@ -315,7 +315,9 @@ struct SummaryConfigContext {
 
     bool is_supported_region_to_region(const std::string& keyword)
     {
-        static const auto supported_kw = std::regex { R"(R[OGW]F[RT][-+GL]?)" };
+        static const auto supported_kw = std::regex {
+            R"~~(R[OGW]F[RT][-+GL_]?([A-Z0-9_]{3})?)~~"
+        };
 
         // R[OGW]F[RT][-+GL]? (e.g., "ROFTG", "RGFR+", or "RWFT")
         return std::regex_match(keyword, supported_kw);
@@ -323,7 +325,9 @@ struct SummaryConfigContext {
 
     bool is_unsupported_region_to_region(const std::string& keyword)
     {
-        static const auto unsupported_kw = std::regex { R"(R([EK]|NL)F[RT][-+]?)" };
+        static const auto unsupported_kw = std::regex {
+            R"~~(R([EK]|NL)F[RT][-+_]?([A-Z0-9_]{3})?)~~"
+        };
 
         // R[EK]F[RT][-+]? (e.g., "REFT" or "RKFR+")
         // RNLF[RT][-+]? (e.g., "RNLFR-" or "RNLFT")
@@ -1804,6 +1808,22 @@ std::set<std::string> SummaryConfig::fip_regions() const {
     return reg_set;
 }
 
+std::set<std::string> SummaryConfig::fip_regions_interreg_flow() const
+{
+    using Category = EclIO::SummaryNode::Category;
+
+    auto reg_set = std::set<std::string>{};
+
+    for (const auto& node : this->m_keywords) {
+        if ((node.category() == Category::Region) &&
+            is_region_to_region(node.keyword()))
+        {
+            reg_set.insert(node.fip_region());
+        }
+    }
+
+    return reg_set;
+}
 
 bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
     return this->m_keywords == data.m_keywords &&
