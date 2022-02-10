@@ -51,6 +51,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
@@ -1247,6 +1248,14 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             return false;
     }
 
+    bool EclipseGrid::hasLgrKeywords(const Deck& deck) {
+        if (deck.hasKeyword<ParserKeywords::CARFIN>() &&
+            deck.hasKeyword<ParserKeywords::ENDFIN>())
+            return true;
+        else
+            return false;
+    }
+
     void EclipseGrid::assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& vectorName) {
         if (vector.size() != expectedSize)
             throw std::invalid_argument("Wrong size for keyword: " + vectorName + ". Expected: " + std::to_string(expectedSize) + " got: " + std::to_string(vector.size()));
@@ -1930,6 +1939,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             throw std::invalid_argument("Out of range");
 
         return 6*( i + j*(this->nx + 1) ) +  layer * 3 + dim;
+    }
+
+      Lgr::Lgr(const Deck& deck)
+    {
     }
 }
 

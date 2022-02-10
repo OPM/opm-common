@@ -127,6 +127,7 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         , m_eclipseConfig(     deck )
         , m_deckUnitSystem(    deck.getActiveUnitSystem() )
         , m_inputGrid(         deck, nullptr )
+        , m_inputLgr (         deck )
         , m_inputNnc(          m_inputGrid, deck)
         , m_gridDims(          deck )
         , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables)
@@ -191,6 +192,10 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
 
     const EclipseGrid& EclipseState::getInputGrid() const {
         return m_inputGrid;
+    }
+
+    const Lgr& EclipseState::getInputLgr() const {
+        return m_inputLgr;
     }
 
 

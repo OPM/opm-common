@@ -91,6 +91,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/setKeywordBox.cpp
     src/opm/parser/eclipse/EclipseState/Grid/TranCalculator.cpp
     src/opm/parser/eclipse/EclipseState/Grid/TransMult.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/Carfin.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/Equil.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/InitConfig.cpp
@@ -692,6 +693,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp
        opm/parser/eclipse/EclipseState/Grid/MapAxes.hpp
        opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp
+       opm/parser/eclipse/EclipseState/Grid/Carfin.hpp
        opm/parser/eclipse/EclipseState/EndpointScaling.hpp
        opm/parser/eclipse/EclipseState/TracerConfig.hpp
        opm/parser/eclipse/EclipseState/MICPpara.hpp

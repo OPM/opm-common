@@ -2970,4 +2970,46 @@ BOOST_AUTO_TEST_CASE(GDFILE_NO_ACTNUM) {
     BOOST_CHECK_NO_THROW( Opm::EclipseState{deck} );
 }
 
+/* static Deck createDeckCarfinOpts() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "DX\n"
+        "1000*0.25 /\n"
+        "DY\n"
+        "1000*0.25 /\n"
+        "DZ\n"
+        "1000*0.25 /\n"
+        "TOPS\n"
+        "100*0.25 /\n"
+        "CARFIN"
+        "'LGR1'  5  6  5  6  1  3  6  6  9 /\n"
+        "ENDFIN \n";
 
+    Parser parser;
+    return parser.parseString(deckData) ;
+}
+
+BOOST_AUTO_TEST_CASE(GetCarfin) {
+    auto deck = createDeckCarfinOpts();
+    EclipseState state( deck );
+    const auto& carfin = state.getCarfin();
+
+    BOOST_CHECK( carfin.hasCarfin( "LGR1" ) );
+  
+    const auto& LGR1 = carfin.getCarfin( "LGR1" );
+
+    BOOST_CHECK_EQUAL( 5, LGR1.getI1() );
+    BOOST_CHECK_EQUAL( 6, LGR1.getI2() );
+    BOOST_CHECK_EQUAL( 5, LGR1.getJ1() );
+    BOOST_CHECK_EQUAL( 6, LGR1.getJ2() );
+    BOOST_CHECK_EQUAL( 1, LGR1.getK1() );
+    BOOST_CHECK_EQUAL( 3, LGR1.getK2() );
+    BOOST_CHECK_EQUAL( 6, LGR1.getNX() );
+    BOOST_CHECK_EQUAL( 6, LGR1.getNY() );
+    BOOST_CHECK_EQUAL( 9, LGR1.getNZ() );
+}
+ */

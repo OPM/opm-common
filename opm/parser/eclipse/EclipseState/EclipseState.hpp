@@ -74,6 +74,8 @@ namespace Opm {
         const SimulationConfig& getSimulationConfig() const;
         virtual const EclipseGrid& getInputGrid() const;
 
+        virtual const Lgr& getInputLgr() const;
+
         const FaultCollection& getFaults() const;
         const TransMult& getTransMult() const;
         TransMult& getTransMult();
@@ -152,6 +154,7 @@ namespace Opm {
         EclipseConfig m_eclipseConfig;
         UnitSystem m_deckUnitSystem;
         EclipseGrid m_inputGrid;
+        Lgr m_inputLgr;
         NNC m_inputNnc;
         GridDims m_gridDims;
         FieldPropsManager field_props;

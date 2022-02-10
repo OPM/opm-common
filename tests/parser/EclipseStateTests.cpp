@@ -489,4 +489,3 @@ BOOST_AUTO_TEST_CASE(TestBox) {
     EclipseState state(deck);
 
 }
-

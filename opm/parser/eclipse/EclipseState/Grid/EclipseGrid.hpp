@@ -119,6 +119,8 @@ namespace Opm {
         MinpvMode::ModeEnum getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;
 
+        static bool hasLgrKeywords(const Deck&);
+
         /*
           Will return a vector of nactive elements. The method will
           behave differently depending on the lenght of the
@@ -326,6 +328,12 @@ namespace Opm {
         std::array<size_t,3> dims;
         std::array<size_t,3> stride;
         std::array<size_t,8> cell_shift;
+    };
+
+    class Lgr {
+    public:
+        Lgr(const Deck& deck);
+
     };
 }
 
