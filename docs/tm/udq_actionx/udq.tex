@@ -86,12 +86,13 @@ input order and whether a certain \udq{} symbol is now a \kw{ASSIGN} or
 statements take effect at input time, making the newly defined symbol
 immediately available for reuse in a subsequent defintion. This is utilized in
 the \udq{} keyword above where the symbol \kw{FU1} is referenced in the
-defintion of \kw{FU2}. As used in this example the \kw{ASSIGN FU 100} can be
+defintion of \kw{FU2}. As used in this example the \kw{ASSIGN FU1 100} can be
 seen as a \emph{forward reference}. When we have completed the first timestep
-and it is time evalute the \udq{} expressions they will be evaluated in order
-\{\kw{FU1}, \kw{FU2}\}, at this stage the active definition of \kw{FU1} is
-\inlinecode{FU1 = FWPR}, i.e. the value \inlinecode{100} from the initial
-definition \inlinecode{FU1 = 100} is actually never dereferenced.
+and it is time to evalute the \udq{} expressions they will be evaluated in order
+of \emph{first appearance}, i.e. \{\kw{FU1}, \kw{FU2}\}. At this stage the
+active definition of \kw{FU1} is \inlinecode{FU1 = FWPR}, i.e. the value
+\inlinecode{100} from the initial definition \inlinecode{FU1 = 100} is never
+actually used.
 
 \section{Different types of \udq{} - field, group and well}
 The \udq{} keywords can be of different types, \flow{} supports \emph{field},
@@ -379,12 +380,14 @@ There are a list of functions \kw{Uxxx} which operate on the union of the values
 found in the two sets, i.e. a result is assigned if at at least one set has
 defined value for this well/group.
 \begin{description}
-\item[UADD] Will add the items from the two sets, if only one value is defined
-  the function will behave as if the other is equal to zero.
+\item[UADD] Will add the items from the two sets.
 \item[UMUL] Will multiply the items from the two sets.
 \item[UMAX] The maximum value from the two sets.
 \item[UMIN] The minumum value from the two sets.
 \end{description}
+In the case where only one of the sets has a defined value the operation will be
+performed \emph{as if} the function \kw{Uxxx} is the identity function.
+
 
 As an example consider the two sets:
 \begin{code}
@@ -518,7 +521,7 @@ able to output restart files in \eclipse{} format.
 
 \subsection*{\inlinecode{UDQDefine} and \inlinecode{UDQASTNode}}
 The \inlinecode{UDQDefine} manages a parsed \udq{} expresssion along with a
-chunck of metadata. The parsed \udq{} expression is in managed in an instance of
+chunck of metadata. The parsed \udq{} expression is managed in an instance of
 \inlinecode{UDQASTNode}. The \inlinecode{UDQASTNode} contains a parsed tree
 representation of the \udq{} input expression. The parsing of \udq{} expressions
 happens at input time, and for the rest of the simulation the
