@@ -117,7 +117,7 @@ arguments are:
   \ref{pyaction_actionx}).
 \item[\inlinecode{report\_step}:] This is an integer for the report step we
   are currently working on. Observe that the \pyaction{} is called for every
-  simulator timestep, i.e. it will typically be called multiple time with
+  simulator timestep, i.e. it will typically be called multiple times with
   the same value for the $\mathrm{report\_step}$ argument.
 \item[\inlinecode{summary\_state}:] An instance of the
   \inlinecode{Opm::SummaryState} class, this is where the current summary
@@ -151,14 +151,14 @@ arguments are:
 \subsection{Holding state}
 The \pyaction{} keywords will often be invoked multiple times, a Python
 dictionary \inlinecode{state} has been injected in the module - that dictionary
-can be used to maintain state between invocations. Let ut assume we want to
+can be used to maintain state between invocations. Let us assume we want to
 detect when the field oil production starts curving down - i.e. when
 $\partial^2_{t} \mathrm{FOPR} < 0$, in order to calculate that we need to keep
 track of the timesteps and the $\mathrm{FOPR}$ as function of time - this is one
 possible implementation:
 \begin{code}
 def diff(pair1, pair2):
-    return (pair1[0] - pair2[0], pair1[1] - pair12[1])   
+    return (pair1[0] - pair2[0], pair1[1] - pair2[1])   
 
 def fopr_diff2(summary_state):
     fopr = summary_state.get('FOPR')
@@ -201,10 +201,11 @@ function calls like
 \end{code}
 to close a well and set the oil rate of another well. Unfortunately it proved
 very complex to get good semantics for combining such runtime changes with the
-keyword based model for \kw{SCHEDULE} section, so the current recommendation is
-actually to apply the keywords from \kw{ACTIONX} from the Python module when a
-change to the \kw{SCHEDULE} section is desired\footnote{Yes, from a programmers
-point of view this is a very unsatisfactory solution, but it seems to work.
+keyword based model for \kw{SCHEDULE} section. The current recommendation is to
+apply changes to the \kw{SCHEDULE} section using callbacks to \kw{ACTIONX}
+keywords from Python code, this is illustrated in the example
+below\footnote{From a programmers point of view the solution seems very
+unsatisfactory, but it works and it plays nicely with the \kw{ACTIONX} behavior.
 If/when the underlying \inlinecode{Schedule} implementation changes there is
 nothing per se in the \pyaction{} design which inhibits use of a better
 \inlinecode{Schedule} api in the future.}.
@@ -361,7 +362,7 @@ UDQ
 ...
 ...
 -- Need to define a well list with all the production wells.
--- This is to ensur that the WCONPROD keyword is only applied
+-- This is to ensure that the WCONPROD keyword is only applied
 -- to producers.
 WLIST
   'PROD'  P1 P2 P3 .../
@@ -388,7 +389,7 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
 \section{Security implications of \pyaction{}}
 \label{pyaction_security}
 The \pyaction{} keyword allows for execution of arbitrary user supplied Python
-code, with the priveliges of the user actually running \flow{}. If you have a
+code, with the priviliges of the user actually running \flow{}. If you have a
 setup where \flow{} runs with a different user account than the person
 submitting the simulation you should be \emph{very careful} about enabling the
 embedded Python functionality and the \pyaction{} keyword. As a scary example

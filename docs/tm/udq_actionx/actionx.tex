@@ -210,7 +210,9 @@ processed content of the \inlinecode{Schedule} class is managed in vector of
 \inlinecode{ScheduleState} instances, where one \inlinecode{ScheduleState}
 represents the complete dynamic input state at a particular report step. The
 processed \kw{SCHEDULE} code is created with the method
-\inlinecode{Schedule::iterateScheduleSection()}.
+\begin{code}
+  Schedule::iterateScheduleSection().
+\end{code}
 
 When \inlinecode{Schedule::iterateScheduleSection(report\_step)} is called it
 starts by clearing the vector of \inlinecode{ScheduleState} instances from
@@ -233,7 +235,7 @@ unconditionally referenced in the deck we get a challenge at the first pass
 through the \kw{SCHEDULE} section. In the example below a new well \kw{W1} is
 defined with the \kw{WELSPECS} keyword when the action \inlinecode{NEW\_WELL}
 evaluates to true. At 1.st of January 2025 the well \kw{W1} is opened with the
-\kw{WCONPROD} keyword. The enginer making this model assumes that the
+\kw{WCONPROD} keyword. The engineer making this model assumes that the
 \inlinecode{NEW\_WELL} action will evaluate to true sometime before 1.st of
 January 2025, and thereby ensure that the well is fully defined when it is
 eventually opened with \kw{WCONPROD}:
