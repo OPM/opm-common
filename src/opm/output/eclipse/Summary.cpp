@@ -51,6 +51,7 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/ExtSmryOutput.hpp>
@@ -2141,6 +2142,36 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_u
   {"RRPV"     , Opm::UnitSystem::measure::geometric_volume }
 };
 
+static const auto interregion_units =
+    std::unordered_map<std::string, Opm::UnitSystem::measure>
+{
+    // Flow rates (surface volume)
+    { "ROFR"  , Opm::UnitSystem::measure::liquid_surface_rate },
+    { "ROFR+" , Opm::UnitSystem::measure::liquid_surface_rate },
+    { "ROFR-" , Opm::UnitSystem::measure::liquid_surface_rate },
+    { "RGFR"  , Opm::UnitSystem::measure::gas_surface_rate    },
+    { "RGFR+" , Opm::UnitSystem::measure::gas_surface_rate    },
+    { "RGFR-" , Opm::UnitSystem::measure::gas_surface_rate    },
+    { "RWFR"  , Opm::UnitSystem::measure::liquid_surface_rate },
+    { "RWFR+" , Opm::UnitSystem::measure::liquid_surface_rate },
+    { "RWFR-" , Opm::UnitSystem::measure::liquid_surface_rate },
+
+    // Cumulatives (surface volume)
+    { "ROFT"  , Opm::UnitSystem::measure::liquid_surface_volume },
+    { "ROFT+" , Opm::UnitSystem::measure::liquid_surface_volume },
+    { "ROFT-" , Opm::UnitSystem::measure::liquid_surface_volume },
+    { "ROFTG" , Opm::UnitSystem::measure::liquid_surface_volume },
+    { "ROFTL" , Opm::UnitSystem::measure::liquid_surface_volume },
+    { "RGFT"  , Opm::UnitSystem::measure::gas_surface_volume    },
+    { "RGFT+" , Opm::UnitSystem::measure::gas_surface_volume    },
+    { "RGFT-" , Opm::UnitSystem::measure::gas_surface_volume    },
+    { "RGFTG" , Opm::UnitSystem::measure::gas_surface_volume    },
+    { "RGFTL" , Opm::UnitSystem::measure::gas_surface_volume    },
+    { "RWFT"  , Opm::UnitSystem::measure::liquid_surface_volume },
+    { "RWFT+" , Opm::UnitSystem::measure::liquid_surface_volume },
+    { "RWFT-" , Opm::UnitSystem::measure::liquid_surface_volume },
+};
+
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_units = {
   {"BPR"        , Opm::UnitSystem::measure::pressure},
   {"BRPV"     , Opm::UnitSystem::measure::volume },
@@ -2642,6 +2673,199 @@ namespace Evaluator {
         }
     };
 
+    class InterRegionValue : public Base
+    {
+    public:
+        explicit InterRegionValue(const Opm::EclIO::SummaryNode& node,
+                                  const Opm::UnitSystem::measure m)
+            : node_   (node)
+            , m_      (m)
+            , regname_(node_.fip_region.has_value()
+                       ? node_.fip_region.value()
+                       : std::string{ "FIPNUM" })
+        {
+            this->analyzeKeyword();
+        }
+
+        void update(const std::size_t    /* sim_step */,
+                    const double            stepSize,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            if (this->component_ == Component::NumComponents) {
+                return;
+            }
+
+            auto flows = simRes.ireg.find(this->regname_);
+            if (flows == simRes.ireg.end()) {
+                return;
+            }
+
+            auto flow = flows->second.getInterRegFlows(this->r1_, this->r2_);
+            if (! flow.has_value()) {
+                return;
+            }
+
+            const auto& usys = input.es.getUnits();
+            const auto  val  = this->getValue(flow->first, flow->second, stepSize);
+
+            updateValue(this->node_, usys.from_si(this->m_, val), st);
+        }
+
+    private:
+        using RateWindow = Opm::data::InterRegFlowMap::ReadOnlyWindow;
+        using Component  = RateWindow::Component;
+        using Direction  = RateWindow::Direction;
+
+        Opm::EclIO::SummaryNode node_;
+        Opm::UnitSystem::measure m_;
+        std::string regname_{};
+
+        Component component_{ Component::NumComponents };
+        Component subtract_ { Component::NumComponents };
+        Direction direction_{ Direction::Positive };
+        bool useDirection_{ false };
+        bool isCumulative_{ false };
+        int r1_{ -1 };
+        int r2_{ -1 };
+
+        void analyzeKeyword()
+        {
+            // Valid keywords are
+            //
+            // - R[OGW]F[TR]
+            //     Basic oil/gas/water flow rates and cumulatives.  FIPNUM
+            //     region set.
+            //
+            // - R[OGW]F[TR][-+]
+            //     Directional versions of basic oil/gas/water flow rates
+            //     and cumulatives.  FIPNUM region set.
+            //
+            // - R[OG]F[TR][GL]
+            //     Flow rates and cumulatives of free oil (ROF[TR]L),
+            //     vaporised oil (ROF[TR]G), free gas (RGF[TR]G), and gas
+            //     dissolved in liquid (RGF[TR]L).  FIPNUM region set.
+            //
+            // - R[OGW]F[TR]_[A-Z0-9]{3}
+            //     Basic oil/gas/water flow rates and cumulatives.  User
+            //     defined region set (FIP* keyword).
+            //
+            // - R[OGW]F[TR][-+][A-Z0-9]{3}
+            //     Directional versions of basic oil/gas/water flow rates
+            //     and cumulatives.  User defined region set (FIP* keyword).
+            //
+            // - R[OG]F[TR][GL][A-Z0-9]{3}
+            //     Flow rates and cumulatives of free oil (ROF[TR]L),
+            //     vaporised oil (ROF[TR]G), free gas (RGF[TR]G), and gas
+            //     dissolved in liquid (RGF[TR]L).  User defined region set
+            //     (FIP* keyword).
+            //
+            // We don't need a full keyword verification here, only to
+            // extract the pertinent keyword pieces, because the input
+            // keyword validity is enforced at the parser level.  See json
+            // descriptions REGION2REGION_PROBE and REGION2REGION_PROBE_E300
+            // in input/eclipse/share/keywords.
+            //
+            // Note that we explicitly disregard the region set name here as
+            // this name does not influence the interpretation of the
+            // summary vector keyword-only the definition of the individual
+            // regions.
+
+            static const auto pattern = std::regex {
+                R"~~(R([OGW])F([RT])([-+GL]?)(?:_?[A-Z0-9_]{3})?)~~"
+            };
+
+            auto keywordPieces = std::smatch {};
+            if (std::regex_match(this->node_.keyword, keywordPieces, pattern)) {
+                this->identifyComponent(keywordPieces);
+                this->identifyDirection(keywordPieces);
+                this->identifyCumulative(keywordPieces);
+                this->assignRegionIDs();
+            }
+        }
+
+        double getValue(const RateWindow& iregFlow,
+                        const double      sign,
+                        const double      stepSize) const
+        {
+            const auto prim = this->useDirection_
+                ? iregFlow.flow(this->component_, this->direction_)
+                : iregFlow.flow(this->component_);
+
+            const auto sub = (this->subtract_ == Component::NumComponents)
+                ? 0.0 : iregFlow.flow(this->subtract_);
+
+            const auto val = sign * (prim - sub);
+
+            return this->isCumulative_
+                ? stepSize * val
+                : val;
+        }
+
+        void assignRegionIDs()
+        {
+            const auto& [r1, r2] =
+                Opm::EclIO::splitSummaryNumber(this->node_.number);
+
+            this->r1_ = r1 - 1;
+            this->r2_ = r2 - 1;
+        }
+
+        void identifyComponent(const std::smatch& keywordPieces)
+        {
+            const auto main = keywordPieces[1].str();
+
+            if (main == "O") {
+                this->component_ = (keywordPieces[3].str() == "G")
+                    ? Component::Vapoil
+                    : Component::Oil;
+
+                if (keywordPieces[3].str() == "L") {
+                    // Free oil = "oil - vapoil"
+                    this->subtract_ = Component::Vapoil;
+                }
+            }
+            else if (main == "G") {
+                this->component_ = (keywordPieces[3].str() == "L")
+                    ? Component::Disgas
+                    : Component::Gas;
+
+                if (keywordPieces[3].str() == "G") {
+                    // Free gas = "gas - disgas"
+                    this->subtract_ = Component::Disgas;
+                }
+            }
+            else if (main == "W") {
+                this->component_ = Component::Water;
+            }
+        }
+
+        void identifyDirection(const std::smatch& keywordPieces)
+        {
+            if (keywordPieces.length(3) == std::smatch::difference_type{0}) {
+                return;
+            }
+
+            const auto dir = keywordPieces[3].str();
+
+            this->useDirection_ = (dir == "+") || (dir == "-");
+
+            if (dir == "-") {
+                this->direction_ = Direction::Negative;
+            }
+        }
+
+        void identifyCumulative(const std::smatch& keywordPieces)
+        {
+            assert (keywordPieces.length(2) != std::smatch::difference_type{0});
+
+            const auto type = keywordPieces[2].str();
+
+            this->isCumulative_ = type == "T";
+        }
+    };
+
     class GlobalProcessValue : public Base
     {
     public:
@@ -2841,6 +3065,7 @@ namespace Evaluator {
         Descriptor blockValue();
         Descriptor aquiferValue();
         Descriptor regionValue();
+        Descriptor interRegionValue();
         Descriptor globalProcessValue();
         Descriptor userDefinedValue();
         Descriptor unknownParameter();
@@ -2848,6 +3073,7 @@ namespace Evaluator {
         bool isBlockValue();
         bool isAquiferValue();
         bool isRegionValue();
+        bool isInterRegionValue();
         bool isGlobalProcessValue();
         bool isFunctionRelation();
         bool isUserDefined();
@@ -2867,11 +3093,14 @@ namespace Evaluator {
         if (this->isBlockValue())
             return this->blockValue();
 
-       if (this->isAquiferValue())
+        if (this->isAquiferValue())
             return this->aquiferValue();
 
         if (this->isRegionValue())
             return this->regionValue();
+
+        if (this->isInterRegionValue())
+            return this->interRegionValue();
 
         if (this->isGlobalProcessValue())
             return this->globalProcessValue();
@@ -2924,6 +3153,18 @@ namespace Evaluator {
 
         desc.unit = this->directUnitString();
         desc.evaluator.reset(new RegionValue {
+            *this->node_, this->paramUnit_
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::interRegionValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new InterRegionValue {
             *this->node_, this->paramUnit_
         });
 
@@ -3003,6 +3244,32 @@ namespace Evaluator {
 
         // 'node_' represents a region value.  Capture unit
         // of measure and return true.
+        this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isInterRegionValue()
+    {
+        const auto end = std::min({
+            // Infinity (std::string::npos) if no underscore
+            this->node_->keyword.find('_'),
+
+            // Don't look beyond end of keyword string.
+            this->node_->keyword.size(),
+
+            // Always at most 5 characters in the "real" keyword.
+            std::string::size_type{5},
+        });
+
+        auto pos = interregion_units.find(this->node_->keyword.substr(0, end));
+        if (pos == interregion_units.end()) {
+            // Node_'s canonical form reduced keyword does not match any of
+            // the supported inter-region flow summary vector keywords.
+            return false;
+        }
+
+        // 'Node_' represents a supported inter-region summary vector.
+        // Capture unit of measure and return true.
         this->paramUnit_ = pos->second;
         return true;
     }
