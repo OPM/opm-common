@@ -38,7 +38,7 @@ def get_item_deckitem(self):
     elif self.is_double():
         return self.get_raw(0)
     elif self.is_uda():
-        return self.get_uda(0)
+        return self.get_uda(0).value
     else:
         raise ValueError("Deck Item, unknown type")
 
