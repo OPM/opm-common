@@ -17,20 +17,26 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <chrono>
-#include <fmt/format.h>
-#include <unordered_set>
-
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Deck/DeckOutput.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
+
 #include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/DeckOutput.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
+
+#include <chrono>
+#include <ctime>
+#include <unordered_set>
+
+#include <fmt/format.h>
+#include <fmt/chrono.h>
 
 namespace Opm {
 
@@ -253,6 +259,50 @@ ScheduleDeck::ScheduleDeck(time_point start_time, const Deck& deck, const Schedu
     }
 }
 
+namespace {
+
+    std::string
+    format_skiprest_error(const ScheduleTimeType time_type,
+                          const time_point&      restart_time,
+                          const time_point&      t)
+    {
+        const auto rst = TimeStampUTC {
+            TimeService::to_time_t(restart_time)
+        };
+
+        const auto current = TimeStampUTC {
+            TimeService::to_time_t(t)
+        };
+
+        auto rst_tm = std::tm{};
+        rst_tm.tm_year = rst.year()  - 1900;
+        rst_tm.tm_mon  = rst.month() -    1;
+        rst_tm.tm_mday = rst.day();
+
+        rst_tm.tm_hour = rst.hour();
+        rst_tm.tm_min  = rst.minutes();
+        rst_tm.tm_sec  = rst.seconds();
+
+        auto current_tm = std::tm{};
+        current_tm.tm_year = current.year()  - 1900;
+        current_tm.tm_mon  = current.month() -    1;
+        current_tm.tm_mday = current.day();
+
+        current_tm.tm_hour = current.hour();
+        current_tm.tm_min  = current.minutes();
+        current_tm.tm_sec  = current.seconds();
+
+        const auto* keyword = (time_type == ScheduleTimeType::DATES)
+            ? "DATES" : "TSTEP";
+        const auto* record = (time_type == ScheduleTimeType::DATES)
+            ? "record" : "report step";
+
+        return fmt::format("In a restarted simulation using SKIPREST, the {0} keyword must have\n"
+                           "a {1} corresponding to the RESTART time {2:%d-%b-%Y %H:%M:%S}.\n"
+                           "Reached time {3:%d-%b-%Y %H:%M:%S} without an intervening {1}.",
+                           keyword, record, rst_tm, current_tm);
+    }
+}
 
 void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location) {
     context.last_time = t;
@@ -265,11 +315,9 @@ void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, Sc
 
         if (t > this->m_restart_time) {
             if (this->skiprest) {
-                TimeStampUTC rst(TimeService::to_time_t(this->m_restart_time));
-                TimeStampUTC current(TimeService::to_time_t(t));
-                auto reason = fmt::format("At date: {:4d}-{:02d}-{:02d} - scanned past restart data: {:4d}-{:02d}-{:02d}",
-                                          current.year(), current.month(), current.day(),
-                                          rst.year(), rst.month(), rst.day());
+                const auto reason =
+                    format_skiprest_error(time_type, this->m_restart_time, t);
+
                 throw OpmInputError(reason, location);
             }
             context.rst_skip = false;
