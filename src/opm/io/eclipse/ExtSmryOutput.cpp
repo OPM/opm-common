@@ -148,6 +148,28 @@ std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std
 
             mod_keys.push_back(mod_key);
 
+        } else if (valueKeys[n].substr(0,1) == "R"){
+            std::string str34 = valueKeys[n].substr(2,2);
+            std::string str45 = valueKeys[n].substr(3,2);
+
+            if (valueKeys[n].substr(0,5) == "RORFR"){
+                mod_keys.push_back(valueKeys[n]);
+
+            } else if ((str34 == "FR") || (str34 == "FT") || (str45 == "FR") || (str45 == "FT")) {
+                auto p = valueKeys[n].find(":");
+                if (p != std::string::npos) {
+                    int num = std::stoi(valueKeys[n].substr(p+1));
+                    const auto& [r1, r2] = splitSummaryNumber(num);
+                    std::string mod_key = valueKeys[n].substr(0,p) + ":" + std::to_string(r1) + "-" + std::to_string(r2);
+                    mod_keys.push_back(mod_key);
+                } else {
+                    mod_keys.push_back(valueKeys[n]);
+                }
+
+            } else {
+                mod_keys.push_back(valueKeys[n]);
+            }
+
         } else {
             mod_keys.push_back(valueKeys[n]);
         }
