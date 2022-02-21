@@ -2145,6 +2145,8 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
   {"BPR"        , Opm::UnitSystem::measure::pressure},
   {"BRPV"     , Opm::UnitSystem::measure::volume },
   {"BPRESSUR"   , Opm::UnitSystem::measure::pressure},
+  {"BTCNFHEA"   , Opm::UnitSystem::measure::temperature},
+  {"BTEMP"      , Opm::UnitSystem::measure::temperature},
   {"BSWAT"      , Opm::UnitSystem::measure::identity},
   {"BWSAT"      , Opm::UnitSystem::measure::identity},
   {"BSGAS"      , Opm::UnitSystem::measure::identity},
