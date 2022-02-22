@@ -1229,7 +1229,7 @@ inline quantity injection_history( const fn_args& args )
 }
 
 template< bool injection >
-inline quantity abondoned_well( const fn_args& args ) {
+inline quantity abandoned_well( const fn_args& args ) {
     std::size_t count = 0;
 
     for (const auto* sched_well : args.schedule_wells) {
@@ -2045,8 +2045,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
-    { "FMWPA", abondoned_well< producer > },
-    { "FMWIA", abondoned_well< injector >},
+    { "FMWPA", abandoned_well< producer > },
+    { "FMWIA", abandoned_well< injector >},
 
     //Field control mode
     { "FMCTP", group_control< false, true,  false, false >},
