@@ -1770,7 +1770,202 @@ BOOST_AUTO_TEST_CASE(region_injection) {
                       ecl_sum_get_general_var( resp , 2 , "CGIT:W_3:3,1,1"), 1e-5);
 }
 
+namespace {
+    Opm::data::InterRegFlowMap::FlowRates ireg_flow_1_11()
+    {
+        using Component = Opm::data::InterRegFlowMap::Component;
+        auto rates = Opm::data::InterRegFlowMap::FlowRates{};
 
+        rates[Component::Oil] = 1.234f;
+        rates[Component::Gas] = 23.45f;
+        rates[Component::Water] = 0.543f;
+        rates[Component::Disgas] = 20.45f;
+        rates[Component::Vapoil] = 0.004f;
+
+        return rates;
+    }
+
+    Opm::data::InterRegFlowMap::FlowRates ireg_flow_1_2()
+    {
+        using Component = Opm::data::InterRegFlowMap::Component;
+        auto rates = Opm::data::InterRegFlowMap::FlowRates{};
+
+        rates[Component::Oil] = 0.1234f;
+        rates[Component::Gas] = -2.345f;
+        rates[Component::Water] = 1.729f;
+        rates[Component::Disgas] = -0.345f;
+        rates[Component::Vapoil] = 0.0004f;
+
+        return rates;
+    }
+
+    Opm::data::InterRegFlowMap::FlowRates ireg_flow_9_10()
+    {
+        using Component = Opm::data::InterRegFlowMap::Component;
+        auto rates = Opm::data::InterRegFlowMap::FlowRates{};
+
+        rates[Component::Oil] = -0.271828f;
+        rates[Component::Gas] = 3.1415926f;
+        rates[Component::Water] = 11.2233f;
+        rates[Component::Disgas] = 3.0f;
+        rates[Component::Vapoil] = 11.0f;
+
+        return rates;
+    }
+
+    Opm::data::InterRegFlowMap::FlowRates ireg_flow_2_12()
+    {
+        using Component = Opm::data::InterRegFlowMap::Component;
+        auto rates = Opm::data::InterRegFlowMap::FlowRates{};
+
+        rates[Component::Oil] = 4.32f;
+        rates[Component::Gas] = 10.98f;
+        rates[Component::Water] = 54.321f;
+        rates[Component::Disgas] = 7.65f;
+        rates[Component::Vapoil] = 1.32f;
+
+        return rates;
+    }
+
+    Opm::data::InterRegFlowMap::FlowRates ireg_flow_5_6()
+    {
+        using Component = Opm::data::InterRegFlowMap::Component;
+        auto rates = Opm::data::InterRegFlowMap::FlowRates{};
+
+        rates[Component::Oil] = 0.56f;
+        rates[Component::Gas] = 6.5f;
+        rates[Component::Water] = 0.065f;
+        rates[Component::Disgas] = 5.6f;
+        rates[Component::Vapoil] = 0.42f;
+
+        return rates;
+    }
+
+    Opm::out::Summary::InterRegFlowValues interRegionFlows()
+    {
+        auto values = Opm::out::Summary::InterRegFlowValues{};
+
+        auto& ireg = values["FIPNUM"];
+        ireg.addConnection(0, 10, ireg_flow_1_11());
+        ireg.addConnection(0,  1, ireg_flow_1_2 ());
+        ireg.addConnection(8,  9, ireg_flow_9_10());
+        ireg.addConnection(1, 11, ireg_flow_2_12());
+        ireg.addConnection(4,  5, ireg_flow_5_6 ());
+
+        ireg.compress(20);
+
+        return values;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(inter_region_flows)
+{
+    const auto cfg = setup{ "inter_region_flows" };
+
+    {
+        auto st = SummaryState{ TimeService::now() };
+        auto writer = out::Summary {
+            cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name
+        };
+
+        const auto values = interRegionFlows();
+
+        for (auto i = 0; i < 3; ++i) {
+            writer.eval(st, i, i * day, cfg.wells, cfg.grp_nwrk,
+                        {}, {}, {}, {}, {}, {}, {}, values);
+            writer.add_timestep(st, 0, false);
+        }
+
+        writer.write();
+    }
+
+    const auto res = readsum(cfg.name);
+    const auto* resp = res.get();
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFT:1-11"),
+                        "Summary data must have ROFT:1-11");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFT:1-11"), 0 * 86400.0f * 1.234f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROFT:1-11"), 1 * 86400.0f * 1.234f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "ROFT:1-11"), 2 * 86400.0f * 1.234f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFT:1-2"),
+                        "Summary data must have ROFT:1-2");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFT:1-2"), 0 * 86400.0f * 0.1234f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROFT:1-2"), 1 * 86400.0f * 0.1234f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "ROFT:1-2"), 2 * 86400.0f * 0.1234f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFT:9-10"),
+                        "Summary data must have ROFT:9-10");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFT:9-10"), 0 * 86400.0f * (-0.271828f), 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROFT:9-10"), 1 * 86400.0f * (-0.271828f), 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "ROFT:9-10"), 2 * 86400.0f * (-0.271828f), 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RWFR-:2-12"),
+                        "Summary data must have RWFR-:2-12");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RWFR-:2-12"), 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RWFR-:2-12"), 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RWFR-:2-12"), 0.0f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RWFR+:2-12"),
+                        "Summary data must have RWFR+:2-12");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RWFR+:2-12"), 54.321f * 86400.0, 5.0e-6f); // SM3/s -> SM3/d
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RWFR+:2-12"), 54.321f * 86400.0, 5.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RWFR+:2-12"), 54.321f * 86400.0, 5.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFTG:5-6"),
+                        "Summary data must have RGFTG:5-6");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFTG:5-6"), 0 * 86400.0f * 0.9f, 5.0e-5f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFTG:5-6"), 1 * 86400.0f * 0.9f, 5.0e-5f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFTG:5-6"), 2 * 86400.0f * 0.9f, 5.0e-5f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFTG:1-20"),
+                        "Summary data must have RGFTG:1-20");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFTG:1-20"), 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFTG:1-20"), 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFTG:1-20"), 0.0f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFTG:5-6"),
+                        "Summary data must have ROFTG:5-6");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFTG:5-6"), 0 * 86400.0f * 0.42f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROFTG:5-6"), 1 * 86400.0f * 0.42f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "ROFTG:5-6"), 2 * 86400.0f * 0.42f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFTL:5-6"),
+                        "Summary data must have RGFTL:5-6");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFTL:5-6"), 0 * 86400.0f * 5.6f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFTL:5-6"), 1 * 86400.0f * 5.6f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFTL:5-6"), 2 * 86400.0f * 5.6f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFTL:5-6"),
+                        "Summary data must have ROFTL:5-6");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFTL:5-6"), 0 * 86400.0f * 0.14f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROFTL:5-6"), 1 * 86400.0f * 0.14f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "ROFTL:5-6"), 2 * 86400.0f * 0.14f, 1.0e-5f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFR:2-12"),
+                        "Summary data must have RGFR:2-12");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFR:2-12"), 86400.0f * 10.98f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFR:2-12"), 86400.0f * 10.98f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFR:2-12"), 86400.0f * 10.98f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFR:9-10"),
+                        "Summary data must have RGFR:9-10");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFR:9-10"), 86400.0f * 3.1415926f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFR:9-10"), 86400.0f * 3.1415926f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFR:9-10"), 86400.0f * 3.1415926f, 1.0e-6f);
+}
 
 BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     setup cfg( "region_injection" );

@@ -316,6 +316,44 @@ RWIP
 RPPO
 /
 
+-- Inter-region flows --
+
+ROFT
+ 1 11 /
+ 1  2 /
+ 9 10 /
+/
+
+RWFR-
+ 2 12 /
+/
+
+RWFR+
+ 2 12 /
+/
+
+RGFR
+ 2 12 /
+ 9 10 /
+/
+
+RGFTG
+ 5  6 /
+ 1 20 / -- No connection => zero flow rate and cumulatives
+/
+
+ROFTG
+ 5  6 /
+/
+
+RGFTL
+ 5  6 /
+/
+
+ROFTL
+ 5  6 /
+/
+
 --  Group data --
 GPR
 /
