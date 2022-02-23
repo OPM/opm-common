@@ -100,6 +100,24 @@ KEYWORD
         self.assertEqual(len(deck), 1)
 
 
+    def test_raw_string_output(self):
+        deck_string = """
+UDQ
+   DEFINE WUOPR2   WOPR '*' * WOPR '*' /
+   DEFINE WUGASRA  3 - WGLIR '*' /
+/
+        """
+
+        parse_context = ParseContext( )
+        parser = Parser()
+        parse_context.ignore_keyword("KEYWORD")
+        deck = parser.parse_string( deck_string )
+        udq = deck[0]
+        s = ""
+        for rec in udq:
+            for item in rec:
+                s += item.get_str(0)
+
 if __name__ == "__main__":
     unittest.main()
 
