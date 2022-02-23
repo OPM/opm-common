@@ -130,6 +130,7 @@ namespace Opm {
         bool is_double() { return  type == get_type< double >(); };
         bool is_int() { return  type == get_type< int >() ; };
         bool is_string() { return  type == get_type< std::string >(); };
+        bool is_raw_string() { return  type == get_type< RawString >(); };
 
         UDAValue& get_uda() { return uval[0]; };
 

@@ -148,6 +148,19 @@ std::string get_uda_str(DeckItem *  item)
     return uda.get<std::string>();
 }
 
+/*
+  When exporting values to Python RawString and std::string are treated
+  identically.
+*/
+std::string get_string(DeckItem * item, std::size_t index) {
+    if (item->is_string())
+        return item->get<std::string>(index);
+    else if (item->is_raw_string())
+        return item->get<RawString>(index);
+    else
+        throw std::logic_error("Tried to get string from item which is not string");
+}
+
 
 }
 void python::common::export_DeckKeyword(py::module& module) {
@@ -242,7 +255,7 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("is_double", &DeckItem::is_double)
         .def("is_int", &DeckItem::is_int)
         .def("is_string", &DeckItem::is_string)
-        .def("get_str", &DeckItem::get<std::string>)
+        .def("get_str", &get_string)
         .def("get_int", &DeckItem::get<int>)
         .def("get_raw", &DeckItem::get<double>)
         .def("get_uda", &DeckItem::get<UDAValue>)
