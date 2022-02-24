@@ -367,7 +367,7 @@ void Opm::data::InterRegFlowMap::CSR::condenseDuplicates()
 
 void Opm::data::InterRegFlowMap::CSR::accumulateFlowRates(const RateBuffer& v)
 {
-    const auto sz = Window::bufferSize();
+    constexpr auto sz = Window::bufferSize();
 
     if (v.size() != this->compressedIdx_.size()*sz) {
         throw std::logic_error {
@@ -375,14 +375,14 @@ void Opm::data::InterRegFlowMap::CSR::accumulateFlowRates(const RateBuffer& v)
         };
     }
 
-    auto dst = [this, sz](const Offset start) -> Window
+    auto dst = [this](const Offset start) -> Window
     {
         auto begin = this->sa_.begin() + start*sz;
 
         return Window { begin, begin + sz };
     };
 
-    auto src = [&v, sz](const Offset start) -> ReadOnlyWindow
+    auto src = [&v](const Offset start) -> ReadOnlyWindow
     {
         auto begin = v.begin() + start*sz;
 
