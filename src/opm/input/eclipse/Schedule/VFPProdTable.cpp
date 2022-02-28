@@ -541,6 +541,14 @@ Dimension VFPProdTable::ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem&
     return Dimension(scaling_factor);
 }
 
+void VFPProdTable::updateAlqType(const ALQ_TYPE& type, const UnitSystem& unit_system)
+{
+    if (this->m_alq_type != ALQ_TYPE::ALQ_UNDEF) {
+        throw std::logic_error("ALQ type already set. Cannot update.");
+    }
+    this->m_alq_type = type;
+    convertAlqToSI(type, this->m_alq_data, unit_system);
+}
 
 void VFPProdTable::convertAlqToSI(const ALQ_TYPE& type,
                                   std::vector<double>& values,

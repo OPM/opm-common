@@ -137,6 +137,8 @@ public:
         return m_alq_data;
     }
 
+    void updateAlqType(const ALQ_TYPE& type, const UnitSystem& unit_system);
+
     /**
      * Returns the data of the table itself. For ordered access
      * use operator()(thp_idx, wfr_idx, gfr_idx, alq_idx, flo_idx)

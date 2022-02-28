@@ -1662,7 +1662,6 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
             for (const auto& wname : well_names) {
                 auto well = GasLiftOpt::Well(wname, use_glo);
-
                 if (max_rate_item.hasValue(0))
                     well.max_rate( max_rate_item.getSIDouble(0) );
 
@@ -1670,8 +1669,21 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 well.inc_weight_factor(inc_weight_factor);
                 well.min_rate(min_rate);
                 well.alloc_extra_gas(alloc_extra_gas);
-
                 glo.add_well(well);
+
+                auto well2 = this->snapshots.back().wells.get( wname );
+                auto prod_prop = well2.getProductionProperties();
+                auto table_no = prod_prop.VFPTableNumber;
+                auto& vfp_prod = this->snapshots.back().vfpprod;
+                if (vfp_prod.has(table_no)) {
+                    auto& table = vfp_prod.get(table_no);
+                    auto alq_type = table.getALQType();
+                    if (alq_type == VFPProdTable::ALQ_TYPE::ALQ_UNDEF) {
+                        table.updateAlqType(
+                            VFPProdTable::ALQ_TYPE::ALQ_GRAT,
+                            this->m_static.m_unit_system);
+                    }
+                }
             }
         }
 
