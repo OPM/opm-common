@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Opm::WetGasPvt
+ * \copydoc Opm::DryHumidGasPvt
  */
-#ifndef OPM_WET_GAS_PVT_HPP
-#define OPM_WET_GAS_PVT_HPP
+#ifndef OPM_DRY_HUMID_GAS_PVT_HPP
+#define OPM_DRY_HUMID_GAS_PVT_HPP
 
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
@@ -36,7 +36,7 @@
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+//#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #endif
 
 #if HAVE_OPM_COMMON
@@ -46,11 +46,11 @@
 namespace Opm {
 
 /*!
- * \brief This class represents the Pressure-Volume-Temperature relations of the gas phas
- *        with vaporized oil.
+ * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
+ *        with vaporized water.
  */
 template <class Scalar>
-class WetGasPvt
+class DryHumidGasPvt
 {
     typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
 
@@ -58,29 +58,29 @@ public:
     typedef UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
     typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
 
-    WetGasPvt()
+    DryHumidGasPvt()
     {
         vapPar1_ = 0.0;
     }
 
-    WetGasPvt(const std::vector<Scalar>& gasReferenceDensity,
-              const std::vector<Scalar>& oilReferenceDensity,
+    DryHumidGasPvt(const std::vector<Scalar>& gasReferenceDensity,
+              const std::vector<Scalar>& waterReferenceDensity,
               const std::vector<TabulatedTwoDFunction>& inverseGasB,
               const std::vector<TabulatedOneDFunction>& inverseSaturatedGasB,
               const std::vector<TabulatedTwoDFunction>& gasMu,
               const std::vector<TabulatedTwoDFunction>& inverseGasBMu,
               const std::vector<TabulatedOneDFunction>& inverseSaturatedGasBMu,
-              const std::vector<TabulatedOneDFunction>& saturatedOilVaporizationFactorTable,
+              const std::vector<TabulatedOneDFunction>& saturatedWaterVaporizationFactorTable,
               const std::vector<TabulatedOneDFunction>& saturationPressure,
               Scalar vapPar1)
         : gasReferenceDensity_(gasReferenceDensity)
-        , oilReferenceDensity_(oilReferenceDensity)
+        , waterReferenceDensity_(waterReferenceDensity)
         , inverseGasB_(inverseGasB)
         , inverseSaturatedGasB_(inverseSaturatedGasB)
         , gasMu_(gasMu)
         , inverseGasBMu_(inverseGasBMu)
         , inverseSaturatedGasBMu_(inverseSaturatedGasBMu)
-        , saturatedOilVaporizationFactorTable_(saturatedOilVaporizationFactorTable)
+        , saturatedWaterVaporizationFactorTable_(saturatedWaterVaporizationFactorTable)
         , saturationPressure_(saturationPressure)
         , vapPar1_(vapPar1)
     {
@@ -95,12 +95,12 @@ public:
      */
     void initFromState(const EclipseState& eclState, const Schedule& schedule)
     {
-        const auto& pvtgTables = eclState.getTableManager().getPvtgTables();
+        const auto& pvtgwTables = eclState.getTableManager().getPvtgwTables();
         const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-        assert(pvtgTables.size() == densityTable.size());
+        assert(pvtgwTables.size() == densityTable.size());
 
-        size_t numRegions = pvtgTables.size();
+        size_t numRegions = pvtgwTables.size();
         setNumRegions(numRegions);
 
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
@@ -112,20 +112,20 @@ public:
         }
 
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            const auto& pvtgTable = pvtgTables[regionIdx];
+            const auto& pvtgwTable = pvtgwTables[regionIdx];
 
-            const auto& saturatedTable = pvtgTable.getSaturatedTable();
+            const auto& saturatedTable = pvtgwTable.getSaturatedTable();
             assert(saturatedTable.numRows() > 1);
 
             auto& gasMu = gasMu_[regionIdx];
             auto& invGasB = inverseGasB_[regionIdx];
             auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
             auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
-            auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
+            auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
-            oilVaporizationFac.setXYArrays(saturatedTable.numRows(),
+            waterVaporizationFac.setXYArrays(saturatedTable.numRows(),
                                            saturatedTable.getColumn("PG"),
-                                           saturatedTable.getColumn("RV"));
+                                           saturatedTable.getColumn("RW"));
 
             std::vector<Scalar> invSatGasBArray;
             std::vector<Scalar> invSatGasBMuArray;
@@ -145,15 +145,15 @@ public:
                 assert(invGasB.numX() == outerIdx + 1);
                 assert(gasMu.numX() == outerIdx + 1);
 
-                const auto& underSaturatedTable = pvtgTable.getUnderSaturatedTable(outerIdx);
+                const auto& underSaturatedTable = pvtgwTable.getUnderSaturatedTable(outerIdx);
                 size_t numRows = underSaturatedTable.numRows();
                 for (size_t innerIdx = 0; innerIdx < numRows; ++ innerIdx) {
-                    Scalar Rv = underSaturatedTable.get("RV" , innerIdx);
+                    Scalar Rw = underSaturatedTable.get("RW" , innerIdx);
                     Scalar Bg = underSaturatedTable.get("BG" , innerIdx);
                     Scalar mug = underSaturatedTable.get("MUG" , innerIdx);
 
-                    invGasB.appendSamplePoint(outerIdx, Rv, 1.0/Bg);
-                    gasMu.appendSamplePoint(outerIdx, Rv, mug);
+                    invGasB.appendSamplePoint(outerIdx, Rw, 1.0/Bg);
+                    gasMu.appendSamplePoint(outerIdx, Rw, mug);
                 }
             }
 
@@ -180,39 +180,35 @@ public:
                 size_t masterTableIdx = xIdx + 1;
                 for (; masterTableIdx < saturatedTable.numRows(); ++masterTableIdx)
                 {
-                    if (pvtgTable.getUnderSaturatedTable(masterTableIdx).numRows() > 1)
+                    if (pvtgwTable.getUnderSaturatedTable(masterTableIdx).numRows() > 1)
                         break;
                 }
 
                 if (masterTableIdx >= saturatedTable.numRows())
-                    throw std::runtime_error("PVTG tables are invalid: The last table must exhibit at least one "
+                    throw std::runtime_error("PVTGW tables are invalid: The last table must exhibit at least one "
                               "entry for undersaturated gas!");
 
 
                 // extend the current table using the master table.
-                extendPvtgTable_(regionIdx,
+                extendPvtgwTable_(regionIdx,
                                  xIdx,
-                                 pvtgTable.getUnderSaturatedTable(xIdx),
-                                 pvtgTable.getUnderSaturatedTable(masterTableIdx));
+                                 pvtgwTable.getUnderSaturatedTable(xIdx),
+                                 pvtgwTable.getUnderSaturatedTable(masterTableIdx));
             }
         }
 
         vapPar1_ = 0.0;
-        const auto& oilVap = schedule[0].oilvap();
-        if (oilVap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS) {
-            vapPar1_ = oilVap.vap1();
-        }
-
+        
         initEnd();
     }
 
 private:
-    void extendPvtgTable_(unsigned regionIdx,
+    void extendPvtgwTable_(unsigned regionIdx,
                           unsigned xIdx,
                           const SimpleTable& curTable,
                           const SimpleTable& masterTable)
     {
-        std::vector<double> RvArray = curTable.getColumn("RV").vectorCopy();
+        std::vector<double> RvArray = curTable.getColumn("RW").vectorCopy();
         std::vector<double> gasBArray = curTable.getColumn("BG").vectorCopy();
         std::vector<double> gasMuArray = curTable.getColumn("MUG").vectorCopy();
 
@@ -220,7 +216,7 @@ private:
         auto& gasMu = gasMu_[regionIdx];
 
         for (size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++ newRowIdx) {
-            const auto& RVColumn = masterTable.getColumn("RV");
+            const auto& RVColumn = masterTable.getColumn("RW");
             const auto& BGColumn = masterTable.getColumn("BG");
             const auto& viscosityColumn = masterTable.getColumn("MUG");
 
@@ -263,14 +259,14 @@ public:
 
     void setNumRegions(size_t numRegions)
     {
-        oilReferenceDensity_.resize(numRegions);
+        waterReferenceDensity_.resize(numRegions);
         gasReferenceDensity_.resize(numRegions);
         inverseGasB_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
         inverseGasBMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
         inverseSaturatedGasB_.resize(numRegions);
         inverseSaturatedGasBMu_.resize(numRegions);
         gasMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-        saturatedOilVaporizationFactorTable_.resize(numRegions);
+        saturatedWaterVaporizationFactorTable_.resize(numRegions);
         saturationPressure_.resize(numRegions);
     }
 
@@ -278,11 +274,11 @@ public:
      * \brief Initialize the reference densities of all fluids for a given PVT region
      */
     void setReferenceDensities(unsigned regionIdx,
-                               Scalar rhoRefOil,
+                               Scalar /*rhoRefOil*/,
                                Scalar rhoRefGas,
-                               Scalar /*rhoRefWater*/)
+                               Scalar rhoRefWater)
     {
-        oilReferenceDensity_[regionIdx] = rhoRefOil;
+        waterReferenceDensity_[regionIdx] = rhoRefWater;
         gasReferenceDensity_[regionIdx] = rhoRefGas;
     }
 
@@ -291,65 +287,8 @@ public:
      *
      * \param samplePoints A container of (x,y) values.
      */
-    void setSaturatedGasOilVaporizationFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
-    { saturatedOilVaporizationFactorTable_[regionIdx].setContainerOfTuples(samplePoints); }
-
-    /*!
-     * \brief Initialize the function for the gas formation volume factor
-     *
-     * The gas formation volume factor \f$B_g\f$ is a function of \f$(p_g, X_g^O)\f$ and
-     * represents the partial density of the oil component in the gas phase at a given
-     * pressure. This method only requires the volume factor of oil-saturated gas (which
-     * only depends on pressure) while the dependence on the oil mass fraction is
-     * guesstimated...
-     */
-    void setSaturatedGasFormationVolumeFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
-    {
-        auto& invGasB = inverseGasB_[regionIdx];
-
-        const auto& RvTable = saturatedOilVaporizationFactorTable_[regionIdx];
-
-        Scalar T = 273.15 + 15.56; // [K]
-
-        Scalar RvMin = 0.0;
-        Scalar RvMax = RvTable.eval(saturatedOilVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
-
-        Scalar poMin = samplePoints.front().first;
-        Scalar poMax = samplePoints.back().first;
-
-        size_t nRv = 20;
-        size_t nP = samplePoints.size()*2;
-
-        Scalar rhooRef = oilReferenceDensity_[regionIdx];
-
-        TabulatedOneDFunction gasFormationVolumeFactor;
-        gasFormationVolumeFactor.setContainerOfTuples(samplePoints);
-
-        updateSaturationPressure_(regionIdx);
-
-        // calculate a table of estimated densities depending on pressure and gas mass
-        // fraction. note that this assumes oil of constant compressibility. (having said
-        // that, if only the saturated gas densities are available, there's not much
-        // choice.)
-        for (size_t RvIdx = 0; RvIdx < nRv; ++RvIdx) {
-            Scalar Rv = RvMin + (RvMax - RvMin)*RvIdx/nRv;
-
-            invGasB.appendXPos(Rv);
-
-            for (size_t pIdx = 0; pIdx < nP; ++pIdx) {
-                Scalar pg = poMin + (poMax - poMin)*pIdx/nP;
-
-                Scalar poSat = saturationPressure(regionIdx, T, Rv);
-                Scalar BgSat = gasFormationVolumeFactor.eval(poSat, /*extrapolate=*/true);
-                Scalar drhoo_dp = (1.1200 - 1.1189)/((5000 - 4000)*6894.76);
-                Scalar rhoo = rhooRef/BgSat*(1 + drhoo_dp*(pg - poSat));
-
-                Scalar Bg = rhooRef/rhoo;
-
-                invGasB.appendSamplePoint(RvIdx, pg, 1.0/Bg);
-            }
-        }
-    }
+    void setSaturatedGasWaterVaporizationFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
+    { saturatedWaterVaporizationFactorTable_[regionIdx].setContainerOfTuples(samplePoints); }
 
     /*!
      * \brief Initialize the function for the gas formation volume factor
@@ -383,15 +322,15 @@ public:
      */
     void setSaturatedGasViscosity(unsigned regionIdx, const SamplingPoints& samplePoints  )
     {
-        auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
+        auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
-        Scalar RvMin = 0.0;
-        Scalar RvMax = oilVaporizationFac.eval(saturatedOilVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
+        Scalar RwMin = 0.0;
+        Scalar RwMax = waterVaporizationFac.eval(saturatedWaterVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
 
         Scalar poMin = samplePoints.front().first;
         Scalar poMax = samplePoints.back().first;
 
-        size_t nRv = 20;
+        size_t nRw = 20;
         size_t nP = samplePoints.size()*2;
 
         TabulatedOneDFunction mugTable;
@@ -399,16 +338,16 @@ public:
 
         // calculate a table of estimated densities depending on pressure and gas mass
         // fraction
-        for (size_t RvIdx = 0; RvIdx < nRv; ++RvIdx) {
-            Scalar Rv = RvMin + (RvMax - RvMin)*RvIdx/nRv;
+        for (size_t RwIdx = 0; RwIdx < nRw; ++RwIdx) {
+            Scalar Rw = RwMin + (RwMax - RwMin)*RwIdx/nRw;
 
-            gasMu_[regionIdx].appendXPos(Rv);
+            gasMu_[regionIdx].appendXPos(Rw);
 
             for (size_t pIdx = 0; pIdx < nP; ++pIdx) {
                 Scalar pg = poMin + (poMax - poMin)*pIdx/nP;
                 Scalar mug = mugTable.eval(pg, /*extrapolate=*/true);
 
-                gasMu_[regionIdx].appendSamplePoint(RvIdx, pg, mug);
+                gasMu_[regionIdx].appendSamplePoint(RwIdx, pg, mug);
             }
         }
     }
@@ -439,19 +378,19 @@ public:
 
                 assert(gasMu.numY(pIdx) == invGasB.numY(pIdx));
 
-                size_t numRv = gasMu.numY(pIdx);
-                for (size_t rvIdx = 0; rvIdx < numRv; ++rvIdx)
+                size_t numRw = gasMu.numY(pIdx);
+                for (size_t RwIdx = 0; RwIdx < numRw; ++RwIdx)
                     invGasBMu.appendSamplePoint(pIdx,
-                                                gasMu.yAt(pIdx, rvIdx),
-                                                invGasB.valueAt(pIdx, rvIdx)
-                                                / gasMu.valueAt(pIdx, rvIdx));
+                                                gasMu.yAt(pIdx, RwIdx),
+                                                invGasB.valueAt(pIdx, RwIdx)
+                                                / gasMu.valueAt(pIdx, RwIdx));
 
                 // the sampling points in UniformXTabulated2DFunction are always sorted
                 // in ascending order. Thus, the value for saturated gas is the last one
-                // (i.e., the one with the largest Rv value)
+                // (i.e., the one with the largest Rw value)
                 satPressuresArray.push_back(gasMu.xAt(pIdx));
-                invSatGasBArray.push_back(invGasB.valueAt(pIdx, numRv - 1));
-                invSatGasBMuArray.push_back(invGasBMu.valueAt(pIdx, numRv - 1));
+                invSatGasBArray.push_back(invGasB.valueAt(pIdx, numRw - 1));
+                invSatGasBMuArray.push_back(invGasBMu.valueAt(pIdx, numRw - 1));
             }
 
             invSatGasB.setXYContainers(satPressuresArray, invSatGasBArray);
@@ -486,10 +425,10 @@ public:
     Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& /*temperature*/,
                          const Evaluation& pressure,
-                         const Evaluation& Rv) const
+                         const Evaluation& Rw) const
     {
-        const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true);
-        const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true);
+        const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, Rw, /*extrapolate=*/true);
+        const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, Rw, /*extrapolate=*/true);
 
         return invBg/invMugBg;
     }
@@ -515,11 +454,11 @@ public:
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& /*temperature*/,
                                             const Evaluation& pressure,
-                                            const Evaluation& Rv) const
-    { return inverseGasB_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true); }
+                                            const Evaluation& Rw) const
+    { return inverseGasB_[regionIdx].eval(pressure, Rw, /*extrapolate=*/true); }
 
     /*!
-     * \brief Returns the formation volume factor [-] of oil saturated gas at a given pressure.
+     * \brief Returns the formation volume factor [-] of water saturated gas at a given pressure.
      */
     template <class Evaluation>
     Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
@@ -527,93 +466,77 @@ public:
                                                      const Evaluation& pressure) const
     { return inverseSaturatedGasB_[regionIdx].eval(pressure, /*extrapolate=*/true); }
 
-    // template <class Evaluation>
-    // Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-    //                                           const Evaluation& /*temperature*/,
-    //                                           const Evaluation& /*pressure*/,
-    //                                           const Evaluation& /*oilSaturation*/,
-    //                                           const Evaluation& /*maxOilSaturation*/) const
-    // { return 0.0; /* this is non-humid gas! */ }
-
     /*!
-     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the gasphase.
+     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the water phase.
      */
     template <class Evaluation>
-    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/) const
-    { return 0.0; /* this is non-humid gas! */ }
-    
-    /*!
-     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
-     */
-    template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& /*temperature*/,
                                               const Evaluation& pressure) const
     {
-        return saturatedOilVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
     }
+
+    // /*!
+    //  * \brief Returns the water vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
+    //  */
+    // template <class Evaluation>
+    // Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+    //                                           const Evaluation& /*temperature*/,
+    //                                           const Evaluation& pressure,
+    //                                           const Evaluation& waterSaturation,
+    //                                           Evaluation maxWaterSaturation) const
+    // {
+    //     return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);;
+    // }
 
     /*!
-     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
-     *
-     * This variant of the method prevents all the oil to be vaporized even if the gas
-     * phase is still not saturated. This is physically quite dubious but it corresponds
-     * to how the Eclipse 100 simulator handles this. (cf the VAPPARS keyword.)
+     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
      */
     template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+    Evaluation saturatedOilVaporizationFactor(unsigned /*regionIdx*/,
                                               const Evaluation& /*temperature*/,
-                                              const Evaluation& pressure,
-                                              const Evaluation& oilSaturation,
-                                              Evaluation maxOilSaturation) const
-    {
-        Evaluation tmp =
-            saturatedOilVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+                                              const Evaluation& /*pressure*/,
+                                              const Evaluation& /*oilSaturation*/,
+                                              const Evaluation& /*maxOilSaturation*/) const
+    { return 0.0; /* this is dry humid gas! */ }
 
-        // apply the vaporization parameters for the gas phase (cf. the Eclipse VAPPARS
-        // keyword)
-        maxOilSaturation = min(maxOilSaturation, Scalar(1.0));
-        if (vapPar1_ > 0.0 && maxOilSaturation > 0.01 && oilSaturation < maxOilSaturation) {
-            static const Scalar eps = 0.001;
-            const Evaluation& So = max(oilSaturation, eps);
-            tmp *= max(1e-3, pow(So/maxOilSaturation, vapPar1_));
-        }
-
-        return tmp;
-    }
+    /*!
+     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
+     */
+    template <class Evaluation>
+    Evaluation saturatedOilVaporizationFactor(unsigned /*regionIdx*/,
+                                              const Evaluation& /*temperature*/,
+                                              const Evaluation& /*pressure*/) const
+    { return 0.0; /* this is dry humid gas! */ }
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
-     *        depending on its mass fraction of the oil component
+     *        depending on its mass fraction of the water component
      *
-     * This method uses the standard blackoil assumptions: This means that the Rv value
-     * does not depend on the saturation of oil. (cf. the Eclipse VAPPARS keyword.)
-     *
-     * \param Rv The surface volume of oil component dissolved in what will yield one
+     * \param Rw The surface volume of water component dissolved in what will yield one
      *           cubic meter of gas at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation&,
-                                  const Evaluation& Rv) const
+                                  const Evaluation& Rw) const
     {
         typedef MathToolbox<Evaluation> Toolbox;
 
-        const auto& RvTable = saturatedOilVaporizationFactorTable_[regionIdx];
+        const auto& RwTable = saturatedWaterVaporizationFactorTable_[regionIdx];
         const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
 
         // use the tabulated saturation pressure function to get a pretty good initial value
-        Evaluation pSat = saturationPressure_[regionIdx].eval(Rv, /*extrapolate=*/true);
+        Evaluation pSat = saturationPressure_[regionIdx].eval(Rw, /*extrapolate=*/true);
 
         // Newton method to do the remaining work. If the initial
         // value is good, this should only take two to three
         // iterations...
         bool onProbation = false;
         for (unsigned i = 0; i < 20; ++i) {
-            const Evaluation& f = RvTable.eval(pSat, /*extrapolate=*/true) - Rv;
-            const Evaluation& fPrime = RvTable.evalDerivative(pSat, /*extrapolate=*/true);
+            const Evaluation& f = RwTable.eval(pSat, /*extrapolate=*/true) - Rw;
+            const Evaluation& fPrime = RwTable.evalDerivative(pSat, /*extrapolate=*/true);
 
             // If the derivative is "zero" Newton will not converge,
             // so simply return our initial guess.
@@ -642,7 +565,7 @@ public:
         std::stringstream errlog;
         errlog << "Finding saturation pressure did not converge:"
                << " pSat = " << pSat
-               << ", Rv = " << Rv;
+               << ", Rw = " << Rw;
 #if HAVE_OPM_COMMON
         OpmLog::debug("Wet gas saturation pressure", errlog.str());
 #endif
@@ -660,8 +583,8 @@ public:
     const Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
-    { return oilReferenceDensity_[regionIdx]; }
+    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    { return waterReferenceDensity_[regionIdx]; }
 
     const std::vector<TabulatedTwoDFunction>& inverseGasB() const {
         return inverseGasB_;
@@ -683,8 +606,8 @@ public:
         return inverseSaturatedGasBMu_;
     }
 
-    const std::vector<TabulatedOneDFunction>& saturatedOilVaporizationFactorTable() const {
-        return saturatedOilVaporizationFactorTable_;
+    const std::vector<TabulatedOneDFunction>& saturatedWaterVaporizationFactorTable() const {
+        return saturatedWaterVaporizationFactorTable_;
     }
 
     const std::vector<TabulatedOneDFunction>& saturationPressure() const {
@@ -695,16 +618,16 @@ public:
         return vapPar1_;
     }
 
-    bool operator==(const WetGasPvt<Scalar>& data) const
+    bool operator==(const DryHumidGasPvt<Scalar>& data) const
     {
         return this->gasReferenceDensity_ == data.gasReferenceDensity_ &&
-               this->oilReferenceDensity_ == data.oilReferenceDensity_ &&
+               this->oilReferenceDensity_ == data.waterReferenceDensity_ &&
                this->inverseGasB() == data.inverseGasB() &&
                this->inverseSaturatedGasB() == data.inverseSaturatedGasB() &&
                this->gasMu() == data.gasMu() &&
                this->inverseGasBMu() == data.inverseGasBMu() &&
                this->inverseSaturatedGasBMu() == data.inverseSaturatedGasBMu() &&
-               this->saturatedOilVaporizationFactorTable() == data.saturatedOilVaporizationFactorTable() &&
+               this->saturatedWaterVaporizationFactorTable() == data.saturatedWaterVaporizationFactorTable() &&
                this->saturationPressure() == data.saturationPressure() &&
                this->vapPar1() == data.vapPar1();
     }
@@ -713,20 +636,20 @@ private:
     void updateSaturationPressure_(unsigned regionIdx)
     {
         typedef std::pair<Scalar, Scalar> Pair;
-        const auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
+        const auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
         // create the taublated function representing saturation pressure depending of
-        // Rv
-        size_t n = oilVaporizationFac.numSamples();
-        Scalar delta = (oilVaporizationFac.xMax() - oilVaporizationFac.xMin())/Scalar(n + 1);
+        // Rw
+        size_t n = waterVaporizationFac.numSamples();
+        Scalar delta = (waterVaporizationFac.xMax() - waterVaporizationFac.xMin())/Scalar(n + 1);
 
         SamplingPoints pSatSamplePoints;
-        Scalar Rv = 0;
+        Scalar Rw = 0;
         for (size_t i = 0; i <= n; ++ i) {
-            Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
-            Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
+            Scalar pSat = waterVaporizationFac.xMin() + Scalar(i)*delta;
+            Rw = saturatedWaterVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
 
-            Pair val(Rv, pSat);
+            Pair val(Rw, pSat);
             pSatSamplePoints.push_back(val);
         }
 
@@ -739,13 +662,13 @@ private:
     }
 
     std::vector<Scalar> gasReferenceDensity_;
-    std::vector<Scalar> oilReferenceDensity_;
+    std::vector<Scalar> waterReferenceDensity_;
     std::vector<TabulatedTwoDFunction> inverseGasB_;
     std::vector<TabulatedOneDFunction> inverseSaturatedGasB_;
     std::vector<TabulatedTwoDFunction> gasMu_;
     std::vector<TabulatedTwoDFunction> inverseGasBMu_;
     std::vector<TabulatedOneDFunction> inverseSaturatedGasBMu_;
-    std::vector<TabulatedOneDFunction> saturatedOilVaporizationFactorTable_;
+    std::vector<TabulatedOneDFunction> saturatedWaterVaporizationFactorTable_;
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
     Scalar vapPar1_;

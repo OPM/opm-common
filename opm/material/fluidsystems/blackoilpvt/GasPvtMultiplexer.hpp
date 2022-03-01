@@ -28,6 +28,7 @@
 #define OPM_GAS_PVT_MULTIPLEXER_HPP
 
 #include "DryGasPvt.hpp"
+#include "DryHumidGasPvt.hpp"
 #include "WetGasPvt.hpp"
 #include "GasPvtThermal.hpp"
 #include "Co2GasPvt.hpp"
@@ -41,6 +42,11 @@ namespace Opm {
     switch (gasPvtApproach_) {                                            \
     case GasPvtApproach::DryGasPvt: {                                     \
         auto& pvtImpl = getRealPvt<GasPvtApproach::DryGasPvt>();          \
+        codeToCall;                                                       \
+        break;                                                            \
+    }                                                                     \
+    case GasPvtApproach::DryHumidGasPvt: {                                \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::DryHumidGasPvt>();     \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
@@ -66,6 +72,7 @@ namespace Opm {
 enum class GasPvtApproach {
     NoGasPvt,
     DryGasPvt,
+    DryHumidGasPvt,
     WetGasPvt,
     ThermalGasPvt,
     Co2GasPvt
@@ -108,6 +115,10 @@ public:
             delete &getRealPvt<GasPvtApproach::DryGasPvt>();
             break;
         }
+        case GasPvtApproach::DryHumidGasPvt: {
+            delete &getRealPvt<GasPvtApproach::DryHumidGasPvt>();
+            break;
+        }
         case GasPvtApproach::WetGasPvt: {
             delete &getRealPvt<GasPvtApproach::WetGasPvt>();
             break;
@@ -141,8 +152,10 @@ public:
             setApproach(GasPvtApproach::ThermalGasPvt);
         else if (!eclState.getTableManager().getPvtgTables().empty())
             setApproach(GasPvtApproach::WetGasPvt);
-        else if (eclState.getTableManager().hasTables("PVDG"))
+        else if (eclState.getTableManager().hasTables("PVDG")) //PJPE:for simple table
             setApproach(GasPvtApproach::DryGasPvt);
+        else if (!eclState.getTableManager().getPvtgwTables().empty())
+            setApproach(GasPvtApproach::DryHumidGasPvt);
 
         OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
     }
@@ -153,6 +166,10 @@ public:
         switch (gasPvtAppr) {
         case GasPvtApproach::DryGasPvt:
             realGasPvt_ = new DryGasPvt<Scalar>;
+            break;
+
+        case GasPvtApproach::DryHumidGasPvt:
+            realGasPvt_ = new DryHumidGasPvt<Scalar>;
             break;
 
         case GasPvtApproach::WetGasPvt:
@@ -258,6 +275,26 @@ public:
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedOilVaporizationFactor(regionIdx, temperature, pressure, oilSaturation, maxOilSaturation)); return 0; }
 
     /*!
+     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
+     */
+    template <class Evaluation = Scalar>
+    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& temperature,
+                                              const Evaluation& pressure) const
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure)); return 0; }
+
+    // /*!
+    //  * \brief Returns the water vaporization factor \f$R_v\f$ [m^3/m^3] of water saturated gas.
+    //  */
+    // template <class Evaluation = Scalar>
+    // Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+    //                                           const Evaluation& temperature,
+    //                                           const Evaluation& pressure,
+    //                                           const Evaluation& waterSaturation,
+    //                                           const Evaluation& maxWaterSaturation) const
+    // { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure, waterSaturation, maxWaterSaturation)); return 0; }
+
+    /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
      *        depending on its mass fraction of the oil component
      *
@@ -303,6 +340,21 @@ public:
         return *static_cast<const DryGasPvt<Scalar>* >(realGasPvt_);
     }
 
+    // get the parameter object for the dry humid gas case
+    template <GasPvtApproach approachV>
+    typename std::enable_if<approachV == GasPvtApproach::DryHumidGasPvt, DryHumidGasPvt<Scalar> >::type& getRealPvt()
+    {
+        assert(gasPvtApproach() == approachV);
+        return *static_cast<DryHumidGasPvt<Scalar>* >(realGasPvt_);
+    }
+
+    template <GasPvtApproach approachV>
+    typename std::enable_if<approachV == GasPvtApproach::DryHumidGasPvt, const DryHumidGasPvt<Scalar> >::type& getRealPvt() const
+    {
+        assert(gasPvtApproach() == approachV);
+        return *static_cast<const DryHumidGasPvt<Scalar>* >(realGasPvt_);
+    }
+
     // get the parameter object for the wet gas case
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::WetGasPvt, WetGasPvt<Scalar> >::type& getRealPvt()
@@ -325,7 +377,6 @@ public:
         assert(gasPvtApproach() == approachV);
         return *static_cast<GasPvtThermal<Scalar>* >(realGasPvt_);
     }
-
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::ThermalGasPvt, const GasPvtThermal<Scalar> >::type& getRealPvt() const
     {
@@ -358,6 +409,9 @@ public:
         case GasPvtApproach::DryGasPvt:
             return *static_cast<const DryGasPvt<Scalar>*>(realGasPvt_) ==
                    *static_cast<const DryGasPvt<Scalar>*>(data.realGasPvt_);
+        case GasPvtApproach::DryHumidGasPvt:
+            return *static_cast<const DryHumidGasPvt<Scalar>*>(realGasPvt_) ==
+                   *static_cast<const DryHumidGasPvt<Scalar>*>(data.realGasPvt_);
         case GasPvtApproach::WetGasPvt:
             return *static_cast<const WetGasPvt<Scalar>*>(realGasPvt_) ==
                    *static_cast<const WetGasPvt<Scalar>*>(data.realGasPvt_);
@@ -378,6 +432,9 @@ public:
         switch (gasPvtApproach_) {
         case GasPvtApproach::DryGasPvt:
             realGasPvt_ = new DryGasPvt<Scalar>(*static_cast<const DryGasPvt<Scalar>*>(data.realGasPvt_));
+            break;
+        case GasPvtApproach::DryHumidGasPvt:
+            realGasPvt_ = new DryHumidGasPvt<Scalar>(*static_cast<const DryHumidGasPvt<Scalar>*>(data.realGasPvt_));
             break;
         case GasPvtApproach::WetGasPvt:
             realGasPvt_ = new WetGasPvt<Scalar>(*static_cast<const WetGasPvt<Scalar>*>(data.realGasPvt_));

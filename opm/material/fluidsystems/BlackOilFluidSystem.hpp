@@ -800,6 +800,7 @@ public:
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
                     + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx);
             }
+            //PJPE: need to consider water evaporization
 
             // immiscible gas
             const LhsEval Rv(0.0);
@@ -1111,6 +1112,31 @@ public:
         }
 
         throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+    }
+
+    /*!
+     * \brief Returns the water vaporization factor \f$R_\alpha\f$ of saturated phase
+     *
+     * For the gas phase, this means the R_vw factor, for the water and oil phase,
+     * it is always 0.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    static LhsEval saturatedWaterVaporationFactor(const FluidState& fluidState,
+                                              unsigned phaseIdx,
+                                              unsigned regionIdx)
+    {
+        assert(phaseIdx <= numPhases);
+        assert(regionIdx <= numRegions());
+
+        const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
+        const auto& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
+
+        switch (phaseIdx) {
+        case oilPhaseIdx: return 0.0;
+        case gasPhaseIdx: return gasPvt_->saturatedWaterVaporizationFactor(regionIdx, T, p);
+        case waterPhaseIdx: return 0.0;
+        default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+        }
     }
 
     /*!
