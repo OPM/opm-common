@@ -383,6 +383,20 @@ private:
     }
 
     /*!
+    * \brief Convert a gas mole fraction in the oil phase the corresponding mass fraction.
+    *
+    * \param xoG mole fraction [-]
+    */
+    template <class LhsEval>
+    LhsEval convertxoGToXoG(const LhsEval& xoG) const
+    {
+        Scalar M_H2 = H2::molarMass();
+        Scalar M_Brine = Brine::molarMass();
+
+        return xoG*M_H2 / (xoG*(M_H2 - M_Brine) + M_Brine);
+    }
+
+    /*!
     * \brief Convert the mass fraction of the gas component in the oil phase to the corresponding gas dissolution
     * factor.
     * 
