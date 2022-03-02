@@ -33,6 +33,7 @@
 #include "WetGasPvt.hpp"
 #include "GasPvtThermal.hpp"
 #include "Co2GasPvt.hpp"
+#include "H2GasPvt.hpp"
 
 namespace Opm {
 
@@ -72,6 +73,11 @@ class Schedule;
         auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();             \
         codeToCall;                                                       \
         break;                                                            \
+    }
+    case GasPvtApproach::H2GasPvt: {                                     \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::H2GasPvt>();          \
+        codeToCall;                                                       \
+        break;                                                            \
     }                                                                     \
     case GasPvtApproach::NoGas:                                           \
         throw std::logic_error("Not implemented: Gas PVT of this deck!"); \
@@ -85,6 +91,7 @@ enum class GasPvtApproach {
     WetGas,
     ThermalGas,
     Co2Gas
+    H2GasPvt
 };
 
 /*!
@@ -144,6 +151,10 @@ public:
             delete &getRealPvt<GasPvtApproach::Co2Gas>();
             break;
         }
+        case GasPvtApproach::H2GasPvt: {
+            delete &getRealPvt<GasPvtApproach::H2GasPvt>();
+            break;
+        }
         case GasPvtApproach::NoGas:
             break;
         }
@@ -183,6 +194,10 @@ public:
 
         case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>;
+            break;
+
+	case GasPvtApproach::H2GasPvt:
+            realGasPvt_ = new H2GasPvt<Scalar>;
             break;
 
         case GasPvtApproach::NoGas:
@@ -416,6 +431,13 @@ public:
         return *static_cast<const Co2GasPvt<Scalar>* >(realGasPvt_);
     }
 
+    template <GasPvtApproach approachV>
+    typename std::enable_if<approachV == GasPvtApproach::H2GasPvt, const H2GasPvt<Scalar> >::type& getRealPvt() const
+    {
+        assert(gasPvtApproach() == approachV);
+        return *static_cast<const H2GasPvt<Scalar>* >(realGasPvt_);
+    }
+
     const void* realGasPvt() const { return realGasPvt_; }
 
     GasPvtMultiplexer<Scalar,enableThermal>& operator=(const GasPvtMultiplexer<Scalar,enableThermal>& data)
@@ -439,6 +461,9 @@ public:
             break;
         case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>(*static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_));
+            break;
+	case GasPvtApproach::H2GasPvt:
+            realGasPvt_ = new H2GasPvt<Scalar>(*static_cast<const H2GasPvt<Scalar>*>(data.realGasPvt_));
             break;
         default:
             break;

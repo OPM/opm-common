@@ -32,6 +32,7 @@
 #include "LiveOilPvt.hpp"
 #include "OilPvtThermal.hpp"
 #include "BrineCo2Pvt.hpp"
+#include "BrineH2Pvt.hpp"
 
 namespace Opm {
 
@@ -66,7 +67,12 @@ class Schedule;
         auto& pvtImpl = getRealPvt<OilPvtApproach::BrineCo2>();                   \
         codeToCall;                                                               \
         break;                                                                    \
-    }                                                                             \
+    }    
+    case OilPvtApproach::BrineH2Pvt: {                                              \
+        auto& pvtImpl = getRealPvt<OilPvtApproach::BrineH2Pvt>();                   \
+        codeToCall;                                                                  \
+        break;                                                                       \
+    }                                                                       \
     case OilPvtApproach::NoOil:                                                   \
         throw std::logic_error("Not implemented: Oil PVT of this deck!");         \
     }
@@ -78,6 +84,7 @@ enum class OilPvtApproach {
     ConstantCompressibilityOil,
     ThermalOil,
     BrineCo2
+    BrineH2Pvt
 };
 
 /*!
@@ -135,7 +142,10 @@ public:
             delete &getRealPvt<OilPvtApproach::BrineCo2>();
             break;
         }
-
+	case OilPvtApproach::BrineH2Pvt: {
+            delete &getRealPvt<OilPvtApproach::BrineH2Pvt>();
+            break;
+        }
         case OilPvtApproach::NoOil:
             break;
         }
@@ -281,6 +291,10 @@ public:
             realOilPvt_ = new BrineCo2Pvt<Scalar>;
             break;
 
+        case OilPvtApproach::BrineH2Pvt:
+            realOilPvt_ = new BrineH2Pvt<Scalar>;
+            break;
+
         case OilPvtApproach::NoOil:
             throw std::logic_error("Not implemented: Oil PVT of this deck!");
         }
@@ -387,6 +401,9 @@ public:
             break;
         case OilPvtApproach::BrineCo2:
             realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
+            break;
+	case OilPvtApproach::BrineH2Pvt:
+            realOilPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realOilPvt_));
             break;
         default:
             break;
