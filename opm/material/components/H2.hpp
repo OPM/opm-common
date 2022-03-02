@@ -44,7 +44,7 @@ namespace Opm {
  * \tparam Scalar The type used for scalar values
  */
 template <class Scalar>
-class H2 : public Components<Scalar, H2<Scalar> >
+class H2 : public Component<Scalar, H2<Scalar> >
 {
     using IdealGas = Opm::IdealGas<Scalar>;
 
@@ -253,43 +253,6 @@ public:
               (cpVapB/2 + T*
                 (cpVapC/3 + T*
                  (cpVapD/4))));
-    }
-
-    /*!
-     * \brief The dynamic viscosity \f$\mathrm{[Pa*s]}\f$ of \f$H_2\f$ at a given pressure and temperature.
-     *
-     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
-     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
-     *
-     * See:
-     *
-     * See: R. Reid, et al.: The Properties of Gases and Liquids,
-     * 4th edition (1987, pp 396-397, 667) \cite reid1987 <BR>
-     * 5th edition (2001, pp 9.7-9.8 (omega and V_c taken from p. A.19)) \cite poling2001
-     */
-    template <class Evaluation>
-    static Evaluation gasViscosity(Evaluation temperature, Evaluation pressure)
-    {
-        const Scalar Tc = criticalTemperature();
-        const Scalar Vc = 65.0; // critical specific volume [cm^3/mol]
-        const Scalar omega = -0.216; // accentric factor
-        const Scalar M = molarMass() * 1e3; // molar mas [g/mol]
-        const Scalar dipole = 0.0; // dipole moment [debye]
-
-        Scalar mu_r4 = 131.3 * dipole / std::sqrt(Vc * Tc);
-        mu_r4 *= mu_r4;
-        mu_r4 *= mu_r4;
-
-        Scalar Fc = 1 - 0.2756*omega + 0.059035*mu_r4;
-        Evaluation Tstar = 1.2593 * temperature/Tc;
-        Evaluation Omega_v =
-            1.16145*pow(Tstar, -0.14874) +
-            0.52487*exp(- 0.77320*Tstar) +
-            2.16178*exp(- 2.43787*Tstar);
-        Evaluation mu = 40.785*Fc*sqrt(M*temperature)/(std::pow(Vc, 2./3)*Omega_v);
-
-        // convertion from micro poise to Pa s
-        return mu/1e6 / 10;
     }
 };
 
