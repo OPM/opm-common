@@ -28,6 +28,7 @@
 #define OPM_H2_GAS_PVT_HPP
 
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
+#include <opm/material/components/H2.hpp>
 #include <opm/material/binarycoefficients/Brine_H2.hpp>
 
 #if HAVE_ECL_INPUT
@@ -170,7 +171,7 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        return H2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
+        return H2::gasDensity(temperature, pressure)/gasReferenceDensity_[regionIdx];
     }
 
     /*!

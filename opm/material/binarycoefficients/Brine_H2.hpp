@@ -31,9 +31,6 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/binarycoefficients/FullerMethod.hpp>
 
-#include <opm/material/components/H2O.hpp>
-#include <opm/material/components/H2.hpp>
-
 namespace Opm {
 namespace BinaryCoeff {
 
@@ -191,8 +188,8 @@ public:
     static Evaluation convertPgToReducedRho_(const Evaluation& temperature, const Evaluation& pg)
     {
         // Interval for search
-        Scalar rho_red_min = 0.0;
-        Scalar rho_red_max = 1.0;
+        Evaluation rho_red_min = 0.0;
+        Evaluation rho_red_max = 1.0;
 
         // Obj. value at min, fmin=f(xmin) for first comparison with fmid=f(xmid)
         Evaluation fmin = -pg / 1.0e6;  // at 0.0 we don't need to envoke function (see also why in rootFindingObj_)
@@ -205,11 +202,12 @@ public:
 
             // Check if midpoint fulfills f=0 or x-xmin is sufficiently small
             if (Opm::abs(fmid) < 1e-8 || Opm::abs((rho_red_max - rho_red_min) / 2) < 1e-8) {
-                return rho_red
+                return rho_red;
             }
 
             // Else we repeat with midpoint being either xmin or xmax (depending on the signs)
-            else if (Dune::sign(fmid) != Dune::sign(fmin)) {
+            else if ((Opm::getValue(fmid) > 0.0 && Opm::getValue(fmin) < 0.0) ||
+                (Opm::getValue(fmid) < 0.0 && Opm::getValue(fmin) > 0.0)) {
                 // fmid has same sign as fmax so we set xmid as the new xmax
                 rho_red_max = rho_red;
             }
@@ -329,6 +327,7 @@ public:
 
         // Eq. (7) in Li et al. (2018), which can be compared with Eq. (55) in Span et al. (2000)
         // First sum term
+        Evaluation s1 = 0.0;
         for (int i = 0; i < 7; ++i) {
             s1 += N[i] * pow(rho_red, d[i]) * pow(T_red, t[i]);
         }
@@ -356,12 +355,9 @@ public:
     *
     * To calculate the values, the \ref fullerMethod is used.
     */
-    template <class Scalar, class Evaluation = Scalar>
+    template <class Evaluation>
     static Evaluation gasDiffCoeff(const Evaluation& temperature, const Evaluation& pressure)
     {
-        typedef H2O<Scalar> H2O;
-        typedef H2<Scalar> H2;
-
         // atomic diffusion volumes
         const Scalar SigmaNu[2] = { 13.1 /* H2O */,  7.07 /* CO2 */ };
         // molar masses [g/mol]
