@@ -339,9 +339,9 @@ private:
         const LhsEval& rho_pure = H2O::liquidDensity(temperature, pl, extrapolate);
 
         // (apparent) molar volume of H2, Eq. (14) in Li et al. (2018)
-        const LhsEval& A1 = 51.1904 - 0.208062*temperature + 3.4427e-4*temperature*temperature;
+        const LhsEval& A1 = 51.1904 - 0.208062*temperature + 3.4427e-4*(temperature*temperature);
         const LhsEval& A2 = -0.022;
-        const LhsEval& V_phi = A1 + A2 * pl;
+        const LhsEval& V_phi = (A1 + A2 * (pl / 1e6)) / 1e6;  // pressure in [MPa] and Vphi in [m3/mol] (from [cm3/mol])
 
         // density of solution, Eq. (19) in Garcia (2001)
         const LhsEval xlH2O = 1.0 - xlH2;
