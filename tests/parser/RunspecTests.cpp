@@ -434,55 +434,6 @@ WELLDIMS
     BOOST_CHECK_EQUAL(wd.maxGroupsInField(), 0);  // WELLDIMS(3), defaulted
 }
 
-BOOST_AUTO_TEST_CASE(WELLDIMS_MaxWList_Dflt)
-{
-    const auto input = std::string { R"(
-RUNSPEC
-
-WELLDIMS
-/
-)" };
-
-    const auto wd = Welldims {
-        Parser{}.parseString(input)
-    };
-
-    BOOST_CHECK_EQUAL(wd.maxWellListsPrWell(), 1); // WELLDIMS(11), defaulted
-}
-
-BOOST_AUTO_TEST_CASE(WELLDIMS_MaxWList_Assigned)
-{
-    const auto input = std::string { R"(
-RUNSPEC
-
-WELLDIMS
-10* 5 /
-)" };
-
-    const auto wd = Welldims {
-        Parser{}.parseString(input)
-    };
-
-    BOOST_CHECK_EQUAL(wd.maxWellListsPrWell(), 5); // WELLDIMS(11), assigned
-}
-
-BOOST_AUTO_TEST_CASE(WELLDIMS_MaxWList_Zero)
-{
-    const auto input = std::string { R"(
-RUNSPEC
-
-WELLDIMS
-10* 0 /
-)" };
-
-    const auto wd = Welldims {
-        Parser{}.parseString(input)
-    };
-
-    // WELLDIMS(11) assigned but reset to at least 1.
-    BOOST_CHECK_EQUAL(wd.maxWellListsPrWell(), 1);
-}
-
 BOOST_AUTO_TEST_CASE(WSEGDIMS_NotSpecified)
 {
     const auto input = std::string {
@@ -1047,6 +998,28 @@ BOOST_AUTO_TEST_CASE(Co2Storage_watergas) {
     BOOST_CHECK( phases.active( Phase::WATER ) );
     BOOST_CHECK( phases.active( Phase::GAS ) );
     BOOST_CHECK( runspec.co2Storage() );
+
+
+}
+
+BOOST_AUTO_TEST_CASE(H2Storage) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    GAS
+    H2STORE
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    const auto& phases = runspec.phases();
+    BOOST_CHECK_EQUAL( 2U, phases.size() );
+    BOOST_CHECK( phases.active( Phase::OIL ) );
+    BOOST_CHECK( phases.active( Phase::GAS ) );
+    BOOST_CHECK( runspec.h2Storage() );
 
 
 }
