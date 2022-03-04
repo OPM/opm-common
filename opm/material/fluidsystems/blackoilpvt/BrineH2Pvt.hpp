@@ -207,7 +207,7 @@ public:
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rs*/) const
     {
-        throw std::runtime_error("Requested the saturation pressure for the brine-co2 pvt module. Not yet implemented.");
+        throw std::runtime_error("Requested the saturation pressure for the Brine-H2 pvt module. Not yet implemented.");
     }
 
     /*!

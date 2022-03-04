@@ -36,7 +36,7 @@ namespace BinaryCoeff {
 
 /*!
 * \ingroup Binarycoefficients
-* \brief Binary coefficients for brine and CO2.
+* \brief Binary coefficients for brine and H2.
 */
 template<class Scalar, class H2O, class H2, bool verbose = true>
 class Brine_H2 {
@@ -46,8 +46,8 @@ class Brine_H2 {
 
 public:
     /*!
-    * \brief Returns the _mol_ (!) fraction of H2 in the liquid phase for a given temperature, pressure, H2 molality and
-    * brine salinity. Implemented according to Li et al., Int. J. Hydrogen Energ., 2018.
+    * \brief Returns the _mol_ (!) fraction of H2 in the liquid phase for a given temperature, pressure, and brine
+    * salinity. Implemented according to Li et al., Int. J. Hydrogen Energ., 2018.
     *
     * \param temperature temperature [K]
     * \param pg gas phase pressure [Pa]
@@ -69,11 +69,8 @@ public:
         Evaluation PF = computePoyntingFactor_(temperature, pg);
         Evaluation lnGammaH2 = activityCoefficient_(temperature, salinity);
 
-        // Eq. (6) to get molality of H2 in brine
-        Evaluation solH2 = exp(lnYH2 + lnPg + lnPhiH2 - lnKh - PF - lnGammaH2 - 4.0166);
-
-        // Convert to mole fraction
-        xH2 = solH2 / (55.51 + solH2);
+        // Eq. (4) to get mole fraction of H2 in brine
+        xH2 = exp(lnYH2 + lnPg + lnPhiH2 - lnKh - PF - lnGammaH2);
     }
 
     /*!
@@ -162,7 +159,7 @@ public:
     {
         // Convert pressure to reduced density and temperature to reduced temperature
         Evaluation rho_red = convertPgToReducedRho_(temperature, pg);
-        Evaluation T_red = temperature / H2::criticalTemperature();
+        Evaluation T_red = H2::criticalTemperature() / temperature;
 
         // Residual Helmholtz energy, Eq. (7) in Li et al. (2018)
         Evaluation resHelm = residualHelmholtz_(T_red, rho_red);
@@ -187,12 +184,25 @@ public:
     template <class Evaluation> 
     static Evaluation convertPgToReducedRho_(const Evaluation& temperature, const Evaluation& pg)
     {
-        // Interval for search
+        // Interval for search. xmin = 0.0 is good since it guaranties negative fmin.
         Evaluation rho_red_min = 0.0;
-        Evaluation rho_red_max = 1.0;
+        Evaluation fmin = -pg / 1.0e6;  // at 0.0 we don't need to envoke function (see eq.(9) in Li et al. (2018))
 
-        // Obj. value at min, fmin=f(xmin) for first comparison with fmid=f(xmid)
-        Evaluation fmin = -pg / 1.0e6;  // at 0.0 we don't need to envoke function (see also why in rootFindingObj_)
+        // xmax must be high enough to give positive xmax. Check fmax for xmax given. If fmax is not positive we
+        // increase xmax
+        Evaluation rho_red_max = 2.0;  // start
+        Evaluation fmax = rootFindingObj_(rho_red_max, temperature, pg);
+        if (Opm::getValue(fmax) <= 0.0) {
+            // increase 10 times, and if that does not give fmax > 0, we abort
+            for (int i=0; i < 10; ++i) {
+                rho_red_max *= 1.25;
+                fmax = rootFindingObj_(rho_red_max, temperature, pg);
+                if (Opm::getValue(fmax) < 0.0) {
+                    break;
+                }
+            }
+            throw std::runtime_error("No max reduced density could be found for current pressure for bisection!");
+        }
 
         // Bisection loop
         for (int iteration=1; iteration<100; ++iteration) {
@@ -217,6 +227,7 @@ public:
                 fmin = fmid;
             }
         }
+        throw std::runtime_error("No reduced density could be found for current pressure using bisection!");
     }
 
     /*!
@@ -230,7 +241,7 @@ public:
     static Evaluation rootFindingObj_(const Evaluation& rho_red, const Evaluation& temperature, const Evaluation& pg)
     {
         // Temporary calculations
-        Evaluation T_red = temperature / H2::criticalTemperature();  // reduced temp.
+        Evaluation T_red = H2::criticalTemperature() / temperature;  // reciprocal reduced temp.
         Evaluation p_MPa = pg / 1.0e6;  // Pa --> MPa
         Scalar R = IdealGas::R;
         Evaluation rho_cRT = H2::criticalDensity() * R * temperature;
@@ -297,8 +308,7 @@ public:
         return s;
     }
     /*!
-    * \brief The residual part of Helmholtz energy wrt. reduced density. Used primarily to calculate fugacity
-    * coefficient for H2.
+    * \brief The residual part of Helmholtz energy. Used primarily to calculate fugacity coefficient in Li et al (2018).
     * 
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
@@ -359,7 +369,7 @@ public:
     static Evaluation gasDiffCoeff(const Evaluation& temperature, const Evaluation& pressure)
     {
         // atomic diffusion volumes
-        const Scalar SigmaNu[2] = { 13.1 /* H2O */,  7.07 /* CO2 */ };
+        const Scalar SigmaNu[2] = { 13.1 /* H2O */,  7.07 /* H2 */ };
         // molar masses [g/mol]
         const Scalar M[2] = { H2O::molarMass()*1e3, H2::molarMass()*1e3 };
 
