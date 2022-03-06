@@ -36,7 +36,7 @@
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-//#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+
 #endif
 
 #if HAVE_OPM_COMMON
@@ -476,19 +476,6 @@ public:
     {
         return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
     }
-
-    // /*!
-    //  * \brief Returns the water vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
-    //  */
-    // template <class Evaluation>
-    // Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
-    //                                           const Evaluation& /*temperature*/,
-    //                                           const Evaluation& pressure,
-    //                                           const Evaluation& waterSaturation,
-    //                                           Evaluation maxWaterSaturation) const
-    // {
-    //     return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);;
-    // }
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.

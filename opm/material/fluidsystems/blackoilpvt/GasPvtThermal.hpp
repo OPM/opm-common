@@ -326,14 +326,6 @@ public:
         return b/(1 + (cT1 + cT2*Y)*Y);
     }
 
-    // template <class Evaluation>
-    // Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-    //                                           const Evaluation& /*temperature*/,
-    //                                           const Evaluation& /*pressure*/,
-    //                                           const Evaluation& /*oilSaturation*/,
-    //                                           const Evaluation& /*maxOilSaturation*/) const
-    // { return 0.0; }
-
     /*!
      * \brief Returns the water vaporization factor \f$R_v\f$ [m^3/m^3] of the water phase.
      */

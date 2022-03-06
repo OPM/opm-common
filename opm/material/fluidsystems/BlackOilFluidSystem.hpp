@@ -738,6 +738,16 @@ public:
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
                     + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx);
             }
+            //vaporized oil simultaneous with vaporized water is not yet supported
+            if (enableVaporizedWater()) {
+                // gas containing vaporized water
+                const LhsEval& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rvw);
+
+                return
+                    bg*referenceDensity(gasPhaseIdx, regionIdx)
+                    + Rvw*bg*referenceDensity(waterPhaseIdx, regionIdx);
+            }
 
             // immiscible gas
             const LhsEval Rv(0.0);
@@ -800,7 +810,16 @@ public:
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
                     + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx);
             }
-            //PJPE: need to consider water evaporization
+            //vaporized oil simultaneous with vaporized water is not yet supported
+            if (enableVaporizedWater()) {
+                // gas containing vaporized water
+                const LhsEval& Rvw = saturatedVaporizationFactor<FluidState, LhsEval>(fluidState, gasPhaseIdx, regionIdx);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rvw);
+
+                return
+                    bg*referenceDensity(gasPhaseIdx, regionIdx)
+                    + Rvw*bg*referenceDensity(waterPhaseIdx, regionIdx);
+            }
 
             // immiscible gas
             const LhsEval Rv(0.0);
@@ -1121,7 +1140,7 @@ public:
      * it is always 0.
      */
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
-    static LhsEval saturatedWaterVaporationFactor(const FluidState& fluidState,
+    static LhsEval saturatedVaporizationFactor(const FluidState& fluidState,
                                               unsigned phaseIdx,
                                               unsigned regionIdx)
     {
