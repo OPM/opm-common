@@ -527,14 +527,6 @@ public:
                                                      const Evaluation& pressure) const
     { return inverseSaturatedGasB_[regionIdx].eval(pressure, /*extrapolate=*/true); }
 
-    // template <class Evaluation>
-    // Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-    //                                           const Evaluation& /*temperature*/,
-    //                                           const Evaluation& /*pressure*/,
-    //                                           const Evaluation& /*oilSaturation*/,
-    //                                           const Evaluation& /*maxOilSaturation*/) const
-    // { return 0.0; /* this is non-humid gas! */ }
-
     /*!
      * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the gasphase.
      */

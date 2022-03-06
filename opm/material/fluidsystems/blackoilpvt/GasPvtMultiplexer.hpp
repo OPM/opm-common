@@ -152,7 +152,7 @@ public:
             setApproach(GasPvtApproach::ThermalGasPvt);
         else if (!eclState.getTableManager().getPvtgTables().empty())
             setApproach(GasPvtApproach::WetGasPvt);
-        else if (eclState.getTableManager().hasTables("PVDG")) //PJPE:for simple table
+        else if (eclState.getTableManager().hasTables("PVDG"))
             setApproach(GasPvtApproach::DryGasPvt);
         else if (!eclState.getTableManager().getPvtgwTables().empty())
             setApproach(GasPvtApproach::DryHumidGasPvt);
@@ -282,17 +282,6 @@ public:
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure)); return 0; }
-
-    // /*!
-    //  * \brief Returns the water vaporization factor \f$R_v\f$ [m^3/m^3] of water saturated gas.
-    //  */
-    // template <class Evaluation = Scalar>
-    // Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
-    //                                           const Evaluation& temperature,
-    //                                           const Evaluation& pressure,
-    //                                           const Evaluation& waterSaturation,
-    //                                           const Evaluation& maxWaterSaturation) const
-    // { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure, waterSaturation, maxWaterSaturation)); return 0; }
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
