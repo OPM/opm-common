@@ -21,3 +21,5 @@ ${PYTHON38} -m pip install pip --upgrade
 ${PYTHON38} -m pip install wheel setuptools twine pytest-runner auditwheel
 ${PYTHON39} -m pip install pip --upgrade
 ${PYTHON39} -m pip install wheel setuptools twine pytest-runner auditwheel
+${PYTHON310} -m pip install pip --upgrade
+${PYTHON310} -m pip install wheel setuptools twine pytest-runner auditwheel
