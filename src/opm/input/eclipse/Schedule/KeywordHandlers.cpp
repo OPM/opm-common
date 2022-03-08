@@ -936,7 +936,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleVFPPROD(HandlerContext& handlerContext) {
-        auto table = VFPProdTable(handlerContext.keyword, this->m_static.m_unit_system);
+        auto table = VFPProdTable(handlerContext.keyword, this->m_static.gaslift_opt_active, this->m_static.m_unit_system);
         this->snapshots.back().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
         this->snapshots.back().vfpprod.update( std::move(table) );
     }

@@ -51,6 +51,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
@@ -144,7 +145,8 @@ namespace Opm {
         rst_config( SOLUTIONSection(deck), parseContext, errors ),
         output_interval(output_interval_),
         sumthin(sumthin_summary_section(SUMMARYSection{ deck })),
-        rptonly(rptonly_summary_section(SUMMARYSection{ deck }))
+        rptonly(rptonly_summary_section(SUMMARYSection{ deck })),
+        gaslift_opt_active(deck.hasKeyword<ParserKeywords::LIFTOPT>())
     {
     }
 

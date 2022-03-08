@@ -82,10 +82,12 @@ VFPProdTable::GFR_TYPE getGFRType( const DeckItem& item) {;
     throw std::invalid_argument("Invalid GFR string");
 }
 
-VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
-    if (item.defaultApplied(0))
+VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item, bool gaslift_opt_active) {
+    if (item.defaultApplied(0)) {
+        if (gaslift_opt_active)
+            return VFPProdTable::ALQ_TYPE::ALQ_GRAT;
         return VFPProdTable::ALQ_TYPE::ALQ_UNDEF;
-    else {
+    } else {
         const std::string& alq_string = item.getTrimmedString(0);
 
         if (alq_string == "GRAT")
@@ -106,8 +108,11 @@ VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
         if (alq_string == "BEAN")
             return VFPProdTable::ALQ_TYPE::ALQ_BEAN;
 
-        if (alq_string == "")
+        if (alq_string == "") {
+            if (gaslift_opt_active)
+                return VFPProdTable::ALQ_TYPE::ALQ_GRAT;
             return VFPProdTable::ALQ_TYPE::ALQ_UNDEF;
+        }
 
         throw std::invalid_argument("Invalid ALQ_DEF string: " + alq_string);
     }
@@ -174,7 +179,11 @@ VFPProdTable VFPProdTable::serializeObject()
 }
 
 
-VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) :
+/*
+  If the gaslift_opt flag is set to true the ALQ_TYPE item will default to GRAT.
+*/
+
+VFPProdTable::VFPProdTable( const DeckKeyword& table, bool gaslift_opt_active, const UnitSystem& deck_unit_system) :
     m_location(table.location())
 {
     using ParserKeywords::VFPPROD;
@@ -201,7 +210,7 @@ VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_uni
         throw std::invalid_argument("PRESSURE_DEF is required to be THP");
     }
 
-    m_alq_type = Opm::getALQType(header.getItem<VFPPROD::ALQ_DEF>());
+    m_alq_type = Opm::getALQType(header.getItem<VFPPROD::ALQ_DEF>(), gaslift_opt_active);
 
     //Check units used for this table
     std::string units_string = "";
