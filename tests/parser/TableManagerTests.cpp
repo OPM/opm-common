@@ -698,7 +698,7 @@ VFPPROD \n\
 
     BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
-    Opm::VFPProdTable vfpprodTable(vfpprodKeyword, units);
+    Opm::VFPProdTable vfpprodTable(vfpprodKeyword, false, units);
 
 
     BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
@@ -822,14 +822,14 @@ VFPPROD \n\
 
     BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
-    Opm::VFPProdTable vfpprodTable(vfpprodKeyword, units);
+    Opm::VFPProdTable vfpprodTable(vfpprodKeyword, true , units);
 
     BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpprodTable.getDatumDepth(), 32.9);
     BOOST_CHECK(vfpprodTable.getFloType() == Opm::VFPProdTable::FLO_TYPE::FLO_LIQ);
     BOOST_CHECK(vfpprodTable.getWFRType() == Opm::VFPProdTable::WFR_TYPE::WFR_WCT);
     BOOST_CHECK(vfpprodTable.getGFRType() == Opm::VFPProdTable::GFR_TYPE::GFR_GOR);
-    BOOST_CHECK(vfpprodTable.getALQType() == Opm::VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
+    BOOST_CHECK(vfpprodTable.getALQType() == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT);
 
     //Flo axis
     {
@@ -869,13 +869,18 @@ VFPPROD \n\
         BOOST_CHECK_EQUAL(gfr[0], 19);
     }
 
-    //ALQ axis
+    //ALQ axis. The table has been instantiated with gaslift_opt == true, which
+    //implies that the ALQ_TYPE has been converted from ALQ_UNDEF to GRAT during
+    //construction.
     {
         const std::vector<double>& alq = vfpprodTable.getALQAxis();
         BOOST_REQUIRE_EQUAL(alq.size(), 1U);
 
-        //Unit of ALQ undefined
-        BOOST_CHECK_EQUAL(alq[0], 29);
+        const auto gas_surface_volume    = units.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
+        const auto time                  = units.getDimension(UnitSystem::measure::time).getSIScaling();
+
+        auto scaling_factor = gas_surface_volume / time;
+        BOOST_CHECK_EQUAL(alq[0], 29 * scaling_factor);
     }
 
     //The data itself
@@ -967,7 +972,7 @@ VFPPROD \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1001,7 +1006,7 @@ VFPPROD \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1033,7 +1038,7 @@ VFPPROD \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1066,7 +1071,7 @@ VFPPROD \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1099,7 +1104,7 @@ VFPPROD \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, false, units), std::invalid_argument);
     }
 }
 
@@ -1228,7 +1233,7 @@ VFPINJ \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1256,7 +1261,7 @@ VFPINJ \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1283,7 +1288,7 @@ VFPINJ \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1311,7 +1316,7 @@ VFPINJ \n\
         auto units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, false, units), std::invalid_argument);
     }
 
 
@@ -1339,7 +1344,7 @@ VFPINJ \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, false, units), std::invalid_argument);
     }
 }
 

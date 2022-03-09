@@ -67,7 +67,7 @@ public:
     };
 
     VFPProdTable();
-    VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
+    VFPProdTable( const DeckKeyword& table, bool gaslift_opt_active, const UnitSystem& deck_unit_system);
     VFPProdTable(int table_num,
                  double datum_depth,
                  FLO_TYPE flo_type,

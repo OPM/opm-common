@@ -87,6 +87,7 @@ namespace Opm
         std::optional<int> output_interval;
         double sumthin{-1.0};
         bool rptonly{false};
+        bool gaslift_opt_active{false};
 
         ScheduleStatic() = default;
 
@@ -113,6 +114,7 @@ namespace Opm
             rst_info.serializeOp(serializer);
             rst_config.serializeOp(serializer);
             serializer(this->output_interval);
+            serializer(this->gaslift_opt_active);
         }
 
 
@@ -134,6 +136,7 @@ namespace Opm
                    this->m_unit_system == other.m_unit_system &&
                    this->rst_config == other.rst_config &&
                    this->rst_info == other.rst_info &&
+                   this->gaslift_opt_active == other.gaslift_opt_active &&
                    this->m_runspec == other.m_runspec;
         }
     };
