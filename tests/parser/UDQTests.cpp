@@ -17,53 +17,65 @@ Copyright 2018 Statoil ASA.
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <stdexcept>
-
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Utility/Typetools.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/Deck/UDAValue.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
-#include <opm/common/utility/TimeService.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
+
+#include <opm/input/eclipse/Utility/Typetools.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 using namespace Opm;
 
-Schedule make_schedule(const std::string& input) {
-    Parser parser;
-    auto python = std::make_shared<Python>();
+namespace {
+    Schedule make_schedule(const std::string& input) {
+        Parser parser;
+        auto python = std::make_shared<Python>();
 
-    auto deck = parser.parseString(input);
-    if (deck.hasKeyword("DIMENS")) {
-        EclipseState es(deck);
-        return Schedule(deck, es, python);
-    } else {
-        EclipseGrid grid(10,10,10);
-        TableManager table ( deck );
-        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-        Runspec runspec (deck);
-        return Schedule(deck, grid , fp, runspec, python);
+        auto deck = parser.parseString(input);
+        if (deck.hasKeyword("DIMENS")) {
+            EclipseState es(deck);
+            return Schedule(deck, es, python);
+        } else {
+            EclipseGrid grid(10,10,10);
+            TableManager table ( deck );
+            FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+            Runspec runspec (deck);
+            return Schedule(deck, grid , fp, runspec, python);
+        }
     }
-}
+} // namespace anonymous
 
 BOOST_AUTO_TEST_CASE(TYPE_COERCION) {
     BOOST_CHECK( UDQVarType::SCALAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::SCALAR) );
@@ -1610,11 +1622,13 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
     }
 }
 
-Schedule make_udq_schedule(const std::string& schedule_string) {
+namespace {
+    Schedule make_udq_schedule(const std::string& schedule_string) {
 #include "data/integration_tests/udq2.data"
-    deck_string += schedule_string;
-    return make_schedule(deck_string);
-}
+        deck_string += schedule_string;
+        return make_schedule(deck_string);
+    }
+} // Namespace anonymous
 
 BOOST_AUTO_TEST_CASE(IntegrationTest2) {
     const std::string udq_string = R"(
