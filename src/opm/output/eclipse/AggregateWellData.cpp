@@ -45,10 +45,9 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
-#include <fmt/format.h>
-
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <exception>
@@ -57,6 +56,8 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+
+#include <fmt/format.h>
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
@@ -806,12 +807,13 @@ namespace {
             xWell[Ix::HistWatInjTotal] = get("WWITH");
             xWell[Ix::HistGasInjTotal] = get("WGITH");
         }
+
         template <class XWellArray>
         void assignProducer(const std::string&         well,
                             const ::Opm::SummaryState& smry,
                             XWellArray&                xWell)
         {
-            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+            using Ix = VI::XWell::index;
 
             auto get = [&smry, &well](const std::string& vector)
             {
@@ -832,6 +834,7 @@ namespace {
             xWell[Ix::GORatio] = get("WGOR");
 
             // Not fully characterised.
+            xWell[Ix::item36] = xWell[Ix::OilPrRate];
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
 
@@ -848,6 +851,16 @@ namespace {
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
+            // Injection rates reported as negative.
+            xWell[Ix::OilPrRate] = -get("WOIR");
+            xWell[Ix::WatPrRate] = -get("WWIR");
+            xWell[Ix::GasPrRate] = -get("WGIR");
+
+            // Not fully characterised.
+            xWell[Ix::item36] = xWell[Ix::OilPrRate];
+            xWell[Ix::item37] = xWell[Ix::WatPrRate];
+            xWell[Ix::item38] = xWell[Ix::GasPrRate];
+
             xWell[Ix::TubHeadPr] = get("WTHP");
             xWell[Ix::FlowBHP] = get("WBHP");
         }
@@ -861,20 +874,14 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get_well_var(well, vector, 0);
+                return smry.get_well_var(well, vector, 0.0);
             };
 
             assignCommonInjector(get, xWell);
 
-            // Injection rates reported as negative.
-            xWell[Ix::WatPrRate] = -get("WWIR");
             xWell[Ix::LiqPrRate] = xWell[Ix::WatPrRate];
 
-            // Not fully characterised.
-            xWell[Ix::item37] = xWell[Ix::WatPrRate];
-
             xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WWIGR");
-
             xWell[Ix::WatVoidPrRate] = -get("WWVIR");
         }
 
@@ -887,13 +894,12 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get_well_var(well, vector, 0);
+                return smry.get_well_var(well, vector, 0.0);
             };
 
             assignCommonInjector(get, xWell);
 
             // Injection rates reported as negative production rates.
-            xWell[Ix::GasPrRate]  = -get("WGIR");
             xWell[Ix::VoidPrRate] = -get("WGVIR");
 
             xWell[Ix::GasFVF] = (std::abs(xWell[Ix::GasPrRate]) > 0.0)
@@ -904,11 +910,7 @@ namespace {
                 xWell[Ix::GasFVF] = 0.0;
             }
 
-            // Not fully characterised.
-            xWell[Ix::item38] = xWell[Ix::GasPrRate];
-
             xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WGIGR");
-
             xWell[Ix::GasVoidPrRate] = xWell[Ix::VoidPrRate];
         }
 
@@ -917,16 +919,17 @@ namespace {
                                const ::Opm::SummaryState& smry,
                                XWellArray&                xWell)
         {
-            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+            using Ix = VI::XWell::index;
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get_well_var(well, vector, 0);
+                return smry.get_well_var(well, vector, 0.0);
             };
 
-            xWell[Ix::TubHeadPr] = get("WTHP");
-            xWell[Ix::FlowBHP] = get("WBHP");
+            assignCommonInjector(get, xWell);
 
+            // Injection rates reported as negative production rates.
+            xWell[Ix::VoidPrRate] = -get("WOVIR");
             xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WOIGR");
         }
 
@@ -1091,13 +1094,13 @@ AggregateWellData(const std::vector<int>& inteHead)
 
 void
 Opm::RestartIO::Helpers::AggregateWellData::
-captureDeclaredWellData(const Schedule&   sched,
-                        const TracerConfig& tracers,
-                        const std::size_t sim_step,
+captureDeclaredWellData(const Schedule&             sched,
+                        const TracerConfig&         tracers,
+                        const std::size_t           sim_step,
                         const ::Opm::Action::State& action_state,
-                        const Opm::WellTestState& wtest_state,
+                        const Opm::WellTestState&   wtest_state,
                         const ::Opm::SummaryState&  smry,
-                        const std::vector<int>& inteHead)
+                        const std::vector<int>&     inteHead)
 {
     const auto& wells = sched.wellNames(sim_step);
     const auto& step_glo = sched.glo(sim_step);
@@ -1106,7 +1109,7 @@ captureDeclaredWellData(const Schedule&   sched,
     {
         //const auto grpNames = groupNames(sched.getGroups());
         const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
-        auto msWellID       = std::size_t{0};
+        auto msWellID = std::size_t{0};
 
         wellLoop(wells, sched, sim_step, [&groupMapNameIndex, &msWellID, &step_glo, &wtest_state, &smry, &sched, &sim_step, this]
             (const Well& well, const std::size_t wellID) -> void
@@ -1155,7 +1158,7 @@ Opm::RestartIO::Helpers::AggregateWellData::
 captureDynamicWellData(const Opm::Schedule&        sched,
                        const TracerConfig&         tracers,
                        const std::size_t           sim_step,
-                       const Opm::data::Wells& xw,
+                       const Opm::data::Wells&     xw,
                        const ::Opm::SummaryState&  smry)
 {
     const auto& wells = sched.wellNames(sim_step);
