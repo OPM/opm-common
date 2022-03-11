@@ -1290,6 +1290,25 @@ BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
     BOOST_CHECK_EQUAL( def2.input_string() , "2 * (1 + WBHP)");
 }
 
+BOOST_AUTO_TEST_CASE(INPUT_STRING_SCIENTIFIC_NOTATION) {
+    const auto schedule = make_schedule(R"(
+SCHEDULE
+UDQ
+DEFINE FU_THREE (3000000 + FU_ONE*1500000 + 1000000*FU_TWO)/365 /
+/
+)");
+
+    const auto& udq = schedule.getUDQConfig(0);
+    const auto def = udq.definitions();
+
+    BOOST_CHECK_EQUAL(def.size(), 1ULL);
+
+    const auto expect_input_string = std::string {
+        "(3E+06 + FU_ONE * 1.5E+06 + 1E+06 * FU_TWO) / 365"
+    };
+
+    BOOST_CHECK_EQUAL(def[0].input_string(), expect_input_string);
+}
 
 BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     UDQParams udqp;
