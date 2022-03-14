@@ -28,7 +28,6 @@
 #ifndef OPM_BINARY_COEFF_BRINE_H2_HPP
 #define OPM_BINARY_COEFF_BRINE_H2_HPP
 
-#include <opm/material/IdealGas.hpp>
 #include <opm/material/binarycoefficients/FullerMethod.hpp>
 
 namespace Opm {
@@ -40,7 +39,6 @@ namespace BinaryCoeff {
 */
 template<class Scalar, class H2O, class H2, bool verbose = true>
 class Brine_H2 {
-    using IdealGas = Opm::IdealGas<Scalar>;
     static const int liquidPhaseIdx = 0; // index of the liquid phase
     static const int gasPhaseIdx = 1; // index of the gas phase
 
@@ -149,7 +147,7 @@ public:
     /*!
     * \brief Calculate fugacity coefficient for H2 which is needed in calculation of H2 solubility in Li et al (2018).
     * The equation used is based on Helmoltz free energy EOS. The formulas here are taken from Span et al., J. Phys.
-    * Chem. Ref. Data 29, 2000 and adapted to H2 in Li et al (2018).
+    * Chem. Ref. Data 29, 2000 and Leachman et al., J. Phys. Chem. Ref. Data 38, 2009, and Li et al. (2018).
     * 
     * \param temperature temperature [K]
     * \param pg gas phase pressure [Pa] 
@@ -158,206 +156,19 @@ public:
     static Evaluation fugacityCoefficientH2(const Evaluation& temperature, const Evaluation& pg)
     {
         // Convert pressure to reduced density and temperature to reduced temperature
-        Evaluation rho_red = convertPgToReducedRho_(temperature, pg);
+        Evaluation rho_red = H2::reducedMolarDensity(temperature, pg);
         Evaluation T_red = H2::criticalTemperature() / temperature;
 
         // Residual Helmholtz energy, Eq. (7) in Li et al. (2018)
-        Evaluation resHelm = residualHelmholtz_(T_red, rho_red);
+        Evaluation resHelm = H2::residualPartHelmholtz(T_red, rho_red);
 
         // Derivative of residual Helmholtz energy wrt to reduced density, Eq. (73) in Span et al. (2018)
-        Evaluation dResdHelm = derivResidualHelmholtz_(T_red, rho_red);
+        Evaluation dResHelm_dRedRho = H2::derivResHelmholtzWrtRedRho(T_red, rho_red);
 
         // Fugacity coefficient, Eq. (8) in Li et al. (2018)
-        Evaluation lnPhiH2 = resHelm + rho_red * dResdHelm - log(rho_red * dResdHelm + 1);
+        Evaluation lnPhiH2 = resHelm + rho_red * dResHelm_dRedRho - log(rho_red * dResHelm_dRedRho + 1);
 
         return lnPhiH2;
-    }
-
-    /*!
-    * \brief Convert pressure to reduced density (rho/rho_crit) for further calculation of fugacity coefficient in Li et
-    * al. (2018) and Span et al. (2000). The conversion is done using the simplest root-finding algorithm, i.e. the
-    * bisection method.
-    * 
-    * \param pg gas phase pressure [Pa]
-    * \param temperature temperature [K]
-    */
-    template <class Evaluation> 
-    static Evaluation convertPgToReducedRho_(const Evaluation& temperature, const Evaluation& pg)
-    {
-        // Interval for search. xmin = 0.0 is good since it guaranties negative fmin.
-        Evaluation rho_red_min = 0.0;
-        Evaluation fmin = -pg / 1.0e6;  // at 0.0 we don't need to envoke function (see eq.(9) in Li et al. (2018))
-
-        // xmax must be high enough to give positive xmax. Check fmax for xmax given. If fmax is not positive we
-        // increase xmax
-        Evaluation rho_red_max = 2.0;  // start
-        Evaluation fmax = rootFindingObj_(rho_red_max, temperature, pg);
-        if (Opm::getValue(fmax) <= 0.0) {
-            // increase 10 times, and if that does not give fmax > 0, we abort
-            for (int i=0; i < 10; ++i) {
-                rho_red_max *= 1.25;
-                fmax = rootFindingObj_(rho_red_max, temperature, pg);
-                if (Opm::getValue(fmax) < 0.0) {
-                    break;
-                }
-            }
-            throw std::runtime_error("No max reduced density could be found for current pressure for bisection!");
-        }
-
-        // Bisection loop
-        for (int iteration=1; iteration<100; ++iteration) {
-            // New midpoint and its obj. value
-            Evaluation rho_red = (rho_red_min + rho_red_max) / 2;
-            Evaluation fmid = rootFindingObj_(rho_red, temperature, pg);
-
-            // Check if midpoint fulfills f=0 or x-xmin is sufficiently small
-            if (Opm::abs(fmid) < 1e-8 || Opm::abs((rho_red_max - rho_red_min) / 2) < 1e-8) {
-                return rho_red;
-            }
-
-            // Else we repeat with midpoint being either xmin or xmax (depending on the signs)
-            else if ((Opm::getValue(fmid) > 0.0 && Opm::getValue(fmin) < 0.0) ||
-                (Opm::getValue(fmid) < 0.0 && Opm::getValue(fmin) > 0.0)) {
-                // fmid has same sign as fmax so we set xmid as the new xmax
-                rho_red_max = rho_red;
-            }
-            else {
-                // fmid has same sign as fmin so we set xmid as the new xmin
-                rho_red_min = rho_red;
-                fmin = fmid;
-            }
-        }
-        throw std::runtime_error("No reduced density could be found for current pressure using bisection!");
-    }
-
-    /*!
-    * \brief Objective function in root-finding done in convertPgToReducedRho_ taken from Li et al. (2018).
-    * 
-    * \param rho_red reduced density [-]
-    * \param pg gas phase pressure [Pa]
-    * \param temperature temperature [K]
-    */
-    template <class Evaluation> 
-    static Evaluation rootFindingObj_(const Evaluation& rho_red, const Evaluation& temperature, const Evaluation& pg)
-    {
-        // Temporary calculations
-        Evaluation T_red = H2::criticalTemperature() / temperature;  // reciprocal reduced temp.
-        Evaluation p_MPa = pg / 1.0e6;  // Pa --> MPa
-        Scalar R = IdealGas::R;
-        Evaluation rho_cRT = H2::criticalDensity() * R * temperature;
-
-        // Eq. (9)
-        Evaluation dResdH = derivResidualHelmholtz_(T_red, rho_red);
-        Evaluation obj = rho_red * rho_cRT * (1 + rho_red * dResdH) - p_MPa;
-        return obj;
-    }
-
-    /*!
-    * \brief Derivative of the residual part of Helmholtz energy wrt. reduced density. Used primarily to calculate
-    * fugacity coefficient for H2.
-    * 
-    * \param T_red reduced temperature [-]
-    * \param rho_red reduced density [-]
-    */
-    template <class Evaluation> 
-    static Evaluation derivResidualHelmholtz_(const Evaluation& T_red, const Evaluation& rho_red)
-    {
-        // Various parameter values needed in calculations (Table 1 in Li et al. (2018))
-        static const Scalar N[14] = {-6.93643, 0.01, 2.1101, 4.52059, 0.732564, -1.34086, 0.130985, -0.777414, 
-            0.351944, -0.0211716, 0.0226312, 0.032187, -0.0231752, 0.0557346};
-        
-        static const Scalar t[14] = {0.6844, 1.0, 0.989, 0.489, 0.803, 1.1444, 1.409, 1.754, 1.311, 4.187, 5.646, 
-            0.791, 7.249, 2.986};
-        
-        static const int d[14] = {1, 4, 1, 1, 2, 2, 3, 1, 3, 2, 1, 3, 1, 1};
-
-        static const int p[2] = {1, 1};
-
-        static const Scalar phi[5] = {-1.685, -0.489, -0.103, -2.506, -1.607};
-
-        static const Scalar beta[5] = {-0.1710, -0.2245, -0.1304, -0.2785, -0.3967};
-
-        static const Scalar gamma[5] = {0.7164, 1.3444, 1.4517, 0.7204, 1.5445};
-        
-        static const Scalar D[5] = {1.506, 0.156, 1.736, 0.670, 1.662};
-
-        // Derivative of Eq. (7) in Li et al. (2018), which can be compared with Eq. (73) in Span et al. (2000)
-        // First sum term 
-        Evaluation s1 = 0.0;
-        for (int i = 0; i < 7; ++i) {
-            s1 += d[i] * N[i] * pow(rho_red, d[i]-1) * pow(T_red, t[i]);
-        }
-
-        // Second sum term
-        Evaluation s2 = 0.0;
-        for (int i = 7; i < 9; ++i) {
-            s2 += N[i] * pow(T_red, t[i]) * pow(rho_red, d[i]-1) * exp(-pow(rho_red, p[i-7])) *
-                (d[i] - p[i-7]*pow(rho_red, p[i-7]));
-        }
-
-        // Third, and last, sum term
-        Evaluation s3 = 0.0;
-        for (int i = 9; i < 15; ++i) {
-            s3 += N[i] * pow(T_red, t[i]) * pow(rho_red, d[i]-1) * 
-                exp(phi[i-9] * pow(rho_red - D[i-9], 2) + beta[i-9] * pow(T_red - gamma[i-9], 2)) *
-                    (d[i] + 2 * phi[i-9] * rho_red * (rho_red - D[i-9]));
-        }
-
-        // Return total sum
-        Evaluation s = s1 + s2 + s3;
-        return s;
-    }
-    /*!
-    * \brief The residual part of Helmholtz energy. Used primarily to calculate fugacity coefficient in Li et al (2018).
-    * 
-    * \param T_red reduced temperature [-]
-    * \param rho_red reduced density [-]
-    */
-    template <class Evaluation> 
-    static Evaluation residualHelmholtz_(const Evaluation& T_red, const Evaluation& rho_red)
-    {
-        // Various parameter values needed in calculations (Table 1 in Li et al. (2018))
-        static const Scalar N[14] = {-6.93643, 0.01, 2.1101, 4.52059, 0.732564, -1.34086, 0.130985, -0.777414, 
-            0.351944, -0.0211716, 0.0226312, 0.032187, -0.0231752, 0.0557346};
-        
-        static const Scalar t[14] = {0.6844, 1.0, 0.989, 0.489, 0.803, 1.1444, 1.409, 1.754, 1.311, 4.187, 5.646, 
-            0.791, 7.249, 2.986};
-        
-        static const int d[14] = {1, 4, 1, 1, 2, 2, 3, 1, 3, 2, 1, 3, 1, 1};
-
-        static const int p[2] = {1, 1};
-
-        static const Scalar phi[5] = {-1.685, -0.489, -0.103, -2.506, -1.607};
-
-        static const Scalar beta[5] = {-0.1710, -0.2245, -0.1304, -0.2785, -0.3967};
-
-        static const Scalar gamma[5] = {0.7164, 1.3444, 1.4517, 0.7204, 1.5445};
-        
-        static const Scalar D[5] = {1.506, 0.156, 1.736, 0.670, 1.662};
-
-        // Eq. (7) in Li et al. (2018), which can be compared with Eq. (55) in Span et al. (2000)
-        // First sum term
-        Evaluation s1 = 0.0;
-        for (int i = 0; i < 7; ++i) {
-            s1 += N[i] * pow(rho_red, d[i]) * pow(T_red, t[i]);
-        }
-
-        // Second sum term
-        Evaluation s2 = 0.0;
-        for (int i = 7; i < 9; ++i) {
-            s2 += N[i] * pow(T_red, t[i]) * pow(rho_red, d[i]) * exp(-pow(rho_red, p[i-7]));
-        }
-
-        // Third, and last, sum term
-        Evaluation s3 = 0.0;
-        for (int i = 9; i < 15; ++i) {
-            s3 += N[i] * pow(T_red, t[i]) * pow(rho_red, d[i]) * 
-                exp(phi[i-9] * pow(rho_red - D[i-9], 2) + beta[i-9] * pow(T_red - gamma[i-9], 2));
-        }
-
-        // Return total sum
-        Evaluation s = s1 + s2 + s3;
-        return s;
     }
 
     /*!
