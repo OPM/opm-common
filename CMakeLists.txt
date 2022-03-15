@@ -199,6 +199,18 @@ if (OPM_ENABLE_PYTHON)
     else()
       find_package(Python3 REQUIRED COMPONENTS Interpreter)
     endif()
+    # Make sure we fail gracefully here without setuptool
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import setuptools"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+      ERROR_VARIABLE SETUPTOOL_ERROR OUTPUT_VARIABLE SETUPTOOL_OUT
+      RESULT_VARIABLE SETUPTOOL_RESULT)
+    if(SETUPTOOL_RESULT GREATER 0)
+      message(WARNING "Trying to test setuptools resulted in error message: ${SETUPTOOL_ERROR}")
+      message(SEND_ERROR "To build the python bindings you need to install setuptool. "
+        "Either use \"apt-get install python3-setuptools\" (on Debian/Ubuntu) "
+        "or \"pip install setuptools\"")
+    endif()
+
     # Compatibility settings for PythonInterp and PythonLibs
     # used e.g. in FindCwrap, pybind11
     set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
