@@ -226,7 +226,7 @@ function build_module_full {
   PY_MINOR=`python3 --version | awk -F ' ' '{print $2}' | awk -F '.' '{print $2}'`
   for configuration in ${!configurations[@]}
   do
-    export PYTHONPATH="$WORKSPACE/$configuration/install/lib/python$PY_MAJOR.$PY_MINOR/dist-packages"
+    export PYTHONPATH="$WORKSPACE/$configuration/install/lib/python$PY_MAJOR.$PY_MINOR/site-packages"
 
     # Build upstream modules
     build_upstreams
