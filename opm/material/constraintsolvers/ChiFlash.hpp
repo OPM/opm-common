@@ -110,6 +110,7 @@ public:
             K[compIdx] = fluid_state.K(compIdx);
         }
         InputEval L;
+        // TODO: L has all the derivatives to be all ZEROs here.
         L = fluid_state.L(0);
 
         // Print header
@@ -657,7 +658,7 @@ protected:
             }
 
             // Print iteration info
-            if (verbosity >= 3 || verbosity >= 4) {
+            if (verbosity >= 3) {
                 std::cout << std::setw(10) << i << std::setw(16) << K_norm << std::setw(16) << R_norm << std::endl;
             }
 
@@ -785,11 +786,11 @@ protected:
 
         // TODO: I might not need to set soln anything here.
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            x[compIdx] = Eval(Opm::getValue(fluidState.moleFraction(oilPhaseIdx, compIdx)), compIdx);
+            x[compIdx] = Eval(fluidState.moleFraction(oilPhaseIdx, compIdx), compIdx);
             const unsigned idx = compIdx + numComponents;
-            y[compIdx] = Eval(Opm::getValue(fluidState.moleFraction(gasPhaseIdx, compIdx)), idx);
+            y[compIdx] = Eval(fluidState.moleFraction(gasPhaseIdx, compIdx), idx);
         }
-        l = Eval(Opm::getValue(L), num_equations - 1);
+        l = Eval(L, num_equations - 1);
 
         // it is created for the AD calculation for the flash calculation
         CompositionalFluidState<Eval, FluidSystem> flash_fluid_state;
@@ -802,16 +803,16 @@ protected:
         flash_fluid_state.setLvalue(l);
         // other values need to be Scalar, but I guess the fluidstate does not support it yet.
         flash_fluid_state.setPressure(FluidSystem::oilPhaseIdx,
-                                      Opm::getValue(fluidState.pressure(FluidSystem::oilPhaseIdx)));
+                                      fluidState.pressure(FluidSystem::oilPhaseIdx));
         flash_fluid_state.setPressure(FluidSystem::gasPhaseIdx,
-                                      Opm::getValue(fluidState.pressure(FluidSystem::gasPhaseIdx)));
+                                      fluidState.pressure(FluidSystem::gasPhaseIdx));
 
         // TODO: not sure whether we need to set the saturations
         flash_fluid_state.setSaturation(FluidSystem::gasPhaseIdx,
-                                        Opm::getValue(fluidState.saturation(FluidSystem::gasPhaseIdx)));
+                                        fluidState.saturation(FluidSystem::gasPhaseIdx));
         flash_fluid_state.setSaturation(FluidSystem::oilPhaseIdx,
-                                        Opm::getValue(fluidState.saturation(FluidSystem::oilPhaseIdx)));
-        flash_fluid_state.setTemperature(Opm::getValue(fluidState.temperature(0)));
+                                        fluidState.saturation(FluidSystem::oilPhaseIdx));
+        flash_fluid_state.setTemperature(fluidState.temperature(0));
 
         using ParamCache = typename FluidSystem::template ParameterCache<typename CompositionalFluidState<Eval, FluidSystem>::Scalar>;
         ParamCache paramCache;
@@ -830,10 +831,11 @@ protected:
         while (iter < max_iter) {
 
             // assembling the Jacobian and residuals
+            // assemble_(flash_fluid_state, )
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 {
                     // z - L*x - (1-L) * y
-                    auto local_res = -Opm::getValue(globalComposition[compIdx]) + l * x[compIdx] + (1 - l) * y[compIdx];
+                    auto local_res = -globalComposition[compIdx] + l * x[compIdx] + (1 - l) * y[compIdx];
                     res[compIdx] = Opm::getValue(local_res);
                     for (unsigned i = 0; i < num_primary_variables; ++i) {
                         jac[compIdx][i] = local_res.derivative(i);
