@@ -185,7 +185,7 @@ public:
       /*!
        * \brief The L value of a composition [-]
        */
-      const Scalar& L(unsigned /*phaseIdx*/) const
+      const Scalar& L() const
       { return L_; }
 
       /*!

@@ -111,7 +111,7 @@ public:
         }
         InputEval L;
         // TODO: L has all the derivatives to be all ZEROs here.
-        L = fluid_state.L(0);
+        L = fluid_state.L();
 
         // Print header
         if (verbosity >= 1) {
@@ -829,42 +829,7 @@ protected:
         unsigned iter = 0;
         constexpr unsigned max_iter = 1000;
         while (iter < max_iter) {
-
-            // assembling the Jacobian and residuals
-            // assemble_(flash_fluid_state, )
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                {
-                    // z - L*x - (1-L) * y
-                    auto local_res = -globalComposition[compIdx] + l * x[compIdx] + (1 - l) * y[compIdx];
-                    res[compIdx] = Opm::getValue(local_res);
-                    for (unsigned i = 0; i < num_primary_variables; ++i) {
-                        jac[compIdx][i] = local_res.derivative(i);
-                    }
-                }
-
-                {
-                    // (f_liquid/f_vapor) - 1 = 0
-                    auto local_res = (flash_fluid_state.fugacity(oilPhaseIdx, compIdx) /
-                                      flash_fluid_state.fugacity(gasPhaseIdx, compIdx)) - 1.0;
-                    res[compIdx + numComponents] = Opm::getValue(local_res);
-                    for (unsigned i = 0; i < num_equations; ++i) {
-                        jac[compIdx + numComponents][i] = local_res.derivative(i);
-                    }
-                }
-            }
-            // sum(x) - sum(y) = 0
-            Eval sumx = 0.;
-            Eval sumy = 0.;
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                sumx += x[compIdx];
-                sumy += y[compIdx];
-            }
-            auto local_res = sumx - sumy;
-            res[num_equations - 1] = Opm::getValue(local_res);
-            for (unsigned i = 0; i < num_equations; ++i) {
-                jac[num_equations - 1][i] = local_res.derivative(i);
-            }
-
+            assembleNewton_<CompositionalFluidState<Eval, FluidSystem>, ComponentVector, num_primary_variables, num_equations> (flash_fluid_state, globalComposition, jac, res);
             std::cout << " newton residual is " << res.two_norm() << std::endl;
             converged = res.two_norm() < tolerance;
             if (converged) {
@@ -935,6 +900,57 @@ protected:
         // Check if norm(fugVec) is less than tolerance
         bool conv = fugVec.two_norm() < 1e-6;
         return conv;
+    }
+
+    // TODO: the interface will need to refactor for later usage
+    template<typename FlashFluidState, typename ComponentVector, size_t num_primary, size_t num_equation >
+    static void assembleNewton_(const FlashFluidState& fluid_state,
+                                const ComponentVector& global_composition,
+                                Dune::FieldMatrix<double, num_equation, num_primary>& jac,
+                                Dune::FieldVector<double, num_equation>& res)
+    {
+        using Eval = DenseAd::Evaluation<double, num_primary>;
+        std::vector<Eval> x(numComponents), y(numComponents);
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            x[compIdx] = fluid_state.moleFraction(oilPhaseIdx, compIdx);
+            y[compIdx] = fluid_state.moleFraction(gasPhaseIdx, compIdx);
+        }
+        const Eval& l = fluid_state.L();
+        // TODO: clearing zero whether necessary?
+        jac = 0.;
+        res = 0.;
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            {
+                // z - L*x - (1-L) * y
+                auto local_res = -global_composition[compIdx] + l * x[compIdx] + (1 - l) * y[compIdx];
+                res[compIdx] = Opm::getValue(local_res);
+                for (unsigned i = 0; i < num_primary; ++i) {
+                    jac[compIdx][i] = local_res.derivative(i);
+                }
+            }
+
+            {
+                // (f_liquid/f_vapor) - 1 = 0
+                auto local_res = (fluid_state.fugacity(oilPhaseIdx, compIdx) /
+                                  fluid_state.fugacity(gasPhaseIdx, compIdx)) - 1.0;
+                res[compIdx + numComponents] = Opm::getValue(local_res);
+                for (unsigned i = 0; i < num_equation; ++i) {
+                    jac[compIdx + numComponents][i] = local_res.derivative(i);
+                }
+            }
+        }
+        // sum(x) - sum(y) = 0
+        Eval sumx = 0.;
+        Eval sumy = 0.;
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            sumx += x[compIdx];
+            sumy += y[compIdx];
+        }
+        auto local_res = sumx - sumy;
+        res[num_equation - 1] = Opm::getValue(local_res);
+        for (unsigned i = 0; i < num_equation; ++i) {
+            jac[num_equation - 1][i] = local_res.derivative(i);
+        }
     }
 
     /* template <class Vector, class Matrix, class Eval, class ComponentVector>
