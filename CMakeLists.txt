@@ -334,7 +334,12 @@ install(FILES cmake/OPM-CMake.md
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import site, sys; sys.stdout.write(site.getsitepackages()[-1]);" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_PATH)
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "
+import site, sys
+try:
+    sys.stdout.write(site.getsitepackages()[-1])
+except e:
+    sys.stdout.write('')" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_PATH)
   # -------------------------------------------------------------------------
   # 1: Wrap C++ functionality in Python
   if (PYTHON_SITE_PACKAGES_PATH MATCHES ".*/dist-packages/?" AND
