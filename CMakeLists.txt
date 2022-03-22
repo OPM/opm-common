@@ -334,9 +334,18 @@ install(FILES cmake/OPM-CMake.md
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "
+import site, sys
+try:
+    sys.stdout.write(site.getsitepackages()[-1])
+except e:
+    sys.stdout.write('')" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_PATH)
   # -------------------------------------------------------------------------
   # 1: Wrap C++ functionality in Python
-  if (EXISTS "/etc/debian_version")
+  if (PYTHON_SITE_PACKAGES_PATH MATCHES ".*/dist-packages/?" AND
+      CMAKE_INSTALL_PREFIX MATCHES "^/usr.*")
+    # dist-packages is only used if we install below /usr and python's site packages
+    # path matches dist-packages
     set(PYTHON_PACKAGE_PATH "dist-packages")
   else()
     set(PYTHON_PACKAGE_PATH "site-packages")
