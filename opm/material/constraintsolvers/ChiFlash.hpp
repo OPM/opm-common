@@ -931,8 +931,11 @@ protected:
 
             {
                 // (f_liquid/f_vapor) - 1 = 0
-                auto local_res = (fluid_state.fugacity(oilPhaseIdx, compIdx) /
-                                  fluid_state.fugacity(gasPhaseIdx, compIdx)) - 1.0;
+                /* auto local_res = (fluid_state.fugacity(oilPhaseIdx, compIdx) /
+                                  fluid_state.fugacity(gasPhaseIdx, compIdx)) - 1.0; */
+                // TODO: it looks this formulation converges quicker while begin with bigger residual
+                auto local_res = (fluid_state.fugacity(oilPhaseIdx, compIdx) -
+                                  fluid_state.fugacity(gasPhaseIdx, compIdx));
                 res[compIdx + numComponents] = Opm::getValue(local_res);
                 for (unsigned i = 0; i < num_equation; ++i) {
                     jac[compIdx + numComponents][i] = local_res.derivative(i);

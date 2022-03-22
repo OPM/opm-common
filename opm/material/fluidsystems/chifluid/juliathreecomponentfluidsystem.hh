@@ -158,6 +158,8 @@ namespace Opm {
             assert(0 <= phaseIdx && phaseIdx < numPhases);
             assert(0 <= compIdx && compIdx < numComponents);
 
+            // TODO: here the derivatives for the phi are dropped. Should we keep the derivatives against the pressure
+            // and temperature?
             Scalar phi = Opm::getValue(
                     PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
             return phi;
