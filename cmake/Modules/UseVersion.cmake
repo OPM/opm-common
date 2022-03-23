@@ -43,7 +43,6 @@ else ()
   # system, so there is "no" way we can update the SHA. notice
   # that this is a slightly different version of the label than
   # above.
-  if (NOT GIT_FOUND)
 	file (WRITE "${PROJECT_BINARY_DIR}/project-version.h"
               "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
               "#define OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
@@ -58,6 +57,7 @@ else ()
       "#define OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
       "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n"
       "#endif // OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
+  if (NOT GIT_FOUND OR NOT EXISTS ${PROJECT_SOURCE_DIR}/.git)
       )
   else ()
 	add_custom_target (update-version ALL
