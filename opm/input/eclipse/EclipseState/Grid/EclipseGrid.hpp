@@ -17,21 +17,20 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 
-
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/PinchMode.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <array>
 #include <memory>
 #include <optional>
-#include <vector>
+#include <stdexcept>
 #include <unordered_set>
+#include <vector>
 
 namespace Opm {
 
@@ -176,6 +175,14 @@ namespace Opm {
         bool isCellActive(size_t i, size_t j, size_t k) const {
             return cellActive(i, j, k);
         }
+
+        /// Whether or not given cell has a valid cell geometry
+        ///
+        /// Valid geometry is defined as all vertices have finite
+        /// coordinates and at least one pair of coordinates are separated
+        /// by a physical distance along a pillar.
+        bool isValidCellGeomtry(const std::size_t globalIndex,
+                                const UnitSystem& usys) const;
 
         double getCellDepth(size_t i,size_t j, size_t k) const;
         double getCellDepth(size_t globalIndex) const;
@@ -328,8 +335,5 @@ namespace Opm {
         std::array<size_t,8> cell_shift;
     };
 }
-
-
-
 
 #endif // OPM_PARSER_ECLIPSE_GRID_HPP

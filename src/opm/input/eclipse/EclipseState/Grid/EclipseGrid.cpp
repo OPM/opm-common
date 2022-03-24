@@ -19,15 +19,8 @@
 */
 
 #define _USE_MATH_DEFINES
-#include <cmath>
-#include <cstring>
-#include <numeric>
 
-#include <iostream>
-#include <tuple>
-#include <functional>
-
-#include <fmt/format.h>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -60,8 +53,16 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/Z.hpp>
 
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <functional>
+#include <initializer_list>
+#include <iostream>
+#include <numeric>
+#include <tuple>
 
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -1595,6 +1596,41 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
             return std::array<double, 3> {{X[corner_index], Y[corner_index], Z[corner_index]}};
         }
+    }
+
+    bool EclipseGrid::isValidCellGeomtry(const std::size_t globalIndex,
+                                         const UnitSystem& usys) const
+    {
+        const auto threshold = usys.to_si(UnitSystem::measure::length, 1.0e+20f);
+
+        auto is_finite = [threshold](const double coord_component)
+        {
+            return std::abs(coord_component) < threshold;
+        };
+
+        std::array<double,8> X, Y, Z;
+        this->getCellCorners(globalIndex, X, Y, Z);
+
+        const auto finite_coord = std::all_of(X.begin(), X.end(), is_finite)
+            && std::all_of(Y.begin(), Y.end(), is_finite)
+            && std::all_of(Z.begin(), Z.end(), is_finite);
+
+        if (! finite_coord) {
+            return false;
+        }
+
+        const auto max_pillar_point_distance = std::max({
+            Z[0 + 4] - Z[0 + 0],
+            Z[1 + 4] - Z[1 + 0],
+            Z[2 + 4] - Z[2 + 0],
+            Z[3 + 4] - Z[3 + 0],
+        });
+
+        // Define points as "well separated" if maximum distance exceeds
+        // 1e-4 length units (e.g., 0.1 mm in METRIC units).  May consider
+        // using a coarser tolerance/threshold here.
+        return max_pillar_point_distance
+            >  usys.to_si(UnitSystem::measure::length, 1.0e-4);
     }
 
     double EclipseGrid::getCellDepth(size_t globalIndex) const {
