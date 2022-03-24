@@ -16,20 +16,25 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fmt/format.h>
-#include <numeric>
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQToken.hpp>
 
-namespace Opm {
+#include <numeric>
+#include <string>
+#include <variant>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace {
-std::string format_double(double d) {
-    return fmt::format("{:g}", d);
-}
-}
+    std::string format_double(const double d)
+    {
+        // Use uppercase exponents for restart file compatibility.
+        return fmt::format("{:G}", d);
+    }
+} // namespace anonymous
 
-
+namespace Opm {
 
 UDQToken::UDQToken(const std::string& string_token, UDQTokenType token_type_) :
     token_type(token_type_)
@@ -74,5 +79,4 @@ std::string UDQToken::str() const {
         return format_double(std::get<double>(this->m_value));
 }
 
-
-}
+} // namespace Opm

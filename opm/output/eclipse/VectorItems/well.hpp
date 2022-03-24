@@ -213,6 +213,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             GasFVF      = 34,  // Well's producing gas formation volume factor.
 
+            item36      = 35,   // Unknown
             item37      = 36,   // Unknown
             item38      = 37,   // Unknown
 
