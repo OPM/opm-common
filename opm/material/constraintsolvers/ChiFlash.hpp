@@ -178,6 +178,12 @@ public:
             std::cout << "********" << std::endl;
         }
 
+        // all the solution should be processed in scalar form
+        // now we should update the derivatives
+        // TODO: should be able the handle the derivatives directly, which will affect the final organization
+        // of the code
+        updateDerivatives_(fluid_state_scalar, fluid_state);
+
         // Update phases
         /* typename FluidSystem::template ParameterCache<InputEval> paramCache;
         paramCache.updatePhase(fluid_state, oilPhaseIdx);
@@ -954,6 +960,26 @@ protected:
         for (unsigned i = 0; i < num_equation; ++i) {
             jac[num_equation - 1][i] = local_res.derivative(i);
         }
+    }
+
+    template <typename FlashFluidStateScalar, typename FlashFluidState>
+    static void updateDerivatives_(const FlashFluidStateScalar& fluid_state_scalar,
+                                         FlashFluidState& fluid_state)
+    {
+        // getting the secondary Jocobian matrix
+        constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
+        constexpr size_t secondary_num_pv = numComponents + 1;
+        using SecondaryEval = Opm::DenseAd::Evaluation<double, secondary_num_pv>; // three z and one pressure
+        using SecondaryComponentVector = Dune::FieldVector<SecondaryEval, numComponents>;
+        using SecondaryFlashFluidState = Opm::CompositionalFluidState<SecondaryEval, FluidSystem>;
+
+        SecondaryFlashFluidState secondary_fluid_state;
+        SecondaryComponentVector secondary_z;
+
+        // TODO: trying to get the secondary matrix here,
+        // TODO: then getting the primary matrix,
+        // TODO: then beginning from that point
+
     }
 
     /* template <class Vector, class Matrix, class Eval, class ComponentVector>

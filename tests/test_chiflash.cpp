@@ -104,6 +104,14 @@ void testChiFlash()
             }
         }
         zInit /= sumMoles;
+        // initialize the derivatives
+        // TODO: the derivative eventually should be from the reservoir flow equations
+        Evaluation z_last = 1.;
+        for (unsigned compIdx = 0; compIdx < numComponents - 1; ++compIdx) {
+            zInit[compIdx] = Evaluation::createVariable(Opm::getValue(zInit[compIdx]), compIdx + 1);
+            z_last -= zInit[compIdx];
+        }
+        zInit[numComponents - 1] = z_last;
     }
 
     // TODO: only, p, z need the derivatives.
