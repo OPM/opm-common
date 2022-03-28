@@ -182,7 +182,8 @@ public:
         // now we should update the derivatives
         // TODO: should be able the handle the derivatives directly, which will affect the final organization
         // of the code
-        updateDerivatives_(fluid_state_scalar, fluid_state);
+        // TODO: Does fluid_state_scalar contain z with derivatives?
+        updateDerivatives_(fluid_state_scalar, z_scalar, fluid_state);
 
         // Update phases
         /* typename FluidSystem::template ParameterCache<InputEval> paramCache;
@@ -796,7 +797,7 @@ protected:
             const unsigned idx = compIdx + numComponents;
             y[compIdx] = Eval(fluidState.moleFraction(gasPhaseIdx, compIdx), idx);
         }
-        l = Eval(L, num_equations - 1);
+        l = Eval(L, num_primary_variables - 1);
 
         // it is created for the AD calculation for the flash calculation
         CompositionalFluidState<Eval, FluidSystem> flash_fluid_state;
@@ -835,7 +836,8 @@ protected:
         unsigned iter = 0;
         constexpr unsigned max_iter = 1000;
         while (iter < max_iter) {
-            assembleNewton_<CompositionalFluidState<Eval, FluidSystem>, ComponentVector, num_primary_variables, num_equations> (flash_fluid_state, globalComposition, jac, res);
+            assembleNewton_<CompositionalFluidState<Eval, FluidSystem>, ComponentVector, num_primary_variables, num_equations>
+                    (flash_fluid_state, globalComposition, jac, res);
             std::cout << " newton residual is " << res.two_norm() << std::endl;
             converged = res.two_norm() < tolerance;
             if (converged) {
@@ -870,7 +872,17 @@ protected:
         if (!converged) {
             throw std::runtime_error(" Newton composition update did not converge within maxIterations");
         }
-        // TODO: we need to update the K, L, fluidState, not sure about the derivatives
+
+        // fluidState is scalar, we need to update all the values for fluidState here
+        for (unsigned idx = 0; idx < numComponents; ++idx) {
+            const auto x_i = Opm::getValue(flash_fluid_state.moleFraction(oilPhaseIdx, idx));
+            fluidState.setMoleFraction(FluidSystem::oilPhaseIdx, idx, x_i);
+            const auto y_i = Opm::getValue(flash_fluid_state.moleFraction(gasPhaseIdx, idx));
+            fluidState.setMoleFraction(FluidSystem::gasPhaseIdx, idx, y_i);
+            const auto K_i = Opm::getValue(flash_fluid_state.K(idx));
+            fluidState.setKvalue(idx, K_i);
+        }
+        fluidState.setLvalue(Opm::getValue(flash_fluid_state.L()));
     }
 
     template <class DefectVector>
@@ -936,14 +948,14 @@ protected:
             }
 
             {
-                // (f_liquid/f_vapor) - 1 = 0
+                // f_liquid - f_vapor = 0
                 /* auto local_res = (fluid_state.fugacity(oilPhaseIdx, compIdx) /
                                   fluid_state.fugacity(gasPhaseIdx, compIdx)) - 1.0; */
                 // TODO: it looks this formulation converges quicker while begin with bigger residual
                 auto local_res = (fluid_state.fugacity(oilPhaseIdx, compIdx) -
                                   fluid_state.fugacity(gasPhaseIdx, compIdx));
                 res[compIdx + numComponents] = Opm::getValue(local_res);
-                for (unsigned i = 0; i < num_equation; ++i) {
+                for (unsigned i = 0; i < num_primary; ++i) {
                     jac[compIdx + numComponents][i] = local_res.derivative(i);
                 }
             }
@@ -957,29 +969,125 @@ protected:
         }
         auto local_res = sumx - sumy;
         res[num_equation - 1] = Opm::getValue(local_res);
-        for (unsigned i = 0; i < num_equation; ++i) {
+        for (unsigned i = 0; i < num_primary; ++i) {
             jac[num_equation - 1][i] = local_res.derivative(i);
         }
     }
 
-    template <typename FlashFluidStateScalar, typename FlashFluidState>
+    template <typename FlashFluidStateScalar, typename FlashFluidState, typename ComponentVector>
     static void updateDerivatives_(const FlashFluidStateScalar& fluid_state_scalar,
-                                         FlashFluidState& fluid_state)
+                                   const ComponentVector& z,
+                                   FlashFluidState& fluid_state)
     {
         // getting the secondary Jocobian matrix
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr size_t secondary_num_pv = numComponents + 1;
+        constexpr size_t secondary_num_pv = numComponents + 1; // pressure, z for all the components
         using SecondaryEval = Opm::DenseAd::Evaluation<double, secondary_num_pv>; // three z and one pressure
         using SecondaryComponentVector = Dune::FieldVector<SecondaryEval, numComponents>;
         using SecondaryFlashFluidState = Opm::CompositionalFluidState<SecondaryEval, FluidSystem>;
 
         SecondaryFlashFluidState secondary_fluid_state;
         SecondaryComponentVector secondary_z;
+        // p and z are the primary variables here
+        // pressure
+        const SecondaryEval sec_p = SecondaryEval(fluid_state_scalar.pressure(FluidSystem::oilPhaseIdx), 0);
+        secondary_fluid_state.setPressure(FluidSystem::oilPhaseIdx, sec_p);
+        secondary_fluid_state.setPressure(FluidSystem::gasPhaseIdx, sec_p);
 
-        // TODO: trying to get the secondary matrix here,
-        // TODO: then getting the primary matrix,
+        // set the temperature // TODO: currently we are not considering the temperature derivatives
+        secondary_fluid_state.setTemperature(Opm::getValue(fluid_state_scalar.temperature(0)));
+
+        for (unsigned idx = 0; idx < numComponents; ++idx) {
+            secondary_z[idx] = SecondaryEval(z[idx], idx + 1);
+        }
+        // set up the mole fractions
+        for (unsigned idx = 0; idx < num_equations; ++idx) {
+            // TODO: double checking that fluid_state_scalar returns a scalar here
+            const auto x_i = fluid_state_scalar.moleFraction(oilPhaseIdx, idx);
+            secondary_fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, idx, x_i);
+            const auto y_i = fluid_state_scalar.moleFraction(gasPhaseIdx, idx);
+            secondary_fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, idx, y_i);
+            // TODO: double checking make sure those are consistent
+            const auto K_i = fluid_state_scalar.K(idx);
+            secondary_fluid_state.setKvalue(idx, K_i);
+        }
+        const auto L = fluid_state_scalar.L();
+        secondary_fluid_state.setLvalue(L);
+        // TODO: Do we need to update the saturations?
+        // compositions
+        // TODO: we probably can simplify SecondaryFlashFluidState::Scalar
+        using SecondaryParamCache = typename FluidSystem::template ParameterCache<typename SecondaryFlashFluidState::Scalar>;
+        SecondaryParamCache secondary_param_cache;
+        for (unsigned phase_idx = 0; phase_idx < numPhases; ++phase_idx) {
+            secondary_param_cache.updatePhase(secondary_fluid_state, phase_idx);
+            for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+                SecondaryEval phi = FluidSystem::fugacityCoefficient(secondary_fluid_state, secondary_param_cache, phase_idx, comp_idx);
+                secondary_fluid_state.setFugacityCoefficient(phase_idx, comp_idx, phi);
+            }
+        }
+
+        using SecondaryNewtonVector = Dune::FieldVector<Scalar, num_equations>;
+        using SecondaryNewtonMatrix = Dune::FieldMatrix<Scalar, num_equations, secondary_num_pv>;
+        SecondaryNewtonMatrix sec_jac;
+        SecondaryNewtonVector sec_res;
+        assembleNewton_<SecondaryFlashFluidState, SecondaryComponentVector, secondary_num_pv, num_equations>
+                (secondary_fluid_state, secondary_z, sec_jac, sec_res);
+
+
+        // assembly the major matrix here
+        // primary variables are x, y and L
+        constexpr size_t primary_num_pv = numMisciblePhases * numMiscibleComponents + 1;
+        using PrimaryEval = Opm::DenseAd::Evaluation<double, primary_num_pv>;
+        using PrimaryComponentVector = Dune::FieldVector<double, numComponents>;
+        using PrimaryFlashFluidState = Opm::CompositionalFluidState<PrimaryEval, FluidSystem>;
+
+        PrimaryFlashFluidState primary_fluid_state;
+        // primary_z is not needed, because we use the globalComposition will be okay here
+        PrimaryComponentVector primary_z;
+        for (unsigned  comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+            primary_z[comp_idx] = Opm::getValue(z[comp_idx]);
+        }
+        // TODO: x and y are not needed here
+        std::vector<PrimaryEval> x(numComponents), y(numComponents);
+        PrimaryEval l;
+        for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+            x[comp_idx] = PrimaryEval(fluid_state_scalar.moleFraction(oilPhaseIdx, comp_idx), comp_idx);
+            primary_fluid_state.setMoleFraction(oilPhaseIdx, comp_idx, x[comp_idx]);
+            const unsigned idx = comp_idx + numComponents;
+            y[comp_idx] = PrimaryEval(fluid_state_scalar.moleFraction(gasPhaseIdx, comp_idx), idx);
+            primary_fluid_state.setMoleFraction(gasPhaseIdx, comp_idx, y[comp_idx]);
+            primary_fluid_state.setKvalue(comp_idx, y[comp_idx] / x[comp_idx]);
+        }
+        l = PrimaryEval(fluid_state_scalar.L(), primary_num_pv - 1);
+        // TODO: do we need to setL?
+        primary_fluid_state.setLvalue(l);
+        primary_fluid_state.setPressure(oilPhaseIdx, fluid_state_scalar.pressure(oilPhaseIdx));
+        primary_fluid_state.setPressure(gasPhaseIdx, fluid_state_scalar.pressure(gasPhaseIdx));
+
+        primary_fluid_state.setTemperature(fluid_state_scalar.temperature(0));
+
+        // TODO: is PrimaryFlashFluidState::Scalar> PrimaryEval here?
+        using PrimaryParamCache = typename FluidSystem::template ParameterCache<typename PrimaryFlashFluidState::Scalar>;
+        PrimaryParamCache primary_param_cache;
+        for (unsigned phase_idx = 0; phase_idx < numPhases; ++phase_idx) {
+            primary_param_cache.updatePhase(primary_fluid_state, phase_idx);
+            for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+                PrimaryEval phi = FluidSystem::fugacityCoefficient(primary_fluid_state, primary_param_cache, phase_idx, comp_idx);
+                primary_fluid_state.setFugacityCoefficient(phase_idx, comp_idx, phi);
+            }
+        }
+
+        using PrimaryNewtonVector = Dune::FieldVector<Scalar, num_equations>;
+        using PrimaryNewtonMatrix = Dune::FieldMatrix<Scalar, num_equations, primary_num_pv>;
+        PrimaryNewtonVector pri_res;
+        PrimaryNewtonMatrix pri_jac;
+        assembleNewton_<PrimaryFlashFluidState, PrimaryComponentVector, primary_num_pv, num_equations>
+            (primary_fluid_state, primary_z, pri_jac, pri_res);
+
+        // not totally sure the following matrix operations are correct
+        pri_jac.invert();
+        sec_jac.template leftmultiply(pri_jac);
         // TODO: then beginning from that point
-
     }
 
     /* template <class Vector, class Matrix, class Eval, class ComponentVector>
