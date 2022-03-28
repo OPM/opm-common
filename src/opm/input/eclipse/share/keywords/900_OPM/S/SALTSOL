@@ -9,9 +9,16 @@
   },
   "items": [
     {
-      "name": "DATA",
+      "name": "Solubility",
       "value_type": "DOUBLE",
       "size_type": "ALL",
+      "dimension": "Density"
+    },
+    {
+      "name": "Density",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "default": 2170.0,
       "dimension": "Density"
     }
   ]

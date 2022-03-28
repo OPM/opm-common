@@ -30,6 +30,7 @@ public:
     SaltsolTable( const DeckItem& item, const int tableID );
 
     const TableColumn& getSaltsolColumn() const;
+    const TableColumn& getSaltdenColumn() const;
 };
 }
 

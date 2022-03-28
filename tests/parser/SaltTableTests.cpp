@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE( Saltsol ) {
         "1 2/\n"
         "\n"
         "SALTSOL\n"
-        "8.0/\n"
-        "9.0/\n"
+        "8.0 2170.0/\n"
+        "9.0 2100.0/\n"
         "\n"
         ;
 
@@ -173,4 +173,5 @@ BOOST_AUTO_TEST_CASE( Saltsol ) {
 
     BOOST_CHECK_EQUAL(saltsolTable2.getSaltsolColumn().size(), 1U);
     BOOST_CHECK_CLOSE(saltsolTable2.getSaltsolColumn() [0], 9.0, 1e-5); 
+    BOOST_CHECK_CLOSE(saltsolTable2.getSaltdenColumn() [0], 2100.0, 1e-5); 
 }

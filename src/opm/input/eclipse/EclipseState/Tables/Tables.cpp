@@ -1112,12 +1112,17 @@ const TableColumn& SaltpvdTable::getSaltpColumn() const {
 
 SaltsolTable::SaltsolTable( const DeckItem& item, const int tableID ) {
     m_schema.addColumn( ColumnSchema( "SALTSOLUBILITY" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "SALTDENSITY" , Table::RANDOM , Table::DEFAULT_NONE ));
 
     SimpleTable::init(item, tableID);
 }
 
 const TableColumn& SaltsolTable::getSaltsolColumn() const {
     return SimpleTable::getColumn(0);
+}
+
+const TableColumn& SaltsolTable::getSaltdenColumn() const {
+    return SimpleTable::getColumn(1);
 }
 
 
