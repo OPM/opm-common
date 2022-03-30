@@ -1404,23 +1404,36 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWELSPECS(HandlerContext& handlerContext) {
-        const auto& keyword = handlerContext.keyword;
-        for (std::size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
-            const auto& record = keyword.getRecord(recordNr);
-            const std::string& wellName = trim_wgname(keyword, record.getItem<ParserKeywords::WELSPECS::WELL>().get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
-            const std::string& groupName = trim_wgname(keyword, record.getItem<ParserKeywords::WELSPECS::GROUP>().get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
-            auto density_calc_type = record.getItem<ParserKeywords::WELSPECS::DENSITY_CALC>().get<std::string>(0);
-            auto fip_region_number = record.getItem<ParserKeywords::WELSPECS::FIP_REGION>().get<int>(0);
+    void Schedule::handleWELSPECS(HandlerContext& handlerContext)
+    {
+        auto getTrimmedName = [&handlerContext](const auto& item)
+        {
+            return trim_wgname(handlerContext.keyword,
+                               item.template get<std::string>(0),
+                               handlerContext.parseContext,
+                               handlerContext.errors);
+        };
 
+        auto fieldWells = std::vector<std::string>{};
+        for (const auto& record : handlerContext.keyword) {
+            const auto wellName = getTrimmedName(record.getItem<ParserKeywords::WELSPECS::WELL>());
+            const auto groupName = getTrimmedName(record.getItem<ParserKeywords::WELSPECS::GROUP>());
+
+            if (groupName == "FIELD") {
+                fieldWells.push_back(wellName);
+                continue;
+            }
+
+            const auto fip_region_number = record.getItem<ParserKeywords::WELSPECS::FIP_REGION>().get<int>(0);
             if (fip_region_number != 0) {
-                const auto& location = keyword.location();
+                const auto& location = handlerContext.keyword.location();
                 std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(ParserKeywords::WELSPECS::FIP_REGION::defaultValue);
                 OpmLog::warning(msg);
             }
 
+            const auto& density_calc_type = record.getItem<ParserKeywords::WELSPECS::DENSITY_CALC>().get<std::string>(0);
             if (density_calc_type != "SEG") {
-                const auto& location = keyword.location();
+                const auto& location = handlerContext.keyword.location();
                 std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + ParserKeywords::WELSPECS::DENSITY_CALC::defaultValue;
                 OpmLog::warning(msg);
             }
@@ -1473,6 +1486,16 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             }
 
             this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
+        }
+
+        if (! fieldWells.empty()) {
+            const auto* plural = (fieldWells.size() == 1) ? "" : "s";
+
+            throw OpmInputError {
+                fmt::format(R"(Well{0} cannot be parented directly to 'FIELD'.
+Well{0} entered with disallowed 'FIELD' parent group:
+ * {1})", plural, fmt::join(fieldWells, "\n * ")), handlerContext.keyword.location()
+            };
         }
     }
 
