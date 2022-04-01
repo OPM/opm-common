@@ -128,7 +128,7 @@ if(HAVE_OPM_TESTS)
                PROPERTY ENVIRONMENT "OPM_ERRORS_IGNORE=PARSE_RANDOM_SLASH")
 
   add_test( NAME rst_deck_test_norne
-             COMMAND ${PROJECT_SOURCE_DIR}/tests/rst_test_driver.sh ${CMAKE_BINARY_DIR}/bin/rst_deck ${CMAKE_BINARY_DIR}/bin/opmhash
+             COMMAND ${PROJECT_SOURCE_DIR}/tests/rst_test_driver.sh ${PROJECT_BINARY_DIR}/bin/rst_deck ${PROJECT_BINARY_DIR}/bin/opmhash
              ${OPM_TESTS_ROOT}/norne/NORNE_ATW2013.DATA)
 
   set_property(TEST rst_deck_test_norne
