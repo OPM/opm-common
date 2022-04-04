@@ -91,7 +91,7 @@ public:
     /*!
      * \brief Initialize the parameters for wet gas using an ECL deck.
      *
-     * This method assumes that the deck features valid DENSITY and PVTG keywords.
+     * This method assumes that the deck features valid DENSITY and PVTGW keywords.
      */
     void initFromState(const EclipseState& eclState, const Schedule&)
     {
@@ -208,7 +208,7 @@ private:
                           const SimpleTable& curTable,
                           const SimpleTable& masterTable)
     {
-        std::vector<double> RvArray = curTable.getColumn("RW").vectorCopy();
+        std::vector<double> RwArray = curTable.getColumn("RW").vectorCopy();
         std::vector<double> gasBArray = curTable.getColumn("BG").vectorCopy();
         std::vector<double> gasMuArray = curTable.getColumn("MUG").vectorCopy();
 
@@ -216,13 +216,13 @@ private:
         auto& gasMu = gasMu_[regionIdx];
 
         for (size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++ newRowIdx) {
-            const auto& RVColumn = masterTable.getColumn("RW");
+            const auto& RWColumn = masterTable.getColumn("RW");
             const auto& BGColumn = masterTable.getColumn("BG");
             const auto& viscosityColumn = masterTable.getColumn("MUG");
 
-            // compute the gas pressure for the new entry
-            Scalar diffRv = RVColumn[newRowIdx] - RVColumn[newRowIdx - 1];
-            Scalar newRv = RvArray.back() + diffRv;
+            // compute the vaporized water factor Rw for the new entry
+            Scalar diffRw = RWColumn[newRowIdx] - RWColumn[newRowIdx - 1];
+            Scalar newRw = RwArray.back() + diffRw;
 
             // calculate the compressibility of the master table
             Scalar B1 = BGColumn[newRowIdx];
@@ -230,7 +230,7 @@ private:
             Scalar x = (B1 - B2)/( (B1 + B2)/2.0 );
 
             // calculate the gas formation volume factor which exhibits the same
-            // "compressibility" for the new value of Rv
+            // "compressibility" for the new value of Rw
             Scalar newBg = gasBArray.back()*(1.0 + x/2.0)/(1.0 - x/2.0);
 
             // calculate the "viscosibility" of the master table
@@ -238,19 +238,19 @@ private:
             Scalar mu2 = viscosityColumn[newRowIdx - 1];
             Scalar xMu = (mu1 - mu2)/( (mu1 + mu2)/2.0 );
 
-            // calculate the gas formation volume factor which exhibits the same
-            // compressibility for the new pressure
+            // calculate the viscosity which exhibits the same
+            // "viscosibility" for the new Rw value
             Scalar newMug = gasMuArray.back()*(1.0 + xMu/2)/(1.0 - xMu/2.0);
 
             // append the new values to the arrays which we use to compute the additional
             // values ...
-            RvArray.push_back(newRv);
+            RwArray.push_back(newRw);
             gasBArray.push_back(newBg);
             gasMuArray.push_back(newMug);
 
             // ... and register them with the internal table objects
-            invGasB.appendSamplePoint(xIdx, newRv, 1.0/newBg);
-            gasMu.appendSamplePoint(xIdx, newRv, newMug);
+            invGasB.appendSamplePoint(xIdx, newRw, 1.0/newBg);
+            gasMu.appendSamplePoint(xIdx, newRw, newMug);
         }
     }
 
