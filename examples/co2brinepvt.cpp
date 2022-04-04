@@ -52,14 +52,30 @@ double densityBrine(const BrinePvt& brinePvt, const double p, const double T, co
 
 int main(int argc, char **argv)
 {
-    if (argc < 5) {
-        std::cout << "co2brinepvt prop phase p T salinity rs "<< std::endl;
+
+    bool help = false;
+    for (int i = 1; i < argc; ++i) {
+        std::string tmp = argv[i];
+        help = help || (tmp  == "--h") || (tmp  == "--help");
+    }
+
+    if (argc < 5 || help) {
+        std::cout << "USAGE:" << std::endl;
+        std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> "<< std::endl;
         std::cout << "prop = {density, invB, viscosity, rsSat}" << std::endl;
         std::cout << "phase = {CO2, brine}" << std::endl;
         std::cout << "p: pressure in pascal" << std::endl;
         std::cout << "T: temperature in kelvin" << std::endl;
-        std::cout << "salinity(optional): salinity in molality" << std::endl;
-        std::cout << "rs(optional): rs in SM3/SM3" << std::endl;
+        std::cout << "salinity(optional): salt molality in mol/kg" << std::endl;
+        std::cout << "rs(optional): amout of dissolved CO2 in Brine in SM3/SM3" << std::endl;
+        std::cout << "OPTIONS:" << std::endl;
+        std::cout << "--h/--help Print help and exit." << std::endl;
+        std::cout << "DESCRIPTION:" << std::endl;
+        std::cout << "co2brinepvt computes PVT properties of a brine/co2 system " << std::endl;
+        std::cout << "for a given phase (oil or brine), pressure, temperature, salinity) and rs." << std::endl;
+        std::cout << "The properties support are: density, the inverse phase formation volume factor (invB), viscosity, " << std::endl;
+        std::cout << "saturated dissolution factor (rsSat) " << std::endl;
+        std::cout << "See CO2STORE in the OPM manual for more details." << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -67,11 +83,11 @@ int main(int argc, char **argv)
     std::string phase = argv[2];
     double p = atof(argv[3]);
     double T = atof(argv[4]);
-    std::vector<double> salinity = {0.0};
+    double molality = 0.0;
     double rs = 0.0;
     double rv = 0.0; // only support 0.0 for now
     if (argc > 5)
-        salinity[0] = atof(argv[5]);
+        molality = atof(argv[5]);
     if (argc > 6)
         rs = atof(argv[6]);
 
@@ -81,6 +97,12 @@ int main(int argc, char **argv)
     std::vector<double> ref_den_water = {996.206};
 
     Opm::Co2GasPvt<double> co2Pvt(ref_den_co2);
+
+    const double MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
+    // convert to mass fraction
+    std::vector<double> salinity = {0.0};
+    if (molality > 0.0)
+        salinity[0] = 1 / ( 1 + 1 / (molality*MmNaCl));
     Opm::BrineCo2Pvt<double> brineCo2Pvt(ref_den_water, ref_den_co2, salinity);
     double value;
     if (prop == "density") {
