@@ -93,7 +93,7 @@ public:
      *
      * This method assumes that the deck features valid DENSITY and PVTG keywords.
      */
-    void initFromState(const EclipseState& eclState, const Schedule& schedule)
+    void initFromState(const EclipseState& eclState, const Schedule&)
     {
         const auto& pvtgwTables = eclState.getTableManager().getPvtgwTables();
         const auto& densityTable = eclState.getTableManager().getDensityTable();
