@@ -85,6 +85,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tables.cpp>
 
 namespace Opm {
 
@@ -1106,6 +1107,30 @@ const TableColumn& PermfactTable::getPermeabilityMultiplierColumn() const {
     return SimpleTable::getColumn(1); 
 }
 
+JoulethomsonTable::JoulethomsonTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "PREF" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "OIL" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "WATER" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "GAS" , Table::RANDOM , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+const TableColumn& JoulethomsonTable::getPrefColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& JoulethomsonTable::getOilColumn() const {
+    return SimpleTable::getColumn(1); 
+}
+
+const TableColumn& JoulethomsonTable::getWaterColumn() const {
+    return SimpleTable::getColumn(2); 
+}
+
+const TableColumn& JoulethomsonTable::getGasColumn() const {
+    return SimpleTable::getColumn(3); 
+}
 
 AqutabTable::AqutabTable( const DeckItem& item ) {
     m_schema.addColumn( ColumnSchema( "TD" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );

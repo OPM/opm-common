@@ -741,6 +741,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/FlatTable.hpp
        opm/input/eclipse/EclipseState/Tables/Aqudims.hpp
        opm/input/eclipse/EclipseState/Tables/JFunc.hpp
+       opm/input/eclipse/EclipseState/Tables/JoulethomsonTable.hpp
        opm/input/eclipse/EclipseState/Tables/TableIndex.hpp
        opm/input/eclipse/EclipseState/Tables/PvtgTable.hpp
        opm/input/eclipse/EclipseState/Tables/PvtgwTable.hpp

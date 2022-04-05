@@ -122,6 +122,7 @@ namespace Opm {
         const TableContainer& getAqutabTables() const;
         const TableContainer& getFoamadsTables() const;
         const TableContainer& getFoammobTables() const;
+        const TableContainer& getJoulethomsonTables() const;
 
         const TableContainer& getSorwmisTables() const;
         const TableContainer& getSgcwmisTables() const;
