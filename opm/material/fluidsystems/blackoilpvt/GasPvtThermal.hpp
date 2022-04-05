@@ -327,6 +327,16 @@ public:
     }
 
     /*!
+     * \brief Returns the water vaporization factor \f$R_v\f$ [m^3/m^3] of the water phase.
+     */
+    template <class Evaluation>
+    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
+                                              const Evaluation& /*temperature*/,
+                                              const Evaluation& /*pressure*/) const
+    { return 0.0; }
+    
+
+    /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
      *
      * This method implements temperature dependence and requires the gas pressure,

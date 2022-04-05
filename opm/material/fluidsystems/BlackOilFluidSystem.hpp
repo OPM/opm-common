@@ -124,7 +124,7 @@ LhsEval getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<Flu
 
 template <class FluidSystem, class FluidState, class LhsEval>
 auto getSaltSaturation_(typename std::enable_if<HasMember_saltSaturation<FluidState>::value, const FluidState&>::type fluidState,
-            unsigned regionIdx OPM_UNUSED)
+            unsigned)
     -> decltype(decay<LhsEval>(fluidState.saltSaturation()))
 { return decay<LhsEval>(fluidState.saltSaturation()); }
 
@@ -738,6 +738,16 @@ public:
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
                     + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx);
             }
+            //vaporized oil simultaneous with vaporized water is not yet supported
+            if (enableVaporizedWater()) {
+                // gas containing vaporized water
+                const LhsEval& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rvw);
+
+                return
+                    bg*referenceDensity(gasPhaseIdx, regionIdx)
+                    + Rvw*bg*referenceDensity(waterPhaseIdx, regionIdx);
+            }
 
             // immiscible gas
             const LhsEval Rv(0.0);
@@ -799,6 +809,16 @@ public:
                 return
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
                     + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx);
+            }
+            //vaporized oil simultaneous with vaporized water is not yet supported
+            if (enableVaporizedWater()) {
+                // gas containing vaporized water
+                const LhsEval& Rvw = saturatedVaporizationFactor<FluidState, LhsEval>(fluidState, gasPhaseIdx, regionIdx);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rvw);
+
+                return
+                    bg*referenceDensity(gasPhaseIdx, regionIdx)
+                    + Rvw*bg*referenceDensity(waterPhaseIdx, regionIdx);
             }
 
             // immiscible gas
@@ -1111,6 +1131,31 @@ public:
         }
 
         throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+    }
+
+    /*!
+     * \brief Returns the water vaporization factor \f$R_\alpha\f$ of saturated phase
+     *
+     * For the gas phase, this means the R_vw factor, for the water and oil phase,
+     * it is always 0.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    static LhsEval saturatedVaporizationFactor(const FluidState& fluidState,
+                                              unsigned phaseIdx,
+                                              unsigned regionIdx)
+    {
+        assert(phaseIdx <= numPhases);
+        assert(regionIdx <= numRegions());
+
+        const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
+        const auto& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
+
+        switch (phaseIdx) {
+        case oilPhaseIdx: return 0.0;
+        case gasPhaseIdx: return gasPvt_->saturatedWaterVaporizationFactor(regionIdx, T, p);
+        case waterPhaseIdx: return 0.0;
+        default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+        }
     }
 
     /*!
