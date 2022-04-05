@@ -61,7 +61,7 @@ public:
     {
         enableThermalDensity_ = false;
         enableThermalViscosity_ = false;
-        enableInternalEnergy_ = false;
+        enableJouleThomson_ = false;
         isothermalPvt_ = nullptr;
     }
 
@@ -73,7 +73,8 @@ public:
                   const std::vector<TabulatedOneDFunction>& internalEnergyCurves,
                   bool enableThermalDensity,
                   bool enableThermalViscosity,
-                  bool enableInternalEnergy)
+                  bool enableInternalEnergy,
+                  bool enableJouleThomson)
         : isothermalPvt_(isothermalPvt)
         , gasvisctCurves_(gasvisctCurves)
         , gasdentRefTemp_(gasdentRefTemp)
@@ -83,6 +84,7 @@ public:
         , enableThermalDensity_(enableThermalDensity)
         , enableThermalViscosity_(enableThermalViscosity)
         , enableInternalEnergy_(enableInternalEnergy)
+        , enableJouleThomson_(enableJouleThomson)
     { }
 
     GasPvtThermal(const GasPvtThermal& data)
@@ -111,6 +113,7 @@ public:
         enableThermalDensity_ = tables.GasDenT().size() > 0;
         enableThermalViscosity_ = tables.hasTables("GASVISCT");
         enableInternalEnergy_ = tables.hasTables("SPECHEAT");
+        enableJouleThomson_ = tables.hasTables("JOULETHOMSON");
 
         unsigned numRegions = isothermalPvt_->numRegions();
         setNumRegions(numRegions);
@@ -141,6 +144,20 @@ public:
                 gasdentCT2_[regionIdx] = record.C2;
             }
             enableThermalDensity_ = true;
+        }
+        // temperature dependence of gas density
+        if (enableJouleThomson_) {
+            //const auto& joulethomsonTable = tables.joulethomsonTable();
+
+            // assert(gasDenT.size() == numRegions);
+            // for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+            //     const auto& record = gasDenT[regionIdx];
+
+            //     gasdentRefTemp_[regionIdx] = record.T0;
+            //     gasdentCT1_[regionIdx] = record.C1;
+            //     gasdentCT2_[regionIdx] = record.C2;
+            // }
+            // enableThermalDensity_ = true;
         }
 
         if (enableInternalEnergy_) {
@@ -193,6 +210,8 @@ public:
         gasdentRefTemp_.resize(numRegions);
         gasdentCT1_.resize(numRegions);
         gasdentCT2_.resize(numRegions);
+        joulethomsonRefPres_.resize(numRegions);
+        joulethomsonGas_.resize(numRegions);
     }
 
     /*!
@@ -220,20 +239,81 @@ public:
      * \brief Returns the specific internal energy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
+    Evaluation internalEnergy_JT(unsigned regionIdx,
+                              const Evaluation& temperature,
+                              const Evaluation& pressure,
+                              const Evaluation& Rv) const
+    {
+        if (!enableInternalEnergy_)
+             throw std::runtime_error("Requested the internal energy of gas but it is disabled");
+
+        bool JouleThomson = 1 ; //joulethomsonGas_[regionIdx];
+
+         
+        Evaluation Tref = gasdentRefTemp_[regionIdx];// 399.15;
+        Evaluation Pref = joulethomsonRefPres_[regionIdx]; //20E5;
+  
+        Evaluation bref = inverseFormationVolumeFactor(regionIdx, Tref, pressure, Rv);
+        Evaluation b = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv);
+        Evaluation intEn = internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+        Evaluation Cp = (intEn- 480.6E3)/temperature;
+       
+        Evaluation rho = b * gasReferenceDensity(regionIdx);
+        
+        Scalar c1T = gasdentCT1_[regionIdx];
+        Scalar c2T = gasdentCT2_[regionIdx];
+
+        Evaluation alpha = (c1T + 2*c2T*(temperature - Tref))/
+             (1 + c1T*(temperature - Tref) + c2T*(temperature- Tref)*(temperature - Tref));
+
+        Evaluation beta =  bref.derivative(1)/bref; //derivative wrt to p
+                
+        //Cp = Cv + alpha*alpha/(beta*rho);
+        const int N = 1000;
+        Evaluation deltaP = (pressure - Pref)/N;
+        Evaluation Hp_old = 0;
+        Evaluation Hp, JT;
+
+        for (size_t i = 0; i < N; ++i) {
+            Evaluation p_new = Pref + i * deltaP;
+           
+            Evaluation alpha_new = (c1T + 2*c2T*(temperature- Tref))/(1 + c1T*(temperature - Tref) + c2T*(temperature - Tref)*(temperature - Tref));
+            // Evaluation rho_new = inverseFormationVolumeFactor(regionIdx, temperature, p_new, Rv) * gasReferenceDensity(regionIdx);
+            //JT = -(1.0/Cp)*(1.0 - alpha_new.value() * temperature.value())/rho_new.value();
+            Evaluation rho_new = inverseFormationVolumeFactor(regionIdx, temperature, p_new, Rv) * gasReferenceDensity(regionIdx);
+            JT = -(1.0/Cp)*(1.0 - alpha_new.value() * temperature.value())/rho_new.value();
+
+            Evaluation dHp = -Cp * JT * deltaP;
+            Hp = Hp_old + dHp; 
+            Hp_old = Hp;
+        }
+        std::cout << "P: "<< pressure << " T: " << temperature << " JT: "<< JT << " Hp: " << Hp << "\n"<<std::flush; 
+
+        // compute the specific internal energy for the specified tempature. We use linear
+        // interpolation here despite the fact that the underlying heat capacities are
+        // piecewise linear (which leads to a quadratic function)
+       
+
+        Evaluation a1 = alpha * pressure/rho;
+        Evaluation a2 = (beta * pressure -alpha * temperature)/rho;
+        return Cp * (temperature-Tref) + Hp - pressure/rho;
+       
+    }
+
+    template <class Evaluation>
     Evaluation internalEnergy(unsigned regionIdx,
                               const Evaluation& temperature,
                               const Evaluation&,
                               const Evaluation&) const
     {
         if (!enableInternalEnergy_)
-            throw std::runtime_error("Requested the internal energy of oil but it is disabled");
+            throw std::runtime_error("Requested the internal energy of gas but it is disabled");
 
         // compute the specific internal energy for the specified tempature. We use linear
         // interpolation here despite the fact that the underlying heat capacities are
         // piecewise linear (which leads to a quadratic function)
         return internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
     }
-
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -411,6 +491,15 @@ public:
     bool enableInternalEnergy() const
     { return enableInternalEnergy_; }
 
+    bool enableJouleThomson() const
+    { return enableJouleThomson_; }
+
+    const std::vector<Scalar>& joulethomsonRefPres() const
+    { return  joulethomsonRefPres_; }
+
+    const std::vector<Scalar>&  joulethomsonGas() const
+    { return joulethomsonGas_; }
+
     bool operator==(const GasPvtThermal<Scalar>& data) const
     {
         if (isothermalPvt_ && !data.isothermalPvt_)
@@ -428,6 +517,7 @@ public:
                 this->enableThermalDensity() == data.enableThermalDensity() &&
                 this->enableThermalViscosity() == data.enableThermalViscosity() &&
                 this->enableInternalEnergy() == data.enableInternalEnergy();
+                this->enableJouleThomson() == data.enableJouleThomson();
     }
 
     GasPvtThermal<Scalar>& operator=(const GasPvtThermal<Scalar>& data)
@@ -444,6 +534,7 @@ public:
         enableThermalDensity_ = data.enableThermalDensity_;
         enableThermalViscosity_ = data.enableThermalViscosity_;
         enableInternalEnergy_ = data.enableInternalEnergy_;
+        enableJouleThomson_ = data.enableJouleThomson_;
 
         return *this;
     }
@@ -459,12 +550,16 @@ private:
     std::vector<Scalar> gasdentCT1_;
     std::vector<Scalar> gasdentCT2_;
 
+    std::vector<Scalar> joulethomsonRefPres_;
+    std::vector<int> joulethomsonGas_;
+
     // piecewise linear curve representing the internal energy of gas
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;
 
     bool enableThermalDensity_;
     bool enableThermalViscosity_;
     bool enableInternalEnergy_;
+    bool enableJouleThomson_;
 };
 
 } // namespace Opm
