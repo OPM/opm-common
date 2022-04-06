@@ -47,6 +47,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -547,6 +548,7 @@ public:
     const WellMICPProperties& getMICPProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
+    const WVFPEXP& getWVFPEXP() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
@@ -610,6 +612,7 @@ public:
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
     bool updateWPAVE(const PAvg& pavg);
     void updateWPaveRefDepth(double ref_depth);
+    bool updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -677,6 +680,7 @@ public:
         serializer(production);
         serializer(injection);
         serializer(segments);
+        serializer(wvfpexp);
         m_pavg.serializeOp(serializer);
     }
 
@@ -717,6 +721,7 @@ private:
     std::shared_ptr<WellProductionProperties> production;
     std::shared_ptr<WellInjectionProperties> injection;
     std::shared_ptr<WellSegments> segments;
+    std::shared_ptr<WVFPEXP> wvfpexp;
     Status status;
     PAvg m_pavg;
 };
