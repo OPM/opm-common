@@ -198,6 +198,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
+    wvfpexp(std::make_shared<WVFPEXP>()),
     status(status_from_int(rst_well.well_status))
 {
     if (this->wtype.producer()) {
@@ -374,6 +375,7 @@ Well::Well(const std::string& wname_arg,
     connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
+    wvfpexp(std::make_shared<WVFPEXP>()),
     status(Status::SHUT)
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
@@ -414,6 +416,7 @@ Well Well::serializeObject()
     result.production = std::make_shared<Well::WellProductionProperties>(Well::WellProductionProperties::serializeObject());
     result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializeObject());
     result.segments = std::make_shared<WellSegments>(WellSegments::serializeObject());
+    result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializeObject());
     result.m_pavg = PAvg();
 
     return result;
@@ -505,6 +508,15 @@ bool Well::updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_prop
 bool Well::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits_arg) {
     if (*this->econ_limits != *econ_limits_arg) {
         this->econ_limits = econ_limits_arg;
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp_arg) {
+    if (*this->wvfpexp != *wvfpexp_arg) {
+        this->wvfpexp = std::move(wvfpexp_arg);
         return true;
     }
 
@@ -964,6 +976,10 @@ const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
 }
 
+const WVFPEXP& Well::getWVFPEXP() const {
+    return *this->wvfpexp;
+}
+
 const WellEconProductionLimits& Well::getEconLimits() const {
     return *this->econ_limits;
 }
@@ -1142,7 +1158,6 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword) {
         this->updateSegments( std::make_shared<WellSegments>(keyword) );
     return true;
 }
-
 
 bool Well::updatePVTTable(int pvt_table_) {
     if (this->pvt_table != pvt_table_) {
@@ -1669,6 +1684,7 @@ bool Well::operator==(const Well& data) const {
         && (this->hasInjected() == data.hasInjected())
         && (this->predictionMode() == data.predictionMode())
         && (this->getTracerProperties() == data.getTracerProperties())
+        && (this->getWVFPEXP() == data.getWVFPEXP())
         && (this->getProductionProperties() == data.getProductionProperties())
         && (this->m_pavg == data.m_pavg)
         && (this->getInjectionProperties() == data.getInjectionProperties())

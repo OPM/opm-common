@@ -5000,7 +5000,6 @@ DATES             -- 3, 4
 /
 END
 )";
-
     WorkArea wa;
     {
         std::ofstream stream{"CASE1.DATA"};
@@ -5009,7 +5008,6 @@ END
     const auto& deck1 = Parser{}.parseFile("CASE1.DATA");
     const auto es1 = EclipseState { deck1 };
     const auto sched1 = Schedule { deck1, es1, std::make_shared<const Python>() };
-
 
     {
         std::ofstream stream{"CASE2.DATA"};
@@ -5071,3 +5069,59 @@ PERMZ
         BOOST_CHECK_THROW(sched_grid.get_cell(2,2,2), std::exception);
     }
 }
+
+BOOST_AUTO_TEST_CASE(Test_wvfpexp) {
+        std::string input = R"(
+DIMENS
+ 10 10 10 /
+
+START         -- 0
+ 19 JUN 2007 /
+
+GRID
+
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 10*10.0 /
+DEPTHZ
+ 121*2000.0 /
+
+SCHEDULE
+
+DATES        -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+ 'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
+
+WVFPEXP
+ 'W1' 1* 'NO' 'NO' /
+ 'W2' 'EXP' 'YES' 'YES1' /
+/
+
+END
+
+)";
+    Deck deck = Parser{}.parseString(input);
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<const Python>() };
+
+    const auto& well1 = sched.getWell("W1", 1);
+    const auto& well2 = sched.getWell("W2", 1);
+    const auto& wvfpexp1 = well1.getWVFPEXP();
+    const auto& wvfpexp2 = well2.getWVFPEXP();
+
+    BOOST_CHECK(!wvfpexp1.extrapolate());
+    BOOST_CHECK(!wvfpexp1.shut());
+    BOOST_CHECK(!wvfpexp1.prevent());
+
+    BOOST_CHECK(wvfpexp2.extrapolate());
+    BOOST_CHECK(wvfpexp2.shut());
+    BOOST_CHECK(wvfpexp2.prevent());
+}
+

@@ -80,6 +80,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -2020,6 +2021,23 @@ Well{0} entered with disallowed 'FIELD' parent group:
         sched_state.pavg.update(std::move(wpave));
     }
 
+    void Schedule::handleWVFPEXP(HandlerContext& handlerContext) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                this->invalidNamePattern(wellNamePattern, handlerContext);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells.get(well_name);
+                auto wvfpexp = std::make_shared<WVFPEXP>(well.getWVFPEXP());
+                wvfpexp->update( record );
+                if (well.updateWVFPEXP(std::move(wvfpexp)))
+                    this->snapshots.back().wells.update( std::move(well) );
+            }
+        }
+    }
+
     void Schedule::handleWWPAVE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2249,6 +2267,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             { "WMICP"   , &Schedule::handleWMICP     },
             { "WPAVE"   , &Schedule::handleWPAVE     },
             { "WPAVEDEP", &Schedule::handleWPAVEDEP  },
+            { "WVFPEXP" , &Schedule::handleWVFPEXP   },
             { "WWPAVE"  , &Schedule::handleWWPAVE    },
             { "WPIMULT" , &Schedule::handleWPIMULT   },
             { "WPMITAB" , &Schedule::handleWPMITAB   },

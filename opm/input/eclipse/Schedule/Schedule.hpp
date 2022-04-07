@@ -690,6 +690,7 @@ namespace Opm
         void handleWMICP     (HandlerContext&);
         void handleWPAVE     (HandlerContext&);
         void handleWPAVEDEP  (HandlerContext&);
+        void handleWVFPEXP   (HandlerContext&);
         void handleWWPAVE    (HandlerContext&);
         void handleWPIMULT   (HandlerContext&);
         void handleWPMITAB   (HandlerContext&);

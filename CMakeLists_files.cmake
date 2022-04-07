@@ -168,6 +168,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WellPolymerProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellBrineProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellTracerProperties.cpp
+    src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
     src/opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestState.cpp
@@ -837,6 +838,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp
        opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp
        opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp
+       opm/input/eclipse/Schedule/Well/WVFPEXP.hpp
        opm/input/eclipse/Schedule/Well/WellTestConfig.hpp
        opm/input/eclipse/Schedule/Well/WellTestState.hpp
        opm/input/eclipse/Schedule/Well/WellConnections.hpp
