@@ -71,7 +71,8 @@ namespace Opm {
                 brine            = (1 << 17),
                 alq              = (1 << 18),
                 tracer           = (1 << 19),
-                micp           = (1 << 20)
+                micp             = (1 << 20),
+                vaporized_water     = (1 << 21)
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -132,6 +133,7 @@ namespace Opm {
             double alq = 0.0;
             std::map<std::string, double> tracer;
             double micp = 0.0;
+            double vaporized_water = 0.0;
     };
 
     struct Connection {
@@ -486,7 +488,8 @@ namespace Opm {
              brine == rate.brine &&
              alq == rate.alq &&
              tracer == rate.tracer &&
-             micp == rate.micp;
+             micp == rate.micp &&
+             vaporized_water == rate.vaporized_water;
     }
 
 
@@ -523,6 +526,7 @@ namespace Opm {
             case opt::tracer: /* Should _not_ be called with tracer argument */
                 break;
             case opt::micp: return this->micp;
+            case opt::vaporized_water: return this->vaporized_water;
         }
 
         throw std::invalid_argument(
@@ -603,6 +607,7 @@ namespace Opm {
                 buffer.write(rate);
             }
             buffer.write(this->micp);
+            buffer.write(this->vaporized_water);
     }
 
     template <class MessageBufferType>
@@ -717,6 +722,7 @@ namespace Opm {
                 this->tracer.emplace(tracer_name, tracer_rate);
             }
             buffer.read(this->micp);
+            buffer.read(this->vaporized_water);
     }
 
    template <class MessageBufferType>
