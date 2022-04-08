@@ -241,10 +241,11 @@ public:
     Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
-                         const Evaluation& Rv) const
+                         const Evaluation& Rv,
+                         const Evaluation& Rvw) const
     {
         if (!enableThermalViscosity())
-            return isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rv);
+            return isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rv, Rvw);
 
         // compute the viscosity deviation due to temperature
         const auto& muGasvisct = gasvisctCurves_[regionIdx].eval(temperature);
@@ -274,10 +275,12 @@ public:
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
-                                            const Evaluation& Rv) const
+                                            const Evaluation& Rv,
+                                            const Evaluation& /*Rvw*/) const
     {
+        const Evaluation& Rvw = 0.0;
         const auto& b =
-            isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv);
+            isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
 
         if (!enableThermalDensity())
             return b;

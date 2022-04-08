@@ -11,7 +11,6 @@
   OPM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
@@ -220,7 +219,8 @@ public:
     Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
-                         const Evaluation& /*Rv*/) const
+                         const Evaluation& /*Rv*/,
+                         const Evaluation& /*Rvw*/) const
     { return saturatedViscosity(regionIdx, temperature, pressure); }
 
     /*!
@@ -244,7 +244,8 @@ public:
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
-                                            const Evaluation& /*Rv*/) const
+                                            const Evaluation& /*Rv*/,
+                                            const Evaluation& /*Rvw*/) const
     { return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure); }
 
     /*!

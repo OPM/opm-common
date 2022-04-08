@@ -425,10 +425,11 @@ public:
     Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& /*temperature*/,
                          const Evaluation& pressure,
-                         const Evaluation& Rw) const
+                         const Evaluation& /*Rv*/,
+                         const Evaluation& Rvw) const
     {
-        const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, Rw, /*extrapolate=*/true);
-        const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, Rw, /*extrapolate=*/true);
+        const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, Rvw, /*extrapolate=*/true);
+        const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, Rvw, /*extrapolate=*/true);
 
         return invBg/invMugBg;
     }
@@ -454,8 +455,9 @@ public:
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& /*temperature*/,
                                             const Evaluation& pressure,
-                                            const Evaluation& Rw) const
-    { return inverseGasB_[regionIdx].eval(pressure, Rw, /*extrapolate=*/true); }
+                                            const Evaluation& /*Rv*/,
+                                            const Evaluation& Rvw) const
+    { return inverseGasB_[regionIdx].eval(pressure, Rvw, /*extrapolate=*/true); }
 
     /*!
      * \brief Returns the formation volume factor [-] of water saturated gas at a given pressure.
@@ -608,7 +610,7 @@ public:
     bool operator==(const DryHumidGasPvt<Scalar>& data) const
     {
         return this->gasReferenceDensity_ == data.gasReferenceDensity_ &&
-               this->oilReferenceDensity_ == data.waterReferenceDensity_ &&
+               this->waterReferenceDensity_ == data.waterReferenceDensity_ &&
                this->inverseGasB() == data.inverseGasB() &&
                this->inverseSaturatedGasB() == data.inverseSaturatedGasB() &&
                this->gasMu() == data.gasMu() &&
