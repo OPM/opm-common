@@ -85,6 +85,7 @@ public:
           co2ReferenceDensity_(co2ReferenceDensity),
           salinity_(salinity)
     {
+        Brine::salinity = salinity[0];
     }
 #if HAVE_ECL_INPUT
     /*!
