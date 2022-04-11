@@ -96,6 +96,7 @@ void ensurePvtApi(const BrinePvt& brinePvt, const Co2Pvt& co2Pvt)
         Evaluation pressure = 1e5;
         Evaluation Rs = 0.0;
         Evaluation Rv = 0.0;
+        Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
         Evaluation tmp;
@@ -135,11 +136,13 @@ void ensurePvtApi(const BrinePvt& brinePvt, const Co2Pvt& co2Pvt)
         tmp = co2Pvt.viscosity(/*regionIdx=*/0,
                                temperature,
                                pressure,
-                               Rv);
+                               Rv,
+                               Rvw);
         tmp = co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                   temperature,
                                                   pressure,
-                                                  Rv);
+                                                  Rv,
+                                                  Rvw);
         tmp = co2Pvt.saturatedViscosity(/*regionIdx=*/0,
                                         temperature,
                                         pressure);
