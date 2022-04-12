@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     if (argc < 5 || help) {
         std::cout << "USAGE:" << std::endl;
         std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> "<< std::endl;
-        std::cout << "prop = {density, invB, viscosity, rsSat}" << std::endl;
+        std::cout << "prop = {density, invB, B, viscosity, rsSat, diffusionCoefficient}" << std::endl;
         std::cout << "phase = {CO2, brine}" << std::endl;
         std::cout << "p: pressure in pascal" << std::endl;
         std::cout << "T: temperature in kelvin" << std::endl;
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
         std::cout << "--h/--help Print help and exit." << std::endl;
         std::cout << "DESCRIPTION:" << std::endl;
         std::cout << "co2brinepvt computes PVT properties of a brine/co2 system " << std::endl;
-        std::cout << "for a given phase (oil or brine), pressure, temperature, salinity) and rs." << std::endl;
+        std::cout << "for a given phase (oil or brine), pressure, temperature, salinity and rs." << std::endl;
         std::cout << "The properties support are: density, the inverse phase formation volume factor (invB), viscosity, " << std::endl;
         std::cout << "saturated dissolution factor (rsSat) " << std::endl;
         std::cout << "See CO2STORE in the OPM manual for more details." << std::endl;
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
         } else {
             throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
         }
-    } else if (prop == "invB") {
+    } else if (prop == "invB" || prop == "B") {
         if (phase == "CO2") {
             value = co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                    T,
@@ -124,6 +124,9 @@ int main(int argc, char **argv)
         } else {
             throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
         }
+        if (prop == "B")
+            value = 1 / value;
+
     } else if (prop == "viscosity") {
         if (phase == "CO2") {
             value = co2Pvt.viscosity(/*regionIdx=*/0,
@@ -142,9 +145,18 @@ int main(int argc, char **argv)
             value = brineCo2Pvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
                                                    T,
                                                    p);
+    } else if (prop == "diffusionCoefficient") {
+        size_t comp_idx = 0; // not used
+        if (phase == "CO2") {
+            value = co2Pvt.diffusionCoefficient(T,p, comp_idx);
+        } else if (phase == "brine") {
+            value = brineCo2Pvt.diffusionCoefficient(T,p, comp_idx);
+        } else {
+            throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
+        }
     } else {
         throw std::runtime_error("prop " + prop + " not recognized. "
-        + "Use either density, visosity or invB");
+        + "Use either density, visosity, invB, B or diffusionCoefficient");
     }
 
     std::cout << value << std::endl;
