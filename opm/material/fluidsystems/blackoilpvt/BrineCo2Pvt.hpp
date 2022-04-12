@@ -209,7 +209,7 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& Rs) const
     {
-        return density_(regionIdx, temperature, pressure, Rs)/brineReferenceDensity_[regionIdx];
+        return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density_(regionIdx, temperature, pressure, Rs)/brineReferenceDensity_[regionIdx];
     }
 
     /*!
@@ -221,7 +221,7 @@ public:
                                                      const Evaluation& pressure) const
     {
         Evaluation rsSat = rsSat_(regionIdx, temperature, pressure);
-        return density_(regionIdx, temperature, pressure, rsSat)/brineReferenceDensity_[regionIdx];
+        return (1.0 - convertRsToXoG_(rsSat,regionIdx)) * density_(regionIdx, temperature, pressure, rsSat)/brineReferenceDensity_[regionIdx];
     }
 
     /*!
