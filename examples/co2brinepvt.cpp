@@ -91,19 +91,16 @@ int main(int argc, char **argv)
     if (argc > 6)
         rs = atof(argv[6]);
 
-    //double p_ref = 101325;
-    //double T_ref = 298; // 25C
-    std::vector<double> ref_den_co2 = {1.80914};
-    std::vector<double> ref_den_water = {996.206};
-
-    Opm::Co2GasPvt<double> co2Pvt(ref_den_co2);
+    size_t num_regions = 1;
+    Opm::Co2GasPvt<double> co2Pvt(num_regions);
 
     const double MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
     std::vector<double> salinity = {0.0};
     if (molality > 0.0)
         salinity[0] = 1 / ( 1 + 1 / (molality*MmNaCl));
-    Opm::BrineCo2Pvt<double> brineCo2Pvt(ref_den_water, ref_den_co2, salinity);
+    Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity);
+
     double value;
     if (prop == "density") {
         if (phase == "CO2") {
