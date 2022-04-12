@@ -104,7 +104,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/JFunc.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.cpp>
+#include <opm/input/eclipse/EclipseState/Tables/JoulethomsonTable.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
@@ -446,7 +446,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         addTables( "SALTPVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTSOL", m_tabdims.getNumPVTTables());
         addTables( "PERMFACT", m_eqldims.getNumEquilRegions());
-        addTables( "JOULETHOMSON", m_eqldims.getNumEquilRegions());
+        addTables( "JOULETHO", m_tabdims.getNumPVTTables());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -513,7 +513,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltsolTable>(deck, "SALTSOL" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<SaltvdTable>(deck, "PERMFACT" , m_eqldims.getNumEquilRegions());
-        initSimpleTableContainer<JoulethomsonTable>(deck, "JOULETHOMSON" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<JoulethomsonTable>(deck, "JOULETHO" , m_tabdims.getNumPVTTables());
 
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
@@ -948,7 +948,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
     }
 
     const TableContainer& TableManager::getJoulethomsonTables() const {
-        return getTables("JOULETHOMSON");
+        return getTables("JOULETHO");
     }
 
     const TableContainer& TableManager::getEnkrvdTables() const {

@@ -85,7 +85,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Tables.cpp>
+#include <opm/input/eclipse/EclipseState/Tables/JoulethomsonTable.hpp>
 
 namespace Opm {
 
@@ -1109,9 +1109,12 @@ const TableColumn& PermfactTable::getPermeabilityMultiplierColumn() const {
 
 JoulethomsonTable::JoulethomsonTable( const DeckItem& item ) {
     m_schema.addColumn( ColumnSchema( "PREF" , Table::RANDOM , Table::DEFAULT_NONE ));
-    m_schema.addColumn( ColumnSchema( "OIL" , Table::RANDOM , Table::DEFAULT_NONE ));
-    m_schema.addColumn( ColumnSchema( "WATER" , Table::RANDOM , Table::DEFAULT_NONE ));
-    m_schema.addColumn( ColumnSchema( "GAS" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "OIL_JT" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "OIL_JTC" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "WAT_JT" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "WAT_JTC" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "GAS_JT" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "GAS_JTC" , Table::RANDOM , Table::DEFAULT_NONE ));
 
     SimpleTable::init(item);
 }
@@ -1124,12 +1127,24 @@ const TableColumn& JoulethomsonTable::getOilColumn() const {
     return SimpleTable::getColumn(1); 
 }
 
-const TableColumn& JoulethomsonTable::getWaterColumn() const {
+const TableColumn& JoulethomsonTable::getOilJtcColumn() const {
     return SimpleTable::getColumn(2); 
 }
 
-const TableColumn& JoulethomsonTable::getGasColumn() const {
+const TableColumn& JoulethomsonTable::getWaterColumn() const {
     return SimpleTable::getColumn(3); 
+}
+
+const TableColumn& JoulethomsonTable::getWaterJtcColumn() const {
+    return SimpleTable::getColumn(4); 
+}
+
+const TableColumn& JoulethomsonTable::getGasColumn() const {
+    return SimpleTable::getColumn(5); 
+}
+
+const TableColumn& JoulethomsonTable::getGasJtcColumn() const {
+    return SimpleTable::getColumn(6); 
 }
 
 AqutabTable::AqutabTable( const DeckItem& item ) {

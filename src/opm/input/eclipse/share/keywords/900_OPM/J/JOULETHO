@@ -1,0 +1,27 @@
+{
+  "name": "JOULETHO",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTPVT"
+  },
+  "comment": "items in this order: PREF, OIL, JTC_OIL, WATER, JTC_WATER, GAS, JTC_GAS",
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "Pressure",
+        "1",
+        "Temperature/Pressure",
+        "1",
+        "Temperature/Pressure",
+        "1",
+        "Temperature/Pressure"
+      ]
+    }
+  ]
+}

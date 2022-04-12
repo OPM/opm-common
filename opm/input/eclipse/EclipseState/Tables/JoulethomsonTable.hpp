@@ -31,8 +31,11 @@ public:
 
     const TableColumn& getPrefColumn() const;
     const TableColumn& getOilColumn() const;
+    const TableColumn& getOilJtcColumn() const;
     const TableColumn& getWaterColumn() const;
+    const TableColumn& getWaterJtcColumn() const;
     const TableColumn& getGasColumn() const;
+    const TableColumn& getGasJtcColumn() const;
 };
 }
 
