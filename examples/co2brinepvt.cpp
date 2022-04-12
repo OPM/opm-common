@@ -44,10 +44,11 @@ double densityGas(const Co2Pvt& co2Pvt, const double p, const double T, const do
 template <class BrinePvt>
 double densityBrine(const BrinePvt& brinePvt, const double p, const double T, const double Rs)
 {
-    return brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+    double bo = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                   T,
                                                   p,
-                                                  Rs) * brinePvt.oilReferenceDensity(0);
+                                                  Rs);
+    return bo * (brinePvt.oilReferenceDensity(0) + Rs * brinePvt.gasReferenceDensity(0));
 }
 
 int main(int argc, char **argv)
