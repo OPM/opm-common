@@ -234,13 +234,6 @@ public:
                         const Evaluation& Rv) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rv)); return 0; }
 
-    template <class Evaluation>
-    Evaluation internalEnergy_JT(unsigned regionIdx,
-                        const Evaluation& temperature,
-                        const Evaluation& pressure,
-                        const Evaluation& Rv) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy_JT(regionIdx, temperature, pressure, Rv)); return 0; }
-    
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */

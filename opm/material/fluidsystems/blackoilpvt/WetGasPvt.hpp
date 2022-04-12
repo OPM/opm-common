@@ -478,14 +478,6 @@ public:
     {
         throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
     }
-    template <class Evaluation>
-    Evaluation internalEnergy_JT(unsigned,
-                        const Evaluation&,
-                        const Evaluation&,
-                        const Evaluation&) const
-    {
-        throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
-    }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.

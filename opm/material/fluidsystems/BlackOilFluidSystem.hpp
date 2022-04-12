@@ -1193,37 +1193,6 @@ public:
         const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
         const auto& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
 
-        LhsEval p_st = 1.01325E5; // pressure at standard condition
-        LhsEval T_st = 20 + 273.15; // pressure at standard condition
-        LhsEval Joule_Thomson_coefficient; 
-        LhsEval Tref = 399.15;
-        LhsEval Pref = 20E5;
-        LhsEval Cp;
-        LhsEval dns;
-        LhsEval alpha; 
-        LhsEval JT1;
-        GasPvtThermal<Scalar> obj;
-        Scalar JTC;
-         
-        if (phaseIdx == gasPhaseIdx) {
-            LhsEval intEn = gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
-            //std::cout << "Internal Energy: " << intEn << std::endl;
-            Cp = (intEn- 480.6E3)/T;
-            //dns = density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
-            //alpha = rho d(1/rho)/dT
-            //dns = 9.82;
-            // alpha = dns * (2.67941015e-03 + 2*6.86181705e-06*(T - Tref))/
-            // (0.64861 * (gasPvt_->inverseFormationVolumeFactor(regionIdx, Tref, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))));
-            // JT1 =  -(1.0/Cv)*(1.0 - alpha *T)/dns;
-            //std::cout << "JT1: "<< JT1 << " Cv: "<< Cv << " dns: " << dns << " alpha: " << alpha << std::endl;
-            //std::cout << " dns: " << dns << " alpha: " << alpha << "\n" << std::endl;  
-            
-            //Joule_Thomson_coefficient = 3.26E-6;    
-            //Joule_Thomson_coefficient = gasPvt_->internalEnergy_JT(regionIdx, Tref, Pref, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));    
-            //JTC = Joule_Thomson_coefficient.value(); //3.34718e-06
-            //std::cout << " Joule_Thomson_coefficient: " << JTC << "\n" << std::endl; 
- 
-        }
         switch (phaseIdx) {
         case oilPhaseIdx:
             return
@@ -1232,25 +1201,12 @@ public:
 
         case gasPhaseIdx:
             return
-                //gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
-                //+ p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
-                
-                 gasPvt_->internalEnergy_JT(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
+                 gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
                   + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
-                
-                //gasPvt_->internalEnergy_JT(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
-                
-                //gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
-                //Cv * (T-T_st) - Cv * JT1 * (p - p_st);
-
-                //Cp.value() * (T-T_st) - Cp.value() * JTC * (p - p_st);
-
-                 //gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
-                //- Cv * Joule_Thomson_coefficient * (p - p_st);
 
         case waterPhaseIdx:
             return
-                waterPvt_->internalEnergy(regionIdx, T, p)
+                waterPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
                 + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));

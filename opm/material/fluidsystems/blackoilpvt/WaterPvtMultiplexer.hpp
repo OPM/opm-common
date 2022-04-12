@@ -153,8 +153,9 @@ public:
     template <class Evaluation>
     Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
-                        const Evaluation& pressure) const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure)); return 0; }
+                        const Evaluation& pressure,
+                        const Evaluation& saltconcentration) const
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, saltconcentration)); return 0; }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
