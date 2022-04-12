@@ -5116,11 +5116,11 @@ END
     const auto& wvfpexp1 = well1.getWVFPEXP();
     const auto& wvfpexp2 = well2.getWVFPEXP();
 
-    BOOST_CHECK(!wvfpexp1.extrapolate());
+    BOOST_CHECK(!wvfpexp1.explicit_lookup());
     BOOST_CHECK(!wvfpexp1.shut());
     BOOST_CHECK(!wvfpexp1.prevent());
 
-    BOOST_CHECK(wvfpexp2.extrapolate());
+    BOOST_CHECK(wvfpexp2.explicit_lookup());
     BOOST_CHECK(wvfpexp2.shut());
     BOOST_CHECK(wvfpexp2.prevent());
 }
