@@ -138,6 +138,14 @@ public:
                 watdentCT1_[regionIdx] = record.C1;
                 watdentCT2_[regionIdx] = record.C2;
             }
+          
+            const auto& pvtwTables = tables.getPvtwTable();
+          
+            assert(pvtwTables.size() == numRegions);       
+            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+                pvtwRefPress_[regionIdx] = pvtwTables[regionIdx].reference_pressure;
+                pvtwRefB_[regionIdx] = pvtwTables[regionIdx].volume_factor;
+            }
         }
 
         if (enableThermalViscosity_) {
