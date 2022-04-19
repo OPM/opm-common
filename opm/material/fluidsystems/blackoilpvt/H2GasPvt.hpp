@@ -186,6 +186,15 @@ public:
     { return 0.0; /* this is dry gas! */ }
 
     /*!
+    * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the water phase.
+    */
+    template <class Evaluation>
+    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
+                                              const Evaluation& /*temperature*/,
+                                              const Evaluation& /*pressure*/) const
+    { return 0.0; /* this is non-humid gas! */ }
+
+    /*!
     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
     */
     template <class Evaluation>
