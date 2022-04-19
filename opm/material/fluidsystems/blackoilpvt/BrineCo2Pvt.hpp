@@ -87,6 +87,21 @@ public:
     {
         Brine::salinity = salinity[0];
     }
+
+    BrineCo2Pvt(const std::vector<Scalar>& salinity,
+                Scalar T_ref = 288.71, //(273.15 + 15.56)
+                Scalar P_ref = 101325)
+        : salinity_(salinity)
+    {
+        int num_regions =  salinity_.size();
+        co2ReferenceDensity_.resize(num_regions);
+        brineReferenceDensity_.resize(num_regions);
+        for (int i = 0; i < num_regions; ++i) {
+            co2ReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, true);
+            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, true);
+        }
+        Brine::salinity = salinity[0];
+    }
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for Brine-CO2 system using an ECL deck.

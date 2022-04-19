@@ -68,6 +68,16 @@ public:
         : gasReferenceDensity_(gasReferenceDensity)
     {
     }
+
+    Co2GasPvt(size_t numRegions,
+              Scalar T_ref = 288.71, //(273.15 + 15.56)
+              Scalar P_ref = 101325)
+    {
+        setNumRegions(numRegions);
+        for (size_t i = 0; i < numRegions; ++i) {
+            gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, true);
+        }
+    }
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for co2 gas using an ECL deck.
