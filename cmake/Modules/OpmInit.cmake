@@ -130,7 +130,7 @@ endif ()
 
 # parallel computing must be explicitly enabled
 # This needs to be in OpmInit as prereqs is called before OpmLibMain is included.
-option (USE_MPI "Use Message Passing Interface for parallel computing" OFF)
+option (USE_MPI "Use Message Passing Interface for parallel computing" ON)
 if (NOT USE_MPI)
   set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
 endif ()
@@ -144,7 +144,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # quadmath must be explicitly enabled
 # This needs to be in OpmInit as prereqs is called before OpmLibMain is included.
-option (USE_QUADMATH "Use high precision floating point library (slow)" OFF)
+option (USE_QUADMATH "Use high precision floating point library (slow)" ON)
 if (NOT USE_QUADMATH)
   set (CMAKE_DISABLE_FIND_PACKAGE_QuadMath TRUE)
 endif ()
