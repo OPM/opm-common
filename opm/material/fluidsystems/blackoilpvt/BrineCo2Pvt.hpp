@@ -119,6 +119,8 @@ public:
                          "BRINE PVT properties are computed based on the Hu et al. pvt model and PVDO/PVTO input is ignored. " << std::endl;
         }
 
+        setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
+
         // We only supported single pvt region for the co2-brine module
         size_t numRegions = 1;
         setNumRegions(numRegions);
@@ -166,6 +168,15 @@ public:
     {
 
     }
+
+    /*!
+     * \brief Specify whether the PVT model should consider that the CO2 component can
+     *        dissolve in the brine phase
+     *
+     * By default, dissolved co2 is considered.
+     */
+    void setEnableDissolvedGas(bool yesno)
+    { enableDissolution_ = yesno; }
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
@@ -313,6 +324,7 @@ private:
     std::vector<Scalar> brineReferenceDensity_;
     std::vector<Scalar> co2ReferenceDensity_;
     std::vector<Scalar> salinity_;
+    bool enableDissolution_ = true;
 
     template <class LhsEval>
     LhsEval density_(unsigned regionIdx,
@@ -442,6 +454,9 @@ private:
                    const LhsEval& temperature,
                    const LhsEval& pressure) const
     {
+        if (!enableDissolution_)
+            return 0.0;
+
         // calulate the equilibrium composition for the given
         // temperature and pressure. 
         LhsEval xgH2O;
