@@ -27,7 +27,7 @@ namespace Opm {
     WVFPEXP WVFPEXP::serializeObject()
     {
         WVFPEXP result;
-        result.m_extrapolate = true;
+        result.m_explicit = true;
         result.m_shut = true;
         result.m_prevent = Prevent::No;
 
@@ -35,7 +35,7 @@ namespace Opm {
     }
 
     bool WVFPEXP::operator==(const WVFPEXP& other) const {
-        return (m_extrapolate == other.m_extrapolate)
+        return (m_explicit == other.m_explicit)
             && (m_shut == other.m_shut)
             && (m_prevent == other.m_prevent);
     }
@@ -45,7 +45,7 @@ namespace Opm {
         const auto& close = record.getItem<ParserKeywords::WVFPEXP::CLOSE>().get<std::string>(0);
         const auto& prevent_thp = record.getItem<ParserKeywords::WVFPEXP::PREVENT_THP>().get<std::string>(0);
         //const auto& extrapolation_control = record.getItem<ParserKeywords::WVFPEXP::EXTRAPOLATION_CONTROL>().get<std::string>(0);
-        m_extrapolate = (exp_imp == "EXP"); 
+        m_explicit = (exp_imp == "EXP");
         m_shut = (close == "YES");
         if (prevent_thp == "YES1")
             m_prevent = Prevent::First;
@@ -55,8 +55,8 @@ namespace Opm {
             m_prevent = Prevent::No;
     }
 
-    bool WVFPEXP::extrapolate() const {
-        return m_extrapolate;
+    bool WVFPEXP::explicit_lookup() const {
+        return m_explicit;
     }
 
     bool WVFPEXP::shut() const {

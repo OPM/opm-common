@@ -35,7 +35,7 @@ namespace Opm {
 
         void update(const DeckRecord& record);
 
-        bool extrapolate() const;
+        bool explicit_lookup() const;
         bool shut() const;
         bool prevent() const;
 
@@ -45,13 +45,13 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(m_extrapolate);
+            serializer(m_explicit);
             serializer(m_shut);
             serializer(m_prevent);
         }
 
     private:
-        bool m_extrapolate;
+        bool m_explicit;
         bool m_shut;
         Prevent m_prevent;
     };
