@@ -16,7 +16,12 @@ function parseRevisions {
   do
     if grep -qi "$upstream=" <<< $ghprbCommentBody
     then
-      upstreamRev[$upstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([0-9]+).*/\1/g"`/merge
+      if test -n "$absolute_revisions"
+      then
+        upstreamRev[$upstream]=`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([^ ]+).*/\1/g"`
+      else
+        upstreamRev[$upstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([0-9]+).*/\1/g"`/merge
+      fi
     fi
   done
   if grep -q "with downstreams" <<< $ghprbCommentBody
@@ -25,8 +30,13 @@ function parseRevisions {
     do
       if grep -qi "$downstream=" <<< $ghprbCommentBody
       then
-        downstreamRev[$downstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${downstream,,}=([0-9]+).*/\1/g"`/merge
-      fi
+        if test -n "$absolute_revisions"
+        then
+          downstreamRev[$downstream]=`echo $ghprbCommentBody | sed -r "s/.*${downstream,,}=([^ ]+).*/\1/g"`
+        else
+          downstreamRev[$downstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${downstream,,}=([0-9]+).*/\1/g"`/merge
+       fi
+     fi
     done
   fi
 
