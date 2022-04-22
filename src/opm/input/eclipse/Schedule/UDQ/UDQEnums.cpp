@@ -18,6 +18,7 @@
 */
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+
 #include <opm/common/utility/String.hpp>
 
 #include <map>
@@ -176,7 +177,6 @@ UDQVarType targetType(const std::string& keyword, const std::vector<std::string>
 
     return UDQVarType::SCALAR;
 }
-
 
 
 UDQVarType varType(const std::string& keyword) {
@@ -393,7 +393,8 @@ bool leadingSpace(UDQTokenType token_type) {
 
 namespace {
     template <typename Value>
-    Value lookup_control_map_value(const std::map<UDAControl, Value>& map, const UDAControl control)
+    Value lookup_control_map_value(const std::map<UDAControl, Value>& map,
+                                   const UDAControl                   control)
     {
         auto pos = map.find(control);
         if (pos == map.end()) {
@@ -408,7 +409,7 @@ namespace {
     }
 } // Anonymous
 
-UDAKeyword keyword(UDAControl control)
+UDAKeyword keyword(const UDAControl control)
 {
     static const auto c2k = std::map<UDAControl, UDAKeyword> {
         {UDAControl::WCONPROD_ORAT, UDAKeyword::WCONPROD},
@@ -435,34 +436,36 @@ UDAKeyword keyword(UDAControl control)
     return lookup_control_map_value(c2k, control);
 }
 
-int udaCode(UDAControl control)
+int udaCode(const UDAControl control)
 {
     static const auto c2uda = std::map<UDAControl, int> {
-        {UDAControl::WCONPROD_ORAT,  300004},
-        {UDAControl::WCONPROD_GRAT,  500004},
-        {UDAControl::WCONPROD_WRAT,  400004},
-        {UDAControl::WCONPROD_LRAT,  600004},
-        {UDAControl::WCONPROD_RESV,  999999},
-        {UDAControl::WCONPROD_BHP,   999999},
-        {UDAControl::WCONPROD_THP,   999999},
+        {UDAControl::WCONPROD_ORAT,  300'004},
+        {UDAControl::WCONPROD_GRAT,  500'004},
+        {UDAControl::WCONPROD_WRAT,  400'004},
+        {UDAControl::WCONPROD_LRAT,  600'004},
+        {UDAControl::WCONPROD_RESV,  999'999},
+        {UDAControl::WCONPROD_BHP,   999'999},
+        {UDAControl::WCONPROD_THP,   999'999},
 
         // --------------------------------------------------------------
-        {UDAControl::WCONINJE_RATE,  400003},
-        {UDAControl::WCONINJE_RESV,  500003},
-        {UDAControl::WCONINJE_BHP,   999999},
-        {UDAControl::WCONINJE_THP,   999999},
+        {UDAControl::WCONINJE_RATE,  400'003},
+        {UDAControl::WCONINJE_RESV,  500'003},
+        {UDAControl::WCONINJE_BHP,   999'999},
+        {UDAControl::WCONINJE_THP,   999'999},
 
         // --------------------------------------------------------------
-        {UDAControl::GCONPROD_OIL_TARGET,    200019},
-        {UDAControl::GCONPROD_WATER_TARGET,  300019},
-        {UDAControl::GCONPROD_GAS_TARGET,    400019},
-        {UDAControl::GCONPROD_LIQUID_TARGET, 500019},
+        {UDAControl::GCONPROD_OIL_TARGET,    200'019},
+        {UDAControl::GCONPROD_WATER_TARGET,  300'019},
+        {UDAControl::GCONPROD_GAS_TARGET,    400'019},
+        {UDAControl::GCONPROD_LIQUID_TARGET, 500'019},
 
         // --------------------------------------------------------------
-        {UDAControl::GCONINJE_SURFACE_MAX_RATE,      300017}, // Surface injection rate
-        {UDAControl::GCONINJE_RESV_MAX_RATE,         400017}, // Reservoir volume injection rate
-        {UDAControl::GCONINJE_TARGET_REINJ_FRACTION, 500017}, // Reinjection fraction
-        {UDAControl::GCONINJE_TARGET_VOID_FRACTION,  600017}, // Voidage replacement fraction
+        {UDAControl::GCONINJE_SURFACE_MAX_RATE,      300'017}, // Surface injection rate
+        {UDAControl::GCONINJE_RESV_MAX_RATE,         400'017}, // Reservoir volume injection rate
+        {UDAControl::GCONINJE_TARGET_REINJ_FRACTION, 500'017}, // Reinjection fraction
+        {UDAControl::GCONINJE_TARGET_VOID_FRACTION,  600'017}, // Voidage replacement fraction
+
+        // --------------------------------------------------------------
     };
 
     return lookup_control_map_value(c2uda, control);
@@ -520,46 +523,38 @@ bool production_control(UDAControl control) {
     return !injection_control(control);
 }
 
-
-UDAControl udaControl(int uda_code) {
+UDAControl udaControl(const int uda_code)
+{
     switch (uda_code) {
-    case 300004:
-        return UDAControl::WCONPROD_ORAT;
-    case 400004:
-        return UDAControl::WCONPROD_WRAT;
-    case 500004:
-        return UDAControl::WCONPROD_GRAT;
-    case 600004:
-        return UDAControl::WCONPROD_LRAT;
-    case 999999:
+    case   300'004: return UDAControl::WCONPROD_ORAT;
+    case   400'004: return UDAControl::WCONPROD_WRAT;
+    case   500'004: return UDAControl::WCONPROD_GRAT;
+    case   600'004: return UDAControl::WCONPROD_LRAT;
+
+    case   400'003: return UDAControl::WCONINJE_RATE;
+    case   500'003: return UDAControl::WCONINJE_RESV;
+
+    case   200'019: return UDAControl::GCONPROD_OIL_TARGET;
+    case   300'019: return UDAControl::GCONPROD_WATER_TARGET;
+    case   400'019: return UDAControl::GCONPROD_GAS_TARGET;
+    case   500'019: return UDAControl::GCONPROD_LIQUID_TARGET;
+
+    case   300'017: return UDAControl::GCONINJE_SURFACE_MAX_RATE;
+    case   400'017: return UDAControl::GCONINJE_RESV_MAX_RATE;
+    case   500'017: return UDAControl::GCONINJE_TARGET_REINJ_FRACTION;
+    case   600'017: return UDAControl::GCONINJE_TARGET_VOID_FRACTION;
+
+    case   999'999:
         throw std::logic_error("UDA code 999999 is ambiguous");
-    case 400003:
-        return UDAControl::WCONINJE_RATE;
-    case 500003:
-        return UDAControl::WCONINJE_RESV;
-    case 200019:
-        return UDAControl::GCONPROD_OIL_TARGET;
-    case 300019:
-        return UDAControl::GCONPROD_WATER_TARGET;
-    case 400019:
-        return UDAControl::GCONPROD_GAS_TARGET;
-    case 500019:
-        return UDAControl::GCONPROD_LIQUID_TARGET;
-    case 300017:
-        return UDAControl::GCONINJE_SURFACE_MAX_RATE;
-    case 400017:
-        return UDAControl::GCONINJE_RESV_MAX_RATE;
-    case 500017:
-        return UDAControl::GCONINJE_TARGET_REINJ_FRACTION;
-    case 600017:
-        return UDAControl::GCONINJE_TARGET_VOID_FRACTION;
-    default:
-        throw std::logic_error("Unknown UDA integer control code");
     }
+
+    throw std::logic_error {
+        "Unknown UDA integer control code " + std::to_string(uda_code)
+    };
 }
 
-
-std::string controlName(UDAControl control) {
+std::string controlName(const UDAControl control)
+{
     switch (control) {
     case UDAControl::GCONPROD_OIL_TARGET:
         return "GCONPROD_ORAT";
