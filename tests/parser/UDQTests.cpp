@@ -1570,6 +1570,15 @@ BOOST_AUTO_TEST_CASE(UDQControl_Keyword)
     BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONINJE_TARGET_REINJ_FRACTION) == UDAKeyword::GCONINJE, "GCONINJE_TARGET_REINJ_FRACTION control keyword must be GCONINJE");
     BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::GCONINJE_TARGET_VOID_FRACTION)  == UDAKeyword::GCONINJE, "GCONINJE_TARGET_VOID_FRACTION control keyword must be GCONINJE");
 
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_ORAT) == UDAKeyword::WELTARG, "WELTARG_ORAT control keyword must be WELTARG");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_WRAT) == UDAKeyword::WELTARG, "WELTARG_WRAT control keyword must be WELTARG");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_GRAT) == UDAKeyword::WELTARG, "WELTARG_GRAT control keyword must be WELTARG");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_LRAT) == UDAKeyword::WELTARG, "WELTARG_LRAT control keyword must be WELTARG");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_RESV) == UDAKeyword::WELTARG, "WELTARG_RESV control keyword must be WELTARG");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_BHP)  == UDAKeyword::WELTARG, "WELTARG_BHP control keyword must be WELTARG");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_THP)  == UDAKeyword::WELTARG, "WELTARG_THP control keyword must be WELTARG");
+    BOOST_CHECK_MESSAGE(UDQ::keyword(UDAControl::WELTARG_LIFT) == UDAKeyword::WELTARG, "WELTARG_LIFT control keyword must be WELTARG");
+
     BOOST_CHECK_THROW(UDQ::keyword(static_cast<UDAControl>(1729)),
                       std::logic_error);
 }
@@ -1598,6 +1607,15 @@ BOOST_AUTO_TEST_CASE(UDAControl_IUAD_0)
     BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_RESV_MAX_RATE),          400'017);
     BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_TARGET_REINJ_FRACTION),  500'017);
     BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::GCONINJE_TARGET_VOID_FRACTION),   600'017);
+
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_ORAT),        16);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_WRAT),   100'016);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_GRAT),   200'016);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_LRAT),   300'016);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_RESV),   400'016);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_BHP),    500'016);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_THP),    600'016);
+    BOOST_CHECK_EQUAL(UDQ::udaCode(UDAControl::WELTARG_LIFT), 1'000'016);
 
     BOOST_CHECK_THROW(UDQ::udaCode(static_cast<UDAControl>(1729)),
                       std::logic_error);

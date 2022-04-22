@@ -419,14 +419,30 @@ UDAKeyword keyword(const UDAControl control)
         {UDAControl::WCONPROD_RESV, UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_BHP,  UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_THP,  UDAKeyword::WCONPROD},
+
+        // --------------------------------------------------------------
         {UDAControl::WCONINJE_RATE, UDAKeyword::WCONINJE},
         {UDAControl::WCONINJE_RESV, UDAKeyword::WCONINJE},
         {UDAControl::WCONINJE_BHP,  UDAKeyword::WCONINJE},
         {UDAControl::WCONINJE_THP,  UDAKeyword::WCONINJE},
+
+        // --------------------------------------------------------------
+        {UDAControl::WELTARG_ORAT, UDAKeyword::WELTARG},
+        {UDAControl::WELTARG_WRAT, UDAKeyword::WELTARG},
+        {UDAControl::WELTARG_GRAT, UDAKeyword::WELTARG},
+        {UDAControl::WELTARG_LRAT, UDAKeyword::WELTARG},
+        {UDAControl::WELTARG_RESV, UDAKeyword::WELTARG},
+        {UDAControl::WELTARG_BHP,  UDAKeyword::WELTARG},
+        {UDAControl::WELTARG_THP,  UDAKeyword::WELTARG},
+        {UDAControl::WELTARG_LIFT, UDAKeyword::WELTARG},
+
+        // --------------------------------------------------------------
         {UDAControl::GCONPROD_OIL_TARGET,    UDAKeyword::GCONPROD},
         {UDAControl::GCONPROD_WATER_TARGET,  UDAKeyword::GCONPROD},
         {UDAControl::GCONPROD_GAS_TARGET,    UDAKeyword::GCONPROD},
         {UDAControl::GCONPROD_LIQUID_TARGET, UDAKeyword::GCONPROD},
+
+        // --------------------------------------------------------------
         {UDAControl::GCONINJE_SURFACE_MAX_RATE,      UDAKeyword::GCONINJE},
         {UDAControl::GCONINJE_RESV_MAX_RATE,         UDAKeyword::GCONINJE},
         {UDAControl::GCONINJE_TARGET_REINJ_FRACTION, UDAKeyword::GCONINJE},
@@ -466,6 +482,14 @@ int udaCode(const UDAControl control)
         {UDAControl::GCONINJE_TARGET_VOID_FRACTION,  600'017}, // Voidage replacement fraction
 
         // --------------------------------------------------------------
+        {UDAControl::WELTARG_ORAT,        16},
+        {UDAControl::WELTARG_WRAT,   100'016},
+        {UDAControl::WELTARG_GRAT,   200'016},
+        {UDAControl::WELTARG_LRAT,   300'016},
+        {UDAControl::WELTARG_RESV,   400'016},
+        {UDAControl::WELTARG_BHP,    500'016},
+        {UDAControl::WELTARG_THP,    600'016},
+        {UDAControl::WELTARG_LIFT, 1'000'016},
     };
 
     return lookup_control_map_value(c2uda, control);
@@ -549,8 +573,14 @@ UDAControl udaControl(const int uda_code)
     case   500'017: return UDAControl::GCONINJE_TARGET_REINJ_FRACTION;
     case   600'017: return UDAControl::GCONINJE_TARGET_VOID_FRACTION;
 
-    case   999'999:
-        throw std::logic_error("UDA code 999999 is ambiguous");
+    case        16: return UDAControl::WELTARG_ORAT;
+    case   100'016: return UDAControl::WELTARG_WRAT;
+    case   200'016: return UDAControl::WELTARG_GRAT;
+    case   300'016: return UDAControl::WELTARG_LRAT;
+    case   400'016: return UDAControl::WELTARG_RESV;
+    case   500'016: return UDAControl::WELTARG_BHP;
+    case   600'016: return UDAControl::WELTARG_THP;
+    case 1'000'016: return UDAControl::WELTARG_LIFT;
     }
 
     throw std::logic_error {
@@ -618,11 +648,21 @@ std::string controlName(const UDAControl control)
     case UDAControl::WCONINJE_THP:
         return "WCONINJE_THP";
 
-    default:
-        throw std::logic_error("What the ??");
+    case UDAControl::WELTARG_ORAT: return "WELTARG_ORAT";
+    case UDAControl::WELTARG_WRAT: return "WELTARG_WRAT";
+    case UDAControl::WELTARG_GRAT: return "WELTARG_GRAT";
+    case UDAControl::WELTARG_LRAT: return "WELTARG_LRAT";
+    case UDAControl::WELTARG_RESV: return "WELTARG_RESV";
+    case UDAControl::WELTARG_BHP:  return "WELTARG_BHP";
+    case UDAControl::WELTARG_THP:  return "WELTARG_THP";
+    case UDAControl::WELTARG_LIFT: return "WELTARG_LIFT";
     }
-}
 
+    throw std::logic_error {
+        "Unknown UDA control keyword '" +
+        std::to_string(static_cast<int>(control)) + '\''
+    };
+}
 
 
 }} // Opm::UDQ
