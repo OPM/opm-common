@@ -443,15 +443,15 @@ int udaCode(const UDAControl control)
         {UDAControl::WCONPROD_GRAT,  500'004},
         {UDAControl::WCONPROD_WRAT,  400'004},
         {UDAControl::WCONPROD_LRAT,  600'004},
-        {UDAControl::WCONPROD_RESV,  999'999},
-        {UDAControl::WCONPROD_BHP,   999'999},
-        {UDAControl::WCONPROD_THP,   999'999},
+        {UDAControl::WCONPROD_RESV,  700'004},
+        {UDAControl::WCONPROD_BHP,   800'004},
+        {UDAControl::WCONPROD_THP,   900'004},
 
         // --------------------------------------------------------------
         {UDAControl::WCONINJE_RATE,  400'003},
         {UDAControl::WCONINJE_RESV,  500'003},
-        {UDAControl::WCONINJE_BHP,   999'999},
-        {UDAControl::WCONINJE_THP,   999'999},
+        {UDAControl::WCONINJE_BHP,   600'003},
+        {UDAControl::WCONINJE_THP,   700'003},
 
         // --------------------------------------------------------------
         {UDAControl::GCONPROD_OIL_TARGET,    200'019},
@@ -530,9 +530,14 @@ UDAControl udaControl(const int uda_code)
     case   400'004: return UDAControl::WCONPROD_WRAT;
     case   500'004: return UDAControl::WCONPROD_GRAT;
     case   600'004: return UDAControl::WCONPROD_LRAT;
+    case   700'004: return UDAControl::WCONPROD_RESV;
+    case   800'004: return UDAControl::WCONPROD_BHP;
+    case   900'004: return UDAControl::WCONPROD_THP;
 
     case   400'003: return UDAControl::WCONINJE_RATE;
     case   500'003: return UDAControl::WCONINJE_RESV;
+    case   600'003: return UDAControl::WCONINJE_BHP;
+    case   700'003: return UDAControl::WCONINJE_THP;
 
     case   200'019: return UDAControl::GCONPROD_OIL_TARGET;
     case   300'019: return UDAControl::GCONPROD_WATER_TARGET;
