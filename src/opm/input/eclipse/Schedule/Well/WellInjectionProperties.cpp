@@ -330,7 +330,7 @@ namespace Opm {
             break;
 
         case UDAControl::WCONINJE_THP:
-            this->BHPTarget = value;
+            this->THPTarget = value;
             udq_active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONINJE_THP);
             break;
 
