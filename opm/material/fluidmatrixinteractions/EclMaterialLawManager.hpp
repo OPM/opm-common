@@ -743,7 +743,7 @@ private:
                                                     slgofTables.getTable<SlgofTable>(satRegionIdx));
             else if ( !tableManager.getSgofletTable().empty() ) {
                 const auto& letSgofTab = tableManager.getSgofletTable()[satRegionIdx];
-                const std::vector<Scalar> dum;
+                const std::vector<Scalar> dum; // dummy arg to comform with existing interface
 
                 effParams.setApproach(SatCurveMultiplexerApproach::LETApproach);
                 auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LETApproach>();
@@ -921,7 +921,7 @@ private:
             }
             else if ( !tableManager.getSwofletTable().empty() ) {
                 const auto& letTab = tableManager.getSwofletTable()[satRegionIdx];
-                const std::vector<Scalar> dum;
+                const std::vector<Scalar> dum; // dummy arg to conform with existing interface
 
                 effParams.setApproach(SatCurveMultiplexerApproach::LETApproach);
                 auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LETApproach>();

@@ -5,7 +5,7 @@
 
   OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 2 of the License, or
+  the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
   OPM is distributed in the hope that it will be useful,
@@ -95,7 +95,7 @@ public:
     template <class Container, class FluidState>
     static void capillaryPressures(Container& /* values */, const Params& /* params */, const FluidState& /* fs */)
     {
-        throw std::invalid_argument("The capillaryPressures(fs) method is not yet implemented");
+        throw std::logic_error("The capillaryPressures(fs) method is not yet implemented");
     }
 
     /*!
@@ -105,7 +105,7 @@ public:
     template <class Container, class FluidState>
     static void saturations(Container& /* pc */, const Params& /* params */, const FluidState& /* fs */)
     {
-        throw std::invalid_argument("The saturations(fs) method is not yet implemented");
+        throw std::logic_error("The saturations(fs) method is not yet implemented");
     }
 
     /*!
@@ -121,7 +121,7 @@ public:
     template <class Container, class FluidState>
     static void relativePermeabilities(Container& /* pc */, const Params& /* params */, const FluidState& /* fs */)
     {
-        throw std::invalid_argument("The relativePermeabilities(fs) method is not yet implemented");
+        throw std::logic_error("The relativePermeabilities(fs) method is not yet implemented");
     }
 
     /*!
@@ -166,25 +166,25 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation Sw(const Params& /* params */, const FluidState& /* fs */)
     {
-        throw std::invalid_argument("The Sw(fs) method is not yet implemented");
+        throw std::logic_error("The Sw(fs) method is not yet implemented");
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatSw(const Params& /* params */, const Evaluation& /* pc */)
     {
-        throw std::invalid_argument("The twoPhaseSatSw(fs) method is not yet implemented");
+        throw std::logic_error("The twoPhaseSatSw(fs) method is not yet implemented");
     }
 
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation Sn(const Params& /* params */, const FluidState& /* fs */)
     {
-        throw std::invalid_argument("The Sn(fs) method is not yet implemented");
+        throw std::logic_error("The Sn(fs) method is not yet implemented");
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatSn(const Params& /* params */, const Evaluation& /* pc */)
     {
-        throw std::invalid_argument("The twoPhaseSatSn(fs) method is not yet implemented");
+        throw std::logic_error("The twoPhaseSatSn(fs) method is not yet implemented");
     }
     /*!
      * \brief The relative permeability for the wetting phase of
