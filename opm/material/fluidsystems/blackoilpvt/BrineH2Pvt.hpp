@@ -260,7 +260,25 @@ public:
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
-        // NOT IMPLEMENTED YET!
+        // Diffusion coefficient of H2 in pure water according to Ferrell & Himmelbau, AIChE Journal, 13(4), 1967 (Eq.
+        // 23)
+        // Some intermediate calculations and definitions
+        const Scalar vm = 28.45;  // molar volume at normal boiling point (20.271 K and 1 atm) in cm2/mol
+        const Scalar sigma = 2.96 * 1e-8; // Lennard-Jones 6-12 potential in cm (1 Å = 1e-8 cm)
+        const Scalar avogadro = 6.022e23; // Avogrado's number in mol^-1
+        const Scalar alpha = sigma / pow((vm / avogadro), 1 / 3);  // Eq. (19)
+        const Scalar lambda = 1.729; // quantum parameter [-]
+        const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, true) * 1e3;  // water viscosity in cP
+
+        // Diffusion coeff in pure water in cm2/s
+        const Evaluation D_pure = ((4.8e-7 * temperature) / pow(mu_pure, alpha)) * pow((1 + pow(lambda, 2)) / vm, 0.6);
+
+        // Diffusion coefficient in brine using Ratcliff and Holdcroft, J. G. Trans. Inst. Chem. Eng, 1963. OBS: Value
+        // of n is noted as the recommended single value according to Akita, Ind. Eng. Chem. Fundam., 1981.
+        const Evaluation& mu_brine = Brine::liquidViscosity(temperature, pressure) * 1e3; // Brine viscosity in cP
+        const Evaluation log_D_brine = log10(D_pure) - 0.637 * log10(mu_brine / mu_pure);
+
+        return pow(Evaluation(10), log_D_brine) * 1e-4;  // convert from cm2/s to m2/s
     }
 
 private:
