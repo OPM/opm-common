@@ -443,7 +443,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
             break;
 
         case UDAControl::WCONPROD_THP:
-            this->BHPTarget = value;
+            this->THPTarget = value;
             udq_active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONPROD_THP);
             break;
 
