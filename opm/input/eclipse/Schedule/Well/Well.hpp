@@ -298,6 +298,7 @@ public:
         void setBHPLimit(const double limit);
         InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+        bool updateUDQActive(const UDQConfig& udq_config, const WELTARGCMode cmode, UDQActive& active) const;
         void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
         void handleWTMULT(Well::WELTARGCMode cmode, double factor);
 
@@ -426,6 +427,7 @@ public:
         void clearControls();
         ProductionControls controls(const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+        bool updateUDQActive(const UDQConfig& udq_config, const WELTARGCMode cmode, UDQActive& active) const;
         void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
 
         void setBHPLimit(const double limit);

@@ -311,6 +311,36 @@ namespace Opm {
         return (update_count > 0);
     }
 
+    bool Well::WellInjectionProperties::updateUDQActive(const UDQConfig&   udq_config,
+                                                        const WELTARGCMode cmode,
+                                                        UDQActive&         active) const
+    {
+        switch (cmode) {
+        case WELTARGCMode::ORAT:
+            return (this->injectorType == InjectorType::OIL)
+                && (active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WELTARG_ORAT) > 0);
+
+        case WELTARGCMode::WRAT:
+            return (this->injectorType == InjectorType::WATER)
+                && (active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WELTARG_WRAT) > 0);
+
+        case WELTARGCMode::GRAT:
+            return (this->injectorType == InjectorType::GAS)
+                && (active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WELTARG_GRAT) > 0);
+
+        case WELTARGCMode::RESV:
+            return active.update(udq_config, this->reservoirInjectionRate, this->name, UDAControl::WELTARG_RESV) > 0;
+
+        case WELTARGCMode::BHP:
+            return active.update(udq_config, this->BHPTarget, this->name, UDAControl::WELTARG_BHP) > 0;
+
+        case WELTARGCMode::THP:
+            return active.update(udq_config, this->THPTarget, this->name, UDAControl::WELTARG_THP) > 0;
+
+        default:
+            return false;
+        }
+    }
 
     void Well::WellInjectionProperties::update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value) {
         switch (control) {

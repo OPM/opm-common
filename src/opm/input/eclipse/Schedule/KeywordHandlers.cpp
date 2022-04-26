@@ -1538,15 +1538,21 @@ Well{0} entered with disallowed 'FIELD' parent group:
                         update |= well2.updateWellGuideRate(new_arg.get<double>());
 
                     auto udq_active = this->snapshots.back().udq_active.get();
-                    if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
+                    if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), cmode, udq_active))
                         this->snapshots.back().udq_active.update( std::move(udq_active));
-                } else {
+                }
+                else {
                     auto inj = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                     inj->handleWELTARG(cmode, new_arg, SiFactorP);
                     update = well2.updateInjection(inj);
                     if (cmode == Well::WELTARGCMode::GUID)
                         update |= well2.updateWellGuideRate(new_arg.get<double>());
+
+                    auto udq_active = this->snapshots.back().udq_active.get();
+                    if (inj->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), cmode, udq_active))
+                        this->snapshots.back().udq_active.update(std::move(udq_active));
                 }
+
                 if (update)
                 {
                     if (well2.isProducer()) {
@@ -1558,6 +1564,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
                     }
                     this->snapshots.back().wells.update( std::move(well2) );
                 }
+
                 handlerContext.affected_well(well_name);
             }
         }
