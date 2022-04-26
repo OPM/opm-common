@@ -1675,13 +1675,18 @@ namespace {
             for (const auto& [control, value, wgname, ig_phase] : uda_records) {
                 if (UDQ::well_control(control)) {
                     auto& well = this->snapshots.back().wells.get(wgname);
-                    if (UDQ::injection_control(control)) {
+
+                    if (UDQ::injection_control(control) ||
+                        (well.isInjector() && UDQ::is_weltarg(control)))
+                    {
                         auto injection_properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
                         injection_properties->update_uda(udq_config, udq_active, control, value);
                         well.updateInjection(std::move(injection_properties));
                     }
 
-                    if (UDQ::production_control(control)) {
+                    if (UDQ::production_control(control) ||
+                        (well.isProducer() && UDQ::is_weltarg(control)))
+                    {
                         auto production_properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
                         production_properties->update_uda(udq_config, udq_active, control, value);
                         well.updateProduction(std::move(production_properties));

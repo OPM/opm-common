@@ -201,6 +201,7 @@ namespace UDQ {
     bool leadingSpace(UDQTokenType token_type);
     bool group_control(UDAControl control);
     bool well_control(UDAControl control);
+    bool is_weltarg(UDAControl control);
     bool injection_control(UDAControl control);
     bool production_control(UDAControl control);
 

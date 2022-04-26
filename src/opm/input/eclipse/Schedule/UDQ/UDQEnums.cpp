@@ -520,6 +520,16 @@ bool well_control(const UDAControl control)
     }
 }
 
+bool is_weltarg(const UDAControl control)
+{
+    try {
+        return keyword(control) == UDAKeyword::WELTARG;
+    }
+    catch (const std::logic_error&) {
+        return false;
+    }
+}
+
 bool injection_control(const UDAControl control)
 {
     try {

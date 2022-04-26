@@ -451,44 +451,48 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
     {
         switch (control) {
         case UDAControl::WCONPROD_ORAT:
+        case UDAControl::WELTARG_ORAT:
             this->OilRate = value;
-            udq_active.update(udq_config, this->OilRate, this->name, UDAControl::WCONPROD_ORAT);
             break;
 
         case UDAControl::WCONPROD_GRAT:
+        case UDAControl::WELTARG_GRAT:
             this->GasRate = value;
-            udq_active.update(udq_config, this->GasRate, this->name, UDAControl::WCONPROD_GRAT);
             break;
 
         case UDAControl::WCONPROD_WRAT:
+        case UDAControl::WELTARG_WRAT:
             this->WaterRate = value;
-            udq_active.update(udq_config, this->WaterRate, this->name, UDAControl::WCONPROD_WRAT);
             break;
 
         case UDAControl::WCONPROD_LRAT:
+        case UDAControl::WELTARG_LRAT:
             this->LiquidRate = value;
-            udq_active.update(udq_config, this->LiquidRate, this->name, UDAControl::WCONPROD_LRAT);
             break;
 
         case UDAControl::WCONPROD_RESV:
+        case UDAControl::WELTARG_RESV:
             this->ResVRate = value;
-            udq_active.update(udq_config, this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
             break;
 
         case UDAControl::WCONPROD_BHP:
+        case UDAControl::WELTARG_BHP:
             this->BHPTarget = value;
-            udq_active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONPROD_BHP);
             break;
 
         case UDAControl::WCONPROD_THP:
+        case UDAControl::WELTARG_THP:
             this->THPTarget = value;
-            udq_active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONPROD_THP);
             break;
 
         default:
-            throw std::logic_error("Invalid UDA control");
+            throw std::logic_error {
+                "Unsupported well production UDA control '"
+                + UDQ::controlName(control) + '\''
+            };
         }
 
+        udq_active.update(udq_config, value, this->name, control);
     }
 
 } // namespace Opm
