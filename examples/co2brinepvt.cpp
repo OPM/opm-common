@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         std::cout << "p: pressure in pascal" << std::endl;
         std::cout << "T: temperature in kelvin" << std::endl;
         std::cout << "salinity(optional): salt molality in mol/kg" << std::endl;
-        std::cout << "rs(optional): amout of dissolved CO2 in Brine in SM3/SM3" << std::endl;
+        std::cout << "rs(optional): amount of dissolved CO2 in Brine in SM3/SM3" << std::endl;
         std::cout << "OPTIONS:" << std::endl;
         std::cout << "--h/--help Print help and exit." << std::endl;
         std::cout << "DESCRIPTION:" << std::endl;
