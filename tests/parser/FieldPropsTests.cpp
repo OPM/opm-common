@@ -29,6 +29,7 @@
 #define BOOST_TEST_MODULE FieldPropsTests
 
 #include <boost/test/unit_test.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -346,7 +347,7 @@ ENDBOX
 
     // k = 0: poro * V
     for (std::size_t g = 0; g < 100; g++) {
-        BOOST_CHECK_EQUAL(porv[g], grid.getCellVolume(g) * poro[g]);
+        BOOST_CHECK_CLOSE(porv[g], grid.getCellVolume(g) * poro[g], 1e-13);
         BOOST_CHECK_EQUAL(porv[g], 0.10);
         BOOST_CHECK_EQUAL(poro[g], 0.10);
         BOOST_CHECK_EQUAL(ntg[g], 1.0);
@@ -355,7 +356,7 @@ ENDBOX
 
     // k = 1: poro * NTG * V
     for (std::size_t g = 100; g < 200; g++) {
-        BOOST_CHECK_EQUAL(porv[g], grid.getCellVolume(g) * poro[g] * ntg[g]);
+        BOOST_CHECK_CLOSE(porv[g], grid.getCellVolume(g) * poro[g] * ntg[g], 1e-13);
         BOOST_CHECK_EQUAL(porv[g], 0.20);
         BOOST_CHECK_EQUAL(poro[g], 0.10);
         BOOST_CHECK_EQUAL(ntg[g], 2.0);
@@ -372,7 +373,7 @@ ENDBOX
 
     // k = 3: poro * V * multpv
     for (std::size_t g = 300; g < 400; g++) {
-        BOOST_CHECK_EQUAL(porv[g], multpv[g] * grid.getCellVolume(g) * poro[g] * ntg[g]);
+        BOOST_CHECK_CLOSE(porv[g], multpv[g] * grid.getCellVolume(g) * poro[g] * ntg[g], 1e-13);
         BOOST_CHECK_EQUAL(porv[g], 0.40);
         BOOST_CHECK_EQUAL(poro[g], 0.10);
         BOOST_CHECK_EQUAL(ntg[g], 1.0);
@@ -381,7 +382,7 @@ ENDBOX
 
     // k = 4: poro * V * MULTREGP
     for (std::size_t g = 400; g < 500; g++) {
-        BOOST_CHECK_EQUAL(porv[g], grid.getCellVolume(g) * poro[g] * 5.0);
+        BOOST_CHECK_CLOSE(porv[g], grid.getCellVolume(g) * poro[g] * 5.0, 1e-13);
         BOOST_CHECK_EQUAL(porv[g], 0.50);
         BOOST_CHECK_EQUAL(poro[g], 0.10);
     }
@@ -671,8 +672,8 @@ OPERATE
 
     const auto& permz = fpm.get_double("PERMZ");
     for (std::size_t i = 0; i < 3; i++) {
-        BOOST_CHECK_EQUAL(permz[i]  , 2*permy[i]   + to_si(1000));
-        BOOST_CHECK_EQUAL(permz[i+3], 3*permx[i+3] + to_si(300));
+        BOOST_CHECK_CLOSE(permz[i]  , 2*permy[i]   + to_si(1000), 1e-13);
+        BOOST_CHECK_CLOSE(permz[i+3], 3*permx[i+3] + to_si(300), 1e-13);
     }
 }
 
@@ -2061,23 +2062,23 @@ MINVALUE
                     auto a = grid.activeIndex(i,j,k);
 
                     if (k==0)
-                        BOOST_CHECK_EQUAL(tranx[a], to_si(0.20));
+                        BOOST_CHECK_CLOSE(tranx[a], to_si(0.20), 1e-13);
                     else
-                        BOOST_CHECK_EQUAL(tranx[a], to_si(0.10));
+                        BOOST_CHECK_CLOSE(tranx[a], to_si(0.10), 1e-13);
 
                     if (k == 0)
-                        BOOST_CHECK_EQUAL(trany[a], to_si(2.0));
+                        BOOST_CHECK_CLOSE(trany[a], to_si(2.0), 1e-13);
                     else if (k == 1)
-                        BOOST_CHECK_EQUAL(trany[a], to_si(5.0));
+                        BOOST_CHECK_CLOSE(trany[a], to_si(5.0), 1e-13);
                     else if (k == 2)
-                        BOOST_CHECK_EQUAL(trany[a], to_si(2.0));
+                        BOOST_CHECK_CLOSE(trany[a], to_si(2.0), 1e-13);
 
                     if (k==0)
                         BOOST_CHECK(tranz[a] <= to_si(0));
                     else if (k == 1)
                         BOOST_CHECK(tranz[a] >= to_si(3.0));
                     else if (k == 2)
-                        BOOST_CHECK_EQUAL(tranz[a], to_si(1.0));
+                        BOOST_CHECK_CLOSE(tranz[a], to_si(1.0), 1e-13);
                 }
             }
         }
@@ -2473,8 +2474,8 @@ OPERATE
 
     const auto& permz = fpm.get_double("PERMZ");
     for (std::size_t i = 0; i < 3; i++) {
-        BOOST_CHECK_EQUAL(permz[i]  , 2*permy[i]   + to_si(1000));
-        BOOST_CHECK_EQUAL(permz[i+3], 3*permx[i+3] + to_si(300));
+        BOOST_CHECK_CLOSE(permz[i]  , 2*permy[i]   + to_si(1000), 1e-13);
+        BOOST_CHECK_CLOSE(permz[i+3], 3*permx[i+3] + to_si(300), 1e-13);
     }
 
     BOOST_CHECK(permx == fpm.get_double("PERMR"));

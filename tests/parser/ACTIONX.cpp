@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE ACTIONX
 
 #include <boost/test/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -1268,7 +1269,7 @@ TSTEP
         const auto& glo = sched.glo(0);
         BOOST_CHECK(glo.has_group("PLAT-A"));
         const auto& plat_group = glo.group("PLAT-A");
-        BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), unitSystem.to_si( UnitSystem::measure::gas_surface_rate, 200000));
+        BOOST_CHECK_CLOSE( *plat_group.max_lift_gas(), unitSystem.to_si( UnitSystem::measure::gas_surface_rate, 200000), 1e-13);
         BOOST_CHECK(!plat_group.max_total_gas().has_value());
     }
 
