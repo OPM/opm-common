@@ -30,6 +30,7 @@
 #define BOOST_TEST_MODULE ScheduleTests
 
 #include <boost/test/unit_test.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/TimeService.hpp>
@@ -991,14 +992,14 @@ I1 THP 4 /
     const auto wpp_2 = well_2.getProductionProperties();
     const auto prod_controls = wpp_2.controls(st, 0);
 
-    BOOST_CHECK_EQUAL(prod_controls.oil_rate, 1300 * siFactorL);
-    BOOST_CHECK_EQUAL(prod_controls.water_rate, 1400 * siFactorL);
-    BOOST_CHECK_EQUAL(prod_controls.gas_rate, 1500.52 * siFactorG);
-    BOOST_CHECK_EQUAL(prod_controls.liquid_rate, 1600.58 * siFactorL);
-    BOOST_CHECK_EQUAL(prod_controls.resv_rate, 1801.05 * siFactorL);
-    BOOST_CHECK_EQUAL(prod_controls.bhp_limit, 1900 * siFactorP);
-    BOOST_CHECK_EQUAL(prod_controls.thp_limit, 2000 * siFactorP);
-    BOOST_CHECK_EQUAL(wpp_2.ALQValue.get<double>(), 1234);
+    BOOST_CHECK_CLOSE(prod_controls.oil_rate, 1300 * siFactorL, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls.water_rate, 1400 * siFactorL, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls.gas_rate, 1500.52 * siFactorG, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls.liquid_rate, 1600.58 * siFactorL, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls.resv_rate, 1801.05 * siFactorL, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls.bhp_limit, 1900 * siFactorP, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls.thp_limit, 2000 * siFactorP, 1e-13);
+    BOOST_CHECK_CLOSE(wpp_2.ALQValue.get<double>(), 1234, 1e-13);
 
     BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::ORAT) );
     BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::RESV) );
@@ -1008,9 +1009,9 @@ I1 THP 4 /
     const auto wpp_3 = well_3.getProductionProperties();
     const auto prod_controls3 = wpp_3.controls(st, 0);
 
-    BOOST_CHECK_EQUAL(prod_controls3.oil_rate, 2 * 1300 * siFactorL);
-    BOOST_CHECK_EQUAL(prod_controls3.water_rate, 4 * 1400 * siFactorL);
-    BOOST_CHECK_EQUAL(prod_controls3.gas_rate, 3 * 1500.52 * siFactorG);
+    BOOST_CHECK_CLOSE(prod_controls3.oil_rate, 2 * 1300 * siFactorL, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls3.water_rate, 4 * 1400 * siFactorL, 1e-13);
+    BOOST_CHECK_CLOSE(prod_controls3.gas_rate, 3 * 1500.52 * siFactorG, 1e-13);
 
 
     const auto& inj_controls2 = schedule.getWell("I1", 2).getInjectionProperties().controls(unitSystem, st, 0);
@@ -1212,13 +1213,13 @@ COMPDAT
     const auto& cs3 = schedule.getWell("OP_1", 3).getConnections();
     const auto& cs4 = schedule.getWell("OP_1", 4).getConnections();
     for(size_t i = 0; i < cs2.size(); i++)
-        BOOST_CHECK_EQUAL(cs2.get( i ).CF() / cs1.get(i).CF(), 1.3);
+        BOOST_CHECK_CLOSE(cs2.get( i ).CF() / cs1.get(i).CF(), 1.3, 1e-13);
 
     for(size_t i = 0; i < cs3.size(); i++ )
-        BOOST_CHECK_EQUAL(cs3.get( i ).CF() / cs1.get(i).CF(), (1.3*1.3));
+        BOOST_CHECK_CLOSE(cs3.get( i ).CF() / cs1.get(i).CF(), (1.3*1.3), 1e-13);
 
     for(size_t i = 0; i < cs4.size(); i++ )
-        BOOST_CHECK_EQUAL(cs4.get( i ).CF(), cs1.get(i).CF());
+        BOOST_CHECK_CLOSE(cs4.get( i ).CF(), cs1.get(i).CF(), 1e-13);
 
     auto sim_time1 = TimeStampUTC{ schedule.simTime(1) };
     BOOST_CHECK_EQUAL(sim_time1.day(), 10);
@@ -1328,20 +1329,20 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
 
         {
             auto g = schedule.getGroup("G1", 1);
-            BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 1000 * siFactorL);
+            BOOST_CHECK_CLOSE(g.productionControls(st).oil_target, 1000 * siFactorL, 1e-13);
             BOOST_CHECK(g.has_control(Group::ProductionCMode::ORAT));
             BOOST_CHECK(!g.has_control(Group::ProductionCMode::WRAT));
             BOOST_CHECK_EQUAL(g.productionControls(st).guide_rate, 0);
         }
         {
             auto g = schedule.getGroup("G1", 2);
-            BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 2000 * siFactorL);
+            BOOST_CHECK_CLOSE(g.productionControls(st).oil_target, 2000 * siFactorL, 1e-13);
             BOOST_CHECK_EQUAL(g.productionControls(st).guide_rate, 148);
             BOOST_CHECK_EQUAL(true, g.productionControls(st).guide_rate_def == Group::GuideRateProdTarget::OIL);
         }
 
         auto g2 = schedule.getGroup("G2", 2);
-        BOOST_CHECK_EQUAL(g2.productionControls(st).oil_target, 2000 * siFactorL);
+        BOOST_CHECK_CLOSE(g2.productionControls(st).oil_target, 2000 * siFactorL, 1e-13);
 
         auto gh = schedule.getGroup("H1", 1);
 
@@ -4807,7 +4808,7 @@ WCONPROD
 
     auto dim = sched.getUnits().getDimension(UnitSystem::measure::gas_surface_rate);
     const auto& controls2 = well2.productionControls(st);
-    BOOST_CHECK_EQUAL(controls2.alq_value, dim.convertRawToSi(123));
+    BOOST_CHECK_CLOSE(controls2.alq_value, dim.convertRawToSi(123), 1e-13);
 
     BOOST_CHECK(!sched[0].has_gpmaint());
 }
