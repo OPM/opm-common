@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(TestERst_5a) {
     BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(2), true);
     BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(0), false);
 
-    // invalied report step number
+    // invalid report step number
     BOOST_CHECK_THROW(rst1.hasLGR("LGR1", 99) , std::invalid_argument );
 
     BOOST_CHECK_EQUAL(rst1.hasLGR("LGR1", 2), true);
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(TestERst_5b) {
     BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(1), true);
     BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(5), false);
 
-    // invalied report step number
+    // invalid report step number
     BOOST_CHECK_THROW(rst1.hasLGR("LGR1", 99) , std::invalid_argument );
 
     BOOST_CHECK_EQUAL(rst1.hasLGR("LGR1", 2), true);
