@@ -2175,6 +2175,9 @@ static const auto interregion_units =
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_units = {
   {"BPR"        , Opm::UnitSystem::measure::pressure},
   {"BRPV"     , Opm::UnitSystem::measure::volume },
+  {"BOPV"     , Opm::UnitSystem::measure::volume },
+  {"BGPV"     , Opm::UnitSystem::measure::volume },
+  {"BWPV"     , Opm::UnitSystem::measure::volume },
   {"BPRESSUR"   , Opm::UnitSystem::measure::pressure},
   {"BTCNFHEA"   , Opm::UnitSystem::measure::temperature},
   {"BTEMP"      , Opm::UnitSystem::measure::temperature},
