@@ -144,7 +144,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # quadmath must be explicitly enabled
 # This needs to be in OpmInit as prereqs is called before OpmLibMain is included.
-option (USE_QUADMATH "Use high precision floating point library (slow)" ON)
+option (USE_QUADMATH "Search for high precision floating point library (normally not used)" ON)
 if (NOT USE_QUADMATH)
   set (CMAKE_DISABLE_FIND_PACKAGE_QuadMath TRUE)
 endif ()
