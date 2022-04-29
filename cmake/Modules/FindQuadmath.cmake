@@ -43,7 +43,7 @@ int main(void){
 endif()
 
 if (USE_QUADMATH AND NOT QUADMATH_FOUND)
-  message(FATAL_ERROR "Quadruple precision math support was explicitly requested but is unavailable!")
+  message(STATUS "Quadruple precision math support is unavailable! Skipping it.")
 endif()
 
 include(FindPackageHandleStandardArgs)
