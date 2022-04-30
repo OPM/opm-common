@@ -139,7 +139,7 @@ struct SummaryConfigContext {
     */
     const std::map<std::string , std::set<std::string>> required_fields =  {
          {"PRESSURE", {"FPR" , "RPR" , "BPR"}},
-         {"RPV", {"FRPV" , "RRPV" , "BRPV"}},
+         {"RPV", {"FRPV" , "RRPV"}},
          {"OIP"  , {"ROIP" , "FOIP" , "FOE"}},
          {"OIPR" , {"FOIPR"}},
          {"OIPL" , {"ROIPL" ,"FOIPL" }},
