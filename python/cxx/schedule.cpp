@@ -1,5 +1,6 @@
 #include <ctime>
 #include <chrono>
+#include <map>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -9,6 +10,7 @@
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <fmt/format.h>
 #include <pybind11/stl.h>
 #include <pybind11/chrono.h>
 #include "export.hpp"
@@ -56,6 +58,57 @@ namespace {
         throw py::key_error( name );
     }
 
+    std::map<std::string, double> get_production_properties(
+        const Schedule& sch, const std::string& name, const size_t& timestep)
+    {
+        const Well* well = nullptr;
+        try{
+            well = &(sch.getWell( name, timestep ));
+        } catch( const std::invalid_argument& e ) {
+            throw py::key_error( fmt::format("well {} is not defined", name ));
+        }
+        if (well->isProducer()) {
+            std::map<std::string, double> props;
+            auto& prod_prop = well->getProductionProperties();
+            {
+                auto rate = prod_prop.OilRate.get<double>();
+                props.insert(std::make_pair("oil_rate", rate));
+            }
+            {
+                auto rate = prod_prop.GasRate.get<double>();
+                props.insert(std::make_pair("gas_rate", rate));
+            }
+            {
+                auto rate = prod_prop.WaterRate.get<double>();
+                props.insert(std::make_pair("water_rate", rate));
+            }
+            {
+                auto rate = prod_prop.LiquidRate.get<double>();
+                props.insert(std::make_pair("liquid_rate", rate));
+            }
+            {
+                auto rate = prod_prop.ResVRate.get<double>();
+                props.insert(std::make_pair("resv_rate", rate));
+            }
+            {
+                auto rate = prod_prop.BHPTarget.get<double>();
+                props.insert(std::make_pair("bhp_target", rate));
+            }
+            {
+                auto rate = prod_prop.THPTarget.get<double>();
+                props.insert(std::make_pair("thp_target", rate));
+            }
+            {
+                auto rate = prod_prop.ALQValue.get<double>();
+                props.insert(std::make_pair("alq_value", rate));
+            }
+            return props;
+        }
+        else {
+            throw py::key_error( fmt::format("well {} is not a producer", name) );
+        }
+
+    }
     system_clock::time_point get_start_time( const Schedule& s ) {
         return datetime(s.posixStartTime());
     }
@@ -157,6 +210,7 @@ void python::common::export_Schedule(py::module& module) {
     .def( "open_well", &Schedule::open_well)
     .def( "stop_well", &Schedule::stop_well)
     .def( "get_wells", &Schedule::getWells)
+    .def( "get_production_properties", &get_production_properties)
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
     .def( "insert_keywords",
