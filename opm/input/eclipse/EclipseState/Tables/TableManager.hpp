@@ -163,6 +163,8 @@ namespace Opm {
         const ShrateTable& getShrateTable() const;
         const Stone1exTable& getStone1exTable() const;
         const WatdentTable& getWatdentTable() const;
+        const SgofletTable& getSgofletTable() const;
+        const SwofletTable& getSwofletTable() const;
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
         const std::map<int, SkprpolyTable>& getSkprpolyTables() const;
@@ -217,6 +219,8 @@ namespace Opm {
             m_stone1exTable.serializeOp(serializer);
             m_viscrefTable.serializeOp(serializer);
             m_watdentTable.serializeOp(serializer);
+            m_sgofletTable.serializeOp(serializer);
+            m_swofletTable.serializeOp(serializer);
             serializer.vector(m_pvtwsaltTables);
             serializer.vector(m_rwgsaltTables);
             serializer.vector(m_bdensityTables);
@@ -356,6 +360,8 @@ namespace Opm {
         Stone1exTable m_stone1exTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
+        SgofletTable m_sgofletTable;
+        SwofletTable m_swofletTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
         std::vector<RwgsaltTable> m_rwgsaltTables;
         std::vector<BrineDensityTable> m_bdensityTables;

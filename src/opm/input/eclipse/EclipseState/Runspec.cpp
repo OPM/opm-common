@@ -88,7 +88,8 @@ namespace {
         const auto family1 =       // SGOF/SLGOF and/or SWOF
             (gas && (deck.hasKeyword<Opm::ParserKeywords::SGOF>() ||
                      deck.hasKeyword<Opm::ParserKeywords::SLGOF>())) ||
-            (wat && deck.hasKeyword<Opm::ParserKeywords::SWOF>());
+            (wat && deck.hasKeyword<Opm::ParserKeywords::SWOF>()) ||
+            (wat && deck.hasKeyword<Opm::ParserKeywords::SWOFLET>());
 
         // note: we allow for SOF2 to be part of family1 for threeP +
         // solvent simulations.
