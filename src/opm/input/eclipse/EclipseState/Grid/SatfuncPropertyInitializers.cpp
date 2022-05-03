@@ -156,6 +156,9 @@ namespace {
                     return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
                 else if ( !swofLetTables.empty() )
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
             case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
@@ -193,6 +196,9 @@ namespace {
                     return map( famI, Opm::fun::iota( num_tables ) );
                 else if ( !swofLetTables.empty() )
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
             case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
@@ -392,6 +398,9 @@ namespace {
                     return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
                 else if ( !swofLetTables.empty() )
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
             case SatfuncFamily::II: return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default: throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -566,6 +575,9 @@ namespace {
                     return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
                 else if ( !swofLetTables.empty() )
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::GAS)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
@@ -849,6 +861,9 @@ namespace {
                     return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
                 else if( !swofLetTables.empty() )
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
@@ -910,6 +925,9 @@ namespace {
                     return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
                 else if ( !swofLetTables.empty() )
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::GAS)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
@@ -1084,6 +1102,9 @@ namespace {
                     return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
                 else if (!swofLetTables.empty())
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
@@ -1145,6 +1166,9 @@ namespace {
                     return Opm::fun::map( famI_let_wat, Opm::fun::iota( num_tables ) );
                 else if ( !gas_f1_let.empty() )
                     return Opm::fun::map( famI_let_gas, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Valid family I tables must be provided");
+
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::GAS) && ph.active(::Opm::Phase::WATER)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
@@ -1185,6 +1209,9 @@ namespace {
                     return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
                 else if( !swofLetTables.empty() )
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
+                else
+                    throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
+
 
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
