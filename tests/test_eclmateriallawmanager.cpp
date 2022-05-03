@@ -411,6 +411,65 @@ static const char* fam2DeckStringGasOil =
     "0.999  1       \n"
     "1.0    1       \n /\n";
 
+
+static const char* letDeckString =
+    "RUNSPEC\n"
+    "\n"
+    "DIMENS\n"
+    "   10 10 3 /\n"
+    "\n"
+    "TABDIMS\n"
+    "/\n"
+    "\n"
+    "OIL\n"
+    "GAS\n"
+    "WATER\n"
+    "\n"
+    "DISGAS\n"
+    "\n"
+    "FIELD\n"
+    "\n"
+    "GRID\n"
+    "\n"
+    "DX\n"
+    "       300*1000 /\n"
+    "DY\n"
+    "   300*1000 /\n"
+    "DZ\n"
+    "   100*20 100*30 100*50 /\n"
+    "\n"
+    "TOPS\n"
+    "   100*8325 /\n"
+    "\n"
+    "\n"
+    "PORO\n"
+    "  300*0.15 /\n"
+    "PROPS\n"
+    "\n"
+    "SWOFLET\n"
+    " 0.1  0.2 1.5 7.0 1.5 0.5    0.05 0.15 3.5 3.0 1.3 1.0    0.7 17.0 0.95 3.8 0.04 /\n"
+    "\n"
+    "SGOFLET\n"
+    " 0.0  0.03 1.8 1.9 1.0 0.95   0.0  0.01 3.5 4.0 1.1 1.0   1.0 1.0 1.0 0.2 0.01 /\n"
+    "\n";
+
+
+template <class Scalar>
+inline Scalar computeLetCurve(const Scalar S, const Scalar L, const Scalar E, const Scalar T)
+{
+        if (S <= 0.0) {
+            return 0.0;
+        } else if (S >= 1.0) {
+            return 1.0;
+        }
+
+        const Scalar powS = Opm::pow(S,L);
+        const Scalar pow1mS = Opm::pow(1.0-S,T);
+
+        return powS/(powS+pow1mS*E);
+}
+
+
 template <class Scalar>
 inline void testAll()
 {
@@ -614,6 +673,86 @@ inline void testAll()
                         if (std::abs(krFam1[phaseIdx] - krFam2[phaseIdx]) > 1e-1)
                             throw std::logic_error("Discrepancy between relative permeabilities of family 1 and family 2 keywords");
                     }
+                }
+            }
+        }
+
+        // LET: Curves from input parameters interpreted via MaterialLawManager versus directly computed curves.
+        {
+            const auto letDeck = parser.parseString(letDeckString);
+            const Opm::EclipseState letEclState(letDeck);
+
+            MaterialLawManager letmaterialLawManager;
+            letmaterialLawManager.initFromState(letEclState);
+            letmaterialLawManager.initParamsForElements(letEclState, n);
+
+            Scalar Swco = 0.1;
+            Scalar psi2Pa = 6894.7573;
+
+            for (unsigned elemIdx = 0; elemIdx < 1; ++ elemIdx) {
+
+                for (int i = -10; i < 120; ++ i) {
+                    Scalar So = Scalar(i)/100;
+
+                    // Oil in gas and conate water
+
+                    Scalar Sw=Swco;
+                    Scalar Sg = 1 - Sw - So;
+                    FluidState fs;
+                    fs.setSaturation(waterPhaseIdx, Sw);
+                    fs.setSaturation(oilPhaseIdx, So);
+                    fs.setSaturation(gasPhaseIdx, Sg);
+
+                    Scalar pcLET[numPhases]  = { 0.0, 0.0, 0.0 };
+                    MaterialLaw::capillaryPressures(pcLET,
+                                                    letmaterialLawManager.materialLawParams(elemIdx),
+                                                    fs);
+
+                    Scalar krLET[numPhases] = { 0.0, 0.0, 0.0 };
+                    MaterialLaw::relativePermeabilities(krLET,
+                                                        letmaterialLawManager.materialLawParams(elemIdx),
+                                                        fs);
+
+                    //SGOFLET
+                    //0.0  0.03 1.8 1.9 1.0 0.95   0.0  0.01 3.5 4.0 1.1 1.0   1.0 1.0 1.0 0.2 0.01
+                    Scalar krg_let = 0.95*computeLetCurve((1.0-So-0.03-Swco)/(1.0-0.03-0.01-Swco), 1.8, 1.9, 1.0);
+                    Scalar krog_let = 1.0*computeLetCurve((So-0.01)/(1.0-0.03-0.01-Swco), 3.5, 4.0, 1.1);
+                    //S=(So-Sorg)/(1-Sorg-Sgl-Swco), Pc = Pct + (pcir_pc-Pct)*(1-S)^L/[(1-S)^L+E*S^T]
+                    Scalar pcog_let = psi2Pa*(0.01 + (0.2-0.01)*computeLetCurve((1.0-So-Swco)/(1.0-Swco), 1.0, 1.0, 1.0));
+
+                    if (std::abs(krLET[gasPhaseIdx]-krg_let) > 1e-5 || std::abs(krLET[oilPhaseIdx]-krog_let) > 1e-5)
+                        throw std::logic_error("Inconsistent LET relative permeabilities family 1 gas/oil");
+                    if (std::abs(pcLET[gasPhaseIdx]-pcog_let) > 1e-2)
+                        throw std::logic_error("Inconsistent LET capillary pressure family 1 gas/oil");
+
+                    // Oil in water
+
+                    Sg = 0.0;
+                    Sw = 1.0-So-Sg;
+                    fs.setSaturation(waterPhaseIdx, Sw);
+                    fs.setSaturation(oilPhaseIdx, So);
+                    fs.setSaturation(gasPhaseIdx, Sg);
+
+                    MaterialLaw::capillaryPressures(pcLET,
+                                                    letmaterialLawManager.materialLawParams(elemIdx),
+                                                    fs);
+
+                    MaterialLaw::relativePermeabilities(krLET,
+                                                        letmaterialLawManager.materialLawParams(elemIdx),
+                                                        fs);
+
+                    //SWOFLET
+                    //0.1  0.2 1.5 7.0 1.5 0.5    0.05 0.15 3.5 3.0 1.3 1.0    0.7 17.0 0.95 3.8 0.04
+                    Scalar krw_let = 0.5*computeLetCurve((Sw-0.2)/(1.0-0.2-0.15), 1.5, 7.0, 1.5);
+                    Scalar krow_let = 1.0*computeLetCurve((1.0-Sw-0.15)/(1.0-0.2-0.15), 3.5, 3.0, 1.3);
+                    // S=(Sw-Swco)/(1-Swco-Sorw), Pc = Pct + (Pcir-Pct)*(1-S)^L/[(1-S)^L+E*S^T]
+                    Scalar pcow_let = -psi2Pa*(0.04 + (3.8-0.04)*computeLetCurve(1.0-(Sw-Swco)/(1.0-0.05-Swco), 0.7, 17.0, 0.95));
+
+                    if (std::abs(krLET[waterPhaseIdx]-krw_let) > 1e-5 || std::abs(krLET[oilPhaseIdx]-krow_let) > 1e-5)
+                        throw std::logic_error("Inconsistent LET relative permeabilities family 1 wat/oil");
+                    if (std::abs(pcLET[waterPhaseIdx]-pcow_let) > 1e-2)
+                        throw std::logic_error("Inconsistent LET capillary pressure family 1 wat/oil");
+
                 }
             }
         }

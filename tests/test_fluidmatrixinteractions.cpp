@@ -42,6 +42,7 @@
 #include <opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp>
 #include <opm/material/fluidmatrixinteractions/EffToAbsLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp>
 #include <opm/material/fluidmatrixinteractions/SplineTwoPhaseMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/ThreePhaseParkerVanGenuchten.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp>
@@ -383,6 +384,12 @@ inline void testAll()
     }
     {
         typedef Opm::PiecewiseLinearTwoPhaseMaterial<TwoPhaseTraits> MaterialLaw;
+        testGenericApi<MaterialLaw, TwoPhaseFluidState>();
+        testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
+        testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
+    }
+    {
+        typedef Opm::TwoPhaseLETCurves<TwoPhaseTraits> MaterialLaw;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
