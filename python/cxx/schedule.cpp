@@ -1,5 +1,6 @@
 #include <ctime>
 #include <chrono>
+#include <map>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -9,6 +10,7 @@
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <fmt/format.h>
 #include <pybind11/stl.h>
 #include <pybind11/chrono.h>
 #include "export.hpp"
@@ -56,6 +58,32 @@ namespace {
         throw py::key_error( name );
     }
 
+    std::map<std::string, double> get_production_properties(
+        const Schedule& sch, const std::string& name, const size_t& timestep)
+    {
+        const Well* well = nullptr;
+        try{
+            well = &(sch.getWell( name, timestep ));
+        } catch( const std::invalid_argument& e ) {
+            throw py::key_error( fmt::format("well {} is not defined", name ));
+        }
+        if (well->isProducer()) {
+            auto& prod_prop = well->getProductionProperties();
+            return {
+                { "oil_rate", prod_prop.OilRate.get<double>() },
+                { "gas_rate", prod_prop.GasRate.get<double>() },
+                { "water_rate", prod_prop.WaterRate.get<double>() },
+                { "liquid_rate", prod_prop.LiquidRate.get<double>() },
+                { "resv_rate", prod_prop.ResVRate.get<double>() },
+                { "bhp_target", prod_prop.BHPTarget.get<double>() },
+                { "thp_target", prod_prop.THPTarget.get<double>() },
+                { "alq_value", prod_prop.ALQValue.get<double>() },
+            };
+        }
+        else {
+            throw py::key_error( fmt::format("well {} is not a producer", name) );
+        }
+    }
     system_clock::time_point get_start_time( const Schedule& s ) {
         return datetime(s.posixStartTime());
     }
@@ -157,6 +185,7 @@ void python::common::export_Schedule(py::module& module) {
     .def( "open_well", &Schedule::open_well)
     .def( "stop_well", &Schedule::stop_well)
     .def( "get_wells", &Schedule::getWells)
+    .def( "get_production_properties", &get_production_properties)
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
     .def( "insert_keywords",

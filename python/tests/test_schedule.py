@@ -57,17 +57,21 @@ class TestSchedule(unittest.TestCase):
         with self.assertRaises(Exception):
             self.sch[0].group('foo')
 
-    def test_open_shut(self):
+    def test_production_properties(self):
         deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
         state = EclipseState(deck)
         sch = Schedule( deck, state )
-        prod = sch.get_well("PROD", 1)
-        self.assertEqual(prod.status(), "OPEN")
-
-        sch.shut_well("PROD", 10)
-        prod = sch.get_well("PROD", 10)
-        self.assertEqual(prod.status(), "SHUT")
-
+        report_step = 4
+        well_name = 'PROD'
+        prop = sch.get_production_properties(well_name, report_step)
+        self.assertEqual(prop['alq_value'], 0.0)
+        self.assertEqual(prop['bhp_target'], 500.0)
+        self.assertEqual(prop['gas_rate'], 6200.0)
+        self.assertEqual(prop['liquid_rate'], 0.0)
+        self.assertEqual(prop['oil_rate'], 0.0)
+        self.assertEqual(prop['resv_rate'], 0.0)
+        self.assertEqual(prop['thp_target'], 0.0)
+        self.assertEqual(prop['water_rate'], 0.0)
 
     def test_well_names(self):
         deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
@@ -90,5 +94,9 @@ class TestSchedule(unittest.TestCase):
         st100 = sch[100]
         nupcol = st100.nupcol
 
+    def test_open_shut(self):
+        deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
+        state = EclipseState(deck)
+        sch = Schedule( deck, state )
 if __name__ == "__main__":
     unittest.main()
