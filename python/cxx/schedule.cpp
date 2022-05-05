@@ -77,7 +77,7 @@ namespace {
                 { "resv_rate", prod_prop.ResVRate.get<double>() },
                 { "bhp_target", prod_prop.BHPTarget.get<double>() },
                 { "thp_target", prod_prop.THPTarget.get<double>() },
-                { "alq_value", prod_prop.ALQValue.get<double>() }
+                { "alq_value", prod_prop.ALQValue.get<double>() },
             };
         }
         else {
