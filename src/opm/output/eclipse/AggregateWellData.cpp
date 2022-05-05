@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
@@ -275,6 +276,187 @@ namespace {
             iWell[VI::IWell::index::ActWCtrl] = curr;
         }
 
+        template <typename IWellArray>
+        void assignGasliftOpt(const std::string&     well,
+                              const Opm::GasLiftOpt& glo,
+                              IWellArray&            iWell)
+        {
+            using Ix = VI::IWell::index;
+
+            if (! glo.has_well(well)) {
+                return;
+            }
+
+            // Integer flag indicating lift gas optimisation to be calculated
+            const auto& w_glo = glo.well(well);
+
+            iWell[Ix::LiftOpt] = w_glo.use_glo();
+            iWell[Ix::LiftOptAllocExtra] = w_glo.alloc_extra_gas();
+        }
+
+        template <typename IWellArray>
+        void assignMSWInfo(const Opm::Well&  well,
+                           const std::size_t msWellID,
+                           IWellArray&       iWell)
+        {
+            using Ix = VI::IWell::index;
+
+            // Multi-segmented well information
+            iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
+            iWell[Ix::NWseg] = 0;  // Number of well segments
+            iWell[Ix::MSW_PlossMod] = 0;  // Segment pressure loss model
+            iWell[Ix::MSW_MulPhaseMod] = 0;  // Segment multi phase flow model
+
+            if (well.isMultiSegment()) {
+                iWell[Ix::MsWID] = static_cast<int>(msWellID);
+                iWell[Ix::NWseg] = well.getSegments().size();
+                iWell[Ix::MSW_PlossMod] = PLossMod(well);
+                iWell[Ix::MSW_MulPhaseMod] = 1;  // temporary solution - valid for HO - multiphase model - only implemented now
+                //iWell[Ix::MSW_MulPhaseMod] = MPhaseMod(well);
+            }
+        }
+
+        template <typename IWellArray>
+        void assignWellTest(const std::string&         well,
+                            const Opm::WellTestConfig& wtest_config,
+                            const Opm::WellTestState&  wtest_state,
+                            IWellArray&                iWell)
+        {
+            using Ix = VI::IWell::index;
+
+            const auto wtest_rst = wtest_state.restart_well(wtest_config, well);
+
+            if (! wtest_rst.has_value()) {
+                return;
+            }
+
+            iWell[Ix::WTestConfigReason] = wtest_rst->config_reasons;
+            iWell[Ix::WTestCloseReason] = wtest_rst->close_reason;
+            iWell[Ix::WTestRemaining] = wtest_rst->num_test;
+        }
+
+        int wgrupConGuideratePhase(const Opm::Well::GuideRateTarget grTarget)
+        {
+            using GRTarget = Opm::Well::GuideRateTarget;
+            using GRPhase = VI::IWell::Value::WGrupCon::GRPhase;
+
+            switch (grTarget) {
+            case GRTarget::OIL:       return GRPhase::Oil;
+            case GRTarget::WAT:       return GRPhase::Water;
+            case GRTarget::GAS:       return GRPhase::Gas;
+            case GRTarget::LIQ:       return GRPhase::Liquid;
+            case GRTarget::RAT:       return GRPhase::SurfaceInjectionRate;
+            case GRTarget::RES:       return GRPhase::ReservoirVolumeRate;
+            case GRTarget::UNDEFINED: return GRPhase::Defaulted;
+
+            default:
+                throw std::invalid_argument {
+                    fmt::format("Unsupported guiderate phase '{}' for restart",
+                                Opm::Well::GuideRateTarget2String(grTarget))
+                };
+            }
+        }
+
+        template <typename IWellArray>
+        void assignWGrupCon(const Opm::Well& well,
+                            IWellArray&      iWell)
+        {
+            using Ix = VI::IWell::index;
+            namespace Value = VI::IWell::Value;
+
+            iWell[Ix::WGrupConControllable] = well.isAvailableForGroupControl()
+                ? Value::WGrupCon::Controllable::Yes // Common case
+                : Value::WGrupCon::Controllable::No;
+
+            iWell[Ix::WGrupConGRPhase] =
+                wgrupConGuideratePhase(well.getRawGuideRatePhase());
+        }
+
+        template <typename IWellArray>
+        void assignTHPLookupOptions(const Opm::Well& well,
+                                    IWellArray&      iWell)
+        {
+            using Ix = VI::IWell::index;
+            namespace Value = VI::IWell::Value;
+
+            const auto& options = well.getWVFPEXP();
+
+            iWell[Ix::THPLookupVFPTable] = options.explicit_lookup()
+                ? Value::WVfpExp::Lookup::Explicit
+                : Value::WVfpExp::Lookup::Implicit;
+
+            iWell[Ix::CloseWellIfTHPStabilised] = options.shut()
+                ? static_cast<int>(Value::WVfpExp::CloseStabilised::Yes)
+                : static_cast<int>(Value::WVfpExp::CloseStabilised::No);
+
+            auto& prevent = iWell[Ix::PreventTHPIfUnstable];
+            if (options.report_first()) {
+                prevent = static_cast<int>(Value::WVfpExp::PreventTHP::Yes1);
+            }
+            else if (options.report_every()) {
+                prevent = static_cast<int>(Value::WVfpExp::PreventTHP::Yes2);
+            }
+            else {
+                prevent = static_cast<int>(Value::WVfpExp::PreventTHP::No);
+            }
+        }
+
+        int workoverProcedure(const Opm::WellEconProductionLimits::EconWorkover procedure)
+        {
+            namespace Value = VI::IWell::Value;
+            using WO = Opm::WellEconProductionLimits::EconWorkover;
+
+            switch (procedure) {
+            case WO::NONE: return Value::EconLimit::WOProcedure::None;
+            case WO::CON:  return Value::EconLimit::WOProcedure::Con;
+            case WO::CONP: return Value::EconLimit::WOProcedure::ConAndBelow;
+            case WO::WELL: return Value::EconLimit::WOProcedure::StopOrShut;
+            case WO::PLUG: return Value::EconLimit::WOProcedure::Plug;
+
+            default:
+                throw std::invalid_argument {
+                    fmt::format("Unsupported workover procedure '{}' for restart",
+                                Opm::WellEconProductionLimits::EconWorkover2String(procedure))
+                };
+            }
+        }
+
+        int econLimitQuantity(const Opm::WellEconProductionLimits::QuantityLimit quantity)
+        {
+            namespace Value = VI::IWell::Value;
+            using Quant = Opm::WellEconProductionLimits::QuantityLimit;
+
+            switch (quantity) {
+            case Quant::RATE: return Value::EconLimit::Quantity::Rate;
+            case Quant::POTN: return Value::EconLimit::Quantity::Potential;
+            }
+
+            throw std::invalid_argument {
+                fmt::format("Unsupported economic limit quantity '{}' for restart",
+                            Opm::WellEconProductionLimits::QuantityLimit2String(quantity))
+            };
+        }
+
+        template <typename IWellArray>
+        void assignEconomicLimits(const Opm::Well& well,
+                                  IWellArray&      iWell)
+        {
+            using Ix = VI::IWell::index;
+            namespace Value = VI::IWell::Value;
+
+            const auto& limits = well.getEconLimits();
+
+            iWell[Ix::EconWorkoverProcedure] = workoverProcedure(limits.workover());
+            iWell[Ix::EconWorkoverProcedure_2] =
+                workoverProcedure(limits.workoverSecondary());
+
+            iWell[Ix::EconLimitEndRun] = limits.endRun()
+                ? Value::EconLimit::EndRun::Yes
+                : Value::EconLimit::EndRun::No; // Common case
+
+            iWell[Ix::EconLimitQuantity] = econLimitQuantity(limits.quantityLimit());
+        }
+
         template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
                            const Opm::GasLiftOpt&          glo,
@@ -324,47 +506,27 @@ namespace {
             // The following items aren't fully characterised yet, but
             // needed for restart of M2.  Will need further refinement.
             iWell[Ix::item18] = -100;
-            iWell[Ix::item25] = -  1;
             iWell[Ix::item32] =    7;
             iWell[Ix::item48] = -  1;
-
-            // integer flag indicating lift gas optimisation to be calculated
-            if (glo.has_well(well.name())) {
-                const auto& w_glo = glo.well(well.name());
-                iWell[Ix::LiftOpt] = (w_glo.use_glo()) ? 1 : 0;
-                iWell[Ix::LiftOptAllocExtra] = w_glo.alloc_extra_gas() ? 1 : 0;
-            }
 
             // Deliberate misrepresentation.  Function 'eclipseControlMode'
             // returns the target control mode requested in the simulation
             // deck.  This item is supposed to be the well's actual, active
             // target control mode in the simulator.
             //
-            // Observe that the setupCurrentContro() function is called again
-            // for open wells in the dynamicContrib() function.
+            // Observe that setCurrentControl() is called again, for open
+            // wells, in the dynamicContrib() function.
             setCurrentControl(Opm::Well::eclipseControlMode(well, st), iWell);
             setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
-            // Multi-segmented well information
-            iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
-            iWell[Ix::NWseg] = 0;  // Number of well segments
-            iWell[Ix::MSW_PlossMod] = 0;  // Segment pressure loss model
-            iWell[Ix::MSW_MulPhaseMod] = 0;  // Segment multi phase flow model
-            if (well.isMultiSegment()) {
-                iWell[Ix::MsWID] = static_cast<int>(msWellID);
-                iWell[Ix::NWseg] = well.getSegments().size();
-                iWell[Ix::MSW_PlossMod] = PLossMod(well);
-                iWell[Ix::MSW_MulPhaseMod] = 1;  // temporary solution - valid for HO - multiphase model - only implemented now
-                //iWell[Ix::MSW_MulPhaseMod] = MPhaseMod(well);
-            }
-
             iWell[Ix::CompOrd] = compOrder(well);
-            const auto& wtest_rst = wtest_state.restart_well(wtest_config, well.name());
-            if (wtest_rst.has_value()) {
-                iWell[Ix::WTestConfigReason] = wtest_rst->config_reasons;
-                iWell[Ix::WTestCloseReason] = wtest_rst->close_reason;
-                iWell[Ix::WTestRemaining] = wtest_rst->num_test;
-            }
+
+            assignGasliftOpt(well.name(), glo, iWell);
+            assignMSWInfo(well, msWellID, iWell);
+            assignWGrupCon(well, iWell);
+            assignTHPLookupOptions(well, iWell);
+            assignEconomicLimits(well, iWell);
+            assignWellTest(well.name(), wtest_config, wtest_state, iWell);
         }
 
         template <class IWellArray>
@@ -520,6 +682,7 @@ namespace {
                            const double                   rate)
         {
             float rLimit = 1.0e+20f;
+
             if (rate > 0.0) {
                 rLimit = static_cast<float>(units.from_si(u, rate));
             }
@@ -530,13 +693,345 @@ namespace {
             return rLimit;
         }
 
+        template <class SWProp, class SWellArray>
+        void assignOWGRateTargetsProd(const Opm::Well::ProductionControls& pc,
+                                      const bool                           predMode,
+                                      SWProp&&                             swprop,
+                                      SWellArray&                          sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            if (predMode) {
+                if (pc.oil_rate != 0.0) {
+                    sWell[Ix::OilRateTarget] = swprop(M::liquid_surface_rate, pc.oil_rate);
+                }
+
+                if (pc.water_rate != 0.0) {
+                    sWell[Ix::WatRateTarget] = swprop(M::liquid_surface_rate, pc.water_rate);
+                }
+
+                if (pc.gas_rate != 0.0) {
+                    sWell[Ix::GasRateTarget] = swprop(M::gas_surface_rate, pc.gas_rate);
+
+                    sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
+                }
+            }
+            else {
+                sWell[Ix::OilRateTarget] =
+                    swprop(M::liquid_surface_rate, pc.oil_rate);
+
+                sWell[Ix::WatRateTarget] =
+                    swprop(M::liquid_surface_rate, pc.water_rate);
+
+                sWell[Ix::GasRateTarget] =
+                    swprop(M::gas_surface_rate, pc.gas_rate);
+
+                sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
+            }
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignLiqRateTargetsProd(const Opm::Well::ProductionControls& pc,
+                                      const bool                           predMode,
+                                      SWProp&&                             swprop,
+                                      SWellArray&                          sWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            if (pc.liquid_rate != 0.0) {    // check if this works - may need to be rewritten
+                sWell[Ix::LiqRateTarget] = swprop(M::liquid_surface_rate, pc.liquid_rate);
+
+                sWell[Ix::HistLiqRateTarget] = sWell[Ix::LiqRateTarget];
+            }
+            else if (!predMode)  {
+                sWell[Ix::LiqRateTarget] =
+                    swprop(M::liquid_surface_rate, pc.oil_rate + pc.water_rate);
+            }
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignResVRateTargetsProd(const std::string&                   well,
+                                       const Opm::SummaryState&             smry,
+                                       const Opm::Well::ProductionControls& pc,
+                                       const bool                           predMode,
+                                       SWProp&&                             swprop,
+                                       SWellArray&                          sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            if (pc.resv_rate != 0.0)  {
+                sWell[Ix::ResVRateTarget] = swprop(M::rate, pc.resv_rate);
+            }
+            else if (!predMode) {
+                // Write out summary voidage production rate if target/limit
+                // is not set
+                const auto vr = smry.get_well_var("WVPR", well, 0.0);
+                if (vr != 0.0) {
+                    sWell[Ix::ResVRateTarget] = static_cast<float>(vr);
+                }
+            }
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignALQProd(const Opm::VFPProdTable::ALQ_TYPE alqType,
+                           const double                      alq_value,
+                           SWProp&&                          swprop,
+                           SWellArray&                       sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            if (alqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
+                sWell[Ix::Alq_value] = swprop(M::gas_surface_rate, alq_value);
+            }
+            else if ((alqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_IGLR) ||
+                     (alqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_TGLR))
+            {
+                sWell[Ix::Alq_value] = swprop(M::gas_oil_ratio, alq_value);
+            }
+            else {
+                // Note: Not all ALQ types have associated units of
+                // measurement.
+                sWell[Ix::Alq_value] = alq_value;
+            }
+        }
+
+        template <class SWellArray>
+        void assignPredictionTargetsProd(const Opm::UnitSystem&               units,
+                                         const Opm::Well::ProductionControls& pc,
+                                         SWellArray&                          sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            sWell[Ix::OilRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.oil_rate);
+            sWell[Ix::WatRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.water_rate);
+            sWell[Ix::GasRateTarget]   = getRateLimit(units, M::gas_surface_rate,    pc.gas_rate);
+            sWell[Ix::LiqRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.liquid_rate);
+            sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate,                pc.resv_rate);
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignProductionTargets(const Opm::Well&         well,
+                                     const Opm::SummaryState& smry,
+                                     const Opm::Schedule&     sched,
+                                     const std::size_t        sim_step,
+                                     SWProp&&                 swprop,
+                                     SWellArray&              sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            const auto pc = well.productionControls(smry);
+            const auto predMode = well.predictionMode();
+
+            assignOWGRateTargetsProd(pc, predMode, std::forward<SWProp>(swprop), sWell);
+            assignLiqRateTargetsProd(pc, predMode, std::forward<SWProp>(swprop), sWell);
+            assignResVRateTargetsProd(well.name(), smry, pc, predMode,
+                                      std::forward<SWProp>(swprop), sWell);
+
+            sWell[Ix::THPTarget] = (pc.thp_limit != 0.0)
+                ? swprop(M::pressure, pc.thp_limit)
+                : 0.0;
+
+            sWell[Ix::BHPTarget] = (pc.bhp_limit != 0.0)
+                ? swprop(M::pressure, pc.bhp_limit)
+                : swprop(M::pressure, 1.0*::Opm::unit::atm);
+
+            sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
+
+            if (pc.alq_value != 0.0) {
+                const auto alqType = sched[sim_step].vfpprod(pc.vfp_table_number).getALQType();
+                assignALQProd(alqType, pc.alq_value, std::forward<SWProp>(swprop), sWell);
+            }
+
+            if (predMode) {
+                assignPredictionTargetsProd(sched.getUnits(), pc, sWell);
+            }
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignInjectionTargets(const Opm::Well&         well,
+                                    const Opm::SummaryState& smry,
+                                    SWProp&&                 swprop,
+                                    SWellArray&              sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M  = ::Opm::UnitSystem::measure;
+            using IP = ::Opm::Well::InjectorCMode;
+            using IT = ::Opm::InjectorType;
+
+            const auto& ic = well.injectionControls(smry);
+
+            if (ic.hasControl(IP::RATE)) {
+                switch (ic.injector_type) {
+                case IT::OIL:
+                    sWell[Ix::OilRateTarget] = swprop(M::liquid_surface_rate, ic.surface_rate);
+                    break;
+
+                case IT::WATER:
+                    sWell[Ix::WatRateTarget]     = swprop(M::liquid_surface_rate, ic.surface_rate);
+                    sWell[Ix::HistLiqRateTarget] = sWell[Ix::WatRateTarget];
+                    break;
+
+                case IT::GAS:
+                    sWell[Ix::GasRateTarget]     = swprop(M::gas_surface_rate, ic.surface_rate);
+                    sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            if (ic.hasControl(IP::RESV)) {
+                sWell[Ix::ResVRateTarget] = swprop(M::rate, ic.reservoir_rate);
+            }
+
+            if (ic.hasControl(IP::THP)) {
+                sWell[Ix::THPTarget] = swprop(M::pressure, ic.thp_limit);
+            }
+
+            sWell[Ix::BHPTarget] = ic.hasControl(IP::BHP)
+                ? swprop(M::pressure, ic.bhp_limit)
+                : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
+
+            sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignGasLiftOptimisation(const Opm::GasLiftOpt::Well& w_glo,
+                                       SWProp&&                     swprop,
+                                       SWellArray&                  sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            sWell[Ix::LOmaxRate] = swprop(M::gas_surface_rate, w_glo.max_rate().value_or(0.0));
+            sWell[Ix::LOminRate] = swprop(M::gas_surface_rate, w_glo.min_rate());
+
+            sWell[Ix::LOweightFac] = static_cast<float>(w_glo.weight_factor());
+            sWell[Ix::LOincFac] = static_cast<float>(w_glo.inc_weight_factor());
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignReferenceDepth(const Opm::Well& well,
+                                  SWProp&&         swprop,
+                                  SWellArray&      sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            if (const auto depth = datumDepth(well); depth.has_value()) {
+                sWell[Ix::DatumDepth] = swprop(M::length, depth.value());
+            }
+            else {
+                // BHP reference depth missing for this well.  Typically
+                // caused by defaulted WELSPECS(5) and no active reservoir
+                // connections from which to infer the depth.  Output
+                // sentinel value.
+                //
+                // Note: All unit systems get the *same* sentinel value so
+                // we intentionally omit unit conversion here.
+                sWell[Ix::DatumDepth] = -1.0e+20f;
+            }
+        }
+
+        template <class SWellArray>
+        void assignWGrupCon(const Opm::Well& well,
+                            SWellArray&      sWell)
+        {
+            using Ix = VI::SWell::index;
+
+            if (const auto gr = well.getGuideRate(); gr > 0.0) {
+                sWell[Ix::WGrupConGuideRate] = static_cast<float>(gr);
+            }
+
+            sWell[Ix::WGrupConGRScaling] =
+                static_cast<float>(well.getGuideRateScalingFactor());
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignEconomicLimits(const Opm::Well& well,
+                                  SWProp&&         swprop,
+                                  SWellArray&      sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            const auto& limits = well.getEconLimits();
+
+            if (limits.onMinOilRate()) {
+                sWell[Ix::EconLimitMinOil] = swprop(M::liquid_surface_rate, limits.minOilRate());
+            }
+
+            if (limits.onMinGasRate()) {
+                sWell[Ix::EconLimitMinGas] = swprop(M::gas_surface_rate, limits.minGasRate());
+            }
+
+            if (limits.onMaxWaterCut()) {
+                sWell[Ix::EconLimitMaxWct] = swprop(M::identity, limits.maxWaterCut());
+            }
+
+            if (limits.onMaxGasOilRatio()) {
+                sWell[Ix::EconLimitMaxGor] = swprop(M::gas_oil_ratio, limits.maxGasOilRatio());
+            }
+
+            if (limits.onMaxWaterGasRatio()) {
+                sWell[Ix::EconLimitMaxWgr] = swprop(M::oil_gas_ratio, limits.maxWaterGasRatio());
+            }
+
+            if (limits.onSecondaryMaxWaterCut()) {
+                sWell[Ix::EconLimitMaxWct_2] = swprop(M::identity, limits.maxSecondaryMaxWaterCut());
+            }
+
+            if (limits.onMinLiquidRate()) {
+                sWell[Ix::EconLimitMinLiq] = swprop(M::liquid_surface_rate, limits.minLiquidRate());
+            }
+        }
+
+        template <class SWProp, class SWellArray>
+        void assignWellTest(const std::string&        well,
+                            const Opm::Schedule&      sched,
+                            const Opm::WellTestState& wtest_state,
+                            const std::size_t         sim_step,
+                            SWProp&&                  swprop,
+                            SWellArray&               sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            const auto& wtest_config = sched[sim_step].wtest_config();
+            const auto& wtest_param = wtest_state.restart_well(wtest_config, well);
+
+            if (! wtest_param.has_value()) {
+                return;
+            }
+
+            sWell[Ix::WTestInterval] = swprop(M::time, wtest_param->test_interval);
+            sWell[Ix::WTestStartupTime] = swprop(M::time, wtest_param->startup_time);
+        }
+
+        template <class SWellArray>
+        void assignEfficiencyFactors(const Opm::Well& well,
+                                     SWellArray&      sWell)
+        {
+            using Ix = VI::SWell::index;
+
+            sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
+            sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
+        }
+
         template <class SWellArray>
         void assignTracerData(const Opm::TracerConfig& tracers,
                               const Opm::SummaryState& smry,
-                              const std::string& wname,
-                              SWellArray &sWell)
+                              const std::string&       wname,
+                              SWellArray&              sWell)
         {
-            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+            using Ix = VI::SWell::index;
             std::fill(sWell.begin() + Ix::TracerOffset, sWell.end(), 0);
 
             std::size_t output_index = Ix::TracerOffset;
@@ -556,183 +1051,36 @@ namespace {
                            const ::Opm::SummaryState& smry,
                            SWellArray&                sWell)
         {
-            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+            using Ix = VI::SWell::index;
             using M = ::Opm::UnitSystem::measure;
-            const auto& units = sched.getUnits();
 
+            assignDefaultSWell(sWell);
+
+            const auto& units = sched.getUnits();
             auto swprop = [&units](const M u, const double x) -> float
             {
                 return static_cast<float>(units.from_si(u, x));
             };
-            
-            assignDefaultSWell(sWell);
 
             if (well.isProducer()) {
-                const auto& pc = well.productionControls(smry);
-                const auto& predMode = well.predictionMode();
-
-                if (predMode) {
-                    if ((pc.oil_rate != 0.0)) {
-                        sWell[Ix::OilRateTarget] =
-                            swprop(M::liquid_surface_rate, pc.oil_rate);
-                    }
-
-                    if ((pc.water_rate != 0.0)) {
-                        sWell[Ix::WatRateTarget] =
-                            swprop(M::liquid_surface_rate, pc.water_rate);
-                    }
-
-                    if ((pc.gas_rate != 0.0)) {
-                        sWell[Ix::GasRateTarget] =
-                            swprop(M::gas_surface_rate, pc.gas_rate);
-                        sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
-                    }
-                } else {
-                    sWell[Ix::OilRateTarget] =
-                        swprop(M::liquid_surface_rate, pc.oil_rate);
-                    sWell[Ix::WatRateTarget] =
-                        swprop(M::liquid_surface_rate, pc.water_rate);
-                    sWell[Ix::GasRateTarget] =
-                        swprop(M::gas_surface_rate, pc.gas_rate);
-                    sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
-                }
-
-                if (pc.liquid_rate != 0.0) {    // check if this works - may need to be rewritten
-                    sWell[Ix::LiqRateTarget] =
-                        swprop(M::liquid_surface_rate, pc.liquid_rate);
-                    sWell[Ix::HistLiqRateTarget] = sWell[Ix::LiqRateTarget];
-                }
-                else if (!predMode)  {
-                    sWell[Ix::LiqRateTarget] =
-                        swprop(M::liquid_surface_rate, pc.oil_rate + pc.water_rate);
-                }
-
-                if (pc.resv_rate != 0.0)  {
-                    sWell[Ix::ResVRateTarget] =
-                        swprop(M::rate, pc.resv_rate);
-                }
-                else if ((smry.has("WVPR:" + well.name())) && (!predMode)) {
-                    // Write out summary voidage production rate if
-                    // target/limit is not set
-                    auto vr = static_cast<float>(smry.get("WVPR:" + well.name()));
-                    if (vr != 0.0) {
-                        sWell[Ix::ResVRateTarget] = vr;
-                    }
-                }
-
-                sWell[Ix::THPTarget] = pc.thp_limit != 0.0
-                    ? swprop(M::pressure, pc.thp_limit)
-                    : 0.0;
-
-                sWell[Ix::BHPTarget] = pc.bhp_limit != 0.0
-                    ? swprop(M::pressure, pc.bhp_limit)
-                    : swprop(M::pressure, 1.0*::Opm::unit::atm);
-                sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
-                
-                if (pc.alq_value != 0.0) {
-                    const auto alqType = sched[sim_step].vfpprod(pc.vfp_table_number).getALQType();
-                    if (alqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
-                        sWell[Ix::Alq_value] = static_cast<float>(units.from_si(M::gas_surface_rate, pc.alq_value));
-                    }
-                    else if ((alqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_IGLR) ||
-                             (alqType == Opm::VFPProdTable::ALQ_TYPE::ALQ_TGLR))
-                    {
-                        sWell[Ix::Alq_value] = static_cast<float>(units.from_si(M::gas_oil_ratio, pc.alq_value));
-                    }
-                    else {
-                        // not all alq_value options have units
-                        sWell[Ix::Alq_value] = pc.alq_value;
-                    }
-                }
-
-                if (predMode) {
-                    //if (well.getStatus() == Opm::Well::Status::OPEN) {
-                    sWell[Ix::OilRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.oil_rate);
-                    sWell[Ix::WatRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.water_rate);
-                    sWell[Ix::GasRateTarget]   = getRateLimit(units, M::gas_surface_rate,    pc.gas_rate);
-                    sWell[Ix::LiqRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.liquid_rate);
-                    sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate, pc.resv_rate);
-                    //}
-                }
+                assignProductionTargets(well, smry, sched, sim_step, swprop, sWell);
             }
             else if (well.isInjector()) {
-                const auto& ic = well.injectionControls(smry);
-
-                using IP = ::Opm::Well::InjectorCMode;
-                using IT = ::Opm::InjectorType;
-
-                if (ic.hasControl(IP::RATE)) {
-                    if (ic.injector_type == IT::OIL) {
-                        sWell[Ix::OilRateTarget] =
-                            swprop(M::liquid_surface_rate, ic.surface_rate);
-                    }
-                    if (ic.injector_type == IT::WATER) {
-                        sWell[Ix::WatRateTarget] =
-                            swprop(M::liquid_surface_rate, ic.surface_rate);
-                        sWell[Ix::HistLiqRateTarget] = sWell[Ix::WatRateTarget];
-                    }
-                    if (ic.injector_type == IT::GAS) {
-                        sWell[Ix::GasRateTarget] =
-                            swprop(M::gas_surface_rate, ic.surface_rate);
-                        sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
-                    }
-                }
-
-                if (ic.hasControl(IP::RESV)) {
-                    sWell[Ix::ResVRateTarget] =
-                        swprop(M::rate, ic.reservoir_rate);
-                }
-
-                if (ic.hasControl(IP::THP)) {
-                    sWell[Ix::THPTarget] = swprop(M::pressure, ic.thp_limit);
-                }
-
-                sWell[Ix::BHPTarget] = ic.hasControl(IP::BHP)
-                    ? swprop(M::pressure, ic.bhp_limit)
-                    : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
-                sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
+                assignInjectionTargets(well, smry, swprop, sWell);
             }
 
-            // assign gas lift data
             if (glo.has_well(well.name())) {
-                const auto& w_glo = glo.well(well.name());
-                sWell[Ix::LOmaxRate] = swprop(M::gas_surface_rate, w_glo.max_rate().value_or(0.));
-                sWell[Ix::LOminRate] = swprop(M::gas_surface_rate, w_glo.min_rate());
-                sWell[Ix::LOweightFac] = static_cast<float>(w_glo.weight_factor());
-                sWell[Ix::LOincFac] = static_cast<float>(w_glo.inc_weight_factor());
+                assignGasLiftOptimisation(glo.well(well.name()), swprop, sWell);
             }
 
-            if (const auto depth = datumDepth(well); depth.has_value()) {
-                sWell[Ix::DatumDepth] = swprop(M::length, depth.value());
-            }
-            else {
-                // BHP reference depth missing for this well.  Typically
-                // caused by defaulted WELSPECS(5) and no active reservoir
-                // connections from which to infer the depth.  Output
-                // sentinel value.
-                //
-                // Note: All unit systems get the *same* sentinel value so
-                // we intentionally omit unit conversion here.
-                sWell[Ix::DatumDepth] = -1.0e+20f;
-            }
+            assignReferenceDepth(well, swprop, sWell);
 
             sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
 
-            // Restart files from Eclipse indicate that the efficiency
-            // factor is found in two items in the restart file; since only
-            // one of the items is needed in the OPM restart, and we are not
-            // really certain that the two values are equal by construction
-            // we have only assigned one of the items explicitly here.
-            sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
-            sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
-
-            const auto& wtest_config = sched[sim_step].wtest_config();
-            const auto& wtest_rst = wtest_state.restart_well(wtest_config, well.name());
-            if (wtest_rst.has_value()) {
-                sWell[Ix::WTestInterval] = units.from_si(Opm::UnitSystem::measure::time, wtest_rst->test_interval);
-                sWell[Ix::WTestStartupTime] = units.from_si(Opm::UnitSystem::measure::time, wtest_rst->startup_time);
-            }
-
+            assignWGrupCon(well, sWell);
+            assignEfficiencyFactors(well, sWell);
+            assignEconomicLimits(well, swprop, sWell);
+            assignWellTest(well.name(), sched, wtest_state, sim_step, swprop, sWell);
             assignTracerData(tracers, smry, well.name(), sWell);
         }
     } // SWell
