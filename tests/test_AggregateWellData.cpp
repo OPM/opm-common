@@ -26,33 +26,38 @@
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
-#include <opm/common/utility/TimeService.hpp>
-
-#include <opm/io/eclipse/rst/well.hpp>
-#include <opm/io/eclipse/rst/header.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-#include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 
+#include <opm/io/eclipse/rst/well.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
 #include <exception>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -401,11 +406,12 @@ TSTEP            -- 9
         return Opm::Parser{}.parseString(input);
     }
 
-    Opm::Deck msw_sim(std::string fname) {
+    Opm::Deck msw_sim(const std::string& fname)
+    {
         return Opm::Parser{}.parseFile(fname);
     }
 
-   Opm::SummaryState sim_state()
+    Opm::SummaryState sim_state()
     {
         auto state = Opm::SummaryState{Opm::TimeService::now()};
 
@@ -579,14 +585,12 @@ struct SimulationCase
     explicit SimulationCase(const Opm::Deck& deck)
         : es   { deck }
         , grid { deck }
-        , python{ std::make_shared<Opm::Python>()}
-        , sched{ deck, es, python }
+        , sched{ deck, es, std::make_shared<Opm::Python>() }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
 };
 
@@ -606,11 +610,15 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_EQUAL(awd.getZWell().size(), ih.nwells * ih.nzwelz);
 }
 
+// --------------------------------------------------------------------
+
 BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 {
     const auto simCase = SimulationCase{first_sim()};
+
     Opm::Action::State action_state;
     Opm::WellTestState wtest_state;
+
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
 
@@ -624,11 +632,18 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
 
     wtest_state.close_well("OP_1", Opm::WellTestConfig::Reason::PHYSICAL, 0);
-    auto tw = wtest_state.test_wells(simCase.sched[rptStep].wtest_config(), 86400 * 10);
-    BOOST_CHECK(tw == std::vector<std::string>{"OP_1"});
+    {
+        auto tw = wtest_state.test_wells(simCase.sched[rptStep].wtest_config(), 86400 * 10);
+        BOOST_CHECK(tw == std::vector<std::string>{"OP_1"});
+    }
 
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.tracer(), rptStep, action_state, wtest_state, smry, ih.value);
+                                simCase.es.tracer(),
+                                rptStep,
+                                action_state,
+                                wtest_state,
+                                smry,
+                                ih.value);
 
     // IWEL (OP_1)
     {
@@ -651,7 +666,6 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         BOOST_CHECK_EQUAL(iwell[start + Ix::CompOrd], 0); // Track ordering (default)
 
         BOOST_CHECK_EQUAL(iwell[start + Ix::item18], -100); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item25], -  1); // M2 Magic
         BOOST_CHECK_EQUAL(iwell[start + Ix::item48], -  1); // M2 Magic
         BOOST_CHECK_EQUAL(iwell[start + Ix::item32],    7); // M2 Magic
     }
@@ -674,7 +688,6 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         BOOST_CHECK_EQUAL(iwell[start + Ix::CompOrd], 0); // Track ordering (default)
 
         BOOST_CHECK_EQUAL(iwell[start + Ix::item18], -100); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item25], -  1); // M2 Magic
         BOOST_CHECK_EQUAL(iwell[start + Ix::item48], -  1); // M2 Magic
         BOOST_CHECK_EQUAL(iwell[start + Ix::item32],    7); // M2 Magic
     }
@@ -766,15 +779,19 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
         BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "OP_2    ");
     }
+
     {
         WorkArea work;
         std::string outputDir = "./";
         std::string baseName = "TEST";
         {
-            Opm::EclIO::OutputStream::Restart rstFile {Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
-                                                       rptStep,
-                                                       Opm::EclIO::OutputStream::Formatted {false},
-                                                       Opm::EclIO::OutputStream::Unified {true}};
+            Opm::EclIO::OutputStream::Restart rstFile {
+                Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
+                rptStep,
+                Opm::EclIO::OutputStream::Formatted {false},
+                Opm::EclIO::OutputStream::Unified   {true}
+            };
+
             const double secs_elapsed = 100;
             const double next_step_size = 10;
 
@@ -782,8 +799,10 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
                 createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
                                rptStep, rptStep, rptStep);
 
-            const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es, simCase.sched, rptStep, rptStep+1,
-                                                                    secs_elapsed, next_step_size);
+            const auto dh =
+                Opm::RestartIO::Helpers::createDoubHead(simCase.es, simCase.sched,
+                                                        rptStep, rptStep+1,
+                                                        secs_elapsed, next_step_size);
 
             const auto& lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
 
@@ -797,6 +816,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
                 rstFile.write("XGRP", group_aggregator.getXGroup());
                 rstFile.write("ZGRP", group_aggregator.getZGroup());
             }
+
             rstFile.write("IWEL", awd.getIWell());
             rstFile.write("SWEL", awd.getSWell());
             rstFile.write("XWEL", awd.getXWell());
@@ -804,7 +824,10 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
             {
                 auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(IH);
                 auto xw = Opm::data::Wells {};
-                conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(), simCase.es.getUnits(), xw, sim_state(), rptStep);
+                conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(),
+                                                        simCase.es.getUnits(), xw,
+                                                        sim_state(), rptStep);
+
                 rstFile.write("ICON", conn_aggregator.getIConn());
                 rstFile.write("SCON", conn_aggregator.getSConn());
                 rstFile.write("XCON", conn_aggregator.getXConn());
@@ -826,10 +849,6 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         }
     }
 
-
-
-
-
     // SWEL (OP_6)
     // Report Step 8: 2014-10-18 --> 2014-10-28
     const auto rptStep_8 = std::size_t{8};
@@ -843,7 +862,12 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     //smry = sim_state();
     awd = Opm::RestartIO::Helpers::AggregateWellData{ih_8.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.tracer(), rptStep_8, action_state, wtest_state, smry, ih_8.value);
+                                simCase.es.tracer(),
+                                rptStep_8,
+                                action_state,
+                                wtest_state,
+                                smry,
+                                ih_8.value);
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
 
@@ -862,24 +886,27 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     }
 }
 
+// --------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE (Declared_Well_Data_MSW_well_data)
 {
     const auto simCase = SimulationCase{msw_sim("0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA")};
-    Opm::EclipseState es    = simCase.es;
-    Opm::Schedule     sched = simCase.sched;
-    Opm::Action::State action_state;
-    Opm::WellTestState wtest_state;
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
         static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
+
     const auto smry = sim_state();
 
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.tracer(), rptStep, action_state, wtest_state, smry, ih.value);
+                                simCase.es.tracer(),
+                                rptStep,
+                                Opm::Action::State{},
+                                Opm::WellTestState{},
+                                smry,
+                                ih.value);
 
     // IWEL (PROD1)
     {
@@ -919,8 +946,6 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data_MSW_well_data)
         BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_PlossMod], 2); // PROD3 - H-- => 2,
         BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_MulPhaseMod] , 1); // PROD3 - HO => 0
     }
-
-
 }
 
 // --------------------------------------------------------------------
@@ -1257,49 +1282,61 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
     }
 }
 
+// --------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(WELL_POD) {
+BOOST_AUTO_TEST_CASE(WELL_POD)
+{
     const auto simCase = SimulationCase{first_sim()};
     const auto& units = simCase.es.getUnits();
+
     // Report Step 2: 2011-01-20 --> 2013-06-15
     const auto rptStep = std::size_t{2};
     const auto sim_step = rptStep - 1;
-    Opm::SummaryState sumState(Opm::TimeService::now());
-    Opm::WellTestState wtest_state;
-    const auto xw   = well_rates_1();
-    Opm::Action::State action_state;
 
-    const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
-                                                            simCase.grid,
-                                                            simCase.sched,
-                                                            0,
-                                                            sim_step,
-                                                            sim_step,
-                                                            sim_step);
+    const auto sumState = Opm::SummaryState { Opm::TimeService::now() };
+
+    const auto xw = well_rates_1();
+    const auto ih =
+        Opm::RestartIO::Helpers::createInteHead(simCase.es,
+                                                simCase.grid,
+                                                simCase.sched,
+                                                0,
+                                                sim_step,
+                                                sim_step,
+                                                sim_step);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step, action_state, wtest_state, sumState, ih);
-    wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(), sim_step, xw , sumState);
+    wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step,
+                                     Opm::Action::State{}, Opm::WellTestState{},
+                                     sumState, ih);
+
+    wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(),
+                                    sim_step, xw, sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, xw , sumState, sim_step);
+    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units,
+                                           xw, sumState, sim_step);
 
     const auto& iwel = wellData.getIWell();
     const auto& swel = wellData.getSWell();
     const auto& xwel = wellData.getXWell();
-    const auto& zwel8 = wellData.getZWell();
 
     const auto& icon = connectionData.getIConn();
     const auto& scon = connectionData.getSConn();
     const auto& xcon = connectionData.getXConn();
 
-    Opm::RestartIO::RstHeader header(simCase.es.runspec(), units, ih, std::vector<bool>(100), std::vector<double>(1000));
-    std::vector<Opm::RestartIO::RstWell> wells;
-    std::vector<std::string> zwel;
-    for (const auto& s8: zwel8)
-        zwel.push_back(s8.c_str());
+    const auto header = Opm::RestartIO::RstHeader {
+        simCase.es.runspec(), units, ih, std::vector<bool>(100), std::vector<double>(1000)
+    };
 
-    for (auto iw = 0; iw < header.num_wells; iw++) {
+    std::vector<Opm::RestartIO::RstWell> wells;
+
+    auto zwel = std::vector<std::string>{};
+    for (const auto& s8 : wellData.getZWell()) {
+        zwel.push_back(s8.c_str());
+    }
+
+    for (auto iw = 0; iw < header.num_wells; ++iw) {
         std::size_t zwel_offset = header.nzwelz * iw;
         std::size_t iwel_offset = header.niwelz * iw;
         std::size_t swel_offset = header.nswelz * iw;
@@ -1318,7 +1355,6 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
                            icon.data() + icon_offset,
                            scon.data() + scon_offset,
                            xcon.data() + xcon_offset);
-
     }
 
     // Well OP2
