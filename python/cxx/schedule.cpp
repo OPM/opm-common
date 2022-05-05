@@ -68,46 +68,21 @@ namespace {
             throw py::key_error( fmt::format("well {} is not defined", name ));
         }
         if (well->isProducer()) {
-            std::map<std::string, double> props;
             auto& prod_prop = well->getProductionProperties();
-            {
-                auto rate = prod_prop.OilRate.get<double>();
-                props.insert(std::make_pair("oil_rate", rate));
-            }
-            {
-                auto rate = prod_prop.GasRate.get<double>();
-                props.insert(std::make_pair("gas_rate", rate));
-            }
-            {
-                auto rate = prod_prop.WaterRate.get<double>();
-                props.insert(std::make_pair("water_rate", rate));
-            }
-            {
-                auto rate = prod_prop.LiquidRate.get<double>();
-                props.insert(std::make_pair("liquid_rate", rate));
-            }
-            {
-                auto rate = prod_prop.ResVRate.get<double>();
-                props.insert(std::make_pair("resv_rate", rate));
-            }
-            {
-                auto rate = prod_prop.BHPTarget.get<double>();
-                props.insert(std::make_pair("bhp_target", rate));
-            }
-            {
-                auto rate = prod_prop.THPTarget.get<double>();
-                props.insert(std::make_pair("thp_target", rate));
-            }
-            {
-                auto rate = prod_prop.ALQValue.get<double>();
-                props.insert(std::make_pair("alq_value", rate));
-            }
-            return props;
+            return {
+                { "oil_rate", prod_prop.OilRate.get<double>() },
+                { "gas_rate", prod_prop.GasRate.get<double>() },
+                { "water_rate", prod_prop.WaterRate.get<double>() },
+                { "liquid_rate", prod_prop.LiquidRate.get<double>() },
+                { "resv_rate", prod_prop.ResVRate.get<double>() },
+                { "bhp_target", prod_prop.BHPTarget.get<double>() },
+                { "thp_target", prod_prop.THPTarget.get<double>() },
+                { "alq_value", prod_prop.ALQValue.get<double>() }
+            };
         }
         else {
             throw py::key_error( fmt::format("well {} is not a producer", name) );
         }
-
     }
     system_clock::time_point get_start_time( const Schedule& s ) {
         return datetime(s.posixStartTime());
