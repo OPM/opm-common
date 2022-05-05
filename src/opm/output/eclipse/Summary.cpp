@@ -88,6 +88,28 @@
 
 #include <fmt/format.h>
 
+template <> struct fmt::formatter<Opm::EclIO::SummaryNode::Category>: fmt::formatter<string_view> {
+    // parse is inherited from formatter<string_view>.
+    template <typename FormatContext>
+    auto format(Opm::EclIO::SummaryNode::Category c, FormatContext& ctx) {
+        using Category = Opm::EclIO::SummaryNode::Category;
+        string_view name = "unknown";
+        switch (c) {
+        case Category::Well:          name = "Well"; break;
+        case Category::Group:         name = "Group"; break;
+        case Category::Field:         name = "Field"; break;
+        case Category::Region:        name = "Region"; break;
+        case Category::Block:         name = "Block"; break;
+        case Category::Connection:    name = "Connection"; break;
+        case Category::Segment:       name = "Segment"; break;
+        case Category::Aquifer:       name = "Aquifer"; break;
+        case Category::Node:          name = "Node"; break;
+        case Category::Miscellaneous: name = "Miscellaneous"; break;
+        }
+        return formatter<string_view>::format(name, ctx);
+    }
+};
+
 namespace {
     struct ParamCTorArgs
     {
@@ -2348,7 +2370,7 @@ find_wells(const Opm::Schedule&           schedule,
 
     throw std::runtime_error {
         fmt::format("Unhandled summary node category \"{}\" in find_wells()",
-                    static_cast<int>(node.category))
+                    node.category)
     };
 }
 
@@ -4031,7 +4053,8 @@ namespace {
 
         default:
             throw std::logic_error {
-                fmt::format("make_default_nodes does not yet support: {}", keyword)
+                fmt::format("Keyword category '{}' (e.g., summary keyword {}) is not supported in ACTIONX",
+            category, keyword)
             };
         }
 
