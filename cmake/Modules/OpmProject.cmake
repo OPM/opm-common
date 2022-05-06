@@ -54,6 +54,12 @@ function (configure_cmake_file name variant version)
   foreach (suffix IN LISTS variable_suffices)
 	set (opm-project_${suffix} "${${name}_${suffix}}")
   endforeach (suffix)
+
+  if (BUILD_SHARED_LIBS)
+    # No need to list shared libraries as the linker information is alread
+    # in the shared lib
+    string(REGEX REPLACE ";?[^;]*.so" "" opm-project_LIBRARIES "${opm-project_LIBRARIES}")
+  endif()
   set (opm-project_NAME "${${name}_NAME}")
   set (opm-project_NAME_UC "${${name}_NAME}")
   string(TOUPPER "${opm-project_NAME}" opm-project_NAME_UC)
