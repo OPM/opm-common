@@ -79,18 +79,18 @@ namespace fun {
      * vec => { 0, 2, 4, 6, 8 };
      *
      */
-    template< typename F, typename C >
-    std::vector< typename std::result_of< F( typename C::const_iterator::value_type& ) >::type >
-    map( F f, const C& src ) {
-        using A = typename C::const_iterator::value_type;
-        using B = typename std::result_of< F( A& ) >::type;
-        std::vector< B > ret;
-        ret.reserve( src.size() );
+    template <typename F, typename C>
+    auto map(F&& f, C&& c)
+    {
+        using Val = std::remove_cv_t<std::remove_reference_t<
+            decltype(std::invoke(std::forward<F>(f), *std::begin(std::forward<C>(c))))>>;
 
-        std::transform( src.begin(), src.end(), std::back_inserter( ret ), f );
+        std::vector<Val> ret{};
+        ret.reserve(std::size(std::forward<C>(c)));
+
+        std::transform(std::begin(c), std::end(c), std::back_inserter(ret), std::forward<F>(f));
         return ret;
     }
-
     /*
      * concat :: [[a]] -> [a]
      *
