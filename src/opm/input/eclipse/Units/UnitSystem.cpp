@@ -1308,11 +1308,11 @@ namespace {
     }
 
 
-    Dimension UnitSystem::uda_dim(UDAControl control) const {
+    Dimension UnitSystem::uda_dim(const UDAControl control) const {
         switch (control) {
-        case UDAControl::WCONPROD_ORAT:
-        case UDAControl::WCONPROD_WRAT:
-        case UDAControl::WCONPROD_LRAT:
+        case UDAControl::WCONPROD_ORAT:  case UDAControl::WELTARG_ORAT:
+        case UDAControl::WCONPROD_WRAT:  case UDAControl::WELTARG_WRAT:
+        case UDAControl::WCONPROD_LRAT:  case UDAControl::WELTARG_LRAT:
         case UDAControl::GCONPROD_OIL_TARGET:
         case UDAControl::GCONPROD_WATER_TARGET:
         case UDAControl::GCONPROD_LIQUID_TARGET:
@@ -1320,16 +1320,17 @@ namespace {
 
         case UDAControl::WCONINJE_RESV:
         case UDAControl::WCONPROD_RESV:
+        case UDAControl::WELTARG_RESV:
         case UDAControl::GCONINJE_RESV_MAX_RATE:
             return this->getDimension(UnitSystem::measure::geometric_volume_rate);
 
         case UDAControl::WCONPROD_GRAT:
+        case UDAControl::WELTARG_GRAT:
             return this->getDimension(UnitSystem::measure::gas_surface_rate);
 
-        case UDAControl::WCONPROD_BHP:
-        case UDAControl::WCONPROD_THP:
-        case UDAControl::WCONINJE_THP:
-        case UDAControl::WCONINJE_BHP:
+        case UDAControl::WCONPROD_BHP:  case UDAControl::WCONPROD_THP:
+        case UDAControl::WCONINJE_BHP:  case UDAControl::WCONINJE_THP:
+        case UDAControl::WELTARG_BHP:   case UDAControl::WELTARG_THP:
             return this->getDimension(UnitSystem::measure::pressure);
 
         case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
@@ -1339,7 +1340,9 @@ namespace {
             return this->getDimension(UnitSystem::measure::identity);
 
         default:
-            throw std::logic_error("No dimension");
+            throw std::logic_error {
+                "No dimension for UDA control '" + UDQ::controlName(control) + '\''
+            };
         }
     }
 

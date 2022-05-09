@@ -141,8 +141,8 @@ enum class UDQUpdate {
 
 enum class UDAControl {
     WCONPROD_ORAT,
-    WCONPROD_GRAT,
     WCONPROD_WRAT,
+    WCONPROD_GRAT,
     WCONPROD_LRAT,
     WCONPROD_RESV,
     WCONPROD_BHP,
@@ -162,13 +162,23 @@ enum class UDAControl {
     GCONINJE_RESV_MAX_RATE,
     GCONINJE_TARGET_REINJ_FRACTION,
     GCONINJE_TARGET_VOID_FRACTION,
+    //
+    WELTARG_ORAT,
+    WELTARG_WRAT,
+    WELTARG_GRAT,
+    WELTARG_LRAT,
+    WELTARG_RESV,
+    WELTARG_BHP,
+    WELTARG_THP,
+    WELTARG_LIFT,
 };
 
 enum class UDAKeyword {
     WCONPROD,
     WCONINJE,
+    WELTARG,
     GCONINJE,
-    GCONPROD
+    GCONPROD,
 };
 
 namespace UDQ {
@@ -191,8 +201,10 @@ namespace UDQ {
     bool leadingSpace(UDQTokenType token_type);
     bool group_control(UDAControl control);
     bool well_control(UDAControl control);
-    bool injection_control(UDAControl control);
-    bool production_control(UDAControl control);
+    bool is_well_injection_control(UDAControl control, const bool isInjector);
+    bool is_well_production_control(UDAControl control, const bool isProducer);
+    bool is_group_injection_control(UDAControl control);
+    bool is_group_production_control(UDAControl control);
 
     std::string typeName(UDQVarType var_type);
     std::string controlName(UDAControl control);

@@ -751,21 +751,26 @@ const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Sc
             }
         }
     }
+
     return inj_phase;
 }
 
-const std::vector<int> iuap_data(const Opm::Schedule& sched,
-                                    const std::size_t simStep,
-                                    const std::vector<Opm::UDQActive::InputRecord>& iuap)
+std::vector<int>
+iuap_data(const Opm::Schedule& sched,
+          const std::size_t simStep,
+          const std::vector<Opm::UDQActive::InputRecord>& iuap)
 {
     //construct the current list of well or group sequence numbers to output the IUAP array
     std::vector<int> wg_no;
-    Opm::UDAKeyword wg_key;
 
     for (std::size_t ind = 0; ind < iuap.size(); ind++) {
         auto& ctrl = iuap[ind].control;
-        wg_key = Opm::UDQ::keyword(ctrl);
-        if ((wg_key == Opm::UDAKeyword::WCONPROD) || (wg_key == Opm::UDAKeyword::WCONINJE)) {
+        const auto wg_key = Opm::UDQ::keyword(ctrl);
+
+        if ((wg_key == Opm::UDAKeyword::WCONPROD) ||
+            (wg_key == Opm::UDAKeyword::WCONINJE) ||
+            (wg_key == Opm::UDAKeyword::WELTARG))
+        {
             const auto& well = sched.getWell(iuap[ind].wgname, simStep);
             wg_no.push_back(well.seqIndex());
         }

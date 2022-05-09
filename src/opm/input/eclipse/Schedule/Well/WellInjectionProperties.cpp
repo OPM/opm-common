@@ -311,31 +311,101 @@ namespace Opm {
         return (update_count > 0);
     }
 
+    bool Well::WellInjectionProperties::updateUDQActive(const UDQConfig&   udq_config,
+                                                        const WELTARGCMode cmode,
+                                                        UDQActive&         active) const
+    {
+        switch (cmode) {
+        case WELTARGCMode::ORAT:
+            return (this->injectorType == InjectorType::OIL)
+                && (active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WELTARG_ORAT) > 0);
 
-    void Well::WellInjectionProperties::update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value) {
+        case WELTARGCMode::WRAT:
+            return (this->injectorType == InjectorType::WATER)
+                && (active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WELTARG_WRAT) > 0);
+
+        case WELTARGCMode::GRAT:
+            return (this->injectorType == InjectorType::GAS)
+                && (active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WELTARG_GRAT) > 0);
+
+        case WELTARGCMode::RESV:
+            return active.update(udq_config, this->reservoirInjectionRate, this->name, UDAControl::WELTARG_RESV) > 0;
+
+        case WELTARGCMode::BHP:
+            return active.update(udq_config, this->BHPTarget, this->name, UDAControl::WELTARG_BHP) > 0;
+
+        case WELTARGCMode::THP:
+            return active.update(udq_config, this->THPTarget, this->name, UDAControl::WELTARG_THP) > 0;
+
+        default:
+            return false;
+        }
+    }
+
+    void Well::WellInjectionProperties::update_uda(const UDQConfig& udq_config,
+                                                   UDQActive&       udq_active,
+                                                   const UDAControl control,
+                                                   const UDAValue&  value)
+    {
+        auto update_active = true;
+
         switch (control) {
         case UDAControl::WCONINJE_RATE:
             this->surfaceInjectionRate = value;
-            udq_active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WCONINJE_RATE);
+            break;
+
+        case UDAControl::WELTARG_ORAT:
+            if (this->injectorType == InjectorType::OIL) {
+                this->surfaceInjectionRate = value;
+            }
+            else {
+                update_active = false;
+            }
+
+            break;
+
+        case UDAControl::WELTARG_WRAT:
+            if (this->injectorType == InjectorType::WATER) {
+                this->surfaceInjectionRate = value;
+            }
+            else {
+                update_active = false;
+            }
+            break;
+
+        case UDAControl::WELTARG_GRAT:
+            if (this->injectorType == InjectorType::GAS) {
+                this->surfaceInjectionRate = value;
+            }
+            else {
+                update_active = false;
+            }
             break;
 
         case UDAControl::WCONINJE_RESV:
+        case UDAControl::WELTARG_RESV:
             this->reservoirInjectionRate = value;
-            udq_active.update(udq_config, this->reservoirInjectionRate, this->name, UDAControl::WCONINJE_RESV);
             break;
 
         case UDAControl::WCONINJE_BHP:
+        case UDAControl::WELTARG_BHP:
             this->BHPTarget = value;
-            udq_active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONINJE_BHP);
             break;
 
         case UDAControl::WCONINJE_THP:
+        case UDAControl::WELTARG_THP:
             this->THPTarget = value;
-            udq_active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONINJE_THP);
             break;
 
         default:
-            throw std::logic_error("Invalid UDA control");
+            throw std::logic_error {
+                "Unsupported well injection UDA control '"
+                + UDQ::controlName(control) + '\''
+            };
+        }
+
+        if (update_active) {
+            udq_active.update(udq_config, value, this->name, control);
         }
     }
 
