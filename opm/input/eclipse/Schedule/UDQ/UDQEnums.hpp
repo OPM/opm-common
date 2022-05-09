@@ -141,8 +141,8 @@ enum class UDQUpdate {
 
 enum class UDAControl {
     WCONPROD_ORAT,
-    WCONPROD_GRAT,
     WCONPROD_WRAT,
+    WCONPROD_GRAT,
     WCONPROD_LRAT,
     WCONPROD_RESV,
     WCONPROD_BHP,

@@ -413,8 +413,8 @@ UDAKeyword keyword(const UDAControl control)
 {
     static const auto c2k = std::map<UDAControl, UDAKeyword> {
         {UDAControl::WCONPROD_ORAT, UDAKeyword::WCONPROD},
-        {UDAControl::WCONPROD_GRAT, UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_WRAT, UDAKeyword::WCONPROD},
+        {UDAControl::WCONPROD_GRAT, UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_LRAT, UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_RESV, UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_BHP,  UDAKeyword::WCONPROD},
@@ -456,8 +456,8 @@ int udaCode(const UDAControl control)
 {
     static const auto c2uda = std::map<UDAControl, int> {
         {UDAControl::WCONPROD_ORAT,  300'004},
-        {UDAControl::WCONPROD_GRAT,  500'004},
         {UDAControl::WCONPROD_WRAT,  400'004},
+        {UDAControl::WCONPROD_GRAT,  500'004},
         {UDAControl::WCONPROD_LRAT,  600'004},
         {UDAControl::WCONPROD_RESV,  700'004},
         {UDAControl::WCONPROD_BHP,   800'004},
