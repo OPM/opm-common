@@ -520,34 +520,46 @@ bool well_control(const UDAControl control)
     }
 }
 
-bool is_weltarg(const UDAControl control)
-{
-    try {
-        return keyword(control) == UDAKeyword::WELTARG;
-    }
-    catch (const std::logic_error&) {
-        return false;
-    }
-}
-
-bool injection_control(const UDAControl control)
+bool is_well_injection_control(const UDAControl control,
+                               const bool       isInjector)
 {
     try {
         const auto kw = keyword(control);
         return (kw == UDAKeyword::WCONINJE)
-            || (kw == UDAKeyword::GCONINJE);
+            || (isInjector && (kw == UDAKeyword::WELTARG));
     }
     catch (const std::logic_error&) {
         return false;
     }
 }
 
-bool production_control(const UDAControl control)
+bool is_well_production_control(const UDAControl control,
+                                const bool       isProducer)
 {
     try {
         const auto kw = keyword(control);
         return (kw == UDAKeyword::WCONPROD)
-            || (kw == UDAKeyword::GCONPROD);
+            || (isProducer && (kw == UDAKeyword::WELTARG));
+    }
+    catch (const std::logic_error&) {
+        return false;
+    }
+}
+
+bool is_group_injection_control(const UDAControl control)
+{
+    try {
+        return keyword(control) == UDAKeyword::GCONINJE;
+    }
+    catch (const std::logic_error&) {
+        return false;
+    }
+}
+
+bool is_group_production_control(const UDAControl control)
+{
+    try {
+        return keyword(control) == UDAKeyword::GCONPROD;
     }
     catch (const std::logic_error&) {
         return false;

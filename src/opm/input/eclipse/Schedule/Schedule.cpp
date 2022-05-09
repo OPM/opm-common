@@ -1676,30 +1676,26 @@ namespace {
                 if (UDQ::well_control(control)) {
                     auto& well = this->snapshots.back().wells.get(wgname);
 
-                    if (UDQ::injection_control(control) ||
-                        (well.isInjector() && UDQ::is_weltarg(control)))
-                    {
+                    if (UDQ::is_well_injection_control(control, well.isInjector())) {
                         auto injection_properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
                         injection_properties->update_uda(udq_config, udq_active, control, value);
                         well.updateInjection(std::move(injection_properties));
                     }
 
-                    if (UDQ::production_control(control) ||
-                        (well.isProducer() && UDQ::is_weltarg(control)))
-                    {
+                    if (UDQ::is_well_production_control(control, well.isProducer())) {
                         auto production_properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
                         production_properties->update_uda(udq_config, udq_active, control, value);
                         well.updateProduction(std::move(production_properties));
                     }
                 } else {
                     auto& group = this->snapshots.back().groups.get(wgname);
-                    if (UDQ::injection_control(control)) {
+                    if (UDQ::is_group_injection_control(control)) {
                         auto injection_properties = group.injectionProperties(ig_phase.value());
                         injection_properties.update_uda(udq_config, udq_active, control, value);
                         group.updateInjection(injection_properties);
                     }
 
-                    if (UDQ::production_control(control)) {
+                    if (UDQ::is_group_production_control(control)) {
                         auto production_properties = group.productionProperties();
                         production_properties.update_uda(udq_config, udq_active, control, value);
                         group.updateProduction(production_properties);
