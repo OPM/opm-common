@@ -927,8 +927,12 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
         if (rawKeyword->can_complete())
             rawKeyword->terminateKeyword();
 
-        if (!rawKeyword->isFinished())
-            throw std::invalid_argument("Keyword " + rawKeyword->getKeywordName() + " is not properly terminated");
+        if (!rawKeyword->isFinished()) {
+            throw OpmInputError {
+                "Keyword is not properly terminated.",
+                rawKeyword->location()
+            };
+        }
     }
 
     return rawKeyword;

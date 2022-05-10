@@ -24,12 +24,17 @@
 #define BOOST_TEST_MODULE ReportConfigTest
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
 
 
@@ -96,9 +101,9 @@ RPTSCHED
   FIPSOL=2.50
 )";
 
-    BOOST_CHECK_THROW(make_schedule(sched_string1), std::invalid_argument);
-    BOOST_CHECK_THROW(make_schedule(sched_string2), std::invalid_argument);
-    BOOST_CHECK_THROW(make_schedule(sched_string3), std::invalid_argument);
+    BOOST_CHECK_THROW(make_schedule(sched_string1), Opm::OpmInputError);
+    BOOST_CHECK_THROW(make_schedule(sched_string2), Opm::OpmInputError);
+    BOOST_CHECK_THROW(make_schedule(sched_string3), Opm::OpmInputError);
 }
 
 

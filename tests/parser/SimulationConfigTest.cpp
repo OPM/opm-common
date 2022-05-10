@@ -23,17 +23,20 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 using namespace Opm;
 
@@ -211,7 +214,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
 
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRRUnspecWithData) {
-    BOOST_CHECK_THROW( createDeck(inputStr_INVALID) , std::invalid_argument );
+    BOOST_CHECK_THROW( createDeck(inputStr_INVALID) , Opm::OpmInputError );
 }
 
 

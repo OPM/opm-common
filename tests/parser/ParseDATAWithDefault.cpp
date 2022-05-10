@@ -23,6 +23,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -37,33 +39,33 @@ using namespace Opm;
 
 
 
-const char *dataMissingRecord = "\n\
-ENDSCALE\n\
-     1*     1*     2 /\n\
-\n\
-ENKRVD\n\
-100 1   2  3  4  5  6  7   200 11 22 33 44 55 66 77 /\n\
-";
+const char *dataMissingRecord = R"(
+ENDSCALE
+     1*     1*     2 /
+
+ENKRVD
+100 1   2  3  4  5  6  7   200 11 22 33 44 55 66 77 /
+)";
 
 
 
 BOOST_AUTO_TEST_CASE( ParseMissingRECORD_THrows) {
     Parser parser;
-    BOOST_CHECK_THROW( parser.parseString( dataMissingRecord ), std::invalid_argument );
+    BOOST_CHECK_THROW( parser.parseString( dataMissingRecord ), OpmInputError );
 }
 
 
 
 
-const char *data = "\n\
-ENDSCALE\n\
-     1*     1*     3 /\n\
-\n\
-ENKRVD\n\
-100 *   2  *  2*    6  7   200 11 22 33     3*55 10 /\n\
-100 *   2  3  4  5  6  7   200 11 22 33 44 55 66 77 /\n\
-100 *   2  3  4  5  6  7   200 11 22 33 44 55 66 *  /\n\
-";
+const char *data = R"(
+ENDSCALE
+     1*     1*     3 /
+
+ENKRVD
+100 *   2  *  2*    6  7   200 11 22 33     3*55 10 /
+100 *   2  3  4  5  6  7   200 11 22 33 44 55 66 77 /
+100 *   2  3  4  5  6  7   200 11 22 33 44 55 66 *  /
+)";
 
 
 
