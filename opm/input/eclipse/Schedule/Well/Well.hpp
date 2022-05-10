@@ -509,6 +509,7 @@ public:
     bool isAvailableForGroupControl() const;
     double getGuideRate() const;
     GuideRateTarget getGuideRatePhase() const;
+    GuideRateTarget getRawGuideRatePhase() const;
     double getGuideRateScalingFactor() const;
 
     bool hasBeenDefined(size_t timeStep) const;
@@ -689,6 +690,8 @@ public:
 private:
     void switchToInjector();
     void switchToProducer();
+
+    GuideRateTarget preferredPhaseAsGuideRatePhase() const;
 
     std::string wname;
     std::string group_name;
