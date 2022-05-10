@@ -55,8 +55,6 @@ namespace Opm {
 template <class Scalar>
 class PengRobinson
 {
-    //! The ideal gas constant [Pa * m^3/mol/K]
-    static const Scalar R;
 
     PengRobinson()
     { }
@@ -168,7 +166,7 @@ public:
         if (!std::isfinite(scalarValue(b)) || b <= 0)
             return std::numeric_limits<Scalar>::quiet_NaN();
 
-        const Evaluation& RT= R*T;
+        const Evaluation& RT= Constants<Scalar>::R*T;
         const Evaluation& Astar = a*p/(RT*RT);
         const Evaluation& Bstar = b*p/RT;
 
@@ -253,7 +251,7 @@ public:
         const Evaluation& p = params.pressure();
         const Evaluation& Vm = params.molarVolume();
 
-        const Evaluation& RT = R*T;
+        const Evaluation& RT = Constants<Scalar>::R*T;
         const Evaluation& Z = p*Vm/RT;
         const Evaluation& Bstar = p*params.b() / RT;
 
@@ -417,7 +415,7 @@ protected:
         Scalar u = 2;
         Scalar w = -1;
 
-        const Evaluation& RT = R*T;
+        const Evaluation& RT = Constants<Scalar>::R*T;
 
         // calculate coefficients of the 4th order polynominal in
         // monomial basis
@@ -541,8 +539,6 @@ protected:
 */
 };
 
-template <class Scalar>
-const Scalar PengRobinson<Scalar>::R = Constants<Scalar>::R;
 
 /*
 template <class Scalar>

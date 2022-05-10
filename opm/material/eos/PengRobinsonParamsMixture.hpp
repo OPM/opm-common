@@ -65,9 +65,6 @@ class PengRobinsonParamsMixture
 
     typedef MathToolbox<Scalar> Toolbox;
 
-    // the ideal gas constant
-    static const Scalar R;
-
 public:
     /*!
      * \brief Update Peng-Robinson parameters for the pure components.
@@ -98,7 +95,7 @@ public:
             Scalar pc = FluidSystem::criticalPressure(i);
             Scalar omega = FluidSystem::acentricFactor(i);
             Scalar Tr = temperature/FluidSystem::criticalTemperature(i);
-            Scalar RTc = R*FluidSystem::criticalTemperature(i);
+            Scalar RTc = Constants<Scalar>::R*FluidSystem::criticalTemperature(i);
 
             Scalar f_omega;
 
@@ -246,8 +243,6 @@ private:
     Scalar aCache_[numComponents][numComponents];
 };
 
-template <class Scalar, class FluidSystem, unsigned phaseIdx, bool useSpe5Relations>
-const Scalar PengRobinsonParamsMixture<Scalar, FluidSystem, phaseIdx, useSpe5Relations>::R = Constants<Scalar>::R;
 
 } // namespace Opm
 
