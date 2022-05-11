@@ -745,6 +745,9 @@ void staticContrib(const Opm::Schedule&     sched,
         iGrp[nwgmax+11] = 0;
         iGrp[nwgmax+12] = -1;
 
+        // Hack.  Needed by real field cases.
+        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
+
         //assign values to group number (according to group sequence)
         iGrp[nwgmax+88] = group.insert_index();
         iGrp[nwgmax+89] = group.insert_index();
