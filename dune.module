@@ -5,8 +5,8 @@
 
 Module: opm-common
 Description: Open Porous Media Initiative shared infrastructure
-Version: 2022.04-rc1
-Label: 2022.04-rc1
+Version: 2022.04
+Label: 2022.04
 Maintainer: opm@opm-project.org
 MaintainerName: OPM community
 Url: http://opm-project.org
