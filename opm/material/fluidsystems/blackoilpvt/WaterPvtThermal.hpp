@@ -71,7 +71,6 @@ public:
                     const std::vector<Scalar>& watdentCT1,
                     const std::vector<Scalar>& watdentCT2,
                     const std::vector<Scalar>& watJTRefPres,
-                    const std::vector<Scalar>& watJT,
                     const std::vector<Scalar>& watJTC,
                     const std::vector<Scalar>& pvtwRefPress,
                     const std::vector<Scalar>& pvtwRefB,
@@ -81,6 +80,7 @@ public:
                     const std::vector<TabulatedOneDFunction>& watvisctCurves,
                     const std::vector<TabulatedOneDFunction>& internalEnergyCurves,
                     bool enableThermalDensity,
+                    bool enableJouleThomson,
                     bool enableThermalViscosity,
                     bool enableInternalEnergy)
         : isothermalPvt_(isothermalPvt)
@@ -89,7 +89,6 @@ public:
         , watdentCT1_(watdentCT1)
         , watdentCT2_(watdentCT2)
         , watJTRefPres_(watJTRefPres)
-        , watJT_(watJT)
         , watJTC_(watJTC)
         , pvtwRefPress_(pvtwRefPress)
         , pvtwRefB_(pvtwRefB)
@@ -99,6 +98,7 @@ public:
         , watvisctCurves_(watvisctCurves)
         , internalEnergyCurves_(internalEnergyCurves)
         , enableThermalDensity_(enableThermalDensity)
+        , enableJouleThomson_(enableJouleThomson)
         , enableThermalViscosity_(enableThermalViscosity)
         , enableInternalEnergy_(enableInternalEnergy)
     { }
@@ -127,6 +127,7 @@ public:
         const auto& tables = eclState.getTableManager();
 
         enableThermalDensity_ = tables.WatDenT().size() > 0;
+        enableJouleThomson_ = tables.WatJT().size() > 0;
         enableThermalViscosity_ = tables.hasTables("WATVISCT");
         enableInternalEnergy_ = tables.hasTables("SPECHEAT");
 
@@ -148,21 +149,23 @@ public:
             const auto& pvtwTables = tables.getPvtwTable();
           
             assert(pvtwTables.size() == numRegions);       
+
             for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
                 pvtwRefPress_[regionIdx] = pvtwTables[regionIdx].reference_pressure;
                 pvtwRefB_[regionIdx] = pvtwTables[regionIdx].volume_factor;
             }
         }
 
-       // Joule Thomson 
-        if (tables.hasTables("JOULETHO")) {
-            const auto& joulethomsonTables = tables.getJoulethomsonTables();
+        // Joule Thomson 
+        if (enableJouleThomson_) {
+             const auto& watJT = tables.WatJT();
 
-            assert(joulethomsonTables.size() == numRegions);
+            assert(watJT.size() == numRegions);
             for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-                watJTRefPres_[regionIdx] = joulethomsonTables[regionIdx].getColumn("PREF").front();
-                watJT_[regionIdx] = joulethomsonTables[regionIdx].getColumn("WAT_JT").front();
-                watJTC_[regionIdx] = joulethomsonTables[regionIdx].getColumn("WAT_JTC").front();
+                const auto& record = watJT[regionIdx];
+
+                watJTRefPres_[regionIdx] =  record.P0;
+                watJTC_[regionIdx] = record.C1;
             }
         }
 
@@ -242,7 +245,6 @@ public:
         watdentCT1_.resize(numRegions);
         watdentCT2_.resize(numRegions);
         watJTRefPres_.resize(numRegions);
-        watJT_.resize(numRegions);
         watJTC_.resize(numRegions);
         internalEnergyCurves_.resize(numRegions);
     }
@@ -258,6 +260,12 @@ public:
      */
     bool enableThermalDensity() const
     { return enableThermalDensity_; }
+
+     /*!
+     * \brief Returns true iff Joule-Thomson effect for the water phase is active.
+     */
+    bool enableJouleThomsony() const
+    { return enableJouleThomson_; }
 
     /*!
      * \brief Returns true iff the viscosity of the water phase is temperature dependent.
@@ -280,8 +288,6 @@ public:
         if (!enableInternalEnergy_)
             throw std::runtime_error("Requested the internal energy of water but it is disabled");
 
-        bool enableJouleThomson_  = watJT_[regionIdx];
-
         if (!enableJouleThomson_) {
             // compute the specific internal energy for the specified tempature. We use linear
             // interpolation here despite the fact that the underlying heat capacities are
@@ -291,7 +297,7 @@ public:
         else {
             Evaluation Tref = watdentRefTemp_[regionIdx];
             Evaluation Pref = watJTRefPres_[regionIdx]; 
-            Scalar JTC =watJTC_[regionIdx]; // JTC = 0: JTC calculated
+            Scalar JTC =watJTC_[regionIdx]; // if JTC = 999 (default) then JTC calculated
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
             Evaluation Cp = internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true)/temperature;
@@ -421,9 +427,6 @@ public:
     const std::vector<Scalar>& watJTRefPres() const
     { return  watJTRefPres_; }
 
-    const std::vector<Scalar>&  watJT() const
-    { return watJT_; }
-
      const std::vector<Scalar>&  watJTC() const
     { return watJTC_; }
 
@@ -453,6 +456,7 @@ public:
                this->watvisctCurves() == data.watvisctCurves() &&
                this->internalEnergyCurves() == data.internalEnergyCurves() &&
                this->enableThermalDensity() == data.enableThermalDensity() &&
+               this->enableJouleThomson() == data.enableJouleThomson() &&
                this->enableThermalViscosity() == data.enableThermalViscosity() &&
                this->enableInternalEnergy() == data.enableInternalEnergy();
     }
@@ -468,7 +472,6 @@ public:
         watdentCT1_ = data.watdentCT1_;
         watdentCT2_ = data.watdentCT2_;
         watJTRefPres_ =  data.watJTRefPres_;
-        watJT_ =  data.watJT_;
         watJTC_ =  data.watJTC_;
         pvtwRefPress_ = data.pvtwRefPress_;
         pvtwRefB_ = data.pvtwRefB_;
@@ -478,6 +481,7 @@ public:
         watvisctCurves_ = data.watvisctCurves_;
         internalEnergyCurves_ = data.internalEnergyCurves_;
         enableThermalDensity_ = data.enableThermalDensity_;
+        enableJouleThomson_ = data.enableJouleThomson_;
         enableThermalViscosity_ = data.enableThermalViscosity_;
         enableInternalEnergy_ = data.enableInternalEnergy_;
 
@@ -496,7 +500,6 @@ private:
     std::vector<Scalar> watdentCT2_;
 
     std::vector<Scalar> watJTRefPres_;
-    std::vector<Scalar> watJT_;
     std::vector<Scalar> watJTC_;
 
     std::vector<Scalar> pvtwRefPress_;
@@ -511,6 +514,7 @@ private:
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;
 
     bool enableThermalDensity_;
+    bool enableJouleThomson_;
     bool enableThermalViscosity_;
     bool enableInternalEnergy_;
 };
