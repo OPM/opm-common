@@ -180,6 +180,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
     src/opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
     src/opm/input/eclipse/EclipseState/Tables/DenT.cpp
+    src/opm/input/eclipse/EclipseState/Tables/JouleThomson.cpp
     src/opm/input/eclipse/EclipseState/Tables/Eqldims.cpp
     src/opm/input/eclipse/EclipseState/Tables/JFunc.cpp
     src/opm/input/eclipse/EclipseState/Tables/PvtxTable.cpp
@@ -706,6 +707,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/TracerConfig.hpp
        opm/input/eclipse/EclipseState/MICPpara.hpp
        opm/input/eclipse/EclipseState/Tables/DenT.hpp
+       opm/input/eclipse/EclipseState/Tables/JouleThomson.hpp
        opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp
        opm/input/eclipse/EclipseState/Tables/StandardCond.hpp
        opm/input/eclipse/EclipseState/Tables/PolyInjTable.hpp

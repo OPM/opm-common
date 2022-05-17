@@ -251,6 +251,16 @@ DensityTable make_density_table(const GravityTable& gravity) {
 
         if (deck.hasKeyword<ParserKeywords::WATDENT>())
             this->watDenT = DenT( deck.get<ParserKeywords::WATDENT>().back());
+        
+        if (deck.hasKeyword<ParserKeywords::GASJT>())
+            this->gasJT = JouleThomson( deck.get<ParserKeywords::GASJT>().back());
+
+        if (deck.hasKeyword<ParserKeywords::OILJT>())
+            this->oilJT = JouleThomson( deck.get<ParserKeywords::OILJT>().back());
+
+        if (deck.hasKeyword<ParserKeywords::WATJT>())
+            this->watJT = JouleThomson( deck.get<ParserKeywords::WATJT>().back());
+
 
         if (deck.hasKeyword<ParserKeywords::STCOND>()) {
             auto stcondKeyword = deck["STCOND"].back();
@@ -323,6 +333,9 @@ DensityTable make_density_table(const GravityTable& gravity) {
         result.oilDenT = DenT::serializeObject();
         result.gasDenT = DenT::serializeObject();
         result.watDenT = DenT::serializeObject();
+        result.oilJT = JouleThomson::serializeObject();
+        result.gasJT = JouleThomson::serializeObject();
+        result.watJT = JouleThomson::serializeObject();
         result.stcond = StandardCond::serializeObject();
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
@@ -402,6 +415,18 @@ DensityTable make_density_table(const GravityTable& gravity) {
 
     const DenT& TableManager::OilDenT() const {
         return this->oilDenT;
+    }
+
+    const JouleThomson& TableManager::WatJT() const {
+        return this->watJT;
+    }
+
+    const JouleThomson& TableManager::GasJT() const {
+        return this->gasJT;
+    }
+
+    const JouleThomson& TableManager::OilJT() const {
+        return this->oilJT;
     }
 
     const StandardCond& TableManager::stCond() const {
@@ -1278,6 +1303,9 @@ DensityTable make_density_table(const GravityTable& gravity) {
                gasDenT == data.gasDenT &&
                oilDenT == data.oilDenT &&
                watDenT == data.watDenT &&
+               gasJT == data.gasJT &&
+               oilJT == data.oilJT &&
+               watJT == data.watJT &&
                stcond == data.stcond &&
                jfunc == data.jfunc &&
                m_rtemp == data.m_rtemp &&

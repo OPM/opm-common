@@ -26,6 +26,7 @@
 #include <set>
 
 #include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/JouleThomson.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgwTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgwoTable.hpp>
@@ -145,6 +146,9 @@ namespace Opm {
         const DenT& WatDenT() const;
         const DenT& GasDenT() const;
         const DenT& OilDenT() const;
+        const JouleThomson& WatJT() const;
+        const JouleThomson& GasJT() const;
+        const JouleThomson& OilJT() const;
         const StandardCond& stCond() const;
         std::size_t gas_comp_index() const;
         const PvtwTable& getPvtwTable() const;
@@ -240,6 +244,9 @@ namespace Opm {
             oilDenT.serializeOp(serializer);
             gasDenT.serializeOp(serializer);
             watDenT.serializeOp(serializer);
+            oilJT.serializeOp(serializer);
+            gasJT.serializeOp(serializer);
+            watJT.serializeOp(serializer);
             stcond.serializeOp(serializer);
             serializer(m_gas_comp_index);
             serializer(m_rtemp);
@@ -385,6 +392,9 @@ namespace Opm {
         DenT oilDenT;
         DenT gasDenT;
         DenT watDenT;
+        JouleThomson oilJT;
+        JouleThomson gasJT;
+        JouleThomson watJT;
         StandardCond stcond;
         std::size_t m_gas_comp_index = 77;
         double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
