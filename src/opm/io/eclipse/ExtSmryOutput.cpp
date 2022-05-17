@@ -27,6 +27,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <filesystem>
 
 
 namespace Opm { namespace EclIO {
@@ -96,25 +97,35 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
 
     if ((is_final_summary) || (elapsed_seconds.count() > m_min_write_interval))
     {
-        Opm::EclIO::EclOutput outFile(m_outputFileName, m_fmt, std::ios::out);
+        const auto tp = std::chrono::system_clock::now();
+        auto sec_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+        std::string tmp_file_name = "TMP_" + std::to_string(sec_since_epoch) + ".ESMRY";
 
-        outFile.write<int>("START", m_start_date_vect);
+        {
+            Opm::EclIO::EclOutput outFile(tmp_file_name, m_fmt, std::ios::out);
 
-        if (m_restart_rootn.size() > 0) {
-            outFile.write<std::string>("RESTART", {m_restart_rootn});
-            outFile.write<int>("RSTNUM", {m_restart_step});
+            outFile.write<int>("START", m_start_date_vect);
+
+            if (m_restart_rootn.size() > 0) {
+                outFile.write<std::string>("RESTART", {m_restart_rootn});
+                outFile.write<int>("RSTNUM", {m_restart_step});
+            }
+
+            outFile.write("KEYCHECK", m_smry_keys);
+            outFile.write("UNITS", m_smryUnits);
+
+            outFile.write<int>("RSTEP", m_rstep);
+            outFile.write<int>("TSTEP", m_tstep);
+
+            for (size_t n = 0; n < static_cast<size_t>(m_nVect); n++ ) {
+                std::string vect_name="V" + std::to_string(n);
+                outFile.write<float>(vect_name, m_smrydata[n]);
+            }
         }
 
-        outFile.write("KEYCHECK", m_smry_keys);
-        outFile.write("UNITS", m_smryUnits);
-
-        outFile.write<int>("RSTEP", m_rstep);
-        outFile.write<int>("TSTEP", m_tstep);
-
-        for (size_t n = 0; n < static_cast<size_t>(m_nVect); n++ ) {
-            std::string vect_name="V" + std::to_string(n);
-            outFile.write<float>(vect_name, m_smrydata[n]);
-        }
+        const std::filesystem::path from_file = tmp_file_name;
+        const std::filesystem::path to_file = m_outputFileName;
+        std::filesystem::rename(from_file, to_file);
 
         m_last_write = std::chrono::system_clock::now();
     }
