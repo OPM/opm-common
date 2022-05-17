@@ -37,6 +37,7 @@ ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const st
 {
     m_nVect = valueKeys.size();
     m_nTimeSteps = 0;
+    m_last_write = std::chrono::system_clock::now();
 
     IOConfig ioconf = es.getIOConfig();
 
@@ -71,11 +72,14 @@ ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const st
 }
 
 
-void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step)
+void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bool is_final_summary)
 {
 
     if (ts_data.size() != static_cast<size_t>(m_nVect))
         throw std::invalid_argument("size of ts_data vector not same as number of smry vectors");
+
+    auto current = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = current - m_last_write;
 
     m_rstep.push_back(report_step);
 
@@ -90,6 +94,7 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step)
     for (size_t n = 0; n < static_cast<size_t>(m_nVect); n++)
         m_smrydata[n].push_back(ts_data[n]);
 
+    if ((is_final_summary) || (elapsed_seconds.count() > m_min_write_interval))
     {
         Opm::EclIO::EclOutput outFile(m_outputFileName, m_fmt, std::ios::out);
 
@@ -110,6 +115,8 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step)
             std::string vect_name="V" + std::to_string(n);
             outFile.write<float>(vect_name, m_smrydata[n]);
         }
+
+        m_last_write = std::chrono::system_clock::now();
     }
 
     m_nTimeSteps++;

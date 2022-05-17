@@ -40,9 +40,12 @@ public:
     ExtSmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
                  const EclipseState& es, const time_t start_time);
 
-    void write(const std::vector<float>& ts_data, int report_step);
+    void write(const std::vector<float>& ts_data, int report_step, bool is_final_summary);
 
 private:
+
+    const int m_min_write_interval = 15;  // at least 15 seconds betwen each write
+    std::chrono::time_point<std::chrono::system_clock> m_last_write;
 
     std::string m_outputFileName;
     int m_nTimeSteps;
