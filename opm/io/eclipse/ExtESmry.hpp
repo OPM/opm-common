@@ -37,7 +37,7 @@ using TimeStepEntry = std::tuple<int, int, uint64_t>;
 using RstEntry = std::tuple<std::string, int>;
 
 // start, rstart + rstnum, keycheck, units, rstep, tstep
-using LodsmryHeadType = std::tuple<time_point, RstEntry, std::vector<std::string>, std::vector<std::string>,
+using ExtSmryHeadType = std::tuple<time_point, RstEntry, std::vector<std::string>, std::vector<std::string>,
                                     std::vector<int>, std::vector<int>>;
 
 class ExtESmry
@@ -72,7 +72,7 @@ public:
 
 private:
     std::filesystem::path m_inputFileName;
-    std::vector<std::filesystem::path> m_lodsmry_files;
+    std::vector<std::filesystem::path> m_esmry_files;
 
     bool m_loadBaseRun;
     std::vector<std::map<std::string, int>> m_keyword_index;
@@ -91,15 +91,17 @@ private:
     size_t m_nTstep;
     std::vector<int> m_seqIndex;
 
-    std::vector<uint64_t> m_lod_offset;
-    std::vector<uint64_t> m_lod_arr_size;
+    std::vector<uint64_t> m_rstep_offset;
 
     time_point m_startdat;
 
     double m_io_opening;
     double m_io_loading;
 
-    uint64_t open_esmry(std::filesystem::path& inputFileName, LodsmryHeadType& lodsmry_head);
+    bool open_esmry(const std::filesystem::path& inputFileName, ExtSmryHeadType& ext_smry_head, uint64_t& rstep_offset);
+
+    bool load_esmry(const std::vector<std::string>& stringVect, const std::vector<int>& keyIndexVect,
+                               const std::vector<int>& loadKeyIndex, int ind, int to_ind );
 
     void updatePathAndRootName(std::filesystem::path& dir, std::filesystem::path& rootN);
 };
