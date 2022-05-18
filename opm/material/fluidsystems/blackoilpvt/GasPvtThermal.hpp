@@ -160,6 +160,13 @@ public:
                 gasJTRefPres_[regionIdx] =  record.P0;
                 gasJTC_[regionIdx] = record.C1;
             }
+
+            const auto& densityTable = eclState.getTableManager().getDensityTable();
+
+            assert(densityTable.size() == numRegions);
+            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+                 rhoRefO_[regionIdx] = densityTable[regionIdx].oil;
+            }
         }
 
         if (enableInternalEnergy_) {
@@ -214,6 +221,7 @@ public:
         gasdentCT2_.resize(numRegions);
         gasJTRefPres_.resize(numRegions);
         gasJTC_.resize(numRegions);
+        rhoRefO_.resize(numRegions);
     }
 
     /*!
@@ -269,7 +277,7 @@ public:
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv);
             const Scalar hVap = 480.6e3; // [J / kg]
             Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
-            Evaluation density = invB * gasReferenceDensity(regionIdx);
+            Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
 
             Evaluation enthalpyPres;
             if  (JTC != 0) {
@@ -287,8 +295,10 @@ public:
                 Evaluation enthalpyPresPrev = 0;
                 for (size_t i = 0; i < N; ++i) {
                     Evaluation Pnew = Pref + i * deltaP;
-                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rv) * gasReferenceDensity(regionIdx);
-                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;  
+                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rv) *
+                                     (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
+                    // see e.g.https://en.wikipedia.org/wiki/Joule-Thomson_effect for a derivation of the Joule-Thomson coeff.
+                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;
                     Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
                     enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres; 
                     enthalpyPresPrev = enthalpyPres;
@@ -544,6 +554,8 @@ private:
 
     std::vector<Scalar> gasJTRefPres_;
     std::vector<Scalar> gasJTC_;
+
+    std::vector<Scalar> rhoRefO_;
 
     // piecewise linear curve representing the internal energy of gas
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;
