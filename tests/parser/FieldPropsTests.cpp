@@ -30,6 +30,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -1987,11 +1988,7 @@ OPERATE
 )";
 
 
-
-
-
-
-    BOOST_CHECK_THROW(make_fp(invalid_copy), std::logic_error);
+    BOOST_CHECK_THROW(make_fp(invalid_copy), OpmInputError);
     BOOST_CHECK_THROW(make_fp(invalid_region), std::logic_error);
     BOOST_CHECK_THROW(make_fp(invalid_operate), std::logic_error);
 }
