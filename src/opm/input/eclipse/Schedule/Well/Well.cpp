@@ -17,29 +17,40 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fmt/format.h>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
 #include <opm/common/utility/shmatch.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include "../MSW/Compsegs.hpp"
 
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
+#include <string>
 #include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -804,24 +815,36 @@ double Well::getGuideRate() const {
     return this->guide_rate.guide_rate;
 }
 
-Well::GuideRateTarget Well::getGuideRatePhase() const {
-    if (this->wtype.producer())
-        return this->guide_rate.guide_phase;
+Well::GuideRateTarget Well::getGuideRatePhase() const
+{
+    const auto target = this->getRawGuideRatePhase();
 
-    if (this->guide_rate.guide_phase == GuideRateTarget::RAT) {
-        switch (this->getPreferredPhase()) {
-        case Phase::OIL:
-            return GuideRateTarget::OIL;
-        case Phase::GAS:
-            return GuideRateTarget::GAS;
-        case Phase::WATER:
-            return GuideRateTarget::WAT;
-        default:
-            throw std::logic_error("Can not convert well preferred phase to GuideRate target phase");
-        }
+    if (this->isInjector() && (target == GuideRateTarget::RAT)) {
+        return this->preferredPhaseAsGuideRatePhase();
     }
 
+    return target;
+}
+
+Well::GuideRateTarget Well::getRawGuideRatePhase() const
+{
     return this->guide_rate.guide_phase;
+}
+
+Well::GuideRateTarget Well::preferredPhaseAsGuideRatePhase() const
+{
+    switch (this->getPreferredPhase()) {
+    case Phase::OIL:   return GuideRateTarget::OIL;
+    case Phase::GAS:   return GuideRateTarget::GAS;
+    case Phase::WATER: return GuideRateTarget::WAT;
+
+    default:
+        throw std::logic_error {
+            fmt::format("Unable to convert well preferred "
+                        "phase {} to GuideRate target phase",
+                        static_cast<int>(this->getPreferredPhase()))
+        };
+    }
 }
 
 double Well::getGuideRateScalingFactor() const {
