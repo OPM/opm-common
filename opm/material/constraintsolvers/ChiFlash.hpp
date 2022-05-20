@@ -955,6 +955,9 @@ protected:
                 auto local_res = (fluid_state.fugacity(oilPhaseIdx, compIdx) -
                                   fluid_state.fugacity(gasPhaseIdx, compIdx));
                 res[compIdx + numComponents] = Opm::getValue(local_res);
+                //std::cout << "fugacity oil = " << local_res.derivative(i) << " gas = " << fluid_state.fugacity(gasPhaseIdx, compIdx) << " comp  " << compIdx << std::endl; trine
+
+
                 for (unsigned i = 0; i < num_primary; ++i) {
                     jac[compIdx + numComponents][i] = local_res.derivative(i);
                 }
@@ -1084,11 +1087,66 @@ protected:
         assembleNewton_<PrimaryFlashFluidState, PrimaryComponentVector, primary_num_pv, num_equations>
             (primary_fluid_state, primary_z, pri_jac, pri_res);
 
-        // not totally sure the following matrix operations are correct
-        pri_jac.invert();
-        sec_jac.template leftmultiply(pri_jac);
+        //corresponds to julias J_s
+        std::cout << "sec_jac:" << std::endl;
+        std::cout << "[" << sec_jac[0][0] << "  " << sec_jac[0][1] << "  " << sec_jac[0][2] << "  " << sec_jac[0][3] << "]  " << std::endl;
+        std::cout << "[" << sec_jac[1][0] << "  " << sec_jac[1][1] << "  " << sec_jac[1][2] << "  " << sec_jac[1][3] << "]  " << std::endl;
+        std::cout << "[" << sec_jac[2][0] << "  " << sec_jac[2][1] << "  " << sec_jac[2][2] << "  " << sec_jac[2][3] << "]  " << std::endl;
+        std::cout << "[" << sec_jac[3][0] << "  " << sec_jac[3][1] << "  " << sec_jac[3][2] << "  " << sec_jac[3][3] << "]  " << std::endl;
+        std::cout << "[" << sec_jac[4][0] << "  " << sec_jac[4][1] << "  " << sec_jac[4][2] << "  " << sec_jac[4][3] << "]  " << std::endl;
+        std::cout << "[" << sec_jac[5][0] << "  " << sec_jac[5][1] << "  " << sec_jac[5][2] << "  " << sec_jac[5][3] << "]  " << std::endl;
+        std::cout << "[" << sec_jac[6][0] << "  " << sec_jac[6][1] << "  " << sec_jac[6][2] << "  " << sec_jac[6][3] << "]  " << std::endl;
+
+        //corresponds to julias J_p (we miss d/dt, and have d/dL instead of d/dV)
+        std::cout << "pri_jac:" << std::endl;
+        std::cout << "[" << pri_jac[0][0] << "  " << pri_jac[0][1] << "  " << pri_jac[0][2] << "  " << pri_jac[0][3] << "  " << pri_jac[0][4]<< "  " << pri_jac[0][5] << "  " << pri_jac[0][6]<< "]  " << std::endl;
+        std::cout << "[" << pri_jac[1][0] << "  " << pri_jac[1][1] << "  " << pri_jac[1][2] << "  " << pri_jac[1][3] << "  " << pri_jac[1][4]<< "  " << pri_jac[1][5] << "  " << pri_jac[1][6]<< "]  " << std::endl;
+        std::cout << "[" << pri_jac[2][0] << "  " << pri_jac[2][1] << "  " << pri_jac[2][2] << "  " << pri_jac[2][3] << "  " << pri_jac[2][4]<< "  " << pri_jac[2][5] << "  " << pri_jac[2][6]<< "]  " << std::endl;
+        std::cout << "[" << pri_jac[3][0] << "  " << pri_jac[3][1] << "  " << pri_jac[3][2] << "  " << pri_jac[3][3] << "  " << pri_jac[3][4]<< "  " << pri_jac[3][5] << "  " << pri_jac[3][6]<< "]  " << std::endl;
+        std::cout << "[" << pri_jac[4][0] << "  " << pri_jac[4][1] << "  " << pri_jac[4][2] << "  " << pri_jac[4][3] << "  " << pri_jac[4][4]<< "  " << pri_jac[4][5] << "  " << pri_jac[4][6]<< "]  " << std::endl;
+        std::cout << "[" << pri_jac[5][0] << "  " << pri_jac[5][1] << "  " << pri_jac[5][2] << "  " << pri_jac[5][3] << "  " << pri_jac[5][4]<< "  " << pri_jac[5][5] << "  " << pri_jac[5][6]<< "]  " << std::endl;
+        std::cout << "[" << pri_jac[6][0] << "  " << pri_jac[6][1] << "  " << pri_jac[6][2] << "  " << pri_jac[6][3] << "  " << pri_jac[6][4]<< "  " << pri_jac[6][5] << "  " << pri_jac[6][6]<< "]  " << std::endl;
+
+
+        SecondaryNewtonMatrix xx;
+        pri_jac.solve(xx,sec_jac);
+        std::cout << " corresponding to julia-code value and updated J_s " << std::endl;
+        std::cout << "x1 = [" << x[0] << "  " << xx[0][0] << "  " << xx[0][1] << "  " << xx[0][2] << "  " << xx[0][3] <<  "]  " << std::endl;
+        std::cout << "x2 = [" << x[1] << "  " << xx[1][0] << "  " <<xx[1][1] << "  " << xx[1][2] << "  " << xx[1][3] << "]  " << std::endl;
+        std::cout << "x3 = [" << x[2] << "  " << xx[2][0] << "  " << xx[2][1] << "  " << xx[2][2] << "  " << xx[2][3] << "]  " << std::endl;
+        std::cout << "y1 = [" << y[0] << "  " << xx[3][0] << "  " << xx[3][1] << "  " << xx[3][2] << "  " << xx[3][3] << "]  " << std::endl;
+        std::cout << "y2 = [" << y[1] << "  " << xx[4][0] << "  " << xx[4][1] << "  " << xx[4][2] << "  " << xx[4][3] << "]  " << std::endl;
+        std::cout << "y3 = [" << y[2] << "  " << xx[5][0] << "  " << xx[5][1] << "  " << xx[5][2] << "  " << xx[5][3] << "]  " << std::endl;
+        std::cout << "L = [" << L << "  " << xx[6][0] << "  " << xx[6][1] << "  " << xx[6][2] << "  " << xx[6][3] << "]  " << std::endl; 
+
+        // rewrite like Olav xx --> xxx (do this properly to clean up =)
+        // z3 = 1 -z2 -z1;
+        // dx1/dp  dx1/dt  (dx1/dz1-dx1/dz3)   (dx1/dz2 - dx1/dz3)
+        using TertiaryMatrix = Dune::FieldMatrix<Scalar, num_equations, secondary_num_pv-1>;
+        TertiaryMatrix xxx;
+        xxx[0][0] = xx[0][0];
+        xxx[1][0] = xx[1][0];
+        xxx[2][0] = xx[2][0];
+        xxx[3][0] = xx[0][0];
+        xxx[4][0] = xx[1][0];
+        xxx[5][0] = xx[2][0];
+        xxx[6][0] = xx[3][0];
+        for (unsigned i = 0; i < primary_num_pv; ++i) { // 7 rekker
+            xxx[i][1] = Opm::getValue(xx[i][1])-Opm::getValue(xx[i][3]);
+            xxx[i][2] = Opm::getValue(xx[i][2])-Opm::getValue(xx[i][3]); 
+        }
+        std::cout << " corresponding to julia-code value and derivatives listed in test_setup NB CHANGE SIGN, and we dont have d/dT " << std::endl;
+        std::cout << "x1 = [" << x[0] << "  " << xxx[0][0] << "  " << xxx[0][1] << "  " << xxx[0][2] <<  "]  " << std::endl;
+        std::cout << "x2 = [" << x[1] << "  " << xxx[1][0] << "  " <<xxx[1][1] << "  " << xxx[1][2] <<  "]  " << std::endl;
+        std::cout << "x3 = [" << x[2] << "  " << xxx[2][0] << "  " << xxx[2][1] << "  " << xxx[2][2] <<  "]  " << std::endl;
+        std::cout << "y1 = [" << y[0] << "  " << xxx[3][0] << "  " << xxx[3][1] << "  " << xxx[3][2] <<  "]  " << std::endl;
+        std::cout << "y2 = [" << y[1] << "  " << xxx[4][0] << "  " << xxx[4][1] << "  " << xxx[4][2] <<  "]  " << std::endl;
+        std::cout << "y3 = [" << y[2] << "  " << xxx[5][0] << "  " << xxx[5][1] << "  " << xxx[5][2] <<  "]  " << std::endl;
+        std::cout << "L = [" << L << "  " << xxx[6][0] << "  " << xxx[6][1] << "  " << xxx[6][2] << "  " << xx[6][3] << "]  " << std::endl;
+
         // TODO: then beginning from that point
-    }
+
+    }//end updateDerivative
 
     /* template <class Vector, class Matrix, class Eval, class ComponentVector>
     static void evalJacobian(const ComponentVector& globalComposition,

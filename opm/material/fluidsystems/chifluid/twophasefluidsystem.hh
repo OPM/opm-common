@@ -272,8 +272,9 @@ public:
                 assert(0 <= phaseIdx && phaseIdx < numPhases);
                 assert(0 <= compIdx && compIdx < numComponents);
 
-            Scalar phi = Opm::getValue(
-                PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+                LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+            //Scalar phi = Opm::getValue(
+            //    PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
             return phi;
 
 

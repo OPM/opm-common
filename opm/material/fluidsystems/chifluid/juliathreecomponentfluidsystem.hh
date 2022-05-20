@@ -160,8 +160,9 @@ namespace Opm {
 
             // TODO: here the derivatives for the phi are dropped. Should we keep the derivatives against the pressure
             // and temperature?
-            Scalar phi = Opm::getValue(
-                    PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+            LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx); 
+            //Scalar phi = Opm::getValue(
+            //        PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
             return phi;
         }
 
