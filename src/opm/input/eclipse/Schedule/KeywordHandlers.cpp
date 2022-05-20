@@ -738,8 +738,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleNETBALAN(HandlerContext& handlerContext) {
-        Network::Balance new_balance(this->snapshots.back().tuning(), handlerContext.keyword);
-        this->snapshots.back().network_balance.update( std::move(new_balance) );
+        this->snapshots.back().network_balance
+            .update(Network::Balance{ handlerContext.keyword });
     }
 
     void Schedule::handleNEXTSTEP(HandlerContext& handlerContext) {

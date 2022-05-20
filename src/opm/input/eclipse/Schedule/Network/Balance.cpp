@@ -17,69 +17,103 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-namespace Opm {
-namespace Network {
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+namespace {
+    Opm::Network::Balance::CalcMode
+    getNetworkBalancingMode(const double interval)
+    {
+        using CalcMode = Opm::Network::Balance::CalcMode;
+
+        if (interval < 0.0) {
+            return CalcMode::NUPCOL;
+        }
+        else if (interval > 0.0) {
+            return CalcMode::TimeInterval;
+        }
+        else {
+            return CalcMode::TimeStepStart;
+        }
+    }
+
+    double defaultCalcInterval()
+    {
+        static const auto interval = Opm::UnitSystem::newMETRIC()
+            .to_si(Opm::UnitSystem::measure::time,
+                   Opm::ParserKeywords::NETBALAN::TIME_INTERVAL::defaultValue);
+
+        return interval;
+    }
+
+    double defaultNodePressureTolerance()
+    {
+        static const auto tol = Opm::UnitSystem::newMETRIC()
+            .to_si(Opm::UnitSystem::measure::pressure,
+                   Opm::ParserKeywords::NETBALAN::PRESSURE_CONVERGENCE_LIMIT::defaultValue);
+
+        return tol;
+    }
+}
+
+namespace Opm { namespace Network {
 
 using NB = ParserKeywords::NETBALAN;
 
-Balance::Balance(const Tuning& tuning, const DeckKeyword& keyword) {
+Balance::Balance()
+    : calc_mode          (CalcMode::None)
+    , calc_interval      (defaultCalcInterval())
+    , ptol               (defaultNodePressureTolerance())
+    , m_pressure_max_iter(NB::MAX_ITER::defaultValue)
+    , m_thp_tolerance    (NB::THP_CONVERGENCE_LIMIT::defaultValue)
+    , m_thp_max_iter     (NB::MAX_ITER_THP::defaultValue)
+{}
+
+Balance::Balance(const DeckKeyword& keyword)
+{
     const auto& record = keyword[0];
-    double interval = record.getItem<NB::TIME_INTERVAL>().getSIDouble(0);
 
-    if (interval < 0) {
-        this->calc_mode = CalcMode::NUPCOL;
-        this->calc_interval = 0.;
-    }
-    else if (interval == 0) {
-        this->calc_mode = CalcMode::TimeStepStart;
-        this->calc_interval = interval;
-    }
-    else {
-        this->calc_mode = CalcMode::TimeInterval;
-        this->calc_interval = interval;
-    }
-
+    this->calc_interval = record.getItem<NB::TIME_INTERVAL>().getSIDouble(0);
+    this->calc_mode = getNetworkBalancingMode(this->calc_interval);
     this->ptol = record.getItem<NB::PRESSURE_CONVERGENCE_LIMIT>().getSIDouble(0);
     this->m_pressure_max_iter = record.getItem<NB::MAX_ITER>().get<int>(0);
 
     this->m_thp_tolerance = record.getItem<NB::THP_CONVERGENCE_LIMIT>().get<double>(0);
     this->m_thp_max_iter = record.getItem<NB::MAX_ITER_THP>().get<int>(0);
-    this->target_branch_balance_error = record.getItem<NB::TARGET_BALANCE_ERROR>().getSIDouble(0);
-    this->max_branch_balance_error = record.getItem<NB::MAX_BALANCE_ERROR>().getSIDouble(0);
 
-    auto tstep_item = record.getItem<NB::MIN_TIME_STEP>();
-    if (tstep_item.defaultApplied(0))
-        this->m_min_tstep = tuning.TSMINZ;
-    else
-        this->m_min_tstep = record.getItem<NB::MIN_TIME_STEP>().getSIDouble(0);
+    if (const auto& targBE = record.getItem<NB::TARGET_BALANCE_ERROR>(); !targBE.defaultApplied(0)) {
+        this->target_branch_balance_error = targBE.getSIDouble(0);
+    }
+
+    if (const auto& maxBE = record.getItem<NB::MAX_BALANCE_ERROR>(); !maxBE.defaultApplied(0)) {
+        this->max_branch_balance_error = maxBE.getSIDouble(0);
+    }
+
+    if (const auto& minTStep = record.getItem<NB::MIN_TIME_STEP>(); !minTStep.defaultApplied(0)) {
+        this->m_min_tstep = minTStep.getSIDouble(0);
+    }
 }
 
-
-Balance::Balance(bool network_active, const Tuning& tuning)
-    : calc_mode(CalcMode::TimeStepStart)
-    , calc_interval(0)
+Balance::Balance(const bool network_active)
+    : calc_mode      (CalcMode::TimeStepStart)
+    , calc_interval  (defaultCalcInterval())
     , m_thp_tolerance(NB::THP_CONVERGENCE_LIMIT::defaultValue)
-    , m_thp_max_iter( NB::MAX_ITER_THP::defaultValue )
+    , m_thp_max_iter (NB::MAX_ITER_THP::defaultValue)
 {
-    NB parser_keyword{};
-    UnitSystem default_units(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-
     if (network_active) {
-        const auto& item = parser_keyword.getRecord(0).get(NB::PRESSURE_CONVERGENCE_LIMIT::itemName);
-        this->ptol = default_units.to_si( item.dimensions()[0], item.getDefault<double>());
+        this->ptol = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
+                                                   NB::PRESSURE_CONVERGENCE_LIMIT::defaultValue);
+
         this->m_pressure_max_iter = NB::MAX_ITER::defaultValue;
-        this->m_min_tstep = tuning.TSMINZ;
-    } else {
-        this->ptol = 0;
+    }
+    else {
+        this->ptol = 0.0;
         this->m_pressure_max_iter = 0;
-        this->m_min_tstep = 0;
     }
 }
 
@@ -107,15 +141,17 @@ std::size_t Balance::pressure_max_iter() const {
     return this->m_pressure_max_iter;
 }
 
-std::optional<double> Balance::target_balance_error() const {
+const std::optional<double>&
+Balance::target_balance_error() const {
     return this->target_branch_balance_error;
 }
 
-std::optional<double> Balance::max_balance_error() const {
+const std::optional<double>&
+Balance::max_balance_error() const {
     return this->max_branch_balance_error;
 }
 
-double Balance::min_tstep() const {
+const std::optional<double>& Balance::min_tstep() const {
     return this->m_min_tstep;
 }
 
@@ -140,5 +176,4 @@ bool Balance::operator==(const Balance& other) const {
            this->m_min_tstep == other.m_min_tstep;
 }
 
-}
-}
+}} // Opm::Network

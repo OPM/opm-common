@@ -17,33 +17,34 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef NETWORK_BALANCE_HPP
 #define NETWORK_BALANCE_HPP
-#include <optional>
-#include <cstddef>
 
+#include <cstddef>
+#include <optional>
 
 namespace Opm {
-class DeckKeyword;
-struct Tuning;
-class UnitSystem;
+    class DeckKeyword;
+    class UnitSystem;
+} // namespace Opm
 
-namespace Network {
+namespace Opm { namespace Network {
 
-class Balance {
+class Balance
+{
 public:
+    enum class CalcMode {
+        None = 0,
+        TimeInterval = 1,
+        TimeStepStart = 2,
+        NUPCOL = 3,
+    };
 
-enum class CalcMode {
-    None = 0,
-    TimeInterval = 1,
-    TimeStepStart = 2,
-    NUPCOL = 3
-};
+    Balance();
+    explicit Balance(const DeckKeyword& keyword);
+    explicit Balance(bool network_active);
 
-    Balance() = default;
-    Balance(bool network_active, const Tuning& tuning);
-    Balance(const Tuning& tuning, const DeckKeyword& keyword);
+    static Balance serializeObject();
 
     CalcMode mode() const;
     double interval() const;
@@ -51,11 +52,10 @@ enum class CalcMode {
     std::size_t pressure_max_iter() const;
     double thp_tolerance() const;
     std::size_t thp_max_iter() const;
-    std::optional<double> target_balance_error() const;
-    std::optional<double> max_balance_error() const;
-    double min_tstep() const;
+    const std::optional<double>& target_balance_error() const;
+    const std::optional<double>& max_balance_error() const;
+    const std::optional<double>& min_tstep() const;
 
-    static Balance serializeObject();
     bool operator==(const Balance& other) const;
 
     template<class Serializer>
@@ -72,7 +72,6 @@ enum class CalcMode {
         serializer(this->m_min_tstep);
     }
 
-
 private:
     CalcMode calc_mode{CalcMode::None};
     double calc_interval;
@@ -82,11 +81,11 @@ private:
     double m_thp_tolerance;
     std::size_t m_thp_max_iter;
 
-    std::optional<double> target_branch_balance_error;
-    std::optional<double> max_branch_balance_error;
-    double m_min_tstep;
+    std::optional<double> target_branch_balance_error{};
+    std::optional<double> max_branch_balance_error{};
+    std::optional<double> m_min_tstep{};
 };
 
-}
-}
-#endif
+}} // Opm::Network
+
+#endif  // NETWORK_BALANCE_HPP
