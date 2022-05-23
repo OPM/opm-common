@@ -57,6 +57,22 @@ class TestSchedule(unittest.TestCase):
         with self.assertRaises(Exception):
             self.sch[0].group('foo')
 
+    def test_injection_properties(self):
+        deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
+        state = EclipseState(deck)
+        sch = Schedule( deck, state )
+        report_step = 4
+        well_name = 'INJ'
+        prop = sch.get_injection_properties(well_name, report_step)
+        self.assertEqual(prop['surf_inj_rate'], 4700.0) # Mscf/day
+        self.assertEqual(prop['resv_inj_rate'], 0.0) # rb/day
+        self.assertEqual(prop['bhp_target'], 4000.0) # psi
+        self.assertEqual(prop['thp_target'], 0.0)
+        with self.assertRaises(IndexError):
+            prop = sch.get_injection_properties("UNDEF", report_step)
+        with self.assertRaises(KeyError):
+            prop = sch.get_injection_properties("PROD", report_step)
+
     def test_production_properties(self):
         deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
         state = EclipseState(deck)
@@ -67,11 +83,15 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(prop['alq_value'], 0.0)
         self.assertEqual(prop['bhp_target'], 500.0)
         self.assertEqual(prop['gas_rate'], 6200.0)
-        self.assertEqual(prop['liquid_rate'], 0.0)
         self.assertEqual(prop['oil_rate'], 0.0)
+        self.assertEqual(prop['water_rate'], 0.0)
+        self.assertEqual(prop['liquid_rate'], 0.0)
         self.assertEqual(prop['resv_rate'], 0.0)
         self.assertEqual(prop['thp_target'], 0.0)
-        self.assertEqual(prop['water_rate'], 0.0)
+        with self.assertRaises(IndexError):
+            prop = sch.get_production_properties("UNDEF", report_step)
+        with self.assertRaises(KeyError):
+            prop = sch.get_production_properties("INJ", report_step)
 
     def test_well_names(self):
         deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))

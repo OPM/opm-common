@@ -59,13 +59,13 @@ namespace {
     }
 
     std::map<std::string, double> get_production_properties(
-        const Schedule& sch, const std::string& name, const size_t& timestep)
+        const Schedule& sch, const std::string& well_name, const size_t& report_step)
     {
         const Well* well = nullptr;
         try{
-            well = &(sch.getWell( name, timestep ));
-        } catch( const std::invalid_argument& e ) {
-            throw py::key_error( fmt::format("well {} is not defined", name ));
+            well = &(sch.getWell( well_name, report_step ));
+        } catch( const std::out_of_range& e ) {
+            throw py::index_error( fmt::format("well {} is not defined", well_name ));
         }
         if (well->isProducer()) {
             auto& prod_prop = well->getProductionProperties();
@@ -81,9 +81,34 @@ namespace {
             };
         }
         else {
-            throw py::key_error( fmt::format("well {} is not a producer", name) );
+            throw py::key_error( fmt::format("well {} is not a producer", well_name) );
         }
     }
+
+    std::map<std::string, double> get_injection_properties(
+        const Schedule& sch, const std::string& well_name, const size_t& report_step)
+    {
+        const Well* well = nullptr;
+        try{
+            well = &(sch.getWell( well_name, report_step ));
+        } catch( const std::out_of_range& e ) {
+            throw py::index_error( fmt::format("well {}: invalid well name", well_name ));
+        }
+
+        if (well->isInjector()) {
+            auto& inj_prop = well->getInjectionProperties();
+            return {
+                { "surf_inj_rate", inj_prop.surfaceInjectionRate.get<double>() },
+                { "resv_inj_rate", inj_prop.reservoirInjectionRate.get<double>() },
+                { "bhp_target", inj_prop.BHPTarget.get<double>() },
+                { "thp_target", inj_prop.THPTarget.get<double>() },
+            };
+        }
+        else {
+            throw py::key_error( fmt::format("well {} is not an injector", well_name) );
+        }
+    }
+
     system_clock::time_point get_start_time( const Schedule& s ) {
         return datetime(s.posixStartTime());
     }
@@ -185,7 +210,8 @@ void python::common::export_Schedule(py::module& module) {
     .def( "open_well", &Schedule::open_well)
     .def( "stop_well", &Schedule::stop_well)
     .def( "get_wells", &Schedule::getWells)
-    .def( "get_production_properties", &get_production_properties)
+    .def( "get_injection_properties", &get_injection_properties, py::arg("well_name"), py::arg("report_step"))
+    .def( "get_production_properties", &get_production_properties, py::arg("well_name"), py::arg("report_step"))
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
     .def( "insert_keywords",
