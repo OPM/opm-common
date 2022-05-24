@@ -367,10 +367,23 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 {
     auto start = std::chrono::system_clock::now();
 
+    auto num_keys = stringVect.size();
     std::vector<int> keyIndexVect;
+    std::vector<int> loadKeyIndex;
 
-    for (const auto& key: stringVect)
-        keyIndexVect.push_back(m_keyword_index[0].at(key));
+    keyIndexVect.reserve(num_keys);
+    loadKeyIndex.reserve(num_keys);
+
+    int keyCounter = 0;
+
+    for (const auto& key: stringVect){
+        auto key_ind = m_keyword_index[0].at(key);
+        if (!m_vectorLoaded[key_ind]){
+            keyIndexVect.push_back(key_ind);
+            loadKeyIndex.push_back(keyCounter);
+        }
+        ++keyCounter;
+    }
 
     std::fstream fileH;
 
@@ -385,9 +398,10 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
         if (!fileH)
             throw std::runtime_error("Can not open file lodFile");
 
-        for (size_t n = 0 ; n < stringVect.size(); n++) {
+        for (size_t n = 0 ; n < loadKeyIndex.size(); n++) {
 
-            std::string key = stringVect[n];
+            //std::string key = loadKeyNames[n];
+            const auto& key = stringVect[loadKeyIndex[n]];
 
             std::string arrName;
             Opm::EclIO::eclArrType arrType;

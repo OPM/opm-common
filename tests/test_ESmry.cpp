@@ -203,6 +203,29 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
     for (unsigned int i=0;i< smryVect.size();i++){
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_10103_ref[i], 0.01);
     }
+
+    ESmry smry2("SPE1CASE1.SMSPEC");
+    auto fgor2a = smry2.get("FGOR");
+    smry2.loadData({"FGOR"});
+    auto fgor2b = smry2.get("FGOR");
+
+    BOOST_CHECK_EQUAL(fgor2a.size(), fgor2b.size());
+
+    ESmry smry3("SPE1CASE1.SMSPEC");
+    auto fgor3a = smry3.get("FGOR");
+    smry3.loadData();
+    auto fgor3b = smry3.get("FGOR");
+
+    BOOST_CHECK_EQUAL(fgor3a.size(), fgor3b.size());
+
+    ESmry smry4("SPE1CASE1.SMSPEC");
+    smry4.loadData();
+    auto fgor4a = smry4.get("FGOR");
+
+    smry4.loadData({"FGOR"});
+    auto fgor4b = smry4.get("FGOR");
+
+    BOOST_CHECK_EQUAL(fgor4a.size(), fgor4b.size());
 }
 
 BOOST_AUTO_TEST_CASE(TestESmry_2) {
