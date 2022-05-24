@@ -52,7 +52,7 @@ namespace Opm {
         }
 
     private:
-        enum class Prevent : unsigned char { No, First, Every };
+        enum class Prevent : unsigned char { No, ReportFirst, ReportEvery };
 
         bool m_explicit{false};
         bool m_shut{false};

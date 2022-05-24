@@ -1031,13 +1031,11 @@ namespace {
                               const std::string&       wname,
                               SWellArray&              sWell)
         {
-            using Ix = VI::SWell::index;
-            std::fill(sWell.begin() + Ix::TracerOffset, sWell.end(), 0);
+            auto output_index = static_cast<std::size_t>(VI::SWell::index::TracerOffset);
 
-            std::size_t output_index = Ix::TracerOffset;
             for (const auto& tracer : tracers) {
-                sWell[output_index] = smry.get_well_var(wname, fmt::format("WTIC{}", tracer.name), 0);
-                output_index++;
+                sWell[output_index++] =
+                    smry.get_well_var(wname, fmt::format("WTIC{}", tracer.name), 0.0);
             }
         }
 

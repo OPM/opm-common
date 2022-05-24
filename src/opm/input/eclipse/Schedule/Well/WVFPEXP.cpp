@@ -52,9 +52,9 @@ namespace Opm {
         m_explicit = (exp_imp == "EXP");
         m_shut = (close == "YES");
         if (prevent_thp == "YES1")
-            m_prevent = Prevent::First;
+            m_prevent = Prevent::ReportFirst;
         else if (prevent_thp == "YES2")
-            m_prevent = Prevent::Every;
+            m_prevent = Prevent::ReportEvery;
         else
             m_prevent = Prevent::No;
     }
@@ -73,12 +73,12 @@ namespace Opm {
 
     bool WVFPEXP::report_first() const
     {
-        return this->m_prevent == Prevent::First;
+        return this->m_prevent == Prevent::ReportFirst;
     }
 
     bool WVFPEXP::report_every() const
     {
-        return this->m_prevent == Prevent::Every;
+        return this->m_prevent == Prevent::ReportEvery;
     }
 
     bool WVFPEXP::operator!=(const WVFPEXP& other) const {

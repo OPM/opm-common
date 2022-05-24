@@ -406,6 +406,244 @@ TSTEP            -- 9
         return Opm::Parser{}.parseString(input);
     }
 
+    Opm::Deck wecon_etc_sim()
+    {
+        // Mostly copy of tests/FIRST_SIM.DATA
+        const auto input = std::string {
+            R"~(
+RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+UNIFOUT
+UNIFIN
+DIMENS
+ 10 10 10 /
+WELLDIMS
+ 6  20  1  6  /
+TABDIMS
+ 1  1  15  15  2  15  /
+FIELD
+EQLDIMS
+ 1  /
+
+GRID
+DXV
+10*100. /
+DYV
+10*100. /
+DZV
+10*100. /
+TOPS
+100*7000. /
+
+PORO
+1000*0.2 /
+
+PERMX
+1000*100. /
+
+PERMY
+1000*100. /
+
+PERMZ
+1000*10. /
+
+
+PROPS       ==========================================================
+
+-- WATER RELATIVE PERMEABILITY AND CAPILLARY PRESSURE ARE TABULATED AS
+-- A FUNCTION OF WATER SATURATION.
+--
+--  SWAT   KRW   PCOW
+SWFN
+
+    0.12  0       0
+    1.0   0.00001 0  /
+
+-- SIMILARLY FOR GAS
+--
+--  SGAS   KRG   PCOG
+SGFN
+
+    0     0       0
+    0.02  0       0
+    0.05  0.005   0
+    0.12  0.025   0
+    0.2   0.075   0
+    0.25  0.125   0
+    0.3   0.19    0
+    0.4   0.41    0
+    0.45  0.6     0
+    0.5   0.72    0
+    0.6   0.87    0
+    0.7   0.94    0
+    0.85  0.98    0
+    1.0   1.0     0
+/
+
+-- OIL RELATIVE PERMEABILITY IS TABULATED AGAINST OIL SATURATION
+-- FOR OIL-WATER AND OIL-GAS-CONNATE WATER CASES
+--
+--  SOIL     KROW     KROG
+SOF3
+
+    0        0        0
+    0.18     0        0
+    0.28     0.0001   0.0001
+    0.38     0.001    0.001
+    0.43     0.01     0.01
+    0.48     0.021    0.021
+    0.58     0.09     0.09
+    0.63     0.2      0.2
+    0.68     0.35     0.35
+    0.76     0.7      0.7
+    0.83     0.98     0.98
+    0.86     0.997    0.997
+    0.879    1        1
+    0.88     1        1    /
+
+
+-- PVT PROPERTIES OF WATER
+--
+--    REF. PRES. REF. FVF  COMPRESSIBILITY  REF VISCOSITY  VISCOSIBILITY
+PVTW
+       4014.7     1.029        3.13D-6           0.31            0 /
+
+-- ROCK COMPRESSIBILITY
+--
+--    REF. PRES   COMPRESSIBILITY
+ROCK
+        14.7          3.0D-6          /
+
+-- SURFACE DENSITIES OF RESERVOIR FLUIDS
+--
+--        OIL   WATER   GAS
+DENSITY
+         49.1   64.79  0.06054  /
+
+-- PVT PROPERTIES OF DRY GAS (NO VAPOURISED OIL)
+-- WE WOULD USE PVTG TO SPECIFY THE PROPERTIES OF WET GAS
+--
+--   PGAS   BGAS   VISGAS
+PVDG
+     14.7 166.666   0.008
+    264.7  12.093   0.0096
+    514.7   6.274   0.0112
+   1014.7   3.197   0.014
+   2014.7   1.614   0.0189
+   2514.7   1.294   0.0208
+   3014.7   1.080   0.0228
+   4014.7   0.811   0.0268
+   5014.7   0.649   0.0309
+   9014.7   0.386   0.047   /
+
+-- PVT PROPERTIES OF LIVE OIL (WITH DISSOLVED GAS)
+-- WE WOULD USE PVDO TO SPECIFY THE PROPERTIES OF DEAD OIL
+--
+-- FOR EACH VALUE OF RS THE SATURATION PRESSURE, FVF AND VISCOSITY
+-- ARE SPECIFIED. FOR RS=1.27 AND 1.618, THE FVF AND VISCOSITY OF
+-- UNDERSATURATED OIL ARE DEFINED AS A FUNCTION OF PRESSURE. DATA
+-- FOR UNDERSATURATED OIL MAY BE SUPPLIED FOR ANY RS, BUT MUST BE
+-- SUPPLIED FOR THE HIGHEST RS (1.618).
+--
+--   RS      POIL  FVFO  VISO
+PVTO
+    0.001    14.7 1.062  1.04    /
+    0.0905  264.7 1.15   0.975   /
+    0.18    514.7 1.207  0.91    /
+    0.371  1014.7 1.295  0.83    /
+    0.636  2014.7 1.435  0.695   /
+    0.775  2514.7 1.5    0.641   /
+    0.93   3014.7 1.565  0.594   /
+    1.270  4014.7 1.695  0.51
+           5014.7 1.671  0.549
+           9014.7 1.579  0.74    /
+    1.618  5014.7 1.827  0.449
+           9014.7 1.726  0.605   /
+/
+
+
+REGIONS    ===========================================================
+
+
+FIPNUM
+
+  1000*1
+/
+
+EQLNUM
+
+  1000*1
+/
+
+
+SOLUTION    ============================================================
+
+EQUIL
+7020.00 2700.00 7990.00  .00000 7200.00  .00000     0      0       5 /
+
+RSVD       2 TABLES    3 NODES IN EACH           FIELD   12:00 17 AUG 83
+   7000.0  1.0000
+   7990.0  1.0000
+/
+
+SCHEDULE
+RPTRST
+BASIC=1
+/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+      'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+      'OP_2'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_2'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+      'OP_1'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WTEST
+ 'OP_1' 1  PGD  3 2 /
+/
+
+WCONPROD
+      'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /
+/
+WCONINJE
+      'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /
+/
+
+DATES             -- 2
+ 20  JAN 2011 /
+/
+WELSPECS
+      'OP_3'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_3'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WECON
+ 'OP_1'   1.234 12.345 0.87 210.98 1*  WELL   NO /
+ 'OP_3'   1* 1* 1* 0.0 0.0 +CON  YES 1* POTN  0.56 PLUG 1* 10.23 /
+/
+
+WGRUPCON
+  OP_1 YES 123.456 GAS 0.75 /
+  OP_3 NO 100.0 /
+/
+
+TSTEP            -- 3
+10 /
+)~" };
+
+        return Opm::Parser{}.parseString(input);
+    }
+
     Opm::Deck msw_sim(const std::string& fname)
     {
         return Opm::Parser{}.parseFile(fname);
@@ -883,6 +1121,216 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         BOOST_CHECK_CLOSE(swell[i2 + Ix::OilRateTarget], 275.f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i2 + Ix::WatRateTarget], 0.0f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i2 + Ix::GasRateTarget], 34576.0f, 1.0e-7f);
+    }
+}
+
+// --------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE (WECON)
+{
+    const auto simCase = SimulationCase{wecon_etc_sim()};
+
+    const auto action_state = Opm::Action::State{};
+    const auto wtest_state = Opm::WellTestState{};
+
+    // Report Step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep = std::size_t{2};
+
+    const auto ih = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{3});
+
+    const auto smry = sim_state();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+
+    awd.captureDeclaredWellData(simCase.sched,
+                                simCase.es.tracer(),
+                                rptStep,
+                                action_state,
+                                wtest_state,
+                                smry,
+                                ih.value);
+
+    // IWEL (OP_1)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        namespace EconValue = Opm::RestartIO::Helpers::VectorItems::IWell::Value::EconLimit;
+
+        const auto start = 0*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconWorkoverProcedure],
+                          EconValue::WOProcedure::StopOrShut);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconLimitEndRun],
+                          EconValue::EndRun::No);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconLimitQuantity],
+                          EconValue::Quantity::Rate);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconWorkoverProcedure_2],
+                          EconValue::WOProcedure::StopOrShut);
+    }
+
+    // IWEL (OP_3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        namespace EconValue = Opm::RestartIO::Helpers::VectorItems::IWell::Value::EconLimit;
+
+        const auto start = 2*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconWorkoverProcedure],
+                          EconValue::WOProcedure::ConAndBelow);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconLimitEndRun],
+                          EconValue::EndRun::Yes);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconLimitQuantity],
+                          EconValue::Quantity::Potential);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::EconWorkoverProcedure_2],
+                          EconValue::WOProcedure::Plug);
+    }
+
+    // SWEL (OP_1)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i0 = 0*ih.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::EconLimitMinOil], 1.234f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::EconLimitMinGas], 12.345f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::EconLimitMaxWct], 0.87f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::EconLimitMaxGor], 210.98f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::EconLimitMaxWct_2], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::EconLimitMinLiq], 0.0f, 1.0e-7f);
+    }
+
+    // SWEL (OP_3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i2 = 2*ih.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::EconLimitMinOil], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::EconLimitMinGas], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::EconLimitMaxWct], 1.0e+20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::EconLimitMaxGor], 1.0e+20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::EconLimitMaxWct_2], 0.56f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::EconLimitMinLiq], 10.23f, 1.0e-7f);
+    }
+}
+
+// --------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE (WGRUPCON)
+{
+    const auto simCase = SimulationCase{wecon_etc_sim()};
+
+    const auto action_state = Opm::Action::State{};
+    const auto wtest_state = Opm::WellTestState{};
+
+    // Report Step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep = std::size_t{2};
+
+    const auto ih = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{3});
+
+    const auto smry = sim_state();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+
+    awd.captureDeclaredWellData(simCase.sched,
+                                simCase.es.tracer(),
+                                rptStep,
+                                action_state,
+                                wtest_state,
+                                smry,
+                                ih.value);
+
+    // IWEL (OP_1)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        namespace GrupConValue = Opm::RestartIO::Helpers::VectorItems::IWell::Value::WGrupCon;
+
+        const auto start = 0*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WGrupConControllable],
+                          GrupConValue::Controllable::Yes);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WGrupConGRPhase],
+                          GrupConValue::GRPhase::Gas);
+    }
+
+    // IWEL (OP_3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        namespace GrupConValue = Opm::RestartIO::Helpers::VectorItems::IWell::Value::WGrupCon;
+
+        const auto start = 1*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WGrupConControllable],
+                          GrupConValue::Controllable::Yes);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WGrupConGRPhase],
+                          GrupConValue::GRPhase::Defaulted);
+    }
+
+    // IWEL (OP_3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        namespace GrupConValue = Opm::RestartIO::Helpers::VectorItems::IWell::Value::WGrupCon;
+
+        const auto start = 2*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WGrupConControllable],
+                          GrupConValue::Controllable::No);
+
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WGrupConGRPhase],
+                          GrupConValue::GRPhase::Defaulted);
+    }
+
+    // SWEL (OP_1)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i0 = 0*ih.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::WGrupConGuideRate], 123.456f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::WGrupConGRScaling], 0.75f, 1.0e-7f);
+    }
+
+    // SWEL (OP_2)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i1 = 1*ih.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::WGrupConGuideRate], -1.0e+20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::WGrupConGRScaling], 1.0f, 1.0e-7f);
+    }
+
+    // SWEL (OP_3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i2 = 2*ih.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::WGrupConGuideRate], 100.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::WGrupConGRScaling], 1.0f, 1.0e-7f);
     }
 }
 

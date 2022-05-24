@@ -777,6 +777,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
     }
 }
 
+// \todo Restore checks for IGRP[NWGMAX + 17]
 BOOST_AUTO_TEST_CASE (Declared_Group_Data_2)
 {
     namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
