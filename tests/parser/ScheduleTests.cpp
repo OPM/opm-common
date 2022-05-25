@@ -5044,8 +5044,8 @@ DATES             -- 4,5
 SUMTHIN
 0.0 /
 DATES             -- 6,7
-  10  SEP 2007 /
-  10  OCT 2007 /
+  10  NOV 2007 /
+  10  DEC 2007 /
 /
 END
 )");
@@ -5085,6 +5085,38 @@ END
 
     BOOST_REQUIRE_MESSAGE(!sched[6].sumthin().has_value(),
                           R"("SUMTHIN" must NOT be configured on report step 7)");
+}
+
+
+BOOST_AUTO_TEST_CASE(MISORDERD_DATES) {
+const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+START             -- 0
+10 MAI 2007 /
+
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+SCHEDULE
+DATES             -- 1, 2, 3
+  10  JUN  2007 /
+  10  MAY 2007 /
+  10  AUG 2007 /
+/
+END
+)");
+
+const auto es = EclipseState { deck };
+BOOST_CHECK_THROW(Schedule(deck, es), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(RPTONLY_IN_SUMMARY) {
