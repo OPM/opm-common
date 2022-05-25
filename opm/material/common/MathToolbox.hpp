@@ -100,7 +100,7 @@ public:
      * This basically boils down to creating an uninitialized object of sufficient size.
      * This is method only non-trivial for dynamically-sized Evaluation objects.
      */
-    static Scalar createBlank(Scalar)
+    static Scalar createBlank(Scalar value OPM_UNUSED)
     { return Scalar(); }
 
     /*!
@@ -136,7 +136,7 @@ public:
      * function. In general, this returns an evaluation object for which all derivatives
      * are zero.
      */
-    static Scalar createConstant(Scalar, Scalar value)
+    static Scalar createConstant(Scalar x OPM_UNUSED, Scalar value)
     { return value; }
 
     /*!
@@ -146,7 +146,7 @@ public:
      * regard to x. For scalars (which do not consider derivatives), this method does
      * nothing.
      */
-    static Scalar createVariable(Scalar, unsigned)
+    static Scalar createVariable(Scalar value OPM_UNUSED, unsigned varIdx OPM_UNUSED)
     { throw std::logic_error("Plain floating point objects cannot represent variables"); }
 
     /*!
@@ -157,7 +157,7 @@ public:
      * regard to x. For scalars (which do not consider derivatives), this method does
      * nothing.
      */
-    static Scalar createVariable(Scalar, Scalar, unsigned)
+    static Scalar createVariable(Scalar x OPM_UNUSED, Scalar value OPM_UNUSED, unsigned varIdx OPM_UNUSED)
     { throw std::logic_error("Plain floating point objects cannot represent variables"); }
 
     /*!
@@ -227,6 +227,14 @@ public:
     static Scalar asin(Scalar arg)
     { return std::asin(arg); }
 
+    //! The sine hyperbolicus of a value
+    static Scalar sinh(Scalar arg)
+    { return std::sinh(arg); }
+
+    //! The arcus sine hyperbolicus of a value
+    static Scalar asinh(Scalar arg)
+    { return std::asinh(arg); }
+
     //! The cosine of a value
     static Scalar cos(Scalar arg)
     { return std::cos(arg); }
@@ -234,6 +242,14 @@ public:
     //! The arcus cosine of a value
     static Scalar acos(Scalar arg)
     { return std::acos(arg); }
+
+    //! The cosine hyperbolicus of a value
+    static Scalar cosh(Scalar arg)
+    { return std::cosh(arg); }
+
+    //! The arcus cosine hyperbolicus of a value
+    static Scalar acosh(Scalar arg)
+    { return std::acosh(arg); }
 
     //! The square root of a value
     static Scalar sqrt(Scalar arg)
@@ -358,12 +374,28 @@ Evaluation asin(const Evaluation& value)
 { return MathToolbox<Evaluation>::asin(value); }
 
 template <class Evaluation>
+Evaluation sinh(const Evaluation& value)
+{ return MathToolbox<Evaluation>::sinh(value); }
+
+template <class Evaluation>
+Evaluation asinh(const Evaluation& value)
+{ return MathToolbox<Evaluation>::asinh(value); }
+
+template <class Evaluation>
 Evaluation cos(const Evaluation& value)
 { return MathToolbox<Evaluation>::cos(value); }
 
 template <class Evaluation>
 Evaluation acos(const Evaluation& value)
 { return MathToolbox<Evaluation>::acos(value); }
+
+template <class Evaluation>
+Evaluation cosh(const Evaluation& value)
+{ return MathToolbox<Evaluation>::cosh(value); }
+
+template <class Evaluation>
+Evaluation acosh(const Evaluation& value)
+{ return MathToolbox<Evaluation>::acosh(value); }
 
 template <class Evaluation>
 Evaluation sqrt(const Evaluation& value)

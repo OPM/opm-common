@@ -226,6 +226,40 @@ Evaluation<ValueType, numVars, staticSize> asin(const Evaluation<ValueType, numV
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
+Evaluation<ValueType, numVars, staticSize> sinh(const Evaluation<ValueType, numVars, staticSize>& x)
+{
+    typedef MathToolbox<ValueType> ValueTypeToolbox;
+
+    Evaluation<ValueType, numVars, staticSize> result(x);
+
+    result.setValue(ValueTypeToolbox::sinh(x.value()));
+
+    // derivatives use the chain rule
+    const ValueType& df_dx = ValueTypeToolbox::cosh(x.value());
+    for (int curVarIdx = 0; curVarIdx < result.size(); ++curVarIdx)
+        result.setDerivative(curVarIdx, df_dx*x.derivative(curVarIdx));
+
+    return result;
+}
+
+template <class ValueType, int numVars, unsigned staticSize>
+Evaluation<ValueType, numVars, staticSize> asinh(const Evaluation<ValueType, numVars, staticSize>& x)
+{
+    typedef MathToolbox<ValueType> ValueTypeToolbox;
+
+    Evaluation<ValueType, numVars, staticSize> result(x);
+
+    result.setValue(ValueTypeToolbox::asinh(x.value()));
+
+    // derivatives use the chain rule
+    const ValueType& df_dx = 1.0/ValueTypeToolbox::sqrt(x.value()*x.value() + 1);
+    for (int curVarIdx = 0; curVarIdx < result.size(); ++curVarIdx)
+        result.setDerivative(curVarIdx, df_dx*x.derivative(curVarIdx));
+
+    return result;
+}
+
+template <class ValueType, int numVars, unsigned staticSize>
 Evaluation<ValueType, numVars, staticSize> cos(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
@@ -253,6 +287,40 @@ Evaluation<ValueType, numVars, staticSize> acos(const Evaluation<ValueType, numV
 
     // derivatives use the chain rule
     const ValueType& df_dx = - 1.0/ValueTypeToolbox::sqrt(1 - x.value()*x.value());
+    for (int curVarIdx = 0; curVarIdx < result.size(); ++curVarIdx)
+        result.setDerivative(curVarIdx, df_dx*x.derivative(curVarIdx));
+
+    return result;
+}
+
+template <class ValueType, int numVars, unsigned staticSize>
+Evaluation<ValueType, numVars, staticSize> cosh(const Evaluation<ValueType, numVars, staticSize>& x)
+{
+    typedef MathToolbox<ValueType> ValueTypeToolbox;
+
+    Evaluation<ValueType, numVars, staticSize> result(x);
+
+    result.setValue(ValueTypeToolbox::cosh(x.value()));
+
+    // derivatives use the chain rule
+    const ValueType& df_dx = ValueTypeToolbox::sinh(x.value());
+    for (int curVarIdx = 0; curVarIdx < result.size(); ++curVarIdx)
+        result.setDerivative(curVarIdx, df_dx*x.derivative(curVarIdx));
+
+    return result;
+}
+
+template <class ValueType, int numVars, unsigned staticSize>
+Evaluation<ValueType, numVars, staticSize> acosh(const Evaluation<ValueType, numVars, staticSize>& x)
+{
+    typedef MathToolbox<ValueType> ValueTypeToolbox;
+
+    Evaluation<ValueType, numVars, staticSize> result(x);
+
+    result.setValue(ValueTypeToolbox::acosh(x.value()));
+
+    // derivatives use the chain rule
+    const ValueType& df_dx = 1.0/ValueTypeToolbox::sqrt(x.value()*x.value() - 1);
     for (int curVarIdx = 0; curVarIdx < result.size(); ++curVarIdx)
         result.setDerivative(curVarIdx, df_dx*x.derivative(curVarIdx));
 
