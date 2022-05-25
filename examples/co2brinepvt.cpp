@@ -38,7 +38,8 @@ double densityGas(const Co2Pvt& co2Pvt, const double p, const double T, const do
     return co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                   T,
                                                   p,
-                                                  Rv) * co2Pvt.gasReferenceDensity(0);
+                                                  Rv,
+                                                  /*Rvw=*/0.0) * co2Pvt.gasReferenceDensity(0);
 }
 
 template <class BrinePvt>
@@ -116,7 +117,8 @@ int main(int argc, char **argv)
             value = co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                    T,
                                                    p,
-                                                   rv);
+                                                   rv,
+                                                   /*Rvw=*/0.0);
         } else if (phase == "brine") {
             value = brineCo2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                    T,
@@ -133,7 +135,8 @@ int main(int argc, char **argv)
             value = co2Pvt.viscosity(/*regionIdx=*/0,
                                                    T,
                                                    p,
-                                                   rv);
+                                                   rv,
+                                                   /*Rvw=*/0.0);
         } else if (phase == "brine") {
             value = brineCo2Pvt.viscosity(/*regionIdx=*/0,
                                                    T,

@@ -729,20 +729,32 @@ public:
         }
 
         case gasPhaseIdx: {
+             if (enableVaporizedOil() && enableVaporizedWater()) {
+                // gas containing vaporized oil and vaporized water
+                const LhsEval& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                const LhsEval& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
+
+                return
+                    bg*referenceDensity(gasPhaseIdx, regionIdx)
+                    + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx)
+                    + Rvw*bg*referenceDensity(waterPhaseIdx, regionIdx);
+            }
             if (enableVaporizedOil()) {
                 // miscible gas
+                const LhsEval Rvw(0.0);
                 const LhsEval& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
 
                 return
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
                     + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx);
             }
-            //vaporized oil simultaneous with vaporized water is not yet supported
             if (enableVaporizedWater()) {
                 // gas containing vaporized water
+                const LhsEval Rv(0.0);
                 const LhsEval& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rvw);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
 
                 return
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
@@ -751,7 +763,8 @@ public:
 
             // immiscible gas
             const LhsEval Rv(0.0);
-            const auto& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv);
+            const LhsEval Rvw(0.0);
+            const auto& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
             return bg*referenceDensity(phaseIdx, regionIdx);
         }
 
@@ -801,20 +814,34 @@ public:
         }
 
         case gasPhaseIdx: {
+            if (enableVaporizedOil() && enableVaporizedWater()) {
+                // gas containing vaporized oil and vaporized water
+                const LhsEval& Rv = saturatedDissolutionFactor<FluidState, LhsEval>(fluidState, gasPhaseIdx, regionIdx);
+                const LhsEval& Rvw = saturatedVaporizationFactor<FluidState, LhsEval>(fluidState, gasPhaseIdx, regionIdx);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
+
+                return
+                    bg*referenceDensity(gasPhaseIdx, regionIdx)
+                    + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx) 
+                    + Rvw*bg*referenceDensity(waterPhaseIdx, regionIdx) ;
+            }
+
             if (enableVaporizedOil()) {
                 // miscible gas
+                const LhsEval Rvw(0.0);
                 const LhsEval& Rv = saturatedDissolutionFactor<FluidState, LhsEval>(fluidState, gasPhaseIdx, regionIdx);
-                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
 
                 return
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
                     + Rv*bg*referenceDensity(oilPhaseIdx, regionIdx);
             }
-            //vaporized oil simultaneous with vaporized water is not yet supported
+
             if (enableVaporizedWater()) {
                 // gas containing vaporized water
+                const LhsEval Rv(0.0);
                 const LhsEval& Rvw = saturatedVaporizationFactor<FluidState, LhsEval>(fluidState, gasPhaseIdx, regionIdx);
-                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rvw);
+                const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
 
                 return
                     bg*referenceDensity(gasPhaseIdx, regionIdx)
@@ -823,7 +850,8 @@ public:
 
             // immiscible gas
             const LhsEval Rv(0.0);
-            const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv);
+            const LhsEval Rvw(0.0);
+            const LhsEval& bg = gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
 
             return referenceDensity(phaseIdx, regionIdx)*bg;
 
@@ -875,6 +903,20 @@ public:
             return oilPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rs);
         }
         case gasPhaseIdx: {
+            if (enableVaporizedOil() && enableVaporizedWater()) {
+                 const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                 const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                 if (fluidState.saturation(waterPhaseIdx) > 0.0
+                    && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p))
+                    && fluidState.saturation(oilPhaseIdx) > 0.0
+                    && Rv >= (1.0 - 1e-10)*gasPvt_->saturatedOilVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
+                 { 
+                    return gasPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p);
+                 } else {
+                     return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
+                 }
+            }
+
             if (enableVaporizedOil()) {
                 const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 if (fluidState.saturation(oilPhaseIdx) > 0.0
@@ -882,12 +924,26 @@ public:
                 {
                     return gasPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p);
                 } else {
-                    return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv);
+                    const LhsEval Rvw(0.0);
+                    return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
                 }
             }
 
+            if (enableVaporizedWater()) { 
+                const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                if (fluidState.saturation(waterPhaseIdx) > 0.0
+                    && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
+                {
+                    return gasPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p);
+                } else {
+                    const LhsEval Rv(0.0);
+                    return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
+                }
+            }
+            
             const LhsEval Rv(0.0);
-            return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv);
+            const LhsEval Rvw(0.0);
+            return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
         }
         case waterPhaseIdx:
             return waterPvt_->inverseFormationVolumeFactor(regionIdx, T, p, saltConcentration);
@@ -1075,6 +1131,19 @@ public:
         }
 
         case gasPhaseIdx: {
+             if (enableVaporizedOil() && enableVaporizedWater()) {
+                 const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                 const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                 if (fluidState.saturation(waterPhaseIdx) > 0.0
+                    && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p))
+                    && fluidState.saturation(oilPhaseIdx) > 0.0
+                    && Rv >= (1.0 - 1e-10)*gasPvt_->saturatedOilVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
+                 { 
+                     return gasPvt_->saturatedViscosity(regionIdx, T, p);
+                 } else {
+                     return gasPvt_->viscosity(regionIdx, T, p, Rv, Rvw);
+                 }
+            }
             if (enableVaporizedOil()) {
                 const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 if (fluidState.saturation(oilPhaseIdx) > 0.0
@@ -1082,12 +1151,25 @@ public:
                 {
                     return gasPvt_->saturatedViscosity(regionIdx, T, p);
                 } else {
-                    return gasPvt_->viscosity(regionIdx, T, p, Rv);
+                    const LhsEval Rvw(0.0);
+                    return gasPvt_->viscosity(regionIdx, T, p, Rv, Rvw);
+                }
+            }
+            if (enableVaporizedWater()) {
+                const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+                if (fluidState.saturation(waterPhaseIdx) > 0.0
+                    && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
+                {
+                    return gasPvt_->saturatedViscosity(regionIdx, T, p); 
+                } else {
+                    const LhsEval Rv(0.0);
+                    return gasPvt_->viscosity(regionIdx, T, p, Rv, Rvw);
                 }
             }
 
             const LhsEval Rv(0.0);
-            return gasPvt_->viscosity(regionIdx, T, p, Rv);
+            const LhsEval Rvw(0.0);
+            return gasPvt_->viscosity(regionIdx, T, p, Rv, Rvw);
         }
 
         case waterPhaseIdx:

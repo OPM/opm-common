@@ -142,6 +142,7 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         Evaluation saltconcentration = 0.0;
         Evaluation Rs = 0.0;
         Evaluation Rv = 0.0;
+        Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
         Evaluation tmp;
@@ -193,11 +194,13 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         tmp = gasPvt.viscosity(/*regionIdx=*/0,
                                temperature,
                                pressure,
-                               Rv);
+                               Rv,
+                               Rvw);
         tmp = gasPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                   temperature,
                                                   pressure,
-                                                  Rv);
+                                                  Rv,
+                                                  Rvw);
         tmp = gasPvt.saturatedViscosity(/*regionIdx=*/0,
                                         temperature,
                                         pressure);
