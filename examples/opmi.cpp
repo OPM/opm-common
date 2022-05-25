@@ -40,6 +40,7 @@
 void initLogging() {
     std::shared_ptr<Opm::StreamLog> cout_log = std::make_shared<Opm::StreamLog>(std::cout, Opm::Log::DefaultMessageTypes);
     Opm::OpmLog::addBackend( "COUT" , cout_log);
+    std::cout<<"bla"<<std::endl;
 }
 
 inline void loadDeck( const char * deck_file) {

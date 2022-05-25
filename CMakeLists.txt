@@ -411,7 +411,7 @@ if (OPM_ENABLE_PYTHON)
                   OUTPUT_VARIABLE python_lib_target)
 
   add_custom_target(copy_python ALL
-    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR}/python)
 
   add_custom_command(OUTPUT python/opm/${python_lib_target}
                      DEPENDS ${PYTHON_CXX_DEPENDS}
