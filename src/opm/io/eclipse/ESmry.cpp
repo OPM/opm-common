@@ -687,7 +687,9 @@ void ESmry::loadData(const std::vector<std::string>& vectList) const
             OPM_THROW(std::invalid_argument, "error loading key " + key );
 
         auto it = keyword_index.find(key);
-        keywIndVect.push_back(it->second);
+
+        if (!vectorLoaded[it->second])
+            keywIndVect.push_back(it->second);
     }
 
     for (auto ind : keywIndVect)

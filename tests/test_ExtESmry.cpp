@@ -214,7 +214,19 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
         BOOST_REQUIRE_CLOSE (smryVect[i], bpr_10103_ref[i], 0.01);
 
     ExtESmry esmry2("SPE1CASE1.ESMRY");
-    esmry2.loadData();
+    auto fopr2a = esmry2.get("FOPR");
+    esmry2.loadData({"FOPR"});
+    auto fopr2b = esmry2.get("FOPR");
+
+    BOOST_CHECK_EQUAL(fopr2a.size(), fopr2b.size());
+
+    ExtESmry esmry3("SPE1CASE1.ESMRY");
+    auto fopr3a = esmry3.get("FOPR");
+    esmry3.loadData();
+    auto fopr3b = esmry3.get("FOPR");
+
+    BOOST_CHECK_EQUAL(fopr3a.size(), fopr3b.size());
+
 }
 
 BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
