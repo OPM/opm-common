@@ -1276,6 +1276,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
     double Schedule::stepLength(std::size_t timeStep) const {
+        if (this->snapshots[timeStep].end_time() < this->snapshots[timeStep].start_time()) {
+            const auto& start_time = Schedule::formatDate(std::chrono::system_clock::to_time_t(this->snapshots[timeStep].start_time()));
+            const auto& end_time = Schedule::formatDate(std::chrono::system_clock::to_time_t(this->snapshots[timeStep].end_time()));
+            throw std::runtime_error(fmt::format(" Report step {0} has the start time {1} later than the end time {2},\n"
+                                                 "can be due to the wrong way doing restarting (forgetting SKIPREST?) or bad setup in the SCHEDULE section.", timeStep, start_time, end_time));
+        }
         auto elapsed = this->snapshots[timeStep].end_time() - this->snapshots[timeStep].start_time();
         return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
