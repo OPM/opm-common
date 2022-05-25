@@ -147,7 +147,7 @@ public:
         fluid_state_scalar.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
         // Rachford Rice equation to get initial L for composition solver
-        L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+        //L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
 
 
         // Do a stability test to check if cell is single-phase (do for all cells the first time).
@@ -164,6 +164,11 @@ public:
 
         // Update the composition if cell is two-phase
         if ( !isStable) {
+
+            // Rachford Rice equation to get initial L for composition solver
+            L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+
+            const std::string twoPhaseMethod = "newton"; // "ssi"
             flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state_scalar, verbosity);
 
 
@@ -183,6 +188,9 @@ public:
         // TODO: should be able the handle the derivatives directly, which will affect the final organization
         // of the code
         // TODO: Does fluid_state_scalar contain z with derivatives?
+        fluid_state_scalar.setLvalue(L_scalar);
+        //std::cout << "       HEIHEIHEI   L       " << fluid_state_scalar.L(0) << std::endl;
+
         updateDerivatives_(fluid_state_scalar, z, fluid_state);
 
         // Update phases
@@ -531,7 +539,7 @@ protected:
     }
 
     template <class FlashFluidState, class ComponentVector>
-    static void phaseStabilityTest_(bool& isStable, ComponentVector& K, FlashFluidState& fluidState, const ComponentVector& globalComposition, int verbosity)
+    static void phaseStabilityTest_(bool& isStable, ComponentVector& K, FlashFluidState& fluidState, const ComponentVector& z, int verbosity)
     {
         // Declarations
         bool isTrivialL, isTrivialV;
@@ -544,14 +552,17 @@ protected:
         if (verbosity == 3 || verbosity == 4) {
             std::cout << "Stability test for vapor phase:" << std::endl;
         }
-        checkStability_(fluidState, isTrivialV, K0, y, S_v, globalComposition, /*isGas=*/true, verbosity);
+        //stable_vapor, i_v = michelsen_test!(vapor, f_z, f_xy, vapor.z, z, K, eos, c, forces, Val(true); kwarg...)
+        bool stable_vapour = false;
+        michelsenTest_(fluidState, z, K0,stable_vapour,/*isGas*/true, verbosity);
+        checkStability_(fluidState, isTrivialV, K0, y, S_v, z, /*isGas=*/true, verbosity);
         bool V_unstable = (S_v < (1.0 + 1e-5)) || isTrivialV;
 
         // Check for liquids stable phase
         if (verbosity == 3 || verbosity == 4) {
             std::cout << "Stability test for liquid phase:" << std::endl;
         }
-        checkStability_(fluidState, isTrivialL, K1, x, S_l, globalComposition, /*isGas=*/false, verbosity);
+        checkStability_(fluidState, isTrivialL, K1, x, S_l, z, /*isGas=*/false, verbosity);
         bool L_stable = (S_l < (1.0 + 1e-5)) || isTrivialL;
 
         // L-stable means success in making liquid, V-unstable means no success in making vapour
@@ -560,8 +571,8 @@ protected:
             // Single phase, i.e. phase composition is equivalent to the global composition
             // Update fluidstate with mole fraction
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                fluidState.setMoleFraction(gasPhaseIdx, compIdx, globalComposition[compIdx]);
-                fluidState.setMoleFraction(oilPhaseIdx, compIdx, globalComposition[compIdx]);
+                fluidState.setMoleFraction(gasPhaseIdx, compIdx, z[compIdx]);
+                fluidState.setMoleFraction(oilPhaseIdx, compIdx, z[compIdx]);
             }
         }
         // If not stable: use the mole fractions from Michelsen's test to update K
@@ -571,6 +582,166 @@ protected:
             }
         }
     }
+
+//michelsenTest_(fluidState,z, K0,stable_vapour,/*isGas*/true)
+template <class FlashFluidState, class ComponentVector>
+    static void michelsenTest_(const FlashFluidState& fluidState, const ComponentVector z, 
+                                ComponentVector& K, bool& stable, bool isGas, int verbosity)
+    {
+        using FlashEval = typename FlashFluidState::Scalar;
+        
+        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, FluidSystem>;
+
+        // Declarations 
+        FlashFluidState fluidState_xy = fluidState;
+        FlashFluidState fluidState_zi = fluidState;
+        ComponentVector xy_loc;
+        ComponentVector R;
+        FlashEval S_loc = 0.0;
+        FlashEval xy_c = 0.0;
+        bool isTrivial;
+        // Setup output
+        if (verbosity >= 3 || verbosity >= 4) {
+            std::cout << std::setw(10) << "Iteration" << std::setw(16) << "K-Norm" << std::setw(16) << "R-Norm" << std::endl;
+        }
+
+        // Michelsens stability test.
+        // Make two fake phases "inside" one phase and check for positive volume
+        for (int i = 0; i < 20000; ++i) {
+            S_loc = 0.0;
+            
+                for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    if (isGas) {
+                        xy_c = K[compIdx] * z[compIdx];
+                    } else {
+                        xy_c = z[compIdx]/K[compIdx];
+                    }
+                    xy_loc[compIdx] = xy_c;
+                    S_loc += xy_c;
+                }
+                xy_loc /= S_loc;
+
+                //to get out fugacities each phase
+                for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    fluidState_xy.setMoleFraction(gasPhaseIdx, compIdx, xy_loc[compIdx]);
+                }
+                int phaseIdx = (isGas ? static_cast<int>(gasPhaseIdx) : static_cast<int>(oilPhaseIdx));
+                int phaseIdx2 = (isGas ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx));
+
+                for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    fluidState_zi.setMoleFraction(phaseIdx2, compIdx, z[compIdx]);
+                }
+
+                typename FluidSystem::template ParameterCache<FlashEval> paramCache_xy;
+                paramCache_xy.updatePhase(fluidState_xy, phaseIdx);
+
+                typename FluidSystem::template ParameterCache<FlashEval> paramCache_zi;
+                paramCache_zi.updatePhase(fluidState_zi, phaseIdx2);
+
+                for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    auto phi_xy = PengRobinsonMixture::computeFugacityCoefficient(fluidState_xy, paramCache_xy, phaseIdx, compIdx);
+                    auto phi_z = PengRobinsonMixture::computeFugacityCoefficient(fluidState_zi, paramCache_zi, phaseIdx2, compIdx);
+
+                    fluidState_xy.setFugacityCoefficient(phaseIdx, compIdx, phi_xy);
+                    fluidState_zi.setFugacityCoefficient(phaseIdx2, compIdx, phi_z);
+                }
+            
+                //RATIOS
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                if (isGas){
+                    auto f_xy = fluidState_xy.fugacity(phaseIdx, compIdx);
+                    auto f_zi = fluidState_zi.fugacity(phaseIdx2, compIdx);
+                    auto fug_ratio = f_zi / f_xy;
+                    R[compIdx] = fug_ratio / S_loc;
+                }
+                else{
+                    auto fug_xy = fluidState_xy.fugacity(phaseIdx, compIdx);
+                    auto fug_zi = fluidState_zi.fugacity(phaseIdx2, compIdx);
+                    auto fug_ratio = fug_xy / fug_zi;
+                    R[compIdx] = fug_ratio * S_loc;
+                }
+            }
+
+/*   
+                for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    xy_loc[compIdx] = z[compIdx]/K[compIdx];
+                    S_loc += xy_loc[compIdx];
+                }                
+                for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    xy_loc[compIdx] /= S_loc;
+                    fluidState_xy.setMoleFraction(oilPhaseIdx, compIdx, xy_loc[compIdx]);
+                } */
+
+
+            //mrst: f_xy = getFugacity(eos, A_ij_loc, Bi_loc, xy_loc, p_loc, ~insidePhaseIsVapor);
+
+/*             int phaseIdx = (isGas ? static_cast<int>(gasPhaseIdx) : static_cast<int>(oilPhaseIdx));
+            int phaseIdx2 = (isGas ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx));
+      
+
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                fluidState_zi.setMoleFraction(phaseIdx2, compIdx, z[compIdx]);
+            }
+
+            typename FluidSystem::template ParameterCache<FlashEval> paramCache_xy;
+            paramCache_xy.updatePhase(fluidState_xy, phaseIdx);
+
+            typename FluidSystem::template ParameterCache<FlashEval> paramCache_zi;
+            paramCache_zi.updatePhase(fluidState_zi, phaseIdx2);
+
+            //fugacity for fake phases each component
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                auto phi_xy = PengRobinsonMixture::computeFugacityCoefficient(fluidState_xy, paramCache_xy, phaseIdx, compIdx);
+                auto phi_z = PengRobinsonMixture::computeFugacityCoefficient(fluidState_zi, paramCache_zi, phaseIdx2, compIdx);
+
+                fluidState_xy.setFugacityCoefficient(phaseIdx, compIdx, phi_xy);
+                fluidState_zi.setFugacityCoefficient(phaseIdx2, compIdx, phi_z);
+            }
+
+           
+            ComponentVector R;
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                if (isGas){
+                    auto f_xy = fluidState_xy.fugacity(phaseIdx, compIdx);
+                    auto f_zi = fluidState_zi.fugacity(phaseIdx2, compIdx);
+                    auto fug_ratio = f_zi / f_xy;
+                    R[compIdx] = fug_ratio / S_loc;
+                }
+                else{
+                    auto fug_xy = fluidState_xy.fugacity(phaseIdx, compIdx);
+                    auto fug_zi = fluidState_zi.fugacity(phaseIdx2, compIdx);
+                    auto fug_ratio = fug_xy / fug_zi;
+                    R[compIdx] = fug_ratio * S_loc;
+                }
+            }
+
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                K[compIdx] *= R[compIdx];
+            }
+            Scalar R_norm = 0.0;
+            Scalar K_norm = 0.0;
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                auto a = Opm::getValue(R[compIdx]) - 1.0;
+                auto b = Opm::log(Opm::getValue(K[compIdx]));
+                R_norm += a*a;
+                K_norm += b*b;
+            }
+
+            // Print iteration info
+            if (verbosity >= 3) {
+                std::cout << std::setw(10) << i << std::setw(16) << K_norm << std::setw(16) << R_norm << std::endl;
+            }
+
+            // Check convergence
+            isTrivial = (K_norm < 1e-5);
+            if (isTrivial || R_norm < 1e-10)
+                return;
+            //todo: make sure that no mole fraction is smaller than 1e-8 ?
+            //todo: take care of water! */
+        }
+        stable = isTrivial || S_loc <= 1 + 1e-5;
+        throw std::runtime_error(" Stability test did not converge");
+    }//end michelsen
 
     template <class FlashFluidState, class ComponentVector>
     static void checkStability_(const FlashFluidState& fluidState, bool& isTrivial, ComponentVector& K, ComponentVector& xy_loc,
@@ -1095,22 +1266,22 @@ protected:
             (primary_fluid_state, primary_z, pri_jac, pri_res);
 
         //corresponds to julias J_p (we miss d/dt, and have d/dL instead of d/dV)
-        // for (unsigned i =0;  i < num_equations; ++i) {
-        //     for (unsigned j = 0; j < primary_num_pv; ++j) {
-        //         std::cout << " " << pri_jac[i][j];
-        //     }
-        //     std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
+        //  for (unsigned i =0;  i < num_equations; ++i) {
+        //      for (unsigned j = 0; j < primary_num_pv; ++j) {
+        //          std::cout << " " << pri_jac[i][j];
+        //      }
+        //      std::cout << std::endl;
+        //  }
+        //  std::cout << std::endl;
 
         //corresponds to julias J_s
-        // for (unsigned i = 0; i < num_equations; ++i) {
-        //     for (unsigned j = 0; j < secondary_num_pv; ++j) {
-        //         std::cout << " " << sec_jac[i][j] ;
-        //     }
-        //     std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
+        //  for (unsigned i = 0; i < num_equations; ++i) {
+        //      for (unsigned j = 0; j < secondary_num_pv; ++j) {
+        //          std::cout << " " << sec_jac[i][j] ;
+        //      }
+        //      std::cout << std::endl;
+        //  }
+        //  std::cout << std::endl;
 
         SecondaryNewtonMatrix xx;
         pri_jac.solve(xx,sec_jac);
