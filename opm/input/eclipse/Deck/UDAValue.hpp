@@ -80,7 +80,7 @@ public:
     bool operator==(const UDAValue& other) const;
     bool operator!=(const UDAValue& other) const;
 
-    bool is_numeric() { return numeric_value; }
+    bool is_numeric() const { return numeric_value; }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

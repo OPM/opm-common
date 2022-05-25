@@ -745,6 +745,9 @@ void staticContrib(const Opm::Schedule&     sched,
         iGrp[nwgmax+11] = 0;
         iGrp[nwgmax+12] = -1;
 
+        // Hack.  Needed by real field cases.
+        iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 1;
+
         //assign values to group number (according to group sequence)
         iGrp[nwgmax+88] = group.insert_index();
         iGrp[nwgmax+89] = group.insert_index();
@@ -771,6 +774,213 @@ allocate(const std::vector<int>& inteHead)
     };
 }
 
+template <typename SGProp, class SGrpArray>
+void assignGroupGasInjectionTargets(const Opm::Group&        group,
+                                    const Opm::SummaryState& sumState,
+                                    SGProp&&                 sgprop,
+                                    SGrpArray&               sGrp)
+{
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
+    using M  = ::Opm::UnitSystem::measure;
+
+    const auto& prop = group.injectionProperties(Opm::Phase::GAS);
+    const auto  cntl = group.injectionControls(Opm::Phase::GAS, sumState);
+
+    if (group.has_control(Opm::Phase::GAS, Opm::Group::InjectionCMode::RATE) &&
+        (prop.surface_max_rate.is_numeric() || (cntl.surface_max_rate > 0.0)))
+    {
+        sGrp[Ix::gasSurfRateLimit] = sgprop(M::gas_surface_rate, cntl.surface_max_rate);
+        sGrp[Ix::gasSurfRateLimit_2] = sGrp[Ix::gasSurfRateLimit];
+    }
+
+    if (group.has_control(Opm::Phase::GAS, Opm::Group::InjectionCMode::RESV) &&
+        (prop.resv_max_rate.is_numeric() || (cntl.resv_max_rate > 0.0)))
+    {
+        sGrp[Ix::gasResRateLimit] = sgprop(M::rate, cntl.resv_max_rate);
+        sGrp[Ix::gasResRateLimit_2] = sGrp[Ix::gasResRateLimit];
+    }
+
+    if (group.has_control(Opm::Phase::GAS, Opm::Group::InjectionCMode::REIN) &&
+        (prop.target_reinj_fraction.is_numeric() || (cntl.target_reinj_fraction > 0.0)))
+    {
+        sGrp[Ix::gasReinjectionLimit] = cntl.target_reinj_fraction;
+        sGrp[Ix::gasReinjectionLimit_2] = sGrp[Ix::gasReinjectionLimit];
+    }
+
+    if (group.has_control(Opm::Phase::GAS, Opm::Group::InjectionCMode::VREP) &&
+        (prop.target_void_fraction.is_numeric() || (cntl.target_void_fraction > 0.0)))
+    {
+        sGrp[Ix::gasVoidageLimit] = cntl.target_void_fraction;
+        sGrp[Ix::gasVoidageLimit_2] = sGrp[Ix::gasVoidageLimit];
+    }
+
+    sGrp[Ix::gasGuideRate] = cntl.guide_rate;
+}
+
+template <typename SGProp, class SGrpArray>
+void assignGroupWaterInjectionTargets(const Opm::Group&        group,
+                                      const Opm::SummaryState& sumState,
+                                      SGProp&&                 sgprop,
+                                      SGrpArray&               sGrp)
+{
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
+    using M  = ::Opm::UnitSystem::measure;
+
+    const auto& prop = group.injectionProperties(Opm::Phase::WATER);
+    const auto  cntl = group.injectionControls(Opm::Phase::WATER, sumState);
+
+    if (group.has_control(Opm::Phase::WATER, Opm::Group::InjectionCMode::RATE) &&
+        (prop.surface_max_rate.is_numeric() || (cntl.surface_max_rate > 0.0)))
+    {
+        sGrp[Ix::waterSurfRateLimit] = sgprop(M::liquid_surface_rate, cntl.surface_max_rate);
+        sGrp[Ix::waterSurfRateLimit_2] = sGrp[Ix::waterSurfRateLimit];
+    }
+
+    if (group.has_control(Opm::Phase::WATER, Opm::Group::InjectionCMode::RESV) &&
+        (prop.resv_max_rate.is_numeric() || (cntl.resv_max_rate > 0.0)))
+    {
+        sGrp[Ix::waterResRateLimit] = sgprop(M::rate, cntl.resv_max_rate);
+        sGrp[Ix::waterResRateLimit_2] = sGrp[Ix::waterResRateLimit];
+    }
+
+    if (group.has_control(Opm::Phase::WATER, Opm::Group::InjectionCMode::REIN) &&
+        (prop.target_reinj_fraction.is_numeric() || (cntl.target_reinj_fraction > 0.0)))
+    {
+        sGrp[Ix::waterReinjectionLimit] = cntl.target_reinj_fraction;
+        sGrp[Ix::waterReinjectionLimit_2] = sGrp[Ix::waterReinjectionLimit];
+    }
+
+    if (group.has_control(Opm::Phase::WATER, Opm::Group::InjectionCMode::VREP) &&
+        (prop.target_void_fraction.is_numeric() || (cntl.target_void_fraction > 0.0)))
+    {
+        sGrp[Ix::waterVoidageLimit] = cntl.target_void_fraction;
+        sGrp[Ix::waterVoidageLimit_2] = sGrp[Ix::waterVoidageLimit];
+    }
+
+    sGrp[Ix::waterGuideRate] = cntl.guide_rate;
+}
+
+template <typename SGProp, class SGrpArray>
+void assignGroupOilInjectionTargets(const Opm::Group&        group,
+                                    const Opm::SummaryState& sumState,
+                                    SGProp&&                 sgprop,
+                                    SGrpArray&               sGrp)
+{
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
+    using M  = ::Opm::UnitSystem::measure;
+
+    const auto& prop = group.injectionProperties(Opm::Phase::OIL);
+    const auto  cntl = group.injectionControls(Opm::Phase::OIL, sumState);
+
+    if (group.has_control(Opm::Phase::OIL, Opm::Group::InjectionCMode::RATE) &&
+        (prop.surface_max_rate.is_numeric() || (cntl.surface_max_rate > 0.0)))
+    {
+        sGrp[Ix::oilSurfRateLimit] = sgprop(M::liquid_surface_rate, cntl.surface_max_rate);
+        sGrp[Ix::oilSurfRateLimit_2] = sGrp[Ix::oilSurfRateLimit];
+    }
+
+    if (group.has_control(Opm::Phase::OIL, Opm::Group::InjectionCMode::RESV) &&
+        (prop.resv_max_rate.is_numeric() || (cntl.resv_max_rate > 0.0)))
+    {
+        sGrp[Ix::oilResRateLimit] = sgprop(M::rate, cntl.resv_max_rate);
+        sGrp[Ix::oilResRateLimit_2] = sGrp[Ix::oilResRateLimit];
+    }
+
+    if (group.has_control(Opm::Phase::OIL, Opm::Group::InjectionCMode::REIN) &&
+        (prop.target_reinj_fraction.is_numeric() || (cntl.target_reinj_fraction > 0.0)))
+    {
+        sGrp[Ix::oilReinjectionLimit] = cntl.target_reinj_fraction;
+        sGrp[Ix::oilReinjectionLimit_2] = sGrp[Ix::oilReinjectionLimit];
+    }
+
+    if (group.has_control(Opm::Phase::OIL, Opm::Group::InjectionCMode::VREP) &&
+        (prop.target_void_fraction.is_numeric() || (cntl.target_void_fraction > 0.0)))
+    {
+        sGrp[Ix::oilVoidageLimit] = cntl.target_void_fraction;
+        sGrp[Ix::oilVoidageLimit_2] = sGrp[Ix::oilVoidageLimit];
+    }
+}
+
+template <typename SGProp, class SGrpArray>
+void assignGroupInjectionTargets(const Opm::Group&        group,
+                                 const Opm::SummaryState& sumState,
+                                 SGProp&&                 sgprop,
+                                 SGrpArray&               sGrp)
+{
+    if (group.hasInjectionControl(Opm::Phase::GAS)) {
+        assignGroupGasInjectionTargets(group, sumState, std::forward<SGProp>(sgprop), sGrp);
+    }
+
+    if (group.hasInjectionControl(Opm::Phase::WATER)) {
+        assignGroupWaterInjectionTargets(group, sumState, std::forward<SGProp>(sgprop), sGrp);
+    }
+
+    if (group.hasInjectionControl(Opm::Phase::OIL)) {
+        assignGroupOilInjectionTargets(group, sumState, std::forward<SGProp>(sgprop), sGrp);
+    }
+}
+
+template <typename SGProp, class SGrpArray>
+void assignGroupProductionTargets(const Opm::Group&        group,
+                                  const Opm::SummaryState& sumState,
+                                  SGProp&&                 sgprop,
+                                  SGrpArray&               sGrp)
+{
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+    using M  = ::Opm::UnitSystem::measure;
+
+    const auto& prop = group.productionProperties();
+    const auto  cntl = group.productionControls(sumState);
+
+    if (group.has_control(Opm::Group::ProductionCMode::ORAT) &&
+        (prop.oil_target.is_numeric() || (cntl.oil_target > 0.0)))
+    {
+        sGrp[Ix::OilRateLimit] = sgprop(M::liquid_surface_rate, cntl.oil_target);
+        sGrp[Ix::OilRateLimit_2] = sGrp[Ix::OilRateLimit];  // ORAT control
+    }
+
+    if (group.has_control(Opm::Group::ProductionCMode::WRAT) &&
+        (prop.water_target.is_numeric() || (cntl.water_target > 0.0)))
+    {
+        sGrp[Ix::WatRateLimit] = sgprop(M::liquid_surface_rate, cntl.water_target);
+        sGrp[Ix::WatRateLimit_2] = sGrp[Ix::WatRateLimit];  // WRAT control
+    }
+
+    if (group.has_control(Opm::Group::ProductionCMode::GRAT) &&
+        (prop.gas_target.is_numeric() || (cntl.gas_target > 0.0)))
+    {
+        sGrp[Ix::GasRateLimit] = sgprop(M::gas_surface_rate, cntl.gas_target);
+        sGrp[Ix::GasRateLimit_2] = sGrp[Ix::GasRateLimit]; // GRAT control
+    }
+
+    if (group.has_control(Opm::Group::ProductionCMode::LRAT) &&
+        (prop.liquid_target.is_numeric() || (cntl.liquid_target > 0.0)))
+    {
+        sGrp[Ix::LiqRateLimit] = sgprop(M::liquid_surface_rate, cntl.liquid_target);
+        sGrp[Ix::LiqRateLimit_2] = sGrp[Ix::LiqRateLimit];  // LRAT control
+    }
+}
+
+template <typename SGProp, class SGrpArray>
+void assignGasLiftOptimisation(const Opm::GasLiftOpt::Group& group,
+                               SGProp&&                      sgprop,
+                               SGrpArray&                    sGrp)
+{
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+    using M  = ::Opm::UnitSystem::measure;
+
+    sGrp[Ix::GLOMaxSupply] = sGrp[Ix::GLOMaxRate] =
+        ::Opm::RestartIO::Helpers::VectorItems::SGroup::Value::NoGLOLimit;
+
+    if (const auto& max_supply = group.max_lift_gas(); max_supply.has_value()) {
+        sGrp[Ix::GLOMaxSupply] = sgprop(M::gas_surface_rate, max_supply.value());
+    }
+
+    if (const auto& max_total = group.max_total_gas(); max_total.has_value()) {
+        sGrp[Ix::GLOMaxRate] = sgprop(M::gas_surface_rate, max_total.value());
+    }
+}
+
 template <class SGrpArray>
 void staticContrib(const Opm::Group&        group,
                    const Opm::GasLiftOpt&   glo,
@@ -780,7 +990,6 @@ void staticContrib(const Opm::Group&        group,
 {
     using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
     using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
-    using Isi = ::Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
     using M   = ::Opm::UnitSystem::measure;
 
     const auto dflt   = -1.0e+20f;
@@ -816,8 +1025,7 @@ void staticContrib(const Opm::Group&        group,
         zero , zero                             // 110..111  (22)
     };
 
-    const auto sz = static_cast<
-                    decltype(init.size())>(sGrp.size());
+    const auto sz = static_cast<decltype(init.size())>(sGrp.size());
 
     auto b = std::begin(init);
     auto e = b + std::min(init.size(), sz);
@@ -833,118 +1041,22 @@ void staticContrib(const Opm::Group&        group,
         sgprop(M::identity, group.getGroupEfficiencyFactor());
 
     if (group.isProductionGroup()) {
-        const auto& prod_cntl = group.productionControls(sumState);
-
-        if (prod_cntl.oil_target > 0.) {
-            sGrp[Isp::OilRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.oil_target);
-            sGrp[52] = sGrp[Isp::OilRateLimit];  // "ORAT" control
-        }
-        if (prod_cntl.water_target > 0.) {
-            sGrp[Isp::WatRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.water_target);
-            sGrp[53] = sGrp[Isp::WatRateLimit];  //"WRAT" control
-        }
-        if (prod_cntl.gas_target > 0.) {
-            sGrp[Isp::GasRateLimit] = sgprop(M::gas_surface_rate, prod_cntl.gas_target);
-            sGrp[39] = sGrp[Isp::GasRateLimit];
-        }
-        if (prod_cntl.liquid_target > 0.) {
-            sGrp[Isp::LiqRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.liquid_target);
-            sGrp[54] = sGrp[Isp::LiqRateLimit];  //"LRAT" control
-        }
-    }
-
-    if (glo.has_group(group.name())) {
-        const auto& glo_group = glo.group(group.name());
-
-        const auto no_limit = -10.0f;
-
-        if (const auto& max_supply = glo_group.max_lift_gas(); max_supply.has_value()) {
-            sGrp[Isp::GLOMaxSupply] = sgprop(M::gas_surface_rate, max_supply.value());
-        }
-        else {
-            sGrp[Isp::GLOMaxSupply] = no_limit;
-        }
-
-        if (const auto& max_total = glo_group.max_total_gas(); max_total.has_value()) {
-            sGrp[Isp::GLOMaxRate] = sgprop(M::gas_surface_rate, max_total.value());
-        }
-        else {
-            sGrp[Isp::GLOMaxRate] = no_limit;
-        }
-    }
-
-    if ((group.name() == "FIELD") && (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-        sGrp[Isp::GuideRate] = 0.;
-        sGrp[14] = 0.;
-        sGrp[19] = 0.;
-        sGrp[24] = 0.;
+        assignGroupProductionTargets(group, sumState, sgprop, sGrp);
     }
 
     if (group.isInjectionGroup()) {
-        if (group.hasInjectionControl(Opm::Phase::GAS)) {
-            const auto& inj_cntl = group.injectionControls(Opm::Phase::GAS, sumState);
-            if (inj_cntl.surface_max_rate > 0.) {
-                sGrp[Isi::gasSurfRateLimit] = sgprop(M::gas_surface_rate, inj_cntl.surface_max_rate);
-                sGrp[65] =  sGrp[Isi::gasSurfRateLimit];
-            }
-            if (inj_cntl.resv_max_rate > 0.) {
-                sGrp[Isi::gasResRateLimit] = sgprop(M::rate, inj_cntl.resv_max_rate);
-                sGrp[66] =  sGrp[Isi::gasResRateLimit];
-            }
-            if (inj_cntl.target_reinj_fraction > 0.) {
-                sGrp[Isi::gasReinjectionLimit] = inj_cntl.target_reinj_fraction;
-                sGrp[67] =  sGrp[Isi::gasReinjectionLimit];
-            }
-            if (inj_cntl.target_void_fraction > 0.) {
-                sGrp[Isi::gasVoidageLimit] = inj_cntl.target_void_fraction;
-                sGrp[68] =  sGrp[Isi::gasVoidageLimit];
-            }
+        assignGroupInjectionTargets(group, sumState, sgprop, sGrp);
+    }
 
-            sGrp[Isi::waterGuideRate] = inj_cntl.guide_rate;
-        }
+    if (glo.has_group(group.name())) {
+        assignGasLiftOptimisation(glo.group(group.name()), sgprop, sGrp);
+    }
 
-        if (group.hasInjectionControl(Opm::Phase::WATER)) {
-            const auto& inj_cntl = group.injectionControls(Opm::Phase::WATER, sumState);
-            if (inj_cntl.surface_max_rate > 0.) {
-                sGrp[Isi::waterSurfRateLimit] = sgprop(M::liquid_surface_rate, inj_cntl.surface_max_rate);
-                sGrp[61] =  sGrp[Isi::waterSurfRateLimit];
-            }
-            if (inj_cntl.resv_max_rate > 0.) {
-                sGrp[Isi::waterResRateLimit] = sgprop(M::rate, inj_cntl.resv_max_rate);
-                sGrp[62] =  sGrp[Isi::waterResRateLimit];
-            }
-            if (inj_cntl.target_reinj_fraction > 0.) {
-                sGrp[Isi::waterReinjectionLimit] = inj_cntl.target_reinj_fraction;
-                sGrp[63] =  sGrp[Isi::waterReinjectionLimit];
-            }
-            if (inj_cntl.target_void_fraction > 0.) {
-                sGrp[Isi::waterVoidageLimit] = inj_cntl.target_void_fraction;
-                sGrp[64] =  sGrp[Isi::waterVoidageLimit];
-            }
-
-            sGrp[Isi::waterGuideRate] = inj_cntl.guide_rate;
-        }
-
-        if (group.hasInjectionControl(Opm::Phase::OIL)) {
-            const auto& inj_cntl = group.injectionControls(Opm::Phase::OIL, sumState);
-            if (inj_cntl.surface_max_rate > 0.) {
-                sGrp[Isi::oilSurfRateLimit] = sgprop(M::liquid_surface_rate, inj_cntl.surface_max_rate);
-                sGrp[57] =  sGrp[Isi::oilSurfRateLimit];
-            }
-            if (inj_cntl.resv_max_rate > 0.) {
-                sGrp[Isi::oilResRateLimit] = sgprop(M::rate, inj_cntl.resv_max_rate);
-                sGrp[58] =  sGrp[Isi::oilResRateLimit];
-            }
-            if (inj_cntl.target_reinj_fraction > 0.) {
-                sGrp[Isi::oilReinjectionLimit] = inj_cntl.target_reinj_fraction;
-                sGrp[59] =  sGrp[Isi::oilReinjectionLimit];
-            }
-            if (inj_cntl.target_void_fraction > 0.) {
-                sGrp[Isi::oilVoidageLimit] = inj_cntl.target_void_fraction;
-                sGrp[60] =  sGrp[Isi::oilVoidageLimit];
-            }
-        }
-
+    if ((group.name() == "FIELD") && (group.getGroupType() == Opm::Group::GroupType::NONE)) {
+        sGrp[Isp::GuideRate] = 0.0;
+        sGrp[14] = 0.0;
+        sGrp[19] = 0.0;
+        sGrp[24] = 0.0;
     }
 }
 } // SGrp

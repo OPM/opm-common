@@ -16,8 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 #include <string>
 #include <vector>
@@ -48,9 +52,9 @@ namespace Opm {
         m_explicit = (exp_imp == "EXP");
         m_shut = (close == "YES");
         if (prevent_thp == "YES1")
-            m_prevent = Prevent::First;
+            m_prevent = Prevent::ReportFirst;
         else if (prevent_thp == "YES2")
-            m_prevent = Prevent::Every;
+            m_prevent = Prevent::ReportEvery;
         else
             m_prevent = Prevent::No;
     }
@@ -64,9 +68,18 @@ namespace Opm {
     }
 
     bool WVFPEXP::prevent() const {
-        return m_prevent != Prevent::No;;
+        return m_prevent != Prevent::No;
     }
 
+    bool WVFPEXP::report_first() const
+    {
+        return this->m_prevent == Prevent::ReportFirst;
+    }
+
+    bool WVFPEXP::report_every() const
+    {
+        return this->m_prevent == Prevent::ReportEvery;
+    }
 
     bool WVFPEXP::operator!=(const WVFPEXP& other) const {
         return !(*this == other);

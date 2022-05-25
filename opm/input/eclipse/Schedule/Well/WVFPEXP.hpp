@@ -19,18 +19,16 @@
 
 #ifndef WVFPEXP_HPP_HEADER_INCLUDED
 #define WVFPEXP_HPP_HEADER_INCLUDED
-#include <vector>
-#include <string>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+namespace Opm {
+    class DeckRecord;
+} // namespace Opm
 
 namespace Opm {
 
-    class WVFPEXP {
-
+    class WVFPEXP
+    {
     public:
-
-        enum class Prevent : unsigned char { No, First, Every };
-
         static WVFPEXP serializeObject();
 
         void update(const DeckRecord& record);
@@ -38,6 +36,9 @@ namespace Opm {
         bool explicit_lookup() const;
         bool shut() const;
         bool prevent() const;
+
+        bool report_first() const;
+        bool report_every() const;
 
         bool operator==(const WVFPEXP& other) const;
         bool operator!=(const WVFPEXP& other) const;
@@ -51,11 +52,13 @@ namespace Opm {
         }
 
     private:
-        bool m_explicit;
-        bool m_shut;
-        Prevent m_prevent;
+        enum class Prevent : unsigned char { No, ReportFirst, ReportEvery };
+
+        bool m_explicit{false};
+        bool m_shut{false};
+        Prevent m_prevent{Prevent::No};
     };
 
-}
+} // namespace Opm
 
-#endif
+#endif  // WVFPEXP_HPP_HEADER_INCLUDED

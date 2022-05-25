@@ -35,7 +35,14 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WatRateLimit  =  7, // Group's water production target/limit
             GasRateLimit  =  8, // Group's gas production target/limit
             LiqRateLimit  =  9, // Group's liquid production target/limit
+
             GLOMaxSupply  = 34, // Group's maximum supply of lift gas
+
+            GasRateLimit_2 = 39, // Copy of group's gas production target/limit
+            OilRateLimit_2 = 52, // Copy of group's oil production target/limit
+            WatRateLimit_2 = 53, // Copy of group's water production target/limit
+            LiqRateLimit_2 = 54, // Copy of group's liquid production target/limit
+
             GLOMaxRate    = 91, // Group's maximum lift gas rate
         };
 
@@ -44,17 +51,38 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             oilResRateLimit         =  11, // Group's oil reservoir volume injection rate target/limit
             oilReinjectionLimit     =  12, // Group's oil reinjection fraction target/limit
             oilVoidageLimit         =  13, // Group's oil voidage injection fraction target/limit
+
             waterSurfRateLimit      =  15, // Group's water surface volume injection rate target/limit
             waterResRateLimit       =  16, // Group's water reservoir volume injection rate target/limit
             waterReinjectionLimit   =  17, // Group's water reinjection fraction target/limit
             waterVoidageLimit       =  18, // Group's water voidage injection fraction target/limit
-            waterGuideRate          =  19,
+            waterGuideRate          =  19, // Group's water injection guide rate
+
             gasSurfRateLimit        =  20, // Group's gas surface volume injection rate target/limit
             gasResRateLimit         =  21, // Group's gas reservoir volume injection rate target/limit
             gasReinjectionLimit     =  22, // Group's gas reinjection fraction target/limit
             gasVoidageLimit         =  23, // Group's gas voidage injection fraction target/limit
-            gasGuideRate            =  24,
+            gasGuideRate            =  24, // Group's gas injection guide rate
+
+            oilSurfRateLimit_2      =  57, // Copy of group's oil surface volume injection rate target/limit
+            oilResRateLimit_2       =  58, // Copy of group's oil reservoir volume injection rate target/limit
+            oilReinjectionLimit_2   =  59, // Copy of group's oil reinjection fraction target/limit
+            oilVoidageLimit_2       =  60, // Copy of group's oil voidage injection fraction target/limit
+
+            waterSurfRateLimit_2    =  61, // Copy of group's water surface volume injection rate target/limit
+            waterResRateLimit_2     =  62, // Copy of group's water reservoir volume injection rate target/limit
+            waterReinjectionLimit_2 =  63, // Copy of group's water reinjection fraction target/limit
+            waterVoidageLimit_2     =  64, // Copy of group's water voidage injection fraction target/limit
+
+            gasSurfRateLimit_2      =  65, // Copy of group's gas surface volume injection rate target/limit
+            gasResRateLimit_2       =  66, // Copy of group's gas reservoir volume injection rate target/limit
+            gasReinjectionLimit_2   =  67, // Copy of group's gas reinjection fraction target/limit
+            gasVoidageLimit_2       =  68, // Copy of group's gas voidage injection fraction target/limit
         };
+
+        namespace Value {
+            constexpr auto NoGLOLimit = -10.0f;
+        } // namespace Value
     } // SGroup
 
 
