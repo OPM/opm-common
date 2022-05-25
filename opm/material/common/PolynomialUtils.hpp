@@ -309,6 +309,106 @@ unsigned invertCubicPolynomial(SolContainer* sol,
 
     return 3;
 }
+
+/*!
+ * \ingroup Math
+ * \brief Invert a cubic polynomial analytically
+ *
+ * The polynomial is defined as
+ * \f[ p(x) = a\; x^3 + + b\;x^3 + c\;x + d \f]
+ *
+ * This method teturns the number of solutions which are in the real
+ * numbers. The "sol" argument contains the real roots of the cubic
+ * polynomial in order with the smallest root first.
+ *
+ * \param sol Container into which the solutions are written
+ * \param a The coefficient for the cubic term
+ * \param b The coefficient for the quadratic term
+ * \param c The coefficient for the linear term
+ * \param d The coefficient for the constant term
+ */
+template <class Scalar, class SolContainer>
+unsigned cubicRoots(SolContainer* sol,
+                             Scalar a,
+                             Scalar b,
+                             Scalar c,
+                             Scalar d)
+{
+    // reduces to a quadratic polynomial
+    if (std::abs(scalarValue(a)) < 1e-30)
+        return invertQuadraticPolynomial(sol, b, c, d);
+    
+    // We need to reduce the cubic equation to its "depressed cubic" form (however strange that sounds)
+    // Depressed cubic form: t^3 + p*t + q, where x = t - b/3*a is the transform we use when we have
+    // roots for t. p and q are defined below.
+    // Formula for p and q:
+    Scalar p = (3.0 * a * c - b * b) / (3.0 * a * a);
+    Scalar q = (2.0 * b * b * b - 9.0 * a * b * c + 27.0 * d * a * a) / (27.0 * a * a * a);
+    
+    // Check if we have three or one real root by looking at the discriminant, and solve accordingly with 
+    // correct formula
+    Scalar discr = 4.0 * p * p * p + 27.0 * q * q;
+    if (discr < 0.0) {
+        // Find three real roots of a depressed cubic, using the trigonometric method
+        // Help calculation
+        Scalar theta = (1.0 / 3.0) * acos( ((3.0 * q) / (2.0 * p)) * sqrt(-3.0 / p) );
+
+        // Calculate the three roots
+        sol[0] = 2.0 * sqrt(-p / 3.0) * cos( theta );
+        sol[1] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((2.0 * M_PI) / 3.0) );
+        sol[2] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((4.0 * M_PI) / 3.0) );
+
+        // Sort in ascending order
+        std::sort(sol, sol + 3);
+
+        // Return confirmation of three roots
+        // std::cout << "Z (discr < 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
+        return 3;
+    }
+    else if (discr > 0.0) {
+        // Find one real root of a depressed cubic using hyperbolic method. Different solutions depending on 
+        // sign of p
+        Scalar t;
+        if (p < 0) {
+            // Help calculation
+            Scalar theta = (1.0 / 3.0) * acosh( ((-3.0 * abs(q)) / (2.0 * p)) * sqrt(-3.0 / p) );
+
+            // Root
+            t = ( (-2.0 * abs(q)) / q ) * sqrt(-p / 3.0) * cosh(theta);
+        }
+        else if (p > 0) {
+            // Help calculation
+            Scalar theta = (1.0 / 3.0) * asinh( ((3.0 * q) / (2.0 * p)) * sqrt(3.0 / p) );
+            // Root
+            t = -2.0 * sqrt(p / 3.0) * sinh(theta);
+
+        }
+        else {
+            std::runtime_error(" p = 0 in cubic root solver!");
+        }
+
+        // Transform t to output solution
+        sol[0] = t - b / (3.0 * a);
+        // std::cout << "Z (discr > 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
+        return 1;
+
+    }
+    else {
+        // The discriminant, 4*p^3 + 27*q^2 = 0, thus we have simple (real) roots
+        // If p = 0 then also q = 0, and t = 0 is a triple root
+        if (p == 0) {
+            sol[0] = sol[1] = sol[2] = 0.0 - b / (3.0 * a);
+        }
+        // If p != 0, the we have a simple root and a double root 
+        else {
+            sol[0] = (3.0 * q / p) - b / (3.0 * a);
+            sol[1] = sol[2] = (-3.0 * q) / (2.0 * p) - b / (3.0 * a);
+            std::sort(sol, sol + 3);
+        }
+        // std::cout << "Z (disc = 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
+        return 3;
+    }
 }
+} // end Opm
 
 #endif

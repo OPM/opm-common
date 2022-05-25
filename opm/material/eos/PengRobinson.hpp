@@ -55,6 +55,8 @@ namespace Opm {
 template <class Scalar>
 class PengRobinson
 {
+    //! The ideal gas constant [Pa * m^3/mol/K]
+    static const Scalar R;
 
     PengRobinson()
     { }
@@ -127,7 +129,7 @@ public:
             const Evaluation& delta = f/df_dp;
             pVap = pVap - delta;
 
-            if (std::abs(scalarValue(delta/pVap)) < 1e-10)
+            if (std::abs(Opm::scalarValue(delta/pVap)) < 1e-10)
                 break;
         }
 
@@ -160,13 +162,13 @@ public:
         const Evaluation& a = params.a(phaseIdx); // "attractive factor"
         const Evaluation& b = params.b(phaseIdx); // "co-volume"
 
-        if (!std::isfinite(scalarValue(a))
-            || std::abs(scalarValue(a)) < 1e-30)
+        if (!std::isfinite(Opm::scalarValue(a))
+            || std::abs(Opm::scalarValue(a)) < 1e-30)
             return std::numeric_limits<Scalar>::quiet_NaN();
-        if (!std::isfinite(scalarValue(b)) || b <= 0)
+        if (!std::isfinite(Opm::scalarValue(b)) || b <= 0)
             return std::numeric_limits<Scalar>::quiet_NaN();
 
-        const Evaluation& RT= Constants<Scalar>::R*T;
+        const Evaluation& RT= R*T;
         const Evaluation& Astar = a*p/(RT*RT);
         const Evaluation& Bstar = b*p/RT;
 
@@ -184,27 +186,26 @@ public:
         Valgrind::CheckDefined(a2);
         Valgrind::CheckDefined(a3);
         Valgrind::CheckDefined(a4);
-        int numSol = invertCubicPolynomial(Z, a1, a2, a3, a4);
+        // std::cout << "Cubic params : " << a1 << " " << a2 << " " << a3 << " " << a4 << std::endl;
+        // int numSol = invertCubicPolynomial(Z, a1, a2, a3, a4);
+        int numSol = cubicRoots(Z, a1, a2, a3, a4);
+        // std::cout << "Z = " << Z[0] << " " <<  Z[1] << " " << Z[2] << std::endl;
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
             // molar volume of liquid is the smallest one
-#warning HACK, should investigate why
             if (isGasPhase)
-                //  Vm = Z[2]*RT/p;
-                Vm = max(1e-7, Z[2]*RT/p);
+                Vm = Opm::max(1e-7, Z[2]*RT/p);
             else
-                //  Vm = Z[2]*RT/p;
-                Vm = max(1e-7, Z[0]*RT/p);
+                Vm = Opm::max(1e-7, Z[0]*RT/p);
         }
         else if (numSol == 1) {
             // the EOS only has one intersection with the pressure,
             // for the other phase, we take the extremum of the EOS
             // with the largest distance from the intersection.
-            Evaluation VmCubic = Z[0]*RT/p;
+            Evaluation VmCubic = Opm::max(1e-7, Z[0]*RT/p);
             Vm = VmCubic;
 
-#warning, should investigate why here
             // find the extrema (if they are present)
             // Evaluation Vmin, Vmax, pmin, pmax;
             // if (findExtrema_(Vmin, Vmax,
@@ -229,7 +230,7 @@ public:
         }
 
         Valgrind::CheckDefined(Vm);
-        assert(std::isfinite(scalarValue(Vm)));
+        assert(Opm::isfinite(Vm));
         assert(Vm > 0);
         return Vm;
     }
@@ -251,7 +252,7 @@ public:
         const Evaluation& p = params.pressure();
         const Evaluation& Vm = params.molarVolume();
 
-        const Evaluation& RT = Constants<Scalar>::R*T;
+        const Evaluation& RT = R*T;
         const Evaluation& Z = p*Vm/RT;
         const Evaluation& Bstar = p*params.b() / RT;
 
@@ -260,8 +261,8 @@ public:
             (Vm + params.b()*(1 - std::sqrt(2)));
         const Evaluation& expo = - params.a()/(RT * 2 * params.b() * std::sqrt(2));
         const Evaluation& fugCoeff =
-            exp(Z - 1) / (Z - Bstar) *
-            pow(tmp, expo);
+            Opm::exp(Z - 1) / (Z - Bstar) *
+            Opm::pow(tmp, expo);
 
         return fugCoeff;
     }
@@ -299,9 +300,9 @@ protected:
         //Evaluation Vcrit = criticalMolarVolume_.eval(params.a(phaseIdx), params.b(phaseIdx));
 
         if (isGasPhase)
-            Vm = max(Vm, Vcrit);
+            Vm = Opm::max(Vm, Vcrit);
         else
-            Vm = min(Vm, Vcrit);
+            Vm = Opm::min(Vm, Vcrit);
     }
 
     template <class Evaluation>
@@ -351,14 +352,14 @@ protected:
             const Scalar eps = - 1e-11;
             bool hasExtrema OPM_OPTIM_UNUSED = findExtrema_(minVm, maxVm, minP, maxP, a, b, T + eps);
             assert(hasExtrema);
-            assert(std::isfinite(scalarValue(maxVm)));
+            assert(std::isfinite(Opm::scalarValue(maxVm)));
             Evaluation fStar = maxVm - minVm;
 
             // derivative of the difference between the maximum's
             // molar volume and the minimum's molar volume regarding
             // temperature
             Evaluation fPrime = (fStar - f)/eps;
-            if (std::abs(scalarValue(fPrime)) < 1e-40) {
+            if (std::abs(Opm::scalarValue(fPrime)) < 1e-40) {
                 Tcrit = T;
                 pcrit = (minP + maxP)/2;
                 Vcrit = (maxVm + minVm)/2;
@@ -367,7 +368,7 @@ protected:
 
             // update value for the current iteration
             Evaluation delta = f/fPrime;
-            assert(std::isfinite(scalarValue(delta)));
+            assert(std::isfinite(Opm::scalarValue(delta)));
             if (delta > 0)
                 delta = -10;
 
@@ -415,7 +416,7 @@ protected:
         Scalar u = 2;
         Scalar w = -1;
 
-        const Evaluation& RT = Constants<Scalar>::R*T;
+        const Evaluation& RT = R*T;
 
         // calculate coefficients of the 4th order polynominal in
         // monomial basis
@@ -425,11 +426,11 @@ protected:
         const Evaluation& a4 = 2*RT*u*w*b*b*b + 2*u*a*b*b - 2*a*b*b;
         const Evaluation& a5 = RT*w*w*b*b*b*b - u*a*b*b*b;
 
-        assert(std::isfinite(scalarValue(a1)));
-        assert(std::isfinite(scalarValue(a2)));
-        assert(std::isfinite(scalarValue(a3)));
-        assert(std::isfinite(scalarValue(a4)));
-        assert(std::isfinite(scalarValue(a5)));
+        assert(std::isfinite(Opm::scalarValue(a1)));
+        assert(std::isfinite(Opm::scalarValue(a2)));
+        assert(std::isfinite(Opm::scalarValue(a3)));
+        assert(std::isfinite(Opm::scalarValue(a4)));
+        assert(std::isfinite(Opm::scalarValue(a5)));
 
         // Newton method to find first root
 
@@ -438,11 +439,11 @@ protected:
         // above the covolume
         Evaluation V = b*1.1;
         Evaluation delta = 1.0;
-        for (unsigned i = 0; std::abs(scalarValue(delta)) > 1e-12; ++i) {
+        for (unsigned i = 0; std::abs(Opm::scalarValue(delta)) > 1e-12; ++i) {
             const Evaluation& f = a5 + V*(a4 + V*(a3 + V*(a2 + V*a1)));
             const Evaluation& fPrime = a4 + V*(2*a3 + V*(3*a2 + V*4*a1));
 
-            if (std::abs(scalarValue(fPrime)) < 1e-20) {
+            if (std::abs(Opm::scalarValue(fPrime)) < 1e-20) {
                 // give up if the derivative is zero
                 return false;
             }
@@ -456,7 +457,7 @@ protected:
                 return false;
             }
         }
-        assert(std::isfinite(scalarValue(V)));
+        assert(std::isfinite(Opm::scalarValue(V)));
 
         // polynomial division
         Evaluation b1 = a1;
@@ -467,7 +468,7 @@ protected:
         // invert resulting cubic polynomial analytically
         Evaluation allV[4];
         allV[0] = V;
-        int numSol = 1 + invertCubicPolynomial<Evaluation>(allV + 1, b1, b2, b3, b4);
+        int numSol = 1 + Opm::invertCubicPolynomial<Evaluation>(allV + 1, b1, b2, b3, b4);
 
         // sort all roots of the derivative
         std::sort(allV + 0, allV + numSol);
@@ -507,9 +508,9 @@ protected:
         const Evaluation& tau = 1 - Tr;
         const Evaluation& omega = Component::acentricFactor();
 
-        const Evaluation& f0 = (tau*(-5.97616 + sqrt(tau)*(1.29874 - tau*0.60394)) - 1.06841*pow(tau, 5))/Tr;
-        const Evaluation& f1 = (tau*(-5.03365 + sqrt(tau)*(1.11505 - tau*5.41217)) - 7.46628*pow(tau, 5))/Tr;
-        const Evaluation& f2 = (tau*(-0.64771 + sqrt(tau)*(2.41539 - tau*4.26979)) + 3.25259*pow(tau, 5))/Tr;
+        const Evaluation& f0 = (tau*(-5.97616 + Opm::sqrt(tau)*(1.29874 - tau*0.60394)) - 1.06841*Opm::pow(tau, 5))/Tr;
+        const Evaluation& f1 = (tau*(-5.03365 + Opm::sqrt(tau)*(1.11505 - tau*5.41217)) - 7.46628*Opm::pow(tau, 5))/Tr;
+        const Evaluation& f2 = (tau*(-0.64771 + Opm::sqrt(tau)*(2.41539 - tau*4.26979)) + 3.25259*Opm::pow(tau, 5))/Tr;
 
         return Component::criticalPressure()*std::exp(f0 + omega * (f1 + omega*f2));
     }
@@ -539,6 +540,8 @@ protected:
 */
 };
 
+template <class Scalar>
+const Scalar PengRobinson<Scalar>::R = Opm::Constants<Scalar>::R;
 
 /*
 template <class Scalar>
