@@ -28,6 +28,7 @@ namespace Opm {
     struct Tuning;
     class Schedule;
     class UDQParams;
+    class UnitSystem;
 }
 
 namespace Opm { namespace RestartIO {
@@ -57,7 +58,9 @@ namespace Opm { namespace RestartIO {
             double min_ec_grad;
         };
 
-       struct NetBalanceParams {
+        struct NetBalanceParams {
+            explicit NetBalanceParams(const UnitSystem& usys);
+
             double balancingInterval;
             double convTolNodPres;
             double convTolTHPCalc;

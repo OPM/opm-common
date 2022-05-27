@@ -23,15 +23,19 @@
 #include <opm/output/eclipse/DoubHEAD.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
 
 #include <chrono>
 #include <cstddef>
+#include <optional>
 #include <vector>
 
 namespace {
@@ -69,11 +73,10 @@ namespace {
 
         return static_cast<double>(Opm::Metric::Time);
     }
-    
-    
+
     Opm::RestartIO::DoubHEAD::guideRate
     computeGuideRate(const ::Opm::Schedule& sched,
-                     const std::size_t    lookup_step)
+                     const std::size_t      lookup_step)
     {
             double a = 0.;
             double b = 0.;
@@ -112,7 +115,7 @@ namespace {
     Opm::RestartIO::DoubHEAD::liftOptPar
     computeLiftOptParam(const ::Opm::Schedule& sched,
                         const Opm::UnitSystem& units,
-                        const std::size_t    lookup_step)
+                        const std::size_t      lookup_step)
     {
         using M = ::Opm::UnitSystem::measure;
         const auto& glo = sched.glo(lookup_step);
@@ -122,40 +125,43 @@ namespace {
         };
     }
 
-    Opm::RestartIO::DoubHEAD::NetBalanceParams
-    getNetworkBalanceParameters(const Opm::Schedule&   sched,
-                          const Opm::UnitSystem& units,
-                          const std::size_t      report_step)
+    void assignNetworkBalanceParameters(const Opm::Network::Balance&                netbalan,
+                                        const Opm::UnitSystem&                      units,
+                                        Opm::RestartIO::DoubHEAD::NetBalanceParams& param)
     {
         using M = ::Opm::UnitSystem::measure;
-        double balancingInterval = 0.;
-        double convTolNodPres = 0.;
-        double convTolTHPCalc = 0.01;
-        double targBranchBalError = 1.E+20;
-        double maxBranchBalError = 1.E+20;
-        double minTimeStepSize = 0.;
 
-        if (report_step > 0) {
-            const auto& sched_state = sched[report_step];
-            if (sched_state.network().active()) {
-                const auto lookup_step = report_step - 1;
-                balancingInterval = units.from_si(M::time, sched[lookup_step].network_balance().interval());
-                convTolNodPres = units.from_si(M::pressure, sched[lookup_step].network_balance().pressure_tolerance());
-                convTolTHPCalc = sched[lookup_step].network_balance().thp_tolerance();
-                targBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().target_balance_error().value_or(Opm::ParserKeywords::NETBALAN::TARGET_BALANCE_ERROR::defaultValue));
-                maxBranchBalError = units.from_si(M::pressure, sched[lookup_step].network_balance().max_balance_error().value_or(Opm::ParserKeywords::NETBALAN::MAX_BALANCE_ERROR::defaultValue));
-                minTimeStepSize = units.from_si(M::time, sched[lookup_step].network_balance().min_tstep());
-            }
+        param.balancingInterval = units.from_si(M::time, netbalan.interval());
+        param.convTolNodPres = units.from_si(M::pressure, netbalan.pressure_tolerance());
+        param.convTolTHPCalc = units.from_si(M::identity, netbalan.thp_tolerance());
+
+        if (const auto& trgBE = netbalan.target_balance_error(); trgBE.has_value()) {
+            param.targBranchBalError = units.from_si(M::pressure, trgBE.value());
         }
 
-        return {
-            balancingInterval,
-            convTolNodPres,
-            convTolTHPCalc,
-            targBranchBalError,
-            maxBranchBalError,
-            minTimeStepSize
-        };
+        if (const auto& maxBE = netbalan.max_balance_error(); maxBE.has_value()) {
+            param.maxBranchBalError = units.from_si(M::pressure, maxBE.value());
+        }
+
+        if (const auto& minTStep = netbalan.min_tstep(); minTStep.has_value()) {
+            param.minTimeStepSize = units.from_si(M::time, minTStep.value());
+        }
+    }
+
+    Opm::RestartIO::DoubHEAD::NetBalanceParams
+    getNetworkBalanceParameters(const Opm::Schedule&   sched,
+                                const Opm::UnitSystem& units,
+                                const std::size_t      report_step,
+                                const std::size_t      lookup_step)
+    {
+        auto param = Opm::RestartIO::DoubHEAD::NetBalanceParams{units};
+
+        if ((report_step > 0) && sched[lookup_step].network().active()) {
+            assignNetworkBalanceParameters(sched[lookup_step].network_balance(),
+                                           units, param);
+        }
+
+        return param;
     }
 } // Anonymous
 
@@ -173,17 +179,17 @@ createDoubHead(const EclipseState& es,
                const double        nextTimeStep)
 {
     const auto& usys  = es.getDeckUnitSystem();
-    const auto& rspec  = es.runspec();
+    const auto& rspec = es.runspec();
     const auto  tconv = getTimeConv(usys);
 
     auto dh = DoubHEAD{}
         .tuningParameters(sched[lookup_step].tuning(), tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
         .drsdt           (sched, lookup_step, tconv)
-        .udq_param(rspec.udqParams())
+        .udq_param       (rspec.udqParams())
         .guide_rate_param(computeGuideRate(sched, lookup_step))
-        .lift_opt_param(computeLiftOptParam(sched, usys, lookup_step))
-        .netBalParams(getNetworkBalanceParameters(sched, usys, report_step))
+        .lift_opt_param  (computeLiftOptParam(sched, usys, lookup_step))
+        .netBalParams    (getNetworkBalanceParameters(sched, usys, report_step, lookup_step))
         ;
 
     if (nextTimeStep > 0.0) {

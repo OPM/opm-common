@@ -43,12 +43,21 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         XxxMBE  = 18,
         XxxLCV  = 19,
         XxxWFL  = 20,
-        Netbalint  = 51,    //  balancingInterval
-        Netbalnpre  = 53,    //  convTolNodPres
-        Netbalthpc  = 50,    //  convTolTHPCalc
-        Netbaltarerr  = 63,    //  targBranchBalError
-        Netbalmaxerr  = 64,    //  maxBranchBalError
-        Netbalstepsz  = 66,    //  minTimeStepSize
+
+        Netbalthpc    = 50,    //  Network balancing THP convergence limit (NETBALAN(4))
+        Netbalint     = 51,    //  Network balancing interval (NETBALAN(1))
+        Netbalnpre    = 53,    //  Network balancing nodal pressure
+                               //  convergence limit (NETBALAN(2))
+
+        Netbaltarerr  = 63,    //  Target largest branch network balancing
+                               //  error at end of timestep (NETBALAN(6))
+
+        Netbalmaxerr  = 64,    //  Maximum permitted network balancing error
+                               //  at end of timestep (NETBALAN(7))
+
+        Netbalstepsz  = 66,    //  Minimum stepsize for steps limited by
+                               //  network balancing errors (NETBALAN(8))
+
         TrgDPR  = 82,
         TfDiff  = 83,
         DdpLim  = 84,
@@ -74,6 +83,14 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         UdqPar_3 = 213,		// UDQPARAM item number 3 (Value given to undefined elements when outputting data)
         UdqPar_4 = 214,		// UDQPARAM item number 4 (fractional equality tolerance used in ==, <= etc. functions)
     };
+
+    namespace DoubHeadValue {
+        // Default if no active network (BRANPROP/NODEPROP)
+        constexpr auto NetBalNodPressDefault = 0.0; // Barsa
+
+        // Default => Use TSMINZ from TUNING
+        constexpr auto NetBalMinTSDefault = 0.0;
+    }
 
 }}}} // Opm::RestartIO::Helpers::VectorItems
 

@@ -18,13 +18,17 @@
 */
 
 #include <opm/output/eclipse/DoubHEAD.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/output/eclipse/InteHEAD.hpp> // Opm::RestartIO::makeUTCTime()
-
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
 #include <chrono>
 #include <cmath>
@@ -32,6 +36,7 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <optional>
 #include <ratio>
 #include <utility>
 #include <vector>
@@ -368,10 +373,41 @@ namespace {
         // Failed to convert tm1 to time_t (unexpected).  Use initial value.
         return toDateNum(tm0.tm_year, tm0.tm_yday);
     }
+
+    double defaultNetBalanInterval()
+    {
+        static const auto interval = Opm::UnitSystem::newMETRIC()
+            .to_si(Opm::UnitSystem::measure::time,
+                   Opm::ParserKeywords::NETBALAN::TIME_INTERVAL::defaultValue);
+
+        return interval;
+    }
+
+    double defaultNetBalanNodePressTol()
+    {
+        static const auto tol = Opm::UnitSystem::newMETRIC()
+            .to_si(Opm::UnitSystem::measure::pressure,
+                   Opm::RestartIO::Helpers::VectorItems::DoubHeadValue::NetBalNodPressDefault);
+
+        return tol;
+    }
 }
 
 // =====================================================================
 // Public Interface (DoubHEAD member functions) Below Separator
+// ---------------------------------------------------------------------
+
+Opm::RestartIO::DoubHEAD::NetBalanceParams::NetBalanceParams(const UnitSystem& usys)
+    : balancingInterval {usys.from_si(UnitSystem::measure::time,
+                                      defaultNetBalanInterval())}
+    , convTolNodPres    {usys.from_si(UnitSystem::measure::pressure,
+                                      defaultNetBalanNodePressTol())}
+    , convTolTHPCalc    {ParserKeywords::NETBALAN::THP_CONVERGENCE_LIMIT::defaultValue} // No usys.to_si() here!
+    , targBranchBalError{ParserKeywords::NETBALAN::TARGET_BALANCE_ERROR::defaultValue}  // No usys.to_si() here!
+    , maxBranchBalError {ParserKeywords::NETBALAN::MAX_BALANCE_ERROR::defaultValue}     // No usys.to_si() here!
+    , minTimeStepSize   {Helpers::VectorItems::DoubHeadValue::NetBalMinTSDefault}
+{}
+
 // ---------------------------------------------------------------------
 
 Opm::RestartIO::DoubHEAD::DoubHEAD()
@@ -650,13 +686,12 @@ Opm::RestartIO::DoubHEAD::lift_opt_param(const liftOptPar& lo_par)
 Opm::RestartIO::DoubHEAD&
 Opm::RestartIO::DoubHEAD::netBalParams(const NetBalanceParams& net_bal_par)
 {
-    this->data_[Netbalan_int]   = net_bal_par.balancingInterval;
+    this->data_[Netbalan_int]    = net_bal_par.balancingInterval;
     this->data_[Netbalan_npre]   = net_bal_par.convTolNodPres;
     this->data_[Netbalan_thpc]   = net_bal_par.convTolTHPCalc;
-    this->data_[Netbalan_tarerr]   = net_bal_par.targBranchBalError;
-    this->data_[Netbalan_maxerr]   = net_bal_par.maxBranchBalError;
-    this->data_[Netbalan_stepsz]   = net_bal_par.minTimeStepSize;
+    this->data_[Netbalan_tarerr] = net_bal_par.targBranchBalError;
+    this->data_[Netbalan_maxerr] = net_bal_par.maxBranchBalError;
+    this->data_[Netbalan_stepsz] = net_bal_par.minTimeStepSize;
 
     return *this;
 }
-
