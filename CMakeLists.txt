@@ -441,6 +441,9 @@ if (OPM_ENABLE_PYTHON)
   # setup-install.sh - and completely bypass cmake in the installation phase.
   if (OPM_INSTALL_PYTHON)
     install( CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+    ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
+    ##  opm-common
+    install( PROGRAMS "python/install.py" DESTINATION "share/opm/python" )
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
