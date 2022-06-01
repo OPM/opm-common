@@ -354,18 +354,21 @@ unsigned cubicRoots(SolContainer* sol,
         Scalar theta = (1.0 / 3.0) * acos( ((3.0 * q) / (2.0 * p)) * sqrt(-3.0 / p) );
 
         // Calculate the three roots
-        sol[0] = 2.0 * sqrt(-p / 3.0) * cos( theta );
-        sol[1] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((2.0 * M_PI) / 3.0) );
-        sol[2] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((4.0 * M_PI) / 3.0) );
+        sol[0] = 2.0 * sqrt(-p / 3.0) * cos( theta ) - b / (3.0 * a);
+        sol[1] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((2.0 * M_PI) / 3.0) ) - b / (3.0 * a);
+        sol[2] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((4.0 * M_PI) / 3.0) ) - b / (3.0 * a);
+
+        //std::cout << "Z (discr < 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
 
         // Sort in ascending order
         std::sort(sol, sol + 3);
 
         // Return confirmation of three roots
-        // std::cout << "Z (discr < 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
+      
         return 3;
     }
     else if (discr > 0.0) {
+
         // Find one real root of a depressed cubic using hyperbolic method. Different solutions depending on 
         // sign of p
         Scalar t;
