@@ -4,6 +4,7 @@
     "GRID"
   ],
   "size": 1,
+  "requires": ["ENDSCALE"],
   "items": [
     {
       "name": "FLAG",

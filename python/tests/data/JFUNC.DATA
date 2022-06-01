@@ -5,6 +5,10 @@ TITLE
 
 DIMENS
  10 10 10 /
+
+ENDSCALE
+/
+
 GRID
 DX
 1000*0.25 /

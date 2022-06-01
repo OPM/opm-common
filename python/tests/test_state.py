@@ -156,6 +156,8 @@ SATNUM
         jfunc_gas = """
 DIMENS
  10 10 10 /
+ENDSCALE
+/
 GRID
 DX
 1000*0.25 /
