@@ -488,52 +488,6 @@ Opm::SummaryState sim_state()
     return state;
 }
 
-#if 0
-Opm::SummaryState sim_state()
-{
-    auto state = Opm::SummaryState {Opm::TimeService::now()};
-
-    state.update("GOPR:GRP1",   235.);
-    state.update("GGPR:GRP1",   100237.);
-    state.update("GWPR:GRP1",   239.);
-    state.update("GOPGR:GRP1",  345.6);
-    state.update("GWPGR:GRP1",  456.7);
-    state.update("GGPGR:GRP1",  567.8);
-    state.update("GVPGR:GRP1",  678.9);
-    state.update("GOIGR:GRP1", 0.123);
-    state.update("GWIGR:GRP1", 1234.5);
-    state.update("GGIGR:GRP1", 2345.6);
-
-    state.update("GOPR:WGRP1",   23.);
-    state.update("GGPR:WGRP1",   50237.);
-    state.update("GWPR:WGRP1",   29.);
-    state.update("GOPGR:WGRP1",  456.7);
-    state.update("GWPGR:WGRP1",  567.8);
-    state.update("GGPGR:WGRP1",  678.9);
-    state.update("GVPGR:WGRP1",  789.1);
-    state.update("GOIGR:WGRP1", 1.23);
-    state.update("GWIGR:WGRP1", 2345.6);
-    state.update("GGIGR:WGRP1", 3456.7);
-
-    state.update("GOPR:WGRP2",   43.);
-    state.update("GGPR:WGRP2",   70237.);
-    state.update("GWPR:WGRP2",   59.);
-    state.update("GOPGR:WGRP2",  56.7);
-    state.update("GWPGR:WGRP2",  67.8);
-    state.update("GGPGR:WGRP2",  78.9);
-    state.update("GVPGR:WGRP2",  89.1);
-    state.update("GOIGR:WGRP2", 12.3);
-    state.update("GWIGR:WGRP2", 345.6);
-    state.update("GGIGR:WGRP2", 456.7);
-
-    state.update("FOPR",   3456.);
-    state.update("FGPR",   2003456.);
-    state.update("FWPR",   5678.);
-
-    return state;
-}
-#endif
-
 Opm::SummaryState sim_state_2()
 {
     auto state = Opm::SummaryState {Opm::TimeService::now()};
@@ -596,21 +550,68 @@ Opm::SummaryState sim_state_2()
 
     return state;
 }
+
+Opm::SummaryState sim_state_3()
+{
+    auto state = Opm::SummaryState {Opm::TimeService::now()};
+
+    state.update("FMCTP", 0.0);  // FIELD: Production mode NONE
+    state.update("FMCTW", 3.0);  // FIELD: Injection mode VREP for water
+    state.update("FMCTG", 0.0);  // FIELD: Injection mode NONE for gas
+
+    state.update_group_var("PLAT-A", "GMCTP", -1.0);
+    state.update_group_var("PLAT-A", "GMCTW",  0.0);
+    state.update_group_var("PLAT-A", "GMCTG",  0.0);
+
+    state.update_group_var("M5S", "GMCTP",  1.0);
+    state.update_group_var("M5S", "GMCTW",  3.0);
+    state.update_group_var("M5S", "GMCTG",  0.0);
+
+    state.update_group_var("M5N", "GMCTP", -1.0);
+    state.update_group_var("M5N", "GMCTW",  0.0);
+    state.update_group_var("M5N", "GMCTG",  0.0);
+
+    state.update_group_var("B1", "GMCTP",  0.0);
+    state.update_group_var("B1", "GMCTW",  0.0);
+    state.update_group_var("B1", "GMCTG",  0.0);
+
+    state.update_group_var("C1", "GMCTP",  0.0);
+    state.update_group_var("C1", "GMCTW",  0.0);
+    state.update_group_var("C1", "GMCTG",  0.0);
+
+    state.update_group_var("F1", "GMCTP",  0.0);
+    state.update_group_var("F1", "GMCTW",  0.0);
+    state.update_group_var("F1", "GMCTG",  0.0);
+
+    state.update_well_var("B-1H", "WMCTL", -1.0);
+    state.update_well_var("B-2H", "WMCTL",  0.0);
+    state.update_well_var("B-3H", "WMCTL", -1.0);
+    state.update_well_var("G-3H", "WMCTL", -1.0);
+    state.update_well_var("G-4H", "WMCTL", -1.0);
+    state.update_well_var("C-1H", "WMCTL", -1.0);
+    state.update_well_var("C-2H", "WMCTL", -1.0);
+    state.update_well_var("F-1H", "WMCTL", -1.0);
+    state.update_well_var("F-2H", "WMCTL", -1.0);
+
+    return state;
+}
 }
 
 struct SimulationCase
 {
+    explicit SimulationCase(const char* deck)
+        : SimulationCase { Opm::Parser{}.parseString(deck) }
+    {}
+
     explicit SimulationCase(const Opm::Deck& deck)
-        : es   ( deck )
-        , grid { deck }
-    , python( std::make_shared<Opm::Python>() )
-    , sched (deck, es, python )
+        : es    { deck }
+        , grid  { deck }
+        , sched { deck, es, std::make_shared<Opm::Python>() }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
 };
 
@@ -862,6 +863,291 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data_2)
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  5] ,   0); // group available for higher level production control
         // BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 17] ,   0); // group available for higher level water injection control
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 22] ,   0); // group available for higher level gas injection control
+    }
+}
+
+BOOST_AUTO_TEST_CASE (GasLiftOtimisation)
+{
+    // Abridged, and amended, copy of opm-tests/model5/4_GLIFT_MODEL5.DATA
+    const auto cse = SimulationCase { R"(
+RUNSPEC
+
+DIMENS
+ 20 30 10 /
+
+
+OIL
+WATER
+GAS
+DISGAS
+
+METRIC
+
+START
+ 01 'JAN' 2020 /
+
+EQLDIMS
+ 1  100  25 /
+
+TABDIMS
+/
+
+WELLDIMS
+--max.well  max.con/well  max.grup  max.w/grup
+ 10         15            9          10   /
+
+--FLOW   THP  WCT  GCT  ALQ  VFP
+VFPPDIMS
+  22     13   10   13    13   50  /
+
+UNIFIN
+UNIFOUT
+
+GRID
+
+DXV
+ 20*100
+/
+
+DYV
+ 30*100
+/
+
+DZV
+ 10*2
+/
+
+TOPS
+  600*2000 /
+
+PORO
+ 6000*0.28 /
+
+PERMX
+ 6000*10000.0 /
+
+PERMZ
+ 6000*1000.0 /
+
+COPY
+  PERMX PERMY /
+/
+
+PROPS
+
+REGIONS
+
+SOLUTION
+
+EQUIL
+-- Datum    P     woc     Pc   goc    Pc  Rsvd  Rvvd
+ 2000.00  195.0  2070     0.0  500.00  0.0   1   0   0 /
+
+PBVD
+  2000.00    75.00
+  2150.00    75.00  /
+
+------------------------------------------------------------------------------------------------
+SCHEDULE
+------------------------------------------------------------------------------------------------
+
+--
+--                                       FIELD
+--                                         |
+--                                       PLAT-A
+--                          ---------------+---------------------
+--                         |                                    |
+--                        M5S                                  M5N
+--                ---------+----------                     -----+-------
+--               |                   |                    |            |
+--              B1                  G1                   C1           F1
+--           ----+------          ---+---              ---+---       ---+---
+--          |    |     |         |      |             |      |      |      |
+--        B-1H  B-2H  B-3H     G-3H    G-4H         C-1H   C-2H    F-1H   F-2H
+--
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+/
+
+WELSPECS
+--WELL     GROUP  IHEEL JHEEL   DREF PHASE   DRAD INFEQ SIINS XFLOW PRTAB  DENS
+ 'B-1H'  'B1'     11    3      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'B-2H'  'B1'      4    7      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'B-3H'  'B1'     11   12      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'C-1H'  'C1'     13   20      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'C-2H'  'C1'     12   27      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+/
+
+WELSPECS
+ 'F-1H'  'F1'   19    4      1*   WATER   1*   1*   SHUT 1* 1* 1* /
+ 'F-2H'  'F1'   19   12      1*   WATER   1*   1*   SHUT 1* 1* 1* /
+ 'G-3H'  'G1'   19   21      1*   WATER   1*   1*   SHUT 1* 1* 1* /
+ 'G-4H'  'G1'   19   25      1*   WATER   1*   1*   SHUT 1* 1* 1* /
+/
+
+COMPDAT
+--WELL      I   J    K1   K2 OP/SH  SATN    TRAN    WBDIA    KH     SKIN DFACT   DIR    PEQVR
+ 'B-1H'    11   3    1    5   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+ 'B-2H'     4   7    1    6   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+ 'B-3H'    11  12    1    4   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+ 'C-1H'    13  20    1    4   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+ 'C-2H'    12  27    1    5   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+/
+
+COMPDAT
+ 'F-1H'    19   4    6   10   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+ 'F-2H'    19  12    6   10   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+ 'G-3H'    19  21    6   10   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+ 'G-4H'    19  25    6   10   OPEN    1*      1*    0.216    1*        0    1*    Z       1* /
+/
+
+WCONPROD
+--  Well_name  Status  Ctrl  Orate   Wrate  Grate Lrate   RFV  FBHP   WHP  VFP Glift
+   'B-1H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
+   'B-2H'      SHUT    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
+   'B-3H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
+   'C-1H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
+   'C-2H'      SHUT    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
+/
+
+GCONINJE
+ 'FIELD'   'WATER'    'VREP'  3*      1.020    'NO'  5* /
+/
+
+GCONPROD
+ 'PLAT-A' ORAT 10000 /
+/
+
+WCONINJE
+-- Well_name    Type    Status  Ctrl    SRate1  Rrate   BHP     THP     VFP
+  'F-1H'        WATER   OPEN    GRUP    4000    1*      225.0    1*      1*     /
+  'F-2H'        WATER   OPEN    GRUP    4000    1*      225.0    1*      1*     /
+  'G-3H'        WATER   OPEN    GRUP    4000    1*      225.0    1*      1*     /
+  'G-4H'        WATER   OPEN    GRUP    4000    1*      225.0    1*      1*     /
+/
+
+-- Turns on gas lift optimization
+LIFTOPT
+ 12500 5E-3 0.0 YES /
+
+-- Group lift gas limits for gas lift optimization
+GLIFTOPT
+ 'PLAT-A' 12345 /  --
+ 'M5S' 1* 12345 /
+ 'M5N' -1.0 0.0 /
+ 'B1' 0.0 1.0E-20 /
+ 'G1' -12.345 0.99E-20 /
+ 'C1' 1.0E-8 1.0E-8 /
+/
+
+GCONPROD
+ 'PLAT-A' ORAT 10000 /
+/
+
+DATES
+ 1 FEB 2020 /
+ 1 MAR 2020 /
+ 1 APR 2020 /
+/
+
+END
+)" };
+
+    const auto rptStep = std::size_t {1};
+    double secs_elapsed = 3.1536E07;
+
+    const auto& es    = cse.es;
+    const auto& sched = cse.sched;
+    const auto& grid  = cse.grid;
+
+    const auto& units = es.getUnits();
+    const auto  st    = sim_state_3();
+
+    const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed,
+                                                            rptStep, rptStep + 1, rptStep);
+
+    auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+    agrpd.captureDeclaredGroupData(sched, units, rptStep, st, ih);
+
+    const auto& sgrp = agrpd.getSGroup();
+    const auto& zgrp = agrpd.getZGroup();
+
+    namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+    using namespace std::string_literals;
+
+    using Ix = VI::SGroup::prod_index;
+
+    auto requireGroup = [&zgrp, &ih](const int groupID, const std::string& name)
+    {
+        BOOST_REQUIRE_EQUAL(zgrp[groupID*ih[VI::intehead::NZGRPZ] + 0].c_str(), name);
+    };
+
+    auto sgrpValue = [&ih, &sgrp](const int groupID, const int item)
+    {
+        return sgrp[groupID*ih[VI::intehead::NSGRPZ] + item];
+    };
+
+    // PLAT-A
+    {
+        const auto groupID = 2;
+        requireGroup(groupID, "PLAT-A  "s);
+
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxSupply),  12345.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxRate)  , -   10.0f, 1.0e-5f); // Defaulted -> no limit
+    }
+
+    // M5S
+    {
+        const auto groupID = 1;
+        requireGroup(groupID, "M5S     "s);
+
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxSupply), -   10.0f, 1.0e-5f); // Defaulted -> no limit
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxRate)  ,  12345.0f, 1.0e-5f);
+    }
+
+    // M5N
+    {
+        const auto groupID = 3;
+        requireGroup(groupID, "M5N     "s);
+
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxSupply), -   10.0f, 1.0e-5f); // Negative -> defaulted
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxRate)  ,   1.0e-6f, 1.0e-5f); // 0.0 -> small
+    }
+
+    // B1
+    {
+        const auto groupID = 6;
+        requireGroup(groupID, "B1      "s);
+
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxSupply), 1.0e-6f, 1.0e-5f); // 0.0 -> small
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxRate)  , 1.0e-20f, 1.0e-5f); // >= threshold -> preserve
+    }
+
+    // G1
+    {
+        const auto groupID = 7;
+        requireGroup(groupID, "G1      "s);
+
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxSupply), -10.0f, 1.0e-5f); // Negative -> defaulted
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxRate)  ,  1.0e-6f, 1.0e-5f); // < threshold -> small
+    }
+
+    // C1
+    {
+        const auto groupID = 4;
+        requireGroup(groupID, "C1      "s);
+
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxSupply), 1.0e-8f, 1.0e-5f); // >= threshold -> preserve
+        BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxRate)  , 1.0e-8f, 1.0e-5f); // >= threshold -> preserve
     }
 }
 
