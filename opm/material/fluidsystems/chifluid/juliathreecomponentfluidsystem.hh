@@ -116,6 +116,28 @@ namespace Opm {
             return 0.0;
         }
 
+        //! \copydoc BaseFluidSystem::phaseName
+        static const char* phaseName(unsigned phaseIdx)
+        {
+                static const char* name[] = {"o",  // oleic phase
+                                             "g"};  // gas phase
+
+                assert(0 <= phaseIdx && phaseIdx < 2);
+                return name[phaseIdx];
+        }
+
+        //! \copydoc BaseFluidSystem::componentName
+        static const char* componentName(unsigned compIdx)
+        {
+                static const char* name[] = {
+                        Comp0::name(),
+                        Comp1::name(),
+                };
+
+                assert(0 <= compIdx && compIdx < 3);
+                return name[compIdx];
+        }
+
         /*!
          * \copydoc BaseFluidSystem::density
          */
@@ -143,7 +165,10 @@ namespace Opm {
             // Use LBC method to calculate viscosity
             // LhsEval mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
             // LhsEval mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
-            LhsEval mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx);
+            LhsEval mu;
+            mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
+
+          // LhsEval mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx);
             return mu;
 
         }
