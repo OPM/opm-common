@@ -158,11 +158,6 @@ public:
              }
             //phaseStabilityTestMichelsen_(isStable, K_scalar, fluid_state_scalar, z_scalar, verbosity);
             phaseStabilityTest_(isStable, K_scalar, fluid_state_scalar, z_scalar, verbosity);
-/*             for (int compIdx = 0; compIdx<numComponents; ++compIdx) {
-                K_scalar[0] = 1271;
-                K_scalar[1] = 4765;
-                K_scalar[2] = 0.19;
-            } */
 
         }
         if (verbosity >= 1) {
@@ -198,11 +193,21 @@ public:
         // of the code
         // TODO: Does fluid_state_scalar contain z with derivatives?
         fluid_state_scalar.setLvalue(L_scalar);
+        fluid_state.setLvalue(L_scalar);
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fluid_state.setKvalue(compIdx, K_scalar[compIdx]);
+        }
 
         updateDerivatives_(fluid_state_scalar, z, fluid_state);
         std::cout << " ------      SUMMARY   ------       " << std::endl;
-        std::cout << " L  " << L_scalar << std::endl;
-        std::cout << " K  " << K_scalar << std::endl;
+        std::cout << " L  " << fluid_state.L() << std::endl;
+        std::cout << " K  " << fluid_state.K(0) << ", " << fluid_state.K(1) << ", " << fluid_state.K(2) << std::endl;
+        std::cout << " x  " << fluid_state.moleFraction(oilPhaseIdx, 0) << ", " << fluid_state.moleFraction(oilPhaseIdx, 1) << ", " << fluid_state.moleFraction(oilPhaseIdx, 2) << std::endl;
+        std::cout << " y  " << fluid_state.moleFraction(gasPhaseIdx, 0) << ", " << fluid_state.moleFraction(gasPhaseIdx, 1) << ", " << fluid_state.moleFraction(gasPhaseIdx, 2) << std::endl;
+
+
+
+        fluid_state.setLvalue(L_scalar);
 
 
         // Update phases
