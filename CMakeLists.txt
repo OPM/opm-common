@@ -214,6 +214,9 @@ if (OPM_ENABLE_PYTHON)
     # Compatibility settings for PythonInterp and PythonLibs
     # used e.g. in FindCwrap, pybind11
     set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    # Directory to install common (for opm modules) python scripts
+    include (GNUInstallDirs)
+    set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
   endif()
   # We always need the PYTHON_INCLUDE_DIR. Unfortunately
   # When we build pypi packages CMake will fail to determine
@@ -443,7 +446,7 @@ if (OPM_ENABLE_PYTHON)
     install( CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
     ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
     ##  opm-common
-    install( PROGRAMS "python/install.py" DESTINATION "share/opm/python" )
+    install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
