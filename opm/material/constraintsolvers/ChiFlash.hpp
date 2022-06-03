@@ -172,7 +172,7 @@ public:
             Scalar Vtest = 1 - L_scalar;
             
 
-           // const std::string twoPhaseMethod = "ssi"; // "ssi"
+            const std::string twoPhaseMethod = "ssi"; // "ssi"
             flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state_scalar, verbosity);
 
 
@@ -194,20 +194,31 @@ public:
         // TODO: Does fluid_state_scalar contain z with derivatives?
         fluid_state_scalar.setLvalue(L_scalar);
         fluid_state.setLvalue(L_scalar);
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fluid_state.setKvalue(compIdx, K_scalar[compIdx]);
+        // ensure that things in fluid_state_scalar is transformed to fluid_state 
+        for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                const auto x_i = fluid_state_scalar.moleFraction(oilPhaseIdx, compIdx);
+                fluid_state.setMoleFraction(oilPhaseIdx, compIdx, x_i);
+                const auto y_i = fluid_state_scalar.moleFraction(gasPhaseIdx, compIdx);
+                fluid_state.setMoleFraction(gasPhaseIdx, compIdx, y_i);
         }
 
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fluid_state.setKvalue(compIdx, K_scalar[compIdx]);
+            fluid_state_scalar.setKvalue(compIdx, K_scalar[compIdx]);
+        }
+
+        
+
         updateDerivatives_(fluid_state_scalar, z, fluid_state);
-        std::cout << " ------      SUMMARY   ------       " << std::endl;
+
+
+       // fluid_state.setLvalue(L_scalar);
+
+        std::cout << " ------      SUMMARY  AFTER DERIVATIVES ------       " << std::endl;
         std::cout << " L  " << fluid_state.L() << std::endl;
         std::cout << " K  " << fluid_state.K(0) << ", " << fluid_state.K(1) << ", " << fluid_state.K(2) << std::endl;
         std::cout << " x  " << fluid_state.moleFraction(oilPhaseIdx, 0) << ", " << fluid_state.moleFraction(oilPhaseIdx, 1) << ", " << fluid_state.moleFraction(oilPhaseIdx, 2) << std::endl;
         std::cout << " y  " << fluid_state.moleFraction(gasPhaseIdx, 0) << ", " << fluid_state.moleFraction(gasPhaseIdx, 1) << ", " << fluid_state.moleFraction(gasPhaseIdx, 2) << std::endl;
-
-
-
-        fluid_state.setLvalue(L_scalar);
 
 
         // Update phases
@@ -1299,22 +1310,22 @@ template <class FlashFluidState, class ComponentVector>
             (primary_fluid_state, primary_z, pri_jac, pri_res);
 
         //corresponds to julias J_p (we miss d/dt, and have d/dL instead of d/dV)
-          for (unsigned i =0;  i < num_equations; ++i) {
-              for (unsigned j = 0; j < primary_num_pv; ++j) {
-                  std::cout << " " << pri_jac[i][j];
-              }
-              std::cout << std::endl;
-          }
-          std::cout << std::endl;
+        //   for (unsigned i =0;  i < num_equations; ++i) {
+        //       for (unsigned j = 0; j < primary_num_pv; ++j) {
+        //           std::cout << " " << pri_jac[i][j];
+        //       }
+        //       std::cout << std::endl;
+        //   }
+        //   std::cout << std::endl;
 
         //corresponds to julias J_s
-          for (unsigned i = 0; i < num_equations; ++i) {
-              for (unsigned j = 0; j < secondary_num_pv; ++j) {
-                  std::cout << " " << sec_jac[i][j] ;
-              }
-              std::cout << std::endl;
-          }
-          std::cout << std::endl;
+        //   for (unsigned i = 0; i < num_equations; ++i) {
+        //       for (unsigned j = 0; j < secondary_num_pv; ++j) {
+        //           std::cout << " " << sec_jac[i][j] ;
+        //       }
+        //       std::cout << std::endl;
+        //   }
+        //   std::cout << std::endl;
 
         SecondaryNewtonMatrix xx;
         pri_jac.solve(xx,sec_jac);
@@ -1327,9 +1338,15 @@ template <class FlashFluidState, class ComponentVector>
         // }
 
         using InputEval = typename FluidState::Scalar;
-        std::vector<InputEval> x(numComponents), y(numComponents);
+        using ComponentVectorMoleFraction = Dune::FieldVector<InputEval, numComponents>;
+
+        //std::vector<InputEval> x(numComponents), y(numComponents);
+        ComponentVectorMoleFraction x(numComponents), y(numComponents);
+
         InputEval L_eval = L;
         // TODO: then beginning from that point
+
+      
         {
             const auto p_l = fluid_state.pressure(FluidSystem::oilPhaseIdx);
             const auto p_v = fluid_state.pressure(FluidSystem::gasPhaseIdx);
@@ -1338,9 +1355,11 @@ template <class FlashFluidState, class ComponentVector>
             // const double L = fluid_state_scalar.L();
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 K[compIdx] = fluid_state_scalar.K(compIdx);
-                x[compIdx] = z[compIdx] * 1. / (L + (1 - L) * K[compIdx]);
-                y[compIdx] = x[compIdx] * K[compIdx];
+                x[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::oilPhaseIdx,compIdx);//;z[compIdx] * 1. / (L + (1 - L) * K[compIdx]);
+                y[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::gasPhaseIdx,compIdx);//;x[compIdx] * K[compIdx];
             }
+             
+        
             // then we try to set the derivatives for x, y and K against P and x.
             // p_l and p_v are the same here, in the future, there might be slightly more complicated scenarios when capillary
             // pressure joins
@@ -1360,7 +1379,6 @@ template <class FlashFluidState, class ComponentVector>
                         const double pz = -xx[compIdx][cIdx + 1];
                         const auto& zi = z[cIdx];
                         for (unsigned idx = 0; idx < num_deri; ++idx) {
-                            //std::cout << "HEI x[" << compIdx << "]  |" << idx << "| " << deri[idx] << " from:  " << xx[compIdx][0] << ", " << p_l.derivative(idx) << ", " << pz << ", " << zi << std::endl;
                             deri[idx] += pz * zi.derivative(idx);
                         }
                     }
@@ -1401,12 +1419,15 @@ template <class FlashFluidState, class ComponentVector>
         }
         // x, y og L_eval
 
+        
+
         // set up the mole fractions
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, x[compIdx]);
             fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, y[compIdx]);
         }
         fluid_state.setLvalue(L_eval);       
+
     }
 
     /* template <class Vector, class Matrix, class Eval, class ComponentVector>
