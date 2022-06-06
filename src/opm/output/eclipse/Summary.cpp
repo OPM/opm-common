@@ -3649,7 +3649,7 @@ public:
               SummaryState&                      st) const;
 
     void internal_store(const SummaryState& st, const int report_step, bool isSubstep);
-    void write();
+    void write(const bool is_final_summary);
     PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 
 private:
@@ -3843,7 +3843,7 @@ eval(const int                          sim_step,
     }
 }
 
-void Opm::out::Summary::SummaryImplementation::write()
+void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary)
 {
     const auto zero = std::vector<MiniStep>::size_type{0};
     if (this->numUnwritten_ == zero)
@@ -3866,7 +3866,7 @@ void Opm::out::Summary::SummaryImplementation::write()
 
     if (this->esmry_ != nullptr){
         for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i){
-            this->esmry_->write(this->unwritten_[i].params, !this->unwritten_[i].isSubstep);
+            this->esmry_->write(this->unwritten_[i].params, !this->unwritten_[i].isSubstep, is_final_summary);
         }
     }
 
@@ -4294,9 +4294,9 @@ void Summary::add_timestep(const SummaryState& st, const int report_step, bool i
     this->pImpl_->internal_store(st, report_step, isSubstep);
 }
 
-void Summary::write() const
+void Summary::write(const bool is_final_summary) const
 {
-    this->pImpl_->write();
+    this->pImpl_->write(is_final_summary);
 }
 
 Summary::~Summary() {}

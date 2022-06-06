@@ -83,7 +83,7 @@ public:
               const data::Aquifers&              aquifers_values = {},
               const InterRegFlowValues&          interreg_flows = {}) const;
 
-    void write() const;
+    void write(const bool is_final_summary = false) const;
 
     PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 

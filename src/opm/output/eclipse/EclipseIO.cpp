@@ -285,16 +285,18 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
     const auto& schedule = this->impl->schedule;
     const auto& ioConfig = es.cfg().io();
 
+    const bool final_step { report_step == static_cast<int>(schedule.size()) - 1 };
+    const bool is_final_summary = final_step && !isSubstep;
+
     if ((report_step > 0) &&
         this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed))
     {
         this->impl->summary.add_timestep(st, report_step, isSubstep);
-        this->impl->summary.write();
+        this->impl->summary.write(is_final_summary);
 
         this->impl->recordSummaryOutput(secs_elapsed);
     }
 
-    const bool final_step { report_step == static_cast<int>(schedule.size()) - 1 };
 
     if (final_step && !isSubstep && this->impl->summaryConfig.createRunSummary()) {
         std::filesystem::path outputDir { this->impl->outputDir } ;
