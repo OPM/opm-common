@@ -16,9 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fmt/format.h>
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
@@ -28,15 +28,21 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <exception>
+#include <map>
+#include <optional>
 #include <string>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 #define ENABLE_GCNTL_DEBUG_OUTPUT 0
 
@@ -961,24 +967,42 @@ void assignGroupProductionTargets(const Opm::Group&        group,
     }
 }
 
+// Compatibility shim for restart output of gas-lift rates and limits.  The
+// values are intentionally discontinuous in small interval close to zero.
+template <typename SGProp>
+float getGLORate(const SGProp& sgprop, const std::optional<double>& rate)
+{
+    if (! rate.has_value()) {
+        // Defaulted rate limit (e.g., "supply" or "total").
+        return ::Opm::RestartIO::Helpers::
+            VectorItems::SGroup::Value::NoGLOLimit;
+    }
+
+    // Note: These thresholds and values are in output units.
+    const auto smallRateThreshold = 1.0e-20f;
+    const auto smallRateDefaultValue = 1.0e-6f;
+
+    const auto glo_rate =
+        sgprop(Opm::UnitSystem::measure::gas_surface_rate, rate.value());
+
+    if ((glo_rate < 0.0f) || !(glo_rate < smallRateThreshold)) {
+        // rate \not\in [0, smallRateThreshold) -> Unchanged
+        return glo_rate;
+    }
+
+    // rate \in [0, smallRateThreshold) -> smallRateDefaultValue
+    return smallRateDefaultValue;
+}
+
 template <typename SGProp, class SGrpArray>
 void assignGasLiftOptimisation(const Opm::GasLiftOpt::Group& group,
-                               SGProp&&                      sgprop,
+                               const SGProp&                 sgprop,
                                SGrpArray&                    sGrp)
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
-    using M  = ::Opm::UnitSystem::measure;
 
-    sGrp[Ix::GLOMaxSupply] = sGrp[Ix::GLOMaxRate] =
-        ::Opm::RestartIO::Helpers::VectorItems::SGroup::Value::NoGLOLimit;
-
-    if (const auto& max_supply = group.max_lift_gas(); max_supply.has_value()) {
-        sGrp[Ix::GLOMaxSupply] = sgprop(M::gas_surface_rate, max_supply.value());
-    }
-
-    if (const auto& max_total = group.max_total_gas(); max_total.has_value()) {
-        sGrp[Ix::GLOMaxRate] = sgprop(M::gas_surface_rate, max_total.value());
-    }
+    sGrp[Ix::GLOMaxSupply] = getGLORate(sgprop, group.max_lift_gas());
+    sGrp[Ix::GLOMaxRate]   = getGLORate(sgprop, group.max_total_gas());
 }
 
 template <class SGrpArray>
