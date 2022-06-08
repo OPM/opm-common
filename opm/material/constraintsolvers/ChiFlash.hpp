@@ -172,7 +172,7 @@ public:
             Scalar Vtest = 1 - L_scalar;
             
 
-            const std::string twoPhaseMethod = "ssi"; // "ssi"
+            const std::string twoPhaseMethod = "newton"; // "ssi"
             flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state_scalar, verbosity);
 
 
