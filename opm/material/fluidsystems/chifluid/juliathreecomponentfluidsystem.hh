@@ -13,6 +13,7 @@ namespace Opm {
  * \ingroup FluidSystem
  *
  * \brief A two phase three component fluid system from the Julia test
+ * CO2, Methane and NDekan
  */
 
     template<class Scalar>
