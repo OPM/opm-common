@@ -148,3 +148,8 @@ option (USE_QUADMATH "Search for high precision floating point library (normally
 if (NOT USE_QUADMATH)
   set (CMAKE_DISABLE_FIND_PACKAGE_QuadMath TRUE)
 endif ()
+
+option (USE_SUPERLU "Use SuperLU direct solvers for AMG (if umfpack is not found)" ON)
+if (NOT USE_SUPERLU)
+  set (CMAKE_DISABLE_FIND_PACKAGE_SuperLU TRUE)
+endif ()

@@ -63,9 +63,6 @@ find_openmp (${project})
 include (UseThreads)
 find_threads (${project})
 
-# SuperLU is optional
-option (USE_SUPERLU "Use SuperLU direct solvers for AMG (if umfpack is not found)" ON)
-
 # PETSc is optional
 option (USE_PETSC "Use PETSc iterative solvers" OFF)
 
