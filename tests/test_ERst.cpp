@@ -124,6 +124,10 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     // try loading non-existing report step, should throw exception
     BOOST_CHECK_THROW(rst1.loadReportStepNumber(4) , std::invalid_argument );
 
+    BOOST_CHECK_EQUAL(rst1.hasArray("XXXX", 5), false);
+    BOOST_CHECK_EQUAL(rst1.hasArray("PRESSURE", 5), true);
+    BOOST_CHECK_EQUAL(rst1.hasArray("PRESSURE", 4), false);
+
 
     // try to get a list of vectors from non-existing report step, should throw exception
     std::vector<std::tuple<std::string, eclArrType, int64_t>> rstArrays; // = rst1.listOfRstArrays(4);
@@ -1178,5 +1182,5 @@ BOOST_AUTO_TEST_CASE(Formatted)
 }
 
 
-
 BOOST_AUTO_TEST_SUITE_END()
+

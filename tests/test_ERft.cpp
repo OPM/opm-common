@@ -80,7 +80,7 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 // dx = 1000 ft, dy = 1000 ft. dz = 20 ft for layer 1, 30 ft for layer 2 and 50 ft for layer 3.
 // size of grid is 10x10x3
 
-    
+
 BOOST_AUTO_TEST_CASE(TestERft_1) {
     using Date = std::tuple<int, int, int>;
 
@@ -126,10 +126,11 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
     BOOST_CHECK_EQUAL(rft1.hasArray("SGAS","B-2H", Date{2016,5,31}), true);
     BOOST_CHECK_EQUAL(rft1.hasArray("XXXX","B-2H", Date{2016,5,31}), false);
 
-    BOOST_CHECK_THROW(rft1.hasArray("SGAS","C-2H", Date{2016,5,31}),std::invalid_argument);
-    BOOST_CHECK_THROW(rft1.hasArray("SGAS","B-2H", Date{2016,5,30}),std::invalid_argument);
-    BOOST_CHECK_THROW(rft1.hasArray("SGAS","C-2H", Date{2016,5,30}),std::invalid_argument);
-    BOOST_CHECK_THROW(rft1.hasArray("XXXX","C-2H", Date{2016,5,30}),std::invalid_argument);
+    BOOST_CHECK_EQUAL(rft1.hasArray("SGAS","C-2H", Date{2016,5,31}), false);
+    BOOST_CHECK_EQUAL(rft1.hasArray("SGAS","B-2H", Date{2016,5,30}), false);
+    BOOST_CHECK_EQUAL(rft1.hasArray("SGAS","C-2H", Date{2016,5,30}), false);
+    BOOST_CHECK_EQUAL(rft1.hasArray("XXXX","C-2H", Date{2016,5,30}), false);
+
 
    //    // test member function getRft(name, wellName, date)
 

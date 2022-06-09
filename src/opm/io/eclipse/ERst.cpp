@@ -283,6 +283,25 @@ std::tuple<int,int> ERst::getIndexRange(int reportStepNumber) const {
     return range_it->second;
 }
 
+bool  ERst::hasArray(const std::string& name, int number) const
+{
+    if (!hasReportStepNumber(number))
+        return false;
+
+    auto range_it = arrIndexRange.find(number);
+
+    std::pair<int,int> indexRange = range_it->second;
+
+    auto it = std::find(array_name.begin() + indexRange.first,
+                        array_name.begin() + indexRange.second, name);
+
+    if (std::distance(array_name.begin(), it) == indexRange.second)
+        return false;
+
+    return true;
+}
+
+
 int ERst::getArrayIndex(const std::string& name, int number, int occurrenc)
 {
     if (!hasReportStepNumber(number)) {
