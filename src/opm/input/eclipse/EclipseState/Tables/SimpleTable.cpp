@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 
+#include <fmt/format.h>
+
 namespace Opm {
 
     SimpleTable::SimpleTable( TableSchema schema, const DeckItem& deckItem) :
@@ -82,37 +84,17 @@ namespace Opm {
         return col[row];
     }
 
-    void SimpleTable::init( const DeckItem& deckItem ) {
-        this->addColumns();
-
-        if ( (deckItem.data_size() % numColumns()) != 0)
-            throw std::runtime_error("Number of columns in the data file is"
-                    "inconsistent with the ones specified");
-
-        size_t rows = deckItem.data_size() / numColumns();
-        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
-            auto& column = getColumn( colIdx );
-            for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
-                size_t deckItemIdx = rowIdx*numColumns() + colIdx;
-                if (deckItem.defaultApplied(deckItemIdx))
-                    column.addDefault( );
-                else if (m_jfunc) {
-                    column.addValue( deckItem.getData<double>()[deckItemIdx] );
-                }
-                else
-                    column.addValue( deckItem.getSIDouble(deckItemIdx) );
-            }
-            if (colIdx > 0)
-                column.applyDefaults(getColumn( 0 ));
-        }
-    }
-
     void SimpleTable::init( const DeckItem& deckItem, double scaling_factor) {
         this->addColumns();
 
-        if ( (deckItem.data_size() % numColumns()) != 0)
-            throw std::runtime_error("Number of columns in the data file is"
-                    "inconsistent with the ones specified");
+        if ( (deckItem.data_size() % numColumns()) != 0) {
+            throw std::runtime_error {
+                fmt::format("Number of input table elements ({}) is "
+                            "not a multiple of table's specified number "
+                            "of columns ({})",
+                            deckItem.data_size(), this->numColumns())
+            };
+        }
 
         size_t rows = deckItem.data_size() / numColumns();
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
@@ -124,8 +106,12 @@ namespace Opm {
                 else if (m_jfunc) {
                     column.addValue( deckItem.getData<double>()[deckItemIdx] );
                 }
-                else
-                    column.addValue( scaling_factor * deckItem.get<double>(deckItemIdx) );
+                else {
+                    if (scaling_factor > 0.0)
+                        column.addValue( scaling_factor * deckItem.get<double>(deckItemIdx) );
+                    else
+                        column.addValue( deckItem.getSIDouble(deckItemIdx) );
+                }
             }
             if (colIdx > 0)
                 column.applyDefaults(getColumn( 0 ));
