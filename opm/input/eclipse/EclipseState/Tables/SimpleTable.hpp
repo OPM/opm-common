@@ -42,8 +42,10 @@ namespace Opm {
         static SimpleTable serializeObject();
 
         void addColumns();
-        void init(const DeckItem& deckItem );
-        void init( const DeckItem& deckItem, double scaling_factor);
+        //! \brief Initialize deck item.
+        //! \param deckItem item to initialize
+        //! \param scaling_factor If zero use SI value, else use value scaled by scaling factor
+        void init( const DeckItem& deckItem, double scaling_factor = 0.0);
         size_t numColumns() const;
         size_t numRows() const;
         void addRow( const std::vector<double>& row);
