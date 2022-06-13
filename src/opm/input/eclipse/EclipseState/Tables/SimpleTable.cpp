@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 
+#include <fmt/format.h>
+
 namespace Opm {
 
     SimpleTable::SimpleTable( TableSchema schema, const DeckItem& deckItem) :
@@ -85,9 +87,14 @@ namespace Opm {
     void SimpleTable::init( const DeckItem& deckItem, double scaling_factor) {
         this->addColumns();
 
-        if ( (deckItem.data_size() % numColumns()) != 0)
-            throw std::runtime_error("Number of columns in the data file is"
-                    "inconsistent with the ones specified");
+        if ( (deckItem.data_size() % numColumns()) != 0) {
+            throw std::runtime_error {
+                fmt::format("Number of input table elements ({}) is "
+                            "not a multiple of table's specified number "
+                            "of columns ({})",
+                            deckItem.data_size(), this->numColumns())
+            };
+        }
 
         size_t rows = deckItem.data_size() / numColumns();
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
