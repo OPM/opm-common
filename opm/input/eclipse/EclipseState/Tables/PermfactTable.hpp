@@ -28,7 +28,7 @@ namespace Opm {
 
     class PermfactTable : public SimpleTable {
     public:
-        PermfactTable( const DeckItem& item );
+        PermfactTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getPorosityChangeColumn() const;
         const TableColumn& getPermeabilityMultiplierColumn() const;

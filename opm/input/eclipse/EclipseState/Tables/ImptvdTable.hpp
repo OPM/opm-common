@@ -29,7 +29,7 @@ namespace Opm {
     class ImptvdTable : public SimpleTable {
     public:
 
-        ImptvdTable( const DeckItem& item );
+        ImptvdTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getDepthColumn() const;
 

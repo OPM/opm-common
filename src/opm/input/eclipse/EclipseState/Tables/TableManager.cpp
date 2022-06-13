@@ -871,7 +871,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             const auto& tableRecord = rocktabKeyword.getRecord( tableIdx );
             const auto& dataItem = tableRecord.getItem( 0 );
             if (dataItem.data_size() > 0) {
-                std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
+                std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption, tableIdx );
                 container.addTable( tableIdx , table );
             }
         }
@@ -1563,7 +1563,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
                 try {
-                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, useJFunc() );
+                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, useJFunc(), tableIdx );
                     container.addTable( tableIdx , table );
                 } catch (const std::runtime_error& err) {
                     throw OpmInputError(err, tableKeyword.location());
@@ -1591,7 +1591,7 @@ DensityTable make_density_table(const GravityTable& gravity) {
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
-                std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem );
+                std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, tableIdx );
                 container.addTable( tableIdx , table );
             }
         }

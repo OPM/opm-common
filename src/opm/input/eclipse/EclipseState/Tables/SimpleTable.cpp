@@ -27,11 +27,12 @@
 
 namespace Opm {
 
-    SimpleTable::SimpleTable( TableSchema schema, const DeckItem& deckItem) :
+    SimpleTable::SimpleTable( TableSchema schema, const DeckItem& deckItem,
+                              const int tableID) :
         m_schema( std::move( schema ) ),
         m_jfunc (false)
     {
-        init( deckItem );
+        init( deckItem, tableID );
     }
 
 
@@ -84,15 +85,18 @@ namespace Opm {
         return col[row];
     }
 
-    void SimpleTable::init( const DeckItem& deckItem, double scaling_factor) {
+    void SimpleTable::init( const DeckItem& deckItem,
+                            const int tableID,
+                            double scaling_factor) {
         this->addColumns();
 
         if ( (deckItem.data_size() % numColumns()) != 0) {
             throw std::runtime_error {
-                fmt::format("Number of input table elements ({}) is "
+                fmt::format("For table with ID {}: "
+                            "Number of input table elements ({}) is "
                             "not a multiple of table's specified number "
                             "of columns ({})",
-                            deckItem.data_size(), this->numColumns())
+                            tableID+1, deckItem.data_size(), this->numColumns())
             };
         }
 

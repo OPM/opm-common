@@ -27,7 +27,7 @@ namespace Opm {
 
     class PlyviscTable : public SimpleTable {
     public:
-        PlyviscTable( const DeckItem& item );
+        PlyviscTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getPolymerConcentrationColumn() const;
         const TableColumn& getViscosityMultiplierColumn() const;

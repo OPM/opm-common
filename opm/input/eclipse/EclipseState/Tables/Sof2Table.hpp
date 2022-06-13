@@ -27,7 +27,7 @@ namespace Opm {
 
     class Sof2Table : public SimpleTable {
         public:
-            Sof2Table( const DeckItem& item );
+            Sof2Table( const DeckItem& item, const int tableID );
 
             const TableColumn& getSoColumn() const;
             const TableColumn& getKroColumn() const;

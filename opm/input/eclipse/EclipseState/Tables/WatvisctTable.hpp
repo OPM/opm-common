@@ -25,7 +25,7 @@ namespace Opm {
 
     class WatvisctTable : public SimpleTable {
     public:
-        WatvisctTable( const DeckItem& item );
+        WatvisctTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getTemperatureColumn() const;
         const TableColumn& getWaterViscosityColumn() const;

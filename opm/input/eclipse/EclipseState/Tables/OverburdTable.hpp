@@ -27,7 +27,7 @@ namespace Opm {
 
     class OverburdTable : public SimpleTable {
     public:
-        OverburdTable( const DeckItem& item );
+        OverburdTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getDepthColumn() const;
         const TableColumn& getOverburdenPressureColumn() const;

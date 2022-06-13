@@ -64,7 +64,7 @@ namespace Opm {
                 m_outerColumn.addValue( deckRecord.getItem( 0 ).getSIDouble( 0 ));
 
                 const auto& dataItem = deckRecord.getItem(1);
-                m_underSaturatedTables.emplace_back( this->m_underSaturatedSchema, dataItem );
+                m_underSaturatedTables.emplace_back( this->m_underSaturatedSchema, dataItem, tableIdx );
             }
 
 

@@ -27,7 +27,7 @@ namespace Opm {
 
     class RockwnodTable : public SimpleTable {
     public:
-        RockwnodTable( const DeckItem& item );
+        RockwnodTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getSaturationColumn() const;
     };

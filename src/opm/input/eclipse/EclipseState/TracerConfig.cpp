@@ -142,12 +142,13 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                     const auto& deck_item_solution = tracer_keyword_solution.getRecord(0).getItem(0);
                     logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
-                    this->tracers.emplace_back(name, unit_string, phase, TracerVdTable(deck_item, inv_volume),
-                                                            TracerVdTable(deck_item_solution, inv_volume)) ;
+                    this->tracers.emplace_back(name, unit_string, phase,
+                                               TracerVdTable(deck_item, inv_volume, this->tracers.size()),
+                                               TracerVdTable(deck_item_solution, inv_volume, this->tracers.size())) ;
                     continue;
                 }
 
-                this->tracers.emplace_back(name, unit_string, phase, TracerVdTable(deck_item, inv_volume));
+                this->tracers.emplace_back(name, unit_string, phase, TracerVdTable(deck_item, inv_volume, this->tracers.size()));
                 continue;
             }
 

@@ -29,7 +29,7 @@ namespace Opm {
 
     class FoammobTable : public SimpleTable {
     public:
-        FoammobTable( const DeckItem& item );
+        FoammobTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getFoamConcentrationColumn() const;
         const TableColumn& getMobilityMultiplierColumn() const;

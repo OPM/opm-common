@@ -27,7 +27,7 @@ namespace Opm {
 
     class RtempvdTable : public SimpleTable {
     public:
-        RtempvdTable( const DeckItem& item );
+        RtempvdTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getDepthColumn() const;
         const TableColumn& getTemperatureColumn() const;
