@@ -271,8 +271,8 @@ SWOF
 END
 )");
 
-    Opm::SwofTable swof1Table(deck["SWOF"].back().getRecord(0).getItem(0), false);
-    Opm::SwofTable swof2Table(deck["SWOF"].back().getRecord(1).getItem(0), false);
+    Opm::SwofTable swof1Table(deck["SWOF"].back().getRecord(0).getItem(0), false, 0);
+    Opm::SwofTable swof2Table(deck["SWOF"].back().getRecord(1).getItem(0), false, 1);
 
     BOOST_CHECK_EQUAL(swof1Table.numRows(), 2U);
     BOOST_CHECK_EQUAL(swof2Table.numRows(), 3U);
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(PbvdTable_Tests) {
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
 
-    Opm::PbvdTable pbvdTable1(deck["PBVD"].back().getRecord(0).getItem(0));
+    Opm::PbvdTable pbvdTable1(deck["PBVD"].back().getRecord(0).getItem(0), 0);
 
     BOOST_CHECK_EQUAL(pbvdTable1.numRows(), 2U);
     BOOST_CHECK_EQUAL(pbvdTable1.numColumns(), 2U);
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(PbvdTable_Tests) {
     BOOST_CHECK_EQUAL(pbvdTable1.getPbubColumn().front(), 100000); // 1 barsa
 
     // depth must be increasing down the column.
-    BOOST_CHECK_THROW(Opm::PbvdTable pbvdTable2(deck["PBVD"].back().getRecord(1).getItem(0)), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::PbvdTable pbvdTable2(deck["PBVD"].back().getRecord(1).getItem(0), 1), std::invalid_argument);
 }
 
 
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(PdvdTable_Tests) {
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
 
-    Opm::PdvdTable pdvdTable1(deck["PDVD"].back().getRecord(0).getItem(0));
+    Opm::PdvdTable pdvdTable1(deck["PDVD"].back().getRecord(0).getItem(0), 0);
 
     BOOST_CHECK_EQUAL(pdvdTable1.numRows(), 2U);
     BOOST_CHECK_EQUAL(pdvdTable1.numColumns(), 2U);
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(PdvdTable_Tests) {
     BOOST_CHECK_EQUAL(pdvdTable1.getPdewColumn().front(), 100000); // 1 barsa
 
     // depth must be increasing down the column.
-    BOOST_CHECK_THROW(Opm::PdvdTable pdvdTable2(deck["PDVD"].back().getRecord(1).getItem(0)), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::PdvdTable pdvdTable2(deck["PDVD"].back().getRecord(1).getItem(0), 1), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
@@ -369,8 +369,8 @@ BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
     auto deck = parser.parseString(deckData);
 
 
-    Opm::SgwfnTable sgwfn1Table(deck["SGWFN"].back().getRecord(0).getItem(0));
-    Opm::SgwfnTable sgwfn2Table(deck["SGWFN"].back().getRecord(1).getItem(0));
+    Opm::SgwfnTable sgwfn1Table(deck["SGWFN"].back().getRecord(0).getItem(0), 0);
+    Opm::SgwfnTable sgwfn2Table(deck["SGWFN"].back().getRecord(1).getItem(0), 1);
 
     BOOST_CHECK_EQUAL(sgwfn1Table.numRows(), 2U);
     BOOST_CHECK_EQUAL(sgwfn2Table.numRows(), 3U);
@@ -414,8 +414,8 @@ SGOF
 END
 )");
 
-    Opm::SgofTable sgof1Table(deck["SGOF"].back().getRecord(0).getItem(0), false);
-    Opm::SgofTable sgof2Table(deck["SGOF"].back().getRecord(1).getItem(0), false);
+    Opm::SgofTable sgof1Table(deck["SGOF"].back().getRecord(0).getItem(0), false, 0);
+    Opm::SgofTable sgof2Table(deck["SGOF"].back().getRecord(1).getItem(0), false, 1);
 
     BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2U);
     BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3U);
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
         Opm::Parser parser;
         auto deck = parser.parseString(correctDeckData);
         const auto& plyadsKeyword = deck["PLYADS"].back();
-        Opm::PlyadsTable plyadsTable(plyadsKeyword.getRecord(0).getItem(0));
+        Opm::PlyadsTable plyadsTable(plyadsKeyword.getRecord(0).getItem(0), 0);
 
 
         BOOST_CHECK_CLOSE(plyadsTable.getPolymerConcentrationColumn().front(), 0.0, 1e-6);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
         auto deck = parser.parseString(incorrectDeckData);
         const auto& plyadsKeyword = deck["PLYADS"].back();
 
-        BOOST_CHECK_THROW(Opm::PlyadsTable(plyadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::PlyadsTable(plyadsKeyword.getRecord(0).getItem(0), 0), std::invalid_argument);
     }
 
     {
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
         auto deck = parser.parseString(incorrectDeckData);
         const auto& plyadsKeyword = deck["PLYADS"].back();
 
-        BOOST_CHECK_THROW(Opm::PlyadsTable(plyadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::PlyadsTable(plyadsKeyword.getRecord(0).getItem(0), 0), std::invalid_argument);
     }
 }
 
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
         Opm::Parser parser;
         auto deck = parser.parseString(correctDeckData);
         const auto& foamadsKeyword = deck["FOAMADS"].back();
-        Opm::FoamadsTable foamadsTable(foamadsKeyword.getRecord(0).getItem(0));
+        Opm::FoamadsTable foamadsTable(foamadsKeyword.getRecord(0).getItem(0), 0);
 
 
         BOOST_CHECK_CLOSE(foamadsTable.getFoamConcentrationColumn().front(), 0.0, 1e-6);
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
         auto deck = parser.parseString(incorrectDeckData);
         const auto& foamadsKeyword = deck["FOAMADS"].back();
 
-        BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0), 0), std::invalid_argument);
     }
 
     {
@@ -589,7 +589,7 @@ BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
         auto deck = parser.parseString(incorrectDeckData);
         const auto& foamadsKeyword = deck["FOAMADS"].back();
 
-        BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0), 0), std::invalid_argument);
     }
 }
 
@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
         Opm::Parser parser;
         auto deck = parser.parseString(correctDeckData);
         const auto& foammobKeyword = deck["FOAMMOB"].back();
-        Opm::FoammobTable foammobTable(foammobKeyword.getRecord(0).getItem(0));
+        Opm::FoammobTable foammobTable(foammobKeyword.getRecord(0).getItem(0), 0);
 
 
         BOOST_CHECK_CLOSE(foammobTable.getFoamConcentrationColumn().front(), 0.0, 1e-6);
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
         auto deck = parser.parseString(incorrectDeckData);
         const auto& foammobKeyword = deck["FOAMMOB"].back();
 
-        BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0), 0), std::invalid_argument);
     }
 
     {
@@ -647,7 +647,7 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
         auto deck = parser.parseString(incorrectDeckData);
         const auto& foammobKeyword = deck["FOAMMOB"].back();
 
-        BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+        BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0), 0), std::invalid_argument);
     }
 }
 

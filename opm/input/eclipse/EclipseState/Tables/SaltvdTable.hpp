@@ -27,7 +27,7 @@ namespace Opm {
 
     class SaltvdTable : public SimpleTable {
     public:
-        SaltvdTable( const DeckItem& item );
+        SaltvdTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getDepthColumn() const;
         const TableColumn& getSaltColumn() const;

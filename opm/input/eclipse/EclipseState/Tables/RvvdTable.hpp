@@ -27,7 +27,7 @@ namespace Opm {
 
     class RvvdTable : public SimpleTable {
     public:
-        RvvdTable( const DeckItem& item );
+        RvvdTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getDepthColumn() const;
         const TableColumn& getRvColumn() const;

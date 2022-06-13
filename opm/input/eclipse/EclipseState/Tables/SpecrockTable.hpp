@@ -27,7 +27,7 @@ namespace Opm {
     // pore space.
     class SpecrockTable : public SimpleTable {
     public:
-        SpecrockTable(const DeckItem& item);
+        SpecrockTable(const DeckItem& item, const int tableID);
 
         const TableColumn& getTemperatureColumn() const;
         const TableColumn& getCvRockColumn() const;

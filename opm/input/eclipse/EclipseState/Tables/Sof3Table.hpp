@@ -27,7 +27,7 @@ namespace Opm {
 
     class Sof3Table : public SimpleTable {
         public:
-            Sof3Table( const DeckItem& item );
+            Sof3Table( const DeckItem& item, const int tableID );
 
             const TableColumn& getSoColumn() const;
             const TableColumn& getKrowColumn() const;

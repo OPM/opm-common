@@ -27,7 +27,7 @@ namespace Opm {
 
     class PvdgTable : public SimpleTable {
         public:
-            PvdgTable( const DeckItem& item );
+            PvdgTable( const DeckItem& item, const int tableID );
 
             const TableColumn& getPressureColumn() const;
             const TableColumn& getFormationFactorColumn() const;

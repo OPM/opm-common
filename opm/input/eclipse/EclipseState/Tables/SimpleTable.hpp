@@ -36,7 +36,7 @@ namespace Opm {
 
     public:
         SimpleTable() = default;
-        SimpleTable(TableSchema, const DeckItem& deckItem);
+        SimpleTable(TableSchema, const DeckItem& deckItem, const int tableID);
         explicit SimpleTable( TableSchema );
 
         static SimpleTable serializeObject();
@@ -44,8 +44,11 @@ namespace Opm {
         void addColumns();
         //! \brief Initialize deck item.
         //! \param deckItem item to initialize
+        //! \param tableID Index for table to initialize
         //! \param scaling_factor If zero use SI value, else use value scaled by scaling factor
-        void init( const DeckItem& deckItem, double scaling_factor = 0.0);
+        void init( const DeckItem& deckItem,
+                   const int tableID,
+                   double scaling_factor = 0.0);
         size_t numColumns() const;
         size_t numRows() const;
         void addRow( const std::vector<double>& row);

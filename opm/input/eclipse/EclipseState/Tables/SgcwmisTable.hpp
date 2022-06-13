@@ -28,7 +28,7 @@ namespace Opm {
 
     class SgcwmisTable : public SimpleTable {
     public:
-        explicit SgcwmisTable( const DeckItem& item );
+        SgcwmisTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getWaterSaturationColumn() const;
         const TableColumn& getMiscibleResidualGasColumn() const;

@@ -29,7 +29,7 @@ namespace Opm {
     class SorwmisTable : public SimpleTable {
     public:
 
-        explicit SorwmisTable( const DeckItem& item );
+        SorwmisTable( const DeckItem& item, const int tableID );
 
         const TableColumn& getWaterSaturationColumn() const;
         const TableColumn& getMiscibleResidualOilColumn() const;

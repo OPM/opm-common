@@ -27,7 +27,7 @@ namespace Opm {
 
     class PlyadsTable : public SimpleTable {
         public:
-            PlyadsTable( const DeckItem& item );
+            PlyadsTable( const DeckItem& item, const int tableID );
 
             const TableColumn& getPolymerConcentrationColumn() const;
             const TableColumn& getAdsorbedPolymerColumn() const;

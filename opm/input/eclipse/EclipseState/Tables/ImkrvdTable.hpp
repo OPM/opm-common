@@ -27,7 +27,7 @@ namespace Opm {
 
     class ImkrvdTable : public SimpleTable {
     public:
-        ImkrvdTable( const DeckItem& item );
+        ImkrvdTable( const DeckItem& item, const int tableID );
 
         /*!
          * \brief The datum depth for the remaining columns
