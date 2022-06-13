@@ -293,7 +293,7 @@ public:
         else {
             Evaluation Tref = oildentRefTemp_[regionIdx];
             Evaluation Pref = oilJTRefPres_[regionIdx]; 
-            Scalar JTC = oilJTC_[regionIdx]; // if JTC = 999 (default) then JTC calculated
+            Scalar JTC = oilJTC_[regionIdx]; // if JTC is default then JTC is calculated
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs);
             Evaluation Cp = internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true)/temperature;

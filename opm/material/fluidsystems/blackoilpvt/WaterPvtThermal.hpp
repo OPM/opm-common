@@ -297,7 +297,7 @@ public:
         else {
             Evaluation Tref = watdentRefTemp_[regionIdx];
             Evaluation Pref = watJTRefPres_[regionIdx]; 
-            Scalar JTC =watJTC_[regionIdx]; // if JTC = 999 (default) then JTC calculated
+            Scalar JTC =watJTC_[regionIdx]; // if JTC is default then JTC is calculated
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
             Evaluation Cp = internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true)/temperature;

@@ -272,9 +272,10 @@ public:
         else {
             Evaluation Tref = gasdentRefTemp_[regionIdx];
             Evaluation Pref = gasJTRefPres_[regionIdx]; 
-            Scalar JTC = gasJTC_[regionIdx]; // if JTC = 999 (default) then JTC calculated
+            Scalar JTC = gasJTC_[regionIdx]; // if JTC is default then JTC is calculated
+            Evaluation Rvw = 0.0;
 
-            Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv);
+            Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
             const Scalar hVap = 480.6e3; // [J / kg]
             Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
             Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
@@ -286,7 +287,7 @@ public:
             else if(enableThermalDensity_) {
                 Scalar c1T = gasdentCT1_[regionIdx];
                 Scalar c2T = gasdentCT2_[regionIdx];
-
+              
                 Evaluation alpha = (c1T + 2 * c2T * (temperature - Tref)) /
                     (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
 
@@ -295,7 +296,7 @@ public:
                 Evaluation enthalpyPresPrev = 0;
                 for (size_t i = 0; i < N; ++i) {
                     Evaluation Pnew = Pref + i * deltaP;
-                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rv) *
+                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rv, Rvw) *
                                      (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
                     // see e.g.https://en.wikipedia.org/wiki/Joule-Thomson_effect for a derivation of the Joule-Thomson coeff.
                     Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;
