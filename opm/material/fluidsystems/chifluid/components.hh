@@ -225,6 +225,7 @@ public:
 
     // Critical volume [m3/kmol]
     static Scalar criticalVolume() {return 9.412e-5; }
+    // OLD :static Scalar criticalVolume() {return 9.4118e-2; }
 };
 
 template <class Scalar>
