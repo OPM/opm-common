@@ -124,6 +124,25 @@ EclipseGrid::EclipseGrid(const std::string& fileName )
 }
 
 
+EclipseGrid::EclipseGrid(const GridDims& gd)
+    : GridDims(gd),
+      m_minpvMode(MinpvMode::ModeEnum::Inactive),
+      m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+      m_multzMode(PinchMode::ModeEnum::TOP),
+      m_pinchGapMode(PinchMode::ModeEnum::GAP)
+{
+    this->m_nactive = this->getCartesianSize();
+    this->active_volume = std::nullopt;
+    // Nothing else initialized. Leaving in particular as empty:
+    // m_actnum,
+    // m_global_to_active,
+    // m_active_to_global.
+    //
+    // EclipseGrid will only be usable for constructing Box objects with
+    // all cells active.
+}
+
+
 EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                          double dx, double dy, double dz)
     : GridDims(nx, ny, nz),
@@ -478,6 +497,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     size_t EclipseGrid::activeIndex(size_t globalIndex) const {
+        if (m_global_to_active.empty()) {
+            return globalIndex;
+        }
 
         if (m_global_to_active[ globalIndex] == -1) {
             throw std::invalid_argument("Input argument does not correspond to an active cell");
@@ -1410,8 +1432,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     bool EclipseGrid::cellActive( size_t globalIndex ) const {
         assertGlobalIndex( globalIndex );
-
-        return m_actnum[globalIndex]>0;
+        if (m_actnum.empty()) {
+            return true;
+        } else {
+            return m_actnum[globalIndex]>0;
+        }
     }
 
     bool EclipseGrid::cellActive( size_t i , size_t j , size_t k ) const {
