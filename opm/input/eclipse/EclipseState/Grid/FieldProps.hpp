@@ -389,6 +389,7 @@ public:
     const std::string& default_region() const;
 
     std::vector<int> actnum();
+    const std::vector<int>& actnumRaw() const;
 
     template <typename T>
     static bool supported(const std::string& keyword);

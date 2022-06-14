@@ -1174,7 +1174,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
                 EclipseGrid topologyOnlyGrid(static_cast<GridDims&>(*this));
                 FieldProps fp(deck, topologyOnlyGrid);
-                actnumVector = fp.actnum();
+                actnumVector = fp.actnumRaw();
 
                 if (actnumVector.size() != this->getCartesianSize())
                     throw std::invalid_argument("ACTNUM vector has wrong size");

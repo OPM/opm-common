@@ -1176,6 +1176,11 @@ std::vector<int> FieldProps::actnum() {
 }
 
 
+const std::vector<int>& FieldProps::actnumRaw() const {
+    return m_actnum;
+}
+
+
 void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
     Box box(*this->grid_ptr);
 
