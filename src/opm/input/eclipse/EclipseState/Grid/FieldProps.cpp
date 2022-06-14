@@ -15,6 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
+
 #include <functional>
 #include <algorithm>
 #include <unordered_map>
@@ -46,7 +49,6 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include "FieldProps.hpp"
 #include "Operate.hpp"
 
 
@@ -501,7 +503,7 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid) :
     nz(grid.getNZ()),
     m_phases(),
     m_satfuncctrl(deck),
-    m_actnum(1, global_size),  // NB! activates all at start!
+    m_actnum(global_size, 1),  // NB! activates all at start!
     cell_volume(),             // NB! empty for this purpose.
     cell_depth(),              // NB! empty for this purpose.
     m_default_region(default_region_keyword(deck)),
@@ -1205,8 +1207,7 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section) {
             this->handle_keyword(keyword, box);
         }
     }
-    const auto& processed_actnum_fielddata = this->int_data.at("ACTNUM");
-    this->reset_actnum(processed_actnum_fielddata.data);
+    m_actnum = this->int_data.at("ACTNUM").data;
 }
 
 void FieldProps::scanEDITSection(const EDITSection& edit_section) {

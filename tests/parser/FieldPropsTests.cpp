@@ -48,7 +48,7 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
-#include "src/opm/input/eclipse/EclipseState/Grid/FieldProps.hpp"
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
 using namespace Opm;
 

@@ -21,6 +21,7 @@
 #define _USE_MATH_DEFINES
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -1171,8 +1172,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             std::vector<int> actnumVector;
 
             if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-                 const auto& actnumKeyword = deck.get<ParserKeywords::ACTNUM>().back();
-                actnumVector = actnumKeyword.getIntData();
+                EclipseGrid topologyOnlyGrid(static_cast<GridDims&>(*this));
+                FieldProps fp(deck, topologyOnlyGrid);
+                actnumVector = fp.actnum();
 
                 if (actnumVector.size() != this->getCartesianSize())
                     throw std::invalid_argument("ACTNUM vector has wrong size");
