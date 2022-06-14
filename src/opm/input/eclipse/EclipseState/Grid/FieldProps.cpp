@@ -490,6 +490,32 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
 }
 
 
+// Special constructor ONLY used to get the correct ACTNUM.
+// The grid argument should have all active cells.
+FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid) :
+    active_size(grid.getNumActive()),
+    global_size(grid.getCartesianSize()),
+    unit_system(deck.getActiveUnitSystem()),
+    nx(grid.getNX()),
+    ny(grid.getNY()),
+    nz(grid.getNZ()),
+    m_phases(),
+    m_satfuncctrl(deck),
+    m_actnum(1, global_size),  // NB! activates all at start!
+    cell_volume(),             // NB! empty for this purpose.
+    cell_depth(),              // NB! empty for this purpose.
+    m_default_region(default_region_keyword(deck)),
+    grid_ptr(&grid),
+    tables()                   // NB! empty for this purpose.
+{
+    if (this->active_size != this->global_size) {
+        throw std::logic_error("Programmer error: FieldProps special case processing for ACTNUM called with grid object that already had deactivated cells.");
+    }
+    if (DeckSection::hasGRID(deck))
+        this->scanGRIDSectionOnlyACTNUM(GRIDSection(deck));
+}
+
+
 
 void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
     if (this->global_size != new_actnum.size())
@@ -1166,6 +1192,21 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
 
         this->handle_keyword(keyword, box);
     }
+}
+
+void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section) {
+    Box box(*this->grid_ptr);
+
+    for (const auto& keyword : grid_section) {
+        const std::string& name = keyword.name();
+        if (name == "ACTNUM") {
+            this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
+        } else if (name == "BOX" || name == "ENDBOX" || name == "EQUALS") {
+            this->handle_keyword(keyword, box);
+        }
+    }
+    const auto& processed_actnum_fielddata = this->int_data.at("ACTNUM");
+    this->reset_actnum(processed_actnum_fielddata.data);
 }
 
 void FieldProps::scanEDITSection(const EDITSection& edit_section) {
