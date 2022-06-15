@@ -24,6 +24,7 @@
 #include <iterator>
 #include <vector>
 #include <numeric>
+#include <functional>
 
 namespace Opm {
 
