@@ -231,6 +231,7 @@ public:
         double temperature;
         int    vfp_table_number;
         bool   prediction_mode;
+        double rs_rv_inj;
 
         bool hasControl(InjectorCMode cmode_arg) const {
             return (this->controls & static_cast<int>(cmode_arg)) != 0;
@@ -260,6 +261,8 @@ public:
         int     injectionControls;
         InjectorType injectorType;
         InjectorCMode controlMode;
+
+        double rsRvInj;
 
         bool operator==(const WellInjectionProperties& other) const;
         bool operator!=(const WellInjectionProperties& other) const;
@@ -320,6 +323,7 @@ public:
             serializer(injectionControls);
             serializer(injectorType);
             serializer(controlMode);
+            serializer(rsRvInj);
         }
     };
 

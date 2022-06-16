@@ -55,7 +55,8 @@ namespace Opm {
           predictionMode(true),
           injectionControls(0),
           injectorType(InjectorType::WATER),
-          controlMode(InjectorCMode::CMODE_UNDEFINED)
+          controlMode(InjectorCMode::CMODE_UNDEFINED),
+          rsRvInj(0.0)
     {
     }
 
@@ -77,6 +78,7 @@ namespace Opm {
         result.injectionControls = 10;
         result.injectorType = InjectorType::OIL;
         result.controlMode = InjectorCMode::BHP;
+        result.rsRvInj = 11;
 
         return result;
     }
@@ -129,6 +131,12 @@ namespace Opm {
             else {
                 throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + well_name);
             }
+        }
+        this->rsRvInj = record.getItem("VAPOIL_C").getSIDouble(0);
+        if (this->injectorType == InjectorType::OIL && this->rsRvInj > 0) {
+            double factor = record.getItem("VAPOIL_C").getSIDouble(0) / record.getItem("VAPOIL_C").get<double>(0);
+            // for oil injectors the rsRvInj is Rs and the inverse of the si-conversion factor should be used
+            this->rsRvInj =  record.getItem("VAPOIL_C").get<double>(0) / factor;
         }
     }
 
@@ -220,6 +228,12 @@ namespace Opm {
         if (VFPTableNumberArg > 0) {
             this->VFPTableNumber = VFPTableNumberArg;
         }
+        this->rsRvInj = record.getItem("VAPOIL_C").getSIDouble(0);
+        if (this->injectorType == InjectorType::OIL && this->rsRvInj > 0) {
+            double factor = record.getItem("VAPOIL_C").getSIDouble(0) / record.getItem("VAPOIL_C").get<double>(0);
+            // for oil injectors the rsRvInj is Rs and the inverse of the si-conversion factor should be used
+            this->rsRvInj =  record.getItem("VAPOIL_C").get<double>(0) / factor;
+        }
     }
 
     bool Well::WellInjectionProperties::operator==(const Well::WellInjectionProperties& other) const {
@@ -236,7 +250,8 @@ namespace Opm {
             (predictionMode == other.predictionMode) &&
             (injectionControls == other.injectionControls) &&
             (injectorType == other.injectorType) &&
-            (controlMode == other.controlMode))
+            (controlMode == other.controlMode) &&
+            (rsRvInj == other.rsRvInj))
             return true;
         else
             return false;
@@ -275,7 +290,8 @@ namespace Opm {
             << "prediction mode: "  << wp.predictionMode << ", "
             << "injection ctrl: "   << wp.injectionControls << ", "
             << "injector type: "    << InjectorType2String(wp.injectorType) << ", "
-            << "control mode: "     << Well::InjectorCMode2String(wp.controlMode) << " }";
+            << "control mode: "     << Well::InjectorCMode2String(wp.controlMode) << " , "
+            << "rs/rv concentration: " << wp.rsRvInj << " }";
     }
 
 
@@ -296,6 +312,7 @@ namespace Opm {
         controls.cmode = this->controlMode;
         controls.vfp_table_number = this->VFPTableNumber;
         controls.injector_type = this->injectorType;
+        controls.rs_rv_inj = this->rsRvInj;
 
         return controls;
     }

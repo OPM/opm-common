@@ -49,6 +49,7 @@
       "name": "VAPOIL_C",
       "value_type": "DOUBLE",
       "default": 0,
+      "dimension": "OilDissolutionFactor",
       "comment": "Not supported"
     },
     {
