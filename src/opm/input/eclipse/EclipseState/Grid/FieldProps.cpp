@@ -1208,7 +1208,7 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section) {
         const std::string& name = keyword.name();
         if (name == "ACTNUM") {
             this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
-        } else if (name == "BOX" || name == "ENDBOX" || name == "EQUALS") {
+        } else if (name == "EQUALS" || (Fieldprops::keywords::box_keywords.count(name) == 1)) {
             this->handle_keyword(keyword, box);
         }
     }
