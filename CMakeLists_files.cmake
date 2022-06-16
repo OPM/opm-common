@@ -695,6 +695,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp
        opm/input/eclipse/EclipseState/Grid/Fault.hpp
        opm/input/eclipse/EclipseState/Grid/Box.hpp
+       opm/input/eclipse/EclipseState/Grid/FieldProps.hpp
        opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp
        opm/input/eclipse/EclipseState/Grid/FaultFace.hpp
        opm/input/eclipse/EclipseState/Grid/NNC.hpp
