@@ -26,6 +26,7 @@
 #include <set>
 #include <unordered_set>
 
+#include <fmt/format.h>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
@@ -933,7 +934,11 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
                   with global storage.
                 */
                 if (field_data.global_data)
-                    throw std::logic_error("Region operations on 3D fields with global storage is not implemented");
+                {
+                    const auto& location = keyword.location();
+                    throw std::logic_error(fmt::format("In file {} line {}: {} region operation on 3D field {} with global storage is not implemented!",
+                                                       location.filename, std::to_string(location.lineno), keyword.name(), target_kw));
+                }
 
                 FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, scalar_value, index_list);
             }
