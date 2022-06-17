@@ -1489,21 +1489,36 @@ struct flat_props {
     static constexpr const char* errmsg() { return ""; }
 };
 
-template< typename T, std::size_t N >
-double flat_get( const DeckRecord& rec ) {
-    if( !flat_props< T, N >::can_default()
-     && rec.getItem( N ).defaultApplied( 0 ) ) {
-        throw std::invalid_argument( flat_props< T, N >::errmsg() );
+template <typename T, std::size_t N>
+double flat_get(const DeckRecord& rec)
+{
+    const auto& item = rec.getItem(N);
+
+    if (item.defaultApplied(0) && !flat_props<T, N>::can_default()) {
+        throw std::invalid_argument {
+            flat_props<T, N>::errmsg()
+        };
     }
 
-    return rec.getItem( N ).getSIDouble( 0 );
+    return item.getSIDouble(0);
 }
 
-template< typename T, std::size_t... Is >
-std::vector< T > flat_records( const DeckKeyword& kw, seq< Is... > ) {
-    std::vector< T > xs;
-    for( const auto& record : kw )
-        xs.emplace_back( T { flat_get< T, Is >( record )... } );
+template <typename T, std::size_t... Is>
+T flat_get(const DeckRecord& record, seq<Is...>)
+{
+    return { flat_get<T, Is>(record)... };
+}
+
+template <typename T, std::size_t... Is>
+std::vector<T>
+flat_records(const DeckKeyword& kw, seq<Is...> s)
+{
+    auto xs = std::vector<T>{};
+    xs.reserve(kw.size());
+
+    for (const auto& record : kw) {
+        xs.push_back(flat_get<T>(record, s));
+    }
 
     return xs;
 }
