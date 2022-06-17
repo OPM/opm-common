@@ -311,7 +311,7 @@ Fieldprops::ScalarOperation fromString(const std::string& keyword) {
     if (keyword == ParserKeywords::MAXVALUE::keywordName)
         return Fieldprops::ScalarOperation::MAX;
 
-    throw std::invalid_argument("Keyword operation not recognized");
+    throw std::invalid_argument(fmt::format("Keyword operation ({}) not recognized", keyword));
 }
 
 
