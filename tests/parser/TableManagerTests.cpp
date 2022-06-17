@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FoammobTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
@@ -653,6 +654,62 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
 
 
 
+BOOST_AUTO_TEST_CASE(PvtwTable_Tests) {
+    // PVT tables from opm-tests/model5/include/pvt_live_oil_dgas.ecl .
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+TABDIMS
+1 2 /
+PROPS
+DENSITY
+   924.1      1026.0      1.03446 /
+   924.1      1026.0      1.03446 /
+PVTW
+   79.0  1.02643  0.37876E-04  0.39831  0.74714E-04 /
+/
+END
+)");
+
+    const auto tmgr = Opm::TableManager { deck };
+    const auto& pvtw = tmgr.getPvtwTable();
+    BOOST_REQUIRE_EQUAL(pvtw.size(), std::size_t{2});
+
+    {
+        const auto& t1 = pvtw[0];
+        BOOST_CHECK_CLOSE(t1.reference_pressure, 7.9e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.volume_factor, 1.02643, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.compressibility, 0.37876e-9, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.viscosity, 0.39831e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.viscosibility, 0.74714e-9, 1.0e-9);
+    }
+
+    {
+        const auto& t2 = pvtw[1];
+        BOOST_CHECK_CLOSE(t2.reference_pressure, 7.9e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.volume_factor, 1.02643, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.compressibility, 0.37876e-9, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.viscosity, 0.39831e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.viscosibility, 0.74714e-9, 1.0e-9);
+    }
+
+    const auto& dens = tmgr.getDensityTable();
+    BOOST_REQUIRE_EQUAL(dens.size(), std::size_t{2});
+
+    {
+        const auto& t1 = dens[0];
+        BOOST_CHECK_CLOSE(t1.oil, 924.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.gas, 1.03446, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.water, 1026.0, 1.0e-8);
+    }
+
+    {
+        const auto& t2 = dens[1];
+        BOOST_CHECK_CLOSE(t2.oil, 924.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.gas, 1.03446, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.water, 1026.0, 1.0e-8);
+    }
+}
 
 /**
  * Tests "happy path" for a VFPPROD table, i.e., when everything goes well

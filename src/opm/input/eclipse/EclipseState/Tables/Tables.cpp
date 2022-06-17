@@ -86,6 +86,16 @@
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <stdexcept>
+
+#include <stddef.h>
+
+#include <fmt/format.h>
+
 namespace Opm {
 
 PvtgTable::PvtgTable( const DeckKeyword& keyword, size_t tableIdx ) :
@@ -1547,7 +1557,57 @@ struct flat_props< PVCDORecord, N > {
     }
 };
 
+bool all_defaulted(const DeckRecord& record)
+{
+    return std::all_of(record.begin(), record.end(),
+        [](const DeckItem& item)
+    {
+        const auto& vstat = item.getValueStatus();
+        return std::all_of(vstat.begin(), vstat.end(), &value::defaulted);
+    });
 }
+
+} // Anonymous namespace
+
+// ------------------------------------------------------------------------
+
+PvtwTable::PvtwTable(const DeckKeyword& kw)
+{
+    if (kw.name() != ParserKeywords::PVTW::keywordName) {
+        throw std::invalid_argument {
+            fmt::format("Keyword {} cannot be used to "
+                        "initialise {} table structures", kw.name(),
+                        ParserKeywords::PVTW::keywordName)
+        };
+    }
+
+    this->table_.reserve(kw.size());
+
+    for (const auto& record : kw) {
+        if (all_defaulted(record)) {
+            // All-defaulted records imply PVTW in region R is equal to PVTW
+            // in region R-1.  PVTW must not be defaulted in region 1 (i.e.,
+            // when PVTNUM=1).
+            if (this->table_.empty()) {
+                throw OpmInputError {
+                    "First record cannot be defaulted",
+                    kw.location()
+                };
+            }
+
+            this->table_.push_back(this->table_.back());
+        }
+        else {
+            this->table_.push_back(flat_get<PVTWRecord>(record, mkseq<PVTWRecord::size>{}));
+        }
+    }
+}
+
+PvtwTable::PvtwTable(std::initializer_list<PVTWRecord> records)
+    : table_(records)
+{}
+
+// ------------------------------------------------------------------------
 
 template< typename T >
 FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
@@ -1557,7 +1617,6 @@ FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
 template FlatTable< DENSITYRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< GRAVITYRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< DiffCoeffRecord >::FlatTable( const DeckKeyword& );
-template FlatTable< PVTWRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PVCDORecord >::FlatTable( const DeckKeyword& );
 template FlatTable< ROCKRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PlyvmhRecord >::FlatTable( const DeckKeyword& );

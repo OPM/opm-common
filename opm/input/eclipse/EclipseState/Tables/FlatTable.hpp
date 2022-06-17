@@ -1,6 +1,10 @@
 #ifndef OPM_FLAT_TABLE_HPP
 #define OPM_FLAT_TABLE_HPP
 
+#include <cstddef>
+#include <initializer_list>
+#include <vector>
+
 namespace Opm {
 
 class DeckKeyword;
@@ -156,13 +160,44 @@ struct PVTWRecord {
     }
 };
 
-struct PvtwTable : public FlatTable< PVTWRecord > {
-    using FlatTable< PVTWRecord >::FlatTable;
+class PvtwTable
+{
+public:
+    PvtwTable() = default;
+    explicit PvtwTable(const DeckKeyword& kw);
+    explicit PvtwTable(std::initializer_list<PVTWRecord> records);
+
+    auto size()  const { return this->table_.size(); }
+    bool empty() const { return this->table_.empty(); }
+
+    const PVTWRecord& operator[](const std::size_t tableID) const
+    {
+        return this->table_[tableID];
+    }
+
+    const PVTWRecord& at(const std::size_t tableID) const
+    {
+        return this->table_.at(tableID);
+    }
+
+    bool operator==(const PvtwTable& other) const
+    {
+        return this->table_ == other.table_;
+    }
 
     static PvtwTable serializeObject()
     {
         return PvtwTable({{1.0, 2.0, 3.0, 4.0, 5.0}});
     }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(this->table_);
+    }
+
+private:
+    std::vector<PVTWRecord> table_{};
 };
 
 struct ROCKRecord {
