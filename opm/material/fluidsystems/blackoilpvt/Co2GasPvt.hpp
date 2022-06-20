@@ -75,7 +75,7 @@ public:
     {
         setNumRegions(numRegions);
         for (size_t i = 0; i < numRegions; ++i) {
-            gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, true);
+            gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
         }
     }
 #if HAVE_ECL_INPUT
@@ -238,7 +238,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
-        return BinaryCoeffBrineCO2::gasDiffCoeff(temperature, pressure);
+        return BinaryCoeffBrineCO2::gasDiffCoeff(temperature, pressure, extrapolate);
     }
 
     const Scalar gasReferenceDensity(unsigned regionIdx) const
