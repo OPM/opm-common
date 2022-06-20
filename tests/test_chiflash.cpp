@@ -30,21 +30,17 @@
 #include <opm/material/constraintsolvers/ChiFlash.hpp>
 #include <opm/material/fluidsystems/chifluid/juliathreecomponentfluidsystem.hh>
 
-
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 
 #include <dune/common/parallel/mpihelper.hh>
-// the following include should be removed later
-// #include <opm/material/fluidsystems/chifluid/chiwoms.h>
 
 void testChiFlash()
 {
-    
-    
     using Scalar = double;
+    // TODO: the name Julia should not be there, remaining to be changed
     using FluidSystem = Opm::JuliaThreeComponentFluidSystem<Scalar>;
 
     constexpr auto numComponents = FluidSystem::numComponents;
@@ -52,89 +48,85 @@ void testChiFlash()
     typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
     typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
 
-    // input
+// It is a three component system
+    // Initial: the primary variables are, pressure, molar fractions of the first and second component
     Evaluation p_init = Evaluation::createVariable(10e5, 0); // 10 bar
     ComponentVector comp;
     comp[0] = Evaluation::createVariable(0.5, 1);
     comp[1] = Evaluation::createVariable(0.3, 2);
     comp[2] = 1. - comp[0] - comp[1];
-    ComponentVector sat;
-    sat[0] = 1.0; sat[1] = 1.0-sat[0];
-    // TODO: should we put the derivative against the temperature here?
-    Scalar temp = 300.0;
-    // From co2-compositional branch, it uses
-    // typedef typename FluidSystem::template ParameterCache<Scalar> ParameterCache;
-
-    FluidState fs;
-    // TODO: no capillary pressure for now
     
-    fs.setPressure(FluidSystem::oilPhaseIdx, p_init);
-    fs.setPressure(FluidSystem::gasPhaseIdx, p_init);
+    // TODO: not sure whether the saturation matter here.
+    ComponentVector sat;
+    // We assume that currently everything is in the oil phase
+    sat[0] = 1.0; sat[1] = 1.0-sat[0];
+    Scalar temp = 300.0;
 
-    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
-    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
-    fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
+    
+    // FluidState will be the input for the flash calculation
+    FluidState fluid_state;
+    fluid_state.setPressure(FluidSystem::oilPhaseIdx, p_init);
+    fluid_state.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
-    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
-    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
-    fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
+    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
+
+    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
     // It is used here only for calculate the z
-    fs.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
-    fs.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
+    fluid_state.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
+    fluid_state.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
 
-    fs.setTemperature(temp);
+    fluid_state.setTemperature(temp);
 
     // ParameterCache paramCache;
     {
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
-        paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
-        paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
-        fs.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::oilPhaseIdx));
-        fs.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx));
+        paramCache.updatePhase(fluid_state, FluidSystem::oilPhaseIdx);
+        paramCache.updatePhase(fluid_state, FluidSystem::gasPhaseIdx);
+        fluid_state.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::oilPhaseIdx));
+        fluid_state.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx));
     }
 
-    ComponentVector zInit(0.); // TODO; zInit needs to be normalized.
+    ComponentVector z(0.); // TODO; z needs to be normalized.
     {
         Scalar sumMoles = 0.0;
         for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar tmp = Opm::getValue(fs.molarity(phaseIdx, compIdx) * fs.saturation(phaseIdx));
-                zInit[compIdx] += Opm::max(tmp, 1e-8);
+                Scalar tmp = Opm::getValue(fluid_state.molarity(phaseIdx, compIdx) * fluid_state.saturation(phaseIdx));
+                z[compIdx] += Opm::max(tmp, 1e-8);
                 sumMoles += tmp;
             }
         }
-        zInit /= sumMoles;
-        // initialize the derivatives
-        // TODO: the derivative eventually should be from the reservoir flow equations
+        z /= sumMoles;
+        // p And z is the primary variables
         Evaluation z_last = 1.;
         for (unsigned compIdx = 0; compIdx < numComponents - 1; ++compIdx) {
-            zInit[compIdx] = Evaluation::createVariable(Opm::getValue(zInit[compIdx]), compIdx + 1);
-            z_last -= zInit[compIdx];
+            z[compIdx] = Evaluation::createVariable(Opm::getValue(z[compIdx]), compIdx + 1);
+            z_last -= z[compIdx];
         }
-        zInit[numComponents - 1] = z_last;
+        z[numComponents - 1] = z_last;
     }
 
-    // TODO: only, p, z need the derivatives.
     const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
     const int flash_verbosity = 1;
-    //const std::string flash_twophase_method = "ssi"; // "ssi"
     const std::string flash_twophase_method = "newton";
-    // const std::string flash_twophase_method = "ssi+newton";
 
     // TODO: should we set these?
     // Set initial K and L
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Evaluation Ktmp = fs.wilsonK_(compIdx);
-        fs.setKvalue(compIdx, Ktmp);
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
+        fluid_state.setKvalue(compIdx, Ktmp);
     }
     const Evaluation Ltmp = 1.;
-    fs.setLvalue(Ltmp);
+    fluid_state.setLvalue(Ltmp);
 
     const int spatialIdx = 0;
     using Flash = Opm::ChiFlash<double, FluidSystem>;
-    // TODO: here the zInit does not have the proper derivatives
-    Flash::solve(fs, zInit, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
+    Flash::solve(fluid_state, z, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
 
 }
 
