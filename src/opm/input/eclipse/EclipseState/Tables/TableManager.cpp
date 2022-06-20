@@ -1587,12 +1587,24 @@ DensityTable make_density_table(const GravityTable& gravity) {
             return;
         }
 
+        auto lastComplete = 0 * numTables;
         const auto& tableKeyword = deck[keywordName].back();
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
                 std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, tableIdx );
                 container.addTable( tableIdx , table );
+                lastComplete = tableIdx;
+            }
+            else if (tableIdx > static_cast<size_t>(0)) {
+                const auto& item = tableKeyword.getRecord(lastComplete).getItem("DATA");
+                container.addTable(tableIdx, std::make_shared<TableType>(item, tableIdx));
+            }
+            else {
+                throw OpmInputError {
+                    fmt::format("Cannot default region {}'s table data", tableIdx + 1),
+                    tableKeyword.location()
+                };
             }
         }
     }

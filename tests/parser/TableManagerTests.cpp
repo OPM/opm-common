@@ -43,6 +43,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/FoammobTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
 
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
@@ -652,6 +654,150 @@ BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(PvdoTable_Tests) {
+    // PVDO tables from opm-tests/model6/0_BASE_MODEL6.DATA .
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+TABDIMS
+1 2 /
+PROPS
+DENSITY
+   924.1      1026.0      1.03446 /
+   924.1      1026.0      1.03446 /
+PVDO
+ 23.0  1.10770  52.630
+ 27.5  1.08610  53.660
+ 32.1  1.06460  54.730
+ 50.0  1.06350  58.940
+/
+/ -- Copied from table 1
+END
+)");
+
+    const auto tmgr = Opm::TableManager { deck };
+    const auto& pvdo = tmgr.getPvdoTables();
+    BOOST_REQUIRE_EQUAL(pvdo.size(), std::size_t{2});
+
+    {
+        const auto& t1 = pvdo.getTable<PvdoTable>(0);
+
+        const auto& p = t1.getPressureColumn();
+        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{4});
+        BOOST_CHECK_CLOSE(p[0], 2.3e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[1], 2.75e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[2], 3.21e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[3], 5.0e6, 1.0e-8);
+
+        const auto& B = t1.getFormationFactorColumn();
+        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{4});
+        BOOST_CHECK_CLOSE(B[0], 1.10770, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[1], 1.08610, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[2], 1.06460, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[3], 1.06350, 1.0e-8);
+
+        const auto& mu = t1.getViscosityColumn();
+        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{4});
+        BOOST_CHECK_CLOSE(mu[0], 52.630e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[1], 53.660e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[2], 54.730e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[3], 58.940e-3, 1.0e-8);
+    }
+
+    {
+        const auto& t2 = pvdo.getTable<PvdoTable>(1);
+
+        const auto& p = t2.getPressureColumn();
+        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{4});
+        BOOST_CHECK_CLOSE(p[0], 2.3e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[1], 2.75e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[2], 3.21e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[3], 5.0e6, 1.0e-8);
+
+        const auto& B = t2.getFormationFactorColumn();
+        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{4});
+        BOOST_CHECK_CLOSE(B[0], 1.10770, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[1], 1.08610, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[2], 1.06460, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[3], 1.06350, 1.0e-8);
+
+        const auto& mu = t2.getViscosityColumn();
+        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{4});
+        BOOST_CHECK_CLOSE(mu[0], 52.630e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[1], 53.660e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[2], 54.730e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[3], 58.940e-3, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(PvdgTable_Tests) {
+    // PVT tables from opm-tests/model5/include/pvt_live_oil_dgas.ecl .
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+TABDIMS
+1 2 /
+PROPS
+DENSITY
+   924.1      1026.0      1.03446 /
+   924.1      1026.0      1.03446 /
+PVDG
+-- Table number: 1
+    10.0000    0.266161     0.0108
+    15.0000    0.127259     0.0116
+    25.0000    0.062022     0.0123 /
+/ -- Copied from table 1
+END
+)");
+
+    const auto tmgr = Opm::TableManager { deck };
+    const auto& pvdg = tmgr.getPvdgTables();
+    BOOST_REQUIRE_EQUAL(pvdg.size(), std::size_t{2});
+
+    {
+        const auto& t1 = pvdg.getTable<PvdgTable>(0);
+
+        const auto& p = t1.getPressureColumn();
+        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(p[0], 1.0e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[1], 1.5e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[2], 2.5e6, 1.0e-8);
+
+        const auto& B = t1.getFormationFactorColumn();
+        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(B[0], 0.266161, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[1], 0.127259, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[2], 0.062022, 1.0e-8);
+
+        const auto& mu = t1.getViscosityColumn();
+        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(mu[0], 0.0108e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[1], 0.0116e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[2], 0.0123e-3, 1.0e-8);
+    }
+
+    {
+        const auto& t2 = pvdg.getTable<PvdgTable>(1);
+
+        const auto& p = t2.getPressureColumn();
+        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(p[0], 1.0e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[1], 1.5e6, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[2], 2.5e6, 1.0e-8);
+
+        const auto& B = t2.getFormationFactorColumn();
+        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(B[0], 0.266161, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[1], 0.127259, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[2], 0.062022, 1.0e-8);
+
+        const auto& mu = t2.getViscosityColumn();
+        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(mu[0], 0.0108e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[1], 0.0116e-3, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[2], 0.0123e-3, 1.0e-8);
+    }
+}
 
 
 BOOST_AUTO_TEST_CASE(PvtwTable_Tests) {
