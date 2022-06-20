@@ -978,6 +978,111 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
     }
 }
 
+
+/// Similar to createActnumBoxDeck(), but uses a corner point grid, and
+/// also used EQUALS for re-activating a cell.
+/// Creates a deck where the top-layer has ACTNUM = 0 and two partially
+/// overlapping 2*2*2 boxes in the center, one [5,7]^3 and one [6,8]^3
+/// have ACTNUM = 0, then the cell (7,7,7) is made active using EQUALS.
+static Opm::Deck createActnumBoxDeck2() {
+    const char* deckData = "RUNSPEC\n"
+            "\n"
+            "DIMENS \n"
+            "  10 10 10 / \n"
+            "GRID\n"
+            "COORD\n"
+            "  726*1 / \n"
+            "ZCORN \n"
+            "  8000*1 / \n"
+            "PORO \n"
+            "  1000*0.15 /\n"
+            "EQUALS\n"
+            " ACTNUM 0 1 10 1 10 1 1 /\n" // disable top layer
+            "/ \n"
+            // start box
+            "BOX\n"
+            "  5 7 5 7 5 7 /\n"
+            "ACTNUM \n"
+            "    0 0 0 0 0 0 0 0 0\n"
+            "    0 0 0 0 0 0 0 0 0\n"
+            "    0 0 0 0 0 0 0 0 0\n"
+            "/\n"
+            "BOX\n" // don't need ENDBOX
+            "  6 8 6 8 6 8 /\n"
+            "ACTNUM \n"
+            "    27*0\n"
+            "/\n"
+            "ENDBOX\n"
+            "EQUALS\n"
+            " ACTNUM 1 7 7 7 7 7 7 /\n" // re-enable cell (7,7,7)
+            "/ \n"
+            "FLUXNUM\n"
+            "1000*0 /\n"
+            "EDIT\n"
+            "PORV\n"
+            "1000*1 /\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData);
+}
+
+BOOST_AUTO_TEST_CASE(GridBoxActnum2) {
+    auto deck = createActnumBoxDeck2();
+    Opm::EclipseState es( deck);
+    const auto& fp = es.fieldProps();
+    const auto& grid = es.getInputGrid();
+
+    BOOST_CHECK_NO_THROW(fp.get_int("ACTNUM"));
+
+    size_t active = 10 * 10 * 10     // 1000
+                    - (10 * 10 * 1)  // - top layer
+                    - ( 3 *  3 * 3)  // - [5,7]^3 box
+                    - ( 3 *  3 * 3)  // - [6,8]^3 box
+                    + ( 2 *  2 * 2)  // + inclusion/exclusion
+                    + 1;             // cell (7,7,7)
+    BOOST_CHECK_NO_THROW(grid.getNumActive());
+    BOOST_CHECK_EQUAL(grid.getNumActive(), active);
+
+    BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), active);
+
+    {
+        size_t active_index = 0;
+        // NB: The implementation of this test actually assumes that
+        //     the loops are running with z as the outer and x as the
+        //     inner direction.
+        for (size_t z = 0; z < grid.getNZ(); z++) {
+            for (size_t y = 0; y < grid.getNY(); y++) {
+                for (size_t x = 0; x < grid.getNX(); x++) {
+                    if (z == 0)
+                        BOOST_CHECK(!grid.cellActive(x, y, z));
+                    else if (x == 6 && y == 6 && z == 6) {
+                        BOOST_CHECK(grid.cellActive(x, y, z));
+                        BOOST_CHECK_EQUAL( grid.activeIndex(x,y,z) , active_index );
+                        size_t g = grid.getGlobalIndex( x,y,z );
+                        BOOST_CHECK_EQUAL( grid.activeIndex(g) , active_index );
+                        ++active_index;
+                    } else if (x >= 4 && x <= 6 && y >= 4 && y <= 6 && z >= 4 && z <= 6)
+                        BOOST_CHECK(!grid.cellActive(x, y, z));
+                    else if (x >= 5 && x <= 7 && y >= 5 && y <= 7 && z >= 5 && z <= 7)
+                        BOOST_CHECK(!grid.cellActive(x, y, z));
+                    else {
+                        size_t g = grid.getGlobalIndex( x,y,z );
+
+                        BOOST_CHECK(grid.cellActive(x, y, z));
+                        BOOST_CHECK_EQUAL( grid.activeIndex(x,y,z) , active_index );
+                        BOOST_CHECK_EQUAL( grid.activeIndex(g) , active_index );
+
+                        active_index++;
+                    }
+                }
+            }
+        }
+
+        BOOST_CHECK_THROW( grid.activeIndex(0,0,0) , std::invalid_argument );
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     auto deck = createActnumDeck();
 
