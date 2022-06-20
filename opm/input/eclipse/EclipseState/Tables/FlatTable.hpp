@@ -24,37 +24,6 @@ struct FlatTable : public std::vector< T > {
     }
 };
 
-struct DENSITYRecord {
-    static constexpr std::size_t size = 3;
-
-    double oil;
-    double water;
-    double gas;
-
-    bool operator==(const DENSITYRecord& data) const {
-        return oil == data.oil &&
-               water == data.water &&
-               gas == data.gas;
-    }
-
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        serializer(oil);
-        serializer(water);
-        serializer(gas);
-    }
-};
-
-struct DensityTable : public FlatTable< DENSITYRecord > {
-    using FlatTable< DENSITYRecord >::FlatTable;
-
-    static DensityTable serializeObject()
-    {
-        return DensityTable({{1.0, 2.0, 3.0}});
-    }
-};
-
 struct GRAVITYRecord {
     static constexpr std::size_t size = 3;
 
@@ -77,13 +46,111 @@ struct GRAVITYRecord {
     }
 };
 
-struct GravityTable : public FlatTable< GRAVITYRecord > {
-    using FlatTable< GRAVITYRecord >::FlatTable;
+class GravityTable
+{
+public:
+    GravityTable() = default;
+    explicit GravityTable(const DeckKeyword& kw);
+    explicit GravityTable(std::initializer_list<GRAVITYRecord> records);
+
+    auto size()  const { return this->table_.size(); }
+    bool empty() const { return this->table_.empty(); }
+    auto begin() const { return this->table_.begin(); }
+    auto end()   const { return this->table_.end(); }
+
+    const GRAVITYRecord& operator[](const std::size_t tableID) const
+    {
+        return this->table_[tableID];
+    }
+
+    const GRAVITYRecord& at(const std::size_t tableID) const
+    {
+        return this->table_.at(tableID);
+    }
+
+    bool operator==(const GravityTable& other) const
+    {
+        return this->table_ == other.table_;
+    }
 
     static GravityTable serializeObject()
     {
         return GravityTable({{1.0, 2.0, 3.0}});
     }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(this->table_);
+    }
+
+private:
+    std::vector<GRAVITYRecord> table_{};
+};
+
+struct DENSITYRecord {
+    static constexpr std::size_t size = 3;
+
+    double oil;
+    double water;
+    double gas;
+
+    bool operator==(const DENSITYRecord& data) const {
+        return oil == data.oil &&
+               water == data.water &&
+               gas == data.gas;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(oil);
+        serializer(water);
+        serializer(gas);
+    }
+};
+
+class DensityTable
+{
+public:
+    DensityTable() = default;
+    explicit DensityTable(const DeckKeyword& kw);
+    explicit DensityTable(std::initializer_list<DENSITYRecord> records);
+    explicit DensityTable(const GravityTable& gravity);
+
+    auto size()  const { return this->table_.size(); }
+    bool empty() const { return this->table_.empty(); }
+    auto begin() const { return this->table_.begin(); }
+    auto end()   const { return this->table_.end(); }
+
+    const DENSITYRecord& operator[](const std::size_t tableID) const
+    {
+        return this->table_[tableID];
+    }
+
+    const DENSITYRecord& at(const std::size_t tableID) const
+    {
+        return this->table_.at(tableID);
+    }
+
+    bool operator==(const DensityTable& other) const
+    {
+        return this->table_ == other.table_;
+    }
+
+    static DensityTable serializeObject()
+    {
+        return DensityTable({{1.0, 2.0, 3.0}});
+    }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(this->table_);
+    }
+
+private:
+    std::vector<DENSITYRecord> table_{};
 };
 
 struct DiffCoeffRecord {

@@ -1223,6 +1223,70 @@ END
     }
 }
 
+BOOST_AUTO_TEST_CASE(DensityTable_Tests) {
+    // PVT tables from opm-tests/model5/include/pvt_live_oil_dgas.ecl .
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+TABDIMS
+1 2 /
+PROPS
+DENSITY
+   924.1  1026.0  1.03446 /
+/ -- Copied from region 1
+END
+)");
+
+    const auto tmgr = Opm::TableManager { deck };
+    const auto& dens = tmgr.getDensityTable();
+    BOOST_REQUIRE_EQUAL(dens.size(), std::size_t{2});
+
+    {
+        const auto& t1 = dens[0];
+        BOOST_CHECK_CLOSE(t1.oil, 924.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.gas, 1.03446, 1.0e-8);
+        BOOST_CHECK_CLOSE(t1.water, 1026.0, 1.0e-8);
+    }
+
+    {
+        const auto& t2 = dens[1];
+        BOOST_CHECK_CLOSE(t2.oil, 924.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.gas, 1.03446, 1.0e-8);
+        BOOST_CHECK_CLOSE(t2.water, 1026.0, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GravityTable_Tests) {
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+TABDIMS
+1 2 /
+GRAVITY
+  12.34 1.2 1.21 /
+/ -- Copied from region 1
+END
+)");
+
+    const auto tmgr = Opm::TableManager { deck };
+    const auto& dens = tmgr.getDensityTable();
+    BOOST_REQUIRE_EQUAL(dens.size(), std::size_t{2});
+
+    {
+        const auto& t1 = dens[0];
+        BOOST_CHECK_CLOSE(  983.731924360, t1.oil  , 1.0e-8 );
+        BOOST_CHECK_CLOSE( 1200.0        , t1.water, 1.0e-8 );
+        BOOST_CHECK_CLOSE(    1.4762     , t1.gas  , 1.0e-8 );
+    }
+
+    {
+        const auto& t2 = dens[1];
+        BOOST_CHECK_CLOSE(  983.731924360, t2.oil  , 1.0e-8 );
+        BOOST_CHECK_CLOSE( 1200.0        , t2.water, 1.0e-8 );
+        BOOST_CHECK_CLOSE(    1.4762     , t2.gas  , 1.0e-8 );
+    }
+}
+
 /**
  * Tests "happy path" for a VFPPROD table, i.e., when everything goes well
  */

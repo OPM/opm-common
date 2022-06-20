@@ -24,10 +24,13 @@
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
@@ -1609,13 +1612,115 @@ PvtwTable::PvtwTable(std::initializer_list<PVTWRecord> records)
 
 // ------------------------------------------------------------------------
 
+GravityTable::GravityTable(const DeckKeyword& kw)
+{
+    if (kw.name() != ParserKeywords::GRAVITY::keywordName) {
+        throw std::invalid_argument {
+            fmt::format("Keyword {} cannot be used to "
+                        "initialise {} table structures", kw.name(),
+                        ParserKeywords::GRAVITY::keywordName)
+        };
+    }
+
+    this->table_.reserve(kw.size());
+
+    for (const auto& record : kw) {
+        if (all_defaulted(record)) {
+            // All-defaulted records imply GRAVITY in region R is equal to
+            // GRAVITY in region R-1.  GRAVITY must not be defaulted in
+            // region 1 (i.e., when PVTNUM=1).
+            if (this->table_.empty()) {
+                throw OpmInputError {
+                    "First record cannot be defaulted",
+                    kw.location()
+                };
+            }
+
+            this->table_.push_back(this->table_.back());
+        }
+        else {
+            this->table_.push_back(flat_get<GRAVITYRecord>(record, mkseq<GRAVITYRecord::size>{}));
+        }
+    }
+}
+
+GravityTable::GravityTable(std::initializer_list<GRAVITYRecord> records)
+    : table_(records)
+{}
+
+// ------------------------------------------------------------------------
+
+DensityTable::DensityTable(const DeckKeyword& kw)
+{
+    if (kw.name() != ParserKeywords::DENSITY::keywordName) {
+        throw std::invalid_argument {
+            fmt::format("Keyword {} cannot be used to "
+                        "initialise {} table structures", kw.name(),
+                        ParserKeywords::DENSITY::keywordName)
+        };
+    }
+
+    this->table_.reserve(kw.size());
+
+    for (const auto& record : kw) {
+        if (all_defaulted(record)) {
+            // All-defaulted records imply DENSITY in region R is equal to
+            // DENSITY in region R-1.  DENSITY must not be defaulted in
+            // region 1 (i.e., when PVTNUM=1).
+            if (this->table_.empty()) {
+                throw OpmInputError {
+                    "First record cannot be defaulted",
+                    kw.location()
+                };
+            }
+
+            this->table_.push_back(this->table_.back());
+        }
+        else {
+            this->table_.push_back(flat_get<DENSITYRecord>(record, mkseq<DENSITYRecord::size>{}));
+        }
+    }
+}
+
+DensityTable::DensityTable(std::initializer_list<DENSITYRecord> records)
+    : table_(records)
+{}
+
+DensityTable::DensityTable(const GravityTable& gravity)
+{
+    this->table_.reserve(gravity.size());
+
+    constexpr auto default_air_density =
+        1.22 * unit::kilogram / unit::cubic(unit::meter);
+
+    constexpr auto default_water_density =
+        1000.0 * unit::kilogram / unit::cubic(unit::meter);
+
+    // Degrees API defined as
+    //
+    //   API = (141.5 / SG) - 131.5
+    //
+    // with SG being the specific gravity of oil relative to pure water.
+
+    std::transform(gravity.begin(), gravity.end(),
+                   std::back_inserter(this->table_),
+                   [](const GRAVITYRecord& record)
+    {
+        return DENSITYRecord {
+            (141.5 / (record.oil_api + 131.5)) * default_water_density,
+            record.water_sg * default_water_density,
+            record.gas_sg * default_air_density
+        };
+    });
+}
+
+// ------------------------------------------------------------------------
+
 template< typename T >
 FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
     std::vector< T >( flat_records< T >( kw, mkseq< T::size >{} ) )
 {}
 
-template FlatTable< DENSITYRecord >::FlatTable( const DeckKeyword& );
-template FlatTable< GRAVITYRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< DiffCoeffRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PVCDORecord >::FlatTable( const DeckKeyword& );
 template FlatTable< ROCKRecord >::FlatTable( const DeckKeyword& );
