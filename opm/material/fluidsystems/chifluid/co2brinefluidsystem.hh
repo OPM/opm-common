@@ -20,19 +20,21 @@ namespace Opm {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
         static constexpr int numPhases=2;
-        static constexpr int numComponents = 3;
+        static constexpr int numComponents = 2;
+        static constexpr int numMisciblePhases=2;
+        static constexpr int numMiscibleComponents = 2;
         // TODO: phase location should be more general
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
 
         static constexpr int Comp0Idx = 0;
         static constexpr int Comp1Idx = 1;
-        static constexpr int Comp2Idx = 2;
+        //static constexpr int Comp2Idx = 2;
 
         // TODO: needs to be more general
         using Comp0 = Opm::JuliaCO2<Scalar>;
         using Comp1 = Opm::ChiwomsBrine<Scalar>;
-        using Comp2 = Opm::JuliaC10<Scalar>;
+        //using Comp2 = Opm::JuliaC10<Scalar>;
 
         template <class ValueType>
         using ParameterCache = Opm::ChiParameterCache<ValueType, Co2BrineFluidSystem<Scalar>>;
@@ -49,7 +51,7 @@ namespace Opm {
             switch (compIdx) {
             case Comp0Idx: return Comp0::acentricFactor();
             case Comp1Idx: return Comp1::acentricFactor();
-            case Comp2Idx: return Comp2::acentricFactor();
+           // case Comp2Idx: return Comp2::acentricFactor();
             default: throw std::runtime_error("Illegal component index for acentricFactor");
             }
         }
@@ -63,7 +65,7 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalTemperature();
                 case Comp1Idx: return Comp1::criticalTemperature();
-                case Comp2Idx: return Comp2::criticalTemperature();
+            //    case Comp2Idx: return Comp2::criticalTemperature();
                 default: throw std::runtime_error("Illegal component index for criticalTemperature");
             }
         }
@@ -76,7 +78,7 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalPressure();
                 case Comp1Idx: return Comp1::criticalPressure();
-                case Comp2Idx: return Comp2::criticalPressure();
+              //  case Comp2Idx: return Comp2::criticalPressure();
                 default: throw std::runtime_error("Illegal component index for criticalPressure");
             }
         }
@@ -90,7 +92,7 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalVolume();
                 case Comp1Idx: return Comp1::criticalVolume();
-                case Comp2Idx: return Comp2::criticalVolume();
+              //  case Comp2Idx: return Comp2::criticalVolume();
                 default: throw std::runtime_error("Illegal component index for criticalVolume");
             }
         }
@@ -101,7 +103,7 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::molarMass();
                 case Comp1Idx: return Comp1::molarMass();
-                case Comp2Idx: return Comp2::molarMass();
+            //    case Comp2Idx: return Comp2::molarMass();
                 default: throw std::runtime_error("Illegal component index for molarMass");
             }
         }
@@ -131,7 +133,7 @@ namespace Opm {
                 static const char* name[] = {
                         Comp0::name(),
                         Comp1::name(),
-                        Comp2::name(),
+                //        Comp2::name(),
                 };
 
                 assert(0 <= compIdx && compIdx < 3);

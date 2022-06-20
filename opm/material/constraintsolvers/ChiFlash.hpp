@@ -61,24 +61,17 @@ class ChiFlash
     //using Problem = GetPropType<TypeTag, Properties::Problem>;
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
-    // enum { Comp0Idx = FluidSystem::Comp0Idx }; //rename for generic ?
-    // enum { Comp1Idx = FluidSystem::Comp1Idx }; //rename for generic ?
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx};
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx};
-    enum { numMiscibleComponents = 3}; //octane, co2 // should be brine instead of brine here.
-    enum { numMisciblePhases = 2}; //oil, gas
+    enum { numMiscibleComponents = FluidSystem::numMiscibleComponents}; //octane, co2 // should be brine instead of brine here.
+    enum { numMisciblePhases = FluidSystem::numMisciblePhases}; //oil, gas
     enum {
         numEq =
         numMisciblePhases+
         numMisciblePhases*numMiscibleComponents
     };//pressure, saturation, composition
 
-    /* enum {
-        // p0PvIdx = 0, // pressure first phase primary variable index
-        // S0PvIdx = 1, // saturation first phase primary variable index
-        // x00PvIdx = S0PvIdx + 1, // molefraction first phase first component primary variable index
-        //numMiscibleComponennets*numMisciblePhases-1 molefractions/primvar follow
-    }; */
+
 
 public:
     /*!
@@ -203,16 +196,6 @@ public:
 
         updateDerivatives_(fluid_state_scalar, z, fluid_state, single);
         
-
-
-        //print summary after flash
-        if (verbosity >= 1) {
-            std::cout << " ------      SUMMARY  AFTER FLASH ------       " << std::endl;
-            std::cout << " L  " << fluid_state.L() << std::endl;
-            std::cout << " K  " << fluid_state.K(0) << ", " << fluid_state.K(1) << ", " << fluid_state.K(2) << std::endl;
-            std::cout << " x  " << fluid_state.moleFraction(oilPhaseIdx, 0) << ", " << fluid_state.moleFraction(oilPhaseIdx, 1) << ", " << fluid_state.moleFraction(oilPhaseIdx, 2) << std::endl;
-            std::cout << " y  " << fluid_state.moleFraction(gasPhaseIdx, 0) << ", " << fluid_state.moleFraction(gasPhaseIdx, 1) << ", " << fluid_state.moleFraction(gasPhaseIdx, 2) << std::endl;
-        }
     }//end solve
 
     /*!
