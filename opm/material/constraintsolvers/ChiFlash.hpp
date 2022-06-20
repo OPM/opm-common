@@ -58,7 +58,6 @@ namespace Opm {
 template <class Scalar, class FluidSystem>
 class ChiFlash
 {
-    //using Problem = GetPropType<TypeTag, Properties::Problem>;
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx};
@@ -69,9 +68,7 @@ class ChiFlash
         numEq =
         numMisciblePhases+
         numMisciblePhases*numMiscibleComponents
-    };//pressure, saturation, composition
-
-
+    };  //pressure, saturation, composition
 
 public:
     /*!
@@ -84,7 +81,7 @@ public:
                       int spatialIdx,
                       int verbosity,
                       std::string twoPhaseMethod,
-                      Scalar tolerance)
+                      Scalar tolerance = -1.)
     {
 
         using InputEval = typename FluidState::Scalar;
@@ -93,11 +90,11 @@ public:
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,7)
         Dune::FMatrixPrecision<InputEval>::set_singular_limit(1e-35);
 #endif
+        if (tolerance <= 0) {
+            tolerance = std::min<Scalar>(1e-3, 1e8 * std::numeric_limits<Scalar>::epsilon());
+        }
 
-        if (tolerance <= 0)
-            tolerance = std::min<Scalar>(1e-3, 1e8*std::numeric_limits<Scalar>::epsilon());
-        
-        //K and L from previous timestep (wilson and -1 initially)
+        // K and L from previous timestep (wilson and -1 initially)
         ComponentVector K;
         for(int compIdx = 0; compIdx < numComponents; ++compIdx) {
             K[compIdx] = fluid_state.K(compIdx);
@@ -146,7 +143,6 @@ public:
                  std::cout << "Perform stability test (L <= 0 or L == 1)!" << std::endl;
              }
             phaseStabilityTest_(isStable, K_scalar, fluid_state_scalar, z_scalar, verbosity);
-
         }
         if (verbosity >= 1) {
             std::cout << "Inputs after stability test are K = [" << K_scalar << "], L = [" << L_scalar << "], z = [" << z_scalar << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
@@ -164,10 +160,8 @@ public:
         } else {
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
             L_scalar = li_single_phase_label_(fluid_state_scalar, z_scalar, verbosity);
-             single = true;
+            single = true;
         }
-
-        
 
         // Print footer
         if (verbosity >= 1) {
@@ -193,9 +187,7 @@ public:
             fluid_state.setKvalue(compIdx, K_scalar[compIdx]);
             fluid_state_scalar.setKvalue(compIdx, K_scalar[compIdx]);
         }
-
         updateDerivatives_(fluid_state_scalar, z, fluid_state, single);
-        
     }//end solve
 
     /*!
@@ -433,7 +425,6 @@ protected:
         throw std::runtime_error(" Rachford-Rice with bisection failed!");
     }
 
-
     template <class FlashFluidState, class ComponentVector>
     static void phaseStabilityTest_(bool& isStable, ComponentVector& K, FlashFluidState& fluidState, const ComponentVector& globalComposition, int verbosity)
     {
@@ -475,6 +466,7 @@ protected:
             }
         }
     }
+
     template <class FlashFluidState, class ComponentVector>
     static void checkStability_(const FlashFluidState& fluidState, bool& isTrivial, ComponentVector& K, ComponentVector& xy_loc,
                                 typename FlashFluidState::Scalar& S_loc, const ComponentVector& globalComposition, bool isGas, int verbosity)
@@ -537,6 +529,7 @@ protected:
                 fluidState_fake.setFugacityCoefficient(phaseIdx, compIdx, phiFake);
                 fluidState_global.setFugacityCoefficient(phaseIdx2, compIdx, phiGlobal);
             }
+
            
             ComponentVector R;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -771,7 +764,13 @@ protected:
                 }
             }
         }
-
+        for (unsigned i = 0; i < num_equations; ++i) {
+            for (unsigned j = 0; j < num_primary_variables; ++j) {
+                std::cout << " " << jac[i][j] ;
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
         if (!converged) {
             throw std::runtime_error(" Newton composition update did not converge within maxIterations");
         }
@@ -788,7 +787,8 @@ protected:
             K[idx] = K_i;
         }
         L = Opm::getValue(l);
-        fluidState.setLvalue(L);    }
+        fluidState.setLvalue(L);    
+    }
 
     template <class DefectVector>
     static void updateCurrentSol_(DefectVector& x, DefectVector& d)
@@ -1021,7 +1021,6 @@ protected:
         for (unsigned  comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
             primary_z[comp_idx] = Opm::getValue(z[comp_idx]);
         }
-        
         for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
             const auto x_ii = PrimaryEval(fluid_state_scalar.moleFraction(oilPhaseIdx, comp_idx), comp_idx);
             primary_fluid_state.setMoleFraction(oilPhaseIdx, comp_idx, x_ii);
@@ -1106,24 +1105,20 @@ protected:
                     deri[idx] += pz * zi.derivative(idx);
                 }
             }
-            
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 x[compIdx].setDerivative(idx, deri[idx]);
-            }
-            
+            } 
             // handling y
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 deri[idx] = - xx[compIdx + numComponents][0]* p_v.derivative(idx);
-            }
-                    
+            }            
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
                 const double pz = -xx[compIdx + numComponents][cIdx + 1];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += pz * zi.derivative(idx);
                 }
-            }
-            
+            }     
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 y[compIdx].setDerivative(idx, deri[idx]);
             }
@@ -1133,7 +1128,6 @@ protected:
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 deriL[idx] = - xx[2*numComponents][0] * p_v.derivative(idx);
             }
-            
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
                 const double pz = -xx[2*numComponents][cIdx + 1];
                 const auto& zi = z[cIdx];
@@ -1169,6 +1163,7 @@ protected:
             fluidState.setMoleFraction(gasPhaseIdx, compIdx, x[compIdx + numMiscibleComponents]);
         }
 
+
         // Compute fugacities
         using ValueType = typename FluidState::Scalar;
         using ParamCache = typename FluidSystem::template ParameterCache<typename FluidState::Scalar>;
@@ -1198,7 +1193,7 @@ protected:
             // sum(x) - sum(y) = 0
             b[numMiscibleComponents*numMisciblePhases] += -x[compIdx] + x[compIdx + numMiscibleComponents];
         }
-    }//end evalDefect
+    }//end valDefect
 
     template <class FluidState, class DefectVector, class DefectMatrix, class ComponentVector>
     static void evalJacobian_(DefectMatrix& A,
