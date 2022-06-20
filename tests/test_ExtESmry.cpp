@@ -227,6 +227,15 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
 
     BOOST_CHECK_EQUAL(fopr3a.size(), fopr3b.size());
 
+    ExtESmry esmry4("SPE1CASE1.ESMRY");
+
+    // vector list holding two elements of FOPR, should not be loaded twice
+    std::vector<std::string> vect_list{"FOPR", "WBHP:PROD", "FOPR", "FGOR"};
+    esmry4.loadData(vect_list);
+    auto fopr4a = esmry4.get("FOPR");
+    auto fgor4a = esmry4.get("FGOR");
+
+    BOOST_CHECK_EQUAL(fopr4a.size(), fgor4a.size());
 }
 
 BOOST_AUTO_TEST_CASE(TestExtESmry_2) {
@@ -406,4 +415,3 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
     for (size_t n = 63; n < fopt.size(); n++)
         BOOST_REQUIRE_CLOSE(fopt[n], fopt_rst_ref[n-63], 0.01);
 }
-
