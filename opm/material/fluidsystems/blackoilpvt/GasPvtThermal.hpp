@@ -60,8 +60,8 @@ public:
     GasPvtThermal()
     {
         enableThermalDensity_ = false;
+        enableJouleThomson_ = false;
         enableThermalViscosity_ = false;
-        enableInternalEnergy_ = false;
         isothermalPvt_ = nullptr;
     }
 
@@ -70,8 +70,11 @@ public:
                   const std::vector<Scalar>& gasdentRefTemp,
                   const std::vector<Scalar>& gasdentCT1,
                   const std::vector<Scalar>& gasdentCT2,
+                  const std::vector<Scalar>& gasJTRefPres,
+                  const std::vector<Scalar>& gasJTC,
                   const std::vector<TabulatedOneDFunction>& internalEnergyCurves,
                   bool enableThermalDensity,
+                  bool enableJouleThomson,
                   bool enableThermalViscosity,
                   bool enableInternalEnergy)
         : isothermalPvt_(isothermalPvt)
@@ -79,8 +82,11 @@ public:
         , gasdentRefTemp_(gasdentRefTemp)
         , gasdentCT1_(gasdentCT1)
         , gasdentCT2_(gasdentCT2)
+        , gasJTRefPres_(gasJTRefPres)
+        , gasJTC_(gasJTC)
         , internalEnergyCurves_(internalEnergyCurves)
         , enableThermalDensity_(enableThermalDensity)
+        , enableJouleThomson_(enableJouleThomson)
         , enableThermalViscosity_(enableThermalViscosity)
         , enableInternalEnergy_(enableInternalEnergy)
     { }
@@ -109,6 +115,7 @@ public:
         const auto& tables = eclState.getTableManager();
 
         enableThermalDensity_ = tables.GasDenT().size() > 0;
+        enableJouleThomson_ = tables.GasJT().size() > 0;
         enableThermalViscosity_ = tables.hasTables("GASVISCT");
         enableInternalEnergy_ = tables.hasTables("SPECHEAT");
 
@@ -129,7 +136,7 @@ public:
         }
 
         // temperature dependence of gas density
-        if (tables.GasDenT().size() > 0) {
+        if (enableThermalDensity_) {
             const auto& gasDenT = tables.GasDenT();
 
             assert(gasDenT.size() == numRegions);
@@ -140,7 +147,26 @@ public:
                 gasdentCT1_[regionIdx] = record.C1;
                 gasdentCT2_[regionIdx] = record.C2;
             }
-            enableThermalDensity_ = true;
+        }
+
+        // Joule Thomson 
+        if (enableJouleThomson_) {
+            const auto& gasJT = tables.GasJT();
+
+            assert(gasJT.size() == numRegions);
+            for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                const auto& record = gasJT[regionIdx];
+
+                gasJTRefPres_[regionIdx] =  record.P0;
+                gasJTC_[regionIdx] = record.C1;
+            }
+
+            const auto& densityTable = eclState.getTableManager().getDensityTable();
+
+            assert(densityTable.size() == numRegions);
+            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+                 rhoRefO_[regionIdx] = densityTable[regionIdx].oil;
+            }
         }
 
         if (enableInternalEnergy_) {
@@ -193,6 +219,9 @@ public:
         gasdentRefTemp_.resize(numRegions);
         gasdentCT1_.resize(numRegions);
         gasdentCT2_.resize(numRegions);
+        gasJTRefPres_.resize(numRegions);
+        gasJTC_.resize(numRegions);
+        rhoRefO_.resize(numRegions);
     }
 
     /*!
@@ -210,6 +239,12 @@ public:
     bool enableThermalDensity() const
     { return enableThermalDensity_; }
 
+     /*!
+     * \brief Returns true iff Joule-Thomson effect for the gas phase is active.
+     */
+    bool enableJouleThomsony() const
+    { return enableJouleThomson_; }
+
     /*!
      * \brief Returns true iff the viscosity of the gas phase is temperature dependent.
      */
@@ -222,16 +257,62 @@ public:
     template <class Evaluation>
     Evaluation internalEnergy(unsigned regionIdx,
                               const Evaluation& temperature,
-                              const Evaluation&,
-                              const Evaluation&) const
+                              const Evaluation& pressure,
+                              const Evaluation& Rv) const
     {
         if (!enableInternalEnergy_)
-            throw std::runtime_error("Requested the internal energy of oil but it is disabled");
+             throw std::runtime_error("Requested the internal energy of gas but it is disabled");
 
-        // compute the specific internal energy for the specified tempature. We use linear
-        // interpolation here despite the fact that the underlying heat capacities are
-        // piecewise linear (which leads to a quadratic function)
-        return internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+        if (!enableJouleThomson_) {
+            // compute the specific internal energy for the specified tempature. We use linear
+            // interpolation here despite the fact that the underlying heat capacities are
+            // piecewise linear (which leads to a quadratic function)
+            return internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+        }
+        else {
+            Evaluation Tref = gasdentRefTemp_[regionIdx];
+            Evaluation Pref = gasJTRefPres_[regionIdx]; 
+            Scalar JTC = gasJTC_[regionIdx]; // if JTC is default then JTC is calculated
+            Evaluation Rvw = 0.0;
+
+            Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
+            const Scalar hVap = 480.6e3; // [J / kg]
+            Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
+            Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
+
+            Evaluation enthalpyPres;
+            if  (JTC != 0) {
+                enthalpyPres = -Cp * JTC * (pressure -Pref);
+            }
+            else if(enableThermalDensity_) {
+                Scalar c1T = gasdentCT1_[regionIdx];
+                Scalar c2T = gasdentCT2_[regionIdx];
+              
+                Evaluation alpha = (c1T + 2 * c2T * (temperature - Tref)) /
+                    (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
+
+                const int N = 100; // value is experimental
+                Evaluation deltaP = (pressure - Pref)/N;
+                Evaluation enthalpyPresPrev = 0;
+                for (size_t i = 0; i < N; ++i) {
+                    Evaluation Pnew = Pref + i * deltaP;
+                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rv, Rvw) *
+                                     (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
+                    // see e.g.https://en.wikipedia.org/wiki/Joule-Thomson_effect for a derivation of the Joule-Thomson coeff.
+                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;
+                    Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
+                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres; 
+                    enthalpyPresPrev = enthalpyPres;
+                }
+            }
+            else {
+                  throw std::runtime_error("Requested Joule-thomson calculation but thermal gas density (GASDENT) is not provided");
+            }
+
+            Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
+
+            return enthalpy - pressure/density;
+        }
     }
 
     /*!
@@ -411,6 +492,13 @@ public:
     bool enableInternalEnergy() const
     { return enableInternalEnergy_; }
 
+    const std::vector<Scalar>& gasJTRefPres() const
+    { return  gasJTRefPres_; }
+
+     const std::vector<Scalar>&  gasJTC() const
+    { return gasJTC_; }
+
+
     bool operator==(const GasPvtThermal<Scalar>& data) const
     {
         if (isothermalPvt_ && !data.isothermalPvt_)
@@ -424,8 +512,11 @@ public:
                 this->gasdentRefTemp() == data.gasdentRefTemp() &&
                 this->gasdentCT1() == data.gasdentCT1() &&
                 this->gasdentCT2() == data.gasdentCT2() &&
+                this->gasJTRefPres() == data.gasJTRefPres() &&
+                this->gasJTC() == data.gasJTC() &&
                 this->internalEnergyCurves() == data.internalEnergyCurves() &&
                 this->enableThermalDensity() == data.enableThermalDensity() &&
+                this->enableJouleThomson() == data.enableJouleThomson() &&
                 this->enableThermalViscosity() == data.enableThermalViscosity() &&
                 this->enableInternalEnergy() == data.enableInternalEnergy();
     }
@@ -440,8 +531,11 @@ public:
         gasdentRefTemp_ = data.gasdentRefTemp_;
         gasdentCT1_ = data.gasdentCT1_;
         gasdentCT2_ = data.gasdentCT2_;
+        gasJTRefPres_ =  data.gasJTRefPres_;
+        gasJTC_ =  data.gasJTC_;
         internalEnergyCurves_ = data.internalEnergyCurves_;
         enableThermalDensity_ = data.enableThermalDensity_;
+        enableJouleThomson_ = data.enableJouleThomson_;
         enableThermalViscosity_ = data.enableThermalViscosity_;
         enableInternalEnergy_ = data.enableInternalEnergy_;
 
@@ -459,10 +553,16 @@ private:
     std::vector<Scalar> gasdentCT1_;
     std::vector<Scalar> gasdentCT2_;
 
+    std::vector<Scalar> gasJTRefPres_;
+    std::vector<Scalar> gasJTC_;
+
+    std::vector<Scalar> rhoRefO_;
+
     // piecewise linear curve representing the internal energy of gas
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;
 
     bool enableThermalDensity_;
+    bool enableJouleThomson_;
     bool enableThermalViscosity_;
     bool enableInternalEnergy_;
 };

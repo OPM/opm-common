@@ -156,6 +156,7 @@ public:
     template <class Evaluation>
     Evaluation internalEnergy(unsigned,
                         const Evaluation&,
+                        const Evaluation&,
                         const Evaluation&) const
     {
         throw std::runtime_error("Requested the enthalpy of water but the thermal option is not enabled");

@@ -1201,12 +1201,12 @@ public:
 
         case gasPhaseIdx:
             return
-                gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
-                + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+                 gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
+                  + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         case waterPhaseIdx:
             return
-                waterPvt_->internalEnergy(regionIdx, T, p)
+                waterPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
                 + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
