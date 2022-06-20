@@ -23,6 +23,8 @@ namespace Opm {
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
         static constexpr int numPhases=2;
         static constexpr int numComponents = 3;
+        static constexpr int numMisciblePhases=2;
+        static constexpr int numMiscibleComponents = 3;
         // TODO: phase location should be more general
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
@@ -133,6 +135,7 @@ namespace Opm {
                 static const char* name[] = {
                         Comp0::name(),
                         Comp1::name(),
+                        Comp2::name(),
                 };
 
                 assert(0 <= compIdx && compIdx < 3);
