@@ -1212,7 +1212,12 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section) {
             this->handle_keyword(keyword, box);
         }
     }
-    m_actnum = this->int_data.at("ACTNUM").data;
+    const auto iter = this->int_data.find("ACTNUM");
+    if (iter == this->int_data.end()) {
+        m_actnum.assign(this->grid_ptr->getCartesianSize(), 1);
+    } else {
+        m_actnum = iter->second.data;
+    }
 }
 
 void FieldProps::scanEDITSection(const EDITSection& edit_section) {
