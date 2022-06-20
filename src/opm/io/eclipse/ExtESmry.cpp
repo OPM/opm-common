@@ -531,7 +531,7 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 
     for (const auto& key: stringVect){
         auto key_ind = m_keyword_index[0].at(key);
-        if (!m_vectorLoaded[key_ind]){
+        if ((!m_vectorLoaded[key_ind]) && (std::find(keyIndexVect.begin(), keyIndexVect.end(), key_ind) == keyIndexVect.end() )){
             keyIndexVect.push_back(key_ind);
             loadKeyIndex.push_back(keyCounter);
         }
