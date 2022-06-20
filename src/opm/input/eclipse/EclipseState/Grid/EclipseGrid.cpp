@@ -1168,24 +1168,15 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
             const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
 
-            int * actnum = nullptr;
-            std::vector<int> actnumVector;
+            EclipseGrid topologyOnlyGrid(static_cast<GridDims&>(*this));
+            FieldProps fp(deck, topologyOnlyGrid);
+            const auto& actnumVector = fp.actnumRaw();
+            if (actnumVector.size() != this->getCartesianSize())
+                throw std::invalid_argument("ACTNUM vector has wrong size");
 
-            if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-                EclipseGrid topologyOnlyGrid(static_cast<GridDims&>(*this));
-                FieldProps fp(deck, topologyOnlyGrid);
-                actnumVector = fp.actnumRaw();
+            OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN, COORD and ACTNUM"));
 
-                if (actnumVector.size() != this->getCartesianSize())
-                    throw std::invalid_argument("ACTNUM vector has wrong size");
-
-                actnum = actnumVector.data();
-                OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN, COORD and ACTNUM"));
-            } else
-                OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN and COORD"));
-
-
-            initCornerPointGrid( coord , zcorn, actnum);
+            initCornerPointGrid( coord , zcorn, actnumVector.data());
         }
     }
 
