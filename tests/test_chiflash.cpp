@@ -87,8 +87,8 @@ void testChiFlash()
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updatePhase(fluid_state, FluidSystem::oilPhaseIdx);
         paramCache.updatePhase(fluid_state, FluidSystem::gasPhaseIdx);
-        fluid_state.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::oilPhaseIdx));
-        fluid_state.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx));
+        fluid_state.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fluid_state, paramCache, FluidSystem::oilPhaseIdx));
+        fluid_state.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fluid_state, paramCache, FluidSystem::gasPhaseIdx));
     }
 
     ComponentVector z(0.); // TODO; z needs to be normalized.
