@@ -25,8 +25,57 @@
 #include <string>
 #include <stdexcept>
 #include <iterator>
+#include <sstream>
+#include <set>
+#include <cctype>
+#include <algorithm>
 
 namespace Opm {
+
+namespace OrderedMapDetail
+{
+template<class T, class A>
+//typename std::enable_if_t<!std::is_same<T,std::string>::value, std::string>
+std::string
+findSimilarStrings(const std::string&,
+                   const std::vector<T,A>&)
+{
+    return {};
+}
+
+template<class A, class K>
+std::string
+findSimilarStrings(std::string str,
+                   const std::vector<std::pair<std::string, K>,A>& storage)
+{
+    auto toUpper = [](const char c){ return std::toupper(c);};
+    std::transform(str.begin(), str.end(), str.begin(), toUpper);
+    std::set<std::string> alternatives;
+
+    for(const auto& entry: storage)
+    {
+        std::string upper = entry.first;
+        std::transform(upper.begin(), upper.end(), upper.begin(),
+                       toUpper);
+
+        if(upper.find(str) != std::string::npos || str.find(upper) != std::string::npos)
+        {
+            alternatives.insert(entry.first);
+        }
+    }
+
+    if (alternatives.empty())
+    {
+        return {};
+    }
+
+    std::stringstream concated;
+    std::copy(alternatives.begin(), alternatives.end(),
+              std::ostream_iterator<std::string>(concated, ", "));
+    auto concatedStr = concated.str();
+    return concatedStr.substr(0, concatedStr.size()-2);
+}
+} // end namespace detail
 
 template <typename K, typename T>
 class OrderedMap {
@@ -103,7 +152,17 @@ public:
     T& get(const K& key) {
         auto iter = m_map.find( key );
         if (iter == m_map.end())
-            throw std::invalid_argument("Key not found:");
+        {
+            using namespace std::string_literals;
+            auto startsWithSame = OrderedMapDetail::findSimilarStrings(key, m_vector);
+            if (!startsWithSame.empty())
+            {
+                startsWithSame = " Similar entries are "s +
+                    startsWithSame + "."s;
+            }
+            throw std::invalid_argument("Key "s + key + " not found."s
+                                        + startsWithSame);
+        }
         else {
             size_t index = iter->second;
             return iget(index);
@@ -120,7 +179,17 @@ public:
     const T& get(const K& key) const {
         const auto& iter = this->m_map.find( key );
         if (iter == m_map.end())
-            throw std::invalid_argument("Key not found: ??");
+        {
+            auto startsWithSame = OrderedMapDetail::findSimilarStrings(key, m_vector);
+            if (!startsWithSame.empty())
+            {
+                startsWithSame = std::string(" Similar entries are ") +
+                    startsWithSame + std::string(".");
+            }
+            using namespace std::string_literals;
+            throw std::invalid_argument("Key "s + key + " not found."s
+                                        + startsWithSame);
+        }
         else {
             size_t index = iter->second;
             return iget(index);
@@ -130,7 +199,12 @@ public:
 
     const T& iget(size_t index) const {
         if (index >= m_vector.size())
-            throw std::invalid_argument("Invalid index");
+        {
+            using namespace std::string_literals;
+            throw std::invalid_argument("Invalid index "s +
+                                        std::to_string(index) +
+                                        " is larger than container size"s);
+        }
         return m_vector[index].second;
     }
 

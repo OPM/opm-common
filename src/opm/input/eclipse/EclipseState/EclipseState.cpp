@@ -22,6 +22,7 @@
 
 #include <fmt/format.h>
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/InfoLogger.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
@@ -349,9 +350,17 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
                 const auto& faultRecord = *iter;
                 const std::string& faultName = faultRecord.getItem(0).get< std::string >(0);
                 double multFlt = faultRecord.getItem(1).get< double >(0);
-                m_faults.setTransMult( faultName , multFlt );
-
-                logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
+                try
+                {
+                    m_faults.setTransMult( faultName , multFlt );
+                    logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
+                }
+                catch(const std::exception& e)
+                {
+                    auto msg = fmt::format("Could not set fault transmissibility multiplier {} for fault {}: {}",
+                                           multFlt, faultName, e.what());
+                    OPM_THROW(std::invalid_argument, msg);
+                }
             }
         }
     }
