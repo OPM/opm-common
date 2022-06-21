@@ -377,8 +377,11 @@ public:
 
 
 
-
+    /// Normal constructor for FieldProps.
     FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
+    /// Special case constructor used to process ACTNUM only.
+    FieldProps(const Deck& deck, const EclipseGrid& grid);
+
     void reset_actnum(const std::vector<int>& actnum);
 
     void apply_numerical_aquifers(const NumericalAquifers& numerical_aquifers);
@@ -386,6 +389,7 @@ public:
     const std::string& default_region() const;
 
     std::vector<int> actnum();
+    const std::vector<int>& actnumRaw() const;
 
     template <typename T>
     static bool supported(const std::string& keyword);
@@ -504,6 +508,7 @@ public:
     static bool rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg);
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
+    void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);
     void scanPROPSSection(const PROPSSection& props_section);
     void scanREGIONSSection(const REGIONSSection& regions_section);

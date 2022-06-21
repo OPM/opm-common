@@ -21,6 +21,7 @@
 #define _USE_MATH_DEFINES
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -121,6 +122,25 @@ EclipseGrid::EclipseGrid(const std::string& fileName )
     Opm::EclIO::EclFile egridfile(fileName);
     m_useActnumFromGdfile=true;
     initGridFromEGridFile(egridfile, fileName);
+}
+
+
+EclipseGrid::EclipseGrid(const GridDims& gd)
+    : GridDims(gd),
+      m_minpvMode(MinpvMode::ModeEnum::Inactive),
+      m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+      m_multzMode(PinchMode::ModeEnum::TOP),
+      m_pinchGapMode(PinchMode::ModeEnum::GAP)
+{
+    this->m_nactive = this->getCartesianSize();
+    this->active_volume = std::nullopt;
+    // Nothing else initialized. Leaving in particular as empty:
+    // m_actnum,
+    // m_global_to_active,
+    // m_active_to_global.
+    //
+    // EclipseGrid will only be usable for constructing Box objects with
+    // all cells active.
 }
 
 
@@ -478,6 +498,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     size_t EclipseGrid::activeIndex(size_t globalIndex) const {
+        if (m_global_to_active.empty()) {
+            return globalIndex;
+        }
 
         if (m_global_to_active[ globalIndex] == -1) {
             throw std::invalid_argument("Input argument does not correspond to an active cell");
@@ -1145,23 +1168,15 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
             const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
 
-            int * actnum = nullptr;
-            std::vector<int> actnumVector;
+            EclipseGrid topologyOnlyGrid(static_cast<GridDims&>(*this));
+            FieldProps fp(deck, topologyOnlyGrid);
+            const auto& actnumVector = fp.actnumRaw();
+            if (actnumVector.size() != this->getCartesianSize())
+                throw std::invalid_argument("ACTNUM vector has wrong size");
 
-            if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-                 const auto& actnumKeyword = deck.get<ParserKeywords::ACTNUM>().back();
-                actnumVector = actnumKeyword.getIntData();
+            OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN, COORD and ACTNUM"));
 
-                if (actnumVector.size() != this->getCartesianSize())
-                    throw std::invalid_argument("ACTNUM vector has wrong size");
-
-                actnum = actnumVector.data();
-                OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN, COORD and ACTNUM"));
-            } else
-                OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN and COORD"));
-
-
-            initCornerPointGrid( coord , zcorn, actnum);
+            initCornerPointGrid( coord , zcorn, actnumVector.data());
         }
     }
 
@@ -1410,8 +1425,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     bool EclipseGrid::cellActive( size_t globalIndex ) const {
         assertGlobalIndex( globalIndex );
-
-        return m_actnum[globalIndex]>0;
+        if (m_actnum.empty()) {
+            return true;
+        } else {
+            return m_actnum[globalIndex]>0;
+        }
     }
 
     bool EclipseGrid::cellActive( size_t i , size_t j , size_t k ) const {

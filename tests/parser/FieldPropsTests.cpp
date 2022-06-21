@@ -48,7 +48,7 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
-#include "src/opm/input/eclipse/EclipseState/Grid/FieldProps.hpp"
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
 using namespace Opm;
 
@@ -131,6 +131,58 @@ PERMX
 
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "ACTNUM") == keys.end());
     }
+}
+
+
+
+BOOST_AUTO_TEST_CASE(CreateFieldPropsForActnum) {
+    std::string deck_string = R"(
+GRID
+
+BOX
+  1 3 1 3 1 1 /
+
+ACTNUM
+   9*0 /
+
+BOX
+  1 3 1 2 1 1 /
+
+ACTNUM
+   6*1 /
+
+ENDBOX
+
+-- Re-enable (3,3,1)
+EQUALS
+    ACTNUM 1 3 3 3 3 1 1 /
+/
+)";
+
+    Deck deck = Parser{}.parseString(deck_string);
+    EclipseGrid grid{GridDims{3, 3, 1}};
+    FieldProps fp(deck, grid);
+    std::vector<int> expected_actnum = { 1, 1, 1,
+                                         1, 1, 1,
+                                         0, 0, 1  };
+    auto actnum = fp.actnumRaw();
+    BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(), expected_actnum.begin(), expected_actnum.end());
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateFieldPropsForActnumButNoActnumInDeck) {
+    std::string deck_string = R"(
+GRID
+)";
+
+    Deck deck = Parser{}.parseString(deck_string);
+    EclipseGrid grid{GridDims{3, 3, 1}};
+    FieldProps fp(deck, grid);
+    std::vector<int> expected_actnum = { 1, 1, 1,
+                                         1, 1, 1,
+                                         1, 1, 1  };
+    auto actnum = fp.actnumRaw();
+    BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(), expected_actnum.begin(), expected_actnum.end());
 }
 
 
