@@ -166,7 +166,7 @@ EQUALS
                                          1, 1, 1,
                                          0, 0, 1  };
     auto actnum = fp.actnumRaw();
-    BOOST_TEST(actnum == expected_actnum);
+    BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(), expected_actnum.begin(), expected_actnum.end());
 }
 
 
@@ -182,7 +182,7 @@ GRID
                                          1, 1, 1,
                                          1, 1, 1  };
     auto actnum = fp.actnumRaw();
-    BOOST_TEST(actnum == expected_actnum);
+    BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(), expected_actnum.begin(), expected_actnum.end());
 }
 
 
