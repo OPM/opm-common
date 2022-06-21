@@ -936,8 +936,11 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
                 if (field_data.global_data)
                 {
                     const auto& location = keyword.location();
-                    throw std::logic_error(fmt::format("In file {} line {}: {} region operation on 3D field {} with global storage is not implemented!",
-                                                       location.filename, std::to_string(location.lineno), keyword.name(), target_kw));
+                    using namespace std::string_literals;
+                    throw OpmInputError(fmt::format("region operation on 3D field {} with "s +
+                                                    "global storage is not implemented!"s,
+                                                    target_kw),
+                                        location);
                 }
 
                 FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, scalar_value, index_list);
