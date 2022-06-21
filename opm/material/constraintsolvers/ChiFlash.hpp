@@ -1062,8 +1062,11 @@ protected:
             (primary_fluid_state, primary_z, pri_jac, pri_res);
         }
 
-        SecondaryNewtonMatrix xx;
-        pri_jac.solve(xx,sec_jac);
+        // the following code does not compile with DUNE2.6
+        // SecondaryNewtonMatrix xx;
+        // pri_jac.solve(xx, sec_jac);
+        pri_jac.invert();
+        sec_jac.template leftmultiply(pri_jac);
 
         using InputEval = typename FluidState::Scalar;
         using ComponentVectorMoleFraction = Dune::FieldVector<InputEval, numComponents>;
@@ -1095,11 +1098,11 @@ protected:
             std::vector<double> deri(num_deri, 0.);
             // derivatives from P
             for (unsigned idx = 0; idx < num_deri; ++idx) {
-                deri[idx] = - xx[compIdx][0] * p_l.derivative(idx);
+                deri[idx] = - sec_jac[compIdx][0] * p_l.derivative(idx);
             }
 
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double pz = -xx[compIdx][cIdx + 1];
+                const double pz = -sec_jac[compIdx][cIdx + 1];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += pz * zi.derivative(idx);
@@ -1110,10 +1113,10 @@ protected:
             } 
             // handling y
             for (unsigned idx = 0; idx < num_deri; ++idx) {
-                deri[idx] = - xx[compIdx + numComponents][0]* p_v.derivative(idx);
+                deri[idx] = - sec_jac[compIdx + numComponents][0]* p_v.derivative(idx);
             }            
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double pz = -xx[compIdx + numComponents][cIdx + 1];
+                const double pz = -sec_jac[compIdx + numComponents][cIdx + 1];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += pz * zi.derivative(idx);
@@ -1126,10 +1129,10 @@ protected:
             // handling derivatives of L
             std::vector<double> deriL(num_deri, 0.);
             for (unsigned idx = 0; idx < num_deri; ++idx) {
-                deriL[idx] = - xx[2*numComponents][0] * p_v.derivative(idx);
+                deriL[idx] = - sec_jac[2*numComponents][0] * p_v.derivative(idx);
             }
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double pz = -xx[2*numComponents][cIdx + 1];
+                const double pz = -sec_jac[2*numComponents][cIdx + 1];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deriL[idx] += pz * zi.derivative(idx);
