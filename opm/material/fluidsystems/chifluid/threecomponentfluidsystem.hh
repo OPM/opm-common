@@ -3,6 +3,10 @@
 
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/chifluid/components.hh>
+#include <opm/material/components/SimpleCO2.hpp>
+#include <opm/material/components/C10.hpp>
+#include <opm/material/components/C1.hpp>
+
 
 // TODO: this is something else need to check
 #include "ChiParameterCache.hpp"
@@ -34,9 +38,9 @@ namespace Opm {
         static constexpr int Comp2Idx = 2;
 
         // TODO: needs to be more general
-        using Comp0 = Opm::JuliaCO2<Scalar>;
-        using Comp1 = Opm::JuliaC1<Scalar>;
-        using Comp2 = Opm::JuliaC10<Scalar>;
+        using Comp0 = Opm::SimpleCO2<Scalar>;
+        using Comp1 = Opm::C1<Scalar>;
+        using Comp2 = Opm::C10<Scalar>;
 
         template <class ValueType>
         using ParameterCache = Opm::ChiParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;

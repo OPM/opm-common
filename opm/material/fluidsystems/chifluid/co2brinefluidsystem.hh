@@ -2,7 +2,9 @@
 #define OPM_CO2BRINEFLUIDSYSTEM_HH
 
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
-#include <opm/material/fluidsystems/chifluid/components.hh>
+#include <opm/material/components/SimpleCO2.hpp>
+#include <opm/material/components/H2O.hpp>
+#include <opm/material/components/Brine.hpp>
 
 #include "ChiParameterCache.hpp"
 #include "LBCviscosity.hpp"
@@ -23,18 +25,14 @@ namespace Opm {
         static constexpr int numComponents = 2;
         static constexpr int numMisciblePhases=2;
         static constexpr int numMiscibleComponents = 2;
-        // TODO: phase location should be more general
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
 
         static constexpr int Comp0Idx = 0;
         static constexpr int Comp1Idx = 1;
-        //static constexpr int Comp2Idx = 2;
 
-        // TODO: needs to be more general
-        using Comp0 = Opm::JuliaCO2<Scalar>;
-        using Comp1 = Opm::ChiwomsBrine<Scalar>;
-        //using Comp2 = Opm::JuliaC10<Scalar>;
+        using Comp0 = Opm::SimpleCO2<Scalar>;
+        using Comp1 = Opm::Brine<Scalar, Opm::H2O<Scalar>>;
 
         template <class ValueType>
         using ParameterCache = Opm::ChiParameterCache<ValueType, Co2BrineFluidSystem<Scalar>>;
@@ -51,7 +49,6 @@ namespace Opm {
             switch (compIdx) {
             case Comp0Idx: return Comp0::acentricFactor();
             case Comp1Idx: return Comp1::acentricFactor();
-           // case Comp2Idx: return Comp2::acentricFactor();
             default: throw std::runtime_error("Illegal component index for acentricFactor");
             }
         }
@@ -65,7 +62,6 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalTemperature();
                 case Comp1Idx: return Comp1::criticalTemperature();
-            //    case Comp2Idx: return Comp2::criticalTemperature();
                 default: throw std::runtime_error("Illegal component index for criticalTemperature");
             }
         }
@@ -78,7 +74,6 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalPressure();
                 case Comp1Idx: return Comp1::criticalPressure();
-              //  case Comp2Idx: return Comp2::criticalPressure();
                 default: throw std::runtime_error("Illegal component index for criticalPressure");
             }
         }
