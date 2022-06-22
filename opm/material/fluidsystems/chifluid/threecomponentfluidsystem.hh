@@ -1,5 +1,5 @@
-#ifndef OPM_JULIATHREECOMPONENTFLUIDSYSTEM_HH
-#define OPM_JULIATHREECOMPONENTFLUIDSYSTEM_HH
+#ifndef OPM_THREECOMPONENTFLUIDSYSTEM_HH
+#define OPM_THREECOMPONENTFLUIDSYSTEM_HH
 
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/chifluid/components.hh>
@@ -12,13 +12,13 @@ namespace Opm {
 /*!
  * \ingroup FluidSystem
  *
- * \brief A two phase three component fluid system from the Julia test
+ * \brief A two phase three component fluid system with components
  * CO2, Methane and NDekan
  */
 
     template<class Scalar>
-    class JuliaThreeComponentFluidSystem
-            : public Opm::BaseFluidSystem<Scalar, JuliaThreeComponentFluidSystem<Scalar> > {
+    class ThreeComponentFluidSystem
+            : public Opm::BaseFluidSystem<Scalar, ThreeComponentFluidSystem<Scalar> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
         static constexpr int numPhases=2;
@@ -39,9 +39,9 @@ namespace Opm {
         using Comp2 = Opm::JuliaC10<Scalar>;
 
         template <class ValueType>
-        using ParameterCache = Opm::ChiParameterCache<ValueType, JuliaThreeComponentFluidSystem<Scalar>>;
-        using LBCviscosity = typename Opm::LBCviscosity<Scalar, JuliaThreeComponentFluidSystem<Scalar>>;
-        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, JuliaThreeComponentFluidSystem<Scalar>>;
+        using ParameterCache = Opm::ChiParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
+        using LBCviscosity = typename Opm::LBCviscosity<Scalar, ThreeComponentFluidSystem<Scalar>>;
+        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThreeComponentFluidSystem<Scalar>>;
 
         /*!
          * \brief The acentric factor of a component [].
@@ -197,4 +197,4 @@ namespace Opm {
 
     };
 }
-#endif //OPM_JULIATHREECOMPONENTFLUIDSYSTEM_HH
+#endif //OPM_THREECOMPONENTFLUIDSYSTEM_HH
