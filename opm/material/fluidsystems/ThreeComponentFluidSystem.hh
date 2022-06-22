@@ -2,15 +2,14 @@
 #define OPM_THREECOMPONENTFLUIDSYSTEM_HH
 
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
-#include <opm/material/fluidsystems/chifluid/components.hh>
 #include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/C1.hpp>
 
 
 // TODO: this is something else need to check
-#include "ChiParameterCache.hpp"
-#include "LBCviscosity.hpp"
+#include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
+#include <opm/material/fluidsystems/chifluid/LBCviscosity.hpp>
 
 namespace Opm {
 /*!
@@ -43,7 +42,7 @@ namespace Opm {
         using Comp2 = Opm::C10<Scalar>;
 
         template <class ValueType>
-        using ParameterCache = Opm::ChiParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
         using LBCviscosity = typename Opm::LBCviscosity<Scalar, ThreeComponentFluidSystem<Scalar>>;
         using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThreeComponentFluidSystem<Scalar>>;
 

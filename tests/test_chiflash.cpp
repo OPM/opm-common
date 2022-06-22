@@ -28,7 +28,7 @@
 #include "config.h"
 
 #include <opm/material/constraintsolvers/ChiFlash.hpp>
-#include <opm/material/fluidsystems/chifluid/threecomponentfluidsystem.hh>
+#include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>

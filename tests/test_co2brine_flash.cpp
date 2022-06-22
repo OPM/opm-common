@@ -28,7 +28,7 @@
 #include "config.h"
 
 #include <opm/material/constraintsolvers/ChiFlash.hpp>
-#include <opm/material/fluidsystems/chifluid/co2brinefluidsystem.hh>
+#include <opm/material/fluidsystems/Co2BrineFluidSystem.hh>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
