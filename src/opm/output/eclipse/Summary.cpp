@@ -1577,6 +1577,73 @@ quantity well_guiderate(const fn_args& args)
     return guiderate_value<i>(xwPos->second.guide_rates);
 }
 
+quantity well_efficiency_factor(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, measure::identity };
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto* well = args.schedule_wells.front();
+
+    auto xwPos = args.wells.find(well->name());
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        // Non-flowing wells have a zero efficiency factor
+        return zero;
+    }
+
+    return { well->getEfficiencyFactor(), measure::identity };
+}
+
+quantity well_efficiency_factor_grouptree(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, measure::identity };
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto* well = args.schedule_wells.front();
+
+    auto xwPos = args.wells.find(well->name());
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        // Non-flowing wells have a zero efficiency factor
+        return zero;
+    }
+
+    auto factor = well->getEfficiencyFactor();
+    auto parent = well->groupName();
+    while (parent != "FIELD") {
+        const auto& grp = args.schedule[args.sim_step].groups(parent);
+        factor *= grp.getGroupEfficiencyFactor();
+
+        const auto prnt = grp.control_group();
+        parent = prnt.has_value() ? prnt.value() : "FIELD";
+    }
+
+    return { factor, measure::identity };
+}
+
+quantity group_efficiency_factor(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, measure::identity };
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto gefac =
+        args.schedule[args.sim_step].groups(args.group_name)
+        .getGroupEfficiencyFactor();
+
+    return { gefac, measure::identity };
+}
+
 /*
  * A small DSL, really poor man's function composition, to avoid massive
  * repetition when declaring the handlers for each individual keyword. bin_op
@@ -2117,6 +2184,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WGPI", potential_rate< rt::well_potential_gas , false, true>},
     { "WGIP", potential_rate< rt::well_potential_gas , false, true>}, // Alias for 'WGPI'
     { "ROEW", roew },
+
+    // Efficiency factors
+    {"GEFF" , group_efficiency_factor},
+    {"WEFF" , well_efficiency_factor},
+    {"WEFFG", well_efficiency_factor_grouptree},
 };
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_values_units = {

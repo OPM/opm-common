@@ -2293,6 +2293,12 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE( 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WOPT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 2 * 10.1, ecl_sum_get_well_var( resp, 2, "W_1", "WOPT" ), 1e-5 );
 
+        BOOST_CHECK_CLOSE( 1.0, ecl_sum_get_well_var( resp, 1, "W_1", "WEFF" ), 1.0e-5 );
+        BOOST_CHECK_CLOSE( 1.0, ecl_sum_get_well_var( resp, 2, "W_1", "WEFF" ), 1.0e-5 );
+
+        BOOST_CHECK_CLOSE( 1.0, ecl_sum_get_well_var( resp, 1, "W_1", "WEFFG" ), 1.0e-5 );
+        BOOST_CHECK_CLOSE( 1.0, ecl_sum_get_well_var( resp, 2, "W_1", "WEFFG" ), 1.0e-5 );
+
         BOOST_CHECK_CLOSE( 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WOPR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WOPT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 2 * 10.1, ecl_sum_get_well_var( resp, 2, "W_1", "WOPT" ), 1e-5 );
@@ -2309,6 +2315,9 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE(   0.0 , ecl_sum_get_group_var( resp, 2, "G_1", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0 , ecl_sum_get_group_var( resp, 2, "G_1", "GGPI" ), 1e-5 );
 
+        BOOST_CHECK_CLOSE( 1.0, ecl_sum_get_group_var( resp, 1, "G_1", "GEFF" ), 1.0e-5 );
+        BOOST_CHECK_CLOSE( 1.0, ecl_sum_get_group_var( resp, 2, "G_1", "GEFF" ), 1.0e-5 );
+
         /* WEFAC 0.2 assigned to W_2.
          * W_2 assigned to group G2. GEFAC G2 = 0.01 */
         BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WOPR" ), 1e-5 );
@@ -2316,6 +2325,12 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE( 2 * 20.1 * 0.2 * 0.01, ecl_sum_get_well_var( resp, 2, "W_2", "WOPT" ), 1e-5 );
         BOOST_CHECK_CLOSE(  23.4,     ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVPR", 2, 1, 1 ), 1e-5 );
         BOOST_CHECK_CLOSE( 234.5,     ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPR", 2, 1, 2 ), 1e-5 );
+
+        BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 1, "W_2", "WEFF" ), 1.0e-5 );
+        BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 2, "W_2", "WEFF" ), 1.0e-5 );
+
+        BOOST_CHECK_CLOSE( 0.2 * 0.01, ecl_sum_get_well_var( resp, 1, "W_2", "WEFFG" ), 1.0e-5 );
+        BOOST_CHECK_CLOSE( 0.2 * 0.01, ecl_sum_get_well_var( resp, 2, "W_2", "WEFFG" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE(      23.4 * 0.2 * 0.01, ecl_sum_get_well_connection_var( resp, 1, "W_2", "CVPT", 2, 1, 1 ), 1e-5 );
         BOOST_CHECK_CLOSE( 2 * 234.5 * 0.2 * 0.01, ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPT", 2, 1, 2 ), 1e-5 );
@@ -2326,23 +2341,30 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE(   0.0       , ecl_sum_get_group_var( resp, 1, "G_2", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0       , ecl_sum_get_group_var( resp, 1, "G_2", "GGPI" ), 1e-5 );
 
+        BOOST_CHECK_CLOSE(   0.0       , ecl_sum_get_group_var( resp, 1, "G_2", "GWPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(   0.0       , ecl_sum_get_group_var( resp, 1, "G_2", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(   0.01      , ecl_sum_get_group_var( resp, 1, "G_2", "GEFF" ), 1.0e-5 );
+
         BOOST_CHECK_CLOSE( -10.13 - (20.13 * 0.2 * 0.01), ecl_sum_get_group_var( resp, 1, "G", "GWPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( -10.14 - (20.14 * 0.2 * 0.01), ecl_sum_get_group_var( resp, 1, "G", "GOPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( -10.15 - (20.15 * 0.2 * 0.01), ecl_sum_get_group_var( resp, 1, "G", "GGPP" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0                        , ecl_sum_get_group_var( resp, 1, "G", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0                        , ecl_sum_get_group_var( resp, 1, "G", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(   1.0                        , ecl_sum_get_group_var( resp, 1, "G", "GEFF" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE( -20.13 * 0.2, ecl_sum_get_group_var( resp, 2, "G_2", "GWPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( -20.14 * 0.2, ecl_sum_get_group_var( resp, 2, "G_2", "GOPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( -20.15 * 0.2, ecl_sum_get_group_var( resp, 2, "G_2", "GGPP" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0       , ecl_sum_get_group_var( resp, 2, "G_2", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0       , ecl_sum_get_group_var( resp, 2, "G_2", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(   0.01      , ecl_sum_get_group_var( resp, 2, "G_2", "GEFF" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE( -10.13 - (20.13 * 0.2 * 0.01), ecl_sum_get_group_var( resp, 2, "G", "GWPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( -10.14 - (20.14 * 0.2 * 0.01), ecl_sum_get_group_var( resp, 2, "G", "GOPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( -10.15 - (20.15 * 0.2 * 0.01), ecl_sum_get_group_var( resp, 2, "G", "GGPP" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0                        , ecl_sum_get_group_var( resp, 2, "G", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(   0.0                        , ecl_sum_get_group_var( resp, 2, "G", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(   1.0                        , ecl_sum_get_group_var( resp, 2, "G", "GEFF" ), 1.0e-5 );
 
         /* WEFAC 0.3 assigned to W_3.
          * W_3 assigned to group G3. GEFAC G_3 = 0.02
@@ -2350,6 +2372,12 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE( 300.2 / 300.1, ecl_sum_get_well_connection_var( resp, 1, "W_3", "CGOR", 3, 1, 1 ), 1e-5 );
 
         BOOST_CHECK_CLOSE( 300.2 / 300.1, ecl_sum_get_well_connection_var( resp, 2, "W_3", "CGOR", 3, 1, 1 ), 1e-5 );
+
+        BOOST_CHECK_CLOSE( 0.3, ecl_sum_get_well_var( resp, 1, "W_3", "WEFF" ), 1.0e-5 );
+        BOOST_CHECK_CLOSE( 0.3, ecl_sum_get_well_var( resp, 2, "W_3", "WEFF" ), 1.0e-5 );
+
+        BOOST_CHECK_CLOSE( 0.3 * 0.02 * 0.03, ecl_sum_get_well_var( resp, 1, "W_3", "WEFFG" ), 1.0e-5 );
+        BOOST_CHECK_CLOSE( 0.3 * 0.02 * 0.04, ecl_sum_get_well_var( resp, 2, "W_3", "WEFFG" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE( 432.1 * 0.3 * 0.02 * 0.03,
                            ecl_sum_get_well_connection_var( resp, 1, "W_3", "CVPT", 3, 1, 1 ), 1e-5 );
@@ -2366,24 +2394,28 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE( 30.15 * 0.3, ecl_sum_get_group_var( resp, 1, "G_3", "GGPP" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0       , ecl_sum_get_group_var( resp, 1, "G_3", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0       , ecl_sum_get_group_var( resp, 1, "G_3", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(  0.02      , ecl_sum_get_group_var( resp, 1, "G_3", "GEFF" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE( 30.13 * 0.3 * 0.02, ecl_sum_get_group_var( resp, 1, "G_4", "GWPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.14 * 0.3 * 0.02, ecl_sum_get_group_var( resp, 1, "G_4", "GOPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.15 * 0.3 * 0.02, ecl_sum_get_group_var( resp, 1, "G_4", "GGPP" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0              , ecl_sum_get_group_var( resp, 1, "G_4", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0              , ecl_sum_get_group_var( resp, 1, "G_4", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(  0.03             , ecl_sum_get_group_var( resp, 1, "G_4", "GEFF" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE( 30.13 * 0.3, ecl_sum_get_group_var( resp, 2, "G_3", "GWPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.14 * 0.3, ecl_sum_get_group_var( resp, 2, "G_3", "GOPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.15 * 0.3, ecl_sum_get_group_var( resp, 2, "G_3", "GGPP" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0       , ecl_sum_get_group_var( resp, 2, "G_3", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0       , ecl_sum_get_group_var( resp, 2, "G_3", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(  0.02      , ecl_sum_get_group_var( resp, 2, "G_3", "GEFF" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE( 30.13 * 0.3 * 0.02, ecl_sum_get_group_var( resp, 2, "G_4", "GWPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.14 * 0.3 * 0.02, ecl_sum_get_group_var( resp, 2, "G_4", "GOPP" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.15 * 0.3 * 0.02, ecl_sum_get_group_var( resp, 2, "G_4", "GGPP" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0              , ecl_sum_get_group_var( resp, 2, "G_4", "GWPI" ), 1e-5 );
         BOOST_CHECK_CLOSE(  0.0              , ecl_sum_get_group_var( resp, 2, "G_4", "GGPI" ), 1e-5 );
+        BOOST_CHECK_CLOSE(  0.04             , ecl_sum_get_group_var( resp, 2, "G_4", "GEFF" ), 1.0e-5 );
 
         BOOST_CHECK_CLOSE( - 10.13
                            - (20.13 * 0.2 * 0.01)
