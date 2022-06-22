@@ -101,8 +101,11 @@ void testAllComponents()
     checkComponent<Opm::Air<Scalar>, Evaluation>();
     checkComponent<Opm::Brine<Scalar, H2O>, Evaluation>();
     checkComponent<Opm::CO2<Scalar, Opm::ComponentsTest::CO2Tables>, Evaluation>();
+    checkComponent<Opm::C1<Scalar>, Evaluation>();
+    checkComponent<Opm::C10<Scalar>, Evaluation>();
     checkComponent<Opm::DNAPL<Scalar>, Evaluation>();
     checkComponent<Opm::H2O<Scalar>, Evaluation>();
+    checkComponent<Opm::H2<Scalar>, Evaluation>();
     checkComponent<Opm::LNAPL<Scalar>, Evaluation>();
     checkComponent<Opm::Mesitylene<Scalar>, Evaluation>();
     checkComponent<Opm::N2<Scalar>, Evaluation>();

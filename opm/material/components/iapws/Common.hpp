@@ -69,6 +69,9 @@ public:
     //! Density of water at the critical point \f$\mathrm{[kg/m^3]}\f$
     static const Scalar criticalDensity;
 
+    //! Critical volume of water \f$\mathrm{[m^3/kmol]}\f$
+    static const Scalar criticalVolume;
+
     //! Critical molar volume of water \f$\mathrm{[m^3/mol]}\f$
     static const Scalar criticalMolarVolume;
 
@@ -241,6 +244,8 @@ template <class Scalar>
 const Scalar Common<Scalar>::criticalDensity = 322.0;
 template <class Scalar>
 const Scalar Common<Scalar>::criticalMolarVolume = molarMass/criticalDensity;
+template <class Scalar>
+const Scalar Common<Scalar>::criticalVolume = 5.595e-2;
 template <class Scalar>
 const Scalar Common<Scalar>::acentricFactor = 0.344;
 template <class Scalar>

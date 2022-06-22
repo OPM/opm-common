@@ -99,6 +99,12 @@ public:
     { return Common::criticalPressure; }
 
     /*!
+     * \brief Returns the critical volume \f$\mathrm{[m^3/kmol]}\f$ of water.
+     */
+    static const Scalar criticalVolume()
+    { return Common::criticalVolume; }
+
+    /*!
      * \brief Returns the molar volume \f$\mathrm{[m^3/mol]}\f$ of water at the critical point
      */
     static const Scalar criticalMolarVolume()
