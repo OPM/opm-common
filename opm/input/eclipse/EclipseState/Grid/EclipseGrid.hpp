@@ -209,6 +209,17 @@ namespace Opm {
         void resetACTNUM( const std::vector<int>& actnum);
 
         bool equal(const EclipseGrid& other) const;
+        static bool hasDVDEPTHZKeywords(const Deck&);
+        
+        /*
+          For ALugrid we can *only* use the keyword <DXV, DXYV, DZV, DEPTHZ> so to  
+          initialize a Regular Cartesian Grid; further we need equidistant mesh
+          spacing in each direction to initialize ALuGrid (mandatory for  
+          mesh refinement!).
+        */
+        
+        static bool hasEqualDVDEPTHZ(const Deck&);
+        static bool allEqual(const std::vector<double> &v);
 
     private:
         std::vector<double> m_minpvVector;
@@ -265,7 +276,6 @@ namespace Opm {
         void initCornerPointGrid(const Deck&);
         void assertCornerPointKeywords(const Deck&);
 
-        static bool hasDVDEPTHZKeywords(const Deck&);
         static bool hasDTOPSKeywords(const Deck&);
         static void assertVectorSize(const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
 

@@ -1252,7 +1252,21 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         else
             return false;
     }
-
+    
+    bool EclipseGrid::hasEqualDVDEPTHZ(const Deck& deck) {
+        const std::vector<double>& DXV = deck.get<ParserKeywords::DXV>().back().getSIDoubleData();
+        const std::vector<double>& DYV = deck.get<ParserKeywords::DYV>().back().getSIDoubleData();
+        const std::vector<double>& DZV = deck.get<ParserKeywords::DZV>().back().getSIDoubleData();
+        const std::vector<double>& DEPTHZ = deck.get<ParserKeywords::DEPTHZ>().back().getSIDoubleData();
+        if (EclipseGrid::allEqual(DXV) &&
+            EclipseGrid::allEqual(DYV)&&
+            EclipseGrid::allEqual(DZV)&& 
+            EclipseGrid::allEqual(DEPTHZ))
+            return true;
+        else
+            return false;
+    }
+    
     bool EclipseGrid::hasDTOPSKeywords(const Deck& deck) {
         if ((deck.hasKeyword<ParserKeywords::DX>() || deck.hasKeyword<ParserKeywords::DXV>()) &&
             (deck.hasKeyword<ParserKeywords::DY>() || deck.hasKeyword<ParserKeywords::DYV>()) &&
@@ -1383,7 +1397,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
         }
     }
-
+    
+    bool EclipseGrid::allEqual(const std::vector<double> &v) {
+        auto comp = [](double x, double y) { return std::fabs(x - y) < 1e-12; };
+        return std::equal(v.begin() + 1, v.end(), v.begin(), comp);
+    }
+    
     bool EclipseGrid::equal(const EclipseGrid& other) const {
 
         //double reltol = 1.0e-6;
