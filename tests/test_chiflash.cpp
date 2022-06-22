@@ -28,7 +28,7 @@
 #include "config.h"
 
 #include <opm/material/constraintsolvers/ChiFlash.hpp>
-#include <opm/material/fluidsystems/chifluid/juliathreecomponentfluidsystem.hh>
+#include <opm/material/fluidsystems/chifluid/threecomponentfluidsystem.hh>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -40,8 +40,7 @@
 void testChiFlash()
 {
     using Scalar = double;
-    // TODO: the name Julia should not be there, remaining to be changed
-    using FluidSystem = Opm::JuliaThreeComponentFluidSystem<Scalar>;
+    using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
 
     constexpr auto numComponents = FluidSystem::numComponents;
     using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
