@@ -1266,21 +1266,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         else
             return false;
     }
-
-    void EclipseGrid::assertALuGridFormat(const Deck& deck) {
-        if (EclipseGrid::hasDVDEPTHZKeywords(deck) &&
-            EclipseGrid::hasEqualDVDEPTHZ(deck)) {
-            }    
-        else if (!EclipseGrid::hasDVDEPTHZKeywords(deck)) {
-                 throw std::invalid_argument("Tried to initialize ALuGrid without all required keywords <DXV, DXY, DXZ, DEPTHZ>: Only Cartesian Regular Grid  is supported for ALuGrid");
-            }
-        else if (EclipseGrid::hasDVDEPTHZKeywords(deck) &&  
-                 !EclipseGrid::hasEqualDVDEPTHZ(deck)) {
-                 throw std::invalid_argument("Tried to initialize ALuGrid on non-equidistant DXV, and or DXY, and or DXZ, and or DEPTHZ: Only cell dimensions that are equal in each direction are used to initialize ALUGrid");
-            }
-        else
-            throw std::invalid_argument("Tried to initialize ALuGrid using unknown Grid format");
-    }
     
     bool EclipseGrid::hasDTOPSKeywords(const Deck& deck) {
         if ((deck.hasKeyword<ParserKeywords::DX>() || deck.hasKeyword<ParserKeywords::DXV>()) &&

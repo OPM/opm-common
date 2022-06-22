@@ -220,7 +220,6 @@ namespace Opm {
         
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
-        static void assertALuGridFormat(const Deck&);
 
     private:
         std::vector<double> m_minpvVector;
