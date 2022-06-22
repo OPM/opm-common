@@ -6,8 +6,8 @@
 #include <opm/material/components/H2O.hpp>
 #include <opm/material/components/Brine.hpp>
 
-#include "ChiParameterCache.hpp"
-#include "LBCviscosity.hpp"
+#include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
+#include <opm/material/fluidsystems/chifluid/LBCviscosity.hpp>
 
 namespace Opm {
 /*!
@@ -35,7 +35,7 @@ namespace Opm {
         using Comp1 = Opm::Brine<Scalar, Opm::H2O<Scalar>>;
 
         template <class ValueType>
-        using ParameterCache = Opm::ChiParameterCache<ValueType, Co2BrineFluidSystem<Scalar>>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, Co2BrineFluidSystem<Scalar>>;
         using LBCviscosity = typename Opm::LBCviscosity<Scalar, Co2BrineFluidSystem<Scalar>>;
         using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, Co2BrineFluidSystem<Scalar>>;
 
