@@ -29,9 +29,7 @@
 
 #include <cassert>
 
-#include <opm/material/components/H2O.hpp>
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
-
 #include <opm/material/eos/PengRobinson.hpp>
 #include <opm/material/eos/PengRobinsonParamsMixture.hpp>
 

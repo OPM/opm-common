@@ -9,7 +9,7 @@
 
 // TODO: this is something else need to check
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
-#include <opm/material/fluidsystems/chifluid/LBCviscosity.hpp>
+#include <opm/material/viscositymodels/LBCviscosity.hpp>
 
 namespace Opm {
 /*!
@@ -170,13 +170,10 @@ namespace Opm {
                                  unsigned phaseIdx)
         {
             // Use LBC method to calculate viscosity
-            // LhsEval mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
-            // LhsEval mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
             LhsEval mu;
-            mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
-
-          // LhsEval mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx);
-            return mu;
+            // mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
+            //mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
+            mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx); 
 
         }
 
