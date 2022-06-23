@@ -172,40 +172,34 @@ public:
     }
 
     const Scalar& K(unsigned compIdx) const
-     { return K_[compIdx]; }
-
-     /*!
-      * \brief Set the K value of a component [-]
-      */
-     void setKvalue(unsigned compIdx, const Scalar& value)
-     { 
-             K_[compIdx] = value;
-     }
-
-      /*!
-       * \brief The L value of a composition [-]
-       */
-      const Scalar& L() const
-      { return L_; }
-
-      /*!
-       * \brief Set the L value [-]
-       */
-      void setLvalue(const Scalar& value)
-      { L_ = value; }
+    {
+        return K_[compIdx];
+    }
 
     /*!
-    * \brief The twophaseflag
-    */
-    const bool& twophaseflag(unsigned /*phaseIdx*/) const
-    { return twophaseflag_; }
+     * \brief Set the K value of a component [-]
+     */
+    void setKvalue(unsigned compIdx, const Scalar& value)
+    {
+        K_[compIdx] = value;
+    }
 
     /*!
-    * \brief Set the twophaseflag
-    */
-    void setTwophaseflag(const bool& value)
-    { twophaseflag_ = value; }
-    
+     * \brief The L value of a composition [-]
+     */
+    const Scalar& L() const
+    {
+        return L_;
+    }
+
+    /*!
+     * \brief Set the L value [-]
+     */
+    void setLvalue(const Scalar& value)
+    {
+        L_ = value;
+    }
+
     /*!
     * \brief Wilson formula to calculate K
     *
@@ -218,13 +212,15 @@ public:
         const auto& p_crit = FluidSystem::criticalPressure(compIdx);
         const auto& p = asImp_().pressure(0); //for now assume no capillary pressure
 
-        const auto& tmp = exp(5.37 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
+        const auto tmp = exp(5.37 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
         return tmp;
     }
 
 protected:
     const Implementation& asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    {
+        return *static_cast<const Implementation*>(this);
+    }
 
     std::array<std::array<Scalar,numComponents>,numPhases> moleFraction_;
     std::array<Scalar,numPhases> averageMolarMass_;
@@ -232,7 +228,6 @@ protected:
     std::array<Scalar,numPhases> Z_;
     std::array<Scalar,numComponents> K_;
     Scalar L_;
-    bool twophaseflag_;
 };
 
 /*!
@@ -251,8 +246,7 @@ public:
     static_assert(static_cast<int>(numPhases) == static_cast<int>(numComponents),
                   "The number of phases must be the same as the number of (pseudo-) components if you assume immiscibility");
 
-    FluidStateImmiscibleCompositionModule()
-    { }
+    FluidStateImmiscibleCompositionModule() = default;
 
     /*!
      * \brief The mole fraction of a component in a phase []
@@ -323,8 +317,7 @@ class FluidStateNullCompositionModule
 public:
     enum { numComponents = 0 };
 
-    FluidStateNullCompositionModule()
-    { }
+    FluidStateNullCompositionModule() = default;
 
     /*!
      * \brief The mole fraction of a component in a phase []
