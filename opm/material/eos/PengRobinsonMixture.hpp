@@ -85,7 +85,6 @@ public:
       * R. Reid, et al.: The Properties of Gases and Liquids,
       * 4th edition, McGraw-Hill, 1987, pp. 42-44, 143-145
       */
-#warning should check why this function is changed
     template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
     static LhsEval computeFugacityCoefficient(const FluidState& fs_arg,
                                               const Params& params_arg,
