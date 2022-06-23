@@ -9,7 +9,7 @@
 
 // TODO: this is something else need to check
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
-#include <opm/material/viscositymodels/LBCviscosity.hpp>
+#include <opm/material/viscositymodels/LBC.hpp>
 
 namespace Opm {
 /*!
@@ -43,7 +43,7 @@ namespace Opm {
 
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
-        using LBCviscosity = typename Opm::LBCviscosity<Scalar, ThreeComponentFluidSystem<Scalar>>;
+        using ViscosityModel = typename Opm::ViscosityModels<Scalar, ThreeComponentFluidSystem<Scalar>>;
         using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThreeComponentFluidSystem<Scalar>>;
 
         /*!
@@ -171,9 +171,7 @@ namespace Opm {
         {
             // Use LBC method to calculate viscosity
             LhsEval mu;
-            // mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
-            //mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
-            mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx); 
+            mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx); 
 
         }
 
