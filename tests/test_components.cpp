@@ -53,6 +53,9 @@
 #include <opm/material/components/Xylene.hpp>
 #include <opm/material/components/Air.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
+#include <opm/material/components/C1.hpp>
+#include <opm/material/components/C10.hpp>
+#include <opm/material/components/H2.hpp>
 
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
