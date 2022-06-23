@@ -186,10 +186,8 @@ public:
         Valgrind::CheckDefined(a2);
         Valgrind::CheckDefined(a3);
         Valgrind::CheckDefined(a4);
-        // std::cout << "Cubic params : " << a1 << " " << a2 << " " << a3 << " " << a4 << std::endl;
        // int numSol = invertCubicPolynomial(Z, a1, a2, a3, a4);
         int numSol = cubicRoots(Z, a1, a2, a3, a4);
-        // std::cout << "Z = " << Z[0] << " " <<  Z[1] << " " << Z[2] << std::endl;
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
@@ -207,26 +205,26 @@ public:
             Vm = VmCubic;
 
             // find the extrema (if they are present)
-            // Evaluation Vmin, Vmax, pmin, pmax;
-            // if (findExtrema_(Vmin, Vmax,
-            //                  pmin, pmax,
-            //                  a, b, T))
-            // {
-            //     if (isGasPhase)
-            //         Vm = std::max(Vmax, VmCubic);
-            //     else {
-            //         if (Vmin > 0)
-            //             Vm = std::min(Vmin, VmCubic);
-            //         else
-            //             Vm = VmCubic;
-            //     }
-            // }
-            // else {
-            //     // the EOS does not exhibit any physically meaningful
-            //     // extrema, and the fluid is critical...
-            //     Vm = VmCubic;
-            //     handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
-            // }
+             Evaluation Vmin, Vmax, pmin, pmax;
+             if (findExtrema_(Vmin, Vmax,
+                              pmin, pmax,
+                              a, b, T))
+             {
+                 if (isGasPhase)
+                     Vm = std::max(Vmax, VmCubic);
+                 else {
+                     if (Vmin > 0)
+                         Vm = std::min(Vmin, VmCubic);
+                     else
+                         Vm = VmCubic;
+                 }
+             }
+             else {
+                 // the EOS does not exhibit any physically meaningful
+                 // extrema, and the fluid is critical...
+                 Vm = VmCubic;
+                 handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
+             }
         }
 
         Valgrind::CheckDefined(Vm);
@@ -532,26 +530,8 @@ protected:
                                           const Evaluation& VmGas)
     { return fugacity(params, T, p, VmLiquid) - fugacity(params, T, p, VmGas); }
 
-/*
-    static UniformTabulated2DFunction<Scalar> criticalTemperature_;
-    static UniformTabulated2DFunction<Scalar> criticalPressure_;
-    static UniformTabulated2DFunction<Scalar> criticalMolarVolume_;
-*/
+
 };
-
-/*
-template <class Scalar>
-const Scalar PengRobinson<Scalar>::R = Opm::Constants<Scalar>::R;
-
-template <class Scalar>
-UniformTabulated2DFunction<Scalar> PengRobinson<Scalar>::criticalTemperature_;
-
-template <class Scalar>
-UniformTabulated2DFunction<Scalar> PengRobinson<Scalar>::criticalPressure_;
-
-template <class Scalar>
-UniformTabulated2DFunction<Scalar> PengRobinson<Scalar>::criticalMolarVolume_;
-*/
 
 } // namespace Opm
 
