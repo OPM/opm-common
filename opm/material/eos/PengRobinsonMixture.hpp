@@ -31,8 +31,6 @@
 
 #include <opm/material/Constants.hpp>
 
-#include <iostream>
-
 namespace Opm {
 /*!
  * \brief Implements the Peng-Robinson equation of state for a
@@ -45,7 +43,7 @@ class PengRobinsonMixture
     typedef ::Opm::PengRobinson<Scalar> PengRobinson;
 
     // this class cannot be instantiated!
-    PengRobinsonMixture() {}
+    PengRobinsonMixture() = default;
 
     // the ideal gas constant
     static const Scalar R;
@@ -89,14 +87,13 @@ public:
       */
 #warning should check why this function is changed
     template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
-    static LhsEval computeFugacityCoefficient(const FluidState& fs2,
-                                              const Params& params2,
+    static LhsEval computeFugacityCoefficient(const FluidState& fs_arg,
+                                              const Params& params_arg,
                                               unsigned phaseIdx,
                                               unsigned compIdx)
     {
-// #warning also a HACK, should investigate why
-         auto fs = fs2;
-        //  double sumx = 0.0;
+        auto fs = fs_arg;
+        auto params = params_arg;
         //  for (int i = 0; i < FluidState::numComponents; ++i)
         //      sumx += Opm::scalarValue(fs.moleFraction(phaseIdx, i));
         //  if (sumx < 0.95)  {
@@ -107,7 +104,6 @@ public:
         //          fs.setMoleFraction(phaseIdx, i, alpha*fs.moleFraction(phaseIdx, i));
         //  }
 
-         auto params = params2;
         // params.updatePhase(fs, phaseIdx);
         // note that we normalize the component mole fractions, so
         // that their sum is 100%. This increases numerical stability
@@ -129,34 +125,29 @@ public:
         //MAYBE REMOVE THIS COMPLETELY ??
         // calculate delta_i (see: Reid, p. 145)
         LhsEval sumMoleFractions = 0.0;
-        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx)
+        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
             sumMoleFractions += fs.moleFraction(phaseIdx, compJIdx);
+        }
         LhsEval deltai = 2*sqrt(params.aPure(phaseIdx, compIdx))/params.a(phaseIdx);
-        //std::cout << "params.aPure [" << params.aPure(phaseIdx, compIdx) << "]  " << std::endl;
-         LhsEval tmp = 0;
-         for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
-             tmp +=
-                 fs.moleFraction(phaseIdx, compJIdx)
-                 / sumMoleFractions
-                 * sqrt(params.aPure(phaseIdx, compJIdx));
-                 //* (1.0 - StaticParameters::interactionCoefficient(compIdx, compJIdx));
+        LhsEval tmp = 0;
+        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
+           tmp +=
+                fs.moleFraction(phaseIdx, compJIdx)
+                / sumMoleFractions
+                * sqrt(params.aPure(phaseIdx, compJIdx));
          };
          deltai *= tmp;
 
         // Calculate A_s LIKE IN JULIA CODE
-
-       LhsEval A_s = 0.0;
-        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx)
-        {
+        LhsEval A_s = 0.0;
+        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
             //param
             A_s += params.aCache(phaseIdx, compIdx, compJIdx) * fs.moleFraction(phaseIdx, compJIdx) * p / (RT * RT);
         }
-        //LhsEval A_s = 0.5*Astar*deltai;
-        
 
-        LhsEval julia_alpha;
-        LhsEval julia_betta;
-        LhsEval julia_gamma;
+        LhsEval alpha;
+        LhsEval betta;
+        LhsEval gamma;
         LhsEval ln_phi;
         LhsEval fugCoeff;
 
@@ -172,23 +163,16 @@ public:
             (Z + Bstar*m2);
         LhsEval expo =  Astar/(Bstar*std::sqrt(u*u - 4*w))*(bi_b - deltai);
 
-        //julia:
         //α = -log(Z - B) + (B_i[i]/B)*(Z - 1)
         //β = log((Z + m2*B)/(Z + m1*B))*A/(Δm*B)
         //γ = (2/A)*A_s - B_i[i]/B
-        //return α + β*γ 
-
-        julia_alpha = -log(Z-Bstar)+bi_b*(Z - 1);
-        julia_betta = log((Z+m2*Bstar)/(Z+m1*Bstar))*Astar/((m1-m2)*Bstar);
-        //julia_gamma = -bi_b+deltai;//expo;//(2/Astar)*A_s -bi_b/Bstar;
-        julia_gamma = (2 / Astar )* A_s - bi_b;
-
-        ln_phi = julia_alpha + (julia_betta*julia_gamma);
-
-        
+        //ln_phi = α + β*γ
+        alpha = -log(Z - Bstar) + bi_b * (Z - 1);
+        betta = log((Z + m2 * Bstar) / (Z + m1 * Bstar)) * Astar / ((m1 - m2) * Bstar);
+        gamma = (2 / Astar ) * A_s - bi_b;
+        ln_phi = alpha + (betta * gamma);
 
         fugCoeff = exp(ln_phi);
-            //exp(bi_b*(Z - 1))/max(1e-9, Z - Bstar) * pow(base, expo);
 
         ////////
         // limit the fugacity coefficient to a reasonable range:
