@@ -23,11 +23,11 @@
 /*!
  * \file
  *
- * \brief This is test for the ChiFlash flash solver.
+ * \brief This is test for the PTFlash flash solver.
  */
 #include "config.h"
 
-#include <opm/material/constraintsolvers/ChiFlash.hpp>
+#include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
 
 #include <opm/material/densead/Evaluation.hpp>
@@ -37,7 +37,7 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 
-void testChiFlash()
+void testPTFlash()
 {
     using Scalar = double;
     using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
@@ -124,7 +124,7 @@ void testChiFlash()
     fluid_state.setLvalue(Ltmp);
 
     const int spatialIdx = 0;
-    using Flash = Opm::ChiFlash<double, FluidSystem>;
+    using Flash = Opm::PTFlash<double, FluidSystem>;
     Flash::solve(fluid_state, z, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
 
 }
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 {
     Dune::MPIHelper::instance(argc, argv);
 
-    testChiFlash();
+    testPTFlash();
 
     return 0;
 }

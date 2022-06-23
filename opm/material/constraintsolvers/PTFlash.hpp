@@ -21,7 +21,7 @@
 */
 /*!
  * \file
- * \copydoc Opm::ChiFlash
+ * \copydoc Opm::PTFlash
  */
 #ifndef OPM_CHI_FLASH_HPP
 #define OPM_CHI_FLASH_HPP
@@ -56,7 +56,7 @@ namespace Opm {
  *
  */
 template <class Scalar, class FluidSystem>
-class ChiFlash
+class PTFlash
 {
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
@@ -1343,7 +1343,7 @@ protected:
     //     throw std::runtime_error("Successive substitution composition update did not converge within maxIterations");
     }
     
-};//end ChiFlash
+};//end PTFlash
 
 } // namespace Opm
 
