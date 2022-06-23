@@ -163,9 +163,9 @@ namespace Opm {
         {
             // Use LBC method to calculate viscosity
             LhsEval mu;
-            mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx); 
+            mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx);
 
-         
+
             return mu;
 
         }
@@ -180,7 +180,7 @@ namespace Opm {
             assert(0 <= phaseIdx && phaseIdx < numPhases);
             assert(0 <= compIdx && compIdx < numComponents);
 
-            LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx); 
+            LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
 
             return phi;
         }

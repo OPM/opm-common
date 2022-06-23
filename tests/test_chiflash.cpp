@@ -54,14 +54,14 @@ void testChiFlash()
     comp[0] = Evaluation::createVariable(0.5, 1);
     comp[1] = Evaluation::createVariable(0.3, 2);
     comp[2] = 1. - comp[0] - comp[1];
-    
+
     // TODO: not sure whether the saturation matter here.
     ComponentVector sat;
     // We assume that currently everything is in the oil phase
     sat[0] = 1.0; sat[1] = 1.0-sat[0];
     Scalar temp = 300.0;
 
-    
+
     // FluidState will be the input for the flash calculation
     FluidState fluid_state;
     fluid_state.setPressure(FluidSystem::oilPhaseIdx, p_init);
