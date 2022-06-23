@@ -23,11 +23,11 @@
 /*!
  * \file
  *
- * \brief This is test for the ChiFlash flash solver.
+ * \brief This is test for the PTFlash flash solver.
  */
 #include "config.h"
 
-#include <opm/material/constraintsolvers/ChiFlash.hpp>
+#include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/fluidsystems/Co2BrineFluidSystem.hh>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -128,7 +128,7 @@ void testCo2BrineFlash()
     fs.setLvalue(Ltmp);
 
     const int spatialIdx = 0;
-    using Flash = Opm::ChiFlash<double, FluidSystem>;
+    using Flash = Opm::PTFlash<double, FluidSystem>;
     // TODO: here the zInit does not have the proper derivatives
     Flash::solve(fs, zInit, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
 
