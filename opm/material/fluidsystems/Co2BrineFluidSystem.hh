@@ -7,7 +7,7 @@
 #include <opm/material/components/Brine.hpp>
 
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
-#include <opm/material/fluidsystems/chifluid/LBCviscosity.hpp>
+#include <opm/material/viscositymodels/LBCviscosity.hpp>
 
 namespace Opm {
 /*!
@@ -87,7 +87,6 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalVolume();
                 case Comp1Idx: return Comp1::criticalVolume();
-              //  case Comp2Idx: return Comp2::criticalVolume();
                 default: throw std::runtime_error("Illegal component index for criticalVolume");
             }
         }
@@ -98,7 +97,6 @@ namespace Opm {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::molarMass();
                 case Comp1Idx: return Comp1::molarMass();
-            //    case Comp2Idx: return Comp2::molarMass();
                 default: throw std::runtime_error("Illegal component index for molarMass");
             }
         }
@@ -128,7 +126,6 @@ namespace Opm {
                 static const char* name[] = {
                         Comp0::name(),
                         Comp1::name(),
-                //        Comp2::name(),
                 };
 
                 assert(0 <= compIdx && compIdx < 3);
@@ -146,26 +143,27 @@ namespace Opm {
 
             LhsEval dens;
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                // paramCache.updatePhase(fluidState, phaseIdx);
                 dens = fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx);
             }
             return dens;
 
         }
 
-        //! \copydoc BaseFluidSystem::viscosity
+        /*!
+         * \copydoc BaseFluidSystem::viscosity
+         */
         template <class FluidState, class LhsEval = typename FluidState::Scalar, class ParamCacheEval = LhsEval>
         static LhsEval viscosity(const FluidState& fluidState,
                                  const ParameterCache<ParamCacheEval>& paramCache,
                                  unsigned phaseIdx)
         {
             // Use LBC method to calculate viscosity
-            // LhsEval mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
-            // LhsEval mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
             LhsEval mu;
-            mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
+            // mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
+            // mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
+            mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx); 
 
-          // LhsEval mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx);
+         
             return mu;
 
         }
@@ -180,11 +178,8 @@ namespace Opm {
             assert(0 <= phaseIdx && phaseIdx < numPhases);
             assert(0 <= compIdx && compIdx < numComponents);
 
-            // TODO: here the derivatives for the phi are dropped. Should we keep the derivatives against the pressure
-            // and temperature?
             LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx); 
-            //Scalar phi = Opm::getValue(
-            //        PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+
             return phi;
         }
 
