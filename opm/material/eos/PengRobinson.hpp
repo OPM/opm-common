@@ -186,7 +186,7 @@ public:
         Valgrind::CheckDefined(a2);
         Valgrind::CheckDefined(a3);
         Valgrind::CheckDefined(a4);
-       // int numSol = invertCubicPolynomial(Z, a1, a2, a3, a4);
+
         int numSol = cubicRoots(Z, a1, a2, a3, a4);
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,

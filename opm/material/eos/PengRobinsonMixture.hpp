@@ -122,26 +122,8 @@ public:
         LhsEval Astar = params.a(phaseIdx)*p/(RT*RT);
         LhsEval Bstar = params.b(phaseIdx)*p/(RT);
 
-        //MAYBE REMOVE THIS COMPLETELY ??
-        // calculate delta_i (see: Reid, p. 145)
-        LhsEval sumMoleFractions = 0.0;
-        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
-            sumMoleFractions += fs.moleFraction(phaseIdx, compJIdx);
-        }
-        LhsEval deltai = 2*sqrt(params.aPure(phaseIdx, compIdx))/params.a(phaseIdx);
-        LhsEval tmp = 0;
-        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
-           tmp +=
-                fs.moleFraction(phaseIdx, compJIdx)
-                / sumMoleFractions
-                * sqrt(params.aPure(phaseIdx, compJIdx));
-         };
-         deltai *= tmp;
-
-        // Calculate A_s LIKE IN JULIA CODE
         LhsEval A_s = 0.0;
         for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
-            //param
             A_s += params.aCache(phaseIdx, compIdx, compJIdx) * fs.moleFraction(phaseIdx, compJIdx) * p / (RT * RT);
         }
 
@@ -157,16 +139,6 @@ public:
         m1 = 0.5*(u + std::sqrt(u*u - 4*w));
         m2 = 0.5*(u - std::sqrt(u*u - 4*w));
 
-
-        LhsEval base =
-            (Z + Bstar*m1) /
-            (Z + Bstar*m2);
-        LhsEval expo =  Astar/(Bstar*std::sqrt(u*u - 4*w))*(bi_b - deltai);
-
-        //α = -log(Z - B) + (B_i[i]/B)*(Z - 1)
-        //β = log((Z + m2*B)/(Z + m1*B))*A/(Δm*B)
-        //γ = (2/A)*A_s - B_i[i]/B
-        //ln_phi = α + β*γ
         alpha = -log(Z - Bstar) + bi_b * (Z - 1);
         betta = log((Z + m2 * Bstar) / (Z + m1 * Bstar)) * Astar / ((m1 - m2) * Bstar);
         gamma = (2 / Astar ) * A_s - bi_b;
