@@ -205,30 +205,30 @@ public:
             Vm = VmCubic;
 
             // find the extrema (if they are present)
-             Evaluation Vmin, Vmax, pmin, pmax;
-             if (findExtrema_(Vmin, Vmax,
-                              pmin, pmax,
-                              a, b, T))
-             {
-                 if (isGasPhase)
-                     Vm = std::max(Vmax, VmCubic);
-                 else {
-                     if (Vmin > 0)
-                         Vm = std::min(Vmin, VmCubic);
-                     else
-                         Vm = VmCubic;
-                 }
-             }
-             else {
-                 // the EOS does not exhibit any physically meaningful
-                 // extrema, and the fluid is critical...
-                 Vm = VmCubic;
-                 handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
-             }
+            Evaluation Vmin, Vmax, pmin, pmax;
+            if (findExtrema_(Vmin, Vmax,
+                             pmin, pmax,
+                             a, b, T))
+            {
+                if (isGasPhase)
+                    Vm = std::max(Vmax, VmCubic);
+                else {
+                    if (Vmin > 0)
+                        Vm = std::min(Vmin, VmCubic);
+                    else
+                        Vm = VmCubic;
+                }
+            }
+            else {
+                // the EOS does not exhibit any physically meaningful
+                // extrema, and the fluid is critical...
+                Vm = VmCubic;
+                handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
+            }
         }
 
         Valgrind::CheckDefined(Vm);
-        assert(std::isfinite(scalarValue(Vm)));        
+        assert(std::isfinite(scalarValue(Vm)));
         assert(Vm > 0);
         return Vm;
     }
@@ -250,7 +250,7 @@ public:
         const Evaluation& p = params.pressure();
         const Evaluation& Vm = params.molarVolume();
 
-        const Evaluation& RT = Constants<Scalar>::R*T;        
+        const Evaluation& RT = Constants<Scalar>::R*T;
         const Evaluation& Z = p*Vm/RT;
         const Evaluation& Bstar = p*params.b() / RT;
 

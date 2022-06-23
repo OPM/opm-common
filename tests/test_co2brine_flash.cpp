@@ -63,7 +63,7 @@ void testCo2BrineFlash()
 
     FluidState fs;
     // TODO: no capillary pressure for now
-    
+
     fs.setPressure(FluidSystem::oilPhaseIdx, p_init);
     fs.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
