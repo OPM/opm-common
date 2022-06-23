@@ -380,13 +380,17 @@ void RstState::add_wlist(const std::vector<std::string>& zwls,
         const auto& well_name = this->wells[well_index].name;
 
         for (auto wlist_index = 0*this->header.max_wlist; wlist_index < this->header.max_wlist; wlist_index++) {
-            int well_order = iwls[iwls_offset + wlist_index];
-            if (well_order != 0) {
-                const auto& wlist_name = zwls[zwls_offset + wlist_index];
-                auto& wlist = this->wlists[wlist_name];
-                wlist.resize( well_order );
-                wlist[well_order - 1] = well_name;
+            const auto well_order = iwls[iwls_offset + wlist_index];
+            if (well_order < 1) {
+                continue;
             }
+
+            auto& wlist = this->wlists[zwls[zwls_offset + wlist_index]];
+            if (wlist.size() < static_cast<std::vector<std::string>::size_type>(well_order)) {
+                wlist.resize(well_order);
+            }
+
+            wlist[well_order - 1] = well_name;
         }
     }
 }
