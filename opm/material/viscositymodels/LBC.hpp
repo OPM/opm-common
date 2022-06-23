@@ -22,11 +22,11 @@
 */
 /*!
  * \file
- * \copydoc Opm::LBCviscosity
+ * \copydoc Opm::LBC
  */
 
-#ifndef LBC_VISCOSITY_HPP
-#define LBC_VISCOSITY_HPP
+#ifndef LBC_HPP
+#define LBC_HPP
 
 #include <cmath>
 #include <vector>
@@ -34,7 +34,7 @@
 namespace Opm
 {
 template <class Scalar, class FluidSystem>
-class LBCviscosity
+class ViscosityModels
 {
 
 public:
@@ -119,12 +119,12 @@ public:
     }
 
 
-    // Improved LBC model for CO2 rich mixtures. (Lansangan, Taylor, Smith & Kovarik - 1993)
-    template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
-    static LhsEval LBCmod(const FluidState& fluidState,
+        // Improved LBC model for CO2 rich mixtures. (Lansangan, Taylor, Smith & Kovarik - 1993)
+        template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
+        static LhsEval LBCmodified(const FluidState& fluidState,
                           const Params& /*paramCache*/,
                           unsigned phaseIdx)
-    {
+        {
         const Scalar MPa_atm = 0.101325;
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
         const auto& rho = Opm::decay<LhsEval>(fluidState.density(phaseIdx));
@@ -188,87 +188,24 @@ public:
             }
             my0 += xrM*mys;
             sumxrM += xrM;
-        }
-        my0 /= sumxrM;
+            }
+            my0 /= sumxrM;
 
-        std::vector<Scalar> LBC = {0.10230,
+            std::vector<Scalar> LBC = {0.10230,
                                    0.023364,
                                    0.058533,
                                    -0.040758,  // trykkfeil i 1964-artikkel: -0.40758
                                    0.0093324};
 
-        LhsEval sumLBC = 0.0;
-        for (int i = 0; i < 5; ++i) {
-            sumLBC += Opm::pow(rho_r,i)*LBC[i];
-        }
-
-        return (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot -1.8366e-8*Opm::pow(rho_r,13.992))/1e3; // mPas-> Pas
-    }
-
-
-    // translation of the viscosity code from the Julia code
-    template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
-    static LhsEval LBCJulia(const FluidState& fluidState,
-                            const Params& /*paramCache*/,
-                            unsigned phaseIdx) {
-        constexpr Scalar mol_factor = 1000.;
-        constexpr Scalar rankine = 5. / 9.;
-        constexpr Scalar psia = 6.894757293168360e+03;
-        constexpr Scalar R = 8.3144598;
-        const LhsEval T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
-        const LhsEval P = Opm::decay<LhsEval>(fluidState.pressure(phaseIdx));
-        const LhsEval Z = Opm::decay<LhsEval>(fluidState.compressFactor(phaseIdx));
-        const LhsEval rho = P / (R * T * Z);
-
-        LhsEval P_pc = 0.;
-        LhsEval T_pc = 0.;
-        LhsEval Vc = 0.;
-        LhsEval mwc = 0.;
-        LhsEval a = 0.;
-        LhsEval b = 0.;
-        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const LhsEval mol_frac = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            const LhsEval mol_weight = FluidSystem::molarMass(compIdx); // TODO: check values
-            const Scalar p_c = FluidSystem::criticalPressure(compIdx);
-            const Scalar T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar v_c = FluidSystem::criticalVolume(compIdx);
-            mwc += mol_frac * mol_weight;
-            P_pc += mol_frac * p_c;
-            T_pc += mol_frac * T_c;
-            Vc += mol_frac * v_c;
-
-            const LhsEval tr = T / T_c;
-            const Scalar Tc = T_c / rankine;
-            const Scalar Pc = p_c / psia;
-
-            const LhsEval mwi = Opm::sqrt(mol_factor * mol_weight);
-            const LhsEval e_i = 5.4402 * Opm::pow(Tc, 1./6.) / (mwi * Opm::pow(Pc, 2./3.) * 1.e-3);
-
-            LhsEval mu_i;
-            if (tr > 1.5) {
-                mu_i = 17.78e-5 * Opm::pow(4.58*tr - 1.67, 0.625) / e_i;
-            } else {
-                mu_i = 34.e-5 * Opm::pow(tr, 0.94) / e_i;
+            LhsEval sumLBC = 0.0;
+            for (int i = 0; i < 5; ++i) {
+                sumLBC += Opm::pow(rho_r,i)*LBC[i];
             }
-            a += mol_frac * mu_i * mwi;
-            b += mol_frac * mwi;
-        }
-        const LhsEval mu_atm = a / b;
-        const LhsEval e_mix = 5.4402 * Opm::pow(T_pc/rankine, 1./6.) /
-                (Opm::sqrt(mol_factor * mwc) * Opm::pow(P_pc/psia, 2./3.) * (1e-3));
-        const LhsEval rhor = Vc * rho;
 
-        LhsEval corr = 0.;
-        const std::vector<Scalar> LBC{0.10230, 0.023364, 0.058533, -0.040758, 0.0093324};
-        const Scalar shift = -1.e-4;
-        for (unsigned i = 0; i < 5; ++i) {
-            corr += LBC[i] * Opm::pow(rhor, i);
+            return (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot -1.8366e-8*Opm::pow(rho_r,13.992))/1e3; // mPas-> Pas
         }
-        LhsEval mu = mu_atm + (corr * corr * corr * corr + shift)/e_mix;
-        return mu;
-    }
 };
 
-} // namespace Opm
+}; // namespace Opm
 
-#endif // LBC_VISCOSITY_HPP
+#endif // LBC_HPP

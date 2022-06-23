@@ -7,7 +7,8 @@
 #include <opm/material/components/Brine.hpp>
 
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
-#include <opm/material/viscositymodels/LBCviscosity.hpp>
+#include <opm/material/viscositymodels/LBC.hpp>
+//#include <opm/material/viscositymodels/LBC.hpp>
 
 namespace Opm {
 /*!
@@ -36,8 +37,11 @@ namespace Opm {
 
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, Co2BrineFluidSystem<Scalar>>;
-        using LBCviscosity = typename Opm::LBCviscosity<Scalar, Co2BrineFluidSystem<Scalar>>;
+        using ViscosityModel = typename Opm::ViscosityModels<Scalar, Co2BrineFluidSystem<Scalar>>;
+        //using ViscosityModel = typename Opm::ViscosityModels<Scalar, Co2BrineFluidSystem<Scalar>>;
+
         using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, Co2BrineFluidSystem<Scalar>>;
+
 
         /*!
          * \brief The acentric factor of a component [].
@@ -159,9 +163,7 @@ namespace Opm {
         {
             // Use LBC method to calculate viscosity
             LhsEval mu;
-            // mu = LBCviscosity::LBCmod(fluidState, paramCache, phaseIdx);
-            // mu = LBCviscosity::LBC(fluidState, paramCache, phaseIdx);
-            mu = LBCviscosity::LBCJulia(fluidState, paramCache, phaseIdx); 
+            mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx); 
 
          
             return mu;
