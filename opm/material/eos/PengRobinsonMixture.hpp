@@ -94,17 +94,7 @@ public:
     {
         auto fs = fs_arg;
         auto params = params_arg;
-        //  for (int i = 0; i < FluidState::numComponents; ++i)
-        //      sumx += Opm::scalarValue(fs.moleFraction(phaseIdx, i));
-        //  if (sumx < 0.95)  {
-        //      double alpha = 0.95/sumx;
-        //      std::cerr << "normalize: " << sumx
-        //                << " alpha: " << alpha << "\n";
-        //      for (int i = 0; i < FluidState::numComponents; ++i)
-        //          fs.setMoleFraction(phaseIdx, i, alpha*fs.moleFraction(phaseIdx, i));
-        //  }
 
-        // params.updatePhase(fs, phaseIdx);
         // note that we normalize the component mole fractions, so
         // that their sum is 100%. This increases numerical stability
         // considerably if the fluid state is not physical.
