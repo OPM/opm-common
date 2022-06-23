@@ -317,7 +317,7 @@ unsigned invertCubicPolynomial(SolContainer* sol,
  * The polynomial is defined as
  * \f[ p(x) = a\; x^3 + + b\;x^3 + c\;x + d \f]
  *
- * This method teturns the number of solutions which are in the real
+ * This method returns the number of solutions which are in the real
  * numbers. The "sol" argument contains the real roots of the cubic
  * polynomial in order with the smallest root first.
  *
@@ -358,8 +358,6 @@ unsigned cubicRoots(SolContainer* sol,
         sol[1] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((2.0 * M_PI) / 3.0) ) - b / (3.0 * a);
         sol[2] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((4.0 * M_PI) / 3.0) ) - b / (3.0 * a);
 
-        //std::cout << "Z (discr < 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
-
         // Sort in ascending order
         std::sort(sol, sol + 3);
 
@@ -392,7 +390,6 @@ unsigned cubicRoots(SolContainer* sol,
 
         // Transform t to output solution
         sol[0] = t - b / (3.0 * a);
-        // std::cout << "Z (discr > 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
         return 1;
 
     }
@@ -408,7 +405,6 @@ unsigned cubicRoots(SolContainer* sol,
             sol[1] = sol[2] = (-3.0 * q) / (2.0 * p) - b / (3.0 * a);
             std::sort(sol, sol + 3);
         }
-        // std::cout << "Z (disc = 0) = " << sol[0] << " " << sol[1] << " " << sol[2] << std::endl;
         return 3;
     }
 }
