@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <initializer_list>
+#include <string_view>
 #include <vector>
 
 namespace Opm {
@@ -22,6 +23,45 @@ struct FlatTable : public std::vector< T > {
     {
         serializer.vector(*this);
     }
+};
+
+template <typename RecordType>
+class FlatTableWithCopy
+{
+public:
+    FlatTableWithCopy() = default;
+    explicit FlatTableWithCopy(const DeckKeyword& kw,
+                               std::string_view   expect = "");
+    explicit FlatTableWithCopy(std::initializer_list<RecordType> records);
+
+    auto size()  const { return this->table_.size(); }
+    bool empty() const { return this->table_.empty(); }
+    auto begin() const { return this->table_.begin(); }
+    auto end()   const { return this->table_.end(); }
+
+    const RecordType& operator[](const std::size_t tableID) const
+    {
+        return this->table_[tableID];
+    }
+
+    const RecordType& at(const std::size_t tableID) const
+    {
+        return this->table_.at(tableID);
+    }
+
+    bool operator==(const FlatTableWithCopy& other) const
+    {
+        return this->table_ == other.table_;
+    }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(this->table_);
+    }
+
+protected:
+    std::vector<RecordType> table_{};
 };
 
 struct GRAVITYRecord {
@@ -46,32 +86,11 @@ struct GRAVITYRecord {
     }
 };
 
-class GravityTable
+struct GravityTable : public FlatTableWithCopy<GRAVITYRecord>
 {
-public:
     GravityTable() = default;
     explicit GravityTable(const DeckKeyword& kw);
     explicit GravityTable(std::initializer_list<GRAVITYRecord> records);
-
-    auto size()  const { return this->table_.size(); }
-    bool empty() const { return this->table_.empty(); }
-    auto begin() const { return this->table_.begin(); }
-    auto end()   const { return this->table_.end(); }
-
-    const GRAVITYRecord& operator[](const std::size_t tableID) const
-    {
-        return this->table_[tableID];
-    }
-
-    const GRAVITYRecord& at(const std::size_t tableID) const
-    {
-        return this->table_.at(tableID);
-    }
-
-    bool operator==(const GravityTable& other) const
-    {
-        return this->table_ == other.table_;
-    }
 
     static GravityTable serializeObject()
     {
@@ -81,11 +100,8 @@ public:
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(this->table_);
+        FlatTableWithCopy::serializeOp(serializer);
     }
-
-private:
-    std::vector<GRAVITYRecord> table_{};
 };
 
 struct DENSITYRecord {
@@ -110,33 +126,12 @@ struct DENSITYRecord {
     }
 };
 
-class DensityTable
+struct DensityTable : public FlatTableWithCopy<DENSITYRecord>
 {
-public:
     DensityTable() = default;
     explicit DensityTable(const DeckKeyword& kw);
-    explicit DensityTable(std::initializer_list<DENSITYRecord> records);
     explicit DensityTable(const GravityTable& gravity);
-
-    auto size()  const { return this->table_.size(); }
-    bool empty() const { return this->table_.empty(); }
-    auto begin() const { return this->table_.begin(); }
-    auto end()   const { return this->table_.end(); }
-
-    const DENSITYRecord& operator[](const std::size_t tableID) const
-    {
-        return this->table_[tableID];
-    }
-
-    const DENSITYRecord& at(const std::size_t tableID) const
-    {
-        return this->table_.at(tableID);
-    }
-
-    bool operator==(const DensityTable& other) const
-    {
-        return this->table_ == other.table_;
-    }
+    explicit DensityTable(std::initializer_list<DENSITYRecord> records);
 
     static DensityTable serializeObject()
     {
@@ -146,11 +141,8 @@ public:
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(this->table_);
+        FlatTableWithCopy::serializeOp(serializer);
     }
-
-private:
-    std::vector<DENSITYRecord> table_{};
 };
 
 struct DiffCoeffRecord {
@@ -227,30 +219,11 @@ struct PVTWRecord {
     }
 };
 
-class PvtwTable
+struct PvtwTable : public FlatTableWithCopy<PVTWRecord>
 {
-public:
     PvtwTable() = default;
     explicit PvtwTable(const DeckKeyword& kw);
     explicit PvtwTable(std::initializer_list<PVTWRecord> records);
-
-    auto size()  const { return this->table_.size(); }
-    bool empty() const { return this->table_.empty(); }
-
-    const PVTWRecord& operator[](const std::size_t tableID) const
-    {
-        return this->table_[tableID];
-    }
-
-    const PVTWRecord& at(const std::size_t tableID) const
-    {
-        return this->table_.at(tableID);
-    }
-
-    bool operator==(const PvtwTable& other) const
-    {
-        return this->table_ == other.table_;
-    }
 
     static PvtwTable serializeObject()
     {
@@ -260,11 +233,8 @@ public:
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(this->table_);
+        FlatTableWithCopy::serializeOp(serializer);
     }
-
-private:
-    std::vector<PVTWRecord> table_{};
 };
 
 struct ROCKRecord {

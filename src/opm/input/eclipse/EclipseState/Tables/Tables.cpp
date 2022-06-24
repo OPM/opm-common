@@ -94,6 +94,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
+#include <string_view>
 
 #include <stddef.h>
 
@@ -1574,13 +1575,14 @@ bool all_defaulted(const DeckRecord& record)
 
 // ------------------------------------------------------------------------
 
-PvtwTable::PvtwTable(const DeckKeyword& kw)
+template <typename RecordType>
+FlatTableWithCopy<RecordType>::FlatTableWithCopy(const DeckKeyword& kw,
+                                                 std::string_view   expect)
 {
-    if (kw.name() != ParserKeywords::PVTW::keywordName) {
+    if (!expect.empty() && (kw.name() != expect)) {
         throw std::invalid_argument {
             fmt::format("Keyword {} cannot be used to "
-                        "initialise {} table structures", kw.name(),
-                        ParserKeywords::PVTW::keywordName)
+                        "initialise {} table structures", kw.name(), expect)
         };
     }
 
@@ -1588,9 +1590,9 @@ PvtwTable::PvtwTable(const DeckKeyword& kw)
 
     for (const auto& record : kw) {
         if (all_defaulted(record)) {
-            // All-defaulted records imply PVTW in region R is equal to PVTW
-            // in region R-1.  PVTW must not be defaulted in region 1 (i.e.,
-            // when PVTNUM=1).
+            // All-defaulted records imply table in region R is equal to
+            // table in region R-1.  Table must not be defaulted in region 1
+            // (i.e., when PVTNUM=1).
             if (this->table_.empty()) {
                 throw OpmInputError {
                     "First record cannot be defaulted",
@@ -1601,89 +1603,34 @@ PvtwTable::PvtwTable(const DeckKeyword& kw)
             this->table_.push_back(this->table_.back());
         }
         else {
-            this->table_.push_back(flat_get<PVTWRecord>(record, mkseq<PVTWRecord::size>{}));
+            this->table_.push_back(flat_get<RecordType>(record, mkseq<RecordType::size>{}));
         }
     }
 }
 
-PvtwTable::PvtwTable(std::initializer_list<PVTWRecord> records)
-    : table_(records)
+template <typename RecordType>
+FlatTableWithCopy<RecordType>::FlatTableWithCopy(std::initializer_list<RecordType> records)
+    : table_{ records }
 {}
 
 // ------------------------------------------------------------------------
 
 GravityTable::GravityTable(const DeckKeyword& kw)
-{
-    if (kw.name() != ParserKeywords::GRAVITY::keywordName) {
-        throw std::invalid_argument {
-            fmt::format("Keyword {} cannot be used to "
-                        "initialise {} table structures", kw.name(),
-                        ParserKeywords::GRAVITY::keywordName)
-        };
-    }
-
-    this->table_.reserve(kw.size());
-
-    for (const auto& record : kw) {
-        if (all_defaulted(record)) {
-            // All-defaulted records imply GRAVITY in region R is equal to
-            // GRAVITY in region R-1.  GRAVITY must not be defaulted in
-            // region 1 (i.e., when PVTNUM=1).
-            if (this->table_.empty()) {
-                throw OpmInputError {
-                    "First record cannot be defaulted",
-                    kw.location()
-                };
-            }
-
-            this->table_.push_back(this->table_.back());
-        }
-        else {
-            this->table_.push_back(flat_get<GRAVITYRecord>(record, mkseq<GRAVITYRecord::size>{}));
-        }
-    }
-}
+    : FlatTableWithCopy(kw, ParserKeywords::GRAVITY::keywordName)
+{}
 
 GravityTable::GravityTable(std::initializer_list<GRAVITYRecord> records)
-    : table_(records)
+    : FlatTableWithCopy(records)
 {}
 
 // ------------------------------------------------------------------------
 
 DensityTable::DensityTable(const DeckKeyword& kw)
-{
-    if (kw.name() != ParserKeywords::DENSITY::keywordName) {
-        throw std::invalid_argument {
-            fmt::format("Keyword {} cannot be used to "
-                        "initialise {} table structures", kw.name(),
-                        ParserKeywords::DENSITY::keywordName)
-        };
-    }
-
-    this->table_.reserve(kw.size());
-
-    for (const auto& record : kw) {
-        if (all_defaulted(record)) {
-            // All-defaulted records imply DENSITY in region R is equal to
-            // DENSITY in region R-1.  DENSITY must not be defaulted in
-            // region 1 (i.e., when PVTNUM=1).
-            if (this->table_.empty()) {
-                throw OpmInputError {
-                    "First record cannot be defaulted",
-                    kw.location()
-                };
-            }
-
-            this->table_.push_back(this->table_.back());
-        }
-        else {
-            this->table_.push_back(flat_get<DENSITYRecord>(record, mkseq<DENSITYRecord::size>{}));
-        }
-    }
-}
+    : FlatTableWithCopy(kw, ParserKeywords::DENSITY::keywordName)
+{}
 
 DensityTable::DensityTable(std::initializer_list<DENSITYRecord> records)
-    : table_(records)
+    : FlatTableWithCopy(records)
 {}
 
 DensityTable::DensityTable(const GravityTable& gravity)
@@ -1713,6 +1660,16 @@ DensityTable::DensityTable(const GravityTable& gravity)
         };
     });
 }
+
+// ------------------------------------------------------------------------
+
+PvtwTable::PvtwTable(const DeckKeyword& kw)
+    : FlatTableWithCopy(kw, ParserKeywords::PVTW::keywordName)
+{}
+
+PvtwTable::PvtwTable(std::initializer_list<PVTWRecord> records)
+    : FlatTableWithCopy(records)
+{}
 
 // ------------------------------------------------------------------------
 
