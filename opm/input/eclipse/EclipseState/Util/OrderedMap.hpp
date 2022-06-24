@@ -67,13 +67,46 @@ findSimilarStrings(std::string str,
     auto concatedStr = concated.str();
     return concatedStr.substr(0, concatedStr.size()-2);
 }
+
+template<std::size_t MAX_CHARS>
+class TruncatedStringHash
+{
+public:
+    std::size_t operator()(const std::string_view& key) const
+    {
+        return hasher(key.substr(0, MAX_CHARS));
+    }
+private:
+    std::hash<std::string_view> hasher;
+};
+
+
+template<>
+class TruncatedStringHash<std::string::npos> : public std::hash<std::string_view>
+{};
+
+template<std::size_t MAX_CHARS>
+struct TruncatedStringEquals
+{
+    bool operator()(const std::string& str1, const std::string& str2) const
+    {
+        return str1.substr(0, MAX_CHARS) == str2.substr(0, MAX_CHARS);
+    }
+};
+
+template<>
+struct TruncatedStringEquals<std::string::npos> : public std::equal_to<std::string>
+{};
+
 } // end namespace detail
 
-template <typename T>
+template <typename T, std::size_t MAX_CHARS = std::string::npos>
 class OrderedMap {
 public:
     using storage_type = typename std::vector<std::pair<std::string,T>>;
-    using index_type = typename std::unordered_map<std::string,std::size_t>;
+    using index_type = typename std::unordered_map<std::string,std::size_t,
+                                                   Opm::OrderedMapDetail::TruncatedStringHash<MAX_CHARS>,
+                                                   Opm::OrderedMapDetail::TruncatedStringEquals<MAX_CHARS>>;
     using iter_type = typename storage_type::iterator;
     using const_iter_type = typename storage_type::const_iterator;
 
@@ -254,7 +287,8 @@ public:
         return std::next(this->m_vector.begin(), map_iter->second);
     }
 
-    bool operator==(const OrderedMap<T>& data) const {
+    template<size_t n>
+    bool operator==(const OrderedMap<T,n>& data) const {
         return this->getIndex() == data.getIndex() &&
                this->getStorage() == data.getStorage();
     }

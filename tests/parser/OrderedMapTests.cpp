@@ -67,6 +67,36 @@ BOOST_AUTO_TEST_CASE( find ) {
     BOOST_CHECK_EQUAL( iter_found->second, std::string("Value1"));
 }
 
+BOOST_AUTO_TEST_CASE( check_long_truncated_keys)
+{
+    Opm::OrderedMap<std::string, 8> map;
+    map.insert({"AKEY_ABC", "8_characters"});
+    BOOST_CHECK(map.count("AKEY_ABC") == 1);
+    map.insert({"AKEY_ABC_suffix", "too_long"});
+    BOOST_CHECK(map.size() == 1);
+    BOOST_CHECK(map.count("AKEY_ABC") == 1);
+    BOOST_CHECK(map.count("AKEY_ABC_suffix") == 1);
+    BOOST_CHECK_EQUAL( "too_long" , map.get("AKEY_ABC"));
+    BOOST_CHECK_EQUAL( "too_long" , map.get("AKEY_ABC_suffix"));
+    BOOST_CHECK_EQUAL( "too_long" , map.get("AKEY_ABC_arbitray_suffix"));
+    BOOST_CHECK_EQUAL( "too_long" , map.iget(0));
+}
+
+BOOST_AUTO_TEST_CASE( check_long_keys)
+{
+    Opm::OrderedMap<std::string> map;
+    map.insert({"AKEY_ABC", "8_characters"});
+    BOOST_CHECK(map.count("AKEY_ABC") == 1);
+    map.insert({"AKEY_ABC_suffix", "too_long"});
+    BOOST_CHECK(map.count("AKEY_ABC") == 1);
+    BOOST_CHECK(map.count("AKEY_ABC_suffix") == 1);
+    BOOST_CHECK(map.size() == 2);
+    BOOST_CHECK_EQUAL( "8_characters" , map.get("AKEY_ABC"));
+    BOOST_CHECK_EQUAL( "too_long" , map.get("AKEY_ABC_suffix"));
+    BOOST_CHECK_EQUAL( "8_characters" , map.iget(0));
+    BOOST_CHECK_EQUAL( "too_long" , map.iget(1));
+}
+
 BOOST_AUTO_TEST_CASE( check_order ) {
     Opm::OrderedMap<std::string> map;
     map.insert(std::make_pair("CKEY1" , "Value1"));
