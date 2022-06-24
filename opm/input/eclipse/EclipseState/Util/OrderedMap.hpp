@@ -100,6 +100,16 @@ struct TruncatedStringEquals<std::string::npos> : public std::equal_to<std::stri
 
 } // end namespace detail
 
+/// \brief A map with iteration in the order of insertion.
+///
+/// Each entry has an associated index indicating when a value with that key was
+/// first inserted. When itering over it's entries values with lower insertion index
+/// are traversed before ones with an higher insertion index.
+///
+/// \tparam MAX_CHARS The maximum number of characters that are use a keys. Default is
+///                   std::string::npos, which honors all characters. Any keys with the
+///                   same first MAX_CHARS characters are considered equal.
+///
 template <typename T, std::size_t MAX_CHARS = std::string::npos>
 class OrderedMap {
 public:
