@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstddef>
 #include <cstdio>
 #include <ctime>
 #include <iostream>
@@ -1082,6 +1083,178 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum2) {
     }
 }
 
+// 5-by-1-by-5 Cartesian grid in which all cells have dimension 1-by-1-by-1
+// metres.  Setup otherwise very similar to createActnumBoxDeck2, but this
+// deck uses a full initial ACTNUM, followed by EQUALS to reactivate.
+static Opm::Deck createActnumBoxDeck3() {
+    return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+5 1 5 /
+GRID
+SPECGRID
+5 1 5 1 F /
+COORD
+0 0 0  0 0 0
+1 0 0  1 0 0
+2 0 0  2 0 0
+3 0 0  3 0 0
+4 0 0  4 0 0
+5 0 0  5 0 0
+0 1 0  0 1 0
+1 1 0  1 1 0
+2 1 0  2 1 0
+3 1 0  3 1 0
+4 1 0  4 1 0
+5 1 0  5 1 0
+/
+ZCORN
+10*0 10*0
+10*1 10*1
+10*1 10*1
+10*2 10*2
+10*2 10*2
+10*3 10*3
+10*3 10*3
+10*4 10*4
+10*4 10*4
+10*5 10*5
+/
+ACTNUM
+1 1 1 1 1
+1 1 1 1 1
+1 1 1 1 1
+0 0 1 1 1
+0 0 1 1 1
+/
+EQUALS
+ACTNUM   1   1 3 1 1 5 5 /
+PERMX  100.0 1 5 1 1 1 5 /
+PORO     0.3 1 5 1 1 1 5 /
+/
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+)");
+}
+
+static Opm::Deck createActnumBoxDeck4() {
+    return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+5 1 5 /
+GRID
+DXV
+5*1 /
+DYV
+1*1 /
+DZV
+5*1 /
+DEPTHZ
+12*0 /
+ACTNUM
+1 1 1 1 1
+1 1 1 1 1
+1 1 1 1 1
+0 0 1 1 1
+0 0 1 1 1
+/
+EQUALS
+ACTNUM   1   1 3 1 1 5 5 /
+PERMX  100.0 1 5 1 1 1 5 /
+PORO     0.3 1 5 1 1 1 5 /
+/
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+)");
+}
+
+static Opm::Deck createActnumBoxDeck5() {
+    return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+5 1 5 /
+GRID
+DX
+25*1 /
+DY
+25*1 /
+DZ
+25*1 /
+TOPS
+5*0 /
+ACTNUM
+1 1 1 1 1
+1 1 1 1 1
+1 1 1 1 1
+0 0 1 1 1
+0 0 1 1 1
+/
+EQUALS
+ACTNUM   1   1 3 1 1 5 5 /
+PERMX  100.0 1 5 1 1 1 5 /
+PORO     0.3 1 5 1 1 1 5 /
+/
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+)");
+}
+
+BOOST_AUTO_TEST_CASE(GridBoxActnum3) {
+    const auto es = Opm::EclipseState { createActnumBoxDeck3() };
+    const auto& grid = es.getInputGrid();
+    BOOST_CHECK_EQUAL(grid.getNumActive(), std::size_t{23});
+
+    const auto expect = std::vector<int> {
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        0, 0, 1, 1, 1,
+        1, 1, 1, 1, 1,
+    };
+
+    const auto& actnum = grid.getACTNUM();
+    BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(),
+                                  expect.begin(), expect.end());
+}
+
+BOOST_AUTO_TEST_CASE(GridBoxActnum4) {
+    const auto es = Opm::EclipseState { createActnumBoxDeck4() };
+    const auto& grid = es.getInputGrid();
+    BOOST_CHECK_EQUAL(grid.getNumActive(), std::size_t{23});
+
+    const auto expect = std::vector<int> {
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        0, 0, 1, 1, 1,
+        1, 1, 1, 1, 1,
+    };
+
+    const auto& actnum = grid.getACTNUM();
+    BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(),
+                                  expect.begin(), expect.end());
+}
+
+BOOST_AUTO_TEST_CASE(GridBoxActnum5) {
+    const auto es = Opm::EclipseState { createActnumBoxDeck5() };
+    const auto& grid = es.getInputGrid();
+    BOOST_CHECK_EQUAL(grid.getNumActive(), std::size_t{23});
+
+    const auto expect = std::vector<int> {
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        0, 0, 1, 1, 1,
+        1, 1, 1, 1, 1,
+    };
+
+    const auto& actnum = grid.getACTNUM();
+    BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(),
+                                  expect.begin(), expect.end());
+}
 
 BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     auto deck = createActnumDeck();
