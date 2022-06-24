@@ -34,19 +34,11 @@ namespace Opm {
 
 namespace OrderedMapDetail
 {
-template<class T, class A>
-//typename std::enable_if_t<!std::is_same<T,std::string>::value, std::string>
-std::string
-findSimilarStrings(const std::string&,
-                   const std::vector<T,A>&)
-{
-    return {};
-}
 
-template<class A, class K>
+template<class T, class A>
 std::string
 findSimilarStrings(std::string str,
-                   const std::vector<std::pair<std::string, K>,A>& storage)
+                   const std::vector<std::pair<std::string, T>,A>& storage)
 {
     auto toUpper = [](const char c){ return std::toupper(c);};
     std::transform(str.begin(), str.end(), str.begin(), toUpper);
@@ -77,11 +69,11 @@ findSimilarStrings(std::string str,
 }
 } // end namespace detail
 
-template <typename K, typename T>
+template <typename T>
 class OrderedMap {
 public:
-    using storage_type = typename std::vector<std::pair<K,T>>;
-    using index_type = typename std::unordered_map<K,std::size_t>;
+    using storage_type = typename std::vector<std::pair<std::string,T>>;
+    using index_type = typename std::unordered_map<std::string,std::size_t>;
     using iter_type = typename storage_type::iterator;
     using const_iter_type = typename storage_type::const_iterator;
 
@@ -103,13 +95,13 @@ public:
 
     const storage_type& getStorage() const { return m_vector; }
 
-    std::size_t count(const K& key) const {
+    std::size_t count(const std::string& key) const {
         return this->m_map.count(key);
     }
 
 
 
-    T& operator[](const K& key) {
+    T& operator[](const std::string& key) {
         if (this->count(key) == 0)
             this->insert( std::make_pair(key, T()));
 
@@ -117,7 +109,7 @@ public:
     }
 
 
-    std::size_t erase(const K& key) {
+    std::size_t erase(const std::string& key) {
         if (this->count(key) == 0)
             return 0;
 
@@ -136,7 +128,7 @@ public:
     }
 
 
-    void insert(std::pair<K,T> key_value_pair) {
+    void insert(std::pair<std::string,T> key_value_pair) {
         if (this->count(key_value_pair.first) > 0) {
             auto iter = m_map.find( key_value_pair.first );
             size_t index = iter->second;
@@ -149,7 +141,7 @@ public:
     }
 
 
-    T& get(const K& key) {
+    T& get(const std::string& key) {
         auto iter = m_map.find( key );
         if (iter == m_map.end())
         {
@@ -176,7 +168,7 @@ public:
         return m_vector[index].second;
     }
 
-    const T& get(const K& key) const {
+    const T& get(const std::string& key) const {
         const auto& iter = this->m_map.find( key );
         if (iter == m_map.end())
         {
@@ -212,7 +204,7 @@ public:
         return this->iget(index);
     }
 
-    const T& at(const K& key) const {
+    const T& at(const std::string& key) const {
         return this->get(key);
     }
 
@@ -220,7 +212,7 @@ public:
         return this->iget(index);
     }
 
-    T& at(const K& key) {
+    T& at(const std::string& key) {
         return this->get(key);
     }
 
@@ -246,7 +238,7 @@ public:
         return m_vector.end();
     }
 
-    iter_type find(const K& key) {
+    iter_type find(const std::string& key) {
         const auto map_iter = this->m_map.find(key);
         if (map_iter == this->m_map.end())
             return this->m_vector.end();
@@ -254,7 +246,7 @@ public:
         return std::next(this->m_vector.begin(), map_iter->second);
     }
 
-    const_iter_type find(const K& key) const {
+    const_iter_type find(const std::string& key) const {
         const auto map_iter = this->m_map.find(key);
         if (map_iter == this->m_map.end())
             return this->m_vector.end();
@@ -262,7 +254,7 @@ public:
         return std::next(this->m_vector.begin(), map_iter->second);
     }
 
-    bool operator==(const OrderedMap<K,T>& data) const {
+    bool operator==(const OrderedMap<T>& data) const {
         return this->getIndex() == data.getIndex() &&
                this->getStorage() == data.getStorage();
     }

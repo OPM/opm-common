@@ -28,7 +28,7 @@
 
 
 BOOST_AUTO_TEST_CASE( check_empty) {
-    Opm::OrderedMap<std::string, std::string> map;
+    Opm::OrderedMap<std::string> map;
     BOOST_CHECK_EQUAL( 0U , map.size() );
     BOOST_CHECK_THROW( map.iget( 0 ) , std::invalid_argument);
     BOOST_CHECK_THROW( map.get( "KEY" ) , std::invalid_argument);
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE( check_empty) {
 }
 
 BOOST_AUTO_TEST_CASE( operator_square ) {
-    Opm::OrderedMap<std::string, std::string> map;
+    Opm::OrderedMap<std::string> map;
     map.insert(std::make_pair("CKEY1" , "Value1"));
     map.insert(std::make_pair("BKEY2" , "Value2"));
     map.insert(std::make_pair("AKEY3" , "Value3"));
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( operator_square ) {
 }
 
 BOOST_AUTO_TEST_CASE( find ) {
-    Opm::OrderedMap<std::string, std::string> map;
+    Opm::OrderedMap<std::string> map;
     map.insert(std::make_pair("CKEY1" , "Value1"));
     map.insert(std::make_pair("BKEY2" , "Value2"));
     map.insert(std::make_pair("AKEY3" , "Value3"));
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE( find ) {
 }
 
 BOOST_AUTO_TEST_CASE( check_order ) {
-    Opm::OrderedMap<std::string, std::string> map;
+    Opm::OrderedMap<std::string> map;
     map.insert(std::make_pair("CKEY1" , "Value1"));
     map.insert(std::make_pair("BKEY2" , "Value2"));
     map.insert(std::make_pair("AKEY3" , "Value3"));

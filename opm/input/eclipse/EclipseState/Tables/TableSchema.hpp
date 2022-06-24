@@ -49,7 +49,7 @@ namespace Opm {
         }
 
     private:
-        OrderedMap<std::string, ColumnSchema> m_columns;
+        OrderedMap<ColumnSchema> m_columns;
     };
 }
 
