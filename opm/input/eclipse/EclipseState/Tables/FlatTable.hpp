@@ -1,6 +1,11 @@
 #ifndef OPM_FLAT_TABLE_HPP
 #define OPM_FLAT_TABLE_HPP
 
+#include <cstddef>
+#include <initializer_list>
+#include <string_view>
+#include <vector>
+
 namespace Opm {
 
 class DeckKeyword;
@@ -17,6 +22,85 @@ struct FlatTable : public std::vector< T > {
     void serializeOp(Serializer& serializer)
     {
         serializer.vector(*this);
+    }
+};
+
+template <typename RecordType>
+class FlatTableWithCopy
+{
+public:
+    FlatTableWithCopy() = default;
+    explicit FlatTableWithCopy(const DeckKeyword& kw,
+                               std::string_view   expect = "");
+    explicit FlatTableWithCopy(std::initializer_list<RecordType> records);
+
+    auto size()  const { return this->table_.size(); }
+    bool empty() const { return this->table_.empty(); }
+    auto begin() const { return this->table_.begin(); }
+    auto end()   const { return this->table_.end(); }
+
+    const RecordType& operator[](const std::size_t tableID) const
+    {
+        return this->table_[tableID];
+    }
+
+    const RecordType& at(const std::size_t tableID) const
+    {
+        return this->table_.at(tableID);
+    }
+
+    bool operator==(const FlatTableWithCopy& other) const
+    {
+        return this->table_ == other.table_;
+    }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(this->table_);
+    }
+
+protected:
+    std::vector<RecordType> table_{};
+};
+
+struct GRAVITYRecord {
+    static constexpr std::size_t size = 3;
+
+    double oil_api;
+    double water_sg;
+    double gas_sg;
+
+    bool operator==(const GRAVITYRecord& data) const {
+        return this->oil_api == data.oil_api &&
+               this->water_sg == data.water_sg &&
+               this->gas_sg == data.gas_sg;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->oil_api);
+        serializer(this->water_sg);
+        serializer(this->gas_sg);
+    }
+};
+
+struct GravityTable : public FlatTableWithCopy<GRAVITYRecord>
+{
+    GravityTable() = default;
+    explicit GravityTable(const DeckKeyword& kw);
+    explicit GravityTable(std::initializer_list<GRAVITYRecord> records);
+
+    static GravityTable serializeObject()
+    {
+        return GravityTable({{1.0, 2.0, 3.0}});
+    }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        FlatTableWithCopy::serializeOp(serializer);
     }
 };
 
@@ -42,43 +126,22 @@ struct DENSITYRecord {
     }
 };
 
-struct DensityTable : public FlatTable< DENSITYRecord > {
-    using FlatTable< DENSITYRecord >::FlatTable;
+struct DensityTable : public FlatTableWithCopy<DENSITYRecord>
+{
+    DensityTable() = default;
+    explicit DensityTable(const DeckKeyword& kw);
+    explicit DensityTable(const GravityTable& gravity);
+    explicit DensityTable(std::initializer_list<DENSITYRecord> records);
 
     static DensityTable serializeObject()
     {
         return DensityTable({{1.0, 2.0, 3.0}});
     }
-};
 
-struct GRAVITYRecord {
-    static constexpr std::size_t size = 3;
-
-    double oil_api;
-    double water_sg;
-    double gas_sg;
-
-    bool operator==(const GRAVITYRecord& data) const {
-        return this->oil_api == data.oil_api &&
-               this->water_sg == data.water_sg &&
-               this->gas_sg == data.gas_sg;
-    }
-
-    template<class Serializer>
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(this->oil_api);
-        serializer(this->water_sg);
-        serializer(this->gas_sg);
-    }
-};
-
-struct GravityTable : public FlatTable< GRAVITYRecord > {
-    using FlatTable< GRAVITYRecord >::FlatTable;
-
-    static GravityTable serializeObject()
-    {
-        return GravityTable({{1.0, 2.0, 3.0}});
+        FlatTableWithCopy::serializeOp(serializer);
     }
 };
 
@@ -156,12 +219,21 @@ struct PVTWRecord {
     }
 };
 
-struct PvtwTable : public FlatTable< PVTWRecord > {
-    using FlatTable< PVTWRecord >::FlatTable;
+struct PvtwTable : public FlatTableWithCopy<PVTWRecord>
+{
+    PvtwTable() = default;
+    explicit PvtwTable(const DeckKeyword& kw);
+    explicit PvtwTable(std::initializer_list<PVTWRecord> records);
 
     static PvtwTable serializeObject()
     {
         return PvtwTable({{1.0, 2.0, 3.0, 4.0, 5.0}});
+    }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        FlatTableWithCopy::serializeOp(serializer);
     }
 };
 

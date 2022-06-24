@@ -24,10 +24,13 @@
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
@@ -85,6 +88,17 @@
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <stdexcept>
+#include <string_view>
+
+#include <stddef.h>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -1547,17 +1561,124 @@ struct flat_props< PVCDORecord, N > {
     }
 };
 
+bool all_defaulted(const DeckRecord& record)
+{
+    return std::all_of(record.begin(), record.end(),
+        [](const DeckItem& item)
+    {
+        const auto& vstat = item.getValueStatus();
+        return std::all_of(vstat.begin(), vstat.end(), &value::defaulted);
+    });
 }
+
+} // Anonymous namespace
+
+// ------------------------------------------------------------------------
+
+template <typename RecordType>
+FlatTableWithCopy<RecordType>::FlatTableWithCopy(const DeckKeyword& kw,
+                                                 std::string_view   expect)
+{
+    if (!expect.empty() && (kw.name() != expect)) {
+        throw std::invalid_argument {
+            fmt::format("Keyword {} cannot be used to "
+                        "initialise {} table structures", kw.name(), expect)
+        };
+    }
+
+    this->table_.reserve(kw.size());
+
+    for (const auto& record : kw) {
+        if (all_defaulted(record)) {
+            // All-defaulted records imply table in region R is equal to
+            // table in region R-1.  Table must not be defaulted in region 1
+            // (i.e., when PVTNUM=1).
+            if (this->table_.empty()) {
+                throw OpmInputError {
+                    "First record cannot be defaulted",
+                    kw.location()
+                };
+            }
+
+            this->table_.push_back(this->table_.back());
+        }
+        else {
+            this->table_.push_back(flat_get<RecordType>(record, mkseq<RecordType::size>{}));
+        }
+    }
+}
+
+template <typename RecordType>
+FlatTableWithCopy<RecordType>::FlatTableWithCopy(std::initializer_list<RecordType> records)
+    : table_{ records }
+{}
+
+// ------------------------------------------------------------------------
+
+GravityTable::GravityTable(const DeckKeyword& kw)
+    : FlatTableWithCopy(kw, ParserKeywords::GRAVITY::keywordName)
+{}
+
+GravityTable::GravityTable(std::initializer_list<GRAVITYRecord> records)
+    : FlatTableWithCopy(records)
+{}
+
+// ------------------------------------------------------------------------
+
+DensityTable::DensityTable(const DeckKeyword& kw)
+    : FlatTableWithCopy(kw, ParserKeywords::DENSITY::keywordName)
+{}
+
+DensityTable::DensityTable(std::initializer_list<DENSITYRecord> records)
+    : FlatTableWithCopy(records)
+{}
+
+DensityTable::DensityTable(const GravityTable& gravity)
+{
+    this->table_.reserve(gravity.size());
+
+    constexpr auto default_air_density =
+        1.22 * unit::kilogram / unit::cubic(unit::meter);
+
+    constexpr auto default_water_density =
+        1000.0 * unit::kilogram / unit::cubic(unit::meter);
+
+    // Degrees API defined as
+    //
+    //   API = (141.5 / SG) - 131.5
+    //
+    // with SG being the specific gravity of oil relative to pure water.
+
+    std::transform(gravity.begin(), gravity.end(),
+                   std::back_inserter(this->table_),
+                   [](const GRAVITYRecord& record)
+    {
+        return DENSITYRecord {
+            (141.5 / (record.oil_api + 131.5)) * default_water_density,
+            record.water_sg * default_water_density,
+            record.gas_sg * default_air_density
+        };
+    });
+}
+
+// ------------------------------------------------------------------------
+
+PvtwTable::PvtwTable(const DeckKeyword& kw)
+    : FlatTableWithCopy(kw, ParserKeywords::PVTW::keywordName)
+{}
+
+PvtwTable::PvtwTable(std::initializer_list<PVTWRecord> records)
+    : FlatTableWithCopy(records)
+{}
+
+// ------------------------------------------------------------------------
 
 template< typename T >
 FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
     std::vector< T >( flat_records< T >( kw, mkseq< T::size >{} ) )
 {}
 
-template FlatTable< DENSITYRecord >::FlatTable( const DeckKeyword& );
-template FlatTable< GRAVITYRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< DiffCoeffRecord >::FlatTable( const DeckKeyword& );
-template FlatTable< PVTWRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PVCDORecord >::FlatTable( const DeckKeyword& );
 template FlatTable< ROCKRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PlyvmhRecord >::FlatTable( const DeckKeyword& );

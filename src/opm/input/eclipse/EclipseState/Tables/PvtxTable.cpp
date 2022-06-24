@@ -17,13 +17,25 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
+
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
+
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <stddef.h>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -52,10 +64,31 @@ namespace Opm {
       have been explicitly set before calling this method.
     */
 
-    void PvtxTable::init( const DeckKeyword& keyword, size_t tableIdx) {
-        auto ranges = recordRanges( keyword );
+    void PvtxTable::init( const DeckKeyword& keyword, const size_t tableIdx0) {
+        const auto ranges = recordRanges( keyword );
+        auto tableIdx = tableIdx0;
+
         if (tableIdx >= ranges.size())
             throw std::invalid_argument("Asked for table: " + std::to_string( tableIdx ) + " in keyword + " + keyword.name() + " which only has " + std::to_string( ranges.size() ) + " tables");
+
+        auto isempty = [&ranges](const size_t ix)
+        {
+            const auto& [begin, end] = ranges[ix];
+            return begin == end;
+        };
+
+        if ((tableIdx == size_t{0}) && isempty(tableIdx)) {
+            throw OpmInputError {
+                "Cannot default region 1's table data",
+                keyword.location()
+            };
+        }
+
+        // Locate source table for this region.  Last non-empty table up to
+        // and including 'tableIdx0'.
+        while ((tableIdx > size_t{0}) && isempty(tableIdx)) {
+            --tableIdx;
+        }
 
         {
             auto range = ranges[ tableIdx ];
