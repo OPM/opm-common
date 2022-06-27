@@ -200,7 +200,7 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatPcnwInv(const Params& params, const Evaluation& pcnw)
+    static Evaluation twoPhaseSatPcnwInv(const Params&, const Evaluation&)
     {
         throw std::logic_error("SatCurveMultiplexer::twoPhaseSatPcnwInv"
                                " not implemented!");
@@ -228,7 +228,7 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatSw(const Params& params, const Evaluation& pc)
+    static Evaluation twoPhaseSatSw(const Params&, const Evaluation&)
     {
         throw std::logic_error("SatCurveMultiplexer::twoPhaseSatSw"
                                " not implemented!");
@@ -315,7 +315,7 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krw)
+    static Evaluation twoPhaseSatKrwInv(const Params&, const Evaluation&)
     {
         throw std::logic_error("Not implemented: twoPhaseSatKrwInv()");
     }
