@@ -1048,7 +1048,7 @@ protected:
             std::vector<double> deri(num_deri, 0.);
             // derivatives from P
             for (unsigned idx = 0; idx < num_deri; ++idx) {
-                deri[idx] = - sec_jac[compIdx][0] * p_l.derivative(idx);
+                deri[idx] = -sec_jac[compIdx][0] * p_l.derivative(idx);
             }
 
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
@@ -1060,47 +1060,47 @@ protected:
             }
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 x[compIdx].setDerivative(idx, deri[idx]);
-            } 
+            }
             // handling y
             for (unsigned idx = 0; idx < num_deri; ++idx) {
-                deri[idx] = - sec_jac[compIdx + numComponents][0]* p_v.derivative(idx);
-            }            
+                deri[idx] = -sec_jac[compIdx + numComponents][0] * p_v.derivative(idx);
+            }
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
                 const double pz = -sec_jac[compIdx + numComponents][cIdx + 1];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += pz * zi.derivative(idx);
                 }
-            }     
+            }
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 y[compIdx].setDerivative(idx, deri[idx]);
             }
-            
+
             // handling derivatives of L
             std::vector<double> deriL(num_deri, 0.);
             for (unsigned idx = 0; idx < num_deri; ++idx) {
-                deriL[idx] = - sec_jac[2*numComponents][0] * p_v.derivative(idx);
+                deriL[idx] = -sec_jac[2 * numComponents][0] * p_v.derivative(idx);
             }
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double pz = -sec_jac[2*numComponents][cIdx + 1];
+                const double pz = -sec_jac[2 * numComponents][cIdx + 1];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deriL[idx] += pz * zi.derivative(idx);
                 }
             }
-            
+
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 L_eval.setDerivative(idx, deriL[idx]);
             }
-            
+        }
+
         // set up the mole fractions
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, x[compIdx]);
             fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, y[compIdx]);
         }
-        fluid_state.setLvalue(L_eval); 
-        }
-    }//end updateDerivatives      
+        fluid_state.setLvalue(L_eval);
+    } //end updateDerivatives
 
     // TODO: or use typename FlashFluidState::Scalar
     template <class FlashFluidState, class ComponentVector>
