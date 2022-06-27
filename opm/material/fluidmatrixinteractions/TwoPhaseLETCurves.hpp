@@ -157,7 +157,7 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatPcnwInv(const Params& /* params */, const Evaluation& pcnw)
+    static Evaluation twoPhaseSatPcnwInv(const Params& /* params */, const Evaluation&)
     {
         throw std::logic_error("TwoPhaseLETCurves::twoPhaseSatPcnwInv"
                                " not implemented!");
