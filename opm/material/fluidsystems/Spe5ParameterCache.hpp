@@ -176,6 +176,25 @@ public:
     }
 
     /*!
+     * \brief TODO
+     *
+     * \param phaseIdx The fluid phase of interest
+     * \param compIdx The component phase of interest
+     * \param compJIdx Additional component index
+     */
+    Scalar aCache(unsigned phaseIdx, unsigned compIdx, unsigned compJIdx)
+    {
+        switch (phaseIdx)
+        {
+        case oilPhaseIdx: return oilPhaseParams_.getaCache(compIdx,compJIdx);
+        case gasPhaseIdx: return gasPhaseParams_.getaCache(compIdx,compJIdx);
+        default:
+            throw std::logic_error("The aCache() parameter is only defined for "
+                                   "oil phase");
+        };
+    }
+
+    /*!
      * \brief Returns the molar volume of a phase [m^3/mol]
      *
      * \param phaseIdx The fluid phase of interest
