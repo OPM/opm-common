@@ -274,38 +274,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     updateNumericalAquiferCells(deck);
 
-    initGrid(deck);
+    initGrid(deck, actnum);
 
     if (deck.hasKeyword<ParserKeywords::MAPAXES>())
         this->m_mapaxes = std::make_optional<MapAxes>( deck );
-
-    if (actnum != nullptr) {
-        resetACTNUM(actnum);
-    } else {
-        if (m_useActnumFromGdfile){
-            // actnum already reset in initBinaryGrid
-        } else {
-            if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-                const auto& actnumData = deck.get<ParserKeywords::ACTNUM>().back().getIntData();
-                /*
-                  Would have liked to fail hard in the case where the size of the
-                  ACTNUM array disagrees with nx*ny*nz; but it is possible to embed
-                  the ACTNUM keyword in a BOX / ENDBOX pair and in that case it is
-                  legitimate with size(ACTNUM) < nx*ny*nz.
-
-                  If size(actnum) != nx*ny*nz it is ignored here, however it is
-                  taken into account when creating an final actnum in the field
-                  property manager.
-                */
-                if (actnumData.size() == getCartesianSize())
-                    resetACTNUM( actnumData);
-                else
-                    resetACTNUM();
-            } else {
-                resetACTNUM();
-            }
-        }
-    }
 
     /*
       The GRIDUNIT handling is simplified compared to the full specification:
@@ -340,8 +312,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return this->m_circle;
     }
 
-    void EclipseGrid::initGrid(const Deck& deck) {
-
+    void EclipseGrid::initGrid(const Deck& deck, const int* actnum)
+    {
         if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
             initCylindricalGrid(deck );
         } else if (deck.hasKeyword<ParserKeywords::SPIDER>()) {
@@ -389,6 +361,16 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
 
+        if (actnum != nullptr) {
+            this->resetACTNUM(actnum);
+        }
+        else if (! this->m_useActnumFromGdfile) {
+            const auto fp = FieldProps {
+                deck, EclipseGrid { static_cast<GridDims&>(*this) }
+            };
+
+            this->resetACTNUM(fp.actnumRaw());
+        }
     }
 
     void EclipseGrid::initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName){
@@ -1159,25 +1141,19 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         this->resetACTNUM(actnum);
     }
 
-    void EclipseGrid::initCornerPointGrid(const Deck& deck) {
-        assertCornerPointKeywords(deck);
-        {
-            const auto& ZCORNKeyWord = deck.get<ParserKeywords::ZCORN>().back();
-            const auto& COORDKeyWord = deck.get<ParserKeywords::COORD>().back();
+    void EclipseGrid::initCornerPointGrid(const Deck& deck)
+    {
+        this->assertCornerPointKeywords(deck);
 
-            const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
-            const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
+        OpmLog::info(fmt::format("\nCreating corner-point grid from "
+                                 "keywords COORD, ZCORN and others"));
 
-            EclipseGrid topologyOnlyGrid(static_cast<GridDims&>(*this));
-            FieldProps fp(deck, topologyOnlyGrid);
-            const auto& actnumVector = fp.actnumRaw();
-            if (actnumVector.size() != this->getCartesianSize())
-                throw std::invalid_argument("ACTNUM vector has wrong size");
+        const auto& coord = deck.get<ParserKeywords::COORD>().back();
+        const auto& zcorn = deck.get<ParserKeywords::ZCORN>().back();
 
-            OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN, COORD and ACTNUM"));
-
-            initCornerPointGrid( coord , zcorn, actnumVector.data());
-        }
+        this->initCornerPointGrid(coord.getSIDoubleData(),
+                                  zcorn.getSIDoubleData(),
+                                  nullptr);
     }
 
     bool EclipseGrid::hasCornerPointKeywords(const Deck& deck) {

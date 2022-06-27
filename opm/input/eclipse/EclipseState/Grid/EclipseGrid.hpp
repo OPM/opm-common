@@ -272,7 +272,7 @@ namespace Opm {
         void initCartesianGrid(const Deck&);
         void initDTOPSGrid(const Deck&);
         void initDVDEPTHZGrid(const Deck&);
-        void initGrid(const Deck&);
+        void initGrid(const Deck&, const int* actnum);
         void initCornerPointGrid(const Deck&);
         void assertCornerPointKeywords(const Deck&);
 
