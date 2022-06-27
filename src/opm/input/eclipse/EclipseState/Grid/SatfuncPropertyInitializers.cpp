@@ -767,7 +767,7 @@ namespace {
             return sgof.getKrgColumn().eval(ix);
         };
 
-        const auto famI_sgof_let = [&sgofLetTables, &sr](const int i) -> double
+        const auto famI_sgof_let = [&sgofLetTables](const int i) -> double
         {
             return sgofLetTables[i].krt1_relperm;
         };
@@ -842,7 +842,7 @@ namespace {
             return swof.getKrwColumn().eval(ix);
         };
 
-        const auto& famI_let = [&swofLetTables, &sr](const int i) -> double
+        const auto& famI_let = [&swofLetTables](const int i) -> double
         {
             return swofLetTables[i].krt1_relperm;
         };
@@ -896,7 +896,7 @@ namespace {
             return swof.getKrowColumn().eval(ix);
         };
 
-        const auto famI_let = [&swofLetTables, &ep](const int i) -> double
+        const auto famI_let = [&swofLetTables](const int i) -> double
         {
             return swofLetTables[i].krt2_relperm;
         };
@@ -963,7 +963,7 @@ namespace {
             return sgof.getKrogColumn().eval(ix);
         };
 
-        const auto famI_sgof_let = [&sgofLetTables, &ep](const int i) -> double
+        const auto famI_sgof_let = [&sgofLetTables](const int i) -> double
         {
             return sgofLetTables[i].krt2_relperm;
         };
