@@ -136,31 +136,29 @@ public:
 
         fluid_state_scalar.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
-        // Do a stability test to check if cell is single-phase (do for all cells the first time).
-        bool isStable = false;
+        // Do a stability test to check if cell is is_single_phase-phase (do for all cells the first time).
+        bool is_stable = false;
         if ( L <= 0 || L == 1 ) {
              if (verbosity >= 1) {
                  std::cout << "Perform stability test (L <= 0 or L == 1)!" << std::endl;
              }
-            phaseStabilityTest_(isStable, K_scalar, fluid_state_scalar, z_scalar, verbosity);
+            phaseStabilityTest_(is_stable, K_scalar, fluid_state_scalar, z_scalar, verbosity);
         }
         if (verbosity >= 1) {
             std::cout << "Inputs after stability test are K = [" << K_scalar << "], L = [" << L_scalar << "], z = [" << z_scalar << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
         }
-        bool single = false;
+        // TODO: we do not need two variables is_stable and is_single_hase, while lacking a good name
+        // TODO: from the later code, is good if we knows whether single_phase_gas or single_phase_oil here
+        const bool is_single_phase = is_stable;
 
         // Update the composition if cell is two-phase
-        if ( !isStable) {
-
+        if ( !is_single_phase ) {
             // Rachford Rice equation to get initial L for composition solver
             L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
             flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state_scalar, verbosity);
-            single = false;
-
         } else {
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
             L_scalar = li_single_phase_label_(fluid_state_scalar, z_scalar, verbosity);
-            single = true;
         }
 
         // Print footer
@@ -187,7 +185,7 @@ public:
             fluid_state.setKvalue(compIdx, K_scalar[compIdx]);
             fluid_state_scalar.setKvalue(compIdx, K_scalar[compIdx]);
         }
-        updateDerivatives_(fluid_state_scalar, z, fluid_state, single);
+        updateDerivatives_(fluid_state_scalar, z, fluid_state, is_single_phase);
     }//end solve
 
     /*!
@@ -854,12 +852,6 @@ protected:
         }
         const Eval& l = fluid_state.L();
 
-        bool isGas = false;
-        if (l==1)
-            isGas = false;
-        else
-            isGas = true;
-
         // TODO: clearing zero whether necessary?
         jac = 0.;
         res = 0.;
@@ -882,14 +874,16 @@ protected:
                 }
             }
         }
-       // sum(x) - sum(y) = 0
-       auto local_res = l;
-       if(isGas) {
-         auto local_res = l-1;
-       }
-       else {
-         auto local_res = l;
-       }
+
+        // TODO: better we have isGas or isLiquid here
+        const bool isGas = Opm::abs(l - 1.0) > std::numeric_limits<double>::epsilon();
+
+        // sum(x) - sum(y) = 0
+        auto local_res = l;
+        if(isGas) {
+            local_res = l-1;
+        }
+
         res[num_equation - 1] = Opm::getValue(local_res);
         for (unsigned i = 0; i < num_primary; ++i) {
             jac[num_equation - 1][i] = local_res.derivative(i);
