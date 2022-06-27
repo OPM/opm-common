@@ -62,7 +62,7 @@ private:
     void addFaultFaces(const GridDims& grid,
                        const DeckRecord&  faultRecord,
                        const std::string& faultName);
-    OrderedMap<Fault> m_faults;
+    OrderedMap<Fault, 8> m_faults;
 
 };
 }
