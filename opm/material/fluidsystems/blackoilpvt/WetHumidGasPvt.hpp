@@ -82,7 +82,7 @@ public:
         , oilReferenceDensity_(oilReferenceDensity)
         , waterReferenceDensity_(waterReferenceDensity)
         , inverseGasBRvwSat_(inverseGasBRvwSat) // inverse of Bg evaluated at saturated water-gas ratio (Rvw) values; pvtg
-        , inverseGasBRvSat_(inverseGasBRvwSat) // inverse of Bg evaluated at saturated oil-gas ratio (Rv) values; pvtgw
+        , inverseGasBRvSat_(inverseGasBRvSat) // inverse of Bg evaluated at saturated oil-gas ratio (Rv) values; pvtgw
         , inverseSaturatedGasB_(inverseSaturatedGasB) // evaluated at saturated water-gas ratio (Rvw) and oil-gas ratio (Rv) values; pvtgw
         , gasMuRvwSat_(gasMuRvwSat) // Mug evaluated at saturated water-gas ratio (Rvw) values; pvtg
         , gasMuRvSat_(gasMuRvSat) // Mug evaluated at saturated oil-gas ratio (Rv) values; pvtgw
