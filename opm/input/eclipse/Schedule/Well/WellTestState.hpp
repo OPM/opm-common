@@ -265,7 +265,7 @@ public:
                 serializer.map(comp_map);
             }
         } else {
-            std::size_t size;
+            std::size_t size = 0;
             serializer(size);
             for (std::size_t i=0; i < size; i++) {
                 std::string well;
