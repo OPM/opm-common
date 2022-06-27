@@ -60,6 +60,7 @@ public:
     OilPvtThermal()
     {
         enableThermalDensity_ = false;
+        enableJouleThomson_ = false;
         enableThermalViscosity_ = false;
         enableInternalEnergy_ = false;
         isothermalPvt_ = nullptr;
@@ -73,8 +74,11 @@ public:
                   const std::vector<Scalar>& oildentRefTemp,
                   const std::vector<Scalar>& oildentCT1,
                   const std::vector<Scalar>& oildentCT2,
+                  const std::vector<Scalar>& oilJTRefPres,
+                  const std::vector<Scalar>& oilJTC,
                   const std::vector<TabulatedOneDFunction>& internalEnergyCurves,
                   bool enableThermalDensity,
+                  bool enableJouleThomson,
                   bool enableThermalViscosity,
                   bool enableInternalEnergy)
         : isothermalPvt_(isothermalPvt)
@@ -85,8 +89,11 @@ public:
         , oildentRefTemp_(oildentRefTemp)
         , oildentCT1_(oildentCT1)
         , oildentCT2_(oildentCT2)
+        , oilJTRefPres_(oilJTRefPres)
+        , oilJTC_(oilJTC)
         , internalEnergyCurves_(internalEnergyCurves)
         , enableThermalDensity_(enableThermalDensity)
+        , enableJouleThomson_(enableJouleThomson)
         , enableThermalViscosity_(enableThermalViscosity)
         , enableInternalEnergy_(enableInternalEnergy)
     { }
@@ -167,6 +174,26 @@ public:
             }
         }
 
+        // Joule Thomson 
+        if (enableJouleThomson_) {
+            const auto& oilJT = tables.OilJT();
+
+            assert(oilJT.size() == numRegions);
+            for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                const auto& record = oilJT[regionIdx];
+
+                oilJTRefPres_[regionIdx] =  record.P0;
+                oilJTC_[regionIdx] = record.C1;
+            }
+
+            const auto& densityTable = eclState.getTableManager().getDensityTable();
+
+            assert(densityTable.size() == numRegions);
+            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+                 rhoRefG_[regionIdx] = densityTable[regionIdx].gas;
+            }
+        }
+
         if (enableInternalEnergy_) {
             // the specific internal energy of liquid oil. be aware that ecl only specifies the
             // heat capacity (via the SPECHEAT keyword) and we need to integrate it
@@ -210,6 +237,12 @@ public:
         viscrefRs_.resize(numRegions);
         viscRef_.resize(numRegions);
         internalEnergyCurves_.resize(numRegions);
+        oildentRefTemp_.resize(numRegions);
+        oildentCT1_.resize(numRegions);
+        oildentCT2_.resize(numRegions);
+        oilJTRefPres_.resize(numRegions);
+        oilJTC_.resize(numRegions);
+        rhoRefG_.resize(numRegions);
     }
 
     /*!
@@ -223,6 +256,12 @@ public:
      */
     bool enableThermalDensity() const
     { return enableThermalDensity_; }
+
+    /*!
+     * \brief Returns true iff Joule-Thomson effect for the oil phase is active.
+     */
+    bool enableJouleThomsony() const
+    { return enableJouleThomson_; }
 
     /*!
      * \brief Returns true iff the viscosity of the oil phase is temperature dependent.
@@ -239,16 +278,60 @@ public:
     template <class Evaluation>
     Evaluation internalEnergy(unsigned regionIdx,
                               const Evaluation& temperature,
-                              const Evaluation&,
-                              const Evaluation&) const
+                              const Evaluation& pressure,
+                              const Evaluation& Rs) const
     {
         if (!enableInternalEnergy_)
-            throw std::runtime_error("Requested the internal energy of oil but it is disabled");
+             throw std::runtime_error("Requested the internal energy of oil but it is disabled");
 
-        // compute the specific internal energy for the specified tempature. We use linear
-        // interpolation here despite the fact that the underlying heat capacities are
-        // piecewise linear (which leads to a quadratic function)
-        return internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+        if (!enableJouleThomson_) {
+            // compute the specific internal energy for the specified tempature. We use linear
+            // interpolation here despite the fact that the underlying heat capacities are
+            // piecewise linear (which leads to a quadratic function)
+            return internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+        }
+        else {
+            Evaluation Tref = oildentRefTemp_[regionIdx];
+            Evaluation Pref = oilJTRefPres_[regionIdx]; 
+            Scalar JTC = oilJTC_[regionIdx]; // if JTC is default then JTC is calculated
+
+            Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs);
+            Evaluation Cp = internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true)/temperature;
+            Evaluation density = invB * (oilReferenceDensity(regionIdx) + Rs * rhoRefG_[regionIdx]);
+
+            Evaluation enthalpyPres;
+            if  (JTC != 0) {
+                enthalpyPres = -Cp * JTC * (pressure -Pref);
+            }
+            else if(enableThermalDensity_) {
+                Scalar c1T = oildentCT1_[regionIdx];
+                Scalar c2T = oildentCT2_[regionIdx];
+
+                Evaluation alpha = (c1T + 2 * c2T * (temperature - Tref)) /
+                    (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
+
+                const int N = 100; // value is experimental
+                Evaluation deltaP = (pressure - Pref)/N;
+                Evaluation enthalpyPresPrev = 0;
+                for (size_t i = 0; i < N; ++i) {
+                    Evaluation Pnew = Pref + i * deltaP;
+                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rs) *
+                                     (oilReferenceDensity(regionIdx) + Rs * rhoRefG_[regionIdx]) ;
+                    // see e.g.https://en.wikipedia.org/wiki/Joule-Thomson_effect for a derivation of the Joule-Thomson coeff.
+                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;  
+                    Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
+                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres; 
+                    enthalpyPresPrev = enthalpyPres;
+                }
+            }
+            else {
+                  throw std::runtime_error("Requested Joule-thomson calculation but thermal oil density (OILDENT) is not provided");
+            }
+
+            Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
+
+            return enthalpy - pressure/density;
+        }
     }
 
     /*!
@@ -418,6 +501,12 @@ public:
     bool enableInternalEnergy() const
     { return enableInternalEnergy_; }
 
+    const std::vector<Scalar>& oilJTRefPres() const
+    { return  oilJTRefPres_; }
+
+     const std::vector<Scalar>&  oilJTC() const
+    { return oilJTC_; }
+
     bool operator==(const OilPvtThermal<Scalar>& data) const
     {
         if (isothermalPvt_ && !data.isothermalPvt_)
@@ -434,8 +523,11 @@ public:
                 this->oildentRefTemp() == data.oildentRefTemp() &&
                 this->oildentCT1() == data.oildentCT1() &&
                 this->oildentCT2() == data.oildentCT2() &&
+                this->oilJTRefPres() == data.oilJTRefPres() &&
+                this->oilJTC() == data.oilJTC() &&
                 this->internalEnergyCurves() == data.internalEnergyCurves() &&
                 this->enableThermalDensity() == data.enableThermalDensity() &&
+                this->enableJouleThomson() == data.enableJouleThomson() &&
                 this->enableThermalViscosity() == data.enableThermalViscosity() &&
                 this->enableInternalEnergy() == data.enableInternalEnergy();
     }
@@ -453,8 +545,11 @@ public:
         oildentRefTemp_ = data.oildentRefTemp_;
         oildentCT1_ = data.oildentCT1_;
         oildentCT2_ = data.oildentCT2_;
+        oilJTRefPres_ =  data.oilJTRefPres_;
+        oilJTC_ =  data.oilJTC_;
         internalEnergyCurves_ = data.internalEnergyCurves_;
         enableThermalDensity_ = data.enableThermalDensity_;
+        enableJouleThomson_ = data.enableJouleThomson_;
         enableThermalViscosity_ = data.enableThermalViscosity_;
         enableInternalEnergy_ = data.enableInternalEnergy_;
 
@@ -476,10 +571,16 @@ private:
     std::vector<Scalar> oildentCT1_;
     std::vector<Scalar> oildentCT2_;
 
+    std::vector<Scalar> oilJTRefPres_;
+    std::vector<Scalar> oilJTC_;
+
+    std::vector<Scalar> rhoRefG_;
+
     // piecewise linear curve representing the internal energy of oil
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;
 
     bool enableThermalDensity_;
+    bool enableJouleThomson_;
     bool enableThermalViscosity_;
     bool enableInternalEnergy_;
 };

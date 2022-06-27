@@ -103,6 +103,19 @@ public:
     static Scalar criticalPressure()
     { throw std::runtime_error("Not implemented: Component::criticalPressure()"); }
 
+
+    /*!
+     * \brief Returns the acentric factor of the component.
+     */
+    static Scalar acentricFactor()
+    { throw std::runtime_error("Not implemented: acentricFactor of the component"); }
+
+    /*!
+     * \brief Returns the critical volume in \f$\mathrm{[m2/kmol]}\f$ of the component.
+     */
+    static Scalar criticalVolume()
+    { throw std::runtime_error("Not implemented: criticalVolume of the compoenent"); }
+
     /*!
      * \brief Returns the temperature in \f$\mathrm{[K]}\f$ at the component's triple point.
      */
