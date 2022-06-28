@@ -177,8 +177,8 @@ namespace Opm {
                                            unsigned phaseIdx,
                                            unsigned compIdx)
         {
-            assert(0 <= phaseIdx && phaseIdx < numPhases);
-            assert(0 <= compIdx && compIdx < numComponents);
+            assert(phaseIdx < numPhases);
+            assert(compIdx < numComponents);
 
             LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
 

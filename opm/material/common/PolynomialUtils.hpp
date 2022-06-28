@@ -369,7 +369,7 @@ unsigned cubicRoots(SolContainer* sol,
 
         // Find one real root of a depressed cubic using hyperbolic method. Different solutions depending on 
         // sign of p
-        Scalar t;
+        Scalar t = 0;
         if (p < 0) {
             // Help calculation
             Scalar theta = (1.0 / 3.0) * acosh( ((-3.0 * abs(q)) / (2.0 * p)) * sqrt(-3.0 / p) );

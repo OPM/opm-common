@@ -182,8 +182,8 @@ namespace Opm {
                                            unsigned phaseIdx,
                                            unsigned compIdx)
         {
-            assert(0 <= phaseIdx && phaseIdx < numPhases);
-            assert(0 <= compIdx && compIdx < numComponents);
+            assert(phaseIdx < numPhases);
+            assert(compIdx < numComponents);
 
             // TODO: here the derivatives for the phi are dropped. Should we keep the derivatives against the pressure
             // and temperature?
