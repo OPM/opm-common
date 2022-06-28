@@ -61,7 +61,7 @@ namespace {
         if (item.defaultApplied(0))
             return true;
 
-        if (item.get<int>(0) == 0)
+        if (item.get<int>(0) <= 0)
             return true;
 
         return false;
