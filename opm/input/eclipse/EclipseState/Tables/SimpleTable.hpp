@@ -84,7 +84,7 @@ namespace Opm {
 
     protected:
         TableSchema m_schema;
-        OrderedMap<std::string, TableColumn> m_columns;
+        OrderedMap<TableColumn> m_columns;
         bool m_jfunc = false;
     };
 }

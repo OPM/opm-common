@@ -132,7 +132,7 @@ namespace Opm {
         std::unordered_map<std::string, std::string> units;
 
         IOrderSet<std::string> define_order;
-        OrderedMap<std::string, UDQIndex> input_index;
+        OrderedMap<UDQIndex> input_index;
         std::map<UDQVarType, std::size_t> type_count;
     };
 }

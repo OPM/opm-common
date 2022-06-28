@@ -34,19 +34,11 @@ namespace Opm {
 
 namespace OrderedMapDetail
 {
-template<class T, class A>
-//typename std::enable_if_t<!std::is_same<T,std::string>::value, std::string>
-std::string
-findSimilarStrings(const std::string&,
-                   const std::vector<T,A>&)
-{
-    return {};
-}
 
-template<class A, class K>
+template<class T, class A>
 std::string
 findSimilarStrings(std::string str,
-                   const std::vector<std::pair<std::string, K>,A>& storage)
+                   const std::vector<std::pair<std::string, T>,A>& storage)
 {
     auto toUpper = [](const char c){ return std::toupper(c);};
     std::transform(str.begin(), str.end(), str.begin(), toUpper);
@@ -75,13 +67,56 @@ findSimilarStrings(std::string str,
     auto concatedStr = concated.str();
     return concatedStr.substr(0, concatedStr.size()-2);
 }
+
+template<std::size_t MAX_CHARS>
+class TruncatedStringHash
+{
+public:
+    std::size_t operator()(const std::string_view& key) const
+    {
+        return hasher(key.substr(0, MAX_CHARS));
+    }
+private:
+    std::hash<std::string_view> hasher;
+};
+
+
+template<>
+class TruncatedStringHash<std::string::npos> : public std::hash<std::string_view>
+{};
+
+template<std::size_t MAX_CHARS>
+struct TruncatedStringEquals
+{
+    bool operator()(const std::string& str1, const std::string& str2) const
+    {
+        return str1.substr(0, MAX_CHARS) == str2.substr(0, MAX_CHARS);
+    }
+};
+
+template<>
+struct TruncatedStringEquals<std::string::npos> : public std::equal_to<std::string>
+{};
+
 } // end namespace detail
 
-template <typename K, typename T>
+/// \brief A map with iteration in the order of insertion.
+///
+/// Each entry has an associated index indicating when a value with that key was
+/// first inserted. When itering over it's entries values with lower insertion index
+/// are traversed before ones with an higher insertion index.
+///
+/// \tparam MAX_CHARS The maximum number of characters that are use a keys. Default is
+///                   std::string::npos, which honors all characters. Any keys with the
+///                   same first MAX_CHARS characters are considered equal.
+///
+template <typename T, std::size_t MAX_CHARS = std::string::npos>
 class OrderedMap {
 public:
-    using storage_type = typename std::vector<std::pair<K,T>>;
-    using index_type = typename std::unordered_map<K,std::size_t>;
+    using storage_type = typename std::vector<std::pair<std::string,T>>;
+    using index_type = typename std::unordered_map<std::string,std::size_t,
+                                                   Opm::OrderedMapDetail::TruncatedStringHash<MAX_CHARS>,
+                                                   Opm::OrderedMapDetail::TruncatedStringEquals<MAX_CHARS>>;
     using iter_type = typename storage_type::iterator;
     using const_iter_type = typename storage_type::const_iterator;
 
@@ -103,13 +138,13 @@ public:
 
     const storage_type& getStorage() const { return m_vector; }
 
-    std::size_t count(const K& key) const {
+    std::size_t count(const std::string& key) const {
         return this->m_map.count(key);
     }
 
 
 
-    T& operator[](const K& key) {
+    T& operator[](const std::string& key) {
         if (this->count(key) == 0)
             this->insert( std::make_pair(key, T()));
 
@@ -117,7 +152,7 @@ public:
     }
 
 
-    std::size_t erase(const K& key) {
+    std::size_t erase(const std::string& key) {
         if (this->count(key) == 0)
             return 0;
 
@@ -136,7 +171,7 @@ public:
     }
 
 
-    void insert(std::pair<K,T> key_value_pair) {
+    void insert(std::pair<std::string,T> key_value_pair) {
         if (this->count(key_value_pair.first) > 0) {
             auto iter = m_map.find( key_value_pair.first );
             size_t index = iter->second;
@@ -149,7 +184,7 @@ public:
     }
 
 
-    T& get(const K& key) {
+    T& get(const std::string& key) {
         auto iter = m_map.find( key );
         if (iter == m_map.end())
         {
@@ -176,7 +211,7 @@ public:
         return m_vector[index].second;
     }
 
-    const T& get(const K& key) const {
+    const T& get(const std::string& key) const {
         const auto& iter = this->m_map.find( key );
         if (iter == m_map.end())
         {
@@ -212,7 +247,7 @@ public:
         return this->iget(index);
     }
 
-    const T& at(const K& key) const {
+    const T& at(const std::string& key) const {
         return this->get(key);
     }
 
@@ -220,7 +255,7 @@ public:
         return this->iget(index);
     }
 
-    T& at(const K& key) {
+    T& at(const std::string& key) {
         return this->get(key);
     }
 
@@ -246,7 +281,7 @@ public:
         return m_vector.end();
     }
 
-    iter_type find(const K& key) {
+    iter_type find(const std::string& key) {
         const auto map_iter = this->m_map.find(key);
         if (map_iter == this->m_map.end())
             return this->m_vector.end();
@@ -254,7 +289,7 @@ public:
         return std::next(this->m_vector.begin(), map_iter->second);
     }
 
-    const_iter_type find(const K& key) const {
+    const_iter_type find(const std::string& key) const {
         const auto map_iter = this->m_map.find(key);
         if (map_iter == this->m_map.end())
             return this->m_vector.end();
@@ -262,7 +297,8 @@ public:
         return std::next(this->m_vector.begin(), map_iter->second);
     }
 
-    bool operator==(const OrderedMap<K,T>& data) const {
+    template<size_t n>
+    bool operator==(const OrderedMap<T,n>& data) const {
         return this->getIndex() == data.getIndex() &&
                this->getStorage() == data.getStorage();
     }
