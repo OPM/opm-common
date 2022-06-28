@@ -109,7 +109,7 @@ public:
         std::vector<Scalar> LBC = {0.10230,
                                    0.023364,
                                    0.058533,
-                                   -0.040758,  // trykkfeil i 1964-artikkel: -0.40758
+                                   -0.040758,  // typo in 1964-paper: -0.40758
                                    0.0093324};
 
         LhsEval sumLBC = 0.0;
@@ -120,92 +120,6 @@ public:
         return (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot)/1e3; // mPas-> Pas
     }
 
-
-        // Improved LBC model for CO2 rich mixtures. (Lansangan, Taylor, Smith & Kovarik - 1993)
-        template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
-        static LhsEval LBCmodified(const FluidState& fluidState,
-                          const Params& /*paramCache*/,
-                          unsigned phaseIdx)
-        {
-        const Scalar MPa_atm = 0.101325;
-        const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
-        const auto& rho = Opm::decay<LhsEval>(fluidState.density(phaseIdx));
-
-        LhsEval sumMm = 0.0;
-        LhsEval sumVolume = 0.0;
-        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa;
-            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol;
-            const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            const Scalar v_c = FluidSystem::criticalVolume(compIdx);  // in m3/kmol
-            sumMm += x*Mm;
-            sumVolume += x*v_c;
-        }
-
-        LhsEval rho_pc = sumMm/sumVolume; //mixture pseudocritical density
-        LhsEval rho_r = rho/rho_pc;
-
-        LhsEval xxT_p = 0.0;  // x*x*T_c/p_c
-        LhsEval xxT2_p = 0.0; // x*x*T^2_c/p_c
-        for (unsigned i_compIdx = 0; i_compIdx < FluidSystem::numComponents; ++i_compIdx) {
-            const Scalar& T_c_i = FluidSystem::criticalTemperature(i_compIdx);
-            const Scalar& p_c_i = FluidSystem::criticalPressure(i_compIdx)/1e6; // in Mpa;
-            const auto& x_i = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, i_compIdx));
-            for (unsigned j_compIdx = 0; j_compIdx < FluidSystem::numComponents; ++j_compIdx) {
-                const Scalar& T_c_j = FluidSystem::criticalTemperature(j_compIdx);
-                const Scalar& p_c_j = FluidSystem::criticalPressure(j_compIdx)/1e6; // in Mpa;
-                const auto& x_j = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, j_compIdx));
-
-                const Scalar T_c_ij = std::sqrt(T_c_i*T_c_j);
-                const Scalar p_c_ij = 8.0*T_c_ij / Opm::pow(Opm::pow(T_c_i/p_c_i,1.0/3)+Opm::pow(T_c_j/p_c_j,1.0/3),3);
-
-                xxT_p += x_i*x_j*T_c_ij/p_c_ij;
-                xxT2_p += x_i*x_j*T_c_ij*T_c_ij/p_c_ij;
-            }
-        }
-
-        const LhsEval T_pc = xxT2_p/xxT_p; //mixture pseudocritical temperature
-        const LhsEval p_pc = T_pc/xxT_p;   //mixture pseudocritical pressure
-
-        LhsEval p_pca = p_pc / MPa_atm;
-        LhsEval zeta_tot = Opm::pow(T_pc / (Opm::pow(sumMm,3.0) * Opm::pow(p_pca,4.0)),1./6);
-
-        LhsEval my0 = 0.0;
-        LhsEval sumxrM = 0.0;
-        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa;
-            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol;
-            const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            Scalar p_ca = p_c / MPa_atm;
-            Scalar zeta = std::pow(T_c / (std::pow(Mm,3.0) * std::pow(p_ca,4.0)),1./6);
-            LhsEval T_r = T/T_c;
-            LhsEval xrM = x * std::pow(Mm,0.5);
-            LhsEval mys = 0.0;
-            if (T_r <=1.5) {
-                mys = 34.0e-5*Opm::pow(T_r,0.94)/zeta;
-            } else {
-                mys = 17.78e-5*Opm::pow(4.58*T_r - 1.67, 0.625)/zeta;
-            }
-            my0 += xrM*mys;
-            sumxrM += xrM;
-            }
-            my0 /= sumxrM;
-
-            std::vector<Scalar> LBC = {0.10230,
-                                   0.023364,
-                                   0.058533,
-                                   -0.040758,  // trykkfeil i 1964-artikkel: -0.40758
-                                   0.0093324};
-
-            LhsEval sumLBC = 0.0;
-            for (int i = 0; i < 5; ++i) {
-                sumLBC += Opm::pow(rho_r,i)*LBC[i];
-            }
-
-            return (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot -1.8366e-8*Opm::pow(rho_r,13.992))/1e3; // mPas-> Pas
-        }
 };
 
 }; // namespace Opm

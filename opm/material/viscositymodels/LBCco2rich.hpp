@@ -43,7 +43,7 @@ public:
 
         // Improved LBC model for CO2 rich mixtures. (Lansangan, Taylor, Smith & Kovarik - 1993)
         template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
-        static LhsEval LBCmodified(const FluidState& fluidState,
+        static LhsEval LBCco2rich(const FluidState& fluidState,
                           const Params& /*paramCache*/,
                           unsigned phaseIdx)
         {
@@ -116,7 +116,7 @@ public:
             std::vector<Scalar> LBC = {0.10230,
                                    0.023364,
                                    0.058533,
-                                   -0.040758,  // trykkfeil i 1964-artikkel: -0.40758
+                                   -0.040758,  // typo in 1964-paper: -0.40758
                                    0.0093324};
 
             LhsEval sumLBC = 0.0;
@@ -130,4 +130,4 @@ public:
 
 }; // namespace Opm
 
-#endif // LBC_MODIFIED_HPP
+#endif // LBC_co2rich_HPP
