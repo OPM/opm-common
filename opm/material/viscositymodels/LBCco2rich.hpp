@@ -27,8 +27,8 @@
  * \copydoc Opm::ViscosityModels
  */
 
-#ifndef LBC_MODIFIED_HPP
-#define LBC_MODIFIED_HPP
+#ifndef OPM_LBC_CO2RICH_HPP
+#define OPM_LBC_CO2RICH_HPP
 
 #include <cmath>
 #include <vector>
@@ -130,4 +130,4 @@ public:
 
 }; // namespace Opm
 
-#endif // LBC_co2rich_HPP
+#endif // OPM_LBC_CO2RICH_HPP

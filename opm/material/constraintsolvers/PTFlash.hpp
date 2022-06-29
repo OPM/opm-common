@@ -2,6 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright 2022 NORCE.
+  Copyright 2022 SINTEF Digital, Mathematics and Cybernetics.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -1209,7 +1210,10 @@ protected:
             }
 
         }
-        throw std::runtime_error("Successive substitution composition update did not converge within maxIterations");
+        if (!newton_afterwards) {
+            throw std::runtime_error(
+                    "Successive substitution composition update did not converge within maxIterations");
+        }
     }
     
 };//end PTFlash
