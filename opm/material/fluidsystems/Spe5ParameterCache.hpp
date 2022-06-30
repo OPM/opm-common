@@ -190,7 +190,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.getaCache(compIdx,compJIdx);
         default:
             throw std::logic_error("The aCache() parameter is only defined for "
-                                   "oil phase");
+                                   "oil and gas phase");
         };
     }
 
