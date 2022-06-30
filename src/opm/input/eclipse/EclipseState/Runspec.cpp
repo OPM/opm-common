@@ -51,7 +51,8 @@ namespace {
             deck.hasKeyword<Opm::ParserKeywords::WATER>(),
             deck.hasKeyword<Opm::ParserKeywords::SOLVENT>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMER>(),
-            deck.hasKeyword<Opm::ParserKeywords::THERMAL>(),
+            deck.hasKeyword<Opm::ParserKeywords::THERMAL>() ||
+            deck.hasKeyword<Opm::ParserKeywords::TEMP>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMW>(),
             deck.hasKeyword<Opm::ParserKeywords::FOAM>(),
             deck.hasKeyword<Opm::ParserKeywords::BRINE>(),
