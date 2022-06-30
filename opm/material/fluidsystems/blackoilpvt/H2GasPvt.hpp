@@ -139,7 +139,8 @@ public:
     Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
-                         const Evaluation& /*Rv*/) const
+                         const Evaluation& /*Rv*/,
+                         const Evaluation& /*Rvw*/) const
     { return saturatedViscosity(regionIdx, temperature, pressure); }
 
     /*!
@@ -160,7 +161,8 @@ public:
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
-                                            const Evaluation& /*Rv*/) const
+                                            const Evaluation& /*Rv*/,
+                                            const Evaluation& /*Rvw*/) const
     { return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure); }
 
     /*!
