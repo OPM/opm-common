@@ -117,7 +117,7 @@ bool testPTFlash(const std::string& flash_twophase_method)
     }
 
     const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
-    const int flash_verbosity = 1;
+    const int flash_verbosity = 0;
 
     // TODO: should we set these?
     // Set initial K and L
@@ -130,7 +130,7 @@ bool testPTFlash(const std::string& flash_twophase_method)
 
     const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
+    Flash::solve(fluid_state, z, spatialIdx, flash_twophase_method, flash_tolerance, flash_verbosity);
 
     return result_okay(fluid_state);
 }
@@ -242,7 +242,9 @@ int main(int argc, char **argv)
     }
 
     if (!test_passed) {
-        throw std::runtime_error(" PTFlash tests failed");
+        throw std::runtime_error(" test_threecomponents_ptflash tests FAILED");
+    } else {
+        std::cout << "test_threecomponents_ptflash testing is SUCCESSFUL";
     }
 
     return 0;

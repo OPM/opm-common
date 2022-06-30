@@ -181,7 +181,6 @@ namespace Opm {
 
             LhsEval dens;
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                // paramCache.updatePhase(fluidState, phaseIdx);
                 dens = fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx);
             }
             return dens;
@@ -210,11 +209,7 @@ namespace Opm {
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
-            // TODO: here the derivatives for the phi are dropped. Should we keep the derivatives against the pressure
-            // and temperature?
-            LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx); 
-            //Scalar phi = Opm::getValue(
-            //        PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+            LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
             return phi;
         }
 

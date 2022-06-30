@@ -86,14 +86,11 @@ public:
       * 4th edition, McGraw-Hill, 1987, pp. 42-44, 143-145
       */
     template <class FluidState, class Params, class LhsEval = typename FluidState::Scalar>
-    static LhsEval computeFugacityCoefficient(const FluidState& fs_arg,
-                                              const Params& params_arg,
+    static LhsEval computeFugacityCoefficient(const FluidState& fs,
+                                              const Params& params,
                                               unsigned phaseIdx,
                                               unsigned compIdx)
     {
-        auto fs = fs_arg;
-        auto params = params_arg;
-
         // note that we normalize the component mole fractions, so
         // that their sum is 100%. This increases numerical stability
         // considerably if the fluid state is not physical.

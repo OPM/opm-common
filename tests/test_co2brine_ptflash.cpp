@@ -127,7 +127,7 @@ bool testPTFlash(const std::string& flash_twophase_method)
 
     const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
+    Flash::solve(fluid_state, z, spatialIdx, flash_twophase_method, flash_tolerance, flash_verbosity);
 
     return result_okay(fluid_state);
 }
