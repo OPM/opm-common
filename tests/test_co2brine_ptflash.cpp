@@ -1,6 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
+  Copyright 2022 NORCE.
   Copyright 2022 SINTEF Digital, Mathematics and Cybernetics.
 
   This file is part of the Open Porous Media project (OPM).
@@ -208,24 +209,119 @@ bool result_okay(const FluidState& fluid_state)
     return res_okay;
 }
 
+bool testPTFlashSingle(const std::string& flash_twophase_method)
+{
+    // setting up a system that we know activates the calculations for a single-phase system
+    // Initial: the primary variables are, pressure, molar fractions of the first and second component
+    ComponentVector comp;
+    Evaluation p_init = Evaluation::createVariable(9999307.201, 0);
+    comp[0] = Evaluation::createVariable(0.99772060, 1);
+    comp[1] = 1. - comp[0];
+    Scalar temp = 300.0;
+    ComponentVector sat;
+    sat[0] = 1.0; sat[1] = 1.0-sat[0];
+
+
+
+
+    // FluidState will be the input for the flash calculation
+    FluidState fluid_state;
+    fluid_state.setPressure(FluidSystem::oilPhaseIdx, p_init);
+    fluid_state.setPressure(FluidSystem::gasPhaseIdx, p_init);
+
+    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+
+    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+
+    // It is used here only for calculate the z
+    fluid_state.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
+    fluid_state.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
+
+    fluid_state.setTemperature(temp);
+
+    // ParameterCache paramCache;
+    {
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
+        paramCache.updatePhase(fluid_state, FluidSystem::oilPhaseIdx);
+        paramCache.updatePhase(fluid_state, FluidSystem::gasPhaseIdx);
+        fluid_state.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fluid_state, paramCache, FluidSystem::oilPhaseIdx));
+        fluid_state.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fluid_state, paramCache, FluidSystem::gasPhaseIdx));
+    }
+
+    ComponentVector z(0.); // TODO; z needs to be normalized.
+    {
+        Scalar sumMoles = 0.0;
+        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                Scalar tmp = Opm::getValue(fluid_state.molarity(phaseIdx, compIdx) * fluid_state.saturation(phaseIdx));
+                z[compIdx] += Opm::max(tmp, 1e-8);
+                sumMoles += tmp;
+            }
+        }
+        z /= sumMoles;
+        // p And z is the primary variables
+        Evaluation z_last = 1.;
+        for (unsigned compIdx = 0; compIdx < numComponents - 1; ++compIdx) {
+            z[compIdx] = Evaluation::createVariable(Opm::getValue(z[compIdx]), int(compIdx) + 1);
+            z_last -= z[compIdx];
+        }
+        z[numComponents - 1] = z_last;
+    }
+
+    const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
+    const int flash_verbosity = 1;
+
+    // TODO: should we set these?
+    // Set initial K and L
+    for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
+        fluid_state.setKvalue(compIdx, Ktmp);
+    }
+    const Evaluation Ltmp = 1.;
+    fluid_state.setLvalue(Ltmp);
+
+    const int spatialIdx = 0;
+    using Flash = Opm::PTFlash<double, FluidSystem>;
+    Flash::solve(fluid_state, z, spatialIdx, flash_verbosity, flash_twophase_method, flash_tolerance);
+
+    return 1;
+
+    //TODO: add when we have something to compare against return result_okay(fluid_state);
+}
+
 int main(int argc, char **argv)
 {
     Dune::MPIHelper::instance(argc, argv);
-    bool test_passed = true;
+    bool test_passed_two = true;
+    bool test_passed_single = true;
 
     std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
 
     for (const auto& method : test_methods) {
         if (!testPTFlash(method) ) {
-            std::cout << method << " solution for PTFlash failed " << std::endl;
-            test_passed = false;
+            std::cout << method << " solution for PTFlash two-phase case failed " << std::endl;
+            test_passed_two = false;
         } else {
-            std::cout << method << " solution for PTFlash passed " << std::endl;
+            std::cout << method << " solution for PTFlash two-phase case passed " << std::endl;
+        }
+
+        // for the single-phase case (still TODO add refrence and result_okay test)
+        if (!testPTFlashSingle(method) ) {
+            std::cout << method << " solution for PTFlash single-phase failed " << std::endl;
+            test_passed_single = false;
+        } else {
+            std::cout << method << " solution for PTFlash single-phase passed " << std::endl;
         }
     }
 
-    if (!test_passed) {
-        throw std::runtime_error(" PTFlash tests failed");
+    if (!test_passed_two) {
+        throw std::runtime_error(" PTFlash tests two-phase case failed");
+    }
+
+    if (!test_passed_single) {
+        throw std::runtime_error(" PTFlash tests single-phase case failed");
     }
 
     return 0;
