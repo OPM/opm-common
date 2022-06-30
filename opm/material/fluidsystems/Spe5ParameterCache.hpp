@@ -182,7 +182,7 @@ public:
      * \param compIdx The component phase of interest
      * \param compJIdx Additional component index
      */
-    Scalar aCache(unsigned phaseIdx, unsigned compIdx, unsigned compJIdx)
+    Scalar aCache(unsigned phaseIdx, unsigned compIdx, unsigned compJIdx) const
     {
         switch (phaseIdx)
         {

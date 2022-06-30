@@ -65,13 +65,13 @@ class PTFlash
     enum { numComponents = FluidSystem::numComponents };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx};
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx};
-    enum { numMiscibleComponents = FluidSystem::numMiscibleComponents}; //octane, co2 // should be brine instead of brine here.
+    enum { numMiscibleComponents = FluidSystem::numMiscibleComponents};
     enum { numMisciblePhases = FluidSystem::numMisciblePhases}; //oil, gas
     enum {
         numEq =
         numMisciblePhases+
         numMisciblePhases*numMiscibleComponents
-    };  //pressure, saturation, composition
+    };
 
 public:
     /*!
@@ -82,9 +82,9 @@ public:
     static void solve(FluidState& fluid_state,
                       const Dune::FieldVector<typename FluidState::Scalar, numComponents>& z,
                       int spatialIdx,
-                      int verbosity,
                       std::string twoPhaseMethod,
-                      Scalar tolerance = -1.)
+                      Scalar tolerance = -1.,
+                      int verbosity = 0)
     {
 
         using InputEval = typename FluidState::Scalar;
@@ -163,20 +163,16 @@ public:
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
             L_scalar = li_single_phase_label_(fluid_state_scalar, z_scalar, verbosity);
         }
+        fluid_state_scalar.setLvalue(L_scalar);
 
         // Print footer
         if (verbosity >= 1) {
             std::cout << "********" << std::endl;
         }
 
-        // all the solution should be processed in scalar form
-        // now we should update the derivatives
-        // TODO: should be able the handle the derivatives directly, which will affect the final organization
-        // of the code
-        // TODO: Does fluid_state_scalar contain z with derivatives?
-        fluid_state_scalar.setLvalue(L_scalar);
-        fluid_state.setLvalue(L_scalar);
-        // ensure that things in fluid_state_scalar is transformed to fluid_state 
+        // the flash solution process were performed in scalar form, after the flash calculation finishes,
+        // we transform the derivatives to the final solution
+        // ensure that things in fluid_state_scalar is transformed to fluid_state
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 const auto x_i = fluid_state_scalar.moleFraction(oilPhaseIdx, compIdx);
                 fluid_state.setMoleFraction(oilPhaseIdx, compIdx, x_i);
@@ -188,6 +184,7 @@ public:
             fluid_state.setKvalue(compIdx, K_scalar[compIdx]);
             fluid_state_scalar.setKvalue(compIdx, K_scalar[compIdx]);
         }
+        fluid_state.setLvalue(L_scalar);
         updateDerivatives_(fluid_state_scalar, z, fluid_state, is_single_phase);
     }//end solve
 
@@ -279,7 +276,6 @@ protected:
         return L;
     }
 
-    // TODO: not totally sure whether ValueType can be obtained from Vector::field_type
     template <class Vector>
     static typename Vector::field_type rachfordRice_g_(const Vector& K, typename Vector::field_type L, const Vector& z)
     {
@@ -394,12 +390,13 @@ protected:
         typename Vector::field_type gLmin = rachfordRice_g_(K, Lmin, z);
       
         // Print new header
-        if (verbosity == 3 || verbosity == 4) {
+        if (verbosity >= 3) {
                 std::cout << std::setw(10) << "Iteration" << std::setw(16) << "g(Lmid)" << std::setw(16) << "L" << std::endl;
         }
-            
+
+        constexpr int max_it = 100;
         // Bisection loop
-        for (int iteration=1; iteration<100; ++iteration){
+        for (int iteration = 0; iteration < max_it; ++iteration){
             // New midpoint
             auto L = (Lmin + Lmax) / 2;
             auto gMid = rachfordRice_g_(K, L, z);
@@ -423,7 +420,7 @@ protected:
                 gLmin = gMid;
             }
         }
-        throw std::runtime_error(" Rachford-Rice with bisection failed!");
+        throw std::runtime_error(" Rachford-Rice with bisection failed with " + std::to_string(max_it) + " iterations!");
     }
 
     template <class FlashFluidState, class ComponentVector>
@@ -599,9 +596,6 @@ protected:
         }
     }
 
-    // TODO: refactoring the template parameter later
-    // For the function flash_2ph, we should carry the derivatives in, and
-    // return with the correct and updated derivatives
     template <class FluidState, class ComponentVector>
     static void flash_2ph(const ComponentVector& z_scalar,
                           const std::string& flash_2p_method,
@@ -653,7 +647,9 @@ protected:
 
         // Compute x and y from K, L and Z
         computeLiquidVapor_(fluid_state, L, K, z);
-        std::cout << " the current L is " << Opm::getValue(L) << std::endl;
+        if (verbosity >= 1) {
+            std::cout << " the current L is " << Opm::getValue(L) << std::endl;
+        }
 
         // Print initial condition
         if (verbosity >= 1) {
@@ -732,7 +728,9 @@ protected:
         while (iter < max_iter) {
             assembleNewton_<CompositionalFluidState<Eval, FluidSystem>, ComponentVector, num_primary_variables, num_equations>
                     (flash_fluid_state, z, jac, res);
-            std::cout << " newton residual is " << res.two_norm() << std::endl;
+            if (verbosity >= 1) {
+                std::cout << " newton residual is " << res.two_norm() << std::endl;
+            }
             converged = res.two_norm() < tolerance;
             if (converged) {
                 break;
@@ -763,15 +761,17 @@ protected:
                 }
             }
         }
-        for (unsigned i = 0; i < num_equations; ++i) {
-            for (unsigned j = 0; j < num_primary_variables; ++j) {
-                std::cout << " " << jac[i][j] ;
+        if (verbosity >= 1) {
+            for (unsigned i = 0; i < num_equations; ++i) {
+                for (unsigned j = 0; j < num_primary_variables; ++j) {
+                    std::cout << " " << jac[i][j];
+                }
+                std::cout << std::endl;
             }
             std::cout << std::endl;
         }
-        std::cout << std::endl;
         if (!converged) {
-            throw std::runtime_error(" Newton composition update did not converge within maxIterations");
+            throw std::runtime_error(" Newton composition update did not converge within maxIterations " + std::to_string(max_iter));
         }
 
         // fluid_state is scalar, we need to update all the values for fluid_state here

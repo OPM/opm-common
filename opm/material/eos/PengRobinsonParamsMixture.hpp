@@ -70,7 +70,7 @@ public:
     /*!
      * \brief TODO
      */
-    Scalar getaCache(unsigned compIIdx, unsigned compJIdx )
+    Scalar getaCache(unsigned compIIdx, unsigned compJIdx ) const
     {
         return aCache_[compIIdx][compJIdx];
     }

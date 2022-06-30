@@ -2,7 +2,8 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright 2022 NORCE.
-  
+  Copyright 2022 SINTEF Digital, Mathematics and Cybernetics.
+
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -73,15 +74,7 @@ public:
                      unsigned phaseIdx,
                      int exceptQuantities = ParentType::None)
     {
-        // if (phaseIdx != oilPhaseIdx)
-        //     return;
-
         updateEosParams(fluidState, phaseIdx, exceptQuantities);
-
-        // if we don't need to recalculate the molar volume, we exit
-        // here
-        // if (VmUpToDate_[phaseIdx])
-        //     return;
 
         // update the phase's molar volume
         updateMolarVolume_(fluidState, phaseIdx);
@@ -117,7 +110,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.a();
         default:
             throw std::logic_error("The a() parameter is only defined for "
-                                   "oil phases");
+                                   "oil and gas phases");
         };
     }
 
@@ -134,7 +127,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.b();
         default:
             throw std::logic_error("The b() parameter is only defined for "
-                                   "oil phase");
+                                   "oil and gas phase");
         };
     }
 
@@ -154,7 +147,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.pureParams(compIdx).a();
         default:
             throw std::logic_error("The a() parameter is only defined for "
-                                   "oil phase");
+                                   "oil and gas phase");
         };
     }
 
@@ -173,7 +166,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.pureParams(compIdx).b();
         default:
             throw std::logic_error("The b() parameter is only defined for "
-                                   "oil phase");
+                                   "oil and gas phase");
         };
     }
 
@@ -186,7 +179,7 @@ public:
      * \param compIdx The component phase of interest
      * \param compJIdx Additional component index
      */
-    Scalar aCache(unsigned phaseIdx, unsigned compIdx, unsigned compJIdx)
+    Scalar aCache(unsigned phaseIdx, unsigned compIdx, unsigned compJIdx) const
     {
         switch (phaseIdx)
         {
@@ -194,7 +187,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.getaCache(compIdx,compJIdx);
         default:
             throw std::logic_error("The aCache() parameter is only defined for "
-                                   "oil phase");
+                                   "oil and gas phase");
         };
     }
 
@@ -235,9 +228,6 @@ public:
                          unsigned phaseIdx,
                          int exceptQuantities = ParentType::None)
     {
-        // if (phaseIdx != oilPhaseIdx)
-        //     return;
-
         if (!(exceptQuantities & ParentType::Temperature))
         {
             updatePure_(fluidState, phaseIdx);
