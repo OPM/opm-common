@@ -1232,6 +1232,141 @@ COMPDAT
     BOOST_CHECK_EQUAL(sim_time1.year(), 2011);
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithMultipleWPIMULT) {
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+WELSPECS
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_1'     9   9   1   1 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   2   2 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   3   3 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   4   4 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+/
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_2'     8   8   1   1 'OPEN'       1*       50         2*            2*        'X'  22.100 /
+ 'OP_2'     8   8   2   2 'OPEN'       1*       50        2*            2*        'X'  22.100 /
+ 'OP_2'     8   8   3   3 'OPEN'       1*       50        2*            2*        'X'  22.100 /
+/
+DATES             -- 0
+ 20  JAN 2009 /
+/
+WPIMULT
+ 'OP_1'  2.0  /
+ 'OP_2'  3.0 /
+ 'OP_1'  0.8   -1 -1 -1 /  -- all connections
+ 'OP_2'  7.0 /
+/
+DATES             -- 1
+ 20  JAN 2010 /
+/
+WPIMULT
+ 'OP_1'  0.5  /
+/
+DATES             -- 2
+ 20  JAN 2011 /
+/
+
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_1'     9   9   1   1 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   2   2 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   3   3 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   4   4 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+/
+
+WPIMULT
+ 'OP_1'  2.0  /
+ 'OP_1'  0.8   0 0 0 /  -- all connections
+/
+
+DATES             -- 3
+ 20  JAN 2012 /
+/
+
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_1'     9   9   1   1 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   2   2 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   3   3 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   4   4 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+/
+
+WPIMULT
+ 'OP_1'  2.0  /
+ 'OP_1'  0.8 /  -- all connections
+/
+
+DATES             -- 4
+ 20  JAN 2013 /
+/
+
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_1'     9   9   1   1 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   2   2 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   3   3 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   4   4 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+/
+
+WPIMULT
+ 'OP_1'  2.0  /
+ 'OP_1'  0.8 /  -- all connections
+ 'OP_1'  0.50  2* 4 /
+ 'OP_1'  0.10  2* 4 /
+/
+DATES             -- 5
+ 20  JAN 2014 /
+/
+END
+)";
+
+    const auto& schedule = make_schedule(input);
+    const auto& cs0 = schedule.getWell("OP_1", 0).getConnections();
+    const auto& cs1 = schedule.getWell("OP_1", 1).getConnections();
+    const auto& cs2 = schedule.getWell("OP_1", 2).getConnections();
+    const auto& cs3 = schedule.getWell("OP_1", 3).getConnections();
+    const auto& cs4 = schedule.getWell("OP_1", 4).getConnections();
+    const auto& cs5 = schedule.getWell("OP_1", 5).getConnections();
+    const auto& cs0_2 = schedule.getWell("OP_2", 0).getConnections();
+    const auto& cs1_2 = schedule.getWell("OP_2", 1).getConnections();
+    const auto& cs2_2 = schedule.getWell("OP_2", 2).getConnections();
+
+    for (size_t i = 0; i < cs1_2.size(); ++i ) {
+        BOOST_CHECK_CLOSE(cs1_2.get(i).CF() / cs0_2.get(i).CF(), 7.0, 1.e-13);
+        BOOST_CHECK_CLOSE(cs2_2.get(i).CF() / cs1_2.get(i).CF(), 1.0, 1.e-13);
+    }
+    for (size_t i = 0; i < cs1.size(); ++i ) {
+        BOOST_CHECK_CLOSE(cs1.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
+        BOOST_CHECK_CLOSE(cs2.get(i).CF() / cs1.get(i).CF(), 0.5, 1.e-13);
+        BOOST_CHECK_CLOSE(cs3.get(i).CF() / cs0.get(i).CF(), 1.6, 1.e-13);
+        BOOST_CHECK_CLOSE(cs4.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
+    }
+
+    for (size_t i = 0; i < 3; ++i) {
+        BOOST_CHECK_CLOSE(cs5.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
+    }
+    BOOST_CHECK_CLOSE(cs5.get(3).CF() / cs0.get(3).CF(), 0.04, 1.e-13);
+}
+
+
 BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         Opm::Parser parser;
         const std::string input = R"(
