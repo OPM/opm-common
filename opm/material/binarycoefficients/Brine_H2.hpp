@@ -57,12 +57,13 @@ public:
     static void calculateMoleFractions(const Evaluation& temperature,
                                        const Evaluation& pg,
                                        Scalar salinity,
-                                       Evaluation& xH2)
+                                       Evaluation& xH2,
+                                       bool extrapolate = false)
     {
         // All intermediate calculations
         Evaluation lnYH2 = moleFractionGasH2_(temperature, pg);
         Evaluation lnPg = log(pg / 1e6);  // Pa --> MPa before ln
-        Evaluation lnPhiH2 = fugacityCoefficientH2(temperature, pg);
+        Evaluation lnPhiH2 = fugacityCoefficientH2(temperature, pg, extrapolate);
         Evaluation lnKh = henrysConstant_(temperature);
         Evaluation PF = computePoyntingFactor_(temperature, pg);
         Evaluation lnGammaH2 = activityCoefficient_(temperature, salinity);
@@ -153,10 +154,12 @@ public:
     * \param pg gas phase pressure [Pa] 
     */
     template <class Evaluation> 
-    static Evaluation fugacityCoefficientH2(const Evaluation& temperature, const Evaluation& pg)
+    static Evaluation fugacityCoefficientH2(const Evaluation& temperature, 
+                                            const Evaluation& pg, 
+                                            bool extrapolate = false)
     {
         // Convert pressure to reduced density and temperature to reduced temperature
-        Evaluation rho_red = H2::reducedMolarDensity(temperature, pg);
+        Evaluation rho_red = H2::reducedMolarDensity(temperature, pg, extrapolate);
         Evaluation T_red = H2::criticalTemperature() / temperature;
 
         // Residual Helmholtz energy, Eq. (7) in Li et al. (2018)

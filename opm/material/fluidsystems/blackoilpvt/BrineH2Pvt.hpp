@@ -31,6 +31,8 @@ copyright holders.
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/Brine.hpp>
 #include <opm/material/components/H2.hpp>
+#include <opm/material/common/UniformTabulated2DFunction.hpp>
+#include <opm/material/components/h2tables.inc>
 
 #include <vector>
 
@@ -51,7 +53,7 @@ class BrineH2Pvt
 public:
     typedef SimpleHuDuanH2O<Scalar> H2O;
     typedef ::Opm::Brine<Scalar, H2O> Brine;
-    typedef ::Opm::H2<Scalar> H2;
+    typedef ::Opm::H2<Scalar, H2Tables> H2;
 
     // The binary coefficients for brine and H2 used by this fluid system
     typedef BinaryCoeff::Brine_H2<Scalar, H2O, H2> BinaryCoeffBrineH2;
@@ -101,7 +103,7 @@ public:
         Scalar P_ref = eclState.getTableManager().stCond().pressure;
 
         brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, extrapolate);
-        h2ReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref);
+        h2ReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
     }
 #endif
 
@@ -268,7 +270,7 @@ public:
         const Scalar avogadro = 6.022e23; // Avogrado's number in mol^-1
         const Scalar alpha = sigma / pow((vm / avogadro), 1 / 3);  // Eq. (19)
         const Scalar lambda = 1.729; // quantum parameter [-]
-        const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, true) * 1e3;  // water viscosity in cP
+        const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, extrapolate) * 1e3;  // water viscosity in cP
 
         // Diffusion coeff in pure water in cm2/s
         const Evaluation D_pure = ((4.8e-7 * temperature) / pow(mu_pure, alpha)) * pow((1 + pow(lambda, 2)) / vm, 0.6);
@@ -328,6 +330,20 @@ private:
         Valgrind::CheckDefined(T);
         Valgrind::CheckDefined(pl);
         Valgrind::CheckDefined(xlH2);
+
+        // check if pressure and temperature is valid
+        if(!extrapolate && T < 273.15) {
+            std::ostringstream oss;
+            oss << "Liquid density for Brine and H2 is only "
+                   "defined above 273.15K (is "<<T<<"K)";
+            throw NumericalIssue(oss.str());
+        }
+        if(!extrapolate && pl >= 2.5e8) {
+            std::ostringstream oss;
+            oss << "Liquid density for Brine and H2 is only "
+                   "defined below 250MPa (is "<<pl<<"Pa)";
+            throw NumericalIssue(oss.str());
+        }
 
         // calculate individual contribution to density
         const LhsEval& rho_brine = Brine::liquidDensity(T, pl, extrapolate);
@@ -449,7 +465,8 @@ private:
         BinaryCoeffBrineH2::calculateMoleFractions(temperature,
                                                    pressure,
                                                    salinity_[regionIdx],
-                                                   xlH2);
+                                                   xlH2,
+                                                   extrapolate);
         
         // normalize the phase compositions
         xlH2 = max(0.0, min(1.0, xlH2));

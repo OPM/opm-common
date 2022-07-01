@@ -53,8 +53,8 @@ namespace Opm {
  * 
  * \tparam Scalar The type used for scalar values
  */
-template <class Scalar>
-class H2 : public Component<Scalar, H2<Scalar> >
+template <class Scalar, class H2Tables>
+class H2 : public Component<Scalar, H2<Scalar, H2Tables> >
 {
     using IdealGas = Opm::IdealGas<Scalar>;
 
@@ -108,12 +108,12 @@ public:
     { return 38.2e-3; /* [mol/cm^3] */ }
 
     /*!
-     * \brief The vapor pressure in \f$\mathrm{[Pa]}\f$ of pure molecular hydrogen
-     *        at a given temperature.
-     *
-     *\param temperature temperature of component in \f$\mathrm{[K]}\f$
-     *
-     */
+    * \brief The vapor pressure in \f$\mathrm{[Pa]}\f$ of pure molecular hydrogen
+    *        at a given temperature.
+    *
+    *\param temperature temperature of component in \f$\mathrm{[K]}\f$
+    *
+    */
     template <class Evaluation>
     static Evaluation vaporPressure(Evaluation temperature)
     {
@@ -142,19 +142,15 @@ public:
     }
 
     /*!
-     * \brief The density \f$\mathrm{[kg/m^3]}\f$ of \f$H_2\f$ at a given pressure and temperature.
-     *
-     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
-     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
-     */
+    * \brief The density \f$\mathrm{[kg/m^3]}\f$ of \f$H_2\f$ at a given pressure and temperature.
+    *
+    * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+    * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+    */
     template <class Evaluation>
-    static Evaluation gasDensity(Evaluation temperature, Evaluation pressure)
+    static Evaluation gasDensity(Evaluation temperature, Evaluation pressure, bool extrapolate = false)
     {
-        // Use Eq. (56) in Span et al. (2000) to get molar density [mol/m3]
-        Evaluation rho_molar = gasMolarDensity(temperature, pressure);
-
-        // return density in [kg/m3]
-        return rho_molar * molarMass();
+        return H2Tables::tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -164,8 +160,8 @@ public:
      * \param pressure The pressure of the gas
      */
     template <class Evaluation>
-    static Evaluation gasMolarDensity(Evaluation temperature, Evaluation pressure)
-    { return reducedMolarDensity(temperature, pressure) * criticalDensity() * 1e6; }
+    static Evaluation gasMolarDensity(Evaluation temperature, Evaluation pressure, bool extrapolate = false)
+    { return gasDensity(temperature, pressure, extrapolate) / molarMass(); }
 
     /*!
      * \brief Returns true if the gas phase is assumed to be compressible
@@ -201,10 +197,11 @@ public:
     */
     template <class Evaluation>
     static Evaluation gasInternalEnergy(const Evaluation& temperature,
-                                        const Evaluation& pressure)
+                                        const Evaluation& pressure,
+                                        bool extrapolate = false)
     {
         // Eq. (58) in Span et al. (2000)
-        Evaluation rho_red = reducedMolarDensity(temperature, pressure);
+        Evaluation rho_red = reducedMolarDensity(temperature, pressure, extrapolate);
         Evaluation T_red = criticalTemperature() / temperature;
         Scalar R = IdealGas::R;
 
@@ -220,11 +217,12 @@ public:
     */
     template <class Evaluation>
     static const Evaluation gasEnthalpy(Evaluation temperature,
-                                        Evaluation pressure)
+                                        Evaluation pressure,
+                                        bool extrapolate = false)
     {
         // Eq. (59) in Span et al. (2000)
         Evaluation u = gasInternalEnergy(temperature, pressure);
-        Evaluation rho = gasDensity(temperature, pressure);
+        Evaluation rho = gasDensity(temperature, pressure, extrapolate);
 
         return u + (pressure / rho);
     }
@@ -331,58 +329,11 @@ public:
     * \param temperature temperature [K]
     */
     template <class Evaluation> 
-    static Evaluation reducedMolarDensity(const Evaluation& temperature, const Evaluation& pg)
+    static Evaluation reducedMolarDensity(const Evaluation& temperature, 
+                                          const Evaluation& pg, 
+                                          bool extrapolate = false)
     {
-        // Interval for search. xmin = 0.0 is good since it guaranties negative fmin.
-        Evaluation rho_red_min = 0.0;
-        Evaluation fmin = -pg / 1.0e6;  // at 0.0 we don't need to envoke function (see eq.(9) in Li et al. (2018))
-
-        // xmax must be high enough to give positive fmax. Check fmax for a starting xmax. If fmax is not positive we
-        // increase xmax until we have fmax >= 0 and abort if we don't achieve that.
-        Evaluation rho_red_max = 2.0;  // start
-        Evaluation fmax = rootFindingObj_(rho_red_max, temperature, pg);
-        if (Opm::getValue(fmax) <= 0.0) {
-            // increase 10 times, and if that does not give fmax > 0, we abort
-            for (int i=0; i < 10; ++i) {
-                rho_red_max *= 1.25;
-                fmax = rootFindingObj_(rho_red_max, temperature, pg);
-                if (Opm::getValue(fmax) > 0.0) {
-                    break;
-                }
-                else if (Opm::getValue(fmax) < 0.0 && i == 9) {
-                    throw std::runtime_error("No max reduced density could be found for current pressure!");
-                }
-                else if (Opm::getValue(fmax) == 0.0) {
-                    return rho_red_max;
-                }
-            }
-            
-        }
-
-        // Bisection loop
-        for (int iteration=1; iteration<100; ++iteration) {
-            // New midpoint and its obj. value
-            Evaluation rho_red = (rho_red_min + rho_red_max) / 2;
-            Evaluation fmid = rootFindingObj_(rho_red, temperature, pg);
-
-            // Check if midpoint fulfills f=0 or interval is sufficiently small
-            if (Opm::abs(fmid) < 1e-6 || Opm::abs((rho_red_max - rho_red_min) / 2) < 1e-6) {
-                return rho_red;
-            }
-
-            // Else we repeat with midpoint being either xmin or xmax (depending on the signs)
-            else if ((Opm::getValue(fmid) > 0.0 && Opm::getValue(fmin) < 0.0) ||
-                (Opm::getValue(fmid) < 0.0 && Opm::getValue(fmin) > 0.0)) {
-                // fmid has same sign as fmax so we set xmid as the new xmax
-                rho_red_max = rho_red;
-            }
-            else {
-                // fmid has same sign as fmin so we set xmid as the new xmin
-                rho_red_min = rho_red;
-                fmin = fmid;
-            }
-        }
-        throw std::runtime_error("No reduced density could be found for current pressure using bisection!");
+        return gasDensity(temperature, pg, extrapolate) / (molarMass() * criticalDensity() * 1e6);
     }
     
     /*!

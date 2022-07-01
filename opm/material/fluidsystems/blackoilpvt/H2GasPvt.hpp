@@ -30,6 +30,8 @@
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/H2.hpp>
 #include <opm/material/binarycoefficients/Brine_H2.hpp>
+#include <opm/material/common/UniformTabulated2DFunction.hpp>
+#include <opm/material/components/h2tables.inc>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -48,7 +50,8 @@ template <class Scalar>
 class H2GasPvt
 {
     typedef SimpleHuDuanH2O<Scalar> H2O;
-    typedef ::Opm::H2<Scalar> H2;
+    typedef ::Opm::H2<Scalar, H2Tables> H2;
+    static const bool extrapolate = true;
 
 public:
     // The binary coefficients for brine and H2 used by this fluid system
@@ -84,7 +87,7 @@ public:
         size_t regionIdx = 0;
         Scalar T_ref = eclState.getTableManager().stCond().temperature;
         Scalar P_ref = eclState.getTableManager().stCond().pressure;
-        gasReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref);
+        gasReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
         initEnd();
     }
 #endif
@@ -129,7 +132,7 @@ public:
                         const Evaluation& pressure,
                         const Evaluation&) const
     {
-        return H2::gasInternalEnergy(temperature, pressure);
+        return H2::gasInternalEnergy(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -173,7 +176,7 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        return H2::gasDensity(temperature, pressure)/gasReferenceDensity_[regionIdx];
+        return H2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
     }
 
     /*!
