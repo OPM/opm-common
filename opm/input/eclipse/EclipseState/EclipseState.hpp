@@ -116,15 +116,16 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            // FieldPropsManager is handled otherwise, do not add
+            // FieldPropsManager is handled through a different mechanism.
+            // Do not add the member (i.e., field_props) to this list.
             m_tables.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             m_eclipseConfig.serializeOp(serializer);
             m_deckUnitSystem.serializeOp(serializer);
             m_inputNnc.serializeOp(serializer);
             m_gridDims.serializeOp(serializer);
-            aquifer_config.serializeOp(serializer);
             m_simulationConfig.serializeOp(serializer);
+            aquifer_config.serializeOp(serializer);
             m_transMult.serializeOp(serializer);
             m_faults.serializeOp(serializer);
             serializer(m_title);
@@ -137,6 +138,9 @@ namespace Opm {
 
     private:
         void initIOConfigPostSchedule(const Deck& deck);
+        void assignRunTitle(const Deck& deck);
+        void reportNumberOfActivePhases() const;
+        void conveyNumericalAquiferEffects();
         void applyMULTXYZ();
         void initFaults(const Deck& deck);
         void initPara(const Deck& deck);
@@ -155,14 +159,14 @@ namespace Opm {
         NNC m_inputNnc;
         GridDims m_gridDims;
         FieldPropsManager field_props;
-        AquiferConfig aquifer_config;
         SimulationConfig m_simulationConfig;
+        AquiferConfig aquifer_config;
         TransMult m_transMult;
-
-        FaultCollection m_faults;
-        std::string m_title;
         TracerConfig tracer_config;
         MICPpara m_micppara;
+
+        std::string m_title{};
+        FaultCollection m_faults{};
     };
 } // namespace Opm
 
