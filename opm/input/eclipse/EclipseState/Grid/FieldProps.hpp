@@ -243,7 +243,11 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
                                                                                 {"PVTNUM",   keyword_info<int>{}.init(1)},
                                                                                 {"SATNUM",   keyword_info<int>{}.init(1)},
                                                                                 {"LWSLTNUM", keyword_info<int>{}},
-                                                                                {"ROCKNUM",  keyword_info<int>{}}};
+                                                                                {"ROCKNUM",  keyword_info<int>{}},
+                                                                                {"KRNUMX",   keyword_info<int>{}},
+                                                                                {"KRNUMY",   keyword_info<int>{}},
+                                                                                {"KRNUMZ",   keyword_info<int>{}},
+                                                                                };
 }
 
 namespace SOLUTION {
