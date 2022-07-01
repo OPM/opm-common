@@ -17,15 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef BOXMANAGER_HPP_
 #define BOXMANAGER_HPP_
 
-#include <vector>
-#include <memory>
-
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+
+#include <memory>
+#include <vector>
 
 /*
   This class implements a simple book keeping system for the current
@@ -52,9 +51,12 @@
 
 namespace Opm {
 
-    class BoxManager {
+    class BoxManager
+    {
     public:
-        BoxManager(const EclipseGrid& grid);
+        explicit BoxManager(const GridDims& gridDims,
+                            Box::IsActive   isActive,
+                            Box::ActiveIdx  activeIdx);
 
         void setInputBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2);
         void setKeywordBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2);
@@ -67,12 +69,20 @@ namespace Opm {
         const std::vector<Box::cell_index>& index_list() const;
 
     private:
-        const EclipseGrid& grid;
+        GridDims gridDims_{};
+        Box::IsActive isActive_{};
+        Box::ActiveIdx activeIdx_{};
+
         std::unique_ptr<Box> m_globalBox;
         std::unique_ptr<Box> m_inputBox;
         std::unique_ptr<Box> m_keywordBox;
+
+        std::unique_ptr<Box>
+        makeBox(const int i1, const int i2,
+                const int j1, const int j2,
+                const int k1, const int k2) const;
     };
 }
 
 
-#endif
+#endif  // BOXMANAGER_HPP_

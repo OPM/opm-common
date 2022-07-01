@@ -17,130 +17,147 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdexcept>
+#include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp> // BOX
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
-#include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <stdexcept>
+#include <utility>
+
+#include <fmt/format.h>
 
 namespace {
 
-    void assert_dims(int len,  int l1 , int l2) {
-        if (len <= 0)
-            throw std::invalid_argument("Box must have finite size in all directions");
+    void assert_dims(const int len, const int l1, const int l2)
+    {
+        if (len <= 0) {
+            throw std::invalid_argument {
+                "Box must have finite size in all directions"
+            };
+        }
 
-        if ((l1 < 0) || (l2 < 0) || (l1 > l2))
-            throw std::invalid_argument("Invalid index values for sub box");
+        if ((l1 < 0) || (l2 < 0) || (l1 > l2)) {
+            throw std::invalid_argument {
+                "Invalid index values for sub box"
+            };
+        }
 
-        if (l2 >= len)
-            throw std::invalid_argument("Invalid index values for sub box");
+        if (l2 >= len) {
+            throw std::invalid_argument {
+                "Invalid index values for sub box"
+            };
+        }
     }
 
+    bool update_default(const Opm::DeckItem& item,
+                        int&                 value)
+    {
+        if (item.defaultApplied(0)) {
+            return true;
+        }
 
-    void update_default(int &value, std::size_t& default_count, const Opm::DeckItem& item) {
-        if (item.defaultApplied(0))
-            default_count += 1;
-        else
-            value = item.get<int>(0) - 1;
+        value = item.get<int>(0) - 1;
+        return false;
     }
 }
 
-namespace Opm {
-
-    Box::Box(const EclipseGrid& grid_arg) :
-        grid(grid_arg)
+namespace Opm
+{
+    Box::Box(const GridDims& gridDims,
+             IsActive        isActive,
+             ActiveIdx       activeIdx)
+        : m_globalGridDims_ (gridDims)
+        , m_globalIsActive_ (std::move(isActive))
+        , m_globalActiveIdx_(std::move(activeIdx))
     {
         this->reset();
     }
 
-
-    Box::Box(const EclipseGrid& grid_arg, int i1 , int i2 , int j1 , int j2 , int k1 , int k2) :
-        grid(grid_arg)
+    Box::Box(const GridDims& gridDims,
+             IsActive        isActive,
+             ActiveIdx       activeIdx,
+             const int i1, const int i2,
+             const int j1, const int j2,
+             const int k1, const int k2)
+        : m_globalGridDims_ (gridDims)
+        , m_globalIsActive_ (std::move(isActive))
+        , m_globalActiveIdx_(std::move(activeIdx))
     {
-        this->init(i1,i2,j1,j2,k1,k2);
+        this->init(i1, i2, j1, j2, k1, k2);
     }
 
+    void Box::update(const DeckRecord& deckRecord)
+    {
+        auto default_count = 0;
 
-    void Box::update(const DeckRecord& deckRecord) {
-        const auto& I1Item = deckRecord.getItem("I1");
-        const auto& I2Item = deckRecord.getItem("I2");
-        const auto& J1Item = deckRecord.getItem("J1");
-        const auto& J2Item = deckRecord.getItem("J2");
-        const auto& K1Item = deckRecord.getItem("K1");
-        const auto& K2Item = deckRecord.getItem("K2");
-
-        std::size_t default_count = 0;
         int i1 = 0;
-        int i2 = this->grid.getNX() - 1;
+        int i2 = this->m_globalGridDims_.getNX() - 1;
+        default_count += update_default(deckRecord.getItem<ParserKeywords::BOX::I1>(), i1);
+        default_count += update_default(deckRecord.getItem<ParserKeywords::BOX::I2>(), i2);
+
         int j1 = 0;
-        int j2 = this->grid.getNY() - 1;
+        int j2 = this->m_globalGridDims_.getNY() - 1;
+        default_count += update_default(deckRecord.getItem<ParserKeywords::BOX::J1>(), j1);
+        default_count += update_default(deckRecord.getItem<ParserKeywords::BOX::J2>(), j2);
+
         int k1 = 0;
-        int k2 = this->grid.getNZ() - 1;
+        int k2 = this->m_globalGridDims_.getNZ() - 1;
+        default_count += update_default(deckRecord.getItem<ParserKeywords::BOX::K1>(), k1);
+        default_count += update_default(deckRecord.getItem<ParserKeywords::BOX::K2>(), k2);
 
-        update_default(i1, default_count, I1Item);
-        update_default(i2, default_count, I2Item);
-        update_default(j1, default_count, J1Item);
-        update_default(j2, default_count, J2Item);
-        update_default(k1, default_count, K1Item);
-        update_default(k2, default_count, K2Item);
-
-        if (default_count != 6)
-            this->init(i1,i2,j1,j2,k1,k2);
+        if (default_count != 6) {
+            this->init(i1, i2, j1, j2, k1, k2);
+        }
     }
-
 
     void Box::reset()
     {
-        this->init(0, this->grid.getNX() - 1 , 0, this->grid.getNY() - 1, 0, this->grid.getNZ() - 1);
+        this->init(0, this->m_globalGridDims_.getNX() - 1,
+                   0, this->m_globalGridDims_.getNY() - 1,
+                   0, this->m_globalGridDims_.getNZ() - 1);
     }
 
+    void Box::init(const int i1, const int i2,
+                   const int j1, const int j2,
+                   const int k1, const int k2)
+    {
+        assert_dims(this->m_globalGridDims_.getNX(), i1, i2);
+        assert_dims(this->m_globalGridDims_.getNY(), j1, j2);
+        assert_dims(this->m_globalGridDims_.getNZ(), k1, k2);
 
-    void Box::init(int i1, int i2, int j1, int j2, int k1, int k2) {
-        assert_dims(this->grid.getNX(), i1 , i2);
-        assert_dims(this->grid.getNY(), j1 , j2);
-        assert_dims(this->grid.getNZ(), k1 , k2);
-        m_stride[0] = 1;
-        m_stride[1] = this->grid.getNX();
-        m_stride[2] = this->grid.getNX() * this->grid.getNY();
+        this->m_dims[0] = static_cast<std::size_t>(i2 - i1 + 1);
+        this->m_dims[1] = static_cast<std::size_t>(j2 - j1 + 1);
+        this->m_dims[2] = static_cast<std::size_t>(k2 - k1 + 1);
 
-        m_dims[0] = (size_t) (i2 - i1 + 1);
-        m_dims[1] = (size_t) (j2 - j1 + 1);
-        m_dims[2] = (size_t) (k2 - k1 + 1);
+        this->m_offset[0] = static_cast<std::size_t>(i1);
+        this->m_offset[1] = static_cast<std::size_t>(j1);
+        this->m_offset[2] = static_cast<std::size_t>(k1);
 
-        m_offset[0] = (size_t) i1;
-        m_offset[1] = (size_t) j1;
-        m_offset[2] = (size_t) k1;
-
-        if (size() == this->grid.getCartesianSize())
-            m_isGlobal = true;
-        else
-            m_isGlobal = false;
-
-        initIndexList();
+        this->initIndexList();
     }
 
-
-
-    size_t Box::size() const {
+    std::size_t Box::size() const
+    {
         return m_dims[0] * m_dims[1] * m_dims[2];
     }
 
-
-    bool Box::isGlobal() const {
-        return m_isGlobal;
+    bool Box::isGlobal() const
+    {
+        return this->size() == this->m_globalGridDims_.getCartesianSize();
     }
 
-
-    size_t Box::getDim(size_t idim) const {
-        if (idim >= 3)
+    std::size_t Box::getDim(std::size_t idim) const
+    {
+        if (idim >= 3) {
             throw std::invalid_argument("The input dimension value is invalid");
+        }
 
         return m_dims[idim];
     }
-
-
 
     const std::vector<Box::cell_index>& Box::index_list() const {
         return this->m_active_index_list;
@@ -150,54 +167,40 @@ namespace Opm {
         return this->m_global_index_list;
     }
 
+    void Box::initIndexList()
+    {
+        this->m_active_index_list.clear();
+        this->m_global_index_list.clear();
 
+        const auto boxdims = GridDims(this->m_dims[0], this->m_dims[1], this->m_dims[2]);
+        const auto ncells = boxdims.getCartesianSize();
 
-    void Box::initIndexList() {
-        m_active_index_list.clear();
-        m_global_index_list.clear();
+        for (auto data_index = 0*ncells; data_index != ncells; ++data_index) {
+            const auto boxIJK = boxdims.getIJK(data_index);
+            const auto global_index = this->m_globalGridDims_
+                .getGlobalIndex(boxIJK[0] + this->m_offset[0],
+                                boxIJK[1] + this->m_offset[1],
+                                boxIJK[2] + this->m_offset[2]);
 
-        size_t ii,ij,ik;
-        for (ik=0; ik < m_dims[2]; ik++) {
-            size_t k = ik + m_offset[2];
-            for (ij=0; ij < m_dims[1]; ij++) {
-                size_t j = ij + m_offset[1];
-                for (ii=0; ii < m_dims[0]; ii++) {
-                    std::size_t i = ii + m_offset[0];
-                    std::size_t global_index = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
-                    std::size_t data_index = ii + ij*this->m_dims[0] + ik*this->m_dims[0]*this->m_dims[1];
-
-                    if (this->grid.cellActive(global_index)) {
-                        std::size_t active_index = this->grid.activeIndex(global_index);
-                        m_active_index_list.emplace_back(global_index, active_index, data_index);
-                    }
-
-                    this->m_global_index_list.emplace_back( global_index, data_index );
-                }
+            if (this->m_globalIsActive_(global_index)) {
+                const auto active_index = this->m_globalActiveIdx_(global_index);
+                this->m_active_index_list.emplace_back(global_index, active_index, data_index);
             }
+
+            this->m_global_index_list.emplace_back(global_index, data_index);
         }
     }
 
-    bool Box::equal(const Box& other) const {
-
-        if (size() != other.size())
-            return false;
-
-        {
-            for (size_t idim = 0; idim < 3; idim++) {
-                if (m_dims[idim] != other.m_dims[idim])
-                    return false;
-
-                if (m_stride[idim] != other.m_stride[idim])
-                    return false;
-
-                if (m_offset[idim] != other.m_offset[idim])
-                    return false;
-            }
-        }
-
-        return true;
+    bool Box::operator==(const Box& other) const
+    {
+        return (this->m_dims == other.m_dims)
+            && (this->m_offset == other.m_offset);
     }
 
+    bool Box::equal(const Box& other) const
+    {
+        return *this == other;
+    }
 
     int Box::lower(int dim) const {
         return m_offset[dim];

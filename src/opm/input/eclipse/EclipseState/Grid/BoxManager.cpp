@@ -24,11 +24,14 @@
 
 namespace Opm {
 
-    BoxManager::BoxManager(const EclipseGrid& grid_arg) :
-        grid( grid_arg ),
-        m_globalBox( std::unique_ptr<Box>( new Box(grid_arg) ))
+    BoxManager::BoxManager(const GridDims& gridDims,
+                           Box::IsActive   isActive,
+                           Box::ActiveIdx  activeIdx)
+        : gridDims_  (gridDims)
+        , isActive_  (isActive)
+        , activeIdx_ (activeIdx)
+        , m_globalBox(std::make_unique<Box>(gridDims_, isActive_, activeIdx_))
     {}
-
 
     const Box& BoxManager::getActiveBox() const {
         if (m_keywordBox)
@@ -40,31 +43,57 @@ namespace Opm {
         return *m_globalBox;
     }
 
-
-    void BoxManager::setInputBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2) {
-        this->m_inputBox.reset(new Box( this->grid, i1, i2, j1, j2, k1, k2 ));
+    void BoxManager::setInputBox(const int i1, const int i2,
+                                 const int j1, const int j2,
+                                 const int k1, const int k2)
+    {
+        this->m_inputBox = this->makeBox(i1, i2, j1, j2, k1, k2);
     }
 
-    void BoxManager::endInputBox() {
-        if(m_keywordBox)
-            throw std::invalid_argument("Hmmm - this seems like an internal error - the SECTION is terminated with an active keyword box");
+    void BoxManager::endInputBox()
+    {
+        if (this->m_keywordBox != nullptr) {
+            throw std::invalid_argument {
+                "Hmmm - this seems like an internal error - "
+                "the SECTION is terminated with an active keyword box"
+            };
+        }
 
-        m_inputBox.reset( 0 );
+        this->m_inputBox.reset();
     }
 
-    void BoxManager::endSection() {
-        endInputBox();
+    void BoxManager::endSection()
+    {
+        this->endInputBox();
     }
 
-    void BoxManager::setKeywordBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2) {
-        this->m_keywordBox.reset( new Box( this->grid, i1, i2, j1, j2, k1, k2 ));
+    void BoxManager::setKeywordBox(const int i1, const int i2,
+                                   const int j1, const int j2,
+                                   const int k1, const int k2)
+    {
+        this->m_keywordBox = this->makeBox(i1, i2, j1, j2, k1, k2);
     }
 
-    void BoxManager::endKeyword() {
-        this->m_keywordBox.reset( 0 );
+    void BoxManager::endKeyword()
+    {
+        this->m_keywordBox.reset();
     }
 
-    const std::vector<Box::cell_index>& BoxManager::index_list() const {
+    const std::vector<Box::cell_index>& BoxManager::index_list() const
+    {
         return this->getActiveBox().index_list();
+    }
+
+    std::unique_ptr<Box>
+    BoxManager::makeBox(const int i1, const int i2,
+                        const int j1, const int j2,
+                        const int k1, const int k2) const
+    {
+        return std::make_unique<Box>(this->gridDims_,
+                                     this->isActive_,
+                                     this->activeIdx_,
+                                     i1, i2,
+                                     j1, j2,
+                                     k1, k2);
     }
 }

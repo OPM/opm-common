@@ -53,6 +53,23 @@
 #include "Operate.hpp"
 
 
+namespace {
+    Opm::Box makeGlobalGridBox(const Opm::EclipseGrid* gridPtr)
+    {
+        return Opm::Box {
+            *gridPtr,
+            [gridPtr](const std::size_t global_index)
+            {
+                return gridPtr->cellActive(global_index);
+            },
+            [gridPtr](const std::size_t global_index)
+            {
+                return gridPtr->activeIndex(global_index);
+            }
+        };
+    }
+}
+
 namespace Opm {
 
 namespace Fieldprops
@@ -1190,7 +1207,7 @@ const std::vector<int>& FieldProps::actnumRaw() const {
 
 
 void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
-    Box box(*this->grid_ptr);
+    auto box = makeGlobalGridBox(this->grid_ptr);
 
     for (const auto& keyword : grid_section) {
         const std::string& name = keyword.name();
@@ -1210,7 +1227,7 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
 }
 
 void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section) {
-    Box box(*this->grid_ptr);
+    Box box(*this->grid_ptr, [](const std::size_t) { return true; }, [](const std::size_t i) { return i; });
 
     for (const auto& keyword : grid_section) {
         const std::string& name = keyword.name();
@@ -1229,7 +1246,7 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section) {
 }
 
 void FieldProps::scanEDITSection(const EDITSection& edit_section) {
-    Box box(*this->grid_ptr);
+    auto box = makeGlobalGridBox(this->grid_ptr);
     for (const auto& keyword : edit_section) {
         const std::string& name = keyword.name();
 
@@ -1272,7 +1289,7 @@ void FieldProps::init_satfunc(const std::string& keyword, Fieldprops::FieldData<
 
 
 void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
-    Box box(*this->grid_ptr);
+    auto box = makeGlobalGridBox(this->grid_ptr);
 
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
@@ -1298,7 +1315,7 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
 
 
 void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
-    Box box(*this->grid_ptr);
+    auto box = makeGlobalGridBox(this->grid_ptr);
 
     for (const auto& keyword : regions_section) {
         const std::string& name = keyword.name();
@@ -1320,7 +1337,7 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
 
 
 void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
-    Box box(*this->grid_ptr);
+    auto box = makeGlobalGridBox(this->grid_ptr);
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
         if (Fieldprops::keywords::SOLUTION::double_keywords.count(name) == 1) {
@@ -1333,7 +1350,7 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
 }
 
 void FieldProps::handle_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
-    Box box(*this->grid_ptr);
+    auto box = makeGlobalGridBox(this->grid_ptr);
 
     // When called in the SCHEDULE section the context is that the scaling factors
     // have already been applied.

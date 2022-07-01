@@ -70,6 +70,7 @@ public:
     /// \param k The index in the k direction
     /// \return The local index or -1 if the cell is inactive
     int localCell(std::size_t i, std::size_t j, std::size_t k) const;
+
 protected:
     /// \brief Maps the cartesian index to a compressed local index.
     ///
