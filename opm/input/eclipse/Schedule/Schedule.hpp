@@ -504,6 +504,7 @@ namespace Opm
             ErrorGuard& errors;
             SimulatorUpdate * sim_update;
             const std::unordered_map<std::string, double> * target_wellpi;
+            std::unordered_map<std::string, double>* wellpi_global_factor;
             const ScheduleGrid& grid;
 
             HandlerContext(const ScheduleBlock& block_,
@@ -515,7 +516,8 @@ namespace Opm
                            const ParseContext& parseContext_,
                            ErrorGuard& errors_,
                            SimulatorUpdate * sim_update_,
-                           const std::unordered_map<std::string, double> * target_wellpi_)
+                           const std::unordered_map<std::string, double> * target_wellpi_,
+                           std::unordered_map<std::string, double>* wellpi_global_factor_ = nullptr)
             : block(block_)
             , keyword(keyword_)
             , currentStep(currentStep_)
@@ -525,6 +527,7 @@ namespace Opm
             , errors(errors_)
             , sim_update(sim_update_)
             , target_wellpi(target_wellpi_)
+            , wellpi_global_factor(wellpi_global_factor_)
             , grid(grid_)
             {}
 
@@ -586,12 +589,14 @@ namespace Opm
         void handleKeyword(std::size_t currentStep,
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
-                           const ParseContext& parseContext, ErrorGuard& errors,
+                           const ParseContext& parseContext,
+                           ErrorGuard& errors,
                            const ScheduleGrid& grid,
                            const std::vector<std::string>& matching_wells,
-                           bool runtime,
-                           SimulatorUpdate * sim_update,
-                           const std::unordered_map<std::string, double> * target_wellpi);
+                           bool actionx_mode,
+                           SimulatorUpdate* sim_update,
+                           const std::unordered_map<std::string, double>* target_wellpi,
+                           std::unordered_map<std::string, double>* wellpi_global_factor = nullptr);
 
         void prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword);
         void store_wgnames(const DeckKeyword& keyword);
@@ -600,6 +605,7 @@ namespace Opm
         void invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const;
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
+        void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& factors);
 
         bool must_write_rst_file(std::size_t report_step) const;
 

@@ -61,7 +61,7 @@ namespace {
         if (item.defaultApplied(0))
             return true;
 
-        if (item.get<int>(0) <= 0)
+        if (item.get<int>(0) == 0)
             return true;
 
         return false;
@@ -1159,6 +1159,18 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
         if (match(c))
             c.scaleWellPi( wellPi );
 
+        new_connections->add(c);
+    }
+
+    return this->updateConnections(std::move(new_connections), false);
+}
+
+
+bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor)
+{
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    for (auto c : *this->connections) {
+        c.scaleWellPi(scaling_factor);
         new_connections->add(c);
     }
 

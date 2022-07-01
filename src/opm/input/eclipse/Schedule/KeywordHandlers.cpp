@@ -1779,53 +1779,41 @@ Well{0} entered with disallowed 'FIELD' parent group:
         // When defaulted, it assumes it is negative
         // When inputting a negative value, it assumes it is defaulted.
         auto defaultConCompRec = [] (const DeckRecord& rec)-> bool {
-            bool default_connections = true;
+            bool default_con_comp = true;
             for (size_t i = 2;  i < rec.size(); ++i) {
                 const auto& item = rec.getItem(i);
                 if (item.get<int>(0) >= 0) {
-                    default_connections = false;
+                    default_con_comp = false;
                     break;
                 }
             }
-            return default_connections;
+            return default_con_comp;
         };
 
-        auto lastRecordWithDefaultConnections = [&defaultConCompRec, this, &handlerContext] (const DeckKeyword& keyword) {
-            std::unordered_map<std::string, size_t> last_index_default_cons_comps;
-            for (size_t i = 0; i < keyword.size(); ++i) {
-                const auto& record = keyword.getRecord(i);
-                if (defaultConCompRec(record)) {
-                    const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-                    const auto& well_names = this->wellNames(wellNamePattern, handlerContext);
-
-                    for (const auto& wname : well_names) {
-                        last_index_default_cons_comps[wname] = i;
-                    }
-                }
-            }
-            return last_index_default_cons_comps;
-        };
-
-        const auto last_index_default_cons_comps = lastRecordWithDefaultConnections(handlerContext.keyword);
-
-        for (size_t i_rec = 0; i_rec < handlerContext.keyword.size(); ++i_rec) {
-            const auto& record = handlerContext.keyword.getRecord(i_rec);
-            // whether this record has defaulted connection and completion information
-            const bool default_con_comp = defaultConCompRec(record);
-
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto& well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            for (const auto& wname : well_names) {
-                // for records with defaulted connection and completion information, we only use the last record for that well
-                if (default_con_comp) {
-                    const auto search = last_index_default_cons_comps.find(wname);
-                    if (search != last_index_default_cons_comps.end() && i_rec < search->second) {
-                        // it is not the last record with defaulted connection and completion information for that well
-                        // we skp this record for this well
-                        continue;
-                    }
+            // for the record has defaulted connection and completion information, we do not apply it immediately
+            // because we only need to apply the last record with defaulted connection and completion information
+            // as a result, we here only record the information of the record with defaulted connection and completion
+            // information without applying, because there might be multiple WPIMULT keywords here, and we do not know
+            // whether it is the last one.
+            const bool default_con_comp = defaultConCompRec(record);
+            if (default_con_comp) {
+                auto wellpi_global_factor = handlerContext.wellpi_global_factor;
+                if (!wellpi_global_factor) {
+                    throw std::runtime_error(" wellpi_global_factor is nullptr in function handleWPIMULT ");
                 }
+                const auto scaling_factor = record.getItem("WELLPI").get<double>(0);
+                for (const auto& wname : well_names) {
+                    (*wellpi_global_factor)[wname] = scaling_factor;
+                }
+                continue;
+            }
+
+            // the record with non-defaulted connection and completion information will be applied immediately
+            for (const auto& wname : well_names) {
                 auto well = this->snapshots.back().wells( wname );
                 if (well.handleWPIMULT(record))
                     this->snapshots.back().wells.update( std::move(well));

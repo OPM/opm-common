@@ -1294,7 +1294,7 @@ COMPDAT
 
 WPIMULT
  'OP_1'  2.0  /
- 'OP_1'  0.8   0 0 0 /  -- all connections
+ 'OP_1'  0.8   0 0 0 /  -- all connections but not defaulted
 /
 
 DATES             -- 3
@@ -1335,6 +1335,49 @@ WPIMULT
 DATES             -- 5
  20  JAN 2014 /
 /
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_1'     9   9   1   1 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   2   2 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   3   3 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   4   4 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+/
+
+WPIMULT
+ 'OP_1'  2.0  /
+ 'OP_1'  0.10  2* 4 /
+/
+WPIMULT
+  'OP_1'  0.8 /  -- all connections
+  'OP_1'  0.50  2* 4 /
+/
+DATES             -- 6
+ 20  FEB 2014 /
+/
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_1'     9   9   1   1 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   2   2 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   3   3 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+ 'OP_1'     9   9   4   4 'OPEN'       1*       100        2*            2*        'X'  22.100 /
+/
+COMPDAT
+-- WELL     I   J  K1   K2            Sat.      CF        DIAM    KH    SKIN ND    DIR   Ro
+ 'OP_2'     8   8   1   1 'OPEN'       1*       50         2*            2*        'X'  22.100 /
+ 'OP_2'     8   8   2   2 'OPEN'       1*       50        2*            2*        'X'  22.100 /
+ 'OP_2'     8   8   3   3 'OPEN'       1*       50        2*            2*        'X'  22.100 /
+/
+WPIMULT
+ 'OP_1'  2.0  /
+ 'OP_2'  3.0 /
+/
+WPIMULT
+ 'OP_1'  0.8   -1 -1 -1 /  -- all connections
+ 'OP_2'  7.0 /
+/
+DATES             -- 7
+ 20  FEB 2014 /
+/
 END
 )";
 
@@ -1345,25 +1388,32 @@ END
     const auto& cs3 = schedule.getWell("OP_1", 3).getConnections();
     const auto& cs4 = schedule.getWell("OP_1", 4).getConnections();
     const auto& cs5 = schedule.getWell("OP_1", 5).getConnections();
+    const auto& cs6 = schedule.getWell("OP_1", 6).getConnections();
+    const auto& cs7 = schedule.getWell("OP_1", 7).getConnections();
     const auto& cs0_2 = schedule.getWell("OP_2", 0).getConnections();
     const auto& cs1_2 = schedule.getWell("OP_2", 1).getConnections();
     const auto& cs2_2 = schedule.getWell("OP_2", 2).getConnections();
+    const auto& cs7_2 = schedule.getWell("OP_2", 7).getConnections();
 
     for (size_t i = 0; i < cs1_2.size(); ++i ) {
         BOOST_CHECK_CLOSE(cs1_2.get(i).CF() / cs0_2.get(i).CF(), 7.0, 1.e-13);
         BOOST_CHECK_CLOSE(cs2_2.get(i).CF() / cs1_2.get(i).CF(), 1.0, 1.e-13);
+        BOOST_CHECK_CLOSE(cs7_2.get(i).CF() / cs0_2.get(i).CF(), 7.0, 1.e-13);
     }
     for (size_t i = 0; i < cs1.size(); ++i ) {
         BOOST_CHECK_CLOSE(cs1.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
         BOOST_CHECK_CLOSE(cs2.get(i).CF() / cs1.get(i).CF(), 0.5, 1.e-13);
         BOOST_CHECK_CLOSE(cs3.get(i).CF() / cs0.get(i).CF(), 1.6, 1.e-13);
         BOOST_CHECK_CLOSE(cs4.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
+        BOOST_CHECK_CLOSE(cs7.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
     }
 
     for (size_t i = 0; i < 3; ++i) {
         BOOST_CHECK_CLOSE(cs5.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
+        BOOST_CHECK_CLOSE(cs6.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
     }
     BOOST_CHECK_CLOSE(cs5.get(3).CF() / cs0.get(3).CF(), 0.04, 1.e-13);
+    BOOST_CHECK_CLOSE(cs6.get(3).CF() / cs0.get(3).CF(), 0.04, 1.e-13);
 }
 
 
