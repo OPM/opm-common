@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <array>
+#include <vector>
 
 namespace Opm
 {
