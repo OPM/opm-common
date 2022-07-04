@@ -49,77 +49,73 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+namespace {
+    void verify_consistent_restart_information(const Opm::DeckKeyword& restart_keyword,
+                                               const Opm::IOConfig&    io_config,
+                                               const Opm::InitConfig&  init_config)
+    {
+        const auto  report_step = init_config.getRestartStep();
+        const auto& restart_file = io_config
+            .getRestartFileName(init_config.getRestartRootName(), report_step, false);
+
+        if (!std::filesystem::exists(restart_file)) {
+            throw Opm::OpmInputError {
+                fmt::format("The restart file {} does not exist", restart_file),
+                restart_keyword.location()
+            };
+        }
+
+        if (io_config.getUNIFIN()) {
+            const Opm::EclIO::ERst rst{restart_file};
+
+            if (!rst.hasReportStepNumber(report_step)) {
+                throw Opm::OpmInputError {
+                    fmt::format("Report step {} not found in restart file {}",
+                                report_step, restart_file),
+                    restart_keyword.location()
+                };
+            }
+        }
+    }
+}
+
 namespace Opm {
 
-
-namespace {
-
-/*
-  The field_props and grid both have a relationship to the number of active
-  cells, and update eachother through an inelegant dance through the
-  EclispeState construction:
-
-  1. The grid is created is with the explicit ACTNUM keyword found in the deck.
-     This does *not* include ACTNUM data which is entered via e.g. EQUALS or
-     COPY keywords.
-
-  2. A FieldPropsManager is created based on the initial grid. In this manager
-     the grid plays an essential role in mapping active/inactive cells. While
-     assembling the property information the fieldprops manager can encounter
-     ACTNUM modifications and also PORO / PORV. The FieldPropsManager::actnum()
-     function will create a new actnum vector based on:
-
-       1. The ACTNUM from the original grid.
-       2. Direct ACTNUM manipulations.
-       3. Cells with PORV == 0
-
-     The new actnum vector will be returned by value and not used internally in
-     the fieldprops.
-
-  3. We update the grid with the new ACTNUM provided by the field props manager.
-
-  4. We update the fieldprops with the ACTNUM.
-
-  During the EclipseState construction the grid <-> field_props update process
-  is done twice, first after the initial field_props processing and subsequently
-  after the processing of numerical aquifers.
-*/
-
-
-void update_active_cells(EclipseGrid& grid, FieldPropsManager& fp) {
-    grid.resetACTNUM(fp.actnum());
-    fp.reset_actnum(grid.getACTNUM());
-}
-
-AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& input_nnc, EclipseGrid& grid, FieldPropsManager& fp) {
-    auto aquifer_config = AquiferConfig(tables, grid, deck, fp);
-
-    if (aquifer_config.hasNumericalAquifer()) {
-        const auto& numerical_aquifer = aquifer_config.numericalAquifers();
-        // update field_props for numerical aquifer cells, and set the transmissiblity related to aquifer cells to
-        // be zero
-        fp.apply_numerical_aquifers(numerical_aquifer);
-        update_active_cells(grid, fp);
-        aquifer_config.load_connections(deck, grid);
-
-        // add NNCs between aquifer cells and first aquifer cell and aquifer connections
-        const auto& aquifer_cell_nncs = numerical_aquifer.aquiferCellNNCs();
-        for (const auto& nnc_data : aquifer_cell_nncs) {
-            input_nnc.addNNC(nnc_data.cell1, nnc_data.cell2, nnc_data.trans);
-        }
-    } else
-        aquifer_config.load_connections(deck, grid);
-
-    return aquifer_config;
-}
-
-
-}
-
-
+// The field_props and grid both have a relationship to the number of active
+// cells, and update eachother through an inelegant dance through the
+// EclispeState construction:
+//
+// 1. The grid is created is with the explicit ACTNUM information found in
+//    the deck, including the actual ACTNUM keyword and direct ACTNUM data
+//    entered in EQUALS or COPY.
+//
+// 2. A FieldPropsManager is created based on this initial grid.  In this
+//    manager the grid plays an essential role in mapping active/inactive
+//    cells.  The FieldPropsManager::actnum() function will create a new
+//    ACTNUM vector based on:
+//
+//      1. The ACTNUM mapping from the original grid.
+//      2. Direct ACTNUM manipulations.
+//      3. Cells with PORV == 0
+//
+//    The new actnum vector will be returned by value and not used
+//    internally in the fieldprops.
+//
+// 3. We update the grid with the new ACTNUM provided by the field props
+//    manager.
+//
+// 4. We update the fieldprops with the ACTNUM.  Once we reach this point no
+//    deactivated cell must be reactivated as a result of other processing.
+//    We do support active cells becoming deactivated though--e.g., through
+//    MINPV.
+//
+// During the EclipseState construction the grid <-> field_props update
+// process is done twice, first after the initial field_props processing and
+// subsequently after the processing of numerical aquifers.
 
     EclipseState::EclipseState(const Deck& deck)
     try
@@ -132,42 +128,25 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
         , m_gridDims(          deck )
         , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables)
         , m_simulationConfig(  m_eclipseConfig.init().restartRequested(), deck, field_props)
+        , aquifer_config(      m_tables, m_inputGrid, deck, field_props)
         , m_transMult(         GridDims(deck), deck, field_props)
         , tracer_config(       m_deckUnitSystem, deck)
         , m_micppara(          deck)
     {
-        update_active_cells(this->m_inputGrid, this->field_props);
-        this->aquifer_config = load_aquifers(deck, this->m_tables, this->m_inputNnc, this->m_inputGrid, this->field_props);
+        this->assignRunTitle(deck);
+        this->reportNumberOfActivePhases();
 
-        if( this->runspec().phases().size() < 3 )
-            OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
-
-        if (deck.hasKeyword( "TITLE" )) {
-            const auto& titleKeyword = deck["TITLE"].back();
-            const auto& item = titleKeyword.getRecord( 0 ).getItem( 0 );
-            std::vector<std::string> itemValue = item.getData<std::string>();
-            for (const auto& entry : itemValue)
-                m_title += entry + ' ';
-            m_title.pop_back();
-        }
+        this->conveyNumericalAquiferEffects();
+        this->m_inputGrid.resetACTNUM(this->field_props.actnum());
+        this->field_props.reset_actnum(this->getInputGrid().getACTNUM());
+        this->aquifer_config.load_connections(deck, this->getInputGrid());
 
         this->applyMULTXYZ();
         this->initFaults(deck);
 
-        const auto& init_config = this->getInitConfig();
-        if (init_config.restartRequested()) {
-            const auto& restart_keyword = deck.get<ParserKeywords::RESTART>().back();
-            const auto& io_config = this->getIOConfig();
-            const int report_step = init_config.getRestartStep();
-            const auto& restart_file = io_config.getRestartFileName( init_config.getRestartRootName(), report_step, false);
-            if (!std::filesystem::exists(restart_file))
-                throw OpmInputError(fmt::format("The restart file: {} does not exist", restart_file), restart_keyword.location());
-
-            if (io_config.getUNIFIN()) {
-                EclIO::ERst rst{restart_file};
-                if (!rst.hasReportStepNumber(report_step))
-                    throw OpmInputError(fmt::format("Report step: {} not found in restart file: {}", report_step, restart_file), restart_keyword.location());
-            }
+        if (this->getInitConfig().restartRequested()) {
+            verify_consistent_restart_information(deck.get<ParserKeywords::RESTART>().back(),
+                                                  this->getIOConfig(), this->getInitConfig());
         }
     }
     catch (const OpmInputError& opm_error) {
@@ -308,6 +287,45 @@ AquiferConfig load_aquifers(const Deck& deck, const TableManager& tables, NNC& i
     void EclipseState::loadRestartAquifers(const RestartIO::RstAquifer& aquifers) {
         if (aquifers.hasAnalyticAquifers())
             this->aquifer_config.loadFromRestart(aquifers, this->m_tables);
+    }
+
+    void EclipseState::assignRunTitle(const Deck& deck)
+    {
+        if (! deck.hasKeyword<ParserKeywords::TITLE>()) {
+            return;
+        }
+
+        const auto& title = deck[ParserKeywords::TITLE::keywordName]
+            .back().getRecord(0).getItem(0);
+
+        this->m_title = fmt::format("{}", fmt::join(title.getData<std::string>(), " "));
+    }
+
+    void EclipseState::reportNumberOfActivePhases() const
+    {
+        const auto nph = this->runspec().phases().size();
+        const auto is_single_phase = nph == 1;
+        const auto plural1 = is_single_phase ? std::string{""}   : std::string{"s"};
+        const auto plural2 = is_single_phase ? std::string{"is"} : std::string{"are"};
+
+        OpmLog::info(fmt::format("{} fluid phase{} {} active", nph, plural1, plural2));
+    }
+
+    void EclipseState::conveyNumericalAquiferEffects()
+    {
+        if (! this->aquifer_config.hasNumericalAquifer()) {
+            return;
+        }
+
+        const auto& numerical_aquifer = this->aquifer_config.numericalAquifers();
+
+        // Update field_props for numerical aquifer cells and set the
+        // transmissiblity related to aquifer cells to zero.
+        this->field_props.apply_numerical_aquifers(numerical_aquifer);
+
+        // Add NNCs between aquifer cells and first aquifer cell and aquifer
+        // connections.
+        this->appendInputNNC(numerical_aquifer.aquiferCellNNCs());
     }
 
     void EclipseState::applyMULTXYZ() {
