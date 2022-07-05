@@ -171,7 +171,6 @@ public:
         }
 
         // the flash solution process were performed in scalar form, after the flash calculation finishes,
-        // we transform the derivatives to the final solution
         // ensure that things in fluid_state_scalar is transformed to fluid_state
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 const auto x_i = fluid_state_scalar.moleFraction(oilPhaseIdx, compIdx);
@@ -185,6 +184,7 @@ public:
             fluid_state_scalar.setKvalue(compIdx, K_scalar[compIdx]);
         }
         fluid_state.setLvalue(L_scalar);
+        // we update the derivatives in fluid_state
         updateDerivatives_(fluid_state_scalar, z, fluid_state, is_single_phase);
     }//end solve
 
@@ -1109,52 +1109,18 @@ protected:
 
     template <typename FlashFluidStateScalar, typename FluidState, typename ComponentVector>
     static void updateDerivativesSinglePhase_(const FlashFluidStateScalar& fluid_state_scalar,
-                                   const ComponentVector& z,
-                                   FluidState& fluid_state)
+                                              const ComponentVector& z,
+                                              FluidState& fluid_state)
     {
-        constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr size_t num_deri = numComponents;
-
-
         using InputEval = typename FluidState::Scalar;
-        using ComponentVectorMoleFraction = Dune::FieldVector<InputEval, numComponents>;
-        ComponentVectorMoleFraction x(numComponents), y(numComponents);
+        // L_eval is converted from a scalar, so all derivatives are zero at this point
         InputEval L_eval = fluid_state_scalar.L();;
 
+        // for single phase situation, x = y = z;
+        // and L_eval have all zero derivatives
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            x[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::oilPhaseIdx,compIdx);
-            y[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::gasPhaseIdx,compIdx);
-        }
-            
-        // set the (trivial) derivatives for x, y and L against P and x.
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            std::vector<double> deriX(num_deri, 0.);
-            std::vector<double> deriY(num_deri, 0.);
-
-            for (unsigned idx = 0; idx < num_deri; ++idx) {
-                if (idx==0) {
-                    x[compIdx].setDerivative(idx, 0);
-                    y[compIdx].setDerivative(idx, 0);
-                } else {
-                    if (compIdx==0) {
-                        x[compIdx].setDerivative(1, 1);
-                        y[compIdx].setDerivative(1, 1);
-                    } else {
-                        x[compIdx].setDerivative(1, -1);
-                        y[compIdx].setDerivative(1, -1);
-                    }
-                }
-            }     
-        }
-        std::vector<double> deriL(num_deri, 0.);
-        for (unsigned idx = 0; idx < num_deri; ++idx) {
-            L_eval.setDerivative(idx, 0);
-        }
-
-        // update x, y and L in fluid_state
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, x[compIdx]);
-            fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, y[compIdx]);
+            fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, z[compIdx]);
+            fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, z[compIdx]);
         }
         fluid_state.setLvalue(L_eval);
     } //end updateDerivativesSinglePhase

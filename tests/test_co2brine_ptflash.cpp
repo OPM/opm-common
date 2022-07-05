@@ -51,7 +51,28 @@ using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
 typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
 typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
 
-bool result_okay(const FluidState& fluid_state);
+bool result_okay_twophase(const FluidState& fluid_state);
+bool result_okay_singlephase(const FluidState& fluid_state, const ComponentVector& z);
+
+bool eval_almost_equal(const Evaluation& val, const Evaluation& ref) {
+    auto almost_equal = [](const double x, const double y, const double rel_tol = 2.e-3, const double abs_tol = 1.e-3)->bool {
+        return std::fabs(x - y) <= rel_tol * std::fabs(x + y) * 2 || std::fabs(x - y) < abs_tol;
+    };
+    bool equal_okay = true;
+    if (!almost_equal(val.value(), ref.value())) {
+        equal_okay = false;
+        std::cout << " the value are different with " << val.value() << " against the reference " << ref.value() << std::endl;
+    }
+
+    for (int i = 0; i < val.size(); ++i) {
+        if (!almost_equal(val.derivative(i), ref.derivative(i))) {
+            equal_okay = false;
+            std::cout << " the " << i << "th derivative is different with value " << val.derivative(i) << " against the reference " << ref.derivative(i) << std::endl;
+        }
+    }
+
+    return equal_okay;
+};
 
 bool testPTFlash(const std::string& flash_twophase_method)
 {
@@ -115,7 +136,7 @@ bool testPTFlash(const std::string& flash_twophase_method)
     }
 
     const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
-    const int flash_verbosity = 1;
+    const int flash_verbosity = 0;
 
     // TODO: should we set these?
     // Set initial K and L
@@ -130,40 +151,18 @@ bool testPTFlash(const std::string& flash_twophase_method)
     using Flash = Opm::PTFlash<double, FluidSystem>;
     Flash::solve(fluid_state, z, spatialIdx, flash_twophase_method, flash_tolerance, flash_verbosity);
 
-    return result_okay(fluid_state);
+    return result_okay_twophase(fluid_state);
 }
 
-bool result_okay(const FluidState& fluid_state)
+bool result_okay_twophase(const FluidState& fluid_state)
 {
     bool res_okay = true;
-    auto almost_equal = [](const double x, const double y, const double rel_tol = 2.e-3, const double abs_tol = 1.e-3)->bool {
-        return std::fabs(x - y) <= rel_tol * std::fabs(x + y) * 2 || std::fabs(x - y) < abs_tol;
-    };
-
-    auto eval_almost_equal = [almost_equal](const Evaluation& val, const Evaluation& ref) -> bool {
-        bool equal_okay = true;
-        if (!almost_equal(val.value(), ref.value())) {
-            equal_okay = false;
-            std::cout << " the value are different with " << val.value() << " against the reference " << ref.value() << std::endl;
-        }
-
-        for (int i = 0; i < val.size(); ++i) {
-            if (!almost_equal(val.derivative(i), ref.derivative(i))) {
-                equal_okay = false;
-                std::cout << " the " << i << "th derivative is different with value " << val.derivative(i) << " against the reference " << ref.derivative(i) << std::endl;
-            }
-        }
-
-        return equal_okay;
-    };
-
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
     for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
         x[comp_idx] = fluid_state.moleFraction(FluidSystem::oilPhaseIdx, comp_idx);
         y[comp_idx] = fluid_state.moleFraction(FluidSystem::gasPhaseIdx, comp_idx);
     }
-
 
     Evaluation ref_L = 1 - 0.5013878578252918;
     ref_L.setDerivative(0, -0.00010420367632860657);
@@ -221,9 +220,6 @@ bool testPTFlashSingle(const std::string& flash_twophase_method)
     ComponentVector sat;
     sat[0] = 1.0; sat[1] = 1.0-sat[0];
 
-
-
-
     // FluidState will be the input for the flash calculation
     FluidState fluid_state;
     fluid_state.setPressure(FluidSystem::oilPhaseIdx, p_init);
@@ -270,8 +266,8 @@ bool testPTFlashSingle(const std::string& flash_twophase_method)
         z[numComponents - 1] = z_last;
     }
 
-    const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
-    const int flash_verbosity = 1;
+    const double flash_tolerance = 1.e-12;
+    const int flash_verbosity = 0;
 
     // TODO: should we set these?
     // Set initial K and L
@@ -286,9 +282,45 @@ bool testPTFlashSingle(const std::string& flash_twophase_method)
     using Flash = Opm::PTFlash<double, FluidSystem>;
     Flash::solve(fluid_state, z, spatialIdx, flash_twophase_method, flash_tolerance, flash_verbosity);
 
-    return 1;
+    return result_okay_singlephase(fluid_state, z);
+}
 
-    //TODO: add when we have something to compare against return result_okay(fluid_state);
+bool result_okay_singlephase(const FluidState& fluid_state, const ComponentVector& z)
+{
+    bool res_okay = true;
+
+    ComponentVector x, y;
+    const Evaluation L = fluid_state.L();
+    for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+        x[comp_idx] = fluid_state.moleFraction(FluidSystem::oilPhaseIdx, comp_idx);
+        y[comp_idx] = fluid_state.moleFraction(FluidSystem::gasPhaseIdx, comp_idx);
+    }
+
+
+    Evaluation ref_L = 1.;
+
+    ComponentVector ref_x = z;
+    ComponentVector ref_y = z;
+
+    for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+        if (!eval_almost_equal(x[comp_idx], ref_x[comp_idx])) {
+            res_okay = false;
+            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
+        }
+        if (!eval_almost_equal(y[comp_idx], ref_y[comp_idx])) {
+            res_okay = false;
+            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
+        }
+    }
+
+    if (!eval_almost_equal(L, ref_L)) {
+        res_okay = false;
+        std::cout << " the L does not match" << std::endl;
+    }
+
+    // TODO: we should also check densities, viscosities, saturations and so on
+
+    return res_okay;
 }
 
 int main(int argc, char **argv)
@@ -307,7 +339,6 @@ int main(int argc, char **argv)
             std::cout << method << " solution for PTFlash two-phase case passed " << std::endl;
         }
 
-        // for the single-phase case (still TODO add refrence and result_okay test)
         if (!testPTFlashSingle(method) ) {
             std::cout << method << " solution for PTFlash single-phase failed " << std::endl;
             test_passed_single = false;
