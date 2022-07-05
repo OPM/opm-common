@@ -21,8 +21,7 @@
 #define OPM_PARSER_GRIDDIMS_HPP
 
 #include <array>
-#include <stdexcept>
-#include <vector>
+#include <cstddef>
 
 namespace Opm {
     class Deck;
@@ -31,32 +30,30 @@ namespace Opm {
     class GridDims
     {
     public:
-
         GridDims();
-        explicit GridDims(std::array<int, 3> xyz);
-        GridDims(size_t nx, size_t ny, size_t nz);
+        explicit GridDims(const std::array<int, 3>& xyz);
+        GridDims(std::size_t nx, std::size_t ny, std::size_t nz);
 
         static GridDims serializeObject();
 
         explicit GridDims(const Deck& deck);
 
-        size_t getNX() const;
+        std::size_t getNX() const;
+        std::size_t getNY() const;
+        std::size_t getNZ() const;
+        std::size_t operator[](int dim) const;
 
-        size_t getNY() const;
-        size_t getNZ() const;
-        size_t operator[](int dim) const;
+        std::array<int, 3> getNXYZ() const;
 
-        const std::array<int, 3> getNXYZ() const;
+        std::size_t getGlobalIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
-        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
+        std::array<int, 3> getIJK(std::size_t globalIndex) const;
 
-        const std::array<int, 3> getIJK(size_t globalIndex) const;
+        std::size_t getCartesianSize() const;
 
-        size_t getCartesianSize() const;
+        void assertGlobalIndex(std::size_t globalIndex) const;
 
-        void assertGlobalIndex(size_t globalIndex) const;
-
-        void assertIJK(size_t i, size_t j, size_t k) const;
+        void assertIJK(std::size_t i, std::size_t j, std::size_t k) const;
 
         bool operator==(const GridDims& data) const;
 
@@ -69,9 +66,9 @@ namespace Opm {
         }
 
     protected:
-        size_t m_nx;
-        size_t m_ny;
-        size_t m_nz;
+        std::size_t m_nx;
+        std::size_t m_ny;
+        std::size_t m_nz;
 
     private:
         void init(const DeckKeyword& keyword);
