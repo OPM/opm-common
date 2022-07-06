@@ -1778,16 +1778,13 @@ Well{0} entered with disallowed 'FIELD' parent group:
         // the I, J, K location and completion number range.
         // When defaulted, it assumes it is negative
         // When inputting a negative value, it assumes it is defaulted.
-        auto defaultConCompRec = [] (const DeckRecord& rec)-> bool {
-            bool default_con_comp = true;
-            for (size_t i = 2;  i < rec.size(); ++i) {
-                const auto& item = rec.getItem(i);
-                if (item.get<int>(0) >= 0) {
-                    default_con_comp = false;
-                    break;
-                }
-            }
-            return default_con_comp;
+        auto defaultConCompRec = [](const DeckRecord& wpimult)
+        {
+            return std::all_of(wpimult.begin() + 2, wpimult.end(),
+                [](const DeckItem& item)
+                {
+                    return item.defaultApplied(0) || (item.get<int>(0) < 0);
+                });
         };
 
         for (const auto& record : handlerContext.keyword) {
@@ -1801,13 +1798,13 @@ Well{0} entered with disallowed 'FIELD' parent group:
             // whether it is the last one.
             const bool default_con_comp = defaultConCompRec(record);
             if (default_con_comp) {
-                auto wellpi_global_factor = handlerContext.wellpi_global_factor;
-                if (!wellpi_global_factor) {
-                    throw std::runtime_error(" wellpi_global_factor is nullptr in function handleWPIMULT ");
+                auto wpimult_global_factor = handlerContext.wpimult_global_factor;
+                if (!wpimult_global_factor) {
+                    throw std::runtime_error(" wpimult_global_factor is nullptr in function handleWPIMULT ");
                 }
                 const auto scaling_factor = record.getItem("WELLPI").get<double>(0);
                 for (const auto& wname : well_names) {
-                    (*wellpi_global_factor)[wname] = scaling_factor;
+                    (*wpimult_global_factor)[wname] = scaling_factor;
                 }
                 continue;
             }

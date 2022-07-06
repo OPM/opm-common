@@ -15,28 +15,23 @@
     },
     {
       "name": "I",
-      "value_type": "INT",
-      "default" : -1
+      "value_type": "INT"
     },
     {
       "name": "J",
-      "value_type": "INT",
-      "default" : -1
+      "value_type": "INT"
     },
     {
       "name": "K",
-      "value_type": "INT",
-      "default" : -1
+      "value_type": "INT"
     },
     {
       "name": "FIRST",
-      "value_type": "INT",
-      "default" : -1
+      "value_type": "INT"
     },
     {
       "name": "LAST",
-      "value_type": "INT",
-      "default" : -1
+      "value_type": "INT"
     }
   ]
 }

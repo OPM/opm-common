@@ -504,7 +504,7 @@ namespace Opm
             ErrorGuard& errors;
             SimulatorUpdate * sim_update;
             const std::unordered_map<std::string, double> * target_wellpi;
-            std::unordered_map<std::string, double>* wellpi_global_factor;
+            std::unordered_map<std::string, double>* wpimult_global_factor;
             const ScheduleGrid& grid;
 
             HandlerContext(const ScheduleBlock& block_,
@@ -517,7 +517,7 @@ namespace Opm
                            ErrorGuard& errors_,
                            SimulatorUpdate * sim_update_,
                            const std::unordered_map<std::string, double> * target_wellpi_,
-                           std::unordered_map<std::string, double>* wellpi_global_factor_ = nullptr)
+                           std::unordered_map<std::string, double>* wpimult_global_factor_)
             : block(block_)
             , keyword(keyword_)
             , currentStep(currentStep_)
@@ -527,7 +527,7 @@ namespace Opm
             , errors(errors_)
             , sim_update(sim_update_)
             , target_wellpi(target_wellpi_)
-            , wellpi_global_factor(wellpi_global_factor_)
+            , wpimult_global_factor(wpimult_global_factor_)
             , grid(grid_)
             {}
 
@@ -596,7 +596,7 @@ namespace Opm
                            bool actionx_mode,
                            SimulatorUpdate* sim_update,
                            const std::unordered_map<std::string, double>* target_wellpi,
-                           std::unordered_map<std::string, double>* wellpi_global_factor = nullptr);
+                           std::unordered_map<std::string, double>* wpimult_global_factor = nullptr);
 
         void prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword);
         void store_wgnames(const DeckKeyword& keyword);
@@ -605,7 +605,7 @@ namespace Opm
         void invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const;
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
-        void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& factors);
+        void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);
 
         bool must_write_rst_file(std::size_t report_step) const;
 

@@ -314,7 +314,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  bool actionx_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
-                                 std::unordered_map<std::string, double>* wellpi_global_factor)
+                                 std::unordered_map<std::string, double>* wpimult_global_factor)
     {
 
         static const std::unordered_set<std::string> require_grid = {
@@ -323,7 +323,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, parseContext, errors, sim_update, target_wellpi, wellpi_global_factor};
+        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, parseContext, errors, sim_update, target_wellpi,
+                                       wpimult_global_factor};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -537,10 +538,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         } // for (auto report_step = load_start
     }
 
-    void Schedule::applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wellpi_global_factor) {
-        for (const auto& elem : wellpi_global_factor) {
-            const auto& well_name = elem.first;
-            const auto factor = elem.second;
+    void Schedule::applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor) {
+        for (const auto& [well_name, factor] : wpimult_global_factor) {
             auto well = this->snapshots.back().wells(well_name);
             if (well.applyGlobalWPIMULT(factor)) {
                 this->snapshots.back().wells.update(std::move(well));
