@@ -65,10 +65,16 @@ class PengRobinsonParamsMixture
 
     typedef MathToolbox<Scalar> Toolbox;
 
-    // the ideal gas constant
-    static const Scalar R;
-
 public:
+
+    /*!
+     * \brief TODO
+     */
+    Scalar getaCache(unsigned compIIdx, unsigned compJIdx ) const
+    {
+        return aCache_[compIIdx][compJIdx];
+    }
+
     /*!
      * \brief Update Peng-Robinson parameters for the pure components.
      */
@@ -98,16 +104,14 @@ public:
             Scalar pc = FluidSystem::criticalPressure(i);
             Scalar omega = FluidSystem::acentricFactor(i);
             Scalar Tr = temperature/FluidSystem::criticalTemperature(i);
-            Scalar RTc = R*FluidSystem::criticalTemperature(i);
+            Scalar RTc = Constants<Scalar>::R*FluidSystem::criticalTemperature(i);
 
             Scalar f_omega;
 
-            if (useSpe5Relations) {
-                if (omega < 0.49) f_omega = 0.37464  + omega*(1.54226 + omega*(-0.26992));
-                else              f_omega = 0.379642 + omega*(1.48503 + omega*(-0.164423 + omega*0.016666));
-            }
-            else
-                f_omega = 0.37464 + omega*(1.54226 - omega*0.26992);
+            if (omega < 0.49) 
+                f_omega = 0.37464  + omega*(1.54226 + omega*(-0.26992));
+            else              
+                f_omega = 0.379642 + omega*(1.48503 + omega*(-0.164423 + omega*0.016666));
 
             Valgrind::CheckDefined(f_omega);
 
@@ -138,6 +142,7 @@ public:
     template <class FluidState>
     void updateMix(const FluidState& fs)
     {
+        using FlashEval = typename FluidState::Scalar;
         Scalar sumx = 0.0;
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             sumx += fs.moleFraction(phaseIdx, compIdx);
@@ -147,16 +152,16 @@ public:
         //
         // See: R. Reid, et al.: The Properties of Gases and Liquids,
         // 4th edition, McGraw-Hill, 1987, p. 82
-        Scalar newA = 0;
-        Scalar newB = 0;
+        FlashEval newA = 0;
+        FlashEval newB = 0;
         for (unsigned compIIdx = 0; compIIdx < numComponents; ++compIIdx) {
-            const Scalar moleFracI = fs.moleFraction(phaseIdx, compIIdx);
-            Scalar xi = max(0.0, min(1.0, moleFracI));
+            const FlashEval moleFracI = fs.moleFraction(phaseIdx, compIIdx);
+            FlashEval xi = max(0.0, min(1.0, moleFracI));
             Valgrind::CheckDefined(xi);
 
             for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
-                const Scalar moleFracJ = fs.moleFraction(phaseIdx, compJIdx );
-                Scalar xj = max(0.0, min(1.0, moleFracJ));
+                const FlashEval moleFracJ = fs.moleFraction(phaseIdx, compJIdx );
+                FlashEval xj = max(0.0, min(1.0, moleFracJ));
                 Valgrind::CheckDefined(xj);
 
                 // mixing rule from Reid, page 82
@@ -246,8 +251,6 @@ private:
     Scalar aCache_[numComponents][numComponents];
 };
 
-template <class Scalar, class FluidSystem, unsigned phaseIdx, bool useSpe5Relations>
-const Scalar PengRobinsonParamsMixture<Scalar, FluidSystem, phaseIdx, useSpe5Relations>::R = Constants<Scalar>::R;
 
 } // namespace Opm
 

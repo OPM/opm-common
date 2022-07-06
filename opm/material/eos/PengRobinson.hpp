@@ -168,7 +168,7 @@ public:
         if (!std::isfinite(scalarValue(b)) || b <= 0)
             return std::numeric_limits<Scalar>::quiet_NaN();
 
-        const Evaluation& RT= R*T;
+        const Evaluation& RT= Constants<Scalar>::R*T;
         const Evaluation& Astar = a*p/(RT*RT);
         const Evaluation& Bstar = b*p/RT;
 
@@ -186,21 +186,22 @@ public:
         Valgrind::CheckDefined(a2);
         Valgrind::CheckDefined(a3);
         Valgrind::CheckDefined(a4);
-        int numSol = invertCubicPolynomial(Z, a1, a2, a3, a4);
+
+        int numSol = cubicRoots(Z, a1, a2, a3, a4);
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
             // molar volume of liquid is the smallest one
             if (isGasPhase)
-                Vm = Z[2]*RT/p;
+                Vm = max(1e-7, Z[2]*RT/p);
             else
-                Vm = Z[0]*RT/p;
+                Vm = max(1e-7, Z[0]*RT/p);
         }
         else if (numSol == 1) {
             // the EOS only has one intersection with the pressure,
             // for the other phase, we take the extremum of the EOS
             // with the largest distance from the intersection.
-            Evaluation VmCubic = Z[0]*RT/p;
+            Evaluation VmCubic = max(1e-7, Z[0]*RT/p);
             Vm = VmCubic;
 
             // find the extrema (if they are present)
@@ -249,7 +250,7 @@ public:
         const Evaluation& p = params.pressure();
         const Evaluation& Vm = params.molarVolume();
 
-        const Evaluation& RT = R*T;
+        const Evaluation& RT = Constants<Scalar>::R*T;
         const Evaluation& Z = p*Vm/RT;
         const Evaluation& Bstar = p*params.b() / RT;
 
@@ -413,8 +414,7 @@ protected:
         Scalar u = 2;
         Scalar w = -1;
 
-        const Evaluation& RT = R*T;
-
+        const Evaluation& RT = Constants<Scalar>::R*T;
         // calculate coefficients of the 4th order polynominal in
         // monomial basis
         const Evaluation& a1 = RT;
@@ -530,26 +530,8 @@ protected:
                                           const Evaluation& VmGas)
     { return fugacity(params, T, p, VmLiquid) - fugacity(params, T, p, VmGas); }
 
-/*
-    static UniformTabulated2DFunction<Scalar> criticalTemperature_;
-    static UniformTabulated2DFunction<Scalar> criticalPressure_;
-    static UniformTabulated2DFunction<Scalar> criticalMolarVolume_;
-*/
+
 };
-
-template <class Scalar>
-const Scalar PengRobinson<Scalar>::R = Constants<Scalar>::R;
-
-/*
-template <class Scalar>
-UniformTabulated2DFunction<Scalar> PengRobinson<Scalar>::criticalTemperature_;
-
-template <class Scalar>
-UniformTabulated2DFunction<Scalar> PengRobinson<Scalar>::criticalPressure_;
-
-template <class Scalar>
-UniformTabulated2DFunction<Scalar> PengRobinson<Scalar>::criticalMolarVolume_;
-*/
 
 } // namespace Opm
 

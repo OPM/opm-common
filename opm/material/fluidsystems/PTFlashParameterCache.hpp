@@ -1,6 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
+  Copyright 2022 NORCE.
+  Copyright 2022 SINTEF Digital, Mathematics and Cybernetics.
+
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -22,16 +25,14 @@
 */
 /*!
  * \file
- * \copydoc Opm::Spe5ParameterCache
+ * \copydoc Opm::PTFlashParameterCache
  */
-#ifndef OPM_SPE5_PARAMETER_CACHE_HPP
-#define OPM_SPE5_PARAMETER_CACHE_HPP
+#ifndef OPM_PTFlash_PARAMETER_CACHE_HPP
+#define OPM_PTFlash_PARAMETER_CACHE_HPP
 
 #include <cassert>
 
-#include <opm/material/components/H2O.hpp>
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
-
 #include <opm/material/eos/PengRobinson.hpp>
 #include <opm/material/eos/PengRobinsonParamsMixture.hpp>
 
@@ -42,32 +43,29 @@ namespace Opm {
  * \brief Specifies the parameter cache used by the SPE-5 fluid system.
  */
 template <class Scalar, class FluidSystem>
-class Spe5ParameterCache
-    : public ParameterCacheBase<Spe5ParameterCache<Scalar, FluidSystem> >
+class PTFlashParameterCache
+    : public Opm::ParameterCacheBase<PTFlashParameterCache<Scalar, FluidSystem> >
 {
-    typedef Spe5ParameterCache<Scalar, FluidSystem> ThisType;
-    typedef ParameterCacheBase<ThisType> ParentType;
-
-    typedef ::Opm::PengRobinson<Scalar> PengRobinson;
+    using ThisType = PTFlashParameterCache<Scalar, FluidSystem>;
+    using ParentType = Opm::ParameterCacheBase<ThisType>;
+    using PengRobinson = Opm::PengRobinson<Scalar>;
 
     enum { numPhases = FluidSystem::numPhases };
-
-    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
-    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
+    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx};
 
 public:
     //! The cached parameters for the oil phase
-    typedef PengRobinsonParamsMixture<Scalar, FluidSystem, oilPhaseIdx, /*useSpe5=*/true> OilPhaseParams;
+    using OilPhaseParams = Opm::PengRobinsonParamsMixture<Scalar, FluidSystem, oilPhaseIdx, /*useChi=*/false>;
     //! The cached parameters for the gas phase
-    typedef PengRobinsonParamsMixture<Scalar, FluidSystem, gasPhaseIdx, /*useSpe5=*/true> GasPhaseParams;
+    using GasPhaseParams = Opm::PengRobinsonParamsMixture<Scalar, FluidSystem, gasPhaseIdx, /*useChi=*/false>;
 
-    Spe5ParameterCache()
+    PTFlashParameterCache()
     {
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            VmUpToDate_[phaseIdx] = false;
-            Valgrind::SetUndefined(Vm_[phaseIdx]);
-        }
+            VmUpToDate_[oilPhaseIdx] = false;
+            Valgrind::SetUndefined(Vm_[oilPhaseIdx]);
+            VmUpToDate_[gasPhaseIdx] = false;
+            Valgrind::SetUndefined(Vm_[gasPhaseIdx]);
     }
 
     //! \copydoc ParameterCacheBase::updatePhase
@@ -77,11 +75,6 @@ public:
                      int exceptQuantities = ParentType::None)
     {
         updateEosParams(fluidState, phaseIdx, exceptQuantities);
-
-        // if we don't need to recalculate the molar volume, we exit
-        // here
-        if (VmUpToDate_[phaseIdx])
-            return;
 
         // update the phase's molar volume
         updateMolarVolume_(fluidState, phaseIdx);
@@ -95,8 +88,10 @@ public:
     {
         if (phaseIdx == oilPhaseIdx)
             oilPhaseParams_.updateSingleMoleFraction(fluidState, compIdx);
-        else if (phaseIdx == gasPhaseIdx)
+        if (phaseIdx == gasPhaseIdx)
             gasPhaseParams_.updateSingleMoleFraction(fluidState, compIdx);
+        else
+            return;
 
         // update the phase's molar volume
         updateMolarVolume_(fluidState, phaseIdx);
@@ -132,7 +127,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.b();
         default:
             throw std::logic_error("The b() parameter is only defined for "
-                                   "oil and gas phases");
+                                   "oil and gas phase");
         };
     }
 
@@ -152,7 +147,7 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.pureParams(compIdx).a();
         default:
             throw std::logic_error("The a() parameter is only defined for "
-                                   "oil and gas phases");
+                                   "oil and gas phase");
         };
     }
 
@@ -171,9 +166,11 @@ public:
         case gasPhaseIdx: return gasPhaseParams_.pureParams(compIdx).b();
         default:
             throw std::logic_error("The b() parameter is only defined for "
-                                   "oil and gas phases");
+                                   "oil and gas phase");
         };
     }
+
+
 
     /*!
      * \brief TODO
@@ -215,6 +212,7 @@ public:
      *        phase.
      */
     const GasPhaseParams& gasPhaseParams() const
+    // { throw std::invalid_argument("gas phase does not exist");}
     { return gasPhaseParams_; }
 
     /*!
@@ -263,7 +261,6 @@ protected:
         {
         case oilPhaseIdx: oilPhaseParams_.updatePure(T, p); break;
         case gasPhaseIdx: gasPhaseParams_.updatePure(T, p); break;
-            //case waterPhaseIdx: waterPhaseParams_.updatePure(phaseIdx, temperature, pressure);break;
         }
     }
 
@@ -285,8 +282,6 @@ protected:
             break;
         case gasPhaseIdx:
             gasPhaseParams_.updateMix(fluidState);
-            break;
-        case waterPhaseIdx:
             break;
         }
     }
@@ -319,7 +314,7 @@ protected:
             // molar volume appears in basically every quantity the fluid
             // system can get queried, so it is okay to calculate it
             // here...
-            Vm_[oilPhaseIdx] =
+            Vm_[oilPhaseIdx] = 
                 PengRobinson::computeMolarVolume(fluidState,
                                                  *this,
                                                  phaseIdx,
@@ -327,21 +322,6 @@ protected:
 
             break;
         }
-        case waterPhaseIdx: {
-            // Density of water in the stock tank (i.e. atmospheric
-            // pressure) is specified as 62.4 lb/ft^3 by the SPE-5
-            // paper. Also 1 lb = 0.4535923 and 1 ft = 0.3048 m.
-            const Scalar stockTankWaterDensity = 62.4 * 0.45359237 / 0.028316847;
-            // Water compressibility is specified as 3.3e-6 per psi
-            // overpressure, where 1 psi = 6894.7573 Pa
-            Scalar overPressure = fluidState.pressure(waterPhaseIdx) - 1.013e5; // [Pa]
-            Scalar waterDensity =
-                stockTankWaterDensity * (1 + 3.3e-6*overPressure/6894.7573);
-
-            // convert water density [kg/m^3] to molar volume [m^3/mol]
-            Vm_[waterPhaseIdx] = fluidState.averageMolarMass(waterPhaseIdx)/waterDensity;
-            break;
-        };
         };
     }
 

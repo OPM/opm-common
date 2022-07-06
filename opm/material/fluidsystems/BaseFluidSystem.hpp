@@ -151,6 +151,16 @@ public:
     }
 
     /*!
+     * \brief Return the acetntric factor of a component.
+     *
+     * \copydoc Doxygen::compIdxParam
+     */
+    static Scalar acentricFactor(unsigned /*compIdx*/)
+    {
+        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a acentricFactor() method!");
+    }
+
+    /*!
      * \brief Initialize the fluid system's static parameters
      */
     static void init()

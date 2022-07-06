@@ -77,6 +77,16 @@ public:
     { return 3.39858e6; /* [N/m^2] */ }
 
     /*!
+     * \brief Critical volume of \f$N_2\f$ [m2/kmol].
+     */
+    static Scalar criticalVolume() {return 8.94e-2; }
+
+    /*!
+     * \brief Acentric factor of \f$N_2\f$.
+     */
+    static Scalar acentricFactor() { return 0.039; }
+
+    /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ at molecular nitrogen's triple point.
      */
     static Scalar tripleTemperature()

@@ -125,6 +125,15 @@ public:
         }
     }
 
+    void setCompressFactor(unsigned phaseIdx, const Scalar& value) {
+        Valgrind::CheckDefined(value);
+        Z_[phaseIdx] = value;
+    }
+
+    Scalar compressFactor(unsigned phaseIdx) const {
+        return Z_[phaseIdx];
+    }
+
     /*!
      * \brief Retrieve all parameters from an arbitrary fluid
      *        state.
@@ -158,15 +167,67 @@ public:
         Valgrind::CheckDefined(moleFraction_);
         Valgrind::CheckDefined(averageMolarMass_);
         Valgrind::CheckDefined(sumMoleFractions_);
+        Valgrind::CheckDefined(K_);
+        Valgrind::CheckDefined(L_);
+    }
+
+    const Scalar& K(unsigned compIdx) const
+    {
+        return K_[compIdx];
+    }
+
+    /*!
+     * \brief Set the K value of a component [-]
+     */
+    void setKvalue(unsigned compIdx, const Scalar& value)
+    {
+        K_[compIdx] = value;
+    }
+
+    /*!
+     * \brief The L value of a composition [-]
+     */
+    const Scalar& L() const
+    {
+        return L_;
+    }
+
+    /*!
+     * \brief Set the L value [-]
+     */
+    void setLvalue(const Scalar& value)
+    {
+        L_ = value;
+    }
+
+    /*!
+    * \brief Wilson formula to calculate K
+    *
+    */
+    Scalar wilsonK_(unsigned compIdx) const 
+    {
+        const auto& acf = FluidSystem::acentricFactor(compIdx);
+        const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
+        const auto& T = asImp_().temperature(0);
+        const auto& p_crit = FluidSystem::criticalPressure(compIdx);
+        const auto& p = asImp_().pressure(0); //for now assume no capillary pressure
+
+        const auto tmp = exp(5.37 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
+        return tmp;
     }
 
 protected:
     const Implementation& asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    {
+        return *static_cast<const Implementation*>(this);
+    }
 
     std::array<std::array<Scalar,numComponents>,numPhases> moleFraction_;
     std::array<Scalar,numPhases> averageMolarMass_;
     std::array<Scalar,numPhases> sumMoleFractions_;
+    std::array<Scalar,numPhases> Z_;
+    std::array<Scalar,numComponents> K_;
+    Scalar L_;
 };
 
 /*!
@@ -185,8 +246,7 @@ public:
     static_assert(static_cast<int>(numPhases) == static_cast<int>(numComponents),
                   "The number of phases must be the same as the number of (pseudo-) components if you assume immiscibility");
 
-    FluidStateImmiscibleCompositionModule()
-    { }
+    FluidStateImmiscibleCompositionModule() = default;
 
     /*!
      * \brief The mole fraction of a component in a phase []
@@ -257,8 +317,7 @@ class FluidStateNullCompositionModule
 public:
     enum { numComponents = 0 };
 
-    FluidStateNullCompositionModule()
-    { }
+    FluidStateNullCompositionModule() = default;
 
     /*!
      * \brief The mole fraction of a component in a phase []

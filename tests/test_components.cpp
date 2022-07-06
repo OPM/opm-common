@@ -53,6 +53,9 @@
 #include <opm/material/components/Xylene.hpp>
 #include <opm/material/components/Air.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
+#include <opm/material/components/C1.hpp>
+#include <opm/material/components/C10.hpp>
+#include <opm/material/components/H2.hpp>
 
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
@@ -101,8 +104,11 @@ void testAllComponents()
     checkComponent<Opm::Air<Scalar>, Evaluation>();
     checkComponent<Opm::Brine<Scalar, H2O>, Evaluation>();
     checkComponent<Opm::CO2<Scalar, Opm::ComponentsTest::CO2Tables>, Evaluation>();
+    checkComponent<Opm::C1<Scalar>, Evaluation>();
+    checkComponent<Opm::C10<Scalar>, Evaluation>();
     checkComponent<Opm::DNAPL<Scalar>, Evaluation>();
     checkComponent<Opm::H2O<Scalar>, Evaluation>();
+    checkComponent<Opm::H2<Scalar>, Evaluation>();
     checkComponent<Opm::LNAPL<Scalar>, Evaluation>();
     checkComponent<Opm::Mesitylene<Scalar>, Evaluation>();
     checkComponent<Opm::N2<Scalar>, Evaluation>();

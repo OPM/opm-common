@@ -98,6 +98,18 @@ public:
     { return H2O::criticalPressure(); /* [N/m^2] */ }
 
     /*!
+     * \copydoc H2O::criticalVolume
+     */
+    static Scalar criticalVolume()
+    { return H2O::criticalVolume(); /* [m3/kmol] */ }
+
+    /*!
+     * \copydoc H20::acentricFactor
+     */
+    static Scalar acentricFactor()
+    { return H2O::acentricFactor(); }
+
+    /*!
      * \copydoc H2O::tripleTemperature
      */
     static Scalar tripleTemperature()

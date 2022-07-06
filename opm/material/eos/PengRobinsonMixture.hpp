@@ -31,8 +31,6 @@
 
 #include <opm/material/Constants.hpp>
 
-#include <iostream>
-
 namespace Opm {
 /*!
  * \brief Implements the Peng-Robinson equation of state for a
@@ -45,7 +43,7 @@ class PengRobinsonMixture
     typedef ::Opm::PengRobinson<Scalar> PengRobinson;
 
     // this class cannot be instantiated!
-    PengRobinsonMixture() {}
+    PengRobinsonMixture() = default;
 
     // the ideal gas constant
     static const Scalar R;
@@ -110,29 +108,29 @@ public:
         LhsEval Astar = params.a(phaseIdx)*p/(RT*RT);
         LhsEval Bstar = params.b(phaseIdx)*p/(RT);
 
-        // calculate delta_i (see: Reid, p. 145)
-        LhsEval sumMoleFractions = 0.0;
-        for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx)
-            sumMoleFractions += fs.moleFraction(phaseIdx, compJIdx);
-        LhsEval deltai = 2*sqrt(params.aPure(phaseIdx, compIdx))/params.a(phaseIdx);
-        LhsEval tmp = 0;
+        LhsEval A_s = 0.0;
         for (unsigned compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
-            tmp +=
-                fs.moleFraction(phaseIdx, compJIdx)
-                / sumMoleFractions
-                * sqrt(params.aPure(phaseIdx, compJIdx))
-                * (1.0 - StaticParameters::interactionCoefficient(compIdx, compJIdx));
-        };
-        deltai *= tmp;
+            A_s += params.aCache(phaseIdx, compIdx, compJIdx) * fs.moleFraction(phaseIdx, compJIdx) * p / (RT * RT);
+        }
 
-        LhsEval base =
-            (2*Z + Bstar*(u + std::sqrt(u*u - 4*w))) /
-            (2*Z + Bstar*(u - std::sqrt(u*u - 4*w)));
-        LhsEval expo =  Astar/(Bstar*std::sqrt(u*u - 4*w))*(bi_b - deltai);
+        LhsEval alpha;
+        LhsEval betta;
+        LhsEval gamma;
+        LhsEval ln_phi;
+        LhsEval fugCoeff;
 
-        LhsEval fugCoeff =
-            exp(bi_b*(Z - 1))/max(1e-9, Z - Bstar) *
-            pow(base, expo);
+        Scalar m1;
+        Scalar m2;
+
+        m1 = 0.5*(u + std::sqrt(u*u - 4*w));
+        m2 = 0.5*(u - std::sqrt(u*u - 4*w));
+
+        alpha = -log(Z - Bstar) + bi_b * (Z - 1);
+        betta = log((Z + m2 * Bstar) / (Z + m1 * Bstar)) * Astar / ((m1 - m2) * Bstar);
+        gamma = (2 / Astar ) * A_s - bi_b;
+        ln_phi = alpha + (betta * gamma);
+
+        fugCoeff = exp(ln_phi);
 
         ////////
         // limit the fugacity coefficient to a reasonable range:

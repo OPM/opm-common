@@ -60,8 +60,10 @@ void checkComponent()
         { Scalar M OPM_UNUSED = Component::molarMass(); }
         { Scalar Tc OPM_UNUSED = Component::criticalTemperature(); }
         { Scalar pc OPM_UNUSED = Component::criticalPressure(); }
+        { Scalar Vc OPM_UNUSED = Component::criticalVolume(); }
         { Scalar Tt OPM_UNUSED = Component::tripleTemperature(); }
         { Scalar pt OPM_UNUSED = Component::triplePressure(); }
+        { Evaluation omega OPM_UNUSED = Component::acentricFactor(); }
         { Evaluation pv OPM_UNUSED = Component::vaporPressure(T); }
         { Evaluation rho OPM_UNUSED = Component::gasDensity(T, p); }
         { Evaluation rho OPM_UNUSED = Component::liquidDensity(T, p); }

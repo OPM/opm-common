@@ -83,6 +83,17 @@ public:
     { return 273.15 - 56.35; /* [K] */ }
 
     /*!
+     * \brief Acentric factor of \f$CO_2\f$.
+     */
+    static Scalar acentricFactor() { return 0.224; }
+
+    /*!
+     * \brief Critical volume of \f$CO_2\f$ [m2/kmol].
+     */
+    // Critical volume [m3/kmol]
+    static Scalar criticalVolume() {return 9.412e-5; }
+
+    /*!
      * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at the triple point of \f$CO_2\f$.
      */
     static Scalar triplePressure()
