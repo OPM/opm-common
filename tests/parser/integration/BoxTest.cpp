@@ -21,30 +21,35 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <filesystem>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
+
+#include <filesystem>
 
 using namespace Opm;
 
-inline std::string prefix() {
+namespace {
+
+std::string prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
 
-inline Deck makeDeck(const std::string& fileName) {
+Deck makeDeck(const std::string& fileName) {
     Parser parser;
     std::filesystem::path boxFile(fileName);
     return parser.parseFile(boxFile.string());
 }
 
-inline EclipseState makeState(const std::string& fileName) {
+EclipseState makeState(const std::string& fileName) {
     return EclipseState( makeDeck(fileName) );
 }
 
+}
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
@@ -157,7 +162,15 @@ BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
     EclipseGrid grid(deck);
     const auto& box_keyword = deck["BOX"][0];
     const auto& operate_keyword = deck["OPERATE"].back();
-    Box box(grid);
+    Box box(grid,
+            [&grid](const std::size_t global_index)
+            {
+                return grid.cellActive(global_index);
+            },
+            [&grid](const std::size_t global_index)
+            {
+                return grid.activeIndex(global_index);
+            });
     box.update(box_keyword.getRecord(0));
     BOOST_CHECK_EQUAL(box.size(), 8);
 
