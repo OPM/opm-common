@@ -3,6 +3,7 @@
   "sections": [
     "GRID"
   ],
+  "prohibits" : ["MINPV", "MINPVFIL"],
   "size": 1,
   "items": [
     {
