@@ -345,13 +345,20 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         if (deck.hasKeyword<ParserKeywords::MINPV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
-            throw std::invalid_argument("Can not have both MINPV and MINPVFIL in deck.");
+            throw std::invalid_argument("Can not have both MINPV and MINPVFIL in the deck.");
+        } else if(deck.hasKeyword<ParserKeywords::MINPORV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {   
+            throw std::invalid_argument("Can not have both MINPORV and MINPVFIL in the deck.");
         }
-
+        
         m_minpvVector.resize(getCartesianSize(), 0.0);
         if (deck.hasKeyword<ParserKeywords::MINPV>()) {
             const auto& record = deck.get<ParserKeywords::MINPV>( ).back().getRecord(0);
             const auto& item = record.getItem<ParserKeywords::MINPV::VALUE>( );
+            std::fill(m_minpvVector.begin(), m_minpvVector.end(), item.getSIDouble(0));
+            m_minpvMode = MinpvMode::ModeEnum::EclSTD;
+        } else if (deck.hasKeyword<ParserKeywords::MINPORV>()) {
+            const auto& record = deck.get<ParserKeywords::MINPORV>( ).back().getRecord(0);
+            const auto& item = record.getItem<ParserKeywords::MINPORV::VALUE>( );
             std::fill(m_minpvVector.begin(), m_minpvVector.end(), item.getSIDouble(0));
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         } else if(deck.hasKeyword<ParserKeywords::MINPVV>()) {
