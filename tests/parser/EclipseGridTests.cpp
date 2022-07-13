@@ -254,7 +254,7 @@ static Opm::Deck createMinpvDefaultCPDeck() {
         "  1000*1 / \n"
         "MINPV \n"
         "  / \n"
-        "MINPVFIL \n"
+        "MINPVV \n"
         "  / \n"
         "EDIT\n"
         "\n";
