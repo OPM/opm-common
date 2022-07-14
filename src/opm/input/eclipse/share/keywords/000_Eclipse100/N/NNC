@@ -70,14 +70,12 @@
     {
       "item": 12,
       "name": "VE_FACE1",
-      "value_type": "STRING",
-      "default": ""
+      "value_type": "STRING"
     },
     {
       "item": 13,
       "name": "VE_FACE2",
-      "value_type": "STRING",
-      "default": ""
+      "value_type": "STRING"
     },
     {
       "item": 14,
