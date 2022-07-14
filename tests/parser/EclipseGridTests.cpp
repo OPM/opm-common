@@ -255,7 +255,7 @@ static Opm::Deck createMinpvDefaultCPDeck() {
         "  1000*1 / \n"
         "MINPV \n"
         "  / \n"
-        "MINPVV \n"
+        "MINPORV \n"
         "  / \n"
         "EDIT\n"
         "\n";
@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     auto deck3 = createMinpvCPDeck();
 
     Opm::EclipseGrid grid1(deck1);
-    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(deck2), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(deck2), OpmInputError);
     Opm::EclipseGrid grid3(deck3);
 
     BOOST_CHECK(!grid1.equal( grid3 ));
