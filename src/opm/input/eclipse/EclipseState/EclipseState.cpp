@@ -373,15 +373,17 @@ namespace Opm {
                     m_faults.setTransMult( faultName , multFlt );
                     logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
                 }
-                catch(const std::exception& e)
+                catch(const std::exception& std_error)
                 {
-                    auto msg = fmt::format("Could not set fault transmissibility multiplier {} for fault {}: {}",
-                                           multFlt, faultName, e.what());
-                    OPM_THROW(std::invalid_argument, msg);
-                }
+                    OpmLog::error(fmt::format("\nProblem with keyword MULTFLT\n" 
+                       "Could not set fault transmissibility multiplier\n" 
+                       "MULTFLT(FLTNAME) equals {} and MULT(FLT-TRS) equals {}\n"
+                       "Error creating reservoir properties: {}" , faultName, multFlt, std_error.what()));
+                    throw;
+                 }
             }
         }
-    }
+    } 
 
     void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
         OpmLog::error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
