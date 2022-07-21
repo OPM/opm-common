@@ -81,6 +81,7 @@ namespace Opm {
             aicd_strength,
             polymer_density,
             salinity,
+            gas_oil_ratio_rate,
             _count // New entries must be added *before* this
         };
 
