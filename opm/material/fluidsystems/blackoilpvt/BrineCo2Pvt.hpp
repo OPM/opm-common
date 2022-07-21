@@ -96,11 +96,11 @@ public:
         int num_regions =  salinity_.size();
         co2ReferenceDensity_.resize(num_regions);
         brineReferenceDensity_.resize(num_regions);
+        Brine::salinity = salinity[0];
         for (int i = 0; i < num_regions; ++i) {
             co2ReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, true);
             brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, true);
         }
-        Brine::salinity = salinity[0];
     }
 #if HAVE_ECL_INPUT
     /*!
