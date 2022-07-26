@@ -24,7 +24,7 @@
 #include <exception>
 #include <vector>
 #include <utility>
-#include <iostream>
+#include <ostream>
 
 #include <opm/common/ErrorMacros.hpp>
 

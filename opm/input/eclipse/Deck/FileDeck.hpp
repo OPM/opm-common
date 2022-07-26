@@ -25,7 +25,7 @@
 #include <unordered_set>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
+#include <iosfwd>
 #include <fmt/format.h>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>

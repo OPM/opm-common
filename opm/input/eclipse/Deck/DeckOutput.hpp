@@ -20,7 +20,7 @@
 #ifndef DECK_OUTPUT_HPP
 #define DECK_OUTPUT_HPP
 
-#include <ostream>
+#include <iosfwd>
 #include <string>
 #include <cstddef>
 

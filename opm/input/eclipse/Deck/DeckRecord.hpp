@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <ostream>
+#include <iosfwd>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 

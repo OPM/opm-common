@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <iterator>
 #include <iomanip>
 #include <numeric>

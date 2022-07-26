@@ -20,6 +20,7 @@
 #include <opm/output/eclipse/WriteRPT.hpp>
 
 #include <functional>
+#include <string>
 #include <unordered_map>
 
 namespace Opm::RptIO {

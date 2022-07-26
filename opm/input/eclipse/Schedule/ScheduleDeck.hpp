@@ -22,7 +22,7 @@
 #include <chrono>
 #include <cstddef>
 #include <optional>
-#include <ostream>
+#include <iosfwd>
 #include <vector>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>

@@ -21,7 +21,6 @@
 #define STREAMLOG_H
 
 #include <fstream>
-#include <iostream>
 #include <cstdint>
 
 #include <opm/common/OpmLog/LogBackend.hpp>

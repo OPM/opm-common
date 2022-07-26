@@ -30,6 +30,8 @@
 
 #include "raw/RawRecord.hpp"
 
+#include <ostream>
+
 namespace Opm {
 
 namespace {

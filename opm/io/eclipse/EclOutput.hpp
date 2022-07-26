@@ -26,7 +26,6 @@
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
-#include <iostream>
 
 namespace Opm { namespace EclIO { namespace OutputStream {
     class Restart;

@@ -21,7 +21,7 @@
 
 #include <chrono>
 #include <filesystem>
-#include <ostream>
+#include <iosfwd>
 #include <string>
 #include <unordered_map>
 #include <vector>

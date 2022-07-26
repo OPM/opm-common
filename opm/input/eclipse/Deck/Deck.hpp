@@ -21,9 +21,9 @@
 #define DECK_HPP
 
 #include <functional>
+#include <iosfwd>
 #include <map>
 #include <memory>
-#include <ostream>
 #include <optional>
 #include <vector>
 #include <string>
