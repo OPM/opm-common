@@ -31,7 +31,6 @@
 
 #include <stddef.h>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Json {
@@ -48,6 +47,8 @@ namespace Opm {
     }
 
     class Deck;
+    class EclipseGrid;
+    class EclipseState;
     class ParseContext;
     class ErrorGuard;
     class RawKeyword;

@@ -30,7 +30,6 @@
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>

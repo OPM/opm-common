@@ -24,12 +24,13 @@
 #include <string>
 
 namespace Opm {
+
+class EclipseState;
 class PythonInterp;
 class Parser;
 class Deck;
 class SummaryState;
 class Schedule;
-class EclipseState;
 
 namespace Action {
     class PyAction;

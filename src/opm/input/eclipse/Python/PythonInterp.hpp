@@ -28,7 +28,6 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 
 #ifdef EMBEDDED_PYTHON
@@ -62,6 +61,8 @@ private:
 
 
 #else
+
+class EclipseState;
 
 class PythonInterp {
 public:

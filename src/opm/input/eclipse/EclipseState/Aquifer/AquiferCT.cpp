@@ -21,12 +21,11 @@
 
 #include <opm/io/eclipse/rst/aquifer.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-
 #include <opm/input/eclipse/EclipseState/Tables/Aqudims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 

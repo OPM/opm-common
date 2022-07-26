@@ -22,6 +22,9 @@
 #include <iostream>
 #include <getopt.h>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
+#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
@@ -29,7 +32,6 @@
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
 
 namespace fs = std::filesystem;
 
