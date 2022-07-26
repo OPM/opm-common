@@ -26,7 +26,6 @@
 #include <memory>
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 
 
@@ -41,8 +40,8 @@ namespace py = pybind11;
 namespace Opm {
 
 #ifdef EMBEDDED_PYTHON
-class Parser;
 class Deck;
+class Parser;
 
 
 class __attribute__ ((visibility("hidden"))) PythonInterp {
@@ -63,6 +62,7 @@ private:
 #else
 
 class EclipseState;
+class Schedule;
 
 class PythonInterp {
 public:
