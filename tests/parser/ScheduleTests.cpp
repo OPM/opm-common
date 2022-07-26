@@ -71,6 +71,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
+#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
