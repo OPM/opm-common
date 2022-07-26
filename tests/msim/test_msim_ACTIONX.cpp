@@ -29,6 +29,7 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>

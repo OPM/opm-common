@@ -26,6 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>

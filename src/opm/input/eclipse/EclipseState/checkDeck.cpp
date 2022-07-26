@@ -21,6 +21,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>

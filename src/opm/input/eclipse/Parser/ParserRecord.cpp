@@ -17,12 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/input/eclipse/Parser/ParserRecord.hpp>
+
 #include <fmt/format.h>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserRecord.hpp>
 #include <opm/input/eclipse/Parser/ParserItem.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 

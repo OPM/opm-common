@@ -22,9 +22,11 @@
 
 #include <string>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckView.hpp>
 
 namespace Opm {
+
+class Deck;
 
 enum class Section {
     RUNSPEC,

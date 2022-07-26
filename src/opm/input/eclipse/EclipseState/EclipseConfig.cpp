@@ -19,8 +19,6 @@
 
 #include <memory>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>

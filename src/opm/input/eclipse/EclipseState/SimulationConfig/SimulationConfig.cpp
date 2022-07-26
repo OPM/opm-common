@@ -18,8 +18,6 @@
  */
 
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
