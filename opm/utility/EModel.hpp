@@ -25,9 +25,7 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <iostream>
 #include <string>
-#include <fstream>
 #include <vector>
 #include <ctime>
 #include <map>

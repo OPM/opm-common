@@ -2,8 +2,6 @@
 #define ECLIPSE_IO_UTIL_HPP
 
 #include <vector>
-#include <string>
-#include <iostream>
 
 
 namespace Opm

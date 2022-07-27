@@ -27,6 +27,8 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
+#include <iostream>
+
 namespace fs = std::filesystem;
 
 namespace Opm {
