@@ -39,7 +39,6 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 

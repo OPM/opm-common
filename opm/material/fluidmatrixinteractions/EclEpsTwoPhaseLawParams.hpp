@@ -31,7 +31,6 @@
 #include "EclEpsScalingPoints.hpp"
 
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #endif
 
