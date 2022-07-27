@@ -27,7 +27,6 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/rst/state.hpp>

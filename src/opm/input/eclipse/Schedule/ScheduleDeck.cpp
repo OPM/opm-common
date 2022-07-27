@@ -25,6 +25,7 @@
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
