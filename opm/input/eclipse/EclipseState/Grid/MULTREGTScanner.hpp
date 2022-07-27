@@ -23,13 +23,12 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
-
 namespace Opm {
-
-    class FieldPropsManager;
 
     class DeckRecord;
     class DeckKeyword;
+    class FieldPropsManager;
+    class GridDims;
 
     namespace MULTREGT {
 

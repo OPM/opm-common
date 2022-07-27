@@ -22,8 +22,6 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/common/utility/String.hpp>
 

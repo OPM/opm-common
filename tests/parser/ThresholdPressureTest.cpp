@@ -26,7 +26,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>

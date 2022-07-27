@@ -25,7 +25,6 @@
 
 #include <opm/output/eclipse/VectorItems/aquifer.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>

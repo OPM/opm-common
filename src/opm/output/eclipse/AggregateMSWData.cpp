@@ -21,8 +21,7 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>

@@ -23,7 +23,6 @@
 #define BOOST_TEST_MODULE WTEST
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
