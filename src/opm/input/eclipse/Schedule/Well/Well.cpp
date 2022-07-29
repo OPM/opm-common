@@ -1166,6 +1166,18 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
 }
 
 
+bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor)
+{
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    for (auto c : *this->connections) {
+        c.scaleWellPi(scaling_factor);
+        new_connections->add(c);
+    }
+
+    return this->updateConnections(std::move(new_connections), false);
+}
+
+
 void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg) {
     this->segments = std::move(segments_arg);
     this->updateRefDepth( this->segments->depthTopSegment() );

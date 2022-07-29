@@ -1773,10 +1773,42 @@ Well{0} entered with disallowed 'FIELD' parent group:
     }
 
     void Schedule::handleWPIMULT(HandlerContext& handlerContext) {
+        // from the third item to the seventh item in the WPIMULT record, they are numbers indicate
+        // the I, J, K location and completion number range.
+        // When defaulted, it assumes it is negative
+        // When inputting a negative value, it assumes it is defaulted.
+        auto defaultConCompRec = [](const DeckRecord& wpimult)
+        {
+            return std::all_of(wpimult.begin() + 2, wpimult.end(),
+                [](const DeckItem& item)
+                {
+                    return item.defaultApplied(0) || (item.get<int>(0) < 0);
+                });
+        };
+
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto& well_names = this->wellNames(wellNamePattern, handlerContext);
 
+            // for the record has defaulted connection and completion information, we do not apply it immediately
+            // because we only need to apply the last record with defaulted connection and completion information
+            // as a result, we here only record the information of the record with defaulted connection and completion
+            // information without applying, because there might be multiple WPIMULT keywords here, and we do not know
+            // whether it is the last one.
+            const bool default_con_comp = defaultConCompRec(record);
+            if (default_con_comp) {
+                auto wpimult_global_factor = handlerContext.wpimult_global_factor;
+                if (!wpimult_global_factor) {
+                    throw std::runtime_error(" wpimult_global_factor is nullptr in function handleWPIMULT ");
+                }
+                const auto scaling_factor = record.getItem("WELLPI").get<double>(0);
+                for (const auto& wname : well_names) {
+                    (*wpimult_global_factor)[wname] = scaling_factor;
+                }
+                continue;
+            }
+
+            // the record with non-defaulted connection and completion information will be applied immediately
             for (const auto& wname : well_names) {
                 auto well = this->snapshots.back().wells( wname );
                 if (well.handleWPIMULT(record))

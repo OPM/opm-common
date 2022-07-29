@@ -626,6 +626,7 @@ public:
     bool handleWELOPENConnections(const DeckRecord& record, Connection::State status);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
+    bool applyGlobalWPIMULT(double scale_factor);
 
     void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;

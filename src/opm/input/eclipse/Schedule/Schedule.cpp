@@ -313,8 +313,10 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const ScheduleGrid& grid,
                                  const std::vector<std::string>& matching_wells,
                                  bool actionx_mode,
-                                 SimulatorUpdate * sim_update,
-                                 const std::unordered_map<std::string, double> * target_wellpi) {
+                                 SimulatorUpdate* sim_update,
+                                 const std::unordered_map<std::string, double>* target_wellpi,
+                                 std::unordered_map<std::string, double>* wpimult_global_factor)
+    {
 
         static const std::unordered_set<std::string> require_grid = {
             "COMPDAT",
@@ -322,7 +324,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, parseContext, errors, sim_update, target_wellpi};
+        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, parseContext, errors, sim_update, target_wellpi,
+                                       wpimult_global_factor};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -475,6 +478,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             }
             this->create_next(block);
 
+            std::unordered_map<std::string, double> wellpi_global_factor;
             while (true) {
                 if (keyword_index == block.size())
                     break;
@@ -521,14 +525,25 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     {},
                                     false,
                                     nullptr,
-                                    target_wellpi);
+                                    target_wellpi,
+                                    &wellpi_global_factor);
                 keyword_index++;
             }
 
+            this->applyGlobalWPIMULT(wellpi_global_factor);
             this->end_report(report_step);
 
             if (this->must_write_rst_file(report_step)) {
                 this->restart_output.addRestartOutput(report_step);
+            }
+        } // for (auto report_step = load_start
+    }
+
+    void Schedule::applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor) {
+        for (const auto& [well_name, factor] : wpimult_global_factor) {
+            auto well = this->snapshots.back().wells(well_name);
+            if (well.applyGlobalWPIMULT(factor)) {
+                this->snapshots.back().wells.update(std::move(well));
             }
         }
     }
