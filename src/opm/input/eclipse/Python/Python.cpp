@@ -18,7 +18,6 @@
 */
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 #include "PythonInterp.hpp"
 

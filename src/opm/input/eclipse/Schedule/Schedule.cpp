@@ -68,6 +68,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -294,11 +295,11 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         return this->posixStartTime( );
     }
 
-    time_t Schedule::posixStartTime() const {
+    std::time_t Schedule::posixStartTime() const {
         return std::chrono::system_clock::to_time_t(this->m_sched_deck[0].start_time());
     }
 
-    time_t Schedule::posixEndTime() const {
+    std::time_t Schedule::posixEndTime() const {
         // This should indeed access the start_time() property of the last
         // snapshot.
         return std::chrono::system_clock::to_time_t(this->snapshots.back().start_time());
@@ -1272,7 +1273,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
 
-    time_t Schedule::simTime(std::size_t timeStep) const {
+    std::time_t Schedule::simTime(std::size_t timeStep) const {
         return std::chrono::system_clock::to_time_t( this->snapshots[timeStep].start_time() );
     }
 

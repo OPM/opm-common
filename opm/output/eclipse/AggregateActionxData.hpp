@@ -30,7 +30,6 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <cstddef>
 #include <string>

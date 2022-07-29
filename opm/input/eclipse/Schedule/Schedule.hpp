@@ -20,22 +20,21 @@
 #define SCHEDULE_HPP
 
 #include <cstddef>
+#include <ctime>
 #include <map>
 #include <memory>
 #include <optional>
-#include <ostream>
+#include <iosfwd>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
-#include <time.h>
-
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
@@ -45,18 +44,10 @@
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-
-#include <opm/input/eclipse/Python/Python.hpp>
-
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm
@@ -67,11 +58,13 @@ namespace Opm
     class DeckRecord;
     class EclipseState;
     class FieldPropsManager;
+    class GTNode;
     class ParseContext;
     class SCHEDULESection;
     class SummaryState;
     class ErrorGuard;
     class UDQConfig;
+    class WellMatcher;
 
     namespace RestartIO { struct RstState; }
 
@@ -213,10 +206,10 @@ namespace Opm
          * If the input deck does not specify a start time, Eclipse's 1. Jan
          * 1983 is defaulted
          */
-        time_t getStartTime() const;
-        time_t posixStartTime() const;
-        time_t posixEndTime() const;
-        time_t simTime(std::size_t timeStep) const;
+        std::time_t getStartTime() const;
+        std::time_t posixStartTime() const;
+        std::time_t posixEndTime() const;
+        std::time_t simTime(std::size_t timeStep) const;
         double seconds(std::size_t timeStep) const;
         double stepLength(std::size_t timeStep) const;
         std::optional<int> exitStatus() const;
