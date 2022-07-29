@@ -18,7 +18,8 @@
     {
       "item": 3,
       "name": "CMODE",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "default": "NONE"
     },
     {
       "item": 4,
