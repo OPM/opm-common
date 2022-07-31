@@ -20,6 +20,7 @@
 #ifndef OPM_WRITE_RPT_HPP
 #define OPM_WRITE_RPT_HPP
 
+#include <cstddef>
 #include <iosfwd>
 
 namespace Opm {
