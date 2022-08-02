@@ -2626,7 +2626,11 @@ namespace Evaluator {
         explicit FunctionRelation(Opm::EclIO::SummaryNode node, ofun fcn)
             : node_(std::move(node))
             , fcn_ (std::move(fcn))
-        {}
+        {
+            if (this->use_number()) {
+                this->number_ = this->node_.number;
+            }
+        }
 
         void update(const std::size_t       sim_step,
                     const double            stepSize,
@@ -2651,7 +2655,7 @@ namespace Evaluator {
 
             const fn_args args {
                 wells, this->group_name(), this->node_.keyword, stepSize, static_cast<int>(sim_step),
-                std::max(0, this->node_.number),
+                std::max(0, this->number_),
                 this->node_.fip_region,
                 st, simRes.wellSol, simRes.grpNwrkSol,
                 input.reg, input.grid, input.sched,
@@ -2668,6 +2672,7 @@ namespace Evaluator {
     private:
         Opm::EclIO::SummaryNode node_;
         ofun                    fcn_;
+        int                     number_{0};
 
         std::string group_name() const
         {
@@ -2681,6 +2686,17 @@ namespace Evaluator {
                 ? this->node_.wgname : std::string{""};
         }
 
+        bool use_number() const
+        {
+            using Cat = ::Opm::EclIO::SummaryNode::Category;
+            const auto cat = this->node_.category;
+
+            return ! ((cat == Cat::Well) ||
+                      (cat == Cat::Group) ||
+                      (cat == Cat::Field) ||
+                      (cat == Cat::Node) ||
+                      (cat == Cat::Miscellaneous));
+        }
     };
 
     class BlockValue : public Base
