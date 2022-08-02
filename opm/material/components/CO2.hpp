@@ -176,8 +176,8 @@ public:
                                         const Evaluation& pressure,
                                         bool extrapolate = false)
     {
-        const Evaluation& h = gasEnthalpy(temperature, pressure, extrapolate);
-        const Evaluation& rho = gasDensity(temperature, pressure, extrapolate);
+        const Evaluation h = gasEnthalpy(temperature, pressure, extrapolate);
+        const Evaluation rho = gasDensity(temperature, pressure, extrapolate);
 
         return h - (pressure / rho);
     }
@@ -223,12 +223,12 @@ public:
         Evaluation TStar = temperature/ESP;
 
         // mu0: viscosity in zero-density limit
-        const Evaluation& logTStar = log(TStar);
+        const Evaluation logTStar = log(TStar);
         Evaluation SigmaStar = exp(a0 + logTStar*(a1 + logTStar*(a2 + logTStar*(a3 + logTStar*a4))));
 
         Evaluation mu0 = 1.00697*sqrt(temperature) / SigmaStar;
 
-        const Evaluation& rho = gasDensity(temperature, pressure, extrapolate); // CO2 mass density [kg/m^3]
+        const Evaluation rho = gasDensity(temperature, pressure, extrapolate); // CO2 mass density [kg/m^3]
 
         // dmu : excess viscosity at elevated density
         Evaluation dmu =
