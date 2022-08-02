@@ -32,7 +32,6 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
-#include <opm/material/common/Unused.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
 
 #include <csignal>
@@ -116,8 +115,7 @@ public:
         // Newton-Raphson method
         for (unsigned i = 0; i < 5; ++i) {
             // calculate the molar densities
-            int numSol OPM_OPTIM_UNUSED = molarVolumes(Vm, params, T, pVap);
-            assert(numSol == 3);
+            assert(molarVolumes(Vm, params, T, pVap) == 3);
 
             const Evaluation& f = fugacityDifference_(params, T, pVap, Vm[0], Vm[2]);
             Evaluation df_dp =
@@ -348,8 +346,7 @@ protected:
             // epsilon was added to the temperature. (this is case
             // rarely happens, though)
             const Scalar eps = - 1e-11;
-            bool hasExtrema OPM_OPTIM_UNUSED = findExtrema_(minVm, maxVm, minP, maxP, a, b, T + eps);
-            assert(hasExtrema);
+            assert(findExtrema_(minVm, maxVm, minP, maxP, a, b, T + eps));
             assert(std::isfinite(scalarValue(maxVm)));
             Evaluation fStar = maxVm - minVm;
 

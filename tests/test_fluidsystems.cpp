@@ -125,12 +125,12 @@ void ensureBlackoilApi()
         FluidSystem::initEnd();
 
         // the molarMass() method has an optional argument for the PVT region
-        unsigned numRegions OPM_UNUSED = FluidSystem::numRegions();
-        Scalar Mg OPM_UNUSED = FluidSystem::molarMass(FluidSystem::gasCompIdx,
+        [[maybe_unused]] unsigned numRegions = FluidSystem::numRegions();
+        [[maybe_unused]] Scalar Mg = FluidSystem::molarMass(FluidSystem::gasCompIdx,
                                                       /*regionIdx=*/0);
-        bool b1 OPM_UNUSED = FluidSystem::enableDissolvedGas();
-        bool b2 OPM_UNUSED = FluidSystem::enableVaporizedOil();
-        Scalar rhoRefOil OPM_UNUSED = FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx,
+        [[maybe_unused]] bool b1 = FluidSystem::enableDissolvedGas();
+        [[maybe_unused]] bool b2 = FluidSystem::enableVaporizedOil();
+        [[maybe_unused]] Scalar rhoRefOil = FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx,
                                                                     /*regionIdx=*/0);
         dummy = FluidSystem::convertXoGToRs(XoG, /*regionIdx=*/0);
         dummy = FluidSystem::convertXgOToRv(XgO, /*regionIdx=*/0);
@@ -157,9 +157,9 @@ void ensureBlackoilApi()
 
 
         // the "not considered safe to use directly" API
-        const OilPvt& oilPvt2 OPM_UNUSED = FluidSystem::oilPvt();
-        const GasPvt& gasPvt2 OPM_UNUSED = FluidSystem::gasPvt();
-        const WaterPvt& waterPvt2 OPM_UNUSED = FluidSystem::waterPvt();
+        [[maybe_unused]] const OilPvt& oilPvt2 = FluidSystem::oilPvt();
+        [[maybe_unused]] const GasPvt& gasPvt2 = FluidSystem::gasPvt();
+        [[maybe_unused]] const WaterPvt& waterPvt2 = FluidSystem::waterPvt();
     }
 }
 

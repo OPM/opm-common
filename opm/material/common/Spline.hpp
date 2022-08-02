@@ -30,7 +30,6 @@
 #include <opm/material/common/TridiagonalMatrix.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
 #include <opm/material/common/Exceptions.hpp>
-#include <opm/material/common/Unused.hpp>
 
 #include <ostream>
 #include <vector>
@@ -953,7 +952,8 @@ public:
      * In the corner case that the spline is constant within the given
      * interval, this method returns 3.
      */
-    int monotonic(Scalar x0, Scalar x1, bool extrapolate OPM_OPTIM_UNUSED = false) const
+    int monotonic(Scalar x0, Scalar x1,
+                  [[maybe_unused]] bool extrapolate = false) const
     {
         assert(std::abs(x0 - x1) > 1e-30);
 

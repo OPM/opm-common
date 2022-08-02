@@ -68,8 +68,6 @@
 #include <opm/material/components/SimpleH2O.hpp>
 #include <opm/material/components/N2.hpp>
 
-#include <opm/material/common/Unused.hpp>
-
 #include <dune/common/parallel/mpihelper.hh>
 
 // this function makes sure that a capillary pressure law adheres to
@@ -85,10 +83,10 @@ void testGenericApi()
         static const int numPhases = MaterialLaw::numPhases;
 
         // check for the presence of the is*Dependent values
-        static const bool OPM_UNUSED isSaturationDependent = MaterialLaw::isSaturationDependent;
-        static const bool OPM_UNUSED isPressureDependent = MaterialLaw::isPressureDependent;
-        static const bool OPM_UNUSED isTemperatureDependent = MaterialLaw::isTemperatureDependent;
-        static const bool OPM_UNUSED isCompositionDependent = MaterialLaw::isCompositionDependent;
+        [[maybe_unused]] static const bool isSaturationDependent = MaterialLaw::isSaturationDependent;
+        [[maybe_unused]] static const bool isPressureDependent = MaterialLaw::isPressureDependent;
+        [[maybe_unused]] static const bool isTemperatureDependent = MaterialLaw::isTemperatureDependent;
+        [[maybe_unused]] static const bool isCompositionDependent = MaterialLaw::isCompositionDependent;
 
         // Make sure that the Traits, Params and Scalar typedefs are
         // exported by the material law
@@ -148,21 +146,21 @@ void testTwoPhaseApi()
                       "This material law is expected to implement "
                       "the two-phase API!");
 
-        static const int OPM_UNUSED wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
-        static const int OPM_UNUSED nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
+        [[maybe_unused]] static const int wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
+        [[maybe_unused]] static const int nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
 
         // make sure the two-phase specific methods are present
         const FluidState fs;
         const typename MaterialLaw::Params params;
 
-        Scalar v OPM_UNUSED;
+        [[maybe_unused]] Scalar v;
         v = MaterialLaw::template pcnw<FluidState, Scalar>(params, fs);
         v = MaterialLaw::template Sw<FluidState, Scalar>(params, fs);
         v = MaterialLaw::template Sn<FluidState, Scalar>(params, fs);
         v = MaterialLaw::template krw<FluidState, Scalar>(params, fs);
         v = MaterialLaw::template krn<FluidState, Scalar>(params, fs);
 
-        typename FluidState::Scalar vEval OPM_UNUSED;
+        [[maybe_unused]] typename FluidState::Scalar vEval;
         vEval = MaterialLaw::pcnw(params, fs);
         vEval = MaterialLaw::Sw(params, fs);
         vEval = MaterialLaw::Sn(params, fs);
@@ -191,13 +189,13 @@ void testTwoPhaseSatApi()
                       "Capillary pressure laws which implement the twophase saturation only "
                       "API cannot be dependent on the phase compositions!");
 
-        static const int OPM_UNUSED numPhases = MaterialLaw::numPhases;
+         [[maybe_unused]] static const int numPhases = MaterialLaw::numPhases;
 
         // make sure the two-phase specific methods are present
         const typename MaterialLaw::Params params;
 
         Scalar Sw = 0;
-        Scalar v OPM_UNUSED;
+        [[maybe_unused]] Scalar v;
         v = MaterialLaw::twoPhaseSatPcnw(params, Sw);
         v = MaterialLaw::twoPhaseSatSw(params, Sw);
         v = MaterialLaw::twoPhaseSatSn(params, Sw);
@@ -205,7 +203,7 @@ void testTwoPhaseSatApi()
         v = MaterialLaw::twoPhaseSatKrn(params, Sw);
 
         typename FluidState::Scalar SwEval = 0;
-        typename FluidState::Scalar vEval OPM_UNUSED;
+        [[maybe_unused]] typename FluidState::Scalar vEval;
         vEval = MaterialLaw::twoPhaseSatPcnw(params, SwEval);
         vEval = MaterialLaw::twoPhaseSatSw(params, SwEval);
         vEval = MaterialLaw::twoPhaseSatSn(params, SwEval);
@@ -225,15 +223,15 @@ void testThreePhaseApi()
                       "The number of fluid phases for a threephase "
                       "capillary pressure law must be 3");
 
-        static const int OPM_UNUSED wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
-        static const int OPM_UNUSED nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
-        static const int OPM_UNUSED gasPhaseIdx = MaterialLaw::gasPhaseIdx;
+        [[maybe_unused]] static const int wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
+        [[maybe_unused]] static const int nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
+        [[maybe_unused]] static const int gasPhaseIdx = MaterialLaw::gasPhaseIdx;
 
         // make sure the two-phase specific methods are present
         const FluidState fs;
         const typename MaterialLaw::Params params;
 
-        Scalar v OPM_UNUSED;
+        [[maybe_unused]] Scalar v;
         v = MaterialLaw::template pcnw<FluidState, Scalar>(params, fs);
         v = MaterialLaw::template Sw<FluidState, Scalar>(params, fs);
         v = MaterialLaw::template Sn<FluidState, Scalar>(params, fs);
@@ -242,7 +240,7 @@ void testThreePhaseApi()
         v = MaterialLaw::template krn<FluidState, Scalar>(params, fs);
         v = MaterialLaw::template krg<FluidState, Scalar>(params, fs);
 
-        typename FluidState::Scalar vEval OPM_UNUSED;
+        [[maybe_unused]] typename FluidState::Scalar vEval;
         vEval = MaterialLaw::pcnw(params, fs);
         vEval = MaterialLaw::Sw(params, fs);
         vEval = MaterialLaw::Sn(params, fs);

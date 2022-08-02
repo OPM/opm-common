@@ -43,8 +43,6 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/material/binarycoefficients/H2O_N2.hpp>
 
-#include <opm/material/common/Unused.hpp>
-
 #include <iostream>
 
 namespace Opm {
@@ -131,7 +129,7 @@ public:
     /*!
      * \copydoc BaseFluidSystem::isIdealMixture
      */
-    static bool isIdealMixture(unsigned phaseIdx OPM_OPTIM_UNUSED)
+    static bool isIdealMixture([[maybe_unused]] unsigned phaseIdx)
     {
         assert(phaseIdx < numPhases);
 
@@ -141,7 +139,7 @@ public:
     /*!
      * \copydoc BaseFluidSystem::isCompressible
      */
-    static bool isCompressible(unsigned phaseIdx OPM_OPTIM_UNUSED)
+    static bool isCompressible([[maybe_unused]] unsigned phaseIdx)
     {
         assert(phaseIdx < numPhases);
 

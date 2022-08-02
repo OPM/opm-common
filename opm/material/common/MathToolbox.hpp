@@ -32,8 +32,6 @@
 #ifndef OPM_MATERIAL_MATH_TOOLBOX_HPP
 #define OPM_MATERIAL_MATH_TOOLBOX_HPP
 
-#include <opm/material/common/Unused.hpp>
-
 #include <cmath>
 #include <algorithm>
 #include <type_traits>
@@ -100,7 +98,7 @@ public:
      * This basically boils down to creating an uninitialized object of sufficient size.
      * This is method only non-trivial for dynamically-sized Evaluation objects.
      */
-    static Scalar createBlank(Scalar value OPM_UNUSED)
+    static Scalar createBlank(Scalar /*value*/)
     { return Scalar(); }
 
     /*!
@@ -136,7 +134,7 @@ public:
      * function. In general, this returns an evaluation object for which all derivatives
      * are zero.
      */
-    static Scalar createConstant(Scalar x OPM_UNUSED, Scalar value)
+    static Scalar createConstant(Scalar /*x*/, Scalar value)
     { return value; }
 
     /*!
@@ -146,7 +144,7 @@ public:
      * regard to x. For scalars (which do not consider derivatives), this method does
      * nothing.
      */
-    static Scalar createVariable(Scalar value OPM_UNUSED, unsigned varIdx OPM_UNUSED)
+    static Scalar createVariable(Scalar /*value*/, unsigned /*varIdx*/)
     { throw std::logic_error("Plain floating point objects cannot represent variables"); }
 
     /*!
@@ -157,7 +155,7 @@ public:
      * regard to x. For scalars (which do not consider derivatives), this method does
      * nothing.
      */
-    static Scalar createVariable(Scalar x OPM_UNUSED, Scalar value OPM_UNUSED, unsigned varIdx OPM_UNUSED)
+    static Scalar createVariable(Scalar /*x*/, Scalar /*value*/, unsigned /*varIdx*/)
     { throw std::logic_error("Plain floating point objects cannot represent variables"); }
 
     /*!

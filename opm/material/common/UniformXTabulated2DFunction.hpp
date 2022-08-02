@@ -30,7 +30,6 @@
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Exceptions.hpp>
-#include <opm/material/common/Unused.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <iostream>
@@ -185,7 +184,8 @@ public:
      * \brief Return the interval index of a given position on the x-axis.
      */
     template <class Evaluation>
-    unsigned xSegmentIndex(const Evaluation& x, bool extrapolate OPM_OPTIM_UNUSED = false) const
+    unsigned xSegmentIndex(const Evaluation& x,
+                           [[maybe_unused]] bool extrapolate = false) const
     {
         assert(extrapolate || (xMin() <= x && x <= xMax()));
 
@@ -232,7 +232,8 @@ public:
      * \brief Return the interval index of a given position on the y-axis.
      */
     template <class Evaluation>
-    unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx, bool extrapolate OPM_OPTIM_UNUSED = false) const
+    unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
+                           [[maybe_unused]] bool extrapolate = false) const
     {
         assert(xSampleIdx < numX());
         const auto& colSamplePoints = samples_.at(xSampleIdx);
