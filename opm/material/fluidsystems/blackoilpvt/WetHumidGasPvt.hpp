@@ -27,9 +27,7 @@
 #ifndef OPM_WET_HUMID_GAS_PVT_HPP
 #define OPM_WET_HUMID_GAS_PVT_HPP
 
-#include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/OpmFinal.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
@@ -52,11 +50,11 @@ namespace Opm {
 template <class Scalar>
 class WetHumidGasPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
+    using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    typedef UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     WetHumidGasPvt()
     {
@@ -685,7 +683,7 @@ public:
         // keyword)
         maxOilSaturation = min(maxOilSaturation, Scalar(1.0));
         if (vapPar1_ > 0.0 && maxOilSaturation > 0.01 && oilSaturation < maxOilSaturation) {
-            static const Scalar eps = 0.001;
+            constexpr const Scalar eps = 0.001;
             const Evaluation& So = max(oilSaturation, eps);
             tmp *= max(1e-3, pow(So/maxOilSaturation, vapPar1_));
         }
@@ -706,10 +704,10 @@ public:
                                   const Evaluation&,
                                   const Evaluation& Rw) const
     {
-        typedef MathToolbox<Evaluation> Toolbox;
+        using Toolbox = MathToolbox<Evaluation>;
 
         const auto& RwTable = saturatedWaterVaporizationFactorTable_[regionIdx];
-        const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
+        constexpr const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
 
         // use the tabulated saturation pressure function to get a pretty good initial value
         Evaluation pSat = saturationPressure_[regionIdx].eval(Rw, /*extrapolate=*/true);
@@ -828,7 +826,6 @@ public:
 private:
     void updateSaturationPressure_(unsigned regionIdx)
     {
-        typedef std::pair<Scalar, Scalar> Pair;
         const auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
 
         // create the taublated function representing saturation pressure depending of
@@ -842,12 +839,11 @@ private:
             Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
             Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
 
-            Pair val(Rv, pSat);
-            pSatSamplePoints.push_back(val);
+            pSatSamplePoints.emplace_back(Rv, pSat);
         }
 
         //Prune duplicate Rv values (can occur, and will cause problems in further interpolation)
-        auto x_coord_comparator = [](const Pair& a, const Pair& b) { return a.first == b.first; };
+        auto x_coord_comparator = [](const auto& a, const auto& b) { return a.first == b.first; };
         auto last = std::unique(pSatSamplePoints.begin(), pSatSamplePoints.end(), x_coord_comparator);
         pSatSamplePoints.erase(last, pSatSamplePoints.end());
 
