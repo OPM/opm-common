@@ -27,8 +27,6 @@
 #ifndef OPM_CONSTANT_COMPRESSIBILITY_WATER_PVT_HPP
 #define OPM_CONSTANT_COMPRESSIBILITY_WATER_PVT_HPP
 
-#include <opm/material/common/Tabulated1DFunction.hpp>
-
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #endif
@@ -43,9 +41,6 @@ namespace Opm {
 template <class Scalar>
 class ConstantCompressibilityWaterPvt
 {
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
-
 public:
     ConstantCompressibilityWaterPvt() = default;
     ConstantCompressibilityWaterPvt(const std::vector<Scalar>& waterReferenceDensity,
