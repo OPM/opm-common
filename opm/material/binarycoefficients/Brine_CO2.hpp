@@ -29,6 +29,7 @@
 #define OPM_BINARY_COEFF_BRINE_CO2_HPP
 
 #include <opm/material/IdealGas.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 namespace Opm {
 namespace BinaryCoeff {

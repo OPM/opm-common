@@ -33,6 +33,7 @@
 
 #include <opm/material/IdealGas.hpp>
 
+#include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
 #if HAVE_OPM_COMMON
@@ -42,6 +43,7 @@
 #endif
 
 #include <cmath>
+#include <sstream>
 
 namespace Opm {
 
