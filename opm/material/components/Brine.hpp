@@ -80,7 +80,7 @@ public:
     static Scalar molarMass()
     {
         const Scalar M1 = H2O::molarMass();
-        const Scalar M2 = 58e-3; // molar mass of NaCl [kg/mol]
+        constexpr Scalar M2 = 58e-3; // molar mass of NaCl [kg/mol]
         const Scalar X2 = salinity; // mass fraction of salt in brine
         return M1*M2/(M2 + X2*(M1 - M2));
     }
@@ -149,12 +149,12 @@ public:
                                      const Evaluation& pressure)
     {
         // Numerical coefficents from Palliser and McKibbin
-        static const Scalar f[] = {
+        static constexpr Scalar f[] = {
             2.63500e-1, 7.48368e-6, 1.44611e-6, -3.80860e-10
         };
 
         // Numerical coefficents from Michaelides for the enthalpy of brine
-        static const Scalar a[4][3] = {
+        static constexpr Scalar a[4][3] = {
             { -9633.6, -4080.0, +286.49 },
             { +166.58, +68.577, -4.6856 },
             { -0.90963, -0.36524, +0.249667e-1 },
