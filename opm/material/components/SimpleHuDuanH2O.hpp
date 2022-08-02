@@ -35,8 +35,6 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
-#include <opm/material/common/Unused.hpp>
-
 #if HAVE_OPM_COMMON
 #include <opm/common/OpmLog/OpmLog.hpp>
 #else

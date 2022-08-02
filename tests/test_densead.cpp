@@ -37,8 +37,6 @@
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 
-#include <opm/material/common/Unused.hpp>
-
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <iostream>
@@ -60,12 +58,12 @@ struct TestEnvBase
         const Scalar c = 1.234;
         const Scalar x = 4.567;
         const Scalar y = 8.910;
-        Scalar z OPM_UNUSED = Opm::blank(tolerance);
+        [[maybe_unused]] Scalar z = Opm::blank(tolerance);
         const Eval cEval = asImp_().createConstant(c);
-        const Eval c2Eval OPM_UNUSED = asImp_().createConstant(c);
+        [[maybe_unused]] const Eval c2Eval = asImp_().createConstant(c);
         const Eval xEval = asImp_().createVariable(x, 0);
         const Eval yEval = asImp_().createVariable(y, 1);
-        const Eval zEval OPM_UNUSED = Opm::blank(xEval);
+        [[maybe_unused]] const Eval zEval = Opm::blank(xEval);
 
         Eval xyEval = xEval;
         Eval yxEval = yEval;
@@ -578,12 +576,12 @@ struct TestEnvBase
                        1e-6, 1e9);
 
         while (false) {
-            Scalar val1 OPM_UNUSED = 0.0;
-            Scalar val2 OPM_UNUSED = 1.0;
-            Scalar resultVal OPM_UNUSED;
-            Eval eval1 OPM_UNUSED = asImp_().createConstant(1.0);
-            Eval eval2 OPM_UNUSED = asImp_().createConstant(2.0);
-            Eval resultEval OPM_UNUSED = asImp_().newBlankEval();;
+            [[maybe_unused]] Scalar val1 = 0.0;
+            [[maybe_unused]] Scalar val2 = 1.0;
+            [[maybe_unused]] Scalar resultVal;
+            [[maybe_unused]] Eval eval1 = asImp_().createConstant(1.0);
+            [[maybe_unused]] Eval eval2 = asImp_().createConstant(2.0);
+            [[maybe_unused]] Eval resultEval = asImp_().newBlankEval();;
 
             // make sure that the convenince functions work (i.e., that everything can be
             // accessed without the MathToolbox<Scalar> detour.)

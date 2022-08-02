@@ -31,8 +31,6 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #endif
 
-#include <opm/material/common/Unused.hpp>
-
 #include <string>
 #include <cassert>
 #include <algorithm>

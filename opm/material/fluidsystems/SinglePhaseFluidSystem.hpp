@@ -37,8 +37,6 @@
 #include <opm/material/components/N2.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
 
-#include <opm/material/common/Unused.hpp>
-
 #include <limits>
 #include <cassert>
 
@@ -74,7 +72,7 @@ public:
     static const int numPhases = 1;
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName(unsigned phaseIdx OPM_OPTIM_UNUSED)
+    static const char* phaseName([[maybe_unused]] unsigned phaseIdx)
     {
         assert(phaseIdx < numPhases);
 
@@ -124,7 +122,7 @@ public:
     static const int numComponents = 1;
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName(unsigned compIdx OPM_OPTIM_UNUSED)
+    static const char* componentName([[maybe_unused]] unsigned compIdx)
     {
         assert(compIdx < numComponents);
 

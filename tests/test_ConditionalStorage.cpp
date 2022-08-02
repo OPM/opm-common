@@ -28,7 +28,6 @@
 */
 #include "config.h"
 
-#include <opm/material/common/Unused.hpp>
 #include <opm/material/common/ConditionalStorage.hpp>
 
 #include <stdexcept>
@@ -57,7 +56,7 @@ int main()
         ConditionalTrueString bar("hello"); // construct using arguments
         ConditionalTrueString baz(bar); // copy constructor
 
-        EnsureCompileTimeConstant<ConditionalTrueString::condition> hello OPM_UNUSED;
+        [[maybe_unused]] EnsureCompileTimeConstant<ConditionalTrueString::condition> hello;
         if (!std::is_same<typename ConditionalTrueString::type, std::string>::value)
             // something went wrong with the exported type
             std::abort();
@@ -89,9 +88,9 @@ int main()
         typedef Opm::ConditionalStorage<false, std::string> ConditionalFalseString;
         ConditionalFalseString foo; // default constructor
         ConditionalFalseString bar("hello"); // construct by value
-        ConditionalFalseString OPM_UNUSED baz(bar); // copy constructor
+        [[maybe_unused]] ConditionalFalseString baz(bar); // copy constructor
 
-        EnsureCompileTimeConstant<ConditionalFalseString::condition> hello OPM_UNUSED;
+        [[maybe_unused]] EnsureCompileTimeConstant<ConditionalFalseString::condition> hello;
         if (!std::is_same<typename ConditionalFalseString::type, std::string>::value)
             // something went wrong with the exported type
             std::abort();
@@ -122,13 +121,13 @@ int main()
 
     {
         typedef Opm::ConditionalStorage<true, IAmAnIslandLeaveMeAlone> ConditionalTrueIsland;
-        ConditionalTrueIsland OPM_UNUSED foo(1, 2);
+        [[maybe_unused]] ConditionalTrueIsland foo(1, 2);
         // ConditionalTrueIsland OPM_UNUSED bar; // compiler fails because of missing default ctor
     }
 
     {
         typedef Opm::ConditionalStorage<false, IAmAnIslandLeaveMeAlone> ConditionalFalseIsland;
-        ConditionalFalseIsland OPM_UNUSED foo(1, 2);
+        [[maybe_unused]] ConditionalFalseIsland foo(1, 2);
         // ConditionalFalseIsland OPM_UNUSED bar; // compiler fails because of missing default ctor
     }
 

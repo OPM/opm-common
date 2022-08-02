@@ -29,7 +29,6 @@
 #define OPM_CONDITIONAL_STORAGE_HH
 
 #include <stdexcept>
-#include <opm/material/common/Unused.hpp>
 #include <utility>
 
 namespace Opm {

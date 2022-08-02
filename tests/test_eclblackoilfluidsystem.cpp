@@ -38,7 +38,6 @@
 #include <opm/material/densead/Evaluation.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
-#include <opm/material/common/Unused.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -748,9 +747,9 @@ inline void testAll()
     }
 
     // make sure that the {oil,gas,water}Pvt() methods are available
-    const auto& gPvt OPM_UNUSED = FluidSystem::gasPvt();
-    const auto& oPvt OPM_UNUSED  = FluidSystem::oilPvt();
-    const auto& wPvt OPM_UNUSED = FluidSystem::waterPvt();
+    [[maybe_unused]] const auto& gPvt = FluidSystem::gasPvt();
+    [[maybe_unused]] const auto& oPvt = FluidSystem::oilPvt();
+    [[maybe_unused]] const auto& wPvt = FluidSystem::waterPvt();
 }
 
 int main(int argc, char **argv)

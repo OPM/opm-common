@@ -30,7 +30,6 @@
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Exceptions.hpp>
-#include <opm/material/common/Unused.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <vector>

@@ -31,7 +31,6 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/IdealGas.hpp>
 
-#include <opm/material/common/Unused.hpp>
 #include <opm/material/common/Exceptions.hpp>
 
 namespace Opm {

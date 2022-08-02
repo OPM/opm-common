@@ -27,7 +27,6 @@
 #ifndef OPM_CHECK_COMPONENT_HPP
 #define OPM_CHECK_COMPONENT_HPP
 
-#include <opm/material/common/Unused.hpp>
 #include <dune/common/classname.hh>
 
 #include <iostream>
@@ -48,35 +47,35 @@ void checkComponent()
     typedef typename Component::Scalar Scalar;
 
     // make sure the necessary constants are exported
-    bool isTabulated OPM_UNUSED = Component::isTabulated;
+    [[maybe_unused]] bool isTabulated = Component::isTabulated;
 
     // test for the gas-phase functions
     Evaluation T=0, p=0;
     while (0) {
-        { bool b OPM_UNUSED = Component::gasIsCompressible(); }
-        { bool b OPM_UNUSED = Component::gasIsIdeal(); }
-        { bool b OPM_UNUSED = Component::liquidIsCompressible(); }
-        { std::string s OPM_UNUSED = Component::name(); }
-        { Scalar M OPM_UNUSED = Component::molarMass(); }
-        { Scalar Tc OPM_UNUSED = Component::criticalTemperature(); }
-        { Scalar pc OPM_UNUSED = Component::criticalPressure(); }
-        { Scalar Vc OPM_UNUSED = Component::criticalVolume(); }
-        { Scalar Tt OPM_UNUSED = Component::tripleTemperature(); }
-        { Scalar pt OPM_UNUSED = Component::triplePressure(); }
-        { Evaluation omega OPM_UNUSED = Component::acentricFactor(); }
-        { Evaluation pv OPM_UNUSED = Component::vaporPressure(T); }
-        { Evaluation rho OPM_UNUSED = Component::gasDensity(T, p); }
-        { Evaluation rho OPM_UNUSED = Component::liquidDensity(T, p); }
-        { Evaluation h OPM_UNUSED = Component::gasEnthalpy(T, p); }
-        { Evaluation h OPM_UNUSED = Component::liquidEnthalpy(T, p); }
-        { Evaluation u OPM_UNUSED = Component::gasInternalEnergy(T, p); }
-        { Evaluation u OPM_UNUSED = Component::liquidInternalEnergy(T, p); }
-        { Evaluation mu OPM_UNUSED = Component::gasViscosity(T, p); }
-        { Evaluation mu OPM_UNUSED = Component::liquidViscosity(T, p); }
-        { Evaluation lambda OPM_UNUSED = Component::gasThermalConductivity(T, p); }
-        { Evaluation lambda OPM_UNUSED = Component::liquidThermalConductivity(T, p); }
-        { Evaluation cp OPM_UNUSED = Component::gasHeatCapacity(T, p); }
-        { Evaluation cp OPM_UNUSED = Component::liquidHeatCapacity(T, p); }
+        { [[maybe_unused]] bool b = Component::gasIsCompressible(); }
+        { [[maybe_unused]] bool b = Component::gasIsIdeal(); }
+        { [[maybe_unused]] bool b = Component::liquidIsCompressible(); }
+        { [[maybe_unused]] std::string s = Component::name(); }
+        { [[maybe_unused]] Scalar M = Component::molarMass(); }
+        { [[maybe_unused]] Scalar Tc = Component::criticalTemperature(); }
+        { [[maybe_unused]] Scalar pc = Component::criticalPressure(); }
+        { [[maybe_unused]] Scalar Vc = Component::criticalVolume(); }
+        { [[maybe_unused]] Scalar Tt = Component::tripleTemperature(); }
+        { [[maybe_unused]] Scalar pt = Component::triplePressure(); }
+        { [[maybe_unused]] Evaluation omega  = Component::acentricFactor(); }
+        { [[maybe_unused]] Evaluation pv = Component::vaporPressure(T); }
+        { [[maybe_unused]] Evaluation rho = Component::gasDensity(T, p); }
+        { [[maybe_unused]] Evaluation rho = Component::liquidDensity(T, p); }
+        { [[maybe_unused]] Evaluation h = Component::gasEnthalpy(T, p); }
+        { [[maybe_unused]] Evaluation h = Component::liquidEnthalpy(T, p); }
+        { [[maybe_unused]] Evaluation u = Component::gasInternalEnergy(T, p); }
+        { [[maybe_unused]] Evaluation u = Component::liquidInternalEnergy(T, p); }
+        { [[maybe_unused]] Evaluation mu = Component::gasViscosity(T, p); }
+        { [[maybe_unused]] Evaluation mu = Component::liquidViscosity(T, p); }
+        { [[maybe_unused]] Evaluation lambda = Component::gasThermalConductivity(T, p); }
+        { [[maybe_unused]] Evaluation lambda = Component::liquidThermalConductivity(T, p); }
+        { [[maybe_unused]] Evaluation cp = Component::gasHeatCapacity(T, p); }
+        { [[maybe_unused]] Evaluation cp = Component::liquidHeatCapacity(T, p); }
     }
     std::cout << "----------------------------------\n";
 }
