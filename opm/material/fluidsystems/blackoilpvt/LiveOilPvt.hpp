@@ -27,8 +27,6 @@
 #ifndef OPM_LIVE_OIL_PVT_HPP
 #define OPM_LIVE_OIL_PVT_HPP
 
-#include <opm/material/Constants.hpp>
-#include <opm/material/common/OpmFinal.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
@@ -52,11 +50,11 @@ namespace Opm {
 template <class Scalar>
 class LiveOilPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
+    using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    typedef UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     LiveOilPvt()
     {
@@ -304,7 +302,7 @@ public:
      */
     void setSaturatedOilFormationVolumeFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
     {
-        Scalar T = 273.15 + 15.56; // [K]
+        constexpr const Scalar T = 273.15 + 15.56; // [K]
         auto& invOilB = inverseOilBTable_[regionIdx];
 
         updateSaturationPressure_(regionIdx);
@@ -358,7 +356,7 @@ public:
      */
     void setSaturatedOilViscosity(unsigned regionIdx, const SamplingPoints& samplePoints)
     {
-        Scalar T = 273.15 + 15.56; // [K]
+        constexpr const Scalar T = 273.15 + 15.56; // [K]
 
         // update the table for the saturated oil
         saturatedOilMuTable_[regionIdx].setContainerOfTuples(samplePoints);
@@ -534,7 +532,7 @@ public:
         // keyword)
         maxOilSaturation = min(maxOilSaturation, Scalar(1.0));
         if (vapPar2_ > 0.0 && maxOilSaturation > 0.01 && oilSaturation < maxOilSaturation) {
-            static const Scalar eps = 0.001;
+            constexpr const Scalar eps = 0.001;
             const Evaluation& So = max(oilSaturation, eps);
             tmp *= max(1e-3, pow(So/maxOilSaturation, vapPar2_));
         }
@@ -556,7 +554,7 @@ public:
         typedef MathToolbox<Evaluation> Toolbox;
 
         const auto& RsTable = saturatedGasDissolutionFactorTable_[regionIdx];
-        const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
+        constexpr const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
 
         // use the saturation pressure function to get a pretty good initial value
         Evaluation pSat = saturationPressure_[regionIdx].eval(Rs, /*extrapolate=*/true);
