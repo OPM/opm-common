@@ -29,7 +29,6 @@
 
 #include <opm/material/Constants.hpp>
 
-#include <opm/material/common/Tabulated1DFunction.hpp>
 #include <opm/material/components/Brine.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/CO2.hpp>
@@ -56,8 +55,7 @@ namespace Opm {
 template <class Scalar>
 class BrineCo2Pvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
-    static const bool extrapolate = true;
+    static constexpr bool extrapolate = true;
     //typedef H2O<Scalar> H2O_IAPWS;
     //typedef Brine<Scalar, H2O_IAPWS> Brine_IAPWS;
     //typedef TabulatedComponent<Scalar, H2O_IAPWS> H2O_Tabulated;
@@ -68,14 +66,12 @@ class BrineCo2Pvt
 
 
 public:
-    typedef SimpleHuDuanH2O<Scalar> H2O;
-    typedef ::Opm::Brine<Scalar, H2O> Brine;
-    typedef ::Opm::CO2<Scalar, CO2Tables> CO2;
-
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using H2O = SimpleHuDuanH2O<Scalar>;
+    using Brine = ::Opm::Brine<Scalar, H2O>;
+    using CO2 = ::Opm::CO2<Scalar, CO2Tables>;
 
     //! The binary coefficients for brine and CO2 used by this fluid system
-    typedef BinaryCoeff::Brine_CO2<Scalar, H2O, CO2> BinaryCoeffBrineCO2;
+    using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
     explicit BrineCo2Pvt() = default;
     BrineCo2Pvt(const std::vector<Scalar>& brineReferenceDensity,
@@ -486,12 +482,12 @@ private:
         /* same function as enthalpy_brine, only extended by CO2 content */
 
         /*Numerical coefficents from PALLISER*/
-        static Scalar f[] = {
+        static constexpr Scalar f[] = {
             2.63500E-1, 7.48368E-6, 1.44611E-6, -3.80860E-10
         };
 
         /*Numerical coefficents from MICHAELIDES for the enthalpy of brine*/
-        static Scalar a[4][3] = {
+        static constexpr Scalar a[4][3] = {
             { 9633.6, -4080.0, +286.49 },
             { +166.58, +68.577, -4.6856 },
             { -0.90963, -0.36524, +0.249667E-1 },
