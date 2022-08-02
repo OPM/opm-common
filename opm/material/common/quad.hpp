@@ -29,8 +29,6 @@
 #if !defined OPM_COMMON_QUAD_HPP && HAVE_QUAD
 #define OPM_COMMON_QUAD_HPP
 
-#include <opm/material/common/Unused.hpp>
-
 #include <cmath>
 #include <complex>
 #include <string>

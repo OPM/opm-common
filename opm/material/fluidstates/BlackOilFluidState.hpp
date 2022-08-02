@@ -32,7 +32,6 @@
 #include <opm/material/common/HasMemberGeneratorMacros.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
-#include <opm/material/common/Unused.hpp>
 #include <opm/material/common/ConditionalStorage.hpp>
 
 namespace Opm {

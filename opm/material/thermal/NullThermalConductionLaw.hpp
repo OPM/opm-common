@@ -27,8 +27,6 @@
 #ifndef OPM_NULL_THERMAL_CONDUCTION_LAW_HPP
 #define OPM_NULL_THERMAL_CONDUCTION_LAW_HPP
 
-#include <opm/material/common/Unused.hpp>
-
 namespace Opm {
 
 /*!

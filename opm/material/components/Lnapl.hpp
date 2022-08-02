@@ -29,8 +29,6 @@
 
 #include "Component.hpp"
 
-#include <opm/material/common/Unused.hpp>
-
 namespace Opm {
 /*!
  * \ingroup Components
