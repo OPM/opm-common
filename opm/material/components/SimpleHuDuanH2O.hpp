@@ -366,7 +366,7 @@ public:
                 throw NumericalIssue(oss.str());
         }
 
-        const Evaluation& rho = liquidDensity(temperature, pressure, extrapolate);
+        const Evaluation rho = liquidDensity(temperature, pressure, extrapolate);
         return Common::viscosity(temperature, rho);
     }
 
