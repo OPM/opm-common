@@ -48,10 +48,10 @@ namespace Opm {
 template <class Scalar>
 class DryGasPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
+    using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     explicit DryGasPvt() = default;
     DryGasPvt(const std::vector<Scalar>& gasReferenceDensity,
@@ -88,11 +88,11 @@ public:
             setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
 
             // determine the molar masses of the components
-            Scalar p = 1.01325e5; // surface pressure, [Pa]
-            Scalar T = 273.15 + 15.56; // surface temperature, [K]
-            Scalar MO = 175e-3; // [kg/mol]
+            constexpr Scalar p = 1.01325e5; // surface pressure, [Pa]
+            constexpr Scalar T = 273.15 + 15.56; // surface temperature, [K]
+            constexpr Scalar MO = 175e-3; // [kg/mol]
             Scalar MG = Constants<Scalar>::R*T*rhoRefG / p; // [kg/mol], consequence of the ideal gas law
-            Scalar MW = 18.0e-3; // [kg/mol]
+            constexpr Scalar MW = 18.0e-3; // [kg/mol]
             // TODO (?): the molar mass of the components can possibly specified
             // explicitly in the deck.
             setMolarMasses(regionIdx, MO, MG, MW);
