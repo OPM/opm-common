@@ -27,11 +27,6 @@
 #ifndef OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 #define OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 
-#include <opm/material/common/OpmFinal.hpp>
-#include <opm/material/common/UniformXTabulated2DFunction.hpp>
-#include <opm/material/common/Tabulated1DFunction.hpp>
-#include <opm/material/common/Spline.hpp>
-
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
@@ -45,9 +40,6 @@ namespace Opm {
 template <class Scalar>
 class ConstantCompressibilityOilPvt
 {
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
-
 public:
     ConstantCompressibilityOilPvt() = default;
     ConstantCompressibilityOilPvt(const std::vector<Scalar>& oilReferenceDensity,
