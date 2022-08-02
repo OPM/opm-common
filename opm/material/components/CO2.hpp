@@ -51,7 +51,7 @@ namespace Opm {
 template <class Scalar, class CO2Tables>
 class CO2 : public Component<Scalar, CO2<Scalar, CO2Tables> >
 {
-    static const Scalar R;
+    static constexpr Scalar R = Constants<Scalar>::R;
 
 public:
     /*!
@@ -129,9 +129,9 @@ public:
     template <class Evaluation>
     static Evaluation vaporPressure(const Evaluation& T)
     {
-        static const Scalar a[4] =
+        static constexpr Scalar a[4] =
             { -7.0602087, 1.9391218, -1.6463597, -3.2995634 };
-        static const Scalar t[4] =
+        static constexpr Scalar t[4] =
             { 1.0, 1.5, 2.0, 4.0 };
 
         // this is on page 1524 of the reference
@@ -204,19 +204,19 @@ public:
                                    const Evaluation& pressure,
                                    bool extrapolate = false)
     {
-        const Scalar a0 = 0.235156;
-        const Scalar a1 = -0.491266;
-        const Scalar a2 = 5.211155e-2;
-        const Scalar a3 = 5.347906e-2;
-        const Scalar a4 = -1.537102e-2;
+        constexpr Scalar a0 = 0.235156;
+        constexpr Scalar a1 = -0.491266;
+        constexpr Scalar a2 = 5.211155e-2;
+        constexpr Scalar a3 = 5.347906e-2;
+        constexpr Scalar a4 = -1.537102e-2;
 
-        const Scalar d11 = 0.4071119e-2;
-        const Scalar d21 = 0.7198037e-4;
-        const Scalar d64 = 0.2411697e-16;
-        const Scalar d81 = 0.2971072e-22;
-        const Scalar d82 = -0.1627888e-22;
+        constexpr Scalar d11 = 0.4071119e-2;
+        constexpr Scalar d21 = 0.7198037e-4;
+        constexpr Scalar d64 = 0.2411697e-16;
+        constexpr Scalar d81 = 0.2971072e-22;
+        constexpr Scalar d82 = -0.1627888e-22;
 
-        const Scalar ESP = 251.196;
+        constexpr Scalar ESP = 251.196;
 
         if(temperature < 275.) // regularization
             temperature = 275.0;
@@ -254,21 +254,17 @@ public:
     template <class Evaluation>
     static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        Scalar eps = 1e-6;
+        constexpr Scalar eps = 1e-6;
 
         // use central differences here because one-sided methods do
         // not come with a performance improvement. (central ones are
         // more accurate, though...)
-        const Evaluation& h1 = gasEnthalpy(temperature - eps, pressure);
-        const Evaluation& h2 = gasEnthalpy(temperature + eps, pressure);
+        const Evaluation h1 = gasEnthalpy(temperature - eps, pressure);
+        const Evaluation h2 = gasEnthalpy(temperature + eps, pressure);
 
         return (h2 - h1) / (2*eps) ;
     }
 };
-
-
-template <class Scalar, class CO2Tables>
-const Scalar CO2<Scalar, CO2Tables>::R = Constants<Scalar>::R;
 
 } // namespace Opm
 
