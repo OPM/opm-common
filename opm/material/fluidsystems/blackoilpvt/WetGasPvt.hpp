@@ -27,9 +27,7 @@
 #ifndef OPM_WET_GAS_PVT_HPP
 #define OPM_WET_GAS_PVT_HPP
 
-#include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/OpmFinal.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
@@ -52,11 +50,11 @@ namespace Opm {
 template <class Scalar>
 class WetGasPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
+    using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    typedef UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     WetGasPvt()
     {
@@ -309,15 +307,15 @@ public:
 
         const auto& RvTable = saturatedOilVaporizationFactorTable_[regionIdx];
 
-        Scalar T = 273.15 + 15.56; // [K]
+        constexpr const Scalar T = 273.15 + 15.56; // [K]
 
-        Scalar RvMin = 0.0;
+        constexpr const Scalar RvMin = 0.0;
         Scalar RvMax = RvTable.eval(saturatedOilVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
 
         Scalar poMin = samplePoints.front().first;
         Scalar poMax = samplePoints.back().first;
 
-        size_t nRv = 20;
+        constexpr const size_t nRv = 20;
         size_t nP = samplePoints.size()*2;
 
         Scalar rhooRef = oilReferenceDensity_[regionIdx];
@@ -385,13 +383,13 @@ public:
     {
         auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
 
-        Scalar RvMin = 0.0;
+        constexpr const Scalar RvMin = 0.0;
         Scalar RvMax = oilVaporizationFac.eval(saturatedOilVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
 
         Scalar poMin = samplePoints.front().first;
         Scalar poMax = samplePoints.back().first;
 
-        size_t nRv = 20;
+        constexpr const size_t nRv = 20;
         size_t nP = samplePoints.size()*2;
 
         TabulatedOneDFunction mugTable;
@@ -570,7 +568,7 @@ public:
         // keyword)
         maxOilSaturation = min(maxOilSaturation, Scalar(1.0));
         if (vapPar1_ > 0.0 && maxOilSaturation > 0.01 && oilSaturation < maxOilSaturation) {
-            static const Scalar eps = 0.001;
+            constexpr const Scalar eps = 0.001;
             const Evaluation& So = max(oilSaturation, eps);
             tmp *= max(1e-3, pow(So/maxOilSaturation, vapPar1_));
         }
@@ -596,7 +594,7 @@ public:
         typedef MathToolbox<Evaluation> Toolbox;
 
         const auto& RvTable = saturatedOilVaporizationFactorTable_[regionIdx];
-        const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
+        constexpr const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
 
         // use the tabulated saturation pressure function to get a pretty good initial value
         Evaluation pSat = saturationPressure_[regionIdx].eval(Rv, /*extrapolate=*/true);
@@ -706,7 +704,6 @@ public:
 private:
     void updateSaturationPressure_(unsigned regionIdx)
     {
-        typedef std::pair<Scalar, Scalar> Pair;
         const auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
 
         // create the taublated function representing saturation pressure depending of
@@ -720,12 +717,11 @@ private:
             Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
             Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
 
-            Pair val(Rv, pSat);
-            pSatSamplePoints.push_back(val);
+            pSatSamplePoints.emplace_back(Rv, pSat);
         }
 
         //Prune duplicate Rv values (can occur, and will cause problems in further interpolation)
-        auto x_coord_comparator = [](const Pair& a, const Pair& b) { return a.first == b.first; };
+        auto x_coord_comparator = [](const auto& a, const auto& b) { return a.first == b.first; };
         auto last = std::unique(pSatSamplePoints.begin(), pSatSamplePoints.end(), x_coord_comparator);
         if (std::distance(pSatSamplePoints.begin(), last) > 1) // only remove them if there are more than two points
             pSatSamplePoints.erase(last, pSatSamplePoints.end());
