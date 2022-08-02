@@ -33,6 +33,7 @@
 
 #include <array>
 #include <algorithm>
+#include <vector>
 
 namespace Opm {
 
@@ -89,24 +90,21 @@ public:
     //! destructor
     ~FastSmallVector()
     {
-        if (dataPtr_ != smallBuf_.data())
-            delete [] dataPtr_;
     }
 
 
     //! move assignment
     FastSmallVector& operator=(FastSmallVector&& other)
     {
-        if (dataPtr_ != smallBuf_.data() && dataPtr_ != other.dataPtr_)
-            delete [] dataPtr_;
-
         size_ = other.size_;
         if (size_ <= N) {
             smallBuf_ = std::move(other.smallBuf_);
             dataPtr_ = smallBuf_.data();
         }
-        else
-            dataPtr_ = other.dataPtr_;
+        else {
+            data_ = std::move(other.data_);
+            dataPtr_ = data_.data();
+        }
 
         other.dataPtr_ = nullptr;
         other.size_ = 0;
@@ -124,11 +122,8 @@ public:
             dataPtr_ = smallBuf_.data();
         }
         else if (dataPtr_ != other.dataPtr_) {
-            if (dataPtr_ != smallBuf_.data())
-                delete[] dataPtr_;
-            dataPtr_ = new ValueType[size_];
-
-            std::copy(other.dataPtr_, other.dataPtr_ + size_, dataPtr_);
+            data_ = other.data_;
+            dataPtr_ = data_.data();
         }
 
         return (*this);
@@ -151,13 +146,15 @@ private:
     {
         size_ = numElem;
 
-        if (size_ > N)
-            dataPtr_ = new ValueType[size_];
-        else
+        if (size_ > N) {
+            data_.resize(size_);
+            dataPtr_ = data_.data();
+        } else
             dataPtr_ = smallBuf_.data();
     }
 
     std::array<ValueType, N> smallBuf_;
+    std::vector<ValueType> data_;
     std::size_t size_;
     ValueType* dataPtr_;
 };
