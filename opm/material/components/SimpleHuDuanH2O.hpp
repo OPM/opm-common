@@ -64,12 +64,12 @@ namespace Opm {
  * \tparam Scalar The type used for representing scalar values
  */
 template <class Scalar>
-class SimpleHuDuanH2O : public Component<Scalar, SimpleHuDuanH2O<Scalar> >
+class SimpleHuDuanH2O : public Component<Scalar, SimpleHuDuanH2O<Scalar>>
 {
-    typedef ::Opm::IdealGas<Scalar> IdealGas;
-    typedef IAPWS::Common<Scalar> Common;
+    using IdealGas = ::Opm::IdealGas<Scalar>;
+    using Common = IAPWS::Common<Scalar>;
 
-    static const Scalar R;  // specific gas constant of water
+    static constexpr Scalar R = Constants<Scalar>::R / 18e-3;  // specific gas constant of water
 
 public:
     /*!
@@ -146,7 +146,7 @@ public:
         if (T < tripleTemperature())
             return 0; // water is solid: We don't take sublimation into account
 
-        static const Scalar n[10] = {
+        static constexpr Scalar n[10] = {
             0.11670521452767e4, -0.72421316703206e6, -0.17073846940092e2,
             0.12020824702470e5, -0.32325550322333e7, 0.14915108613530e2,
             -0.48232657361591e4, 0.40511340542057e6, -0.23855557567849,
@@ -364,7 +364,7 @@ public:
                 throw NumericalIssue(oss.str());
         }
 
-        const Evaluation& rho = liquidDensity(temperature, pressure, extrapolate);
+        const Evaluation rho = liquidDensity(temperature, pressure, extrapolate);
         return Common::viscosity(temperature, rho);
     }
 
@@ -402,10 +402,10 @@ private:
         Evaluation p = pressure / 1e6; // to MPa
         Scalar Mw = molarMass() * 1e3; //kg/kmol
 
-        static const Scalar k0[5] = { 3.27225e-07, -4.20950e-04, 2.32594e-01, -4.16920e+01, 5.71292e+03 };
-        static const Scalar k1[5] = { -2.32306e-10, 2.91138e-07, -1.49662e-04, 3.59860e-02, -3.55071 };
-        static const Scalar k2[3] = { 2.57241e-14, -1.24336e-11, 5.42707e-07 };
-        static const Scalar k3[3] = { -4.42028e-18, 2.10007e-15, -8.11491e-11 };
+        static constexpr Scalar k0[5] = { 3.27225e-07, -4.20950e-04, 2.32594e-01, -4.16920e+01, 5.71292e+03 };
+        static constexpr Scalar k1[5] = { -2.32306e-10, 2.91138e-07, -1.49662e-04, 3.59860e-02, -3.55071 };
+        static constexpr Scalar k2[3] = { 2.57241e-14, -1.24336e-11, 5.42707e-07 };
+        static constexpr Scalar k3[3] = { -4.42028e-18, 2.10007e-15, -8.11491e-11 };
         Evaluation k0_eval = 1e-3 * (((k0[0]*T + k0[1])*T + k0[2])*T + k0[3] + k0[4]/T);
         Evaluation k1_eval = 1e-2 * (((k1[0]*T + k1[1])*T + k1[2])*T + k1[3] + k1[4]/T);
         Evaluation k2_eval = 1e-1 * ((k2[0]*T + k2[1])*T*T + k2[2]);
@@ -420,9 +420,6 @@ private:
     }
 
 };
-
-template <class Scalar>
-const Scalar SimpleHuDuanH2O<Scalar>::R = Constants<Scalar>::R / 18e-3;
 
 } // namespace Opm
 

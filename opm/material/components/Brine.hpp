@@ -80,7 +80,7 @@ public:
     static Scalar molarMass()
     {
         const Scalar M1 = H2O::molarMass();
-        const Scalar M2 = 58e-3; // molar mass of NaCl [kg/mol]
+        constexpr Scalar M2 = 58e-3; // molar mass of NaCl [kg/mol]
         const Scalar X2 = salinity; // mass fraction of salt in brine
         return M1*M2/(M2 + X2*(M1 - M2));
     }
@@ -149,22 +149,22 @@ public:
                                      const Evaluation& pressure)
     {
         // Numerical coefficents from Palliser and McKibbin
-        static const Scalar f[] = {
+        static constexpr Scalar f[] = {
             2.63500e-1, 7.48368e-6, 1.44611e-6, -3.80860e-10
         };
 
         // Numerical coefficents from Michaelides for the enthalpy of brine
-        static const Scalar a[4][3] = {
+        static constexpr Scalar a[4][3] = {
             { -9633.6, -4080.0, +286.49 },
             { +166.58, +68.577, -4.6856 },
             { -0.90963, -0.36524, +0.249667e-1 },
             { +0.17965e-2, +0.71924e-3, -0.4900e-4 }
         };
 
-        const Evaluation& theta = temperature - 273.15;
+        const Evaluation theta = temperature - 273.15;
 
         Evaluation S = salinity;
-        const Evaluation& S_lSAT =
+        const Evaluation S_lSAT =
             f[0]
             + f[1]*theta
             + f[2]*pow(theta, 2)
@@ -174,17 +174,17 @@ public:
         if (S > S_lSAT)
             S = S_lSAT;
 
-        const Evaluation& hw = H2O::liquidEnthalpy(temperature, pressure)/1e3; // [kJ/kg]
+        const Evaluation hw = H2O::liquidEnthalpy(temperature, pressure)/1e3; // [kJ/kg]
 
         // From Daubert and Danner
-        const Evaluation& h_NaCl =
+        const Evaluation h_NaCl =
             (3.6710e4*temperature
              + (6.2770e1/2)*temperature*temperature
              - (6.6670e-2/3)*temperature*temperature*temperature
              + (2.8000e-5/4)*pow(temperature, 4.0))/58.44e3
             - 2.045698e+02; // [kJ/kg]
 
-        const Evaluation& m = S/(1-S)/58.44e-3;
+        const Evaluation m = S/(1-S)/58.44e-3;
 
         Evaluation d_h = 0;
         for (int i = 0; i<=3; ++i) {
@@ -193,10 +193,10 @@ public:
             }
         }
 
-        const Evaluation& delta_h = 4.184/(1e3 + (58.44 * m))*d_h;
+        const Evaluation delta_h = 4.184/(1e3 + (58.44 * m))*d_h;
 
         // Enthalpy of brine
-        const Evaluation& h_ls = (1-S)*hw + S*h_NaCl + S*delta_h; // [kJ/kg]
+        const Evaluation h_ls = (1-S)*hw + S*h_NaCl + S*delta_h; // [kJ/kg]
         return h_ls*1e3; // convert to [J/kg]
     }
 
@@ -306,7 +306,7 @@ public:
                  && std::abs(scalarValue(pressure)*1e-9) < std::abs(scalarValue(deltaP));
              ++i)
         {
-            const Evaluation& f = liquidDensity(temperature, pressure) - density;
+            const Evaluation f = liquidDensity(temperature, pressure) - density;
 
             Evaluation df_dp = liquidDensity(temperature, pressure + eps);
             df_dp -= liquidDensity(temperature, pressure - eps);
