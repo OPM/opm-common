@@ -48,7 +48,7 @@ template <class Scalar>
 class ConstantCompressibilityBrinePvt
 {
 public:
-    typedef Tabulated1DFunction<Scalar> TabulatedFunction;
+    using TabulatedFunction = Tabulated1DFunction<Scalar>;
 
     ConstantCompressibilityBrinePvt() = default;
     ConstantCompressibilityBrinePvt(const std::vector<Scalar>& waterReferenceDensity,
@@ -238,7 +238,6 @@ private:
     std::vector<TabulatedFunction> compressibilityTables_;
     std::vector<TabulatedFunction> viscosityTables_;
     std::vector<TabulatedFunction> viscosibilityTables_;
-
 };
 
 } // namespace Opm
