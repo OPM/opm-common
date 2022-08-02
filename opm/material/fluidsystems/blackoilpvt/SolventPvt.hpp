@@ -27,8 +27,6 @@
 #ifndef OPM_SOLVENT_PVT_HPP
 #define OPM_SOLVENT_PVT_HPP
 
-#include <opm/material/Constants.hpp>
-
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #if HAVE_ECL_INPUT
@@ -48,10 +46,10 @@ namespace Opm {
 template <class Scalar>
 class SolventPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
+    using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     explicit SolventPvt() = default;
     SolventPvt(const std::vector<Scalar>& solventReferenceDensity,
