@@ -27,13 +27,12 @@
 #ifndef OPM_ECL_TWO_PHASE_MATERIAL_PARAMS_HPP
 #define OPM_ECL_TWO_PHASE_MATERIAL_PARAMS_HPP
 
-#include <type_traits>
-#include <cassert>
 #include <memory>
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
 namespace Opm {
+
 enum class EclTwoPhaseApproach {
     EclTwoPhaseGasOil,
     EclTwoPhaseOilWater,
@@ -50,15 +49,14 @@ enum class EclTwoPhaseApproach {
 template<class Traits, class GasOilParamsT, class OilWaterParamsT, class GasWaterParamsT>
 class EclTwoPhaseMaterialParams : public EnsureFinalized
 {
-    typedef typename Traits::Scalar Scalar;
+    using Scalar = typename Traits::Scalar;
     enum { numPhases = 3 };
 public:
     using EnsureFinalized :: finalize;
 
-
-    typedef GasOilParamsT GasOilParams;
-    typedef OilWaterParamsT OilWaterParams;
-    typedef GasWaterParamsT GasWaterParams;
+    using GasOilParams = GasOilParamsT;
+    using OilWaterParams = OilWaterParamsT;
+    using GasWaterParams = GasWaterParamsT;
 
     /*!
      * \brief The default constructor.
@@ -134,6 +132,7 @@ private:
     std::shared_ptr<OilWaterParams> oilWaterParams_;
     std::shared_ptr<GasWaterParams> gasWaterParams_;
 };
+
 } // namespace Opm
 
 #endif
