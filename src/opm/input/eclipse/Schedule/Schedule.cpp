@@ -479,7 +479,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             }
             this->create_next(block);
 
-            std::unordered_map<std::string, double> wellpi_global_factor;
+            std::unordered_map<std::string, double> wpimult_global_factor;
             while (true) {
                 if (keyword_index == block.size())
                     break;
@@ -527,11 +527,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     false,
                                     nullptr,
                                     target_wellpi,
-                                    &wellpi_global_factor);
+                                    &wpimult_global_factor);
                 keyword_index++;
             }
 
-            this->applyGlobalWPIMULT(wellpi_global_factor);
+            this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 
             if (this->must_write_rst_file(report_step)) {
@@ -1293,6 +1293,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         const std::string prefix = "| "; /* logger prefix string */
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
+        std::unordered_map<std::string, double> wpimult_global_factor;
         for (auto keyword : keywords) {
             input_block.push_back(*keyword);
             this->handleKeyword(reportStep,
@@ -1304,8 +1305,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 matching_wells,
                                 /*actionx_mode=*/false,
                                 &sim_update,
-                                &target_wellpi);
+                                &target_wellpi,
+                                &wpimult_global_factor);
         }
+        this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(reportStep);
         if (reportStep < this->m_sched_deck.size() - 1) {
             iterateScheduleSection(
@@ -1331,6 +1334,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         OpmLog::info(fmt::format("{0}Action {1} evaluated to true. Will add action keywords and\n{0}rerun Schedule section.\n{0}", prefix, action.name()));
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
+        std::unordered_map<std::string, double> wpimult_global_factor;
         for (const auto& keyword : action) {
             input_block.push_back(keyword);
             const auto& location = keyword.location();
@@ -1344,8 +1348,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 matching_wells,
                                 true,
                                 &sim_update,
-                                &target_wellpi);
+                                &target_wellpi,
+                                &wpimult_global_factor);
         }
+        this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(reportStep);
         if (!sim_update.affected_wells.empty()) {
             this->snapshots.back().events().addEvent( ScheduleEvents::ACTIONX_WELL_EVENT );
