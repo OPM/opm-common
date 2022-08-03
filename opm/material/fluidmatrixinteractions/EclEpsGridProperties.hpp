@@ -40,12 +40,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #endif
 
-#include <opm/material/common/Means.hpp>
-
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <memory>
+#include <cstddef>
 #include <string>
 #include <vector>
 
