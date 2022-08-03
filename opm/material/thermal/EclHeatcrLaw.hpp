@@ -29,10 +29,9 @@
 
 #include "EclHeatcrLawParams.hpp"
 
-#include <opm/material/densead/Math.hpp>
-
 namespace Opm
 {
+
 /*!
  * \ingroup material
  *
@@ -46,8 +45,8 @@ template <class ScalarT,
 class EclHeatcrLaw
 {
 public:
-    typedef ParamsT Params;
-    typedef typename Params::Scalar Scalar;
+    using Params = ParamsT;
+    using Scalar = typename Params::Scalar;
 
     /*!
      * \brief Given a fluid state, compute the volumetric internal energy of the rock [W/m^3].
@@ -64,6 +63,7 @@ public:
         return deltaT*(C0 + deltaT*C1 / 2.0);
     }
 };
+
 } // namespace Opm
 
 #endif
