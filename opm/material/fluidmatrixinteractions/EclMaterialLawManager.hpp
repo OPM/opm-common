@@ -68,61 +68,61 @@ template <class TraitsT>
 class EclMaterialLawManager
 {
 private:
-    typedef TraitsT Traits;
-    typedef typename Traits::Scalar Scalar;
+    using Traits = TraitsT;
+    using Scalar = typename Traits::Scalar;
     enum { waterPhaseIdx = Traits::wettingPhaseIdx };
     enum { oilPhaseIdx = Traits::nonWettingPhaseIdx };
     enum { gasPhaseIdx = Traits::gasPhaseIdx };
     enum { numPhases = Traits::numPhases };
 
-    typedef TwoPhaseMaterialTraits<Scalar, oilPhaseIdx, gasPhaseIdx> GasOilTraits;
-    typedef TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx> OilWaterTraits;
-    typedef TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, gasPhaseIdx> GasWaterTraits;
+    using GasOilTraits = TwoPhaseMaterialTraits<Scalar, oilPhaseIdx, gasPhaseIdx>;
+    using OilWaterTraits = TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx>;
+    using GasWaterTraits = TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, gasPhaseIdx>;
 
     // the two-phase material law which is defined on effective (unscaled) saturations
-    typedef SatCurveMultiplexer<GasOilTraits> GasOilEffectiveTwoPhaseLaw;
-    typedef SatCurveMultiplexer<OilWaterTraits> OilWaterEffectiveTwoPhaseLaw;
-    typedef SatCurveMultiplexer<GasWaterTraits> GasWaterEffectiveTwoPhaseLaw;
+    using GasOilEffectiveTwoPhaseLaw = SatCurveMultiplexer<GasOilTraits>;
+    using OilWaterEffectiveTwoPhaseLaw = SatCurveMultiplexer<OilWaterTraits>;
+    using GasWaterEffectiveTwoPhaseLaw = SatCurveMultiplexer<GasWaterTraits>;
 
-    typedef typename GasOilEffectiveTwoPhaseLaw::Params GasOilEffectiveTwoPhaseParams;
-    typedef typename OilWaterEffectiveTwoPhaseLaw::Params OilWaterEffectiveTwoPhaseParams;
-    typedef typename GasWaterEffectiveTwoPhaseLaw::Params GasWaterEffectiveTwoPhaseParams;
+    using GasOilEffectiveTwoPhaseParams = typename GasOilEffectiveTwoPhaseLaw::Params;
+    using OilWaterEffectiveTwoPhaseParams = typename OilWaterEffectiveTwoPhaseLaw::Params;
+    using GasWaterEffectiveTwoPhaseParams = typename GasWaterEffectiveTwoPhaseLaw::Params;
 
     // the two-phase material law which is defined on absolute (scaled) saturations
-    typedef EclEpsTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw> GasOilEpsTwoPhaseLaw;
-    typedef EclEpsTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw> OilWaterEpsTwoPhaseLaw;
-    typedef EclEpsTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw> GasWaterEpsTwoPhaseLaw;
-    typedef typename GasOilEpsTwoPhaseLaw::Params GasOilEpsTwoPhaseParams;
-    typedef typename OilWaterEpsTwoPhaseLaw::Params OilWaterEpsTwoPhaseParams;
-    typedef typename GasWaterEpsTwoPhaseLaw::Params GasWaterEpsTwoPhaseParams;
+    using GasOilEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw>;
+    using OilWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw>;
+    using GasWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw>;
+    using GasOilEpsTwoPhaseParams = typename GasOilEpsTwoPhaseLaw::Params;
+    using OilWaterEpsTwoPhaseParams = typename OilWaterEpsTwoPhaseLaw::Params;
+    using GasWaterEpsTwoPhaseParams = typename GasWaterEpsTwoPhaseLaw::Params;
 
     // the scaled two-phase material laws with hystersis
-    typedef EclHysteresisTwoPhaseLaw<GasOilEpsTwoPhaseLaw> GasOilTwoPhaseLaw;
-    typedef EclHysteresisTwoPhaseLaw<OilWaterEpsTwoPhaseLaw> OilWaterTwoPhaseLaw;
-    typedef EclHysteresisTwoPhaseLaw<GasWaterEpsTwoPhaseLaw> GasWaterTwoPhaseLaw;
-    typedef typename GasOilTwoPhaseLaw::Params GasOilTwoPhaseHystParams;
-    typedef typename OilWaterTwoPhaseLaw::Params OilWaterTwoPhaseHystParams;
-    typedef typename GasWaterTwoPhaseLaw::Params GasWaterTwoPhaseHystParams;
+    using GasOilTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasOilEpsTwoPhaseLaw>;
+    using OilWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<OilWaterEpsTwoPhaseLaw>;
+    using GasWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasWaterEpsTwoPhaseLaw>;
+    using GasOilTwoPhaseHystParams = typename GasOilTwoPhaseLaw::Params;
+    using OilWaterTwoPhaseHystParams = typename OilWaterTwoPhaseLaw::Params;
+    using GasWaterTwoPhaseHystParams = typename GasWaterTwoPhaseLaw::Params;
 
 public:
     // the three-phase material law used by the simulation
-    typedef EclMultiplexerMaterial<Traits, GasOilTwoPhaseLaw, OilWaterTwoPhaseLaw, GasWaterTwoPhaseLaw> MaterialLaw;
-    typedef typename MaterialLaw::Params MaterialLawParams;
+    using MaterialLaw = EclMultiplexerMaterial<Traits, GasOilTwoPhaseLaw, OilWaterTwoPhaseLaw, GasWaterTwoPhaseLaw>;
+    using MaterialLawParams = typename MaterialLaw::Params;
 
 private:
     // internal typedefs
-    typedef std::vector<std::shared_ptr<GasOilEffectiveTwoPhaseParams> > GasOilEffectiveParamVector;
-    typedef std::vector<std::shared_ptr<OilWaterEffectiveTwoPhaseParams> > OilWaterEffectiveParamVector;
-    typedef std::vector<std::shared_ptr<GasWaterEffectiveTwoPhaseParams> > GasWaterEffectiveParamVector;
+    using GasOilEffectiveParamVector = std::vector<std::shared_ptr<GasOilEffectiveTwoPhaseParams>>;
+    using OilWaterEffectiveParamVector = std::vector<std::shared_ptr<OilWaterEffectiveTwoPhaseParams>>;
+    using GasWaterEffectiveParamVector = std::vector<std::shared_ptr<GasWaterEffectiveTwoPhaseParams>>;
 
-    typedef std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar> > > GasOilScalingPointsVector;
-    typedef std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar> > > OilWaterScalingPointsVector;
-    typedef std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar> > > GasWaterScalingPointsVector;
-    typedef std::vector<EclEpsScalingPointsInfo<Scalar>> OilWaterScalingInfoVector;
-    typedef std::vector<std::shared_ptr<GasOilTwoPhaseHystParams> > GasOilParamVector;
-    typedef std::vector<std::shared_ptr<OilWaterTwoPhaseHystParams> > OilWaterParamVector;
-    typedef std::vector<std::shared_ptr<GasWaterTwoPhaseHystParams> > GasWaterParamVector;
-    typedef std::vector<std::shared_ptr<MaterialLawParams> > MaterialLawParamsVector;
+    using GasOilScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
+    using OilWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
+    using GasWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
+    using OilWaterScalingInfoVector = std::vector<EclEpsScalingPointsInfo<Scalar>>;
+    using GasOilParamVector = std::vector<std::shared_ptr<GasOilTwoPhaseHystParams>>;
+    using OilWaterParamVector = std::vector<std::shared_ptr<OilWaterTwoPhaseHystParams>>;
+    using GasWaterParamVector = std::vector<std::shared_ptr<GasWaterTwoPhaseHystParams>>;
+    using MaterialLawParamsVector = std::vector<std::shared_ptr<MaterialLawParams>>;
 
 public:
     EclMaterialLawManager()
@@ -423,18 +423,18 @@ public:
                 Sw = elemScaledEpsInfo.Swl;
 
             // specify a fluid state which only stores the saturations
-            typedef SimpleModularFluidState<Scalar,
-                                            numPhases,
-                                            /*numComponents=*/0,
-                                            /*FluidSystem=*/void, /* -> don't care */
-                                            /*storePressure=*/false,
-                                            /*storeTemperature=*/false,
-                                            /*storeComposition=*/false,
-                                            /*storeFugacity=*/false,
-                                            /*storeSaturation=*/true,
-                                            /*storeDensity=*/false,
-                                            /*storeViscosity=*/false,
-                                            /*storeEnthalpy=*/false> FluidState;
+            using FluidState = SimpleModularFluidState<Scalar,
+                                                       numPhases,
+                                                       /*numComponents=*/0,
+                                                       /*FluidSystem=*/void, /* -> don't care */
+                                                       /*storePressure=*/false,
+                                                       /*storeTemperature=*/false,
+                                                       /*storeComposition=*/false,
+                                                       /*storeFugacity=*/false,
+                                                       /*storeSaturation=*/true,
+                                                       /*storeDensity=*/false,
+                                                       /*storeViscosity=*/false,
+                                                       /*storeEnthalpy=*/false>;
             FluidState fs;
             fs.setSaturation(waterPhaseIdx, Sw);
             fs.setSaturation(gasPhaseIdx, 0);
@@ -443,7 +443,7 @@ public:
             MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
 
             Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
-            const Scalar pcowAtSwThreshold = 1.0; //Pascal
+            constexpr const Scalar pcowAtSwThreshold = 1.0; //Pascal
             // avoid divison by very small number
             if (std::abs(pcowAtSw) > pcowAtSwThreshold) {
                 elemScaledEpsInfo.maxPcow *= pcow/pcowAtSw;
