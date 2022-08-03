@@ -30,8 +30,6 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <cassert>
-
 namespace Opm {
 
 /*!
@@ -45,13 +43,13 @@ namespace Opm {
 template <class TraitsT>
 class TwoPhaseLETCurvesParams : public EnsureFinalized
 {
-    typedef typename TraitsT::Scalar Scalar;
+    using Scalar = typename TraitsT::Scalar;
+
 public:
+    using Traits = TraitsT;
 
-    typedef TraitsT Traits;
-
-    static const int wIdx = 0; //wetting phase index for two phase let
-    static const int nwIdx = 1; //non-wetting phase index for two phase let
+    static constexpr int wIdx = 0; //wetting phase index for two phase let
+    static constexpr int nwIdx = 1; //non-wetting phase index for two phase let
 
     TwoPhaseLETCurvesParams()
     {
@@ -59,7 +57,6 @@ public:
     }
 
     virtual ~TwoPhaseLETCurvesParams() {}
-
 
     /*!
      * \brief Calculate all dependent quantities once the independent
@@ -273,6 +270,7 @@ private:
     Scalar Pcir_;
     Scalar Pct_;
 };
+
 } // namespace Opm
 
 #endif // OPM_TWO_PHASE_LET_CURVES_PARAMS_HPP
