@@ -31,10 +31,6 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #endif
 
-#include <string>
-#include <cassert>
-#include <algorithm>
-
 namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
