@@ -41,8 +41,8 @@ template <class ScalarT>
 class NullThermalConductionLaw
 {
 public:
-    typedef int Params;
-    typedef ScalarT Scalar;
+    using Params = int;
+    using Scalar = ScalarT;
 
     /*!
      * \brief Given a fluid state, return the effective thermal conductivity [W/m^2 / (K/m)] of the porous
@@ -55,6 +55,7 @@ public:
                                           const FluidState&)
     { return 0.0; }
 };
+
 } // namespace Opm
 
 #endif
