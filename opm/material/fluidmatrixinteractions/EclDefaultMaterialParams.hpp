@@ -27,8 +27,6 @@
 #ifndef OPM_ECL_DEFAULT_MATERIAL_PARAMS_HPP
 #define OPM_ECL_DEFAULT_MATERIAL_PARAMS_HPP
 
-#include <type_traits>
-#include <cassert>
 #include <memory>
 
 #include <opm/material/common/EnsureFinalized.hpp>
@@ -46,13 +44,13 @@ namespace Opm {
 template<class Traits, class GasOilParamsT, class OilWaterParamsT>
 class EclDefaultMaterialParams : public EnsureFinalized
 {
-    typedef typename Traits::Scalar Scalar;
+    using Scalar = typename Traits::Scalar;
     enum { numPhases = 3 };
 public:
     using EnsureFinalized :: finalize;
 
-    typedef GasOilParamsT GasOilParams;
-    typedef OilWaterParamsT OilWaterParams;
+    using GasOilParams = GasOilParamsT;
+    using OilWaterParams = OilWaterParamsT;
 
     /*!
      * \brief The default constructor.
