@@ -34,10 +34,9 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #endif
 
-#include <string>
-#include <memory>
 #include <cassert>
-#include <algorithm>
+#include <cmath>
+#include <memory>
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
@@ -51,11 +50,11 @@ namespace Opm {
 template <class EffLawT>
 class EclHysteresisTwoPhaseLawParams : public EnsureFinalized
 {
-    typedef typename EffLawT::Params EffLawParams;
-    typedef typename EffLawParams::Traits::Scalar Scalar;
+    using EffLawParams = typename EffLawT::Params;
+    using Scalar = typename EffLawParams::Traits::Scalar;
 
 public:
-    typedef typename EffLawParams::Traits Traits;
+    using Traits = typename EffLawParams::Traits;
 
     EclHysteresisTwoPhaseLawParams()
     {
