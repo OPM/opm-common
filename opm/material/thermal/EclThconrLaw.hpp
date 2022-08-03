@@ -40,12 +40,12 @@ namespace Opm
  */
 template <class ScalarT,
           class FluidSystem,
-          class ParamsT = EclThconrLawParams<ScalarT> >
+          class ParamsT = EclThconrLawParams<ScalarT>>
 class EclThconrLaw
 {
 public:
-    typedef ParamsT Params;
-    typedef typename Params::Scalar Scalar;
+    using Params = ParamsT;
+    using Scalar = typename Params::Scalar;
 
     /*!
      * \brief Given a fluid state, return the total thermal conductivity [W/m^2 / (K/m)] of the porous
@@ -67,6 +67,7 @@ public:
         }
     }
 };
+
 } // namespace Opm
 
 #endif
