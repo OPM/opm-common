@@ -32,6 +32,7 @@
 #define OPM_MATERIAL_TRAITS_HPP
 
 namespace Opm {
+
 /*!
  * \ingroup material
  *
@@ -44,10 +45,10 @@ class NullMaterialTraits
 {
 public:
     //! The type used for scalar floating point values
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     //! The number of fluid phases
-    static const int numPhases = numPhasesV;
+    static constexpr int numPhases = numPhasesV;
 };
 
 /*!
@@ -60,16 +61,16 @@ class TwoPhaseMaterialTraits
 {
 public:
     //! The type used for scalar floating point values
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     //! The number of fluid phases
-    static const int numPhases = 2;
+    static constexpr int numPhases = 2;
 
     //! The index of the wetting phase
-    static const int  wettingPhaseIdx = wettingPhaseIdxV;
+    static constexpr int  wettingPhaseIdx = wettingPhaseIdxV;
 
     //! The index of the non-wetting phase
-    static const int nonWettingPhaseIdx = nonWettingPhaseIdxV;
+    static constexpr int nonWettingPhaseIdx = nonWettingPhaseIdxV;
 
     // some safety checks...
     static_assert(wettingPhaseIdx != nonWettingPhaseIdx,
@@ -86,19 +87,19 @@ class ThreePhaseMaterialTraits
 {
 public:
     //! The type used for scalar floating point values
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     //! The number of fluid phases
-    static const int numPhases = 3;
+    static constexpr int numPhases = 3;
 
     //! The index of the wetting liquid phase
-    static const int wettingPhaseIdx = wettingPhaseIdxV;
+    static constexpr int wettingPhaseIdx = wettingPhaseIdxV;
 
     //! The index of the non-wetting liquid phase
-    static const int nonWettingPhaseIdx = nonWettingasPhaseIdxV;
+    static constexpr int nonWettingPhaseIdx = nonWettingasPhaseIdxV;
 
     //! The index of the gas phase (i.e., the least wetting phase)
-    static const int gasPhaseIdx = gasPhaseIdxV;
+    static constexpr int gasPhaseIdx = gasPhaseIdxV;
 
     // some safety checks...
     static_assert(0 <= wettingPhaseIdx && wettingPhaseIdx < numPhases,
@@ -115,6 +116,7 @@ public:
     static_assert(nonWettingPhaseIdx != gasPhaseIdx,
                   "nonWettingPhaseIdx and gasPhaseIdx must be different");
 };
+
 } // namespace Opm
 
 #endif

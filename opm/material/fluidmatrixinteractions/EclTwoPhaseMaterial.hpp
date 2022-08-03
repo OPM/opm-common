@@ -56,9 +56,9 @@ template <class TraitsT,
 class EclTwoPhaseMaterial : public TraitsT
 {
 public:
-    typedef GasOilMaterialLawT GasOilMaterialLaw;
-    typedef OilWaterMaterialLawT OilWaterMaterialLaw;
-    typedef GasWaterMaterialLawT GasWaterMaterialLaw;
+    using GasOilMaterialLaw = GasOilMaterialLawT;
+    using OilWaterMaterialLaw = OilWaterMaterialLawT;
+    using GasWaterMaterialLaw = GasWaterMaterialLawT;
 
     // some safety checks
     static_assert(TraitsT::numPhases == 3,
@@ -78,38 +78,38 @@ public:
                   "The two two-phase capillary pressure laws must use the same "
                   "type of floating point values.");
 
-    typedef TraitsT Traits;
-    typedef ParamsT Params;
-    typedef typename Traits::Scalar Scalar;
+    using Traits = TraitsT;
+    using Params = ParamsT;
+    using Scalar = typename Traits::Scalar;
 
-    static const int numPhases = 3;
-    static const int waterPhaseIdx = Traits::wettingPhaseIdx;
-    static const int oilPhaseIdx = Traits::nonWettingPhaseIdx;
-    static const int gasPhaseIdx = Traits::gasPhaseIdx;
+    static constexpr int numPhases = 3;
+    static constexpr int waterPhaseIdx = Traits::wettingPhaseIdx;
+    static constexpr int oilPhaseIdx = Traits::nonWettingPhaseIdx;
+    static constexpr int gasPhaseIdx = Traits::gasPhaseIdx;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
-    static const bool implementsTwoPhaseApi = false;
+    static constexpr bool implementsTwoPhaseApi = false;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API which only depends on the phase saturations
-    static const bool implementsTwoPhaseSatApi = false;
+    static constexpr bool implementsTwoPhaseSatApi = false;
 
     //! Specify whether the quantities defined by this material law
     //! are saturation dependent
-    static const bool isSaturationDependent = true;
+    static constexpr bool isSaturationDependent = true;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the absolute pressure
-    static const bool isPressureDependent = false;
+    static constexpr bool isPressureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are temperature dependent
-    static const bool isTemperatureDependent = false;
+    static constexpr bool isTemperatureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the phase composition
-    static const bool isCompositionDependent = false;
+    static constexpr bool isCompositionDependent = false;
 
     /*!
      * \brief Implements the multiplexer three phase capillary pressure law
@@ -130,7 +130,7 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
         case EclTwoPhaseApproach::EclTwoPhaseGasOil: {
@@ -190,7 +190,7 @@ public:
                                             const Scalar& krnSwMdc,
                                             Params& params)
     {
-        const Scalar krwSw = 2.0; //Should not be used
+        constexpr const Scalar krwSw = 2.0; //Should not be used
         params.oilWaterParams().update(pcSwMdc, krwSw, krnSwMdc);
     }
 
@@ -221,7 +221,7 @@ public:
                                           const Scalar& krnSwMdc,
                                           Params& params)
     {
-        const Scalar krwSw = 2.0; //Should not be used
+        constexpr const Scalar krwSw = 2.0; //Should not be used
         params.gasOilParams().update(pcSwMdc, krwSw, krnSwMdc);
     }
 
@@ -318,7 +318,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
         case EclTwoPhaseApproach::EclTwoPhaseGasOil: {
@@ -416,6 +416,7 @@ public:
         }
     }
 };
+
 } // namespace Opm
 
 #endif

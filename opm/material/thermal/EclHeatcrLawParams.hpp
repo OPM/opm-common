@@ -39,7 +39,7 @@ template <class ScalarT>
 class EclHeatcrLawParams : public EnsureFinalized
 {
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     EclHeatcrLawParams(const EclHeatcrLawParams&) = default;
 

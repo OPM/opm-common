@@ -32,7 +32,8 @@
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <memory>
+#include <cassert>
+#include <stdexcept>
 
 namespace Opm {
 
@@ -43,10 +44,10 @@ namespace Opm {
 template <class ScalarT>
 class EclThermalConductionLawMultiplexerParams : public EnsureFinalized
 {
-    typedef void* ParamPointerType;
+    using ParamPointerType = void*;
 
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     enum ThermalConductionApproach {
         undefinedApproach,
@@ -55,8 +56,8 @@ public:
         nullApproach, // (no keywords)
     };
 
-    typedef EclThconrLawParams<ScalarT> ThconrLawParams;
-    typedef EclThcLawParams<ScalarT> ThcLawParams;
+    using ThconrLawParams = EclThconrLawParams<ScalarT>;
+    using ThcLawParams = EclThcLawParams<ScalarT>;
 
     EclThermalConductionLawMultiplexerParams(const EclThermalConductionLawMultiplexerParams&) = default;
 

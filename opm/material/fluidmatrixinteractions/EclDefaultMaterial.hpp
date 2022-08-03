@@ -29,10 +29,12 @@
 
 #include "EclDefaultMaterialParams.hpp"
 
-#include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <algorithm>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm {
 
@@ -58,8 +60,8 @@ template <class TraitsT,
 class EclDefaultMaterial : public TraitsT
 {
 public:
-    typedef GasOilMaterialLawT GasOilMaterialLaw;
-    typedef OilWaterMaterialLawT OilWaterMaterialLaw;
+    using GasOilMaterialLaw = GasOilMaterialLawT;
+    using OilWaterMaterialLaw = OilWaterMaterialLawT;
 
     // some safety checks
     static_assert(TraitsT::numPhases == 3,
@@ -83,38 +85,38 @@ public:
                   "The oil-water material law must implement the two-phase saturation "
                   "only API to for the default Ecl capillary pressure law!");
 
-    typedef TraitsT Traits;
-    typedef ParamsT Params;
-    typedef typename Traits::Scalar Scalar;
+    using Traits = TraitsT;
+    using Params = ParamsT;
+    using Scalar = typename Traits::Scalar;
 
-    static const int numPhases = 3;
-    static const int waterPhaseIdx = Traits::wettingPhaseIdx;
-    static const int oilPhaseIdx = Traits::nonWettingPhaseIdx;
-    static const int gasPhaseIdx = Traits::gasPhaseIdx;
+    static constexpr int numPhases = 3;
+    static constexpr int waterPhaseIdx = Traits::wettingPhaseIdx;
+    static constexpr int oilPhaseIdx = Traits::nonWettingPhaseIdx;
+    static constexpr int gasPhaseIdx = Traits::gasPhaseIdx;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
-    static const bool implementsTwoPhaseApi = false;
+    static constexpr bool implementsTwoPhaseApi = false;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API which only depends on the phase saturations
-    static const bool implementsTwoPhaseSatApi = false;
+    static constexpr bool implementsTwoPhaseSatApi = false;
 
     //! Specify whether the quantities defined by this material law
     //! are saturation dependent
-    static const bool isSaturationDependent = true;
+    static constexpr bool isSaturationDependent = true;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the absolute pressure
-    static const bool isPressureDependent = false;
+    static constexpr bool isPressureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are temperature dependent
-    static const bool isTemperatureDependent = false;
+    static constexpr bool isTemperatureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the phase composition
-    static const bool isCompositionDependent = false;
+    static constexpr bool isCompositionDependent = false;
 
     /*!
      * \brief Implements the default three phase capillary pressure law
@@ -135,7 +137,7 @@ public:
                                    const Params& params,
                                    const FluidState& state)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
         values[gasPhaseIdx] = pcgn<FluidState, Evaluation>(params, state);
         values[oilPhaseIdx] = 0;
         values[waterPhaseIdx] = - pcnw<FluidState, Evaluation>(params, state);
@@ -172,7 +174,7 @@ public:
                                             const Scalar& krnSwMdc,
                                             Params& params)
     {
-        const double krwSw = 2.0; //Should not be used
+        constexpr const double krwSw = 2.0; //Should not be used
         params.oilWaterParams().update(pcSwMdc, krwSw, krnSwMdc);
     }
 
@@ -209,7 +211,7 @@ public:
     {
         // Maximum attainable oil saturation is 1-SWL
         const auto Swco = params.Swl();
-        const double krwSw = 2.0; //Should not be used
+        constexpr const double krwSw = 2.0; //Should not be used
         params.gasOilParams().update(pcSwMdc - Swco, krwSw, krnSwMdc - Swco);
     }
 
@@ -309,7 +311,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[waterPhaseIdx] = krw<FluidState, Evaluation>(params, fluidState);
         values[oilPhaseIdx] = krn<FluidState, Evaluation>(params, fluidState);
@@ -361,7 +363,7 @@ public:
         // avoid the division by zero: chose a regularized kro which is used if Sw - Swco
         // < epsilon/2 and interpolate between the oridinary and the regularized kro between
         // epsilon and epsilon/2
-        const Scalar epsilon = 1e-5;
+        constexpr const Scalar epsilon = 1e-5;
         if (scalarValue(Sw_ow) - Swco < epsilon) {
             const Evaluation kro2 = (kro_ow + kro_go)/2;
             if (scalarValue(Sw_ow) - Swco > epsilon/2) {

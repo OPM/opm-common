@@ -33,7 +33,8 @@
 #include "EclThcLaw.hpp"
 #include "NullThermalConductionLaw.hpp"
 
-#include <opm/material/densead/Math.hpp>
+#include <stdexcept>
+#include <string>
 
 namespace Opm
 {
@@ -49,13 +50,13 @@ class EclThermalConductionLawMultiplexer
 {
     enum { numPhases = FluidSystem::numPhases };
 
-    typedef EclThconrLaw<ScalarT, FluidSystem, typename ParamsT::ThconrLawParams> ThconrLaw;
-    typedef EclThcLaw<ScalarT, typename ParamsT::ThcLawParams> ThcLaw;
-    typedef NullThermalConductionLaw<ScalarT> NullLaw;
+    using ThconrLaw = EclThconrLaw<ScalarT, FluidSystem, typename ParamsT::ThconrLawParams>;
+    using ThcLaw = EclThcLaw<ScalarT, typename ParamsT::ThcLawParams>;
+    using NullLaw = NullThermalConductionLaw<ScalarT>;
 
 public:
-    typedef ParamsT Params;
-    typedef typename Params::Scalar Scalar;
+    using Params = ParamsT;
+    using Scalar = typename Params::Scalar;
 
     /*!
      * \brief Given a fluid state, compute the volumetric internal energy of the rock [W/m^3].
@@ -82,6 +83,7 @@ public:
         }
     }
 };
+
 } // namespace Opm
 
 #endif

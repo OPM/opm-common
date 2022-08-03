@@ -29,8 +29,6 @@
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <type_traits>
-#include <cassert>
 #include <memory>
 
 namespace Opm {
@@ -46,12 +44,12 @@ namespace Opm {
 template<class Traits, class GasOilLawT, class OilWaterLawT>
 class EclStone1MaterialParams : public EnsureFinalized
 {
-    typedef typename Traits::Scalar Scalar;
+    using Scalar = typename Traits::Scalar;
     enum { numPhases = 3 };
 
 public:
-    typedef typename GasOilLawT::Params GasOilParams;
-    typedef typename OilWaterLawT::Params OilWaterParams;
+    using GasOilParams = typename GasOilLawT::Params;
+    using OilWaterParams = typename OilWaterLawT::Params;
 
     /*!
      * \brief The default constructor.
@@ -153,6 +151,7 @@ private:
     Scalar eta_;
     Scalar krocw_;
 };
+
 } // namespace Opm
 
 #endif

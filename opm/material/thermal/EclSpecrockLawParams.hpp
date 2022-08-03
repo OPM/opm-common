@@ -28,8 +28,9 @@
 #define OPM_ECL_SPECROCK_LAW_PARAMS_HPP
 
 #include <opm/material/common/EnsureFinalized.hpp>
-
 #include <opm/material/common/Tabulated1DFunction.hpp>
+
+#include <cassert>
 
 namespace Opm {
 
@@ -40,10 +41,10 @@ namespace Opm {
 template <class ScalarT>
 class EclSpecrockLawParams : public EnsureFinalized
 {
-    typedef Tabulated1DFunction<ScalarT> InternalEnergyFunction;
+    using InternalEnergyFunction = Tabulated1DFunction<ScalarT>;
 
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     EclSpecrockLawParams(const EclSpecrockLawParams&) = default;
 

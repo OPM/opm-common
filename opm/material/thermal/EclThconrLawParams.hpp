@@ -39,7 +39,7 @@ template <class ScalarT>
 class EclThconrLawParams : public EnsureFinalized
 {
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     EclThconrLawParams(const EclThconrLawParams&) = default;
 

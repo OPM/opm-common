@@ -32,7 +32,9 @@
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <memory>
+#include <cassert>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm {
 
@@ -43,10 +45,10 @@ namespace Opm {
 template <class ScalarT>
 class EclSolidEnergyLawMultiplexerParams : public EnsureFinalized
 {
-    typedef void* ParamPointerType;
+    using ParamPointerType = void*;
 
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     enum SolidEnergyApproach {
         undefinedApproach,
@@ -55,8 +57,8 @@ public:
         nullApproach, // (no keywords)
     };
 
-    typedef EclHeatcrLawParams<ScalarT> HeatcrLawParams;
-    typedef EclSpecrockLawParams<ScalarT> SpecrockLawParams;
+    using HeatcrLawParams = EclHeatcrLawParams<ScalarT>;
+    using SpecrockLawParams = EclSpecrockLawParams<ScalarT>;
 
     EclSolidEnergyLawMultiplexerParams(const EclSolidEnergyLawMultiplexerParams&) = default;
 

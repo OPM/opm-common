@@ -35,16 +35,16 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/material/common/Means.hpp>
+#include <cmath>
+#include <stdexcept>
 #endif
 
-#include <opm/material/common/Means.hpp>
-
 #include <array>
-#include <vector>
-#include <string>
-#include <iostream>
 #include <cassert>
-#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace Opm {
 

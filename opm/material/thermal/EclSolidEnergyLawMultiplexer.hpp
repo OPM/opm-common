@@ -33,7 +33,8 @@
 #include "EclSpecrockLaw.hpp"
 #include "NullSolidEnergyLaw.hpp"
 
-#include <opm/material/densead/Math.hpp>
+#include <string>
+#include <stdexcept>
 
 namespace Opm
 {
@@ -49,13 +50,13 @@ class EclSolidEnergyLawMultiplexer
 {
     enum { numPhases = FluidSystem::numPhases };
 
-    typedef EclHeatcrLaw<ScalarT, FluidSystem, typename ParamsT::HeatcrLawParams> HeatcrLaw;
-    typedef EclSpecrockLaw<ScalarT, typename ParamsT::SpecrockLawParams> SpecrockLaw;
-    typedef NullSolidEnergyLaw<ScalarT> NullLaw;
+    using HeatcrLaw = EclHeatcrLaw<ScalarT, FluidSystem, typename ParamsT::HeatcrLawParams>;
+    using SpecrockLaw = EclSpecrockLaw<ScalarT, typename ParamsT::SpecrockLawParams>;
+    using NullLaw = NullSolidEnergyLaw<ScalarT>;
 
 public:
-    typedef ParamsT Params;
-    typedef typename Params::Scalar Scalar;
+    using Params = ParamsT;
+    using Scalar = typename Params::Scalar;
 
     /*!
      * \brief Given a fluid state, compute the volumetric internal energy of the rock [W/m^3].
@@ -81,6 +82,7 @@ public:
         }
     }
 };
+
 } // namespace Opm
 
 #endif

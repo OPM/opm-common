@@ -29,7 +29,10 @@
 
 #include "EclHysteresisTwoPhaseLawParams.hpp"
 
+#include <stdexcept>
+
 namespace Opm {
+
 /*!
  * \ingroup FluidMatrixInteractions
  *
@@ -40,25 +43,25 @@ template <class EffectiveLawT,
 class EclHysteresisTwoPhaseLaw : public EffectiveLawT::Traits
 {
 public:
-    typedef EffectiveLawT EffectiveLaw;
-    typedef typename EffectiveLaw::Params EffectiveLawParams;
+    using EffectiveLaw = EffectiveLawT;
+    using EffectiveLawParams = typename EffectiveLaw::Params;
 
-    typedef typename EffectiveLaw::Traits Traits;
-    typedef ParamsT Params;
-    typedef typename EffectiveLaw::Scalar Scalar;
+    using Traits = typename EffectiveLaw::Traits;
+    using Params = ParamsT;
+    using Scalar = typename EffectiveLaw::Scalar;
 
     enum { wettingPhaseIdx = Traits::wettingPhaseIdx };
     enum { nonWettingPhaseIdx = Traits::nonWettingPhaseIdx };
 
     //! The number of fluid phases
-    static const int numPhases = EffectiveLaw::numPhases;
+    static constexpr int numPhases = EffectiveLaw::numPhases;
     static_assert(numPhases == 2,
                   "The endpoint scaling applies to the nested twophase laws, not to "
                   "the threephase one!");
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
-    static const bool implementsTwoPhaseApi = true;
+    static constexpr bool implementsTwoPhaseApi = true;
 
     static_assert(EffectiveLaw::implementsTwoPhaseApi,
                   "The material laws put into EclEpsTwoPhaseLaw must implement the "
@@ -66,7 +69,7 @@ public:
 
     //! Specify whether this material law implements the two-phase
     //! convenience API which only depends on the phase saturations
-    static const bool implementsTwoPhaseSatApi = true;
+    static constexpr bool implementsTwoPhaseSatApi = true;
 
     static_assert(EffectiveLaw::implementsTwoPhaseSatApi,
                   "The material laws put into EclEpsTwoPhaseLaw must implement the "
@@ -74,19 +77,19 @@ public:
 
     //! Specify whether the quantities defined by this material law
     //! are saturation dependent
-    static const bool isSaturationDependent = true;
+    static constexpr bool isSaturationDependent = true;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the absolute pressure
-    static const bool isPressureDependent = false;
+    static constexpr bool isPressureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are temperature dependent
-    static const bool isTemperatureDependent = false;
+    static constexpr bool isTemperatureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the phase composition
-    static const bool isCompositionDependent = false;
+    static constexpr bool isCompositionDependent = false;
 
     /*!
      * \brief The capillary pressure-saturation curves depending on absolute saturations.
@@ -266,6 +269,7 @@ public:
                                             Sw + params.deltaSwImbKrn());
     }
 };
+
 } // namespace Opm
 
 #endif

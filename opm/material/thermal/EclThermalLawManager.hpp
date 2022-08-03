@@ -40,6 +40,10 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
+#include <cassert>
+#include <stdexcept>
+#include <vector>
+
 namespace Opm {
 
 /*!
@@ -52,13 +56,13 @@ template <class Scalar, class FluidSystem>
 class EclThermalLawManager
 {
 public:
-    typedef EclSolidEnergyLawMultiplexer<Scalar, FluidSystem> SolidEnergyLaw;
-    typedef typename SolidEnergyLaw::Params SolidEnergyLawParams;
-    typedef typename SolidEnergyLawParams::HeatcrLawParams HeatcrLawParams;
-    typedef typename SolidEnergyLawParams::SpecrockLawParams SpecrockLawParams;
+    using SolidEnergyLaw = EclSolidEnergyLawMultiplexer<Scalar, FluidSystem>;
+    using SolidEnergyLawParams = typename SolidEnergyLaw::Params;
+    using HeatcrLawParams = typename SolidEnergyLawParams::HeatcrLawParams;
+    using SpecrockLawParams = typename SolidEnergyLawParams::SpecrockLawParams;
 
-    typedef EclThermalConductionLawMultiplexer<Scalar, FluidSystem> ThermalConductionLaw;
-    typedef typename ThermalConductionLaw::Params ThermalConductionLawParams;
+    using ThermalConductionLaw = EclThermalConductionLawMultiplexer<Scalar, FluidSystem>;
+    using ThermalConductionLawParams = typename ThermalConductionLaw::Params;
 
     EclThermalLawManager()
     {

@@ -58,16 +58,16 @@ template <class TraitsT>
 class SatCurveMultiplexerParams : public EnsureFinalized
 {
 public:
-    typedef TraitsT Traits;
-    typedef typename TraitsT::Scalar Scalar;
+    using Traits = TraitsT;
+    using Scalar = typename TraitsT::Scalar;
     enum { numPhases = 2 };
 
 private:
-    typedef TwoPhaseLETCurves<Traits> LETTwoPhaseLaw;
-    typedef PiecewiseLinearTwoPhaseMaterial<Traits> PLTwoPhaseLaw;
+    using LETTwoPhaseLaw = TwoPhaseLETCurves<Traits>;
+    using PLTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<Traits>;
 
-    typedef typename LETTwoPhaseLaw::Params LETParams;
-    typedef typename PLTwoPhaseLaw::Params PLParams;
+    using LETParams = typename LETTwoPhaseLaw::Params;
+    using PLParams = typename PLTwoPhaseLaw::Params;
 
     template <class ParamT>
     struct Deleter
@@ -78,7 +78,7 @@ private:
         }
     };
 
-    typedef std::shared_ptr< void > ParamPointerType;
+    using ParamPointerType = std::shared_ptr<void>;
 
 public:
 
@@ -171,6 +171,7 @@ private:
     SatCurveMultiplexerApproach approach_;
     ParamPointerType realParams_;
 };
+
 } // namespace Opm
 
 #endif // OPM_SAT_CURVE_MULTIPLEXER_PARAMS_HPP

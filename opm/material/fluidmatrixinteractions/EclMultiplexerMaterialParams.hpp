@@ -32,9 +32,9 @@
 #include "EclDefaultMaterial.hpp"
 #include "EclTwoPhaseMaterial.hpp"
 
-#include <type_traits>
 #include <cassert>
 #include <memory>
+#include <type_traits>
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
@@ -58,18 +58,18 @@ enum class EclMultiplexerApproach {
 template<class Traits, class GasOilMaterialLawT, class OilWaterMaterialLawT, class GasWaterMaterialLawT>
 class EclMultiplexerMaterialParams : public Traits, public EnsureFinalized
 {
-    typedef typename Traits::Scalar Scalar;
+    using Scalar = typename Traits::Scalar;
     enum { numPhases = 3 };
 
-    typedef EclStone1Material<Traits, GasOilMaterialLawT, OilWaterMaterialLawT> Stone1Material;
-    typedef EclStone2Material<Traits, GasOilMaterialLawT, OilWaterMaterialLawT> Stone2Material;
-    typedef EclDefaultMaterial<Traits, GasOilMaterialLawT, OilWaterMaterialLawT> DefaultMaterial;
-    typedef EclTwoPhaseMaterial<Traits, GasOilMaterialLawT, OilWaterMaterialLawT, GasWaterMaterialLawT> TwoPhaseMaterial;
+    using Stone1Material = EclStone1Material<Traits, GasOilMaterialLawT, OilWaterMaterialLawT>;
+    using Stone2Material = EclStone2Material<Traits, GasOilMaterialLawT, OilWaterMaterialLawT>;
+    using DefaultMaterial = EclDefaultMaterial<Traits, GasOilMaterialLawT, OilWaterMaterialLawT>;
+    using TwoPhaseMaterial = EclTwoPhaseMaterial<Traits, GasOilMaterialLawT, OilWaterMaterialLawT, GasWaterMaterialLawT>;
 
-    typedef typename Stone1Material::Params Stone1Params;
-    typedef typename Stone2Material::Params Stone2Params;
-    typedef typename DefaultMaterial::Params DefaultParams;
-    typedef typename TwoPhaseMaterial::Params TwoPhaseParams;
+    using Stone1Params = typename Stone1Material::Params;
+    using Stone2Params = typename Stone2Material::Params;
+    using DefaultParams = typename DefaultMaterial::Params;
+    using TwoPhaseParams = typename TwoPhaseMaterial::Params;
 
     template <class ParamT>
     struct Deleter
@@ -80,7 +80,7 @@ class EclMultiplexerMaterialParams : public Traits, public EnsureFinalized
         }
     };
 
-    typedef std::shared_ptr< void > ParamPointerType;
+    using ParamPointerType = std::shared_ptr<void>;
 
 public:
     using EnsureFinalized :: finalize;

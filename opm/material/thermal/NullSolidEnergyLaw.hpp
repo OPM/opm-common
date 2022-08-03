@@ -27,8 +27,6 @@
 #ifndef OPM_NULL_SOLID_ENERGY_LAW_HPP
 #define OPM_NULL_SOLID_ENERGY_LAW_HPP
 
-#include <opm/material/densead/Math.hpp>
-
 namespace Opm
 {
 /*!
@@ -40,8 +38,8 @@ template <class ScalarT>
 class NullSolidEnergyLaw
 {
 public:
-    typedef int Params;
-    typedef ScalarT Scalar;
+    using Params = int;
+    using Scalar = ScalarT;
 
     /*!
      * \brief Given a fluid state, compute the volumetric internal energy of the solid
@@ -53,6 +51,7 @@ public:
     static Evaluation solidInternalEnergy(const Params&, const FluidState&)
     { return 0.0; }
 };
+
 } // namespace Opm
 
 #endif

@@ -29,8 +29,6 @@
 
 #include "EclEpsTwoPhaseLawParams.hpp"
 
-#include <opm/material/fluidstates/SaturationOverlayFluidState.hpp>
-
 #include <algorithm>
 #include <cstddef>
 #include <type_traits>

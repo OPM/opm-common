@@ -31,9 +31,8 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
-#include <algorithm>
-#include <cmath>
-#include <cassert>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm {
 /*!
@@ -49,47 +48,47 @@ namespace Opm {
 template <class TraitsT, class ParamsT = PiecewiseLinearTwoPhaseMaterialParams<TraitsT> >
 class PiecewiseLinearTwoPhaseMaterial : public TraitsT
 {
-    typedef typename ParamsT::ValueVector ValueVector;
+    using ValueVector = typename ParamsT::ValueVector;
 
 public:
     //! The traits class for this material law
-    typedef TraitsT Traits;
+    using Traits = TraitsT;
 
     //! The type of the parameter objects for this law
-    typedef ParamsT Params;
+    using Params = ParamsT;
 
     //! The type of the scalar values for this law
-    typedef typename Traits::Scalar Scalar;
+    using Scalar = typename Traits::Scalar;
 
     //! The number of fluid phases
-    static const int numPhases = Traits::numPhases;
+    static constexpr int numPhases = Traits::numPhases;
     static_assert(numPhases == 2,
                   "The piecewise linear two-phase capillary pressure law only"
                   "applies to the case of two fluid phases");
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
-    static const bool implementsTwoPhaseApi = true;
+    static constexpr bool implementsTwoPhaseApi = true;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API which only depends on the phase saturations
-    static const bool implementsTwoPhaseSatApi = true;
+    static constexpr bool implementsTwoPhaseSatApi = true;
 
     //! Specify whether the quantities defined by this material law
     //! are saturation dependent
-    static const bool isSaturationDependent = true;
+    static constexpr bool isSaturationDependent = true;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the absolute pressure
-    static const bool isPressureDependent = false;
+    static constexpr bool isPressureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are temperature dependent
-    static const bool isTemperatureDependent = false;
+    static constexpr bool isTemperatureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the phase composition
-    static const bool isCompositionDependent = false;
+    static constexpr bool isCompositionDependent = false;
 
     /*!
      * \brief The capillary pressure-saturation curve.
@@ -97,7 +96,7 @@ public:
     template <class Container, class FluidState>
     static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[Traits::wettingPhaseIdx] = 0.0; // reference phase
         values[Traits::nonWettingPhaseIdx] = pcnw<FluidState, Evaluation>(params, fs);
@@ -117,7 +116,7 @@ public:
     template <class Container, class FluidState>
     static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[Traits::wettingPhaseIdx] = krw<FluidState, Evaluation>(params, fs);
         values[Traits::nonWettingPhaseIdx] = krn<FluidState, Evaluation>(params, fs);
@@ -333,6 +332,7 @@ private:
         return lowIdx;
     }
 };
+
 } // namespace Opm
 
 #endif

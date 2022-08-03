@@ -29,10 +29,9 @@
 
 #include "EclThcLawParams.hpp"
 
-#include <opm/material/densead/Math.hpp>
-
 namespace Opm
 {
+
 /*!
  * \ingroup material
  *
@@ -42,12 +41,12 @@ namespace Opm
  * keywords.
  */
 template <class ScalarT,
-          class ParamsT = EclThcLawParams<ScalarT> >
+          class ParamsT = EclThcLawParams<ScalarT>>
 class EclThcLaw
 {
 public:
-    typedef ParamsT Params;
-    typedef typename Params::Scalar Scalar;
+    using Params = ParamsT;
+    using Scalar = typename Params::Scalar;
 
     /*!
      * \brief Given a fluid state, return the total thermal conductivity [W/m^2 / (K/m)] of the porous
@@ -68,7 +67,7 @@ public:
         // incorrectness.
         //
         // TODO: also follow their fine leadership in the twophase case.
-        Scalar numPhases = 3.0;
+        constexpr const Scalar numPhases = 3.0;
         Scalar thconAvg =
             poro*(params.thcoil() + params.thcgas() + params.thcwater()) / numPhases
             + (1.0 - poro)*params.thcrock();
@@ -76,6 +75,7 @@ public:
         return thconAvg;
     }
 };
+
 } // namespace Opm
 
 #endif

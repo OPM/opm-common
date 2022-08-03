@@ -32,10 +32,6 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Exceptions.hpp>
 
-#include <algorithm>
-#include <cassert>
-#include <cmath>
-
 namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
@@ -52,9 +48,9 @@ template <class TraitsT, class ParamsT = TwoPhaseLETCurvesParams<TraitsT> >
 class TwoPhaseLETCurves : public TraitsT
 {
 public:
-    typedef TraitsT Traits;
-    typedef ParamsT Params;
-    typedef typename Traits::Scalar Scalar;
+    using Traits = TraitsT;
+    using Params = ParamsT;
+    using Scalar = typename Traits::Scalar;
 
     static_assert(Traits::numPhases == 2,
                   "The number of fluid phases must be two if you want to use "
@@ -63,31 +59,31 @@ public:
     static constexpr Scalar eps = 1.0e-10; //tolerance
 
     //! The number of fluid phases to which this material law applies.
-    static const int numPhases = Traits::numPhases;
+    static constexpr int numPhases = Traits::numPhases;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
-    static const bool implementsTwoPhaseApi = true;
+    static constexpr bool implementsTwoPhaseApi = true;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API which only depends on the phase saturations
-    static const bool implementsTwoPhaseSatApi = true;
+    static constexpr bool implementsTwoPhaseSatApi = true;
 
     //! Specify whether the quantities defined by this material law
     //! are saturation dependent
-    static const bool isSaturationDependent = true;
+    static constexpr bool isSaturationDependent = true;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the absolute pressure
-    static const bool isPressureDependent = false;
+    static constexpr bool isPressureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are temperature dependent
-    static const bool isTemperatureDependent = false;
+    static constexpr bool isTemperatureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the phase composition
-    static const bool isCompositionDependent = false;
+    static constexpr bool isCompositionDependent = false;
 
     /*!
      * \brief The capillary pressure-saturation curves.
@@ -307,6 +303,7 @@ public:
                                " relperm within 20 newton iterations and 50 bisection iterations");
     }
 };
+
 } // namespace Opm
 
 #endif // OPM_TWO_PHASE_LET_CURVES_HPP
