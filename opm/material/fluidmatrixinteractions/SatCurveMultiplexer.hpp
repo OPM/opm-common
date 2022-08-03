@@ -29,12 +29,7 @@
 
 #include "SatCurveMultiplexerParams.hpp"
 
-#include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/Exceptions.hpp>
-
-#include <algorithm>
-#include <cassert>
-#include <cmath>
+#include <stdexcept>
 
 namespace Opm {
 /*!
@@ -48,42 +43,42 @@ template <class TraitsT, class ParamsT = SatCurveMultiplexerParams<TraitsT> >
 class SatCurveMultiplexer : public TraitsT
 {
 public:
-    typedef TraitsT Traits;
-    typedef ParamsT Params;
-    typedef typename Traits::Scalar Scalar;
+    using Traits = TraitsT;
+    using Params = ParamsT;
+    using Scalar = typename Traits::Scalar;
 
-    typedef TwoPhaseLETCurves<Traits> LETTwoPhaseLaw;
-    typedef PiecewiseLinearTwoPhaseMaterial<Traits> PLTwoPhaseLaw;
+    using LETTwoPhaseLaw = TwoPhaseLETCurves<Traits>;
+    using PLTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<Traits>;
 
     //! The number of fluid phases to which this material law applies.
-    static const int numPhases = Traits::numPhases;
+    static constexpr int numPhases = Traits::numPhases;
     static_assert(numPhases == 2,
                   "The Brooks-Corey capillary pressure law only applies "
                   "to the case of two fluid phases");
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
-    static const bool implementsTwoPhaseApi = true;
+    static constexpr bool implementsTwoPhaseApi = true;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API which only depends on the phase saturations
-    static const bool implementsTwoPhaseSatApi = true;
+    static constexpr bool implementsTwoPhaseSatApi = true;
 
     //! Specify whether the quantities defined by this material law
     //! are saturation dependent
-    static const bool isSaturationDependent = true;
+    static constexpr bool isSaturationDependent = true;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the absolute pressure
-    static const bool isPressureDependent = false;
+    static constexpr bool isPressureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are temperature dependent
-    static const bool isTemperatureDependent = false;
+    static constexpr bool isTemperatureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the phase composition
-    static const bool isCompositionDependent = false;
+    static constexpr bool isCompositionDependent = false;
 
     static_assert(Traits::numPhases == 2,
                   "The number of fluid phases must be two if you want to use "
@@ -378,6 +373,7 @@ public:
         return 0.0;
     }
 };
+
 } // namespace Opm
 
 #endif // OPM_SAT_CURVE_MULTIPLEXER_HPP
