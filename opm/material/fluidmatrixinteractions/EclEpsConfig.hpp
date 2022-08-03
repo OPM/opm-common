@@ -29,11 +29,11 @@
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <stdexcept>
 #endif
 
-#include <string>
 #include <cassert>
-#include <algorithm>
+#include <string>
 
 namespace Opm {
 /*!
