@@ -27,9 +27,9 @@
 #ifndef OPM_PIECEWISE_LINEAR_TWO_PHASE_MATERIAL_PARAMS_HPP
 #define OPM_PIECEWISE_LINEAR_TWO_PHASE_MATERIAL_PARAMS_HPP
 
-#include <vector>
+#include <algorithm>
 #include <cassert>
-#include <cstddef>
+#include <vector>
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
@@ -43,12 +43,12 @@ namespace Opm {
 template<class TraitsT>
 class PiecewiseLinearTwoPhaseMaterialParams : public EnsureFinalized
 {
-    typedef typename TraitsT::Scalar Scalar;
+    using Scalar = typename TraitsT::Scalar;
 
 public:
-    typedef std::vector<Scalar> ValueVector;
+    using ValueVector = std::vector<Scalar>;
 
-    typedef TraitsT Traits;
+    using Traits = TraitsT;
 
     PiecewiseLinearTwoPhaseMaterialParams()
     {
