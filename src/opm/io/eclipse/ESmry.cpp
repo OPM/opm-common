@@ -18,9 +18,12 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
+#include <opm/io/eclipse/SummaryNode.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/shmatch.hpp>
 #include <opm/common/utility/TimeService.hpp>
+
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
@@ -34,10 +37,13 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <unordered_set>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -46,19 +52,21 @@
      KEYWORDS       WGNAMES        NUMS                 |   PARAM index   Corresponding ERT key
      ---------------------------------------------------+--------------------------------------------------
      WGOR           OP_1           0                    |        0        WGOR:OP_1
-     FOPT           :+:+:+:+       0                    |        1        FOPT
-     WWCT           OP_1           0                    |        2        WWCT:OP_1
-     WIR            OP_1           0                    |        3        WIR:OP_1
-     WGOR           WI_1           0                    |        4        WWCT:OP_1
-     WWCT           W1_1           0                    |        5        WWCT:WI_1
-     BPR            :+:+:+:+       12675                |        6        BPR:12675, BPR:i,j,k
-     RPR            :+:+:+:+       1                    |        7        RPR:1
-     FOPT           :+:+:+:+       0                    |        8        FOPT
-     GGPR           NORTH          0                    |        9        GGPR:NORTH
-     COPR           OP_1           5628                 |       10        COPR:OP_1:56286, COPR:OP_1:i,j,k
-     RXF            :+:+:+:+       R1 + 32768*(R2 + 10) |       11        RXF:2-3
-     SOFX           OP_1           12675                |       12        SOFX:OP_1:12675, SOFX:OP_1:i,j,jk
-     AAQX           :+:+:+:+       12                   |       13        AAQX:12
+     WOPRL__1       OP_1           1                    |        1        WOPRL:OP_1:1 -- KEYWORDS is strictly speaking "WOPRL__1" here.
+     FOPT           :+:+:+:+       0                    |        2        FOPT
+     WWCT           OP_1           0                    |        3        WWCT:OP_1
+     WIR            OP_1           0                    |        4        WIR:OP_1
+     WGOR           WI_1           0                    |        5        WWCT:OP_1
+     WWCT           W1_1           0                    |        6        WWCT:WI_1
+     BPR            :+:+:+:+       12675                |        7        BPR:12675, BPR:i,j,k
+     RPR            :+:+:+:+       1                    |        8        RPR:1
+     FOPT           :+:+:+:+       0                    |        9        FOPT
+     GGPR           NORTH          0                    |       10        GGPR:NORTH
+     COPR           OP_1           5628                 |       11        COPR:OP_1:56286, COPR:OP_1:i,j,k
+     COPRL          OP_1           5628                 |       12        COPRL:OP_1:5628, COPRL:OP_1:i,j,k
+     RXF            :+:+:+:+       R1 + 32768*(R2 + 10) |       13        RXF:2-3
+     SOFX           OP_1           12675                |       14        SOFX:OP_1:12675, SOFX:OP_1:i,j,jk
+     AAQX           :+:+:+:+       12                   |       15        AAQX:12
 
 */
 
@@ -85,6 +93,25 @@ Opm::time_point make_date(const std::vector<int>& datetime) {
     return Opm::TimeService::from_time_t( Opm::asTimeT(ts) );
 }
 
+bool is_connection_completion(const std::string& keyword)
+{
+    static const auto conn_compl_kw = std::regex {
+        R"(C[OGW][IP][RT]L)"
+    };
+
+    return std::regex_match(keyword, conn_compl_kw);
+}
+
+bool is_well_completion(const std::string& keyword)
+{
+    static const auto well_compl_kw = std::regex {
+        R"(W[OGWLV][PIGOLCF][RT]L([0-9_]{2}[0-9])?)"
+    };
+
+    // True, e.g., for WOPRL, WOPRL__8, WOPRL123, but not WOPRL___ or
+    // WKITL.
+    return std::regex_match(keyword, well_compl_kw);
+}
 
 }
 
@@ -186,13 +213,17 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             for (unsigned int i=0; i<keywords.size(); i++) {
 
                 Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
-                const std::string keyString =  makeKeyString(keywords[i], wgnames[i], nums[i], lgr);
+
+                const auto category = SummaryNode::category_from_keyword(keywords[i]);
+                const auto normKw = SummaryNode::normalise_keyword(category, keywords[i]);
+
+                const std::string keyString = makeKeyString(normKw, wgnames[i], nums[i], lgr);
                 combindKeyList.push_back(keyString);
 
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
-                        keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i]),
+                        normKw,
+                        category,
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -207,13 +238,16 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         } else {
 
             for (unsigned int i=0; i<keywords.size(); i++) {
-                const std::string keyString =  makeKeyString(keywords[i], wgnames[i], nums[i], {});
+                const auto category = SummaryNode::category_from_keyword(keywords[i]);
+                const auto normKw = SummaryNode::normalise_keyword(category, keywords[i]);
+
+                const std::string keyString = makeKeyString(normKw, wgnames[i], nums[i], {});
                 combindKeyList.push_back(keyString);
 
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
-                        keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i]),
+                        normKw,
+                        category,
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -317,14 +351,17 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         if (have_lgr) {
             for (size_t i = 0; i < keywords.size(); i++) {
                 Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
-                const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i], lgr);
 
+                const auto category = SummaryNode::category_from_keyword(keywords[i]);
+                const auto normKw = SummaryNode::normalise_keyword(category, keywords[i]);
+
+                const std::string keyString = makeKeyString(normKw, wgnames[i], nums[i], lgr);
                 combindKeyList.push_back(keyString);
 
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
-                        keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i]),
+                        normKw,
+                        category,
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -341,13 +378,16 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
             for (size_t i = 0; i < keywords.size(); i++) {
 
-                const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i], {});
+                const auto category = SummaryNode::category_from_keyword(keywords[i]);
+                const auto normKw = SummaryNode::normalise_keyword(category, keywords[i]);
+
+                const std::string keyString = makeKeyString(normKw, wgnames[i], nums[i], {});
                 combindKeyList.push_back(keyString);
 
                 if (! keyString.empty()) {
                     summaryNodes.push_back( {
-                        keywords[i],
-                        SummaryNode::category_from_keyword(keywords[i]),
+                        normKw,
+                        category,
                         SummaryNode::Type::Undefined,
                         wgnames[i],
                         nums[i],
@@ -425,13 +465,16 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         if (have_lgr) {
             for (size_t i=0; i < keywords.size(); i++) {
                 Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
-                const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i], lgr);
+
+                const auto normKw = SummaryNode::normalise_keyword(keywords[i]);
+                const std::string keyw = makeKeyString(normKw, wgnames[i], nums[i], lgr);
                 if ((!keyw.empty()) && (keywList.find(keyw) != keywList.end()))
                     arrayPos[specInd][keyIndex[keyw]]=i;
             }
         } else {
             for (size_t i=0; i < keywords.size(); i++) {
-                const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i], {});
+                const auto normKw = SummaryNode::normalise_keyword(keywords[i]);
+                const std::string keyw = makeKeyString(normKw, wgnames[i], nums[i], {});
                 if ((!keyw.empty()) && (keywList.find(keyw) != keywList.end()))
                     arrayPos[specInd][keyIndex[keyw]]=i;
             }
@@ -1251,6 +1294,10 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
             return "";
         }
 
+        if (is_well_completion(keywordArg)) {
+            return fmt::format("{}:{}:{}", keywordArg, wgname, num);
+        }
+
         return fmt::format("{}:{}", keywordArg, wgname);
     }
 
@@ -1259,16 +1306,20 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
 
 std::string ESmry::unpackNumber(const SummaryNode& node) const
 {
-    if (node.category == SummaryNode::Category::Block ||
-        node.category == SummaryNode::Category::Connection) {
+    if ((node.category == SummaryNode::Category::Block) ||
+        (node.category == SummaryNode::Category::Connection) ||
+        ((node.category == SummaryNode::Category::Completion) &&
+         is_connection_completion(node.keyword)))
+    {
         int _i,_j,_k;
         ijk_from_global_index(node.number, _i, _j, _k);
 
         return fmt::format("{},{},{}", _i, _j, _k);
     }
-    else if (node.category == SummaryNode::Category::Region && node.keyword[2] == 'F') {
-        const auto r1 =  node.number % (1 << 15);
-        const auto r2 = (node.number / (1 << 15)) - 10;
+    else if ((node.category == SummaryNode::Category::Region) &&
+             (node.keyword[2] == 'F'))
+    {
+        const auto& [r1, r2] = splitSummaryNumber(node.number);
 
         return fmt::format("{}-{}", r1, r2);
     }

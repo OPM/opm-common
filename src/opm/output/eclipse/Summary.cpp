@@ -99,6 +99,7 @@ template <> struct fmt::formatter<Opm::EclIO::SummaryNode::Category>: fmt::forma
         case Category::Region:        name = "Region"; break;
         case Category::Block:         name = "Block"; break;
         case Category::Connection:    name = "Connection"; break;
+        case Category::Completion:    name = "Completion"; break;
         case Category::Segment:       name = "Segment"; break;
         case Category::Aquifer:       name = "Aquifer"; break;
         case Category::Node:          name = "Node"; break;
@@ -817,7 +818,7 @@ inline quantity cpr( const fn_args& args ) {
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclipse SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
-    // up a completion with offset 0.
+    // up a connection with offset 0.
     const size_t global_index = args.num - 1;
     if (args.schedule_wells.empty())
         return zero;
@@ -920,7 +921,7 @@ inline quantity crate( const fn_args& args ) {
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclipse SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
-    // up a completion with offset 0.
+    // up a connection with offset 0.
     const size_t global_index = args.num - 1;
     if (args.schedule_wells.empty())
         return zero;
@@ -975,7 +976,7 @@ quantity crate_resv( const fn_args& args ) {
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclipse SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
-    // up a completion with offset 0.
+    // up a connection with offset 0.
     const auto global_index = static_cast<std::size_t>(args.num - 1);
 
     const auto& well_data = xwPos->second;
@@ -1004,7 +1005,7 @@ inline quantity srate( const fn_args& args ) {
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclispe SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
-    // up a completion with offset 0.
+    // up a connection with offset 0.
     if (args.schedule_wells.empty()) {
         return zero;
     }
@@ -1049,7 +1050,7 @@ inline quantity trans_factors ( const fn_args& args ) {
         // No dynamic results for this well.  Not open?
         return zero;
 
-    // Like completion rate we need to look up a connection with offset 0.
+    // Like connection rate we need to look up a connection with offset 0.
     const size_t global_index = args.num - 1;
     const auto& connections = xwPos->second.connections;
     auto connPos = std::find_if(connections.begin(), connections.end(),
@@ -1082,7 +1083,7 @@ inline quantity segpress ( const fn_args& args )
         return zero;
     }
 
-    // Like completion rate we need to look up a connection with offset 0.
+    // Like connection rate we need to look up a connection with offset 0.
     const size_t segNumber = args.num;
 
     const auto& well_data = xwPos->second;
@@ -1410,7 +1411,7 @@ inline quantity connection_productivity_index(const fn_args& args)
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclipse SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
-    // up a completion with offset 0.
+    // up a connection with offset 0.
     const auto global_index = static_cast<std::size_t>(args.num) - 1;
 
     const auto& xcon = xwPos->second.connections;
@@ -2429,6 +2430,7 @@ find_wells(const Opm::Schedule&           schedule,
     switch (node.category) {
     case Opm::EclIO::SummaryNode::Category::Well:
     case Opm::EclIO::SummaryNode::Category::Connection:
+    case Opm::EclIO::SummaryNode::Category::Completion:
     case Opm::EclIO::SummaryNode::Category::Segment:
         return find_single_well(schedule, node.wgname, sim_step);
 
@@ -2450,7 +2452,7 @@ find_wells(const Opm::Schedule&           schedule,
 
     throw std::runtime_error {
         fmt::format("Unhandled summary node category \"{}\" in find_wells()",
-                    node.category)
+                    static_cast<int>(node.category))
     };
 }
 
@@ -2463,6 +2465,7 @@ bool need_wells(const Opm::EclIO::SummaryNode& node)
 
     switch (node.category) {
     case Cat::Connection: [[fallthrough]];
+    case Cat::Completion: [[fallthrough]];
     case Cat::Field:      [[fallthrough]];
     case Cat::Group:      [[fallthrough]];
     case Cat::Segment:    [[fallthrough]];
@@ -2484,7 +2487,10 @@ bool need_wells(const Opm::EclIO::SummaryNode& node)
         return false;
     }
 
-    throw std::runtime_error("Unhandled summary node category in need_wells");
+    throw std::runtime_error {
+        fmt::format("Unhandled summary node category \"{}\" in need_wells()",
+                    static_cast<int>(node.category))
+    };
 }
 
 void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::SummaryState& st)
@@ -3396,7 +3402,10 @@ namespace Evaluator {
 
     bool Factory::isFunctionRelation()
     {
-        auto pos = funs.find(this->node_->keyword);
+        const auto normKw = Opm::EclIO::SummaryNode::
+            normalise_keyword(this->node_->category, this->node_->keyword);
+
+        auto pos = funs.find(normKw);
         if (pos != funs.end()) {
             // 'node_' represents a functional relation.
             // Capture evaluation function and return true.
@@ -3404,41 +3413,45 @@ namespace Evaluator {
             return true;
         }
 
-        auto keyword = this->node_->keyword;
-        auto dash_pos = keyword.find("_");
-        if (dash_pos != std::string::npos)
-            keyword = keyword.substr(0, dash_pos);
-
-        pos = funs.find(keyword);
-        if (pos != funs.end()) {
-            // 'node_' represents a functional relation.
-            // Capture evaluation function and return true.
-            this->paramFunction_ = pos->second;
-            return true;
+        if (normKw.length() <= std::string::size_type{4}) {
+            return false;
         }
 
-        if (keyword.length() > 4 ) {
-            std::string tracer_tag = keyword.substr(0, 4);
-            std::string tracer_name = keyword.substr(4);
-            const auto& tracers = es_.tracer();
-            for (const auto& tracer : tracers) {
-                if (tracer.name == tracer_name) {
-                    if (tracer.phase == Opm::Phase::WATER)
-                        tracer_tag += "#W";
-                    else if (tracer.phase == Opm::Phase::OIL)
-                        tracer_tag += "#O";
-                    else if (tracer.phase == Opm::Phase::GAS)
-                        tracer_tag += "#G";
+        const auto tracer_name = normKw.substr(4);
 
-                    pos = funs.find(tracer_tag);
-                    if (pos != funs.end()) {
-                        this->paramFunction_ = pos->second;
-                        return true;
-                    }
+        const auto& tracers = this->es_.tracer();
+        auto trPos = std::find_if(tracers.begin(), tracers.end(),
+                                  [&tracer_name](const auto& tracer)
+                                  {
+                                      return tracer.name == tracer_name;
+                                  });
 
-                    break;
-                }
-            }
+        if (trPos == tracers.end()) {
+            return false;
+        }
+
+        auto tracer_tag = normKw.substr(0, 4);
+        switch (trPos->phase) {
+        case Opm::Phase::WATER:
+            tracer_tag += "#W";
+            break;
+
+        case Opm::Phase::OIL:
+            tracer_tag += "#O";
+            break;
+
+        case Opm::Phase::GAS:
+            tracer_tag += "#G";
+            break;
+
+        default:
+            return false;
+        }
+
+        pos = funs.find(tracer_tag);
+        if (pos != funs.end()) {
+            this->paramFunction_ = pos->second;
+            return true;
         }
 
         return false;

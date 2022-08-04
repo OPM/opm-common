@@ -20,12 +20,11 @@
 #ifndef OPM_IO_SUMMARYNODE_HPP
 #define OPM_IO_SUMMARYNODE_HPP
 
+#include <array>
 #include <functional>
+#include <limits>
 #include <optional>
 #include <string>
-#include <unordered_set>
-#include <array>
-#include <limits>
 
 namespace Opm { namespace EclIO {
 
@@ -42,6 +41,7 @@ struct SummaryNode {
         Region,
         Block,
         Connection,
+        Completion,
         Segment,
         Aquifer,
         Node,
@@ -58,7 +58,6 @@ struct SummaryNode {
         ProdIndex,
         Undefined,
     };
-
 
     std::string keyword;
     Category    category;
@@ -78,6 +77,14 @@ struct SummaryNode {
     bool is_user_defined() const;
 
     static Category category_from_keyword(const std::string&);
+
+    static std::string normalise_keyword(const Category     category,
+                                         const std::string& keyword);
+
+    static inline std::string normalise_keyword(const std::string& keyword)
+    {
+        return normalise_keyword(category_from_keyword(keyword), keyword);
+    }
 
     // Return true for keywords which should be Miscellaneous, although the
     // naive first-character-based classification suggests something else.

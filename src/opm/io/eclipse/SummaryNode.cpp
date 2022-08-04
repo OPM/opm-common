@@ -32,6 +32,7 @@ constexpr bool use_number(Opm::EclIO::SummaryNode::Category category) {
     case Opm::EclIO::SummaryNode::Category::Aquifer:       [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Block:         [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Connection:    [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Completion:    [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Region:        [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Segment:
         return true;
@@ -50,6 +51,7 @@ constexpr bool use_number(Opm::EclIO::SummaryNode::Category category) {
 constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
     switch (category) {
     case Opm::EclIO::SummaryNode::Category::Connection:    [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Completion:    [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Group:         [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Segment:       [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Node:          [[fallthrough]];
@@ -80,6 +82,25 @@ bool is_node_keyword(const std::string& keyword)
     return node_kw.find(keyword) != node_kw.end();
 }
 
+bool is_connection_completion(const std::string& keyword)
+{
+    static const auto conn_compl_kw = std::regex {
+        R"(C[OGW][IP][RT]L)"
+    };
+
+    return std::regex_match(keyword, conn_compl_kw);
+}
+
+bool is_well_completion(const std::string& keyword)
+{
+    static const auto well_compl_kw = std::regex {
+        R"(W[OGWLV][PIGOLCF][RT]L([0-9_]{2}[0-9])?)"
+    };
+
+    // True, e.g., for WOPRL, WOPRL__8, WOPRL123, but not WOPRL___ or WKITL.
+    return std::regex_match(keyword, well_compl_kw);
+}
+
 Opm::EclIO::SummaryNode::Category
 distinguish_group_from_node(const std::string& keyword)
 {
@@ -87,10 +108,42 @@ distinguish_group_from_node(const std::string& keyword)
         ? Opm::EclIO::SummaryNode::Category::Node
         : Opm::EclIO::SummaryNode::Category::Group;
 }
+
+Opm::EclIO::SummaryNode::Category
+distinguish_connection_from_completion(const std::string& keyword)
+{
+    return is_connection_completion(keyword)
+        ? Opm::EclIO::SummaryNode::Category::Completion
+        : Opm::EclIO::SummaryNode::Category::Connection;
 }
 
-std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) const {
-    std::vector<std::string> key_parts { keyword } ;
+Opm::EclIO::SummaryNode::Category
+distinguish_well_from_completion(const std::string& keyword)
+{
+    return is_well_completion(keyword)
+        ? Opm::EclIO::SummaryNode::Category::Completion
+        : Opm::EclIO::SummaryNode::Category::Well;
+}
+
+std::string normalise_well_completion_keyword(const std::string& keyword)
+{
+    static const auto well_compl_kw = std::regex {
+        R"((W[OGWLV][PIGOLCF][RT]L)([0-9_]{2}[0-9])?)"
+    };
+
+    auto keywordPieces = std::smatch {};
+    if (std::regex_match(keyword, keywordPieces, well_compl_kw)) {
+        return keywordPieces[1].str();
+    }
+
+    return keyword;
+}
+
+} // Anonymous namespace
+
+std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) const
+{
+    auto key_parts = std::vector<std::string> { normalise_keyword(this->category, this->keyword) };
 
     if (auto opt = display_name())
         key_parts.emplace_back(opt.value());
@@ -146,41 +199,48 @@ bool Opm::EclIO::SummaryNode::is_user_defined() const {
     return matched && !blacklisted;
 }
 
-
 /*
   Observe that this function started out as a slight generalisation of the
   special case handling of segment variables; i.e. variables starting with 'S'.
   In general there are many other expecptions e.g. 'NEWTON' is an Miscellaneous
   variable and not a network variable - but they will be added when/if required.
 */
-bool Opm::EclIO::SummaryNode::miscellaneous_exception(const std::string& keyword) {
+bool Opm::EclIO::SummaryNode::miscellaneous_exception(const std::string& keyword)
+{
     static const std::unordered_set<std::string> miscellaneous_keywords = {"SEPARATE", "STEPTYPE", "SUMTHIN"};
     return miscellaneous_keywords.count(keyword) == 1;
 }
 
-
-Opm::EclIO::SummaryNode::Category Opm::EclIO::SummaryNode::category_from_keyword(
-    const std::string& keyword
-) {
-    static const std::unordered_set<std::string> miscellaneous_keywords = {"SEPARATE", "STEPTYPE", "SUMTHIN"};
-    if (keyword.length() == 0) {
+Opm::EclIO::SummaryNode::Category
+Opm::EclIO::SummaryNode::category_from_keyword(const std::string& keyword)
+{
+    if (keyword.empty() ||
+        Opm::EclIO::SummaryNode::miscellaneous_exception(keyword))
+    {
         return Category::Miscellaneous;
     }
-
-    if (Opm::EclIO::SummaryNode::miscellaneous_exception(keyword))
-        return Category::Miscellaneous;
 
     switch (keyword[0]) {
     case 'A': return Category::Aquifer;
     case 'B': return Category::Block;
-    case 'C': return Category::Connection;
+    case 'C': return distinguish_connection_from_completion(keyword);
     case 'F': return Category::Field;
     case 'G': return distinguish_group_from_node(keyword);
     case 'R': return Category::Region;
     case 'S': return Category::Segment;
-    case 'W': return Category::Well;
+    case 'W': return distinguish_well_from_completion(keyword);
     default:  return Category::Miscellaneous;
     }
+}
+
+std::string
+Opm::EclIO::SummaryNode::normalise_keyword(const Opm::EclIO::SummaryNode::Category category,
+                                           const std::string&                      keyword)
+{
+    return ((category == Opm::EclIO::SummaryNode::Category::Completion) &&
+            is_well_completion(keyword))
+        ? normalise_well_completion_keyword(keyword)
+        : keyword;
 }
 
 std::optional<std::string> Opm::EclIO::SummaryNode::display_name() const {
