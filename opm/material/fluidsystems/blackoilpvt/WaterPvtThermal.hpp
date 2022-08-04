@@ -27,12 +27,7 @@
 #ifndef OPM_WATER_PVT_THERMAL_HPP
 #define OPM_WATER_PVT_THERMAL_HPP
 
-#include <opm/material/Constants.hpp>
-
-#include <opm/material/common/OpmFinal.hpp>
-#include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
-#include <opm/material/common/Spline.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -54,8 +49,8 @@ template <class Scalar, bool enableBrine>
 class WaterPvtThermal
 {
 public:
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
-    typedef WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine> IsothermalPvt;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
+    using IsothermalPvt = WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine>;
 
     WaterPvtThermal()
     {
@@ -314,7 +309,7 @@ public:
                 Evaluation alpha = (c1T + 2 * c2T * (temperature - Tref)) /
                     (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
 
-                const int N = 100; // value is experimental
+                constexpr const int N = 100; // value is experimental
                 Evaluation deltaP = (pressure - Pref)/N;
                 Evaluation enthalpyPresPrev = 0;
                 for (size_t i = 0; i < N; ++i) {

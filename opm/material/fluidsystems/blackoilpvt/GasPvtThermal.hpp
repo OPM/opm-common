@@ -27,12 +27,7 @@
 #ifndef OPM_GAS_PVT_THERMAL_HPP
 #define OPM_GAS_PVT_THERMAL_HPP
 
-#include <opm/material/Constants.hpp>
-
-#include <opm/material/common/OpmFinal.hpp>
-#include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
-#include <opm/material/common/Spline.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -54,8 +49,8 @@ template <class Scalar>
 class GasPvtThermal
 {
 public:
-    typedef GasPvtMultiplexer<Scalar, /*enableThermal=*/false> IsothermalPvt;
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false>;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     GasPvtThermal()
     {
@@ -276,7 +271,7 @@ public:
             Evaluation Rvw = 0.0;
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
-            const Scalar hVap = 480.6e3; // [J / kg]
+            constexpr const Scalar hVap = 480.6e3; // [J / kg]
             Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
             Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
 
@@ -291,7 +286,7 @@ public:
                 Evaluation alpha = (c1T + 2 * c2T * (temperature - Tref)) /
                     (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
 
-                const int N = 100; // value is experimental
+                constexpr const int N = 100; // value is experimental
                 Evaluation deltaP = (pressure - Pref)/N;
                 Evaluation enthalpyPresPrev = 0;
                 for (size_t i = 0; i < N; ++i) {

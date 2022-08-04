@@ -29,7 +29,6 @@
 
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/OpmFinal.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
@@ -52,11 +51,11 @@ namespace Opm {
 template <class Scalar>
 class DryHumidGasPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
+    using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    typedef UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     DryHumidGasPvt()
     {
@@ -324,13 +323,13 @@ public:
     {
         auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
-        Scalar RwMin = 0.0;
+        constexpr const Scalar RwMin = 0.0;
         Scalar RwMax = waterVaporizationFac.eval(saturatedWaterVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
 
         Scalar poMin = samplePoints.front().first;
         Scalar poMax = samplePoints.back().first;
 
-        size_t nRw = 20;
+        constexpr const size_t nRw = 20;
         size_t nP = samplePoints.size()*2;
 
         TabulatedOneDFunction mugTable;

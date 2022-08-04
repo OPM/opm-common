@@ -29,7 +29,6 @@
 
 #include <opm/material/Constants.hpp>
 
-#include <opm/material/common/Tabulated1DFunction.hpp>
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
@@ -52,16 +51,13 @@ namespace Opm {
 template <class Scalar>
 class Co2GasPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
-    typedef ::Opm::CO2<Scalar, CO2Tables> CO2;
-    typedef SimpleHuDuanH2O<Scalar> H2O;
-    static const bool extrapolate = true;
+    using CO2 = ::Opm::CO2<Scalar, CO2Tables>;
+    using H2O = SimpleHuDuanH2O<Scalar>;
+    static constexpr bool extrapolate = true;
 
 public:
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
-
     //! The binary coefficients for brine and CO2 used by this fluid system
-    typedef BinaryCoeff::Brine_CO2<Scalar, H2O, CO2> BinaryCoeffBrineCO2;
+    using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
     explicit Co2GasPvt() = default;
     Co2GasPvt(const std::vector<Scalar>& gasReferenceDensity)

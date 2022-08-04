@@ -27,9 +27,7 @@
 #ifndef OPM_DEAD_OIL_PVT_HPP
 #define OPM_DEAD_OIL_PVT_HPP
 
-#include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
-#include <opm/material/common/Spline.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -45,10 +43,8 @@ namespace Opm {
 template <class Scalar>
 class DeadOilPvt
 {
-    typedef std::vector<std::pair<Scalar, Scalar> > SamplingPoints;
-
 public:
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     DeadOilPvt() = default;
     DeadOilPvt(const std::vector<Scalar>& oilReferenceDensity,

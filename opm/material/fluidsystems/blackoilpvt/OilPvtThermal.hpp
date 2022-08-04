@@ -27,12 +27,7 @@
 #ifndef OPM_OIL_PVT_THERMAL_HPP
 #define OPM_OIL_PVT_THERMAL_HPP
 
-#include <opm/material/Constants.hpp>
-
-#include <opm/material/common/OpmFinal.hpp>
-#include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
-#include <opm/material/common/Spline.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -54,8 +49,8 @@ template <class Scalar>
 class OilPvtThermal
 {
 public:
-    typedef Tabulated1DFunction<Scalar> TabulatedOneDFunction;
-    typedef OilPvtMultiplexer<Scalar, /*enableThermal=*/false> IsothermalPvt;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
+    using IsothermalPvt = OilPvtMultiplexer<Scalar, /*enableThermal=*/false>;
 
     OilPvtThermal()
     {
@@ -150,7 +145,7 @@ public:
                 // temperature used to calculate the reference viscosity [K]. the
                 // value does not really matter if the underlying PVT object really
                 // is isothermal...
-                Scalar Tref = 273.15 + 20;
+                constexpr const Scalar Tref = 273.15 + 20;
 
                 // compute the reference viscosity using the isothermal PVT object.
                 viscRef_[regionIdx] =
