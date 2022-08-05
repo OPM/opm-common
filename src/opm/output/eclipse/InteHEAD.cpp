@@ -828,7 +828,7 @@ Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::netBalanceData(const NetBalanceDims& nwbaldim)
 {
     this->data_[NETBALAN_3] = nwbaldim.maxNoIterationsNBC;
-    this->data_[NETBALAN_5]  = nwbaldim.maxNoIterationsTHP;
+    this->data_[NETBALAN_5] = nwbaldim.maxNoIterationsTHP;
 
     return *this;
 }

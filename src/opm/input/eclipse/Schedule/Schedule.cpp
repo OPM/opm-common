@@ -15,7 +15,75 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/io/eclipse/rst/state.hpp>
+
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/String.hpp>
+#include <opm/common/utility/numeric/cmp.hpp>
+#include <opm/common/utility/shmatch.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/Network/Node.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+#include <fmt/chrono.h>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
+
+#include "Well/injection.hpp"
+#include "MSW/Compsegs.hpp"
 
 #include <algorithm>
 #include <ctime>
@@ -30,69 +98,6 @@
 #include <vector>
 
 #include <fmt/format.h>
-
-#include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/numeric/cmp.hpp>
-#include <opm/common/utility/String.hpp>
-#include <opm/common/utility/shmatch.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-
-#include <opm/io/eclipse/rst/state.hpp>
-
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
-
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
-#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
-#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
-#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
-
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/Schedule/Network/Node.hpp>
-#include <opm/input/eclipse/Schedule/Well/WList.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <fmt/chrono.h>
-
-#include "Well/injection.hpp"
-#include "MSW/Compsegs.hpp"
 
 namespace {
 
@@ -1748,6 +1753,7 @@ namespace {
                 actions.add( Action::ActionX(rst_action) );
             this->snapshots.back().actions.update( std::move(actions) );
         }
+
         this->snapshots.back().wtest_config.update( WellTestConfig{rst_state, report_step});
 
 

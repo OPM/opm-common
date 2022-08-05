@@ -45,24 +45,25 @@
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
-std::vector<double> elapsedTime(const Opm::Schedule& sched)
-{
-    auto elapsed = std::vector<double>{};
 
-    elapsed.reserve(sched.size());
-    elapsed.push_back(0.0);
-
-    for (auto nstep = sched.size() - 1,
-              step  = 0*nstep; step < nstep; ++step)
+    std::vector<double> elapsedTime(const Opm::Schedule& sched)
     {
-        elapsed.push_back(sched.stepLength(step));
+        auto elapsed = std::vector<double>{};
+
+        elapsed.reserve(sched.size());
+        elapsed.push_back(0.0);
+
+        for (auto nstep = sched.size() - 1,
+                  step  = 0*nstep; step < nstep; ++step)
+        {
+            elapsed.push_back(sched.stepLength(step));
+        }
+
+        std::partial_sum(std::begin(elapsed), std::end(elapsed),
+                         std::begin(elapsed));
+
+        return elapsed;
     }
-
-    std::partial_sum(std::begin(elapsed), std::end(elapsed),
-                     std::begin(elapsed));
-
-    return elapsed;
-}
 
     void expectDate(const Opm::RestartIO::InteHEAD::TimePoint& tp,
                     const int year, const int month, const int day)
@@ -77,14 +78,13 @@ std::vector<double> elapsedTime(const Opm::Schedule& sched)
         BOOST_CHECK_EQUAL(tp.microseconds, 0);
     }
 
-    Opm::Deck first_sim(std::string fname) {
+    Opm::Deck first_sim(const std::string& fname)
+    {
         return Opm::Parser{}.parseFile(fname);
     }
 
 } // Anonymous
 
-
-//int main(int argc, char* argv[])
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
@@ -101,7 +101,6 @@ struct SimulationCase
     Opm::Schedule     sched;
 
 };
-
 
 BOOST_AUTO_TEST_SUITE(Member_Functions)
 
@@ -503,14 +502,18 @@ BOOST_AUTO_TEST_CASE(ngroups)
     BOOST_CHECK_EQUAL(v[VI::intehead::NGRP], ngroup);
 }
 
-static Opm::Schedule make_schedule(const std::string& deck_string) {
-    const auto& deck = Opm::Parser{}.parseString(deck_string);
-    auto python = std::make_shared<Opm::Python>();
-    Opm::EclipseGrid grid(10,10,10);
-    Opm::TableManager table ( deck );
-    Opm::FieldPropsManager fp( deck, Opm::Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    return Opm::Schedule(deck, grid , fp, runspec, python);
+namespace {
+    Opm::Schedule make_schedule(const std::string& deck_string)
+    {
+        const auto deck = Opm::Parser{}.parseString(deck_string);
+
+        const Opm::EclipseGrid grid(10, 10, 10);
+        const Opm::TableManager table(deck);
+        const Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, table);
+        const Opm::Runspec runspec(deck);
+
+        return Opm::Schedule(deck, grid, fp, runspec, std::make_shared<Opm::Python>());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(SimulationDate)
@@ -577,7 +580,8 @@ BOOST_AUTO_TEST_SUITE_END() // Member_Functions
 
 BOOST_AUTO_TEST_SUITE(Transfer_Protocol)
 
-BOOST_AUTO_TEST_CASE(TestHeader) {
+BOOST_AUTO_TEST_CASE(TestHeader)
+{
     using Ph = Opm::RestartIO::InteHEAD::Phases;
 
     const auto nx = 10;
@@ -668,7 +672,10 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .ngroups({ngroup});
 
     Opm::Runspec runspec;
-    Opm::RestartIO::RstHeader header(runspec, unit_system, ih.data(), std::vector<bool>(100), std::vector<double>(1000));
+    Opm::RestartIO::RstHeader header {
+        runspec, unit_system, ih.data(), std::vector<bool>(100), std::vector<double>(1000)
+    };
+
     BOOST_CHECK_EQUAL(header.nx, nx);
     BOOST_CHECK_EQUAL(header.ny, ny);
     BOOST_CHECK_EQUAL(header.nactive, nactive);
@@ -723,7 +730,6 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     BOOST_CHECK_EQUAL(header.ngroup, ngroup);
 }
 
-
 BOOST_AUTO_TEST_CASE(Netbalan)
 {
     const auto simCase = SimulationCase{first_sim("5_NETWORK_MODEL5_STDW_NETBAL_PACK.DATA")};
@@ -743,7 +749,6 @@ BOOST_AUTO_TEST_CASE(Netbalan)
                            report_step, // Should really be number of timesteps
                            report_step, lookup_step);
 
-
     const auto& v = ih.data();
 
     namespace VI = Opm::RestartIO::Helpers::VectorItems;
@@ -752,7 +757,5 @@ BOOST_AUTO_TEST_CASE(Netbalan)
     BOOST_CHECK_EQUAL(v[VI::intehead::NETBALAN_5], 14);
 
 }
-
-
 
 BOOST_AUTO_TEST_SUITE_END() // Transfer_Protocol

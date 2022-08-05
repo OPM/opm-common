@@ -3,29 +3,25 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  OPM is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
 
-  OPM is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  OPM is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+  details.
 
-  You should have received a copy of the GNU General Public License
-  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License along
+  with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef RST_STATE
 #define RST_STATE
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include <opm/io/eclipse/rst/aquifer.hpp>
 #include <opm/io/eclipse/rst/action.hpp>
+#include <opm/io/eclipse/rst/aquifer.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/network.hpp>
@@ -36,6 +32,11 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace Opm {
     class EclipseGrid;
@@ -48,14 +49,15 @@ namespace Opm { namespace EclIO {
 
 namespace Opm { namespace RestartIO {
 
-struct RstState {
+struct RstState
+{
     RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
-             const Runspec& runspec,
+             const Runspec&                          runspec,
              const ::Opm::EclipseGrid*               grid);
 
     static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView,
-                         const Runspec& runspec,
-                         const Parser& parser,
+                         const Runspec&                          runspec,
+                         const Parser&                           parser,
                          const ::Opm::EclipseGrid*               grid = nullptr);
 
     const RstWell& get_well(const std::string& wname) const;
