@@ -439,7 +439,7 @@ public:
             fs.setSaturation(waterPhaseIdx, Sw);
             fs.setSaturation(gasPhaseIdx, 0);
             fs.setSaturation(oilPhaseIdx, 0);
-            Scalar pc[numPhases] = { 0 };
+            std::array<Scalar, numPhases> pc = { 0 };
             MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
 
             Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];

@@ -523,7 +523,7 @@ protected:
         // update the pressures using the material law (saturations
         // and first pressure are already set because it is implicitly
         // solved for.)
-        Dune::FieldVector<FlashEval, numPhases> pC;
+        std::array<FlashEval, numPhases> pC;
         MaterialLaw::capillaryPressures(pC, matParams, flashFluidState);
         for (unsigned phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx)
             flashFluidState.setPressure(phaseIdx,
