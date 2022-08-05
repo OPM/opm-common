@@ -753,9 +753,8 @@ BOOST_AUTO_TEST_CASE(Netbalan)
 
     namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
-    BOOST_CHECK_EQUAL(v[VI::intehead::NETBALAN_3], 13);
-    BOOST_CHECK_EQUAL(v[VI::intehead::NETBALAN_5], 14);
-
+    BOOST_CHECK_EQUAL(v[VI::intehead::NetbalMaxBalanceIter], 13);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NetbalMaxTHPIter], 14);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Transfer_Protocol
