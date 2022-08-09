@@ -139,18 +139,18 @@ auto getSaltSaturation_(typename std::enable_if<HasMember_saltSaturation<FluidSt
 template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits>
 class BlackOilFluidSystem : public BaseFluidSystem<Scalar, BlackOilFluidSystem<Scalar, IndexTraits> >
 {
-    typedef BlackOilFluidSystem ThisType;
+    using ThisType = BlackOilFluidSystem;
 
 public:
-    typedef GasPvtMultiplexer<Scalar> GasPvt;
-    typedef OilPvtMultiplexer<Scalar> OilPvt;
-    typedef WaterPvtMultiplexer<Scalar> WaterPvt;
+    using GasPvt = GasPvtMultiplexer<Scalar>;
+    using OilPvt = OilPvtMultiplexer<Scalar>;
+    using WaterPvt = WaterPvtMultiplexer<Scalar>;
 
     //! \copydoc BaseFluidSystem::ParameterCache
     template <class EvaluationT>
     struct ParameterCache : public NullParameterCache<EvaluationT>
     {
-        typedef EvaluationT Evaluation;
+        using Evaluation = EvaluationT;
 
     public:
         ParameterCache(Scalar maxOilSat = 1.0, unsigned regionIdx=0)
@@ -464,14 +464,14 @@ public:
      ****************************************/
 
     //! \copydoc BaseFluidSystem::numPhases
-    static const unsigned numPhases = 3;
+    static constexpr unsigned numPhases = 3;
 
     //! Index of the water phase
-    static const unsigned waterPhaseIdx = IndexTraits::waterPhaseIdx;
+    static constexpr unsigned waterPhaseIdx = IndexTraits::waterPhaseIdx;
     //! Index of the oil phase
-    static const unsigned oilPhaseIdx = IndexTraits::oilPhaseIdx;
+    static constexpr unsigned oilPhaseIdx = IndexTraits::oilPhaseIdx;
     //! Index of the gas phase
-    static const unsigned gasPhaseIdx = IndexTraits::gasPhaseIdx;
+    static constexpr unsigned gasPhaseIdx = IndexTraits::gasPhaseIdx;
 
     //! The pressure at the surface
     static Scalar surfacePressure;
@@ -507,14 +507,14 @@ public:
      ****************************************/
 
     //! \copydoc BaseFluidSystem::numComponents
-    static const unsigned numComponents = 3;
+    static constexpr unsigned numComponents = 3;
 
     //! Index of the oil component
-    static const unsigned oilCompIdx = IndexTraits::oilCompIdx;
+    static constexpr unsigned oilCompIdx = IndexTraits::oilCompIdx;
     //! Index of the water component
-    static const unsigned waterCompIdx = IndexTraits::waterCompIdx;
+    static constexpr unsigned waterCompIdx = IndexTraits::waterCompIdx;
     //! Index of the gas component
-    static const unsigned gasCompIdx = IndexTraits::gasCompIdx;
+    static constexpr unsigned gasCompIdx = IndexTraits::gasCompIdx;
 
 protected:
     static unsigned char numActivePhases_;
@@ -998,7 +998,7 @@ public:
         const LhsEval phi_oO = 20e3/p;
 
         // for the gas component in the gas phase, assume it to be an ideal gas
-        const Scalar phi_gG = 1.0;
+        constexpr const Scalar phi_gG = 1.0;
 
         // for the fugacity coefficient of the water component in the water phase, we use
         // the same approach as for the oil component in the oil phase

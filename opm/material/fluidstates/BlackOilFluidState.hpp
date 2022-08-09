@@ -126,7 +126,7 @@ class BlackOilFluidState
     enum { oilCompIdx = FluidSystem::oilCompIdx };
 
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
 
@@ -149,28 +149,28 @@ public:
             Valgrind::CheckDefined(density_[storagePhaseIdx]);
             Valgrind::CheckDefined(invB_[storagePhaseIdx]);
 
-            if (enableEnergy)
+            if constexpr (enableEnergy)
                 Valgrind::CheckDefined((*enthalpy_)[storagePhaseIdx]);
         }
 
-        if (enableDissolution) {
+        if constexpr (enableDissolution) {
             Valgrind::CheckDefined(*Rs_);
             Valgrind::CheckDefined(*Rv_);
         }
 
-        if (enableEvaporation) {
+        if constexpr (enableEvaporation) {
             Valgrind::CheckDefined(*Rvw_);
         }
 
-        if (enableBrine) {
+        if constexpr (enableBrine) {
             Valgrind::CheckDefined(*saltConcentration_);
         }
 
-        if (enableSaltPrecipitation) {
+        if constexpr (enableSaltPrecipitation) {
             Valgrind::CheckDefined(*saltSaturation_);
         }
 
-        if (enableTemperature || enableEnergy)
+        if constexpr (enableTemperature || enableEnergy)
             Valgrind::CheckDefined(*temperature_);
 #endif // NDEBUG
     }
@@ -182,23 +182,23 @@ public:
     template <class FluidState>
     void assign(const FluidState& fs)
     {
-        if (enableTemperature || enableEnergy)
+        if constexpr (enableTemperature || enableEnergy)
             setTemperature(fs.temperature(/*phaseIdx=*/0));
 
         unsigned pvtRegionIdx = getPvtRegionIndex_<FluidState>(fs);
         setPvtRegionIndex(pvtRegionIdx);
 
-        if (enableDissolution) {
+        if constexpr (enableDissolution) {
             setRs(BlackOil::getRs_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
             setRv(BlackOil::getRv_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
-        if (enableEvaporation) {
+        if constexpr (enableEvaporation) {
             setRvw(BlackOil::getRvw_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
-        if (enableBrine){
+        if constexpr (enableBrine){
             setSaltConcentration(BlackOil::getSaltConcentration_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
-        if (enableSaltPrecipitation){
+        if constexpr (enableSaltPrecipitation){
             setSaltSaturation(BlackOil::getSaltSaturation_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
         for (unsigned storagePhaseIdx = 0; storagePhaseIdx < numStoragePhases; ++storagePhaseIdx) {
@@ -207,7 +207,7 @@ public:
             setPressure(phaseIdx, fs.pressure(phaseIdx));
             setDensity(phaseIdx, fs.density(phaseIdx));
 
-            if (enableEnergy)
+            if constexpr (enableEnergy)
                 setEnthalpy(phaseIdx, fs.enthalpy(phaseIdx));
 
             setInvB(phaseIdx, getInvB_<FluidSystem, FluidState, Scalar>(fs, phaseIdx, pvtRegionIdx));
@@ -354,12 +354,12 @@ public:
      */
     const Scalar& temperature(unsigned) const
     {
-        if (!enableTemperature && !enableEnergy) {
+        if constexpr (enableTemperature || enableEnergy) {
+            return *temperature_;
+        } else {
             static Scalar tmp(FluidSystem::reservoirTemperature(pvtRegionIdx_));
             return tmp;
         }
-
-        return *temperature_;
     }
 
     /*!
@@ -380,12 +380,12 @@ public:
      */
     const Scalar& Rs() const
     {
-        if (!enableDissolution) {
+        if constexpr (enableDissolution) {
+            return *Rs_;
+        } else {
             static Scalar null = 0.0;
             return null;
         }
-
-        return *Rs_;
     }
 
     /*!
@@ -397,12 +397,12 @@ public:
      */
     const Scalar& Rv() const
     {
-        if (!enableDissolution) {
+        if constexpr (!enableDissolution) {
             static Scalar null = 0.0;
             return null;
+        } else {
+            return *Rv_;
         }
-
-        return *Rv_;
     }
 
     /*!
@@ -414,12 +414,12 @@ public:
      */
     const Scalar& Rvw() const
     {
-        if (!enableEvaporation) {
+        if constexpr (enableEvaporation) {
+            return *Rvw_;
+        } else {
             static Scalar null = 0.0;
             return null;
         }
-
-        return *Rvw_;
     }
 
     /*!
@@ -427,12 +427,12 @@ public:
      */
     const Scalar& saltConcentration() const
     {
-        if (!enableBrine) {
+        if constexpr (enableBrine) {
+            return *saltConcentration_;
+        } else {
             static Scalar null = 0.0;
             return null;
         }
-
-        return *saltConcentration_;
     }
 
     /*!
@@ -440,12 +440,12 @@ public:
      */
     const Scalar& saltSaturation() const
     {
-        if (!enableSaltPrecipitation) {
+        if constexpr (enableSaltPrecipitation) {
+            return *saltSaturation_;
+        } else {
             static Scalar null = 0.0;
             return null;
         }
-
-        return *saltSaturation_;
     }
 
     /*!
@@ -632,18 +632,18 @@ public:
 private:
     static unsigned storageToCanonicalPhaseIndex_(unsigned storagePhaseIdx)
     {
-        if (numStoragePhases == 3)
+        if constexpr (numStoragePhases == 3)
             return storagePhaseIdx;
-
-        return FluidSystem::activeToCanonicalPhaseIdx(storagePhaseIdx);
+        else
+            return FluidSystem::activeToCanonicalPhaseIdx(storagePhaseIdx);
     }
 
     static unsigned canonicalToStoragePhaseIndex_(unsigned canonicalPhaseIdx)
     {
-        if (numStoragePhases == 3)
+        if constexpr (numStoragePhases == 3)
             return canonicalPhaseIdx;
-
-        return FluidSystem::canonicalToActivePhaseIdx(canonicalPhaseIdx);
+        else
+            return FluidSystem::canonicalToActivePhaseIdx(canonicalPhaseIdx);
     }
 
     ConditionalStorage<enableTemperature || enableEnergy, Scalar> temperature_;
