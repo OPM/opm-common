@@ -86,6 +86,7 @@ RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
     : unit_system(rstView->intehead()[VI::intehead::UNIT])
     , header(runspec, unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead())
     , aquifers(rstView, grid, unit_system)
+    , netbalan(rstView->intehead(), rstView->doubhead(), unit_system)
     , network(rstView, unit_system)
 {
     this->load_tuning(rstView->intehead(), rstView->doubhead());

@@ -302,6 +302,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/rst/connection.cpp
           src/opm/io/eclipse/rst/group.cpp
           src/opm/io/eclipse/rst/header.cpp
+          src/opm/io/eclipse/rst/netbalan.cpp
           src/opm/io/eclipse/rst/network.cpp
           src/opm/io/eclipse/rst/udq.cpp
           src/opm/io/eclipse/rst/segment.cpp
@@ -474,6 +475,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_Restart.cpp
           tests/test_RFT.cpp
           tests/test_rst.cpp
+          tests/test_rst_netbalan.cpp
           tests/test_Solution.cpp
           tests/test_Inplace.cpp
           tests/test_Summary.cpp
@@ -930,6 +932,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/rst/connection.hpp
         opm/io/eclipse/rst/group.hpp
         opm/io/eclipse/rst/header.hpp
+        opm/io/eclipse/rst/netbalan.hpp
         opm/io/eclipse/rst/network.hpp
         opm/io/eclipse/rst/segment.hpp
         opm/io/eclipse/rst/state.hpp

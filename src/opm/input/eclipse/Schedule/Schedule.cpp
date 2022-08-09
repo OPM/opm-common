@@ -42,6 +42,7 @@
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
@@ -1756,6 +1757,7 @@ namespace {
 
         this->snapshots.back().wtest_config.update( WellTestConfig{rst_state, report_step});
 
+        this->snapshots.back().network_balance.update(Network::Balance { rst_state.netbalan });
 
         if (!rst_state.wlists.empty())
             this->snapshots.back().wlist_manager.update( WListManager(rst_state) );

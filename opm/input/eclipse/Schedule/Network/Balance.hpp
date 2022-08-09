@@ -28,6 +28,10 @@ namespace Opm {
     class UnitSystem;
 } // namespace Opm
 
+namespace Opm { namespace RestartIO {
+    class RstNetbalan;
+}} // namespace Opm::RestartIO
+
 namespace Opm { namespace Network {
 
 class Balance
@@ -43,6 +47,7 @@ public:
     Balance();
     explicit Balance(const DeckKeyword& keyword);
     explicit Balance(bool network_active);
+    explicit Balance(const RestartIO::RstNetbalan& netbalan);
 
     static Balance serializeObject();
 

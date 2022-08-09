@@ -24,6 +24,7 @@
 #include <opm/io/eclipse/rst/aquifer.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/netbalan.hpp>
 #include <opm/io/eclipse/rst/network.hpp>
 #include <opm/io/eclipse/rst/udq.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
@@ -65,6 +66,7 @@ struct RstState
     ::Opm::UnitSystem unit_system;
     RstHeader header;
     RstAquifer aquifers;
+    RstNetbalan netbalan;
     RstNetwork network;
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
