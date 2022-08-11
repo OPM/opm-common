@@ -89,6 +89,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -131,6 +132,7 @@ namespace {
         1 / (Metric::Pressure / Metric::Density / Opm::unit::square(Metric::GeomVolume / Metric::Time)),
         1 / Metric::PolymerDensity,
         1 / Metric::Salinity,
+        1 / (1 / Metric::Time),
     };
 
     static const double from_metric[] = {
@@ -173,6 +175,7 @@ namespace {
         Metric::Pressure / Metric::Density / Opm::unit::square(Metric::GeomVolume / Metric::Time),
         Metric::PolymerDensity,
         Metric::Salinity,
+        1 / Metric::Time,
     };
 
     static constexpr const char* metric_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -215,6 +218,7 @@ namespace {
         "BARS/(KG/SM3)/(RM3/DAY)2", /* AICD strength parameter */
         "KG / SM3", /*polymer density */
         "KG / SM3", /*salinity */
+        "SM3/SM3/DAY",
     };
 
     static_assert(numElems(from_metric_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -246,6 +250,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -319,6 +324,7 @@ namespace {
         1 / (Field::Pressure / Field::Density / Opm::unit::square(Field::GeomVolume / Field::Time)),
         1 / Field::PolymerDensity,
         1 / Field::Salinity,
+        1 / (Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time),
     };
 
     static const double from_field[] = {
@@ -361,6 +367,7 @@ namespace {
          Field::Pressure / Field::Density / Opm::unit::square(Field::GeomVolume / Field::Time),
          Field::PolymerDensity,
          Field::Salinity,
+         Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time,
     };
 
     static constexpr const char* field_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -403,6 +410,7 @@ namespace {
         "PSI/(LB/FT3)/(RFT3/DAY)2", /* AICD strength parameter */
         "LB/STB", /*polymer density */
         "LB/STB", /*salinity */
+        "MSCF/STB/DAY",
     };
 
     static_assert(numElems(from_field_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -434,6 +442,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -507,6 +516,7 @@ namespace {
         1 / (Lab::Pressure / Lab::Density / Opm::unit::square(Lab::GeomVolume / Lab::Time)),
         1 / Lab::PolymerDensity,
         1 / Lab::Salinity,
+        1 / (Lab::GasDissolutionFactor / Lab::Time),
     };
 
     static const double from_lab[] = {
@@ -549,6 +559,7 @@ namespace {
         Lab::Pressure / Lab::Density / Opm::unit::square(Lab::GeomVolume / Lab::Time),
         Lab::PolymerDensity,
         Lab::Salinity,
+        Lab::GasDissolutionFactor / Lab::Time,
     };
 
     static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -591,6 +602,7 @@ namespace {
         "ATM/(G/SCC)/(RCC/H)2", /* AICD strength parameter */
         "G/SCC", /*polymer density */
         "G/SCC", /*salinity */
+        "SCC/SCC/HR",
     };
 
     static_assert(numElems(from_lab_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -622,6 +634,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -695,6 +708,7 @@ namespace {
         1 / (PVT_M::Pressure / PVT_M::Density  / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
         1 / PVT_M::PolymerDensity,
         1 / PVT_M::Salinity,
+        1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time),
     };
 
     static const double from_pvt_m[] = {
@@ -737,6 +751,7 @@ namespace {
         PVT_M::Pressure / PVT_M::Density  / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time),
         PVT_M::PolymerDensity,
         PVT_M::Salinity,
+        PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time,
     };
 
     static constexpr const char* pvt_m_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -779,6 +794,7 @@ namespace {
         "ATM/(KG/SM3)/(RM3/DAY)2", /* AICD strength parameter */
         "KG/SM3", /*polymer density */
         "KG/SM3", /*salinity */
+        "SM3/SM3/DAY",
     };
 
     static_assert(numElems(from_pvt_m_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -802,6 +818,7 @@ namespace {
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -883,9 +900,11 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -967,6 +986,7 @@ namespace {
         "BARS/(KG/SM3)/(RM3/DAY)2", /* AICD strength parameter */
         "KG/SM3", /*polymer density */
         "KG/SM3", /*salinity */
+        "SM3/SM3/DAY",
     };
 
     static_assert(numElems(from_input_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
