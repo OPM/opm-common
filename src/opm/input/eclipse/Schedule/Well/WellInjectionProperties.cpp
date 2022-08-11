@@ -27,7 +27,6 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include "injection.hpp"

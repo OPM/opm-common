@@ -50,8 +50,6 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
 

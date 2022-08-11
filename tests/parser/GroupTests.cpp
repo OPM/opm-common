@@ -39,8 +39,6 @@
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 
-#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 using namespace Opm;

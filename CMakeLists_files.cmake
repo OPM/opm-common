@@ -836,10 +836,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp
        opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp
        opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp
-       opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp
        opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp
        opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp
-       opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp
        opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp
        opm/input/eclipse/Schedule/Well/WVFPEXP.hpp
        opm/input/eclipse/Schedule/Well/WellTestConfig.hpp

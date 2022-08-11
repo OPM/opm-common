@@ -37,9 +37,6 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
-
 using namespace Opm;
 
 

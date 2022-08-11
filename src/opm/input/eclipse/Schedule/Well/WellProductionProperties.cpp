@@ -29,7 +29,6 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 
 #include "../eval_uda.hpp"
