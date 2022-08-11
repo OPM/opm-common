@@ -28,8 +28,6 @@
 
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
 

@@ -38,9 +38,6 @@
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellInjectionProperties.hpp>
-
 using namespace Opm;
 
 inline std::string pathprefix() {
