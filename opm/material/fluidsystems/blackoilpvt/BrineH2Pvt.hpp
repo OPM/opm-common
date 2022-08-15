@@ -86,6 +86,8 @@ public:
                          "BRINE PVT properties are computed based on the Li et al. (2018) and PVDO/PVTO input" <<
                          " is ignored. " << std::endl;
         }
+        // Check if DISGAS has been activated (enables H2 dissolved in brine)
+        setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
 
         // We only supported single pvt region for the H2-brine module
         size_t numRegions = 1;
@@ -132,6 +134,15 @@ public:
     void initEnd()
     {
     }
+
+    /*!
+     * \brief Specify whether the PVT model should consider that the H2 component can
+     *        dissolve in the brine phase
+     *
+     * By default, dissolved H2 is considered.
+     */
+    void setEnableDissolvedGas(bool yesno)
+    { enableDissolution_ = yesno; }
 
     /*!
     * \brief Return the number of PVT regions which are considered by this PVT-object.
@@ -287,6 +298,7 @@ private:
     std::vector<Scalar> brineReferenceDensity_;
     std::vector<Scalar> h2ReferenceDensity_;
     std::vector<Scalar> salinity_;
+    bool enableDissolution_ = true;
 
     /*!
     * \brief Calculate density of aqueous solution (H2O-NaCl/brine and H2).
@@ -460,6 +472,9 @@ private:
                    const LhsEval& temperature,
                    const LhsEval& pressure) const
     {
+        // Return Rs=0.0 if dissolution is disabled
+        if (!enableDissolution_)
+            return 0.0;
         // calulate the equilibrium composition for the given temperature and pressure
         LhsEval xlH2;
         BinaryCoeffBrineH2::calculateMoleFractions(temperature,
