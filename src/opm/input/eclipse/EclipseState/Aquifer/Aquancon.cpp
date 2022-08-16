@@ -147,6 +147,7 @@ namespace Opm {
         for (std::size_t iaq = 0; iaq < deck.count("AQUANCON"); iaq++) {
             const auto& aquanconKeyword = deck["AQUANCON"][iaq];
             OpmLog::info(OpmInputError::format("Initializing aquifer connections from {keyword} in {file} line {line}", aquanconKeyword.location()));
+            int num_connections_to_inactive_cells = 0;
             for (const auto& aquanconRecord : aquanconKeyword) {
                 const int aquiferID = aquanconRecord.getItem("AQUIFER_ID").get<int>(0);
                 const int i1 = aquanconRecord.getItem("I1").get<int>(0) - 1;
@@ -178,15 +179,24 @@ namespace Opm {
                                     add_cell(aquanconKeyword.location(), work, grid, aquiferID, global_index, influx_coeff, influx_mult, faceDir);
                                 }
                             } else {
+                                ++num_connections_to_inactive_cells;
                                 const auto& location = aquanconKeyword.location();
                                 auto msg = fmt::format("Problem with keyword {}\n"
                                                        "In {} line {} \n"
                                                        "Connection to inactive cell ({},{},{}) is ignored", location.keyword, location.filename, location.lineno, i+1, j+1, k+1);
-                                OpmLog::warning(msg);
+                                OpmLog::warning("AQUANCON_INACTIVE_CELL", msg);
                             }
                         }
                     }
                 }
+            }
+            if (num_connections_to_inactive_cells > 1) {
+                const auto& location = aquanconKeyword.location();
+                auto msg = fmt::format("Problem with keyword {}\n"
+                                       "In {} line {} \n"
+                                       "{} connections to inactive cells are ignored",
+                                       location.keyword, location.filename, location.lineno, num_connections_to_inactive_cells);
+                OpmLog::warning("AQUANCON_INACTIVE_CELLS_OVERVIEW", msg);
             }
         }
 
