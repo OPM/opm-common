@@ -104,8 +104,6 @@ if(HAVE_OPM_TESTS)
                 ${OPM_TESTS_ROOT}/spe9/SPE9_CP_GROUP.DATA
                 ${OPM_TESTS_ROOT}/spe9/SPE9_CP_SHORT.DATA
                 ${OPM_TESTS_ROOT}/spe9/SPE9.DATA
-                ${OPM_TESTS_ROOT}/spe10model1/SPE10_MODEL1.DATA
-                ${OPM_TESTS_ROOT}/spe10model2/SPE10_MODEL2.DATA
                 ${OPM_TESTS_ROOT}/msw_2d_h/2D_H__.DATA
                 ${OPM_TESTS_ROOT}/model2/0_BASE_MODEL2.DATA
                 ${OPM_TESTS_ROOT}/model2/1_MULTREGT_MODEL2.DATA
