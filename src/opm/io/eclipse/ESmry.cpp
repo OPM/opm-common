@@ -426,13 +426,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             for (size_t i=0; i < keywords.size(); i++) {
                 Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
                 const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i], lgr);
-                if (keywList.find(keyw) != keywList.end())
+                if ((!keyw.empty()) && (keywList.find(keyw) != keywList.end()))
                     arrayPos[specInd][keyIndex[keyw]]=i;
             }
         } else {
             for (size_t i=0; i < keywords.size(); i++) {
                 const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i], {});
-                if (keywList.find(keyw) != keywList.end())
+                if ((!keyw.empty()) && (keywList.find(keyw) != keywList.end()))
                     arrayPos[specInd][keyIndex[keyw]]=i;
             }
         }
