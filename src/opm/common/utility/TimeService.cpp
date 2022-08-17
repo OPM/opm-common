@@ -22,6 +22,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <limits>
 #include <utility>
 #include <string>
 
@@ -60,7 +61,40 @@ namespace {
         {10, "OCT"},
         {11, "NOV"},
         {12, "DEC"}};
-}
+
+
+
+    // The days_from_civil() function is from Howard Hinnant, http://howardhinnant.github.io/date_algorithms.html
+    // The website states: "Consider these donated to the public domain."
+
+    // Returns number of days since civil 1970-01-01.  Negative values indicate
+    //    days prior to 1970-01-01.
+    // Preconditions:  y-m-d represents a date in the civil (Gregorian) calendar
+    //                 m is in [1, 12]
+    //                 d is in [1, last_day_of_month(y, m)]
+    //                 y is "approximately" in
+    //                   [numeric_limits<Int>::min()/366, numeric_limits<Int>::max()/366]
+    //                 Exact range of validity is:
+    //                 [civil_from_days(numeric_limits<Int>::min()),
+    //                  civil_from_days(numeric_limits<Int>::max()-719468)]
+    template <class Int>
+    constexpr
+    Int
+    days_from_civil(Int y, unsigned m, unsigned d) noexcept
+    {
+        static_assert(std::numeric_limits<unsigned>::digits >= 18,
+                      "This algorithm has not been ported to a 16 bit unsigned integer");
+        static_assert(std::numeric_limits<Int>::digits >= 20,
+                      "This algorithm has not been ported to a 16 bit signed integer");
+        y -= m <= 2;
+        const Int era = (y >= 0 ? y : y-399) / 400;
+        const unsigned yoe = static_cast<unsigned>(y - era * 400);      // [0, 399]
+        const unsigned doy = (153*(m > 2 ? m-3 : m+9) + 2)/5 + d-1;  // [0, 365]
+        const unsigned doe = yoe * 365 + yoe/4 - yoe/100 + doy;         // [0, 146096]
+        return era * 146097 + static_cast<Int>(doe) - 719468;
+    }
+
+} // anonymous namespace
 
 
 
@@ -90,17 +124,7 @@ std::time_t advance(const std::time_t tp, const double sec)
 
 std::time_t makeUTCTime(std::tm timePoint)
 {
-    const auto ltime =  std::mktime(&timePoint);
-    auto       tmval = *std::gmtime(&ltime); // Mutable.
-
-    // offset =  ltime - tmval
-    //        == #seconds by which 'ltime' is AHEAD of tmval.
-    const auto offset =
-        std::difftime(ltime, std::mktime(&tmval));
-
-    // Advance 'ltime' by 'offset' so that std::gmtime(return value) will
-    // have the same broken-down elements as 'tp'.
-    return advance(ltime, offset);
+    return portable_timegm(&timePoint);
 }
 
 const std::unordered_map<std::string , int>& eclipseMonthIndices() {
@@ -144,6 +168,25 @@ std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minu
 
 std::time_t mkdate(int in_year, int in_month, int in_day) {
     return mkdatetime(in_year , in_month , in_day, 0,0,0);
+}
+
+// The portable_timegm() function is based on
+// https://stackoverflow.com/questions/16647819/timegm-cross-platform
+// answer by Sergey D.
+std::time_t portable_timegm(const std::tm* t)
+{
+    int year = t->tm_year + 1900;
+    int month = t->tm_mon;          // 0-11
+    if (month > 11) {
+        year += month / 12;
+        month %= 12;
+    } else if (month < 0) {
+        int years_diff = (11 - month) / 12;
+        year -= years_diff;
+        month += 12 * years_diff;
+    }
+    int days_from_1970 = days_from_civil(year, month + 1, t->tm_mday);
+    return 60 * (60 * (24L * days_from_1970 + t->tm_hour) + t->tm_min) + t->tm_sec;
 }
 
 std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
