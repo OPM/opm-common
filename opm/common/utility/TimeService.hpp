@@ -45,6 +45,7 @@ namespace Opm {
 
     std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
     std::time_t mkdate(int in_year, int in_month, int in_day);
+    std::time_t portable_timegm(const std::tm* t);
     std::time_t timeFromEclipse(const DeckRecord &dateRecord);
     }
 
