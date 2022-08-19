@@ -21,15 +21,18 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <memory>
-#include <vector>
-
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 
+#include <opm/io/eclipse/rst/connection.hpp>
+#include <opm/io/eclipse/rst/group.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/segment.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
+
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
@@ -37,27 +40,43 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/io/eclipse/rst/connection.hpp>
-#include <opm/io/eclipse/rst/header.hpp>
-#include <opm/io/eclipse/rst/group.hpp>
-#include <opm/io/eclipse/rst/segment.hpp>
-#include <opm/io/eclipse/rst/well.hpp>
-#include <opm/io/eclipse/rst/state.hpp>
-
 #include <tests/WorkArea.hpp>
 
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace {
+    struct SimulationCase
+    {
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es    { deck }
+            , grid  { deck }
+            , sched { deck, es, std::make_shared<Opm::Python>() }
+        {}
+
+        // Order requirement: 'es' must be declared/initialised before 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid  grid;
+        Opm::Schedule     sched;
+        Opm::Parser       parser;
+    };
+
     Opm::Deck first_sim()
     {
         // Mostly copy of tests/FIRST_SIM.DATA
@@ -198,26 +217,100 @@ TSTEP            -- 8
 
         return Opm::Parser{}.parseString(input);
     }
-} // namespace
 
-struct SimulationCase
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es    { deck }
-        , grid  { deck }
-        , sched { deck, es, std::make_shared<Opm::Python>() }
-    {}
+    void writeRstFile(const SimulationCase& simCase,
+                      const std::string&    baseName,
+                      const std::size_t     rptStep)
+    {
+        const auto& units    = simCase.es.getUnits();
+        const auto  sim_step = rptStep - 1;
 
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid  grid;
-    Opm::Schedule     sched;
-    Opm::Parser       parser;
-};
+        const auto sumState     = Opm::SummaryState { Opm::TimeService::now() };
+        const auto action_state = Opm::Action::State{};
+        const auto wtest_state  = Opm::WellTestState{};
+
+        const auto ih = Opm::RestartIO::Helpers::
+            createInteHead(simCase.es, simCase.grid, simCase.sched,
+                           0, sim_step, sim_step, sim_step);
+
+        const auto lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
+        const auto dh = Opm::RestartIO::Helpers::
+            createDoubHead(simCase.es, simCase.sched,
+                           sim_step, sim_step + 1, 0, 0);
+
+        auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
+        wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(),
+                                         sim_step, action_state,
+                                         wtest_state, sumState, ih);
+        wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(),
+                                        sim_step, {}, sumState);
+
+        auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
+        connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units,
+                                               {}, sumState, sim_step);
+
+        auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+        groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
+
+        const auto outputDir = std::string { "./" };
+
+        Opm::EclIO::OutputStream::Restart rstFile {
+            Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
+            static_cast<int>(rptStep),
+            Opm::EclIO::OutputStream::Formatted {false},
+            Opm::EclIO::OutputStream::Unified {true}
+        };
+
+        rstFile.write("INTEHEAD", ih);
+        rstFile.write("DOUBHEAD", dh);
+        rstFile.write("LOGIHEAD", lh);
+
+        rstFile.write("IGRP", groupData.getIGroup());
+        rstFile.write("SGRP", groupData.getSGroup());
+        rstFile.write("XGRP", groupData.getXGroup());
+        rstFile.write("ZGRP", groupData.getZGroup());
+
+        rstFile.write("IWEL", wellData.getIWell());
+        rstFile.write("SWEL", wellData.getSWell());
+        rstFile.write("XWEL", wellData.getXWell());
+        rstFile.write("ZWEL", wellData.getZWell());
+
+        rstFile.write("ICON", connectionData.getIConn());
+        rstFile.write("SCON", connectionData.getSConn());
+        rstFile.write("XCON", connectionData.getXConn());
+    }
+
+    Opm::RestartIO::RstState
+    loadRestart(const SimulationCase& simCase,
+                const std::string&    baseName,
+                const std::size_t     rptStep)
+    {
+        auto rstFile = std::make_shared<Opm::EclIO::ERst>(baseName + ".UNRST");
+        auto rstView = std::make_shared<Opm::EclIO::RestartFileView>
+            (std::move(rstFile), rptStep);
+
+        return Opm::RestartIO::RstState::
+            load(std::move(rstView), simCase.es.runspec(), simCase.parser);
+    }
+
+    Opm::RestartIO::RstState
+    makeRestartState(const SimulationCase& simCase,
+                     const std::string&    baseName,
+                     const std::size_t     rptStep,
+                     const std::string&    workArea)
+    {
+        // Constructor changes working directory of current process
+        WorkArea work_area{workArea};
+
+        writeRstFile(simCase, baseName, rptStep);
+        return loadRestart(simCase, baseName, rptStep);
+    }
+} // Anonymous namespace
 
 // =====================================================================
 
-BOOST_AUTO_TEST_CASE(group_test) {
+BOOST_AUTO_TEST_CASE(group_test)
+{
     const auto simCase = SimulationCase{first_sim()};
     const auto& units = simCase.es.getUnits();
     // Report Step 2: 2011-01-20 --> 2013-06-15
@@ -270,98 +363,22 @@ BOOST_AUTO_TEST_CASE(group_test) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(State_test) {
+BOOST_AUTO_TEST_CASE(State_test)
+{
     const auto simCase = SimulationCase{first_sim()};
-    const auto& units = simCase.es.getUnits();
+
     // Report Step 2: 2011-01-20 --> 2013-06-15
-    const auto rptStep = std::size_t{4};
-    const auto sim_step = rptStep - 1;
-    Opm::SummaryState sumState(Opm::TimeService::now());
-    Opm::Action::State action_state;
-    Opm::WellTestState wtest_state;
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_UDQRST" };
 
-    const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
-                                                            simCase.grid,
-                                                            simCase.sched,
-                                                            0,
-                                                            sim_step,
-                                                            sim_step,
-                                                            sim_step);
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep,
+                         "test_rstate");
 
-    const auto lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
+    const auto& well = state.get_well("OP_3");
+    BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
 
-    const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es,
-                                                            simCase.sched,
-                                                            sim_step,
-                                                            sim_step+1,
-                                                            0, 0);
 
-    auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step, action_state, wtest_state, sumState, ih);
-    wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(), sim_step, {} , sumState);
 
-    auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, {} , sumState, sim_step);
 
-    auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
-
-    {
-        WorkArea work_area("test_rstate");
-        std::string outputDir = "./";
-        std::string baseName = "TEST_UDQRST";
-        {
-            Opm::EclIO::OutputStream::Restart rstFile {Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
-                                                       rptStep,
-                                                       Opm::EclIO::OutputStream::Formatted {false},
-                                                       Opm::EclIO::OutputStream::Unified {true}};
-            rstFile.write("INTEHEAD", ih);
-            rstFile.write("DOUBHEAD", dh);
-            rstFile.write("LOGIHEAD", lh);
-
-            const auto& iwel = wellData.getIWell();
-            const auto& swel = wellData.getSWell();
-            const auto& xwel = wellData.getXWell();
-            const auto& zwel8 = wellData.getZWell();
-
-            const auto& icon = connectionData.getIConn();
-            const auto& scon = connectionData.getSConn();
-            const auto& xcon = connectionData.getXConn();
-
-            const auto& zgrp8 = groupData.getZGroup();
-            const auto& igrp = groupData.getIGroup();
-            const auto& sgrp = groupData.getSGroup();
-            const auto& xgrp = groupData.getXGroup();
-
-            std::vector<std::string> zwel;
-            for (const auto& s8 : zwel8)
-                zwel.push_back(s8.c_str());
-
-            std::vector<std::string> zgrp;
-            for (const auto& s8 : zgrp8)
-                zgrp.push_back(s8.c_str());
-
-            rstFile.write("IWEL", iwel);
-            rstFile.write("SWEL", swel);
-            rstFile.write("XWEL", xwel);
-            rstFile.write("ZWEL", zwel);
-
-            rstFile.write("ICON", icon);
-            rstFile.write("SCON", scon);
-            rstFile.write("XCON", xcon);
-
-            rstFile.write("ZGRP", zgrp);
-            rstFile.write("IGRP", igrp);
-            rstFile.write("SGRP", sgrp);
-            rstFile.write("XGRP", xgrp);
-        }
-
-        auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST_UDQRST.UNRST");
-        auto rstView = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), rptStep);
-
-        auto state = Opm::RestartIO::RstState::load(std::move(rstView), simCase.es.runspec(), simCase.parser);
-
-        const auto& well = state.get_well("OP_3");
-        BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
-    }
 }
