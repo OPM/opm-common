@@ -28,6 +28,7 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Opm {
@@ -72,8 +73,10 @@ struct RstWell
     int well_status;
     int active_control;
     int vfp_table;
+    int econ_workover_procedure;
     int preferred_phase;
     bool allow_xflow;
+    int econ_limit_end_run;
     int hist_requested_control;
     int msw_index;
     int completion_ordering;
@@ -82,6 +85,8 @@ struct RstWell
     int wtest_config_reasons;
     int wtest_close_reason;
     int wtest_remaining;
+    int econ_limit_quantity;
+    int econ_workover_procedure_2;
     bool glift_active;
     bool glift_alloc_extra_gas;
 
@@ -99,6 +104,13 @@ struct RstWell
     float drainage_radius;
     float efficiency_factor;
     float alq_value;
+    float econ_limit_min_oil;
+    float econ_limit_min_gas;
+    float econ_limit_max_wct;
+    float econ_limit_max_gor;
+    float econ_limit_max_wgr;
+    float econ_limit_max_wct_2;
+    float econ_limit_min_liq;
     float wtest_interval;
     float wtest_startup;
     float glift_max_rate;

@@ -44,7 +44,7 @@
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -139,6 +139,12 @@ WCONPROD
 /
 WCONINJE
       'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /
+/
+
+WECON
+-- Adapted from opm-tests/wecon_test/3D_WECON.DATA
+-- Well_name  minOrate  minGrate  maxWCT  maxGOR  maxWGR  WOprocedure  flag  open_well  minEco  2maxWCT WOaction maxGLR minLrate maxT
+  'OP_1'      1.0       800       0.1     321.09  1.0e-3  CON          YES    1*         POTN    0.8     WELL     300.0   50      1* /
 /
 
 DATES             -- 2
@@ -299,7 +305,10 @@ TSTEP            -- 8
                      const std::size_t     rptStep,
                      const std::string&    workArea)
     {
-        // Constructor changes working directory of current process
+        // Recall: Constructor changes working directory of current process,
+        // destructor restores original working directory.  The non-trivial
+        // destructor also means that this object will not be tagged as
+        // "unused" in release builds.
         WorkArea work_area{workArea};
 
         writeRstFile(simCase, baseName, rptStep);
@@ -377,8 +386,221 @@ BOOST_AUTO_TEST_CASE(State_test)
 
     const auto& well = state.get_well("OP_3");
     BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
+}
 
+BOOST_AUTO_TEST_CASE(Well_Economic_Limits)
+{
+    const auto simCase = SimulationCase{first_sim()};
 
+    // Report Step 2: 2011-01-20 --> 2013-06-15
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_RST_WECON" };
 
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep,
+                         "test_rst_wecon");
 
+    const auto& op_1 = state.get_well("OP_1");
+
+    namespace Limits = Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::EconLimit;
+
+    BOOST_CHECK_MESSAGE(op_1.econ_workover_procedure == Limits::WOProcedure::Con,
+                        "Well '" << op_1.name << "' must have work-over procedure 'Con'");
+    BOOST_CHECK_MESSAGE(op_1.econ_workover_procedure_2 == Limits::WOProcedure::StopOrShut,
+                        "Well '" << op_1.name << "' must have secondary work-over "
+                        "procedure 'StopOrShut' (WELL)");
+    BOOST_CHECK_MESSAGE(op_1.econ_limit_end_run == Limits::EndRun::Yes,
+                        "Well '" << op_1.name << "' must have end-run flag 'Yes'");
+    BOOST_CHECK_MESSAGE(op_1.econ_limit_quantity == Limits::Quantity::Potential,
+                        "Well '" << op_1.name << "' must have limiting "
+                        "quantity 'Potential'");
+
+    BOOST_CHECK_CLOSE(op_1.econ_limit_min_oil  ,   1.0f / 86400.0f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_min_gas  , 800.0f / 86400.0f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_wct  ,   0.1f           , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_gor  , 321.09f          , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_wgr  ,   1.0e-3f        , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_wct_2,   0.8f           , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_min_liq  ,  50.0f / 86400.0f, 1.0e-7f);
+
+    const auto& op_2 = state.get_well("OP_2");
+
+    BOOST_CHECK_MESSAGE(op_2.econ_workover_procedure == Limits::WOProcedure::None,
+                        "Well '" << op_2.name << "' must have work-over procedure 'None'");
+    BOOST_CHECK_MESSAGE(op_2.econ_workover_procedure_2 == Limits::WOProcedure::None,
+                        "Well '" << op_2.name << "' must have secondary work-over "
+                        "procedure 'None'");
+    BOOST_CHECK_MESSAGE(op_2.econ_limit_end_run == Limits::EndRun::No,
+                        "Well '" << op_2.name << "' must have end-run flag 'No'");
+    BOOST_CHECK_MESSAGE(op_2.econ_limit_quantity == Limits::Quantity::Rate,
+                        "Well '" << op_2.name << "' must have limiting "
+                        "quantity 'Rate'");
+
+    BOOST_CHECK_CLOSE(op_2.econ_limit_min_oil  ,   0.0f    , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_min_gas  ,   0.0f    , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_wct  ,   1.0e+20f, 1.0e-7f); // No limit => infinity
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_gor  ,   1.0e+20f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_wgr  ,   1.0e+20f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_wct_2,   0.0f    , 1.0e-7f); // No limit => 0.0
+    BOOST_CHECK_CLOSE(op_2.econ_limit_min_liq  ,   0.0f    , 1.0e-7f);
+}
+
+BOOST_AUTO_TEST_CASE(Construct_Well_Economic_Limits_Object)
+{
+    const auto simCase = SimulationCase{first_sim()};
+
+    // Report Step 2: 2011-01-20 --> 2013-06-15
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_RST_WECON" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep,
+                         "test_rst_wecon");
+
+    const auto op_1 = std::string { "OP_1" };
+    const auto op_2 = std::string { "OP_2" };
+    const auto limit_op_1 = Opm::WellEconProductionLimits{ state.get_well(op_1) };
+    const auto limit_op_2 = Opm::WellEconProductionLimits{ state.get_well(op_2) };
+
+    BOOST_CHECK_MESSAGE(limit_op_1.requireWorkover(),
+                        "Well '" << op_1 << "' must have a primary work-over procedure");
+    BOOST_CHECK_MESSAGE(limit_op_1.workover() == Opm::WellEconProductionLimits::EconWorkover::CON,
+                        "Well '" << op_1 << "' must have work-over procedure 'CON'");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.requireSecondaryWorkover(),
+                        "Well '" << op_1 << "' must have a secondary work-over procedure");
+    BOOST_CHECK_MESSAGE(limit_op_1.workoverSecondary() == Opm::WellEconProductionLimits::EconWorkover::WELL,
+                        "Well '" << op_1 << "' must have secondary work-over procedure 'WELL'");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.endRun(), "Well '" << op_1 << "' must have end-run flag 'true'");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.quantityLimit() == Opm::WellEconProductionLimits::QuantityLimit::POTN,
+                        "Well '" << op_1 << "' must have limiting quantity 'POTN'");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onAnyEffectiveLimit(),
+                        "Well '" << op_1 << "' must have active economic limits");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onAnyRatioLimit(),
+                        "Well '" << op_1 << "' must have active economic limits on ratios");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onAnyRateLimit(),
+                        "Well '" << op_1 << "' must have active economic limits on rates");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMinOilRate(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on minimum oil rate");
+    BOOST_CHECK_CLOSE(limit_op_1.minOilRate(), 1.0 / 86400.0, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMinGasRate(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on minimum gas rate");
+    BOOST_CHECK_CLOSE(limit_op_1.minGasRate(), 800.0 / 86400.0, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMaxWaterCut(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum water-cut");
+    BOOST_CHECK_CLOSE(limit_op_1.maxWaterCut(), 0.1, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMaxGasOilRatio(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum gas-oil ratio");
+    BOOST_CHECK_CLOSE(limit_op_1.maxGasOilRatio(), 321.09, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMaxWaterGasRatio(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum water-gas ratio");
+    BOOST_CHECK_CLOSE(limit_op_1.maxWaterGasRatio(), 1.0e-3, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onSecondaryMaxWaterCut(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum secondary water-cut");
+    BOOST_CHECK_CLOSE(limit_op_1.maxSecondaryMaxWaterCut(), 0.8, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMinLiquidRate(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on minimum liquid rate");
+    BOOST_CHECK_CLOSE(limit_op_1.minLiquidRate(), 50.0 / 86400.0, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.onMaxGasLiquidRatio(),
+                        "Well '" << op_1 << "' must NOT have active "
+                        "economic limits on maximum gas-liquid ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.onMaxTemperature(),
+                        "Well '" << op_1 << "' must NOT have active "
+                        "economic limits on maximum temperature");
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.onMinReservoirFluidRate(),
+                        "Well '" << op_1 << "' must NOT have active "
+                        "economic limits on minimum reservoir flow rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.validFollowonWell(),
+                        "Well '" << op_1 << "' must NOT have an "
+                        "active follow-on well");
+
+    // =======================================================================
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.requireWorkover(),
+                        "Well '" << op_2 << "' must NOT have a primary work-over procedure");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.requireSecondaryWorkover(),
+                        "Well '" << op_2 << "' must NOT have a secondary work-over procedure");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.endRun(), "Well '" << op_2 << "' must have end-run flag 'false'");
+
+    BOOST_CHECK_MESSAGE(limit_op_2.quantityLimit() == Opm::WellEconProductionLimits::QuantityLimit::RATE,
+                        "Well '" << op_2 << "' must have limiting quantity 'RATE'");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onAnyEffectiveLimit(),
+                        "Well '" << op_2 << "' must NOT have active economic limits");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onAnyRatioLimit(),
+                        "Well '" << op_2 << "' must NOT have active economic limits on ratios");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onAnyRateLimit(),
+                        "Well '" << op_2 << "' must NOT have active economic limits on rates");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinOilRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum oil rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinGasRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum gas rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxWaterCut(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum water-cut");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxGasOilRatio(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum gas-oil ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxWaterGasRatio(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum water-gas ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onSecondaryMaxWaterCut(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum secondary water-cut");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinLiquidRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum liquid rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxGasLiquidRatio(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum gas-liquid ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxTemperature(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum temperature");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinReservoirFluidRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum reservoir flow rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.validFollowonWell(),
+                        "Well '" << op_2 << "' must NOT have an "
+                        "active follow-on well");
 }
