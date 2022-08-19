@@ -3,7 +3,8 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
@@ -76,8 +77,8 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     well_status(                                                     iwel[VI::IWell::Status]),
     active_control(                                                  iwel[VI::IWell::ActWCtrl]),
     vfp_table(                                                       iwel[VI::IWell::VFPTab]),
-    allow_xflow(                                                     iwel[VI::IWell::XFlow] == 1),
     preferred_phase(                                                 iwel[VI::IWell::PreferredPhase]),
+    allow_xflow(                                                     iwel[VI::IWell::XFlow] == 1),
     hist_requested_control(                                          iwel[VI::IWell::HistReqWCtrl]),
     msw_index(                                                       iwel[VI::IWell::MsWID]),
     completion_ordering(                                             iwel[VI::IWell::CompOrd]),
@@ -190,13 +191,15 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     }
 }
 
-const RstSegment RstWell::segment(int segment_number) const {
+const RstSegment&
+RstWell::segment(int segment_number) const
+{
     const auto& iter = std::find_if(this->segments.begin(), this->segments.end(), [segment_number](const RstSegment& segment) { return segment.segment == segment_number; });
+
     if (iter == this->segments.end())
         throw std::invalid_argument("No such segment");
 
     return *iter;
 }
 
-}
-}
+}} // namepace Opm::RestartIO

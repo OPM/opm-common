@@ -3,7 +3,8 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
@@ -19,24 +20,26 @@
 #ifndef RST_WELL
 #define RST_WELL
 
-#include <array>
-#include <vector>
-#include <string>
-#include <unordered_map>
-
-
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
+
+#include <array>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace Opm {
 class UnitSystem;
+} // namespace Opm
 
-namespace RestartIO {
+namespace Opm { namespace RestartIO {
 
 struct RstHeader;
 
-struct RstWell {
+struct RstWell
+{
     RstWell(const ::Opm::UnitSystem& unit_system,
             const RstHeader& header,
             const std::string& group_arg,
@@ -69,8 +72,8 @@ struct RstWell {
     int well_status;
     int active_control;
     int vfp_table;
-    bool allow_xflow;
     int preferred_phase;
+    bool allow_xflow;
     int hist_requested_control;
     int msw_index;
     int completion_ordering;
@@ -130,16 +133,11 @@ struct RstWell {
     double water_void_rate;
     double gas_void_rate;
 
-    const RstSegment segment(int segment_number) const;
+    const RstSegment& segment(int segment_number) const;
     std::vector<RstConnection> connections;
     std::vector<RstSegment> segments;
 };
 
+}} // namespace Opm::RestartIO
 
-}
-}
-
-
-
-
-#endif
+#endif // RST_WELL
