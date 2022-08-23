@@ -101,6 +101,10 @@ namespace {
                                        ConnectionCallBack&&      connectionOp)
     {
         for (const auto& [aquiferID, connections] : aqConfig.connections().data()) {
+            if ( !aqConfig.hasAnalyticalAquifer(int(aquiferID)) ) {
+                continue;
+            }
+
             const auto tot_influx =
                 std::accumulate(connections.begin(), connections.end(), 0.0,
                     [](const double t, const Opm::Aquancon::AquancCell& connection) -> double

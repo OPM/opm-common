@@ -99,7 +99,8 @@ namespace Opm {
             bool operator==(const Aquancon& other) const;
             bool active() const;
 
-            const std::vector<Aquancon::AquancCell>& operator[](int aquiferID) const;
+            bool hasAquiferConnections(int aquiferID) const;
+            const std::vector<Aquancon::AquancCell>& getConnections(int aquiferID) const;
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)

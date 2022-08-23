@@ -61,6 +61,7 @@ public:
     const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other) const;
     bool hasAquifer(const int aquID) const;
+    bool hasAnalyticalAquifer(const int aquID) const;
 
     bool hasNumericalAquifer() const;
     bool hasAnalyticalAquifer() const;

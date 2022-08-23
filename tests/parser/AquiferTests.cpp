@@ -277,14 +277,14 @@ BOOST_AUTO_TEST_CASE(AquanconTest_DEFAULT_INFLUX)
     const auto& grid = makeGrid();
     Aquancon aqcon(grid, deck1);
 
-    const auto& cells_aq1 = aqcon[1];
+    const auto& cells_aq1 = aqcon.getConnections(1);
     /*
       The cells I = 0..2 are connected to aquifer 1; cell I==0 is inactive and
       not counted here ==> a total of 2 cells are connected to aquifer 1.
     */
     BOOST_CHECK_EQUAL(cells_aq1.size(), 2U);
 
-    const auto& cells_aq2 = aqcon[2];
+    const auto& cells_aq2 = aqcon.getConnections(2);
     BOOST_CHECK_EQUAL(cells_aq2.size(), 1U);
     BOOST_CHECK(aqcon.active());
 
@@ -352,8 +352,8 @@ BOOST_AUTO_TEST_CASE(AquanconTest_ALLOW_AQUIFER_INSIDE_OR_NOT)
     const Aquancon aq2(data);
 
     BOOST_CHECK(aqucon == aq2);
-    auto cells1 = aqucon[1];
-    auto cells2 = aqucon[2];
+    const auto cells1 = aqucon.getConnections(1);
+    const auto cells2 = aqucon.getConnections(2);
     BOOST_CHECK_EQUAL(cells1.size() , 2U);
     BOOST_CHECK_EQUAL(cells2.size() , 1U);
 }
@@ -639,6 +639,14 @@ END
     BOOST_CHECK_MESSAGE(  aquConfig.hasAquifer(7), "Configuration object must have Aquifer ID 7");
     BOOST_CHECK_MESSAGE(! aquConfig.hasAquifer(8), "Configuration object must NOT have Aquifer ID 8");
 
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAnalyticalAquifer(1), "Configuration object must have Analytical Aquifer ID 1");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAnalyticalAquifer(2), "Configuration object must have Analytical Aquifer ID 2");
+    BOOST_CHECK_MESSAGE(  aquConfig.hasAnalyticalAquifer(3), "Configuration object must have Analytical Aquifer ID 3");
+    BOOST_CHECK_MESSAGE(  !aquConfig.hasAnalyticalAquifer(4), "Configuration object must NOT have Analytical Aquifer ID 4");
+    BOOST_CHECK_MESSAGE(  !aquConfig.hasAnalyticalAquifer(5), "Configuration object must NOT have Analytical Aquifer ID 5");
+    BOOST_CHECK_MESSAGE(  !aquConfig.hasAnalyticalAquifer(6), "Configuration object must NOT have Analytical Aquifer ID 6");
+    BOOST_CHECK_MESSAGE(  !aquConfig.hasAnalyticalAquifer(7), "Configuration object must NOT have Analytical Aquifer ID 7");
+
     {
         const auto expect = std::vector<int>{ 1, 2, 3 };
         const auto analytic = analyticAquiferIDs(aquConfig);
@@ -912,7 +920,7 @@ AQUANCON
 )";
        const auto& [aquconn, _] = load_aquifer(aq);
        (void)_;
-       auto cell1 = aquconn[1][0];
+       auto cell1 = aquconn.getConnections(1)[0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 2.0);
    }
 
@@ -925,7 +933,7 @@ AQUANCON
 )";
        const auto& [aquconn, grid] = load_aquifer(aq);
        const auto& dims = grid.getCellDims(0,14,2);
-       auto cell1 = aquconn[1][0];
+       auto cell1 = aquconn.getConnections(1)[0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 2.0 * dims[0]*dims[2]);
    }
 
@@ -937,7 +945,7 @@ AQUANCON
 )";
        const auto& [aquconn, grid] = load_aquifer(aq);
        const auto& dims = grid.getCellDims(0,14,2);
-       auto cell1 = aquconn[1][0];
+       auto cell1 = aquconn.getConnections(1)[0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 3.0 * dims[1]*dims[2]);
    }
 
@@ -950,7 +958,7 @@ AQUANCON
 )";
        const auto& [aquconn, grid] = load_aquifer(aq);
        const auto& dims = grid.getCellDims(0,14,2);
-       auto cell1 = aquconn[1][0];
+       auto cell1 = aquconn.getConnections(1)[0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 4 * ( 100 + 3.0 * dims[1]*dims[2]));
    }
 
@@ -963,7 +971,7 @@ AQUANCON
 /
 )";
        const auto& [aquconn, grid] = load_aquifer(aq);
-       auto cell1 = aquconn[1][0];
+       auto cell1 = aquconn.getConnections(1)[0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 2*(77 + 3*(0 + 4*100)));
    }
 }
