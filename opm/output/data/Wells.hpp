@@ -163,7 +163,8 @@ namespace Opm {
                    cell_pressure == conn2.cell_pressure &&
                    cell_saturation_water == conn2.cell_saturation_water &&
                    cell_saturation_gas == conn2.cell_saturation_gas &&
-                   effective_Kh == conn2.effective_Kh;
+                   effective_Kh == conn2.effective_Kh &&
+                   trans_factor == conn2.trans_factor;
         }
 
         template <class MessageBufferType>
