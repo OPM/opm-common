@@ -36,6 +36,8 @@
 
 namespace Opm {
 
+    namespace Mpi { template <class T> struct Packing; }
+
     namespace data {
 
     class Rates {
@@ -101,6 +103,8 @@ namespace Opm {
             template <class MessageBufferType>
             void read(MessageBufferType& buffer);
 
+            friend struct Mpi::Packing<Rates>;
+
             bool operator==(const Rates& rat2) const;
 
         inline void init_json(Json::JsonObject& json_data) const;
@@ -159,13 +163,16 @@ namespace Opm {
                    cell_pressure == conn2.cell_pressure &&
                    cell_saturation_water == conn2.cell_saturation_water &&
                    cell_saturation_gas == conn2.cell_saturation_gas &&
-                   effective_Kh == conn2.effective_Kh;
+                   effective_Kh == conn2.effective_Kh &&
+                   trans_factor == conn2.trans_factor;
         }
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        friend struct Mpi::Packing<Connection>;
 
         inline void init_json(Json::JsonObject& json_data) const;
     };
@@ -207,6 +214,8 @@ namespace Opm {
             }
         }
 
+        friend struct Mpi::Packing<SegmentPressures>;
+
     private:
         constexpr static std::size_t numvals = 5;
 
@@ -235,6 +244,8 @@ namespace Opm {
 
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        friend struct Mpi::Packing<Segment>;
     };
 
     struct CurrentControl {
