@@ -218,13 +218,18 @@ namespace Opm {
     }
 
 
-    const std::vector<Aquancon::AquancCell>& Aquancon::operator[](int aquiferID) const {
+    const std::vector<Aquancon::AquancCell>& Aquancon::getConnections(int aquiferID) const {
         const auto search = this->cells.find(aquiferID);
         if (search == this->cells.end()) {
             auto msg = fmt::format("There is no connection associated with analytical aquifer {}\n", aquiferID);
             throw std::runtime_error(msg);
         }
         return search->second;
+    }
+
+    bool Aquancon::hasAquiferConnections(const int aquiferID) const {
+        auto search = this->cells.find(aquiferID);
+        return (search != this->cells.end()) && !search->second.empty();
     }
 
     Aquancon::Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data) :
