@@ -455,8 +455,6 @@ void compare( const RestartValue& fst,
         for( ; first != fst.solution.data( key).end(); ++first, ++second )
             BOOST_CHECK_CLOSE( *first, *second, tol );
     }
-
-    BOOST_CHECK_EQUAL( fst.wells, snd.wells );
 }
 
 
@@ -596,9 +594,6 @@ void compare_equal( const RestartValue& fst,
         for( ; first != fst.solution.data( key ).end(); ++first, ++second )
           BOOST_CHECK_EQUAL( *first, *second);
     }
-
-    BOOST_CHECK_EQUAL( fst.wells, snd.wells );
-    //BOOST_CHECK_EQUAL( fst.extra, snd.extra );
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
