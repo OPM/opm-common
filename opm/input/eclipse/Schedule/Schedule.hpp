@@ -324,6 +324,7 @@ namespace Opm
             this->m_static.serializeOp(serializer);
             this->m_sched_deck.serializeOp(serializer);
             this->action_wgnames.serializeOp(serializer);
+            serializer(this->exit_status);
             serializer.vector(this->snapshots);
             this->restart_output.serializeOp(serializer);
             this->completed_cells.serializeOp(serializer);
@@ -531,6 +532,11 @@ namespace Opm
 
         };
 
+        // Please update the member functions
+        //   - operator==(const Schedule&) const
+        //   - serializeObject()
+        //   - serializeOp(Serializer&)
+        // when you update/change this list of data members.
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
         Action::WGNames action_wgnames;
