@@ -321,35 +321,35 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_sched_deck.serializeOp(serializer);
-            serializer.vector(snapshots);
-            m_static.serializeOp(serializer);
-            restart_output.serializeOp(serializer);
+            this->m_sched_deck.serializeOp(serializer);
+            serializer.vector(this->snapshots);
+            this->m_static.serializeOp(serializer);
+            this->restart_output.serializeOp(serializer);
             this->completed_cells.serializeOp(serializer);
             this->action_wgnames.serializeOp(serializer);
 
-            pack_unpack<PAvg, Serializer>(serializer);
-            pack_unpack<WellTestConfig, Serializer>(serializer);
-            pack_unpack<GConSale, Serializer>(serializer);
-            pack_unpack<GConSump, Serializer>(serializer);
-            pack_unpack<WListManager, Serializer>(serializer);
-            pack_unpack<Network::ExtNetwork, Serializer>(serializer);
-            pack_unpack<Network::Balance, Serializer>(serializer);
-            pack_unpack<RPTConfig, Serializer>(serializer);
-            pack_unpack<Action::Actions, Serializer>(serializer);
-            pack_unpack<UDQActive, Serializer>(serializer);
-            pack_unpack<UDQConfig, Serializer>(serializer);
-            pack_unpack<NameOrder, Serializer>(serializer);
-            pack_unpack<GroupOrder, Serializer>(serializer);
-            pack_unpack<GuideRateConfig, Serializer>(serializer);
-            pack_unpack<GasLiftOpt, Serializer>(serializer);
-            pack_unpack<RFTConfig, Serializer>(serializer);
-            pack_unpack<RSTConfig, Serializer>(serializer);
+            this->template pack_unpack<PAvg>(serializer);
+            this->template pack_unpack<WellTestConfig>(serializer);
+            this->template pack_unpack<GConSale>(serializer);
+            this->template pack_unpack<GConSump>(serializer);
+            this->template pack_unpack<WListManager>(serializer);
+            this->template pack_unpack<Network::ExtNetwork>(serializer);
+            this->template pack_unpack<Network::Balance>(serializer);
+            this->template pack_unpack<RPTConfig>(serializer);
+            this->template pack_unpack<Action::Actions>(serializer);
+            this->template pack_unpack<UDQActive>(serializer);
+            this->template pack_unpack<UDQConfig>(serializer);
+            this->template pack_unpack<NameOrder>(serializer);
+            this->template pack_unpack<GroupOrder>(serializer);
+            this->template pack_unpack<GuideRateConfig>(serializer);
+            this->template pack_unpack<GasLiftOpt>(serializer);
+            this->template pack_unpack<RFTConfig>(serializer);
+            this->template pack_unpack<RSTConfig>(serializer);
 
-            pack_unpack_map<int, VFPProdTable, Serializer>(serializer);
-            pack_unpack_map<int, VFPInjTable, Serializer>(serializer);
-            pack_unpack_map<std::string, Group, Serializer>(serializer);
-            pack_unpack_map<std::string, Well, Serializer>(serializer);
+            this->template pack_unpack_map<int, VFPProdTable>(serializer);
+            this->template pack_unpack_map<int, VFPInjTable>(serializer);
+            this->template pack_unpack_map<std::string, Group>(serializer);
+            this->template pack_unpack_map<std::string, Well>(serializer);
         }
 
         template <typename T, class Serializer>
@@ -358,13 +358,13 @@ namespace Opm
             std::vector<std::size_t> index_list;
 
             if (serializer.isSerializing())
-                pack_state<T>(value_list, index_list);
+                this->template pack_state<T>(value_list, index_list);
 
             serializer.vector(value_list);
             serializer.template vector<std::size_t, false>(index_list);
 
             if (!serializer.isSerializing())
-                unpack_state<T>(value_list, index_list);
+                this->template unpack_state<T>(value_list, index_list);
         }
 
         template <typename T>
@@ -382,7 +382,7 @@ namespace Opm
 
         template <typename T>
         void pack_state(std::vector<T>& value_list, std::vector<std::size_t>& index_list) const {
-            auto unique_values = this->unique<T>();
+            auto unique_values = this->template unique<T>();
             for (auto& [index, value] : unique_values) {
                 value_list.push_back( std::move(value) );
                 index_list.push_back( index );
