@@ -49,6 +49,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -221,8 +222,21 @@ public:
                 satnumRegionArray_[elemIdx] = satnumRawData[elemIdx] - 1;
             }
         }
-        else
+        else {
             std::fill(satnumRegionArray_.begin(), satnumRegionArray_.end(), 0);
+        }
+        auto copy_krnum = [&eclState, numCompressedElems](std::vector<int>& dest, const std::string keyword) {
+            if (eclState.fieldProps().has_int(keyword)) {
+                dest.resize(numCompressedElems);
+                const auto& satnumRawData = eclState.fieldProps().get_int(keyword);
+                for (unsigned elemIdx = 0; elemIdx < numCompressedElems; ++elemIdx) {
+                    dest[elemIdx] = satnumRawData[elemIdx] - 1;
+                }
+            }
+        };
+        copy_krnum(krnumXArray_, "KRNUMX");
+        copy_krnum(krnumYArray_, "KRNUMY");
+        copy_krnum(krnumZArray_, "KRNUMZ");
 
         // create the information for the imbibition region (IMBNUM). By default this is
         // the same as the saturation region (SATNUM)
@@ -564,6 +578,30 @@ public:
 
     int satnumRegionIdx(unsigned elemIdx) const
     { return satnumRegionArray_[elemIdx]; }
+
+    int getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const {
+        using Dir = FaceDir::DirEnum;
+        const std::vector<int>* array = nullptr;
+        switch(facedir) {
+            case Dir::XPlus:
+                array = &krnumXArray_;
+                break;
+            case Dir::YPlus:
+                array = &krnumYArray_;
+                break;
+            case Dir::ZPlus:
+                array = &krnumZArray_;
+                break;
+            default:
+                throw std::runtime_error("Unknown face direction");
+        }
+        if (array->size() > 0) {
+            return (*array)[elemIdx];
+        }
+        else {
+            return satnumRegionArray_[elemIdx];
+        }
+    }
 
     int imbnumRegionIdx(unsigned elemIdx) const
     { return imbnumRegionArray_[elemIdx]; }
@@ -1211,6 +1249,9 @@ private:
     std::vector<MaterialLawParams> materialLawParams_;
 
     std::vector<int> satnumRegionArray_;
+    std::vector<int> krnumXArray_;
+    std::vector<int> krnumYArray_;
+    std::vector<int> krnumZArray_;
     std::vector<int> imbnumRegionArray_;
     std::vector<Scalar> stoneEtas;
 
