@@ -321,12 +321,12 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            this->m_sched_deck.serializeOp(serializer);
-            serializer.vector(this->snapshots);
             this->m_static.serializeOp(serializer);
+            this->m_sched_deck.serializeOp(serializer);
+            this->action_wgnames.serializeOp(serializer);
+            serializer.vector(this->snapshots);
             this->restart_output.serializeOp(serializer);
             this->completed_cells.serializeOp(serializer);
-            this->action_wgnames.serializeOp(serializer);
 
             this->template pack_unpack<PAvg>(serializer);
             this->template pack_unpack<WellTestConfig>(serializer);

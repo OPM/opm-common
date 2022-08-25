@@ -282,8 +282,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         Schedule result;
 
         result.m_static = ScheduleStatic::serializeObject();
-        result.snapshots = { ScheduleState::serializeObject() };
         result.m_sched_deck = ScheduleDeck::serializeObject();
+        result.snapshots = { ScheduleState::serializeObject() };
         result.restart_output = WriteRestartFileEvents::serializeObject();
 
         return result;
@@ -1531,9 +1531,9 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     bool Schedule::operator==(const Schedule& data) const {
         return this->m_static == data.m_static &&
                this->m_sched_deck == data.m_sched_deck &&
+               this->action_wgnames == data.action_wgnames &&
                this->snapshots == data.snapshots &&
                this->restart_output == data.restart_output &&
-               this->action_wgnames == data.action_wgnames &&
                this->completed_cells == data.completed_cells;
      }
 
