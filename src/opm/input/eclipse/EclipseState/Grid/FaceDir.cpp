@@ -20,7 +20,7 @@
 #include <stdexcept>
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
-
+#include <fmt/format.h>
 
 
 namespace Opm {
@@ -72,6 +72,24 @@ namespace Opm {
             throw std::invalid_argument("The string " + stringValue + " is not a valid MULTREGT direction value");
         }
 
-
+        const std::string toString(DirEnum dir)
+        {
+            std::vector<std::string> ret;
+            if (dir & DirEnum::XPlus)
+                ret.push_back("X+");
+            if (dir & DirEnum::XMinus)
+                ret.push_back("X-");
+            if (dir & DirEnum::YPlus)
+                ret.push_back("Y+");
+            if (dir & DirEnum::YMinus)
+                ret.push_back("Y-");
+            if (dir & DirEnum::ZPlus)
+                ret.push_back("Z+");
+            if (dir & DirEnum::ZMinus)
+                ret.push_back("Z-");
+            if (ret.size() == 0)
+                throw std::runtime_error("This should not happen");
+            return fmt::format("{}",fmt::join(ret, "|"));
+        }
     }
 }

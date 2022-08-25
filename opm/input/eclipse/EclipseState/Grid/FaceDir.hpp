@@ -43,6 +43,7 @@ namespace Opm {
 
         DirEnum FromString(const std::string& stringValue);
         int     FromMULTREGTString(const std::string& stringValue);
+        const std::string toString(DirEnum dir);
     }
 }
 
