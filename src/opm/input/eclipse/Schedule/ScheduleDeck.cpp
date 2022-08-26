@@ -238,6 +238,16 @@ ScheduleDeck::ScheduleDeck(time_point start_time, const Deck& deck, const Schedu
                     std::throw_with_nested(opm_error);
                 }
 
+                const auto currenTime = std::chrono::system_clock::to_time_t(context.last_time);
+                if (nextTime < currenTime) {
+                    auto msg = fmt::format(
+                               "Keyword DATES specifies a time {:%d-%b-%Y %H:%M:%S} earlier than the end time of previous report step {:%d-%b-%Y %H:%M:%S}",
+                               fmt::gmtime(nextTime), fmt::gmtime(currenTime));
+                    if (rst_info.time > 0 && !this->skiprest) { // the situation with SKIPREST is handled in function add_block
+                        msg += "\nin a RESTARTing simulation, Please check whether SKIPREST is supposed to be used for this circumstance";
+                    }
+                    throw OpmInputError(msg, keyword.location());
+                }
                 this->add_block(ScheduleTimeType::DATES, TimeService::from_time_t( nextTime ), context, keyword.location());
             }
             continue;
@@ -332,6 +342,13 @@ void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, Sc
 void ScheduleDeck::add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context) {
     const auto &item = TSTEPKeyword.getRecord(0).getItem(0);
     for (size_t itemIndex = 0; itemIndex < item.data_size(); itemIndex++) {
+        {
+            const auto tstep = item.get<double>(itemIndex);
+            if (tstep < 0) {
+                const auto msg = fmt::format("a negative TSTEP value {} is input", tstep);
+                throw OpmInputError(msg, TSTEPKeyword.location());
+            }
+        }
         auto next_time = context.last_time + std::chrono::duration_cast<time_point::duration>(std::chrono::duration<double>(item.getSIDouble(itemIndex)));
         this->add_block(ScheduleTimeType::TSTEP, next_time, context, TSTEPKeyword.location());
     }
