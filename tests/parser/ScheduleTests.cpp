@@ -5116,7 +5116,40 @@ END
 )");
 
 const auto es = EclipseState { deck };
-BOOST_CHECK_THROW(Schedule(deck, es), std::runtime_error);
+BOOST_CHECK_THROW(Schedule(deck, es), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(NEGATIVE_TSTEPS) {
+const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+START             -- 0
+10 MAI 2007 /
+
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+SCHEDULE
+DATES             -- 1, 2, 3
+  10  MAY 2007 /
+  10  JUN  2007 /
+  10  AUG 2007 /
+/
+TSTEP
+-1 /
+END
+)");
+
+const auto es = EclipseState { deck };
+BOOST_CHECK_THROW(Schedule(deck, es), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(RPTONLY_IN_SUMMARY) {

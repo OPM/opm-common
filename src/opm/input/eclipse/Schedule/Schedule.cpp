@@ -89,6 +89,7 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
+#include <fmt/chrono.h>
 
 #include "Well/injection.hpp"
 #include "MSW/Compsegs.hpp"
@@ -1276,14 +1277,19 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
     double Schedule::stepLength(std::size_t timeStep) const {
-        if (this->snapshots[timeStep].end_time() < this->snapshots[timeStep].start_time()) {
-            const auto& start_time = Schedule::formatDate(std::chrono::system_clock::to_time_t(this->snapshots[timeStep].start_time()));
-            const auto& end_time = Schedule::formatDate(std::chrono::system_clock::to_time_t(this->snapshots[timeStep].end_time()));
-            throw std::runtime_error(fmt::format(" Report step {0} has the start time {1} later than the end time {2},\n"
-                                                 "can be due to the wrong way doing restarting (forgetting SKIPREST?) or bad setup in the SCHEDULE section.", timeStep, start_time, end_time));
+        const auto start = this->snapshots[timeStep].start_time();
+        const auto end = this->snapshots[timeStep].end_time();
+        if (start > end) {
+            throw std::invalid_argument {
+                    fmt::format(" Report step {} has start time after end time,\n"
+                                "   * Start time = {:%d-%b-%Y %H:%M:%S}\n"
+                                "   * End time   = {:%d-%b-%Y %H:%M:%S}.\n"
+                                " Possibly due to inconsistent RESTART/SKIPREST settings.",
+                                timeStep + 1,
+                                fmt::gmtime(TimeService::to_time_t(start)),
+                                fmt::gmtime(TimeService::to_time_t(end))) };
         }
-        auto elapsed = this->snapshots[timeStep].end_time() - this->snapshots[timeStep].start_time();
-        return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+        return std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     }
 
     void Schedule::applyKeywords(
