@@ -59,16 +59,6 @@ foreach (test BoxTest
   list(APPEND EXTRA_TESTS ${test})
 endforeach ()
 
-opm_add_test( rst_spe1
-              SOURCES tests/rst_test.cpp
-              LIBRARIES ${TEST_LIBS}
-              TEST_ARGS tests/SPE1CASE2.DATA tests/SPE1CASE2_RESTART.DATA )
-
-opm_add_test( rst_msw
-              SOURCES tests/rst_test.cpp
-              LIBRARIES ${TEST_LIBS}
-              TEST_ARGS tests/MSW.DATA tests/MSW_RESTART.DATA )
-
 add_test( NAME rst_deck_test
           COMMAND ${PROJECT_SOURCE_DIR}/tests/rst_test_driver.sh ${PROJECT_BINARY_DIR}/bin/rst_deck ${PROJECT_BINARY_DIR}/bin/opmhash
           ${PROJECT_SOURCE_DIR}/tests/SPE1CASE2_INCLUDE.DATA)
