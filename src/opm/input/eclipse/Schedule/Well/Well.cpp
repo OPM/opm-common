@@ -50,97 +50,89 @@
 
 #include <fmt/format.h>
 
-namespace Opm {
-
 namespace {
 
-    bool defaulted(const DeckRecord& rec, const std::string& s) {
-        const auto& item = rec.getItem( s );
-        if (item.defaultApplied(0))
-            return true;
-
-        if (item.get<int>(0) == 0)
-            return true;
-
-        return false;
+    bool defaulted(const Opm::DeckRecord& rec, const std::string& s)
+    {
+        const auto& item = rec.getItem(s);
+        return item.defaultApplied(0) || (item.get<int>(0) == 0);
     }
 
-
-    int limit(const DeckRecord& rec, const std::string&s , int shift) {
-        const auto& item = rec.getItem( s );
+    int limit(const Opm::DeckRecord& rec, const std::string& s, const int shift)
+    {
+        const auto& item = rec.getItem(s);
         return shift + item.get<int>(0);
     }
 
-    bool match_le(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
-        if (defaulted(rec,s))
-            return true;
-
-        return (value <= limit(rec,s,shift));
+    bool match_le(const int              value,
+                  const Opm::DeckRecord& rec,
+                  const std::string&     s,
+                  const int              shift = 0)
+    {
+        return defaulted(rec, s) || (value <= limit(rec, s, shift));
     }
 
-    bool match_ge(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
-        if (defaulted(rec,s))
-            return true;
-
-        return (value >= limit(rec,s,shift));
+    bool match_ge(const int              value,
+                  const Opm::DeckRecord& rec,
+                  const std::string&     s,
+                  const int              shift = 0)
+    {
+        return defaulted(rec, s) || (value >= limit(rec, s, shift));
     }
 
-
-    bool match_eq(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
-        if (defaulted(rec,s))
-            return true;
-
-        return (limit(rec,s,shift) == value);
+    bool match_eq(const int              value,
+                  const Opm::DeckRecord& rec,
+                  const std::string&     s,
+                  const int              shift = 0)
+    {
+        return defaulted(rec, s)|| (limit(rec, s, shift) == value);
     }
 
-}
-
-namespace {
-
-Connection::Order order_from_int(int int_value) {
-    switch(int_value) {
-    case 0:
-        return Connection::Order::TRACK;
-    case 1:
-        return Connection::Order::DEPTH;
-    case 2:
-        return Connection::Order::INPUT;
+Opm::Connection::Order order_from_int(const int int_value)
+{
+    switch (int_value) {
+    case 0: return Opm::Connection::Order::TRACK;
+    case 1: return Opm::Connection::Order::DEPTH;
+    case 2: return Opm::Connection::Order::INPUT;
     default:
-        throw std::invalid_argument(fmt::format("Invalid integer value: {} encountered when determining connection ordering", int_value));
+        throw std::invalid_argument {
+            fmt::format("Invalid integer value: {} encountered "
+                        "when determining connection ordering", int_value)
+        };
     }
 }
 
-Well::Status status_from_int(int int_value) {
-    using Value = RestartIO::Helpers::VectorItems::IWell::Value::Status;
+Opm::Well::Status status_from_int(const int int_value)
+{
+    using Value = Opm::RestartIO::Helpers::VectorItems::IWell::Value::Status;
 
     switch (int_value) {
-        case Value::Shut:
-            return Well::Status::SHUT;
-        case Value::Stop:
-            return Well::Status::STOP;
-        case Value::Open:
-            return Well::Status::OPEN;
-        case Value::Auto:
-            return Well::Status::AUTO;
+    case Value::Shut: return Opm::Well::Status::SHUT;
+    case Value::Stop: return Opm::Well::Status::STOP;
+    case Value::Open: return Opm::Well::Status::OPEN;
+    case Value::Auto: return Opm::Well::Status::AUTO;
     default:
-        throw std::logic_error(fmt::format("integer value: {} could not be converted to a valid state", int_value));
+        throw std::logic_error {
+            fmt::format("integer value: {} could not be "
+                        "converted to a valid well status.", int_value)
+        };
     }
 }
 
-Well::ProducerCMode producer_cmode_from_int(const int pmode)
+Opm::Well::ProducerCMode producer_cmode_from_int(const int pmode)
 {
     using CModeVal = ::Opm::RestartIO::Helpers::VectorItems::
         IWell::Value::WellCtrlMode;
 
     switch (pmode) {
-    case CModeVal::Group:    return Well::ProducerCMode::GRUP;
-    case CModeVal::OilRate:  return Well::ProducerCMode::ORAT;
-    case CModeVal::WatRate:  return Well::ProducerCMode::WRAT;
-    case CModeVal::GasRate:  return Well::ProducerCMode::GRAT;
-    case CModeVal::LiqRate:  return Well::ProducerCMode::LRAT;
-    case CModeVal::ResVRate: return Well::ProducerCMode::RESV;
-    case CModeVal::THP:      return Well::ProducerCMode::THP;
-    case CModeVal::BHP:      return Well::ProducerCMode::BHP;
+    case CModeVal::Group:    return Opm::Well::ProducerCMode::GRUP;
+    case CModeVal::OilRate:  return Opm::Well::ProducerCMode::ORAT;
+    case CModeVal::WatRate:  return Opm::Well::ProducerCMode::WRAT;
+    case CModeVal::GasRate:  return Opm::Well::ProducerCMode::GRAT;
+    case CModeVal::LiqRate:  return Opm::Well::ProducerCMode::LRAT;
+    case CModeVal::ResVRate: return Opm::Well::ProducerCMode::RESV;
+    case CModeVal::THP:      return Opm::Well::ProducerCMode::THP;
+    case CModeVal::BHP:      return Opm::Well::ProducerCMode::BHP;
     }
 
     throw std::invalid_argument {
@@ -148,20 +140,20 @@ Well::ProducerCMode producer_cmode_from_int(const int pmode)
     };
 }
 
-Well::InjectorCMode injector_cmode_from_int(const int imode)
+Opm::Well::InjectorCMode injector_cmode_from_int(const int imode)
 {
     using CModeVal = ::Opm::RestartIO::Helpers::VectorItems::
         IWell::Value::WellCtrlMode;
 
     switch (imode) {
-    case CModeVal::Group:    return Well::InjectorCMode::GRUP;
+    case CModeVal::Group:    return Opm::Well::InjectorCMode::GRUP;
     case CModeVal::OilRate:  [[fallthrough]];
     case CModeVal::WatRate:  [[fallthrough]];
     case CModeVal::GasRate:  [[fallthrough]];
-    case CModeVal::LiqRate:  return Well::InjectorCMode::RATE;
-    case CModeVal::ResVRate: return Well::InjectorCMode::RESV;
-    case CModeVal::THP:      return Well::InjectorCMode::THP;
-    case CModeVal::BHP:      return Well::InjectorCMode::BHP;
+    case CModeVal::LiqRate:  return Opm::Well::InjectorCMode::RATE;
+    case CModeVal::ResVRate: return Opm::Well::InjectorCMode::RESV;
+    case CModeVal::THP:      return Opm::Well::InjectorCMode::THP;
+    case CModeVal::BHP:      return Opm::Well::InjectorCMode::BHP;
     }
 
     throw std::invalid_argument {
@@ -207,12 +199,14 @@ economicLimits(const Opm::RestartIO::RstWell& rst_well)
         : std::make_shared<Opm::WellEconProductionLimits>();
 }
 
-constexpr Well::ProducerCMode def_whistctl_cmode = Well::ProducerCMode::CMODE_UNDEFINED;
-const static Well::WellGuideRate def_guide_rate = {true, -1, Well::GuideRateTarget::UNDEFINED, ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue};
+constexpr Opm::Well::ProducerCMode def_whistctl_cmode = Opm::Well::ProducerCMode::CMODE_UNDEFINED;
+const static Opm::Well::WellGuideRate def_guide_rate = {true, -1, Opm::Well::GuideRateTarget::UNDEFINED, Opm::ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue};
 const static bool def_automatic_shutin = true;
 constexpr double def_solvent_fraction = 0;
 
 }
+
+namespace Opm {
 
 Well::Well(const RestartIO::RstWell& rst_well,
            int report_step,
