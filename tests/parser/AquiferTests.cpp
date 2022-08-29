@@ -85,7 +85,7 @@ AQUTAB
 
 SOLUTION
 AQUCT
-   1 2000.0 1.5 100 .3 3.0e-5 330 10 360.0 1 2 /
+   1 2000.0 1.5 100 .3 3.0e-5 330 10 360.0 1 2 1* 20/
 /
 )");
 }
@@ -149,6 +149,7 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest)
             BOOST_CHECK_EQUAL(it.inftableID, 2);
             BOOST_CHECK_MESSAGE(it.initial_pressure.has_value(), "Initial pressure must be defined in CT aquifer");
             BOOST_CHECK_CLOSE(it.initial_pressure.value(), 1.5e5, 1e-6);
+            BOOST_CHECK_CLOSE(it.initial_temperature.value(), 20 + 273.15, 1e-6);
         }
     }
 
@@ -159,6 +160,7 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest)
             BOOST_CHECK_CLOSE(it.porosity, 0.3, 1.0e-8);
             BOOST_CHECK_EQUAL(it.inftableID, 2);
             BOOST_CHECK_MESSAGE(! it.initial_pressure.has_value(), "Initial pressure must NOT be defined in CT aquifer");
+            BOOST_CHECK_MESSAGE(! it.initial_temperature.has_value(), "Initial temperature is NOT supposed to be defined in these aquifers");
         }
 
         auto data = aquiferct.data();
@@ -395,7 +397,7 @@ AQUTAB
 
 SOLUTION
 AQUFETP
-1  70000.0  4.0e3 2.0e9 1.0e-5	500 1 0	0 /
+1  70000.0  4.0e3 2.0e9 1.0e-5	500 1 0	20 /
 /
 )");
 }
@@ -471,7 +473,7 @@ AQUTAB
 
 SOLUTION
 AQUFETP
-1  70000.0  1* 2.0e9 1.0e-5	500 1 0	0 /
+1  70000.0  1* 2.0e9 1.0e-5	500 1 0	1* /
 /
 )");
 }
@@ -492,6 +494,7 @@ BOOST_AUTO_TEST_CASE(AquifetpTest)
         BOOST_CHECK_CLOSE(it.initial_watvolume, 2.0e9, 1.0e-8);
         BOOST_CHECK_CLOSE(it.prod_index, 500/86400e5, 1.0e-8);
         BOOST_CHECK_MESSAGE(it.initial_pressure.has_value(), "Fetkovich aquifer must have initial pressure value");
+        BOOST_CHECK_CLOSE(it.initial_temperature.value(), 20 + 273.15, 1.0e-8);
     }
     const auto& data = aquifetp.data();
     Aquifetp aq2(data);
@@ -508,6 +511,7 @@ BOOST_AUTO_TEST_CASE(AquifetpTest)
         BOOST_CHECK_CLOSE(it.initial_watvolume, 2.0e9, 1.0e-8);
         BOOST_CHECK_CLOSE(it.prod_index, 500/86400e5, 1.0e-8);
         BOOST_CHECK_MESSAGE(!it.initial_pressure.has_value(), "Fetkovich aquifer mut NOT have initial pressure value when defaulted");
+        BOOST_CHECK_MESSAGE(!it.initial_temperature.has_value(), "Initial temperature is NOT supposed to be defined in these aquifers");
     }
 }
 
