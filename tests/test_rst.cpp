@@ -41,11 +41,14 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -169,6 +172,11 @@ DATES             -- 3
 COMPDAT
       'OP_2'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
       'OP_1'  9  9   7  7 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WGRUPCON
+ 'OP_2'  YES   0.5  OIL  1.0 /
+ 'OP_3'  NO    1*   RES  0.625 /
 /
 
 DATES             -- 4
@@ -603,4 +611,76 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Economic_Limits_Object)
     BOOST_CHECK_MESSAGE(! limit_op_2.validFollowonWell(),
                         "Well '" << op_2 << "' must NOT have an "
                         "active follow-on well");
+}
+
+BOOST_AUTO_TEST_CASE(Well_Guide_Rates_Group_Control)
+{
+    const auto simCase = SimulationCase{first_sim()};
+
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_RST_WGRUPCON" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "test_rst_wgrupcon");
+
+    const auto& op_2 = state.get_well("OP_2");
+    const auto& op_3 = state.get_well("OP_3");
+
+    namespace WGrupCon = Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::WGrupCon;
+
+    BOOST_CHECK_MESSAGE(op_2.group_controllable_flag == WGrupCon::Controllable::Yes,
+                        "Well '" << op_2.name << "' must be group controllable");
+    BOOST_CHECK_MESSAGE(op_2.grupcon_gr_phase == WGrupCon::GRPhase::Oil,
+                        "Well '" << op_2.name << "' must have guiderate phase 'Oil'");
+    BOOST_CHECK_CLOSE(op_2.grupcon_gr_value, 0.5f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.grupcon_gr_scaling, 1.0f, 1.0e-7f);
+
+    BOOST_CHECK_MESSAGE(op_3.group_controllable_flag == WGrupCon::Controllable::No,
+                        "Well '" << op_3.name << "' must NOT be group controllable");
+    BOOST_CHECK_MESSAGE(op_3.grupcon_gr_phase == WGrupCon::GRPhase::ReservoirVolumeRate,
+                        "Well '" << op_3.name << "' must have guiderate phase 'ReservoirVolumeRate'");
+    BOOST_CHECK_CLOSE(op_3.grupcon_gr_value, -1.0e+20f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_3.grupcon_gr_scaling, 0.625f, 1.0e-7f);
+}
+
+BOOST_AUTO_TEST_CASE(Construct_Well_Guide_Rates_Group_Control_Object)
+{
+    const auto simCase = SimulationCase{first_sim()};
+
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_RST_WGRUPCON" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "test_rst_wgrupcon");
+
+    auto makeRestartWell = [&state, rptStep](const std::string& well_name)
+    {
+        return Opm::Well {
+            state.get_well(well_name),
+            static_cast<int>(rptStep),
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            1.0e+20
+        };
+    };
+
+    const auto op_2 = makeRestartWell("OP_2");
+    const auto op_3 = makeRestartWell("OP_3");
+
+    BOOST_CHECK_MESSAGE(op_2.isAvailableForGroupControl(),
+                        "Well '" << op_2.name() << "' must be group controllable");
+    BOOST_CHECK_MESSAGE(op_2.getRawGuideRatePhase() == Opm::Well::GuideRateTarget::OIL,
+                        "Well '" << op_2.name() << "' must have guiderate phase 'OIL'");
+    BOOST_CHECK_CLOSE(op_2.getGuideRate(), 0.5, 1.0e-7);
+    BOOST_CHECK_CLOSE(op_2.getGuideRateScalingFactor(), 1.0, 1.0e-7);
+
+    // =======================================================================
+
+    BOOST_CHECK_MESSAGE(! op_3.isAvailableForGroupControl(),
+                        "Well '" << op_3.name() << "' must NOT be group controllable");
+    BOOST_CHECK_MESSAGE(op_3.getRawGuideRatePhase() == Opm::Well::GuideRateTarget::RES,
+                        "Well '" << op_3.name() << "' must have guiderate phase 'RES'");
+    BOOST_CHECK_CLOSE(op_3.getGuideRate(), -1.0, 1.0e-7);
+    BOOST_CHECK_CLOSE(op_3.getGuideRateScalingFactor(), 0.625, 1.0e-7);
 }

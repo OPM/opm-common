@@ -199,8 +199,53 @@ economicLimits(const Opm::RestartIO::RstWell& rst_well)
         : std::make_shared<Opm::WellEconProductionLimits>();
 }
 
+Opm::Well::GuideRateTarget guideRatePhase(const int gr_phase)
+{
+    namespace WGrupCon = Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::WGrupCon;
+
+    using Target = Opm::Well::GuideRateTarget;
+
+    switch (gr_phase) {
+    case WGrupCon::GRPhase::Defaulted:            return Target::UNDEFINED;
+    case WGrupCon::GRPhase::Oil:                  return Target::OIL;
+    case WGrupCon::GRPhase::Water:                return Target::WAT;
+    case WGrupCon::GRPhase::Gas:                  return Target::GAS;
+    case WGrupCon::GRPhase::Liquid:               return Target::LIQ;
+    case WGrupCon::GRPhase::SurfaceInjectionRate: return Target::RAT;
+    case WGrupCon::GRPhase::ReservoirVolumeRate:  return Target::RES;
+    }
+
+    throw std::invalid_argument {
+        fmt::format("Cannot convert integer value {} "
+                    "to guiderate phase target", gr_phase)
+    };
+}
+
+bool isGroupControllable(const int gr_controllable_flag)
+{
+    return gr_controllable_flag != Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::WGrupCon::Controllable::No;
+}
+
+double guideRateValue(const float gr_value)
+{
+    return (std::abs(gr_value) < 1.0e+20f)
+        ? gr_value
+        : Opm::ParserKeywords::WGRUPCON::GUIDE_RATE::defaultValue;
+}
+
+Opm::Well::WellGuideRate guideRate(const Opm::RestartIO::RstWell& rst_well)
+{
+    return {
+        isGroupControllable(rst_well.group_controllable_flag),
+        guideRateValue(rst_well.grupcon_gr_value),
+        guideRatePhase(rst_well.grupcon_gr_phase),
+        rst_well.grupcon_gr_scaling
+    };
+}
+
 constexpr Opm::Well::ProducerCMode def_whistctl_cmode = Opm::Well::ProducerCMode::CMODE_UNDEFINED;
-const static Opm::Well::WellGuideRate def_guide_rate = {true, -1, Opm::Well::GuideRateTarget::UNDEFINED, Opm::ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue};
 const static bool def_automatic_shutin = true;
 constexpr double def_solvent_fraction = 0;
 
@@ -226,7 +271,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
     wtype(rst_well.wtype),
-    guide_rate(def_guide_rate),
+    guide_rate(guideRate(rst_well)),
     efficiency_factor(rst_well.efficiency_factor),
     solvent_fraction(def_solvent_fraction),
     prediction_mode(rst_well.hist_requested_control == 0),
@@ -1761,8 +1806,7 @@ PAvgCalculator Well::pavg_calculator(const EclipseGrid& grid, const std::vector<
     return PAvgCalculator(this->name(), this->getWPaveRefDepth(), grid, porv, this->getConnections(), this->m_pavg);
 }
 
-
-}
+} // namespace Opm
 
 int Opm::Well::eclipseControlMode(const Well::InjectorCMode imode,
                              const InjectorType        itype)

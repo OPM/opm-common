@@ -76,7 +76,9 @@ struct RstWell
     int econ_workover_procedure;
     int preferred_phase;
     bool allow_xflow;
+    int group_controllable_flag;
     int econ_limit_end_run;
+    int grupcon_gr_phase;
     int hist_requested_control;
     int msw_index;
     int completion_ordering;
@@ -102,6 +104,7 @@ struct RstWell
     float hist_bhp_target;
     float datum_depth;
     float drainage_radius;
+    float grupcon_gr_value;
     float efficiency_factor;
     float alq_value;
     float econ_limit_min_oil;
@@ -113,6 +116,7 @@ struct RstWell
     float econ_limit_min_liq;
     float wtest_interval;
     float wtest_startup;
+    float grupcon_gr_scaling;
     float glift_max_rate;
     float glift_min_rate;
     float glift_weight_factor;
