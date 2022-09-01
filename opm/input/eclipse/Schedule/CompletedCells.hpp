@@ -87,13 +87,14 @@ public:
                    this->j == other.j &&
                    this->k == other.k &&
                    this->depth == other.depth &&
-                   this->dimensions == other.dimensions && 
+                   this->dimensions == other.dimensions &&
                    this->props == other.props;
         }
 
         static Cell serializeObject() {
             Cell cell(0,1,1,1);
             cell.depth = 12345;
+            cell.dimensions = {1.0,2.0,3.0};
             return cell;
         }
 
