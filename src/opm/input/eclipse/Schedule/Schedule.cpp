@@ -63,7 +63,6 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
-#include <fmt/chrono.h>
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
@@ -98,6 +97,7 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/chrono.h>
 #include <fmt/format.h>
 
 namespace {
@@ -348,73 +348,138 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
 
 namespace {
 
-class ScheduleLogger {
+class ScheduleLogger
+{
 public:
-    ScheduleLogger(bool restart_skip, const std::string& prefix_, const KeywordLocation& location)
-        : prefix(prefix_)
-        , current_file(location.filename)
+    enum class Stream
     {
-        if (restart_skip)
-            this->log_function = &OpmLog::note;
-        else
-            this->log_function = &OpmLog::info;
+        Info, Note, Debug,
+    };
+
+    ScheduleLogger(const Stream stream, const std::string& prefix, const KeywordLocation& location)
+        : stream_      {stream}
+        , prefix_      {prefix}
+        , current_file_{location.filename}
+    {
+        switch (this->stream_) {
+        case Stream::Info:
+            this->log_function_ = &OpmLog::info;
+            break;
+
+        case Stream::Note:
+            this->log_function_ = &OpmLog::note;
+            break;
+
+        case Stream::Debug:
+            this->log_function_ = &OpmLog::debug;
+            break;
+        }
     }
 
-    void operator()(const std::string& msg) {
-        this->log_function(this->prefix + msg);
+    void operator()(const std::string& msg)
+    {
+        this->log_function_(this->format_message(msg));
     }
 
-    void info(const std::string& msg) {
-        OpmLog::info(this->prefix + msg);
+    void operator()(const std::vector<std::string>& msg_list)
+    {
+        std::for_each(msg_list.begin(), msg_list.end(),
+                      [this](const std::string& record)
+                      {
+                          (*this)(record);
+                      });
     }
 
-    void info(const std::vector<std::string>& msg_list) {
-        for (const auto& msg : msg_list)
-            this->info(msg);
+    void info(const std::string& msg)
+    {
+        OpmLog::info(this->format_message(msg));
     }
 
-    void complete_step(const std::string& msg) {
-        this->step_count += 1;
-        if (this->step_count == this->max_print) {
-            this->log_function(this->prefix + msg);
-            this->info(std::vector<std::string>{"Report limit reached, see PRT-file for remaining Schedule initialization.", ""});
-            this->log_function = &OpmLog::note;
-        } else {
-            this->log_function( this->prefix + msg );
-            this->log_function( this->prefix );
+    void complete_step(const std::string& msg)
+    {
+        (*this)(msg);
+
+        this->step_count_ += 1;
+        if (this->step_count_ == this->max_print_) {
+            this->redirect(&OpmLog::note, {"Report limit reached, see PRT-file for remaining Schedule initialization.", ""});
+        }
+        else {
+            // Blank line
+            (*this)("");
         }
     };
 
-    void restart() {
-        this->step_count = 0;
-        this->log_function = &OpmLog::info;
+    void restart()
+    {
+        this->step_count_ = 0;
+        this->redirect(&OpmLog::info);
     }
 
-    void location(const KeywordLocation& location) {
-        if (this->current_file == location.filename)
+    void location(const KeywordLocation& location)
+    {
+        if (this->current_file_ == location.filename) {
             return;
+        }
 
-        this->operator()( fmt::format("Reading from: {} line {}", location.filename, location.lineno) );
-        this->current_file = location.filename;
+        (*this)(fmt::format("Reading from: {} line {}", location.filename, location.lineno));
+        this->current_file_ = location.filename;
     }
 
+    static Stream select_stream(const bool log_to_debug,
+                                const bool restart_skip);
 
 private:
-    std::size_t step_count = 0;
-    std::size_t max_print  = 5;
-    std::string prefix;
-    std::string current_file;
-    void (*log_function)(const std::string&);
+    using LogFunction = void (*) (const std::string&);
+
+    Stream stream_{Stream::Info};
+    std::size_t step_count_ = 0;
+    std::size_t max_print_  = 5;
+    std::string prefix_{};
+    std::string current_file_{};
+
+    LogFunction log_function_{};
+
+    void redirect(const LogFunction               new_stream,
+                  const std::vector<std::string>& messages = {})
+    {
+        if (this->stream_ == Stream::Debug) {
+            // If we're writing to OpmLog::debug then continue to do so.
+            return;
+        }
+
+        this->log_function_ = new_stream;
+        (*this)(messages);
+    }
+
+    std::string format_message(const std::string& message) const
+    {
+        return fmt::format("{}{}", this->prefix_, message);
+    }
 };
 
+    ScheduleLogger::Stream
+    ScheduleLogger::select_stream(const bool log_to_debug,
+                                  const bool restart_skip)
+    {
+        if (log_to_debug) {
+            return ScheduleLogger::Stream::Debug;
+        }
+
+        if (restart_skip) {
+            return ScheduleLogger::Stream::Note;
+        }
+
+        return ScheduleLogger::Stream::Info;
+    }
 }
 
 void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_end,
-                                      const ParseContext& parseContext ,
+                                      const ParseContext& parseContext,
                                       ErrorGuard& errors,
                                       const ScheduleGrid& grid,
                                       const std::unordered_map<std::string, double> * target_wellpi,
-                                      const std::string& prefix) {
+                                      const std::string& prefix,
+                                      const bool log_to_debug) {
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->m_static.m_unit_system.name(UnitSystem::measure::time);
@@ -442,13 +507,18 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                these keywords will be assigned to report step 0.
         */
 
-        auto restart_skip = load_start < this->m_static.rst_info.report_step;
-        ScheduleLogger logger(restart_skip, prefix, this->m_sched_deck.location());
+        const auto restart_skip = load_start < this->m_static.rst_info.report_step;
+        ScheduleLogger logger(ScheduleLogger::select_stream(log_to_debug, restart_skip),
+                              prefix, this->m_sched_deck.location());
         {
             const auto& location = this->m_sched_deck.location();
-            logger.info({"", "Processing dynamic information from", fmt::format("{} line {}", location.filename, location.lineno)});
-            if (restart_skip)
-                logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", this->m_static.rst_info.report_step, Schedule::formatDate(this->m_static.rst_info.time)));
+            logger({"", "Processing dynamic information from", fmt::format("{} line {}", location.filename, location.lineno)});
+            if (restart_skip && !log_to_debug) {
+                logger.info(fmt::format("This is a restarted run - skipping "
+                                        "until report step {} at {}",
+                                        this->m_static.rst_info.report_step,
+                                        Schedule::formatDate(this->m_static.rst_info.time)));
+            }
 
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
                                load_start,
@@ -1349,15 +1419,15 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         SimulatorUpdate sim_update;
         ScheduleGrid grid(this->completed_cells);
 
-        OpmLog::info("/----------------------------------------------------------------------");
-        OpmLog::info(fmt::format("{0}Action {1} evaluated to true. Will add action keywords and\n{0}rerun Schedule section.\n{0}", prefix, action.name()));
+        OpmLog::debug("/----------------------------------------------------------------------");
+        OpmLog::debug(fmt::format("{0}Action {1} triggered. Will add action keywords and\n{0}rerun Schedule section.\n{0}", prefix, action.name()));
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
         std::unordered_map<std::string, double> wpimult_global_factor;
         for (const auto& keyword : action) {
             input_block.push_back(keyword);
             const auto& location = keyword.location();
-            OpmLog::info(fmt::format("{}Processing keyword {} from {} line {}", prefix, location.keyword, location.filename, location.lineno));
+            OpmLog::debug(fmt::format("{}Processing keyword {} from {} line {}", prefix, location.keyword, location.filename, location.lineno));
             this->handleKeyword(reportStep,
                                 input_block,
                                 keyword,
@@ -1378,9 +1448,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 this->snapshots.back().wellgroup_events().addEvent(well, ScheduleEvents::ACTIONX_WELL_EVENT);
         }
 
-        if (reportStep < this->m_sched_deck.size() - 1)
-            iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(), parseContext, errors, grid, &target_wellpi, prefix);
-        OpmLog::info("\\----------------------------------------------------------------------");
+        if (reportStep < this->m_sched_deck.size() - 1) {
+            const auto log_to_debug = true;
+            this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
+                                         parseContext, errors, grid, &target_wellpi,
+                                         prefix, log_to_debug);
+        }
+        OpmLog::debug("\\----------------------------------------------------------------------");
 
         return sim_update;
     }
