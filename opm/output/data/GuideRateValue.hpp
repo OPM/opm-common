@@ -132,6 +132,21 @@ namespace Opm { namespace data {
             }
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+           serializer(mask_);
+           serializer(value_);
+        }
+
+        static GuideRateValue serializeObject()
+        {
+            GuideRateValue val;
+            val.mask_ = std::bitset<Size>(1234);
+            val.value_ = {1,2,3,4};
+
+            return val;
+        }
 
     private:
         enum { Size = static_cast<std::size_t>(Item::NumItems) };
