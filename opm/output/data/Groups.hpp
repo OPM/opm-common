@@ -60,6 +60,21 @@ namespace Opm { namespace data {
             json_data.add_item("water_inj", Opm::Group::InjectionCMode2String(this->currentGasInjectionConstraint));
             json_data.add_item("gas_inj", Opm::Group::InjectionCMode2String(this->currentWaterInjectionConstraint));
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(currentProdConstraint);
+            serializer(currentGasInjectionConstraint);
+            serializer(currentWaterInjectionConstraint);
+        }
+
+        static GroupConstraints serializeObject()
+        {
+            return GroupConstraints{Group::ProductionCMode::GRAT,
+                                    Group::InjectionCMode::RATE,
+                                    Group::InjectionCMode::RESV};
+        }
     };
 
     struct GroupGuideRates {
