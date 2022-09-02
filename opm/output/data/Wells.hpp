@@ -233,6 +233,27 @@ namespace Opm {
         friend struct Mpi::Packing<Connection>;
 
         inline void init_json(Json::JsonObject& json_data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+          serializer(index);
+          rates.serializeOp(serializer);
+          serializer(pressure);
+          serializer(reservoir_rate);
+          serializer(cell_pressure);
+          serializer(cell_saturation_water);
+          serializer(cell_saturation_gas);
+          serializer(effective_Kh);
+          serializer(trans_factor);
+        }
+
+        static Connection serializeObject()
+        {
+            return Connection{1, Rates::serializeObject(),
+                              2.0, 3.0, 4.0, 5.0,
+                              6.0, 7.0, 8.0};
+        }
     };
 
     class SegmentPressures {
