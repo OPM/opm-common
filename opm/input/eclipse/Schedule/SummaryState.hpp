@@ -74,6 +74,9 @@ public:
     // The std::time_t constructor is only for export to Python
     explicit SummaryState(std::time_t sim_start_arg);
 
+    // Only used for testing purposes.
+    SummaryState() : SummaryState(std::time_t{0}) {}
+
     /*
       The canonical way to update the SummaryState is through the update_xxx()
       methods which will inspect the variable and either accumulate or just
@@ -122,6 +125,39 @@ public:
     std::size_t num_wells() const;
     std::size_t size() const;
     bool operator==(const SummaryState& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+      serializer(sim_start);
+      serializer(elapsed);
+      serializer.map(values);
+      serializer.map(well_values);
+      serializer.set(m_wells);
+      serializer(well_names);
+      serializer.map(group_values);
+      serializer.set(m_groups);
+      serializer(group_names);
+      serializer.map(conn_values);
+    }
+
+    static SummaryState serializeObject()
+    {
+        auto st = SummaryState{TimeService::from_time_t(101)};
+
+        st.elapsed = 1.0;
+        st.values = {{"test1", 2.0}};
+        st.well_values = {{"test2", {{"test3", 3.0}}}};
+        st.m_wells = {"test4"};
+        st.well_names = {"test5"};
+        st.group_values = {{"test6", {{"test7", 4.0}}}},
+        st.m_groups = {"test7"};
+        st.group_names = {"test8"},
+        st.conn_values = {{"test9", {{"test10", {{5, 6.0}}}}}};
+
+        return st;
+    }
+
 private:
     time_point sim_start;
     double elapsed = 0;
