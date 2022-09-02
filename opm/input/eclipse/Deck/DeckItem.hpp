@@ -144,7 +144,7 @@ namespace Opm {
             serializer.vector(uval);
             serializer(type);
             serializer(item_name);
-            serializer.template vector<value::status, false>(value_status);
+            serializer.vector(value_status);
             serializer(raw_data);
             serializer.vector(active_dimensions);
             serializer.vector(default_dimensions);
