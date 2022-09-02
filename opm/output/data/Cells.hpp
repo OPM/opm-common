@@ -82,6 +82,21 @@ namespace data {
                    data == cell2.data &&
                    target == cell2.target;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(dim);
+            serializer(data);
+            serializer(target);
+        }
+
+        static CellData serializeObject()
+        {
+            return CellData{UnitSystem::measure::runtime,
+                            {1.0, 2.0, 3.0},
+                            TargetType::RESTART_TRACER_SOLUTION};
+        }
     };
 
 }
