@@ -107,7 +107,7 @@ public:
             serializer(this->k);
             serializer(this->depth);
             serializer(this->props);
-            serializer.template array<std::array<double,3>, false>(this->dimensions);
+            serializer.array(this->dimensions);
         }
 
         Cell(std::size_t g, std::size_t i_, std::size_t j_, std::size_t k_)
