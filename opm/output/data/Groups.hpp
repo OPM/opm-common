@@ -257,6 +257,21 @@ namespace Opm { namespace data {
             return json_data;
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.map(groupData);
+            serializer.map(nodeData);
+        }
+
+        static GroupAndNetworkValues serializeObject()
+        {
+          return GroupAndNetworkValues{
+                      {{"test_data", GroupData::serializeObject()}},
+                      {{"test_node", NodeData::serializeObject()}}
+                 };
+        }
+
     private:
         template <class MessageBufferType, class ValueType>
         void writeMap(const std::map<std::string, ValueType>& map,
