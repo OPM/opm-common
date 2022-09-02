@@ -362,7 +362,7 @@ namespace Opm
                 this->template pack_state<T>(value_list, index_list);
 
             serializer.vector(value_list);
-            serializer.template vector<std::size_t, false>(index_list);
+            serializer.vector(index_list);
 
             if (!serializer.isSerializing())
                 this->template unpack_state<T>(value_list, index_list);
