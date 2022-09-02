@@ -85,7 +85,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.template set<std::unordered_set<std::string>, false>(this->well_set);
+        serializer.set(this->well_set);
     }
 
     static WellSet serializeObject();
