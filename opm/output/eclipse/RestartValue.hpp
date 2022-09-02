@@ -112,6 +112,31 @@ namespace Opm {
                 && (this->aquifer == val2.aquifer)
                 && (this->extra == val2.extra);
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+          solution.serializeOp(serializer);
+          wells.serializeOp(serializer);
+          grp_nwrk.serializeOp(serializer);
+          serializer.map(aquifer);
+          serializer.vector(extra);
+        }
+
+        static RestartValue serializeObject()
+        {
+            auto res = RestartValue {
+                           data::Solution::serializeObject(),
+                           data::Wells::serializeObject(),
+                           data::GroupAndNetworkValues::serializeObject(),
+                           {{1, data::AquiferData::serializeObjectF()},
+                            {2, data::AquiferData::serializeObjectC()},
+                            {3, data::AquiferData::serializeObjectN()}}
+                       };
+            res.extra = {{RestartKey::serializeObject(), {1.0, 2.0}}};
+
+            return res;
+        }
     };
 
 }
