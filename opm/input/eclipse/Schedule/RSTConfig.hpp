@@ -205,7 +205,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
         serializer(write_rst_file);
-        serializer.template map<std::map<std::string, int>, false>(keywords);
+        serializer.map(keywords);
         serializer(basic);
         serializer(freq);
         serializer(save);

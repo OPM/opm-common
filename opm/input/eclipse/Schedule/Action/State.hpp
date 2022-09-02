@@ -93,7 +93,7 @@ public:
     {
         serializer.map(this->run_state);
         serializer.map(this->last_result);
-        serializer.template map<std::map<std::string,bool>, false>(this->m_python_result);
+        serializer.map(this->m_python_result);
     }
 
 

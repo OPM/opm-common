@@ -67,9 +67,9 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(first_open_rft);
-        serializer.template map<std::unordered_map<std::string, RFT>,false>(rft_state);
-        serializer.template map<std::unordered_map<std::string, PLT>,false>(plt_state);
-        serializer.template map<std::unordered_map<std::string, bool>,false>(open_wells);
+        serializer.map(rft_state);
+        serializer.map(plt_state);
+        serializer.map(open_wells);
     }
 
 

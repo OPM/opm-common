@@ -80,14 +80,14 @@ public:
         if (serializer.isSerializing()) {
             for (auto& [udq_key, values] : wgmap) {
                 serializer(udq_key);
-                serializer.template map<std::unordered_map<std::string, double>, false>(values);
+                serializer.map(values);
             }
         } else {
             for (std::size_t index=0; index < map_size; index++) {
                 std::string udq_key;
                 std::unordered_map<std::string, double> inner_map;
                 serializer(udq_key);
-                serializer.template map<std::unordered_map<std::string, double>, false>(inner_map);
+                serializer.map(inner_map);
 
                 wgmap.emplace(udq_key, inner_map);
             }
@@ -98,9 +98,9 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(this->undef_value);
-        serializer.template map<std::unordered_map<std::string, double>, false>(this->scalar_values);
-        serializer.template map<std::unordered_map<std::string, std::size_t>, false>(this->assignments);
-        serializer.template map<std::unordered_map<std::string, std::size_t>, false>(this->defines);
+        serializer.map(this->scalar_values);
+        serializer.map(this->assignments);
+        serializer.map(this->defines);
 
         pack_unpack_wgmap(serializer, this->well_values);
         pack_unpack_wgmap(serializer, this->group_values);

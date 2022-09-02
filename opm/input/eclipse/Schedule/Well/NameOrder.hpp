@@ -48,7 +48,7 @@ public:
 
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
-        serializer.template map<Map, false>(m_index_map);
+        serializer.map(m_index_map);
         serializer(m_name_list);
     }
 

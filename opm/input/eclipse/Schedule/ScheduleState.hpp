@@ -494,7 +494,7 @@ namespace Opm {
             serializer.vector(m_geo_keywords);
             m_message_limits.serializeOp(serializer);
             serializer(m_whistctl_mode);
-            serializer.template map<WellPIMapType, false>(target_wellpi);
+            serializer.map(target_wellpi);
         }
 
 
