@@ -216,6 +216,24 @@ namespace Opm {
 
         friend struct Mpi::Packing<SegmentPressures>;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+          serializer(values_);
+        }
+
+        static SegmentPressures serializeObject()
+        {
+            SegmentPressures spres;
+            spres[Value::Pressure] = 1.0;
+            spres[Value::PDrop] = 2.0;
+            spres[Value::PDropHydrostatic] = 3.0;
+            spres[Value::PDropAccel] = 4.0;
+            spres[Value::PDropFriction] = 5.0;
+
+            return spres;
+        }
+
     private:
         constexpr static std::size_t numvals = 5;
 
