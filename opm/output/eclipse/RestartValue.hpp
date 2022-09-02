@@ -60,6 +60,19 @@ namespace Opm {
                    dim == key2.dim &&
                    required == key2.required;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(key);
+            serializer(dim);
+            serializer(required);
+        }
+
+        static RestartKey serializeObject()
+        {
+            return RestartKey{"test_key", UnitSystem::measure::effective_Kh, true};
+        }
     };
 
     /*
