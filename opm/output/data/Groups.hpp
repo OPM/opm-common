@@ -108,6 +108,19 @@ namespace Opm { namespace data {
             auto json_inj = json_data.add_object("injection");
             this->injection.init_json(json_inj);
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            production.serializeOp(serializer);
+            injection.serializeOp(serializer);
+        }
+
+        static GroupGuideRates serializeObject()
+        {
+            return GroupGuideRates{GuideRateValue::serializeObject(),
+                                   GuideRateValue::serializeObject()};
+        }
     };
 
     struct GroupData {
