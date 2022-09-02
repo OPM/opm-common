@@ -34,8 +34,9 @@ public:
     bool contains(const std::string& key) const;
 
     template<class Serializer>
-    void serializeOp(Serializer& serializer) {
-        serializer.template map<Map, false>( m_mnemonics );
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.map(m_mnemonics);
     }
 
     std::unordered_map<std::string, unsigned>::const_iterator begin() const { return this->m_mnemonics.begin(); };
