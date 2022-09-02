@@ -24,6 +24,10 @@ namespace Opm {
     class DeckRecord;
 } // namespace Opm
 
+namespace Opm { namespace RestartIO {
+    struct RstWell;
+}} // namespace Opm::RestartIO
+
 namespace Opm {
 
     class WVFPEXP
@@ -32,6 +36,7 @@ namespace Opm {
         static WVFPEXP serializationTestObject();
 
         void update(const DeckRecord& record);
+        void update(const RestartIO::RstWell& rst_well);
 
         bool explicit_lookup() const;
         bool shut() const;
