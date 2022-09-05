@@ -381,6 +381,22 @@ namespace Opm {
 
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(isProducer);
+            serializer(prod);
+            serializer(inj);
+        }
+
+        static CurrentControl serializeObject()
+        {
+          return CurrentControl{false,
+                                ::Opm::Well::ProducerCMode::BHP,
+                                ::Opm::Well::InjectorCMode::GRUP
+                 };
+        }
     };
 
     struct Well {
