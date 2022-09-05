@@ -167,6 +167,17 @@ namespace Opm { namespace data {
         void init_json(Json::JsonObject& json_data) const {
             json_data.add_item("pressure", this->pressure);
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(pressure);
+        }
+
+        static NodeData serializeObject()
+        {
+            return NodeData{10.0};
+        }
     };
 
     class GroupAndNetworkValues {
