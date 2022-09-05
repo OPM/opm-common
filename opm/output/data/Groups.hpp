@@ -155,6 +155,19 @@ namespace Opm { namespace data {
             auto json_gr = json_data.add_object("guide_rate");
             this->guideRates.init_json(json_gr);
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            currentControl.serializeOp(serializer);
+            guideRates.serializeOp(serializer);
+        }
+
+        static GroupData serializeObject()
+        {
+          return GroupData{GroupConstraints::serializeObject(),
+                           GroupGuideRates::serializeObject()};
+        }
     };
 
     struct NodeData {
