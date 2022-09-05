@@ -116,6 +116,17 @@ namespace Opm { namespace data {
         // MessageBufferType API should be similar to Dune::MessageBufferIF
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(initPressure);
+        }
+
+        static NumericAquiferData serializeObject()
+        {
+            return NumericAquiferData{{1.0, 2.0, 3.0}};
+        }
     };
 
     namespace detail {
