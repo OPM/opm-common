@@ -468,10 +468,41 @@ namespace Opm {
                  thp == well2.thp &&
                  temperature == well2.temperature &&
                  control == well2.control &&
+                 dynamicStatus == well2.dynamicStatus &&
                  connections == well2.connections &&
                  segments == well2.segments &&
                  current_control == well2.current_control &&
                  guide_rates == well2.guide_rates;
+        }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+          rates.serializeOp(serializer);
+          serializer(bhp);
+          serializer(thp);
+          serializer(temperature);
+          serializer(control);
+          serializer(dynamicStatus);
+          serializer.vector(connections);
+          serializer.map(segments);
+          current_control.serializeOp(serializer);
+          guide_rates.serializeOp(serializer);
+        }
+
+        static Well serializeObject()
+        {
+          return Well{Rates::serializeObject(),
+                      1.0,
+                      2.0,
+                      3.0,
+                      4,
+                      ::Opm::Well::Status::SHUT,
+                      {Connection::serializeObject()},
+                      {{0, Segment::serializeObject()}},
+                      CurrentControl::serializeObject(),
+                      GuideRateValue::serializeObject()
+                 };
         }
     };
 
