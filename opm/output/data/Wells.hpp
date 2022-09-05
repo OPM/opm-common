@@ -107,7 +107,65 @@ namespace Opm {
 
             bool operator==(const Rates& rat2) const;
 
-        inline void init_json(Json::JsonObject& json_data) const;
+            inline void init_json(Json::JsonObject& json_data) const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(mask);
+                serializer(wat);
+                serializer(oil);
+                serializer(gas);
+                serializer(polymer);
+                serializer(solvent);
+                serializer(energy);
+                serializer(dissolved_gas);
+                serializer(vaporized_oil);
+                serializer(reservoir_water);
+                serializer(reservoir_oil);
+                serializer(reservoir_gas);
+                serializer(productivity_index_water);
+                serializer(productivity_index_oil);
+                serializer(productivity_index_gas);
+                serializer(well_potential_water);
+                serializer(well_potential_oil);
+                serializer(well_potential_gas);
+                serializer(brine);
+                serializer(alq);
+                serializer(tracer);
+                serializer(micp);
+                serializer(vaporized_water);
+            }
+
+            static Rates serializeObject()
+            {
+                Rates rat1;
+                rat1.set(opt::wat, 1.0);
+                rat1.set(opt::oil, 2.0);
+                rat1.set(opt::gas, 3.0);
+                rat1.set(opt::polymer, 4.0);
+                rat1.set(opt::solvent, 5.0);
+                rat1.set(opt::energy, 6.0);
+                rat1.set(opt::dissolved_gas, 7.0);
+                rat1.set(opt::vaporized_oil, 8.0);
+                rat1.set(opt::reservoir_water, 9.0);
+                rat1.set(opt::reservoir_oil, 10.0);
+                rat1.set(opt::reservoir_gas, 11.0);
+                rat1.set(opt::productivity_index_water, 12.0);
+                rat1.set(opt::productivity_index_oil, 13.0);
+                rat1.set(opt::productivity_index_gas, 14.0);
+                rat1.set(opt::well_potential_water, 15.0);
+                rat1.set(opt::well_potential_oil, 16.0);
+                rat1.set(opt::well_potential_gas, 17.0);
+                rat1.set(opt::brine, 18.0);
+                rat1.set(opt::alq, 19.0);
+                rat1.set(opt::micp, 21.0);
+                rat1.set(opt::vaporized_water, 22.0);
+                rat1.tracer.insert({"test_tracer", 1.0});
+
+                return rat1;
+            }
+
         private:
             double& get_ref( opt );
             double& get_ref( opt, const std::string& tracer_name );
