@@ -342,6 +342,22 @@ namespace Opm {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            rates.serializeOp(serializer);
+            pressures.serializeOp(serializer);
+            serializer(segNumber);
+        }
+
+        static Segment serializeObject()
+        {
+            return Segment{Rates::serializeObject(),
+                           SegmentPressures::serializeObject(),
+                           10
+                   };
+        }
+
         friend struct Mpi::Packing<Segment>;
     };
 
