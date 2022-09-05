@@ -468,6 +468,7 @@ namespace Opm {
                  thp == well2.thp &&
                  temperature == well2.temperature &&
                  control == well2.control &&
+                 dynamicStatus == well2.dynamicStatus &&
                  connections == well2.connections &&
                  segments == well2.segments &&
                  current_control == well2.current_control &&
