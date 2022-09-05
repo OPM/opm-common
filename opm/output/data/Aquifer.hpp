@@ -85,6 +85,22 @@ namespace Opm { namespace data {
         // MessageBufferType API should be similar to Dune::MessageBufferIF
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(timeConstant);
+            serializer(influxConstant);
+            serializer(waterDensity);
+            serializer(waterViscosity);
+            serializer(dimensionless_time);
+            serializer(dimensionless_pressure);
+        }
+
+        static CarterTracyData serializeObject()
+        {
+            return CarterTracyData{1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+        }
     };
 
     struct NumericAquiferData
