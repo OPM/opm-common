@@ -55,6 +55,22 @@ class Solution : public std::map< std::string, data::CellData > {
         void convertToSI( const UnitSystem& );
         void convertFromSI( const UnitSystem& );
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+          serializer.map(*this);
+          serializer(si);
+        }
+
+        static Solution serializeObject()
+        {
+            Solution sol;
+            sol.si = false;
+            sol.insert({"test_data", CellData::serializeObject()});
+
+            return sol;
+        }
+
     private:
         bool si = true;
 };
