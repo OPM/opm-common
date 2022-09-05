@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     if (argc < 5 || help) {
         std::cout << "USAGE:" << std::endl;
         std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> "<< std::endl;
-        std::cout << "prop = {density, invB, B, viscosity, rsSat, diffusionCoefficient}" << std::endl;
+        std::cout << "prop = {density, invB, B, viscosity, rsSat, internalEnergy, enthalpy, diffusionCoefficient}" << std::endl;
         std::cout << "phase = {CO2, brine}" << std::endl;
         std::cout << "p: pressure in pascal" << std::endl;
         std::cout << "T: temperature in kelvin" << std::endl;
@@ -158,9 +158,25 @@ int main(int argc, char **argv)
         } else {
             throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
         }
+    } else if (prop == "internalEnergy") {
+        if (phase == "CO2") {
+            value = co2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rv);
+        } else if (phase == "brine") {
+            value = brineCo2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rs);
+        } else {
+            throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
+        }
+    } else if (prop == "enthalpy") {
+        if (phase == "CO2") {
+            value = p / densityGas(co2Pvt, p, T, rv) + co2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rv);
+        } else if (phase == "brine") {
+            value = p / densityBrine(brineCo2Pvt, p, T, rs) + brineCo2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rs);
+        } else {
+            throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
+        }
     } else {
         throw std::runtime_error("prop " + prop + " not recognized. "
-        + "Use either density, visosity, invB, B or diffusionCoefficient");
+        + "Use either density, visosity, invB, B, internalEnergy, enthalpy or diffusionCoefficient");
     }
 
     std::cout << value << std::endl;
