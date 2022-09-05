@@ -51,6 +51,19 @@ namespace Opm { namespace data {
         // MessageBufferType API should be similar to Dune::MessageBufferIF
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(initVolume);
+            serializer(prodIndex);
+            serializer(timeConstant);
+        }
+
+        static FetkovichData serializeObject()
+        {
+          return FetkovichData{1.0, 2.0, 3.0};
+        }
     };
 
     struct CarterTracyData
