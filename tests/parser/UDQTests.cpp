@@ -2011,11 +2011,6 @@ BOOST_AUTO_TEST_CASE(UDQSTATE) {
 
     BOOST_CHECK_EQUAL(st.get_well_var("P1", "WUPR"), 75);
     BOOST_CHECK_EQUAL(st.get_well_var("P2", "WUPR"), undefined_value);
-
-    const auto buffer = st.serialize();
-    UDQState st2(1067);
-    st2.deserialize( buffer );
-    BOOST_CHECK(st == st2);
 }
 
 
