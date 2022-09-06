@@ -33,7 +33,7 @@ namespace Opm {
 
 class WellConnections;
 class EclipseGrid;
-class Serializer;
+
 class PAvgCalculator {
 public:
 
@@ -83,10 +83,8 @@ public:
     double wbp9() const;
     double wbp(WBPMode mode) const;
     bool add_pressure(std::size_t global_index, double pressure);
-    void update(Serializer& serializer);
     const std::vector< std::size_t >& index_list() const;
     std::pair< std::reference_wrapper<const std::vector<double>>, std::reference_wrapper<const std::vector<bool>> > data() const;
-    void serialize(Serializer& serializer) const;
 
 private:
     void update(const std::vector<double>& p, const std::vector<char>& m);

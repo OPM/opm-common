@@ -20,7 +20,6 @@
 #include <numeric>
 
 
-#include <opm/common/utility/Serializer.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
@@ -324,18 +323,5 @@ void PAvgCalculator::update(const std::vector<double>& p, const std::vector<char
         }
     }
 }
-
-
-void PAvgCalculator::serialize(Serializer& serializer) const {
-    serializer.put_vector( this->pressure );
-    serializer.put_vector( this->valid_pressure );
-}
-
-void PAvgCalculator::update(Serializer& serializer) {
-    std::vector<double> p = serializer.get_vector<double>();
-    std::vector<char>   v = serializer.get_vector<char>();
-    this->update(p,v);
-}
-
 
 }

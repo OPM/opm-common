@@ -27,7 +27,6 @@
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/common/utility/Serializer.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -272,16 +271,6 @@ END
             calc2.add_pressure(grid.getGlobalIndex(1,1,k), 4.0);
         }
         BOOST_CHECK_THROW(calc1.wbp9(), std::exception);
-
-        Serializer ser1;
-        calc2.serialize(ser1);
-
-        Serializer ser2(ser1.buffer);
-
-        calc1.update(ser2);
-        double inner_weight = 0.50;
-        BOOST_CHECK_EQUAL( calc1.wbp5(), inner_weight * 1 + (1 - inner_weight) * 2 );
-        BOOST_CHECK_EQUAL( calc1.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 * 2 + 4) / 3);
     }
 
 
