@@ -602,7 +602,12 @@ public:
             return satnumRegionArray_[elemIdx];
         }
     }
-
+    bool hasDirectionalRelperms() const {
+        if (krnumXArray_.size() > 0 || krnumYArray_.size() > 0 || krnumZArray_.size() > 0) {
+            return true;
+        }
+        return false;
+    }
     int imbnumRegionIdx(unsigned elemIdx) const
     { return imbnumRegionArray_[elemIdx]; }
 
