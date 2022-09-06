@@ -380,6 +380,29 @@ namespace {
     }
 
 
+    void  SummaryState::append(const SummaryState& buffer) {
+        this->sim_start = buffer.sim_start;
+        this->elapsed = buffer.elapsed;
+        this->values = buffer.values;
+        this->well_names.reset();
+        this->group_names.reset();
+
+        this->m_wells.insert(buffer.m_wells.begin(), buffer.m_wells.end());
+        for (const auto& [well, value] : buffer.well_values) {
+            this->well_values.insert_or_assign(well, value);
+        }
+
+        this->m_groups.insert(buffer.m_groups.begin(), buffer.m_groups.end());
+        for (const auto& [group, value] : buffer.group_values) {
+            this->group_values.insert_or_assign(group, value);
+        }
+
+        for (const auto& [conn, value] : buffer.conn_values) {
+            this->conn_values.insert_or_assign(conn, value);
+        }
+    }
+
+
     void  SummaryState::deserialize(const std::vector<char>& buffer) {
         Serializer ser(buffer);
         this->sim_start = ser.get<time_point>();
