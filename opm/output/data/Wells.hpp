@@ -579,6 +579,19 @@ namespace Opm {
             return json_data;
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+          serializer.map(*this);
+        }
+
+        static Wells serializeObject()
+        {
+            Wells w;
+            w.insert({"test_well", Well::serializeObject()});
+
+            return w;
+        }
     };
 
 
