@@ -163,6 +163,12 @@ void FieldPropsManager::apply_numerical_aquifers(const NumericalAquifers& aquife
     return this->fp->apply_numerical_aquifers(aquifers);
 }
 
+
+const Fieldprops::TranMap& FieldPropsManager::getTran() const
+{
+    return this->fp->getTran();
+}
+
 template<class MapType>
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
                 const MapType& double_data,
