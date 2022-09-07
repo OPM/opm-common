@@ -2108,37 +2108,58 @@ Well{0} entered with disallowed 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWRFT(HandlerContext& handlerContext) {
+    void Schedule::handleWRFT(HandlerContext& handlerContext)
+    {
         auto new_rft = this->snapshots.back().rft_config();
+
         for (const auto& record : handlerContext.keyword) {
             const auto& item = record.getItem<ParserKeywords::WRFT::WELL>();
-            if (item.hasValue(0)) {
-                const std::string& wellNamePattern = record.getItem<ParserKeywords::WRFT::WELL>().getTrimmedString(0);
-                const auto well_names = wellNames(wellNamePattern, handlerContext);
+            if (! item.hasValue(0)) {
+                continue;
+            }
 
-                if (well_names.empty())
-                    this->invalidNamePattern(wellNamePattern, handlerContext);
+            const auto wellNamePattern = record.getItem<ParserKeywords::WRFT::WELL>().getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext);
 
-                for (const auto& well_name : well_names)
-                    new_rft.update(well_name, RFTConfig::RFT::YES);
+            if (well_names.empty()) {
+                this->invalidNamePattern(wellNamePattern, handlerContext);
+            }
+
+            for (const auto& well_name : well_names) {
+                new_rft.update(well_name, RFTConfig::RFT::YES);
             }
         }
+
         new_rft.first_open(true);
-        this->snapshots.back().rft_config.update( std::move(new_rft) );
+
+        this->snapshots.back().rft_config.update(std::move(new_rft));
     }
 
-
-    void Schedule::handleWRFTPLT(HandlerContext& handlerContext) {
+    void Schedule::handleWRFTPLT(HandlerContext& handlerContext)
+    {
         auto new_rft = this->snapshots.back().rft_config();
 
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem<ParserKeywords::WRFTPLT::WELL>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
-            auto RFTKey = RFTConfig::RFTFromString(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_RFT>().getTrimmedString(0));
-            auto PLTKey = RFTConfig::PLTFromString(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_PLT>().getTrimmedString(0));
+        const auto rftKey = [](const DeckItem& key)
+        {
+            return RFTConfig::RFTFromString(key.getTrimmedString(0));
+        };
 
-            if (well_names.empty())
+        const auto pltKey = [](const DeckItem& key)
+        {
+            return RFTConfig::PLTFromString(key.getTrimmedString(0));
+        };
+
+        for (const auto& record : handlerContext.keyword) {
+            const auto wellNamePattern = record.getItem<ParserKeywords::WRFTPLT::WELL>().getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext);
+
+            if (well_names.empty()) {
                 this->invalidNamePattern(wellNamePattern, handlerContext);
+                continue;
+            }
+
+            const auto RFTKey = rftKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_RFT>());
+            const auto PLTKey = pltKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_PLT>());
 
             for (const auto& well_name : well_names) {
                 new_rft.update(well_name, RFTKey);
@@ -2146,7 +2167,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             }
         }
 
-        this->snapshots.back().rft_config.update( std::move(new_rft) );
+        this->snapshots.back().rft_config.update(std::move(new_rft));
     }
 
 
