@@ -27,36 +27,40 @@
 
 namespace Opm {
 
-class RFTConfig {
+class RFTConfig
+{
 public:
     enum class RFT {
-        YES = 1,
-        REPT = 2,
+        YES      = 1,
+        REPT     = 2,
         TIMESTEP = 3,
-        FOPN = 4,
-        NO = 5
+        FOPN     = 4,
+        NO       = 5,
     };
-    static std::string RFT2String(RFT enumValue);
+    static std::string RFT2String(const RFT enumValue);
     static RFT RFTFromString(const std::string &stringValue);
 
     enum class PLT {
         YES      = 1,
         REPT     = 2,
         TIMESTEP = 3,
-        NO       = 5
+        NO       = 5,
     };
-    static std::string PLT2String(PLT enumValue);
+    static std::string PLT2String(const PLT enumValue);
     static PLT PLTFromString( const std::string& stringValue);
 
-
     void first_open(bool on);
-    void update(const std::string& wname, PLT mode);
-    void update(const std::string& wname, RFT mode);
+    void update(const std::string& wname, const PLT mode);
+    void update(const std::string& wname, const RFT mode);
+
     bool active() const;
+
     bool rft() const;
     bool rft(const std::string& wname) const;
+
     bool plt() const;
     bool plt(const std::string& wname) const;
+
     std::optional<RFTConfig> next() const;
     std::optional<RFTConfig> well_open(const std::string& wname) const;
 
@@ -72,7 +76,6 @@ public:
         serializer.map(open_wells);
     }
 
-
 private:
     bool first_open_rft = false;
     std::unordered_map<std::string, RFT> rft_state;
@@ -80,6 +83,6 @@ private:
     std::unordered_map<std::string, bool> open_wells;
 };
 
-}
+} // namespace Opm
 
-#endif
+#endif // RFT_CONFIG2_HPP
