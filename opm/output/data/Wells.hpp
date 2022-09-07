@@ -36,8 +36,6 @@
 
 namespace Opm {
 
-    namespace Mpi { template <class T> struct Packing; }
-
     namespace data {
 
     class Rates {
@@ -102,8 +100,6 @@ namespace Opm {
             void write(MessageBufferType& buffer) const;
             template <class MessageBufferType>
             void read(MessageBufferType& buffer);
-
-            friend struct Mpi::Packing<Rates>;
 
             bool operator==(const Rates& rat2) const;
 
@@ -230,8 +226,6 @@ namespace Opm {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
-        friend struct Mpi::Packing<Connection>;
-
         inline void init_json(Json::JsonObject& json_data) const;
 
         template<class Serializer>
@@ -292,8 +286,6 @@ namespace Opm {
                 buffer.read(value);
             }
         }
-
-        friend struct Mpi::Packing<SegmentPressures>;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -357,8 +349,6 @@ namespace Opm {
                            10
                    };
         }
-
-        friend struct Mpi::Packing<Segment>;
     };
 
     struct CurrentControl {
