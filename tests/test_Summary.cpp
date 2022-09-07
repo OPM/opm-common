@@ -4183,4 +4183,29 @@ BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
 }
 
 
+BOOST_AUTO_TEST_CASE(append_summary_state) {
+    auto now = TimeService::now();
+    SummaryState st1(now);
+    SummaryState st2(now);
+    SummaryState st_both(now);
+
+    st1.update_elapsed(1000);
+    st1.update("FOPT", 100);
+    st1.update_well_var("OP_1", "WOPR", 1000);
+    st1.update_group_var("G1", "GOPR", 1000);
+
+    st2.update("FGPT", 100);
+    st2.update_well_var("OP_1", "GOPR", 2000);
+    st1.update_group_var("G1", "WOPR", 3000);
+
+    st_both.append(st1);
+    BOOST_CHECK_EQUAL(st_both, st1);
+
+    st_both.append(st2);
+    BOOST_CHECK_EQUAL(st_both.get("FGPT"), 100);
+    BOOST_CHECK_EQUAL(st_both.get_well_var("OP_1", "GOPR"), 2000);
+    BOOST_CHECK_EQUAL(st_both.get_group_var("G1", "WOPR"), 3000);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -120,6 +120,7 @@ public:
     std::vector<std::string> groups(const std::string& var) const;
     std::vector<char> serialize() const;
     void deserialize(const std::vector<char>& buffer);
+    void append(const SummaryState& buffer);
     const_iterator begin() const;
     const_iterator end() const;
     std::size_t num_wells() const;
