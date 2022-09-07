@@ -22,7 +22,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/common/utility/Serializer.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 namespace Opm {
@@ -147,14 +146,6 @@ void FieldPropsManager::apply_tran(const std::string& keyword, std::vector<doubl
     this->fp->apply_tran(keyword, data);
 }
 
-std::vector<char> FieldPropsManager::serialize_tran() const {
-    return this->fp->serialize_tran();
-}
-
-void FieldPropsManager::deserialize_tran(const std::vector<char>& buffer) {
-    this->fp->deserialize_tran(buffer);
-}
-
 bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
 }
@@ -211,26 +202,6 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
         }
     }
 }
-
-void deserialize_tran(std::unordered_map<std::string, Fieldprops::TranCalculator>& tran, const std::vector<char>& buffer) {
-    tran.clear();
-
-    Serializer ser(buffer);
-    std::size_t size = ser.get<std::size_t>();
-    for (std::size_t calc_index = 0; calc_index < size; calc_index++) {
-        std::string calc_name = ser.get<std::string>();
-        Fieldprops::TranCalculator calc(calc_name);
-        std::size_t calc_size = ser.get<std::size_t>();
-        for (std::size_t action_index = 0; action_index < calc_size; action_index++) {
-            auto op = static_cast<Fieldprops::ScalarOperation>(ser.get<int>());
-            auto field = ser.get<std::string>();
-
-            calc.add_action(op, field);
-        }
-        tran.emplace(calc_name, std::move(calc));
-    }
-}
-
 
 template
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,

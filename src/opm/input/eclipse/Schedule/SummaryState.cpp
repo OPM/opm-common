@@ -23,7 +23,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <opm/common/utility/Serializer.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
@@ -344,42 +343,6 @@ namespace {
         return this->values.size();
     }
 
-
-
-
-    std::vector<char> SummaryState::serialize() const {
-        Serializer ser;
-        ser.put(this->sim_start);
-        ser.put(this->elapsed);
-        ser.put_map(this->values);
-
-
-        ser.put(this->well_values.size());
-        for (const auto& [var, well_map] : this->well_values) {
-            ser.put(var);
-            ser.put_map(well_map);
-        }
-
-        ser.put(this->group_values.size());
-        for (const auto& [var, group_map] : this->group_values) {
-            ser.put(var);
-            ser.put_map(group_map);
-        }
-
-        ser.put(this->conn_values.size());
-        for (const auto& [var, well_conn_map] : this->conn_values) {
-            ser.put(var);
-            ser.put(well_conn_map.size());
-            for (const auto& [well, conn_map] : well_conn_map) {
-                ser.put(well);
-                ser.put_map(conn_map);
-            }
-        }
-
-        return std::move(ser.buffer);
-    }
-
-
     void  SummaryState::append(const SummaryState& buffer) {
         this->sim_start = buffer.sim_start;
         this->elapsed = buffer.elapsed;
@@ -402,54 +365,6 @@ namespace {
         }
     }
 
-
-    void  SummaryState::deserialize(const std::vector<char>& buffer) {
-        Serializer ser(buffer);
-        this->sim_start = ser.get<time_point>();
-        this->elapsed = ser.get<double>();
-        this->values = ser.get_map<std::string, double>();
-
-        {
-            std::size_t num_well_var = ser.get<std::size_t>();
-            for (std::size_t var_index = 0; var_index < num_well_var; var_index++) {
-                std::string var = ser.get<std::string>();
-                auto v = ser.get_map<std::string, double>();
-                for (const auto& [well, _] : v) {
-                    (void)_;
-                    this->m_wells.insert(well);
-                }
-                this->well_values[var] = std::move(v);
-            }
-            this->well_names.reset();
-        }
-
-        {
-            std::size_t num_group_var = ser.get<std::size_t>();
-            for (std::size_t var_index = 0; var_index < num_group_var; var_index++) {
-                std::string var = ser.get<std::string>();
-                auto v= ser.get_map<std::string, double>();
-                for (const auto& [group, _] : v) {
-                    (void)_;
-                    this->m_groups.insert(group);
-                }
-                this->group_values[var] = std::move(v);
-            }
-            this->group_names.reset();
-        }
-
-        {
-            std::size_t num_conn_var = ser.get<std::size_t>();
-            for (std::size_t var_index = 0; var_index < num_conn_var; var_index++) {
-                std::string var = ser.get<std::string>();
-                std::size_t num_wells = ser.get<std::size_t>();
-                for (std::size_t well_index = 0; well_index < num_wells; well_index++) {
-                    std::string well = ser.get<std::string>();
-                    auto conn_map = ser.get_map<std::size_t, double>();
-                    this->conn_values[var][well] = std::move(conn_map);
-                }
-            }
-        }
-    }
 
     std::ostream& operator<<(std::ostream& stream, const SummaryState& st) {
         stream << "Simulated seconds: " << st.get_elapsed() << std::endl;

@@ -46,7 +46,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/common/utility/Serializer.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -1383,26 +1382,6 @@ const std::string& FieldProps::default_region() const {
 
 void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& data) {
     Opm::apply_tran(this->tran, this->double_data, this->active_size, keyword, data);
-}
-
-
-std::vector<char> FieldProps::serialize_tran() const {
-    Serializer ser;
-    ser.put(this->tran.size());
-    for (const auto& tran_pair : this->tran) {
-        const auto& calc = tran_pair.second;
-        ser.put(calc.name());
-        ser.put(calc.size());
-        for (const auto& action : calc) {
-            ser.put(static_cast<int>(action.op));
-            ser.put(action.field);
-        }
-    }
-    return std::move(ser.buffer);
-}
-
-void FieldProps::deserialize_tran(const std::vector<char>& buffer) {
-    Opm::deserialize_tran(this->tran, buffer);
 }
 
 bool FieldProps::tran_active(const std::string& keyword) const {

@@ -53,8 +53,6 @@ public:
     bool define(const std::string& udq_key, std::pair<UDQUpdate, std::size_t> update_status) const;
     double undefined_value() const;
 
-    std::vector<char> serialize() const;
-    void deserialize(const std::vector<char>& buffer);
     bool operator==(const UDQState& other) const;
 
     static UDQState serializeObject() {

@@ -20,7 +20,6 @@
 
 #include <stdexcept>
 
-#include <opm/common/utility/Serializer.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
@@ -239,51 +238,6 @@ bool UDQState::define(const std::string& udq_key, std::pair<UDQUpdate, std::size
     return define_iter->second < update_status.second;
 }
 
-std::vector<char> UDQState::serialize() const {
-    Serializer ser;
-    ser.put(this->undef_value);
-
-    ser.put(this->well_values.size());
-    for (const auto& [udq_key, values] : this->well_values) {
-        ser.put(udq_key);
-        ser.put_map(values);
-    }
-
-    ser.put(this->group_values.size());
-    for (const auto& [udq_key, values] : this->group_values) {
-        ser.put(udq_key);
-        ser.put_map(values);
-    }
-
-    ser.put_map(this->scalar_values);
-    ser.put_map(this->assignments);
-    ser.put_map(this->defines);
-    return ser.buffer;
-}
-
-
-void UDQState::deserialize(const std::vector<char>& buffer) {
-    Serializer ser(buffer);
-    this->undef_value = ser.get<double>();
-
-    this->well_values.clear();
-    std::size_t size = ser.get<std::size_t>();
-    for (std::size_t index = 0; index < size; index++) {
-        auto udq_key = ser.get<std::string>();
-        this->well_values.insert( std::make_pair(udq_key, ser.get_map<std::string, double>()));;
-    }
-
-    this->group_values.clear();
-    size = ser.get<std::size_t>();
-    for (std::size_t index = 0; index < size; index++) {
-        auto udq_key = ser.get<std::string>();
-        this->group_values.insert( std::make_pair(udq_key, ser.get_map<std::string, double>()));;
-    }
-
-    this->scalar_values = ser.get_map<std::string, double>();
-    this->assignments = ser.get_map<std::string, std::size_t>();
-    this->defines = ser.get_map<std::string, std::size_t>();
-}
 }
 
 

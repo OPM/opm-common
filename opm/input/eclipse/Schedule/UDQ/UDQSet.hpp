@@ -30,8 +30,6 @@
 
 namespace Opm {
 
-class Serializer;
-
 class UDQScalar {
 public:
     UDQScalar() = default;
@@ -55,8 +53,7 @@ public:
     const std::optional<double>& value() const;
     const std::string& wgname() const;
     bool operator==(const UDQScalar& other) const;
-    static UDQScalar deserialize(Serializer& ser);
-    void serialize(Serializer& ser) const;
+
 public:
     std::optional<double> m_value;
     std::string m_wgname;
@@ -69,8 +66,6 @@ public:
     UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames);
     UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
     UDQSet(const std::string& name, std::size_t size);
-    void   serialize(Serializer& ser) const;
-    static UDQSet deserialize(Serializer& ser);
     static UDQSet scalar(const std::string& name, const std::optional<double>& scalar_value);
     static UDQSet scalar(const std::string& name, double value);
     static UDQSet empty(const std::string& name);
