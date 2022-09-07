@@ -475,7 +475,6 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_RFT.cpp
           tests/test_rst.cpp
           tests/test_Solution.cpp
-          tests/test_Serializer.cpp
           tests/test_Inplace.cpp
           tests/test_Summary.cpp
           tests/test_Summary_Group.cpp
@@ -631,7 +630,6 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/OpmLog.hpp
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp
-      opm/common/utility/Serializer.hpp
       opm/common/utility/ActiveGridCells.hpp
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
