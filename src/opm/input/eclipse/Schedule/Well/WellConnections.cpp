@@ -17,30 +17,37 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/ActiveGridCells.hpp>
+
+#include <opm/io/eclipse/rst/connection.hpp>
+
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
+
+#include <stddef.h>
+
 #include <fmt/format.h>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/ActiveGridCells.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/io/eclipse/rst/connection.hpp>
-#include <opm/common/OpmLog/KeywordLocation.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
-
-namespace Opm {
 
 namespace {
 
@@ -48,35 +55,39 @@ namespace {
     // direction.  First two elements of return value are directions
     // perpendicular to completion while last element is direction
     // along completion.
-inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction direction)
+    std::array<std::size_t, 3>
+    directionIndices(const Opm::Connection::Direction direction)
     {
         switch (direction) {
         case Opm::Connection::Direction::X:
-            return {{ 1,2,0 }};
+            return {{ 1, 2, 0 }};
 
         case Opm::Connection::Direction::Y:
-            return {{ 2,0,1}};
+            return {{ 2, 0, 1}};
 
         case Opm::Connection::Direction::Z:
-            return {{ 0,1,2 }};
+            return {{ 0, 1, 2 }};
         }
-        // All enum values should be handled above. Therefore
-        // we should never reach this one. Anyway for the sake
-        // of reduced warnings we throw an exception.
-        throw std::invalid_argument("unhandled enum value");
 
+        // All enum values should be handled above. Therefore we should
+        // never reach this one. Anyway for the sake of reduced warnings we
+        // throw an exception.
+        throw std::invalid_argument {
+            fmt::format("Unhandled direction enumeration value '{}'",
+                        Opm::Connection::Direction2String(direction))
+        };
     }
 
     // Permute (diagonal) permeability components according to
     // completion's direction.
-    inline std::array<double,3>
+    std::array<double, 3>
     permComponents(const Opm::Connection::Direction direction,
-                   const std::array<double,3>& perm)
+                   const std::array<double,3>&      perm)
     {
         const auto p = directionIndices(direction);
 
-        return {{ perm[ p[0] ],
-                  perm[ p[1] ],
+        return {{ perm[ p[0] ] ,
+                  perm[ p[1] ] ,
                   perm[ p[2] ] }};
     }
 
@@ -85,7 +96,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     //
     // Note: 'extent' is intentionally accepted by modifiable value
     // rather than reference-to-const to support NTG manipulation.
-    inline std::array<double,3>
+    std::array<double, 3>
     effectiveExtent(const Opm::Connection::Direction direction,
                     const double                     ntg,
                     std::array<double,3>             extent)
@@ -95,18 +106,14 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
         const auto p = directionIndices(direction);
 
-        std::array<double,3>
-            D = {{ extent[ p[0] ] ,
-                   extent[ p[1] ] ,
-                   extent[ p[2] ] }};
-
-        return D;
+        return {{ extent[ p[0] ] ,
+                  extent[ p[1] ] ,
+                  extent[ p[2] ] }};
     }
 
     // Compute Peaceman's effective radius of single completion.
-    inline double
-    effectiveRadius(const std::array<double,3>& K,
-                    const std::array<double,3>& D)
+    double effectiveRadius(const std::array<double,3>& K,
+                           const std::array<double,3>& D)
     {
         const double K01   = K[0] / K[1];
         const double K10   = K[1] / K[0];
@@ -123,33 +130,27 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return 0.28 * (num / den);
     }
 
-
 } // anonymous namespace
 
-    WellConnections::WellConnections() :
-        headI(0),
-        headJ(0)
-    {
-    }
+namespace Opm {
 
-    WellConnections::WellConnections(Connection::Order order,int headIArg, int headJArg) :
-        m_ordering(order),
-        headI(headIArg),
-        headJ(headJArg)
-    {
-    }
+    WellConnections::WellConnections(const Connection::Order order,
+                                     const int               headIArg,
+                                     const int               headJArg)
+        : m_ordering(order)
+        , headI     (headIArg)
+        , headJ     (headJArg)
+    {}
 
-
-    WellConnections::WellConnections(Connection::Order order,
-                                     int headIArg, int headJArg,
-                                     const std::vector<Connection>& connections) :
-        m_ordering(order),
-        headI(headIArg),
-        headJ(headJArg),
-        m_connections(connections)
-    {
-    }
-
+    WellConnections::WellConnections(const Connection::Order        order,
+                                     const int                      headIArg,
+                                     const int                      headJArg,
+                                     const std::vector<Connection>& connections)
+        : m_ordering   (order)
+        , headI        (headIArg)
+        , headJ        (headJArg)
+        , m_connections(connections)
+    {}
 
     WellConnections WellConnections::serializeObject()
     {
@@ -162,30 +163,41 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return result;
     }
 
+    std::vector<const Connection*>
+    WellConnections::output(const EclipseGrid& grid) const
+    {
+        auto out = std::vector<const Connection*>{};
+        out.reserve(this->m_connections.size());
 
-    std::vector<const Connection *> WellConnections::output(const EclipseGrid& grid) const {
-        if (this->m_connections.empty())
-            return {};
-
-        std::vector<const Connection*> out;
-        for (const auto& conn : this->m_connections)
-            if (grid.isCellActive(conn.getI(), conn.getJ(), conn.getK()))
-                out.push_back( &conn );
-
-        if (!this->m_connections[0].attachedToSegment() && (this->m_ordering != Connection::Order::INPUT)) {
-            std::sort(out.begin(), out.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)
-                                                {
-                                                    return conn1->sort_value() < conn2->sort_value();
-                                                });
+        if (this->m_connections.empty()) {
+            return out;
         }
+
+        for (const auto& conn : this->m_connections) {
+            if (grid.isCellActive(conn.getI(), conn.getJ(), conn.getK())) {
+                out.push_back(&conn);
+            }
+        }
+
+        if (! this->m_connections[0].attachedToSegment() &&
+            (this->m_ordering != Connection::Order::INPUT))
+        {
+            std::sort(out.begin(), out.end(), [](const Opm::Connection* conn1,
+                                                 const Opm::Connection* conn2)
+            {
+                return conn1->sort_value() < conn2->sort_value();
+            });
+        }
+
         return out;
     }
 
     bool WellConnections::prepareWellPIScaling()
     {
         auto update = false;
-        for (auto& conn : this->m_connections)
+        for (auto& conn : this->m_connections) {
             update = conn.prepareWellPIScaling() || update;
+        }
 
         return update;
     }
@@ -197,82 +209,75 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
         auto i = std::size_t{0};
         for (auto& conn : this->m_connections) {
-            if (scalingApplicable[i])
+            if (scalingApplicable[i]) {
                 scalingApplicable[i] = conn.applyWellPIScaling(scaleFactor);
+            }
+
             ++i;
         }
     }
 
-    void WellConnections::addConnection(int i, int j , int k ,
-                                        std::size_t global_index,
-                                        int complnum,
-                                        double depth,
-                                        Connection::State state,
-                                        double CF,
-                                        double Kh,
-                                        double rw,
-                                        double r0,
-                                        double re,
-                                        double connection_length,
-                                        double skin_factor,
+    void WellConnections::addConnection(const int i, const int j, const int k,
+                                        const std::size_t global_index,
+                                        const int complnum,
+                                        const double depth,
+                                        const Connection::State state,
+                                        const double CF,
+                                        const double Kh,
+                                        const double rw,
+                                        const double r0,
+                                        const double re,
+                                        const double connection_length,
+                                        const double skin_factor,
                                         const int satTableId,
                                         const Connection::Direction direction,
                                         const Connection::CTFKind ctf_kind,
                                         const std::size_t seqIndex,
                                         const bool defaultSatTabId)
     {
-        int conn_i = (i < 0) ? this->headI : i;
-        int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, global_index, complnum, depth, state, CF, Kh, rw, r0, re, connection_length,
+        const int conn_i = (i < 0) ? this->headI : i;
+        const int conn_j = (j < 0) ? this->headJ : j;
+
+        Connection conn(conn_i, conn_j, k,
+                        global_index, complnum,
+                        depth, state, CF, Kh, rw, r0, re, connection_length,
                         skin_factor, satTableId, direction, ctf_kind,
                         seqIndex, defaultSatTabId);
+
         this->add(conn);
     }
 
-
-    void WellConnections::addConnection(int i, int j , int k ,
-                                        std::size_t global_index,
-                                        double depth,
-                                        Connection::State state ,
-                                        double CF,
-                                        double Kh,
-                                        double rw,
-                                        double r0,
-                                        double re,
-                                        double connection_length,
-                                        double skin_factor,
+    void WellConnections::addConnection(const int i, const int j, const int k,
+                                        const std::size_t global_index,
+                                        const double depth,
+                                        const Connection::State state,
+                                        const double CF,
+                                        const double Kh,
+                                        const double rw,
+                                        const double r0,
+                                        const double re,
+                                        const double connection_length,
+                                        const double skin_factor,
                                         const int satTableId,
                                         const Connection::Direction direction,
                                         const Connection::CTFKind ctf_kind,
                                         const std::size_t seqIndex,
                                         const bool defaultSatTabId)
     {
-        int complnum = (this->m_connections.size() + 1);
-        this->addConnection(i,
-                            j,
-                            k,
-                            global_index,
-                            complnum,
-                            depth,
-                            state,
-                            CF,
-                            Kh,
-                            rw,
-                            r0,
-                            re,
-                            connection_length,
-                            skin_factor,
-                            satTableId,
-                            direction,
-                            ctf_kind,
-                            seqIndex,
-                            defaultSatTabId);
+        const int complnum = (this->m_connections.size() + 1);
+
+        this->addConnection(i, j, k, global_index, complnum,
+                            depth, state, CF, Kh, rw, r0, re,
+                            connection_length, skin_factor,
+                            satTableId, direction, ctf_kind,
+                            seqIndex, defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord& record,
-                                      const ScheduleGrid& grid,
-                                      const std::string& wname,
-                                      const KeywordLocation& location) {
+    void WellConnections::loadCOMPDAT(const DeckRecord&      record,
+                                      const ScheduleGrid&    grid,
+                                      const std::string&     wname,
+                                      const KeywordLocation& location)
+    {
 
         const auto& itemI = record.getItem( "I" );
         const auto defaulted_I = itemI.defaultApplied( 0 ) || itemI.get< int >( 0 ) == 0;
@@ -437,7 +442,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         }
     }
 
-
     std::size_t WellConnections::size() const {
         return m_connections.size();
     }
@@ -460,7 +464,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return this->m_connections.at(index);
     }
 
-
     const Connection& WellConnections::lowest() const {
         if (this->m_connections.empty())
             throw std::logic_error("Tried to get lowest connection from empty set");
@@ -475,13 +478,11 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return *max_iter;
     }
 
-
     bool WellConnections::hasGlobalIndex(std::size_t global_index) const {
         auto conn_iter = std::find_if(this->begin(), this->end(),
                                       [global_index] (const Connection& conn) {return conn.global_index() == global_index;});
         return (conn_iter != this->end());
     }
-
 
     const Connection& WellConnections::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
@@ -492,7 +493,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         throw std::runtime_error(" the connection is not found! \n ");
     }
 
-
     const Connection& WellConnections::getFromGlobalIndex(std::size_t global_index) const {
         auto conn_iter = std::find_if(this->begin(), this->end(),
                                       [global_index] (const Connection& conn) {return conn.global_index() == global_index;});
@@ -501,7 +501,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             throw std::logic_error(fmt::format("No connection with global index {}", global_index));
         return *conn_iter;
     }
-
 
     Connection& WellConnections::getFromIJK(const int i, const int j, const int k) {
       for (size_t ic = 0; ic < size(); ++ic) {
@@ -512,9 +511,9 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
       throw std::runtime_error(" the connection is not found! \n ");
     }
 
-
-    void WellConnections::add( Connection connection ) {
-        m_connections.emplace_back( connection );
+    void WellConnections::add(Connection connection)
+    {
+        this->m_connections.push_back(std::move(connection));
     }
 
     bool WellConnections::allConnectionsShut( ) const {
@@ -531,8 +530,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             shut );
     }
 
-
-
     void WellConnections::order()
     {
         if (m_connections.empty())
@@ -546,14 +543,12 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             this->orderDEPTH();
     }
 
-
     void WellConnections::orderMSW() {
         std::sort(this->m_connections.begin(), this->m_connections.end(), [](const Opm::Connection& conn1, const Opm::Connection& conn2)
                   {
                       return conn1.sort_value() < conn2.sort_value();
                   });
     }
-
 
     void WellConnections::orderTRACK() {
         // Find the first connection and swap it into the 0-position.
@@ -633,7 +628,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         m_connections.erase(new_end, m_connections.end());
     }
 
-
     double WellConnections::segment_perf_length(int segment) const {
         double perf_length = 0;
         for (const auto& conn : this->m_connections) {
@@ -644,7 +638,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         }
         return perf_length;
     }
-
 
     std::optional<int>
     getCompletionNumberFromGlobalConnectionIndex(const WellConnections& connections,

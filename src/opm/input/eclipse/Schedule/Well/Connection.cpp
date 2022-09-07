@@ -373,6 +373,10 @@ std::string Connection::Direction2String(const Direction enumValue)
     case Direction::Z:
         stringValue = "Z";
         break;
+
+    default:
+        stringValue = std::to_string(static_cast<int>(enumValue));
+        break;
     }
 
     return stringValue;
