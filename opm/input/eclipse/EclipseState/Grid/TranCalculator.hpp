@@ -105,6 +105,13 @@ public:
         serializer.vector(actions);
     }
 
+    static TranCalculator serializeObject()
+    {
+        TranCalculator tran("test");
+        tran.add_action(ScalarOperation::MIN, "FGOP");
+        return tran;
+    }
+
 private:
     std::string m_name;
     std::vector<TranAction> actions;
