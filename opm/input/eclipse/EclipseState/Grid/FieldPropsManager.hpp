@@ -228,17 +228,6 @@ public:
 
     void apply_numerical_aquifers(const NumericalAquifers& aquifers);
 
-
-    /*
-      When using MPI the FieldPropsManager is typically only assembled on the
-      root node and then distributed to the other nodes afterwards. These
-      methods are support methods for that, the real data used by the
-      transmissibility calculators is in the form of custom 3D fields, they are
-      distributed the same way the rest of the 3D fields are distributed.
-    */
-    virtual std::vector<char> serialize_tran() const;
-    virtual void deserialize_tran(const std::vector<char>& buffer);
-
     const Fieldprops::TranMap& getTran() const;
 
 private:
@@ -279,10 +268,6 @@ private:
 
     std::shared_ptr<FieldProps> fp;
 };
-
-
-void deserialize_tran(std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
-                      const std::vector<char>& buffer);
 
 template<class MapType>
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,

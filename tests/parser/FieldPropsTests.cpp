@@ -2133,12 +2133,6 @@ MINVALUE
             }
         }
     }
-    auto buffer = fpm.serialize_tran();
-    fpm.deserialize_tran(buffer);
-
-    BOOST_CHECK(fpm.tran_active("TRANX"));
-    BOOST_CHECK(fpm.tran_active("TRANY"));
-    BOOST_CHECK(fpm.tran_active("TRANZ"));
 }
 
 BOOST_AUTO_TEST_CASE(TRAN_KEYS) {
