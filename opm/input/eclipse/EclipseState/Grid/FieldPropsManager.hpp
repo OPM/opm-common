@@ -238,6 +238,9 @@ public:
     */
     virtual std::vector<char> serialize_tran() const;
     virtual void deserialize_tran(const std::vector<char>& buffer);
+
+    const Fieldprops::TranMap& getTran() const;
+
 private:
     /*
       Return the keyword values as a std::vector<>. All elements in the return
@@ -273,7 +276,6 @@ private:
     */
     template <typename T>
     std::vector<T> get_global(const std::string& keyword) const;
-
 
     std::shared_ptr<FieldProps> fp;
 };

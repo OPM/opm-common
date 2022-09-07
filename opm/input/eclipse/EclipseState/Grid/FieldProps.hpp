@@ -506,6 +506,12 @@ public:
     void deserialize_tran(const std::vector<char>& buffer);
     bool operator==(const FieldProps& other) const;
     static bool rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg);
+
+    const Fieldprops::TranMap& getTran() const
+    {
+        return tran;
+    }
+
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
@@ -566,7 +572,7 @@ private:
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
     std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;
 
-    std::unordered_map<std::string, Fieldprops::TranCalculator> tran;
+    Fieldprops::TranMap tran;
 };
 
 }

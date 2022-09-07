@@ -20,6 +20,7 @@
 #define TRAN_CALCULATOR_HPP
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Opm
@@ -50,12 +51,21 @@ public:
             return this->op == other.op &&
                    this->field == other.field;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(op);
+            serializer(field);
+        }
     };
 
 
     explicit TranCalculator(const std::string& name_arg) :
         m_name(name_arg)
     {}
+
+    TranCalculator() = default;
 
     std::string next_name() const {
         return this->m_name + std::to_string( this->actions.size() );
@@ -88,10 +98,19 @@ public:
                this->actions == other.actions;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer.vector(actions);
+    }
+
 private:
     std::string m_name;
     std::vector<TranAction> actions;
 };
+
+using TranMap = std::unordered_map<std::string, TranCalculator>;
 
 } // namespace Fieldprops
 } // end namespace Opm
