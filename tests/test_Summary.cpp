@@ -2561,13 +2561,6 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK(st.has_conn_var("OP2", "COPR", 100));
     BOOST_CHECK_EQUAL(st.get_conn_var("OP2", "COPR", 100), 123);
     BOOST_CHECK_EQUAL(st.get_conn_var("OP2", "COPR", 101, 99), 99);
-
-
-    auto buffer = st.serialize();
-    Opm::SummaryState st2(TimeService::now());
-    st2.deserialize(buffer);
-
-    BOOST_CHECK( st == st2 );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -4139,47 +4132,6 @@ BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     BOOST_CHECK_EQUAL(st.get_elapsed(), 100);
     st.update_elapsed(100);
     BOOST_CHECK_EQUAL(st.get_elapsed(), 200);
-}
-
-namespace {
-void test_serialize(const SummaryState& st) {
-    SummaryState st2(TimeService::now());
-    auto serial = st.serialize();
-    st2.deserialize(serial);
-    BOOST_CHECK( st == st2 );
-
-    st2.update_elapsed(1234567.09);
-    st2.update("FOPT", 200);
-    st2.deserialize(serial);
-    BOOST_CHECK(st == st2);
-}
-}
-
-BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
-    SummaryState st(TimeService::now());
-    test_serialize(st);
-
-    st.update_elapsed(1000);
-    test_serialize(st);
-
-    st.update("FOPT", 100);
-    test_serialize(st);
-
-    st.update("FGPT", 100);
-    test_serialize(st);
-
-    st.update_well_var("OP_1", "WOPR", 1000);
-    test_serialize(st);
-
-    st.update_well_var("OP_2", "WGOR", 0.67);
-    test_serialize(st);
-
-    st.update_group_var("G1", "GOPR", 1000);
-    test_serialize(st);
-
-    st.update_group_var("G2", "GGOR", 0.67);
-    test_serialize(st);
-
 }
 
 
