@@ -74,7 +74,7 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer.vector(m_records);
+                serializer(m_records);
             }
 
         private:

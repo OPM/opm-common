@@ -61,7 +61,7 @@ namespace Opm {
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer.map(this->m_aquifers);
+            serializer(this->m_aquifers);
             serializer(this->m_num_records);
         }
 

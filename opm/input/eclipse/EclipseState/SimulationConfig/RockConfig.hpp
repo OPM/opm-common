@@ -76,7 +76,7 @@ struct RockComp {
     void serializeOp(Serializer& serializer)
     {
         serializer(m_active);
-        serializer.vector(m_comp);
+        serializer(m_comp);
         serializer(num_property);
         serializer(num_tables);
         serializer(m_water_compaction);

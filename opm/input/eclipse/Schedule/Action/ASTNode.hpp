@@ -43,7 +43,7 @@ public:
         serializer(func);
         serializer(arg_list);
         serializer(number);
-        serializer.vector(children);
+        serializer(children);
     }
 
 private:

@@ -85,7 +85,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.set(this->well_set);
+        serializer(this->well_set);
     }
 
     static WellSet serializeObject();

@@ -116,11 +116,11 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-          solution.serializeOp(serializer);
-          wells.serializeOp(serializer);
-          grp_nwrk.serializeOp(serializer);
-          serializer.map(aquifer);
-          serializer.vector(extra);
+          serializer(solution);
+          serializer(wells);
+          serializer(grp_nwrk);
+          serializer(aquifer);
+          serializer(extra);
         }
 
         static RestartValue serializeObject()

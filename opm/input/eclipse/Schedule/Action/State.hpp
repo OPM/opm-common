@@ -91,9 +91,9 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.map(this->run_state);
-        serializer.map(this->last_result);
-        serializer.map(this->m_python_result);
+        serializer(this->run_state);
+        serializer(this->last_result);
+        serializer(this->m_python_result);
     }
 
 

@@ -95,7 +95,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(m_faces);
+        serializer(m_faces);
     }
 
 private:

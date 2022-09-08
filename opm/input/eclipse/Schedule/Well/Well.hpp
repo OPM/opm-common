@@ -309,10 +309,10 @@ public:
         void serializeOp(Serializer& serializer)
         {
             serializer(name);
-            surfaceInjectionRate.serializeOp(serializer);
-            reservoirInjectionRate.serializeOp(serializer);
-            BHPTarget.serializeOp(serializer);
-            THPTarget.serializeOp(serializer);
+            serializer(surfaceInjectionRate);
+            serializer(reservoirInjectionRate);
+            serializer(BHPTarget);
+            serializer(THPTarget);
             serializer(bhp_hist_limit);
             serializer(thp_hist_limit);
             serializer(temperature);
@@ -442,14 +442,14 @@ public:
         void serializeOp(Serializer& serializer)
         {
             serializer(name);
-            OilRate.serializeOp(serializer);
-            WaterRate.serializeOp(serializer);
-            GasRate.serializeOp(serializer);
-            LiquidRate.serializeOp(serializer);
-            ResVRate.serializeOp(serializer);
-            BHPTarget.serializeOp(serializer);
-            THPTarget.serializeOp(serializer);
-            ALQValue.serializeOp(serializer);
+            serializer(OilRate);
+            serializer(WaterRate);
+            serializer(GasRate);
+            serializer(LiquidRate);
+            serializer(ResVRate);
+            serializer(BHPTarget);
+            serializer(THPTarget);
+            serializer(ALQValue);
             serializer(bhp_hist_limit);
             serializer(thp_hist_limit);
             serializer(BHPH);
@@ -663,7 +663,7 @@ public:
         serializer(headJ);
         serializer(ref_depth);
         serializer(wpave_ref_depth);
-        unit_system.serializeOp(serializer);
+        serializer(unit_system);
         serializer(udq_undefined);
         serializer(status);
         serializer(drainage_radius);
@@ -671,8 +671,8 @@ public:
         serializer(automatic_shutin);
         serializer(pvt_table);
         serializer(gas_inflow);
-        wtype.serializeOp(serializer);
-        guide_rate.serializeOp(serializer);
+        serializer(wtype);
+        serializer(guide_rate);
         serializer(efficiency_factor);
         serializer(solvent_fraction);
         serializer(has_produced);
@@ -689,7 +689,7 @@ public:
         serializer(injection);
         serializer(segments);
         serializer(wvfpexp);
-        m_pavg.serializeOp(serializer);
+        serializer(m_pavg);
     }
 
 private:

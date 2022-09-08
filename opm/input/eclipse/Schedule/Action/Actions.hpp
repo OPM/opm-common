@@ -66,8 +66,8 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(actions);
-        serializer.vector(pyactions);
+        serializer(actions);
+        serializer(pyactions);
     }
 
 private:

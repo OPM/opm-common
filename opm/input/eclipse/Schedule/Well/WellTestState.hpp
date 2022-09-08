@@ -256,13 +256,13 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.map(this->wells);
+        serializer(this->wells);
         if (serializer.isSerializing()) {
             std::size_t size = this->completions.size();
             serializer(size);
             for (auto& [well, comp_map] : this->completions) {
                 serializer(well);
-                serializer.map(comp_map);
+                serializer(comp_map);
             }
         } else {
             std::size_t size = 0;
@@ -272,7 +272,7 @@ public:
                 std::unordered_map<int, ClosedCompletion> comp_map;
 
                 serializer(well);
-                serializer.map(comp_map);
+                serializer(comp_map);
                 this->completions.emplace(well, std::move(comp_map));
             }
         }

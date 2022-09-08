@@ -70,13 +70,7 @@ class Phases {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            if (serializer.isSerializing())
-                serializer(bits.to_ulong());
-            else {
-              unsigned long Bits = 0;
-              serializer(Bits);
-              bits = std::bitset<NUM_PHASES_IN_ENUM>(Bits);
-            }
+            serializer(bits);
         }
 
     private:
@@ -469,19 +463,19 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(this->m_start_time);
-        active_phases.serializeOp(serializer);
-        m_tabdims.serializeOp(serializer);
-        m_regdims.serializeOp(serializer);
-        endscale.serializeOp(serializer);
-        welldims.serializeOp(serializer);
-        wsegdims.serializeOp(serializer);
-        netwrkdims.serializeOp(serializer);
-        aquiferdims.serializeOp(serializer);
-        udq_params.serializeOp(serializer);
-        hystpar.serializeOp(serializer);
-        m_actdims.serializeOp(serializer);
-        m_sfuncctrl.serializeOp(serializer);
-        m_nupcol.serializeOp(serializer);
+        serializer(active_phases);
+        serializer(m_tabdims);
+        serializer(m_regdims);
+        serializer(endscale);
+        serializer(welldims);
+        serializer(wsegdims);
+        serializer(netwrkdims);
+        serializer(aquiferdims);
+        serializer(udq_params);
+        serializer(hystpar);
+        serializer(m_actdims);
+        serializer(m_sfuncctrl);
+        serializer(m_nupcol);
         serializer(m_co2storage);
         serializer(m_micp);
     }

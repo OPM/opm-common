@@ -151,7 +151,7 @@ namespace Opm {
             serializer(this->m_ordering);
             serializer(this->headI);
             serializer(this->headJ);
-            serializer.vector(this->m_connections);
+            serializer(this->m_connections);
         }
 
     private:

@@ -108,7 +108,7 @@ public:
         serializer(m_flo_data);
         serializer(m_thp_data);
         serializer(m_data);
-        m_location.serializeOp(serializer);
+        serializer(m_location);
     }
 
 private:

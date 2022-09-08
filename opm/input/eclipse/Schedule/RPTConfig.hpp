@@ -36,7 +36,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.map(m_mnemonics);
+        serializer(m_mnemonics);
     }
 
     std::unordered_map<std::string, unsigned>::const_iterator begin() const { return this->m_mnemonics.begin(); };

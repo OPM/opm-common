@@ -71,10 +71,10 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        aquifetp.serializeOp(serializer);
-        aquiferct.serializeOp(serializer);
-        aqconn.serializeOp(serializer);
-        numerical_aquifers.serializeOp(serializer);
+        serializer(aquifetp);
+        serializer(aquiferct);
+        serializer(aqconn);
+        serializer(numerical_aquifers);
     }
 
 private:

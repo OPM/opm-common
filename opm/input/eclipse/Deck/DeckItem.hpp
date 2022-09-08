@@ -140,14 +140,14 @@ namespace Opm {
             serializer(dval);
             serializer(ival);
             serializer(sval);
-            serializer.vector(rsval);
-            serializer.vector(uval);
+            serializer(rsval);
+            serializer(uval);
             serializer(type);
             serializer(item_name);
-            serializer.vector(value_status);
+            serializer(value_status);
             serializer(raw_data);
-            serializer.vector(active_dimensions);
-            serializer.vector(default_dimensions);
+            serializer(active_dimensions);
+            serializer(default_dimensions);
         }
 
         void reserve_additionalRawString(std::size_t);

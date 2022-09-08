@@ -74,8 +74,8 @@ namespace Opm {
             serializer(m_time_type);
             serializer(m_start_time);
             serializer(m_end_time);
-            serializer.vector(m_keywords);
-            m_location.serializeOp(serializer);
+            serializer(m_keywords);
+            serializer(m_location);
         }
 
         void dump_time(time_point current_time, DeckOutput& output) const;
@@ -143,8 +143,8 @@ namespace Opm {
             serializer(m_restart_time);
             serializer(m_restart_offset);
             serializer(skiprest);
-            serializer.vector(m_blocks);
-            m_location.serializeOp(serializer);
+            serializer(m_blocks);
+            serializer(m_location);
         }
 
         void dump_deck(std::ostream& os) const;

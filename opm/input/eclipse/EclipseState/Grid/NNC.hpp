@@ -120,8 +120,8 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(m_input);
-        serializer.vector(m_edit);
+        serializer(m_input);
+        serializer(m_edit);
         serializer(m_nnc_location);
         serializer(m_edit_location);
     }

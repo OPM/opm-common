@@ -99,7 +99,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(data_);
+        serializer(data_);
         serializer(transport_phase_);
         serializer(mobility_model_);
     }

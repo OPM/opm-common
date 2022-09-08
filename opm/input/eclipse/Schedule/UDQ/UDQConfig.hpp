@@ -95,12 +95,12 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            udq_params.serializeOp(serializer);
-            serializer.map(m_definitions);
-            serializer.map(m_assignments);
+            serializer(udq_params);
+            serializer(m_definitions);
+            serializer(m_assignments);
             serializer(units);
-            input_index.serializeOp(serializer);
-            serializer.map(type_count);
+            serializer(input_index);
+            serializer(type_count);
             // The UDQFunction table is constant up to udq_params.
             // So we can just construct a new instance here.
             if (!serializer.isSerializing())

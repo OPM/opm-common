@@ -176,7 +176,7 @@ public:
         serializer(m_gfr_data);
         serializer(m_alq_data);
         serializer(m_data);
-        m_location.serializeOp(serializer);
+        serializer(m_location);
     }
 
 private:

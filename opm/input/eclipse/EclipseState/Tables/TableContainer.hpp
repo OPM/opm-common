@@ -99,7 +99,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(m_maxTables);
-            serializer.map(m_tables);
+            serializer(m_tables);
         }
 
     private:

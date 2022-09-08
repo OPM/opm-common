@@ -72,7 +72,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_schema.serializeOp(serializer);
+            serializer(m_schema);
             serializer(m_name);
             serializer(m_values);
             serializer(m_default);

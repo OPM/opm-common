@@ -104,7 +104,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            ymd_.serializeOp(serializer);
+            serializer(ymd_);
             serializer(hour_);
             serializer(minutes_);
             serializer(seconds_);

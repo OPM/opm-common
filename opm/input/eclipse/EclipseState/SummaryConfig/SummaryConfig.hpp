@@ -76,7 +76,7 @@ namespace Opm {
         {
             serializer(keyword_);
             serializer(category_);
-            loc.serializeOp(serializer);
+            serializer(loc);
             serializer(type_);
             serializer(name_);
             serializer(number_);
@@ -206,7 +206,7 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-               serializer.vector(m_keywords);
+               serializer(m_keywords);
                serializer(short_keywords);
                serializer(summary_keywords);
             }

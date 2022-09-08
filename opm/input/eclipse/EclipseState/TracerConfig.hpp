@@ -123,7 +123,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(tracers);
+        serializer(tracers);
     }
 
     bool operator==(const TracerConfig& data) const;

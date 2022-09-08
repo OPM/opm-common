@@ -307,7 +307,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(m_map);
-        serializer.vector(m_vector);
+        serializer(m_vector);
     }
 };
 }

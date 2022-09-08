@@ -97,8 +97,8 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(m_keywordName);
-            m_location.serializeOp(serializer);
-            serializer.vector(m_recordList);
+            serializer(m_location);
+            serializer(m_recordList);
             serializer(m_isDataKeyword);
             serializer(m_slashTerminated);
             serializer(m_isDoubleRecordKeyword);

@@ -88,7 +88,7 @@ public:
         serializer(m_keyword);
         serializer(ast);
         serializer(m_var_type);
-        m_location.serializeOp(serializer);
+        serializer(m_location);
         serializer(string_data);
         serializer(m_update_status);
         serializer(m_report_step);

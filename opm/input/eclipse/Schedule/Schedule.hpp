@@ -99,13 +99,13 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_deck_message_limits.serializeOp(serializer);
-            this->rst_info.serializeOp(serializer);
-            m_runspec.serializeOp(serializer);
-            m_unit_system.serializeOp(serializer);
+            serializer(m_deck_message_limits);
+            serializer(this->rst_info);
+            serializer(m_runspec);
+            serializer(m_unit_system);
             serializer(this->m_input_path);
-            rst_info.serializeOp(serializer);
-            rst_config.serializeOp(serializer);
+            serializer(rst_info);
+            serializer(rst_config);
             serializer(this->output_interval);
             serializer(this->gaslift_opt_active);
         }
@@ -321,13 +321,13 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            this->m_static.serializeOp(serializer);
-            this->m_sched_deck.serializeOp(serializer);
-            this->action_wgnames.serializeOp(serializer);
+            serializer(this->m_static);
+            serializer(this->m_sched_deck);
+            serializer(this->action_wgnames);
             serializer(this->exit_status);
-            serializer.vector(this->snapshots);
-            this->restart_output.serializeOp(serializer);
-            this->completed_cells.serializeOp(serializer);
+            serializer(this->snapshots);
+            serializer(this->restart_output);
+            serializer(this->completed_cells);
 
             this->template pack_unpack<PAvg>(serializer);
             this->template pack_unpack<WellTestConfig>(serializer);
@@ -361,8 +361,8 @@ namespace Opm
             if (serializer.isSerializing())
                 this->template pack_state<T>(value_list, index_list);
 
-            serializer.vector(value_list);
-            serializer.vector(index_list);
+            serializer(value_list);
+            serializer(index_list);
 
             if (!serializer.isSerializing())
                 this->template unpack_state<T>(value_list, index_list);
@@ -419,7 +419,7 @@ namespace Opm
             if (serializer.isSerializing())
                 pack_map<K,T>(value_list, index_list);
 
-            serializer.vector(value_list);
+            serializer(value_list);
             serializer(index_list);
 
             if (!serializer.isSerializing())

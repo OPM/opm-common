@@ -124,7 +124,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.map(wells);
+        serializer(wells);
     }
 
 private:

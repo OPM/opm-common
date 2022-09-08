@@ -67,10 +67,9 @@ namespace Opm {
             serializer(m_nx);
             serializer(m_ny);
             serializer(m_nz);
-            // map used to avoid explicit instances with FaceDir::DirEnum in serializer
-            serializer.map(m_trans);
-            serializer.map(m_names);
-            m_multregtScanner.serializeOp(serializer);
+            serializer(m_trans);
+            serializer(m_names);
+            serializer(m_multregtScanner);
         }
 
     private:

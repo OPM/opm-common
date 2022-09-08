@@ -102,9 +102,9 @@ public:
         serializer(damping_factor_);
         serializer(use_free_gas);
         serializer(default_model);
-        alpha.serializeOp(serializer);
-        beta.serializeOp(serializer);
-        gamma.serializeOp(serializer);
+        serializer(alpha);
+        serializer(beta);
+        serializer(gamma);
     }
 
 private:
