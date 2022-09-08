@@ -96,8 +96,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         ACTNETWRK = 74, //  Indicator for active external network (= 0: no active network, = 2 Active network)
 
-        NETBALAN_5 = 77, // NETBALAN, Item5
-        NETBALAN_3 = 79, // NETBALAN, Item3
+        NetbalMaxTHPIter = 77, // Maximum number of iterations in THP calculations
+                               // for manifold groups under rate control (NETBALAN(5))
+        NetbalMaxBalanceIter = 79, // Maximum number of network balance iterations (NETBALAN(3))
 
         NEWTMX = 80, // Tuning, Record3, Item1
         NEWTMN = 81, // Tuning, Record3, Item2

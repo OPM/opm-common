@@ -74,7 +74,6 @@ namespace {
     {
         return Opm::UDQ::updateType(iudq[udq_index * Opm::UDQDims::entriesPerIUDQ()]);
     }
-
 }
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
@@ -82,11 +81,12 @@ namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 namespace Opm { namespace RestartIO {
 
 RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
-                   const Runspec& runspec,
+                   const Runspec&                          runspec,
                    const ::Opm::EclipseGrid*               grid)
     : unit_system(rstView->intehead()[VI::intehead::UNIT])
     , header(runspec, unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead())
     , aquifers(rstView, grid, unit_system)
+    , netbalan(rstView->intehead(), rstView->doubhead(), unit_system)
     , network(rstView, unit_system)
 {
     this->load_tuning(rstView->intehead(), rstView->doubhead());
@@ -292,17 +292,6 @@ void RstState::add_udqs(const std::vector<int>& iudq,
     }
 }
 
-std::string oper_string(Action::Logical logic) {
-    if (logic == Action::Logical::AND)
-        return "AND";
-
-    if (logic == Action::Logical::OR)
-        return "OR";
-
-    return "";
-}
-
-
 void RstState::add_actions(const Parser& parser,
                            const Runspec& runspec,
                            std::time_t sim_time,
@@ -408,8 +397,8 @@ const RstWell& RstState::get_well(const std::string& wname) const {
 }
 
 RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
-                        const Runspec& runspec,
-                        const Parser& parser,
+                        const Runspec&                          runspec,
+                        const Parser&                           parser,
                         const ::Opm::EclipseGrid*               grid)
 {
     RstState state(rstView, runspec, grid);

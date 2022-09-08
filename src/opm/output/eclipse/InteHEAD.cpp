@@ -126,10 +126,10 @@ enum index : std::vector<int>::size_type {
   ACTIVENETWRK =       VI::intehead::ACTNETWRK,  // Indicator for active external network (= 0: no active network, = 2 Active network)
   ih_075       =       75       ,              //       0       0
   ih_076       =       76       ,              //       0       0       2
-  NETBALAN_5   =       VI::intehead::NETBALAN_5, // NETBALAN item 5 - Maximum number of iterations allowed in the calculation of the THP
+  NETBALAN_5   =       VI::intehead::NetbalMaxTHPIter, // NETBALAN item 5 - Maximum number of iterations allowed in the calculation of the THP
                                                  //  for manifold groups under rate control (ECLIPSE 100).
   ih_078       =       78       ,              //       0       0
-  NETBALAN_3   =       VI::intehead::NETBALAN_3, // NETBALAN item 3 - Maximum number of iterations allowed in the network balancing calculation
+  NETBALAN_3   =       VI::intehead::NetbalMaxBalanceIter, // NETBALAN item 3 - Maximum number of iterations allowed in the network balancing calculation
   NEWTMX       =       VI::intehead::NEWTMX,   //       0       0       Tuning,Record3,Item1
   NEWTMN       =       VI::intehead::NEWTMN,   //       0       0       Tuning,Record3,Item2
   LITMAX       =       VI::intehead::LITMAX,   //       0       0       Tuning,Record3,Item3
@@ -828,7 +828,7 @@ Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::netBalanceData(const NetBalanceDims& nwbaldim)
 {
     this->data_[NETBALAN_3] = nwbaldim.maxNoIterationsNBC;
-    this->data_[NETBALAN_5]  = nwbaldim.maxNoIterationsTHP;
+    this->data_[NETBALAN_5] = nwbaldim.maxNoIterationsTHP;
 
     return *this;
 }

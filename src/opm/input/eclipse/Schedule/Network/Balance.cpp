@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 
+#include <opm/io/eclipse/rst/netbalan.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
@@ -116,6 +118,18 @@ Balance::Balance(const bool network_active)
         this->m_pressure_max_iter = 0;
     }
 }
+
+Balance::Balance(const RestartIO::RstNetbalan& netbalan)
+    : calc_mode                  (getNetworkBalancingMode(netbalan.interval()))
+    , calc_interval              (netbalan.interval())
+    , ptol                       (netbalan.pressureTolerance())
+    , m_pressure_max_iter        (netbalan.pressureMaxIter())
+    , m_thp_tolerance            (netbalan.thpTolerance())
+    , m_thp_max_iter             (netbalan.thpMaxIter())
+    , target_branch_balance_error(netbalan.targetBalanceError())
+    , max_branch_balance_error   (netbalan.maxBalanceError())
+    , m_min_tstep                (netbalan.minTstep())
+{}
 
 Balance::CalcMode Balance::mode() const {
     return this->calc_mode;
