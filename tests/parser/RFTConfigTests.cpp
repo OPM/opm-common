@@ -22,16 +22,18 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <cstddef>
+#include <memory>
 #include <string>
 
 namespace {
@@ -40,14 +42,12 @@ namespace {
         Setup(const ::Opm::Deck& deck);
 
         ::Opm::EclipseState es;
-        std::shared_ptr<::Opm::Python> python;
         ::Opm::Schedule     sched;
     };
 
     Setup::Setup(const ::Opm::Deck& deck)
         : es   (deck)
-        , python(std::make_shared<::Opm::Python>() )
-        , sched(deck, es, python)
+        , sched(deck, es, std::make_shared<Opm::Python>())
     {}
 
     Setup parseDeckString(const std::string& input)
@@ -165,7 +165,6 @@ TSTEP
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(Simple)
 {
     const auto cse = parseDeckString(basesetup_5x5x5() + simple_tstep_all_open());
@@ -193,7 +192,6 @@ BOOST_AUTO_TEST_CASE(Simple_Deferred_Open)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // No_RFT_Keywords
-
 
 // =====================================================================
 
@@ -320,9 +318,6 @@ BOOST_AUTO_TEST_CASE(Simple)
     BOOST_CHECK_MESSAGE(!sched[9].rft_config().active(), "RFT Config must be Inactive at Step 9");
 }
 
-
-
-
 BOOST_AUTO_TEST_CASE(Deferred_Open)
 {
     const auto cse = parseDeckString(basesetup_5x5x5() + simple_tstep_deferred_open());
@@ -374,6 +369,7 @@ BOOST_AUTO_TEST_CASE(Deferred_Open)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // WRFT
+
 // =====================================================================
 
 BOOST_AUTO_TEST_SUITE(WRFTPLT)
@@ -507,8 +503,6 @@ TSTEP
     }
 }
 
-
-
 BOOST_AUTO_TEST_CASE(All_Open)
 {
     const auto cse = parseDeckString(basesetup_5x5x5() + simple_tstep_all_open());
@@ -600,8 +594,6 @@ BOOST_AUTO_TEST_CASE(All_Open)
     BOOST_CHECK_MESSAGE( sched[14].rft_config().active(), R"(RFT Config must be Active at Step 14)");
     BOOST_CHECK_MESSAGE( sched[15].rft_config().active(), R"(RFT Config must be Active at Step 15)");
 }
-
-
 
 BOOST_AUTO_TEST_CASE(Deferred_Open)
 {
@@ -715,7 +707,7 @@ BOOST_AUTO_TEST_CASE(Deferred_Open)
     BOOST_CHECK_MESSAGE(!sched[14].rft_config().rft("P2"), R"(Should NOT Output RFT Data for "P2" at Step 14)");
     BOOST_CHECK_MESSAGE(!sched[15].rft_config().rft("P2"), R"(Should NOT Output RFT Data for "P2" at Step 15)");
 
-    // NOTE: Not at FOPN becaus17e P2 was not declared at WRFTPLT:FOPN time.
+    // NOTE: Not at FOPN because P2 was not declared at WRFTPLT:FOPN time.
     BOOST_CHECK_MESSAGE(!sched[16].rft_config().rft("P2"), R"(Should NOT Output RFT Data for "P2" at Step 16)");
 
     BOOST_CHECK_MESSAGE(!sched[17].rft_config().rft("P2"), R"(Should NOT Output RFT Data for "P2" at Step 17)");
@@ -768,7 +760,4 @@ BOOST_AUTO_TEST_CASE(Deferred_Open)
     BOOST_CHECK_MESSAGE( sched[20].rft_config().active(), R"(RFT Config must be Active at Step 15)");
 }
 
-
-
 BOOST_AUTO_TEST_SUITE_END() // WRFTPLT
-

@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef CONNECTIONSET_HPP_
 #define CONNECTIONSET_HPP_
 
@@ -25,6 +24,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include <stddef.h>
@@ -36,55 +36,59 @@ namespace Opm {
     class KeywordLocation;
     class ScheduleGrid;
     class EclipseGrid;
+} // namespace Opm
 
-    class WellConnections {
+namespace Opm {
+
+    class WellConnections
+    {
     public:
+        using const_iterator = std::vector<Connection>::const_iterator;
 
-
-        WellConnections();
-        WellConnections(Connection::Order ordering, int headI, int headJ);
-        WellConnections(Connection::Order ordering, int headI, int headJ,
+        WellConnections() = default;
+        WellConnections(const Connection::Order ordering, const int headI, const int headJ);
+        WellConnections(const Connection::Order ordering, const int headI, const int headJ,
                         const std::vector<Connection>& connections);
 
         static WellConnections serializeObject();
 
         // cppcheck-suppress noExplicitConstructor
-        template<class Grid>
-        WellConnections(const WellConnections& src, const Grid& grid) :
-            m_ordering(src.ordering()),
-            headI(src.headI),
-            headJ(src.headJ)
+        template <class Grid>
+        WellConnections(const WellConnections& src, const Grid& grid)
+            : m_ordering(src.ordering())
+            , headI     (src.headI)
+            , headJ     (src.headJ)
         {
             for (const auto& c : src) {
-                if (grid.isCellActive(c.getI(), c.getJ(), c.getK()))
+                if (grid.isCellActive(c.getI(), c.getJ(), c.getK())) {
                     this->add(c);
+                }
             }
         }
 
-
-
-
-        void addConnection(int i, int j , int k ,
-                           std::size_t global_index,
-                           double depth,
-                           Connection::State state ,
-                           double CF,
-                           double Kh,
-                           double rw,
-                           double r0,
-                           double re,
-                           double connection_length,
-                           double skin_factor,
+        void addConnection(const int i, const int j, const int k,
+                           const std::size_t global_index,
+                           const double depth,
+                           const Connection::State state,
+                           const double CF,
+                           const double Kh,
+                           const double rw,
+                           const double r0,
+                           const double re,
+                           const double connection_length,
+                           const double skin_factor,
                            const int satTableId,
                            const Connection::Direction direction = Connection::Direction::Z,
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
                            const std::size_t seqIndex = 0,
                            const bool defaultSatTabId = true);
-        void loadCOMPDAT(const DeckRecord& record, const ScheduleGrid& grid, const std::string& wname, const KeywordLocation& location);
 
-        using const_iterator = std::vector< Connection >::const_iterator;
+        void loadCOMPDAT(const DeckRecord&      record,
+                         const ScheduleGrid&    grid,
+                         const std::string&     wname,
+                         const KeywordLocation& location);
 
-        void add( Connection );
+        void add(Connection);
         std::size_t size() const;
         bool empty() const;
         std::size_t num_open() const;
@@ -141,28 +145,33 @@ namespace Opm {
         void applyWellPIScaling(const double       scaleFactor,
                                 std::vector<bool>& scalingApplicable);
 
-        template<class Serializer>
+        template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(m_ordering);
-            serializer(headI);
-            serializer(headJ);
-            serializer.vector(m_connections);
+            serializer(this->m_ordering);
+            serializer(this->headI);
+            serializer(this->headJ);
+            serializer.vector(this->m_connections);
         }
 
     private:
-        void addConnection(int i, int j , int k ,
-                           std::size_t global_index,
-                           int complnum,
-                           double depth,
-                           Connection::State state ,
-                           double CF,
-                           double Kh,
-                           double rw,
-                           double r0,
-                           double re,
-                           double connection_length,
-                           double skin_factor,
+        Connection::Order m_ordering { Connection::Order::TRACK };
+        int headI{0};
+        int headJ{0};
+        std::vector<Connection> m_connections{};
+
+        void addConnection(const int i, const int j, const int k,
+                           const std::size_t global_index,
+                           const int complnum,
+                           const double depth,
+                           const Connection::State state,
+                           const double CF,
+                           const double Kh,
+                           const double rw,
+                           const double r0,
+                           const double re,
+                           const double connection_length,
+                           const double skin_factor,
                            const int satTableId,
                            const Connection::Direction direction = Connection::Direction::Z,
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
@@ -173,17 +182,11 @@ namespace Opm {
         void orderTRACK();
         void orderMSW();
         void orderDEPTH();
-
-        Connection::Order m_ordering = Connection::Order::TRACK;
-        int headI, headJ;
-        std::vector< Connection > m_connections;
     };
 
     std::optional<int>
     getCompletionNumberFromGlobalConnectionIndex(const WellConnections& connections,
                                                  const std::size_t      global_index);
-}
+} // namespace Opm
 
-
-
-#endif
+#endif // CONNECTIONSET_HPP_

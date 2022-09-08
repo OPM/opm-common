@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2019 Equinor ASA
+  Copyright (c) 2019, 2022 Equinor ASA
   Copyright (c) 2016 Statoil ASA
   Copyright (c) 2013-2015 Andreas Lauser
   Copyright (c) 2013 SINTEF ICT, Applied Mathematics.
@@ -34,13 +34,17 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -156,32 +160,21 @@ namespace {
         }
     } // namespace RftUnits
 
-    class WellRFT
+    // =======================================================================
+
+    class RFTRecord
     {
     public:
-        explicit WellRFT(const std::size_t nconn = 0);
+        explicit RFTRecord(const std::size_t nconn = 0);
 
-        void add(const ::Opm::UnitSystem&       usys,
-                 const ::Opm::Connection&       conn,
-                 const ::Opm::data::Connection& xcon,
-                 const double                   depth);
+        void collectRecordData(const ::Opm::UnitSystem&  usys,
+                               const ::Opm::EclipseGrid& grid,
+                               const ::Opm::Well&        well,
+                               const ::Opm::data::Well&  wellSol);
 
         std::size_t nConn() const { return this->i_.size(); }
 
-        const std::vector<int>& conI() const { return this->i_; }
-        const std::vector<int>& conJ() const { return this->j_; }
-        const std::vector<int>& conK() const { return this->k_; }
-
-        const std::vector<float>& depth()    const { return this->depth_; }
-        const std::vector<float>& pressure() const { return this->press_; }
-        const std::vector<float>& swat()     const { return this->swat_; }
-        const std::vector<float>& sgas()     const { return this->sgas_; }
-
-        const std::vector<Opm::EclIO::PaddedOutputString<8>>&
-        hostgrid() const
-        {
-            return this->host_;
-        }
+        void write(::Opm::EclIO::OutputStream::RFT& rftFile) const;
 
     private:
         std::vector<int> i_;
@@ -194,9 +187,14 @@ namespace {
         std::vector<float> sgas_;
 
         std::vector<Opm::EclIO::PaddedOutputString<8>> host_;
+
+        void addConnection(const ::Opm::UnitSystem&       usys,
+                           const ::Opm::Connection&       conn,
+                           const ::Opm::data::Connection& xcon,
+                           const double                   depth);
     };
 
-    WellRFT::WellRFT(const std::size_t nconn)
+    RFTRecord::RFTRecord(const std::size_t nconn)
     {
         if (nconn == 0) { return; }
 
@@ -212,10 +210,54 @@ namespace {
         this->host_.reserve(nconn);
     }
 
-    void WellRFT::add(const ::Opm::UnitSystem&       usys,
-                      const ::Opm::Connection&       conn,
-                      const ::Opm::data::Connection& xcon,
-                      const double                   depth)
+    void RFTRecord::collectRecordData(const ::Opm::UnitSystem&  usys,
+                                      const ::Opm::EclipseGrid& grid,
+                                      const ::Opm::Well&        well,
+                                      const ::Opm::data::Well&  wellSol)
+    {
+        const auto& xcon = wellSol.connections;
+
+        for (const auto& connection : well.getConnections()) {
+            const auto ix = connection.global_index();
+
+            if (! grid.cellActive(ix)) {
+                // Inactive cell.  Ignore.
+                continue;
+            }
+
+            auto xconPos = std::find_if(xcon.begin(), xcon.end(),
+                [ix](const ::Opm::data::Connection& c)
+            {
+                return c.index == ix;
+            });
+
+            if (xconPos == xcon.end()) {
+                // RFT data not available for this connection.  Unexpected.
+                continue;
+            }
+
+            this->addConnection(usys, connection, *xconPos, grid.getCellDepth(ix));
+        }
+    }
+
+    void RFTRecord::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
+    {
+        rftFile.write("CONIPOS", this->i_);
+        rftFile.write("CONJPOS", this->j_);
+        rftFile.write("CONKPOS", this->k_);
+
+        rftFile.write("HOSTGRID", this->host_);
+
+        rftFile.write("DEPTH"   , this->depth_);
+        rftFile.write("PRESSURE", this->press_);
+        rftFile.write("SWAT"    , this->swat_);
+        rftFile.write("SGAS"    , this->sgas_);
+    }
+
+    void RFTRecord::addConnection(const ::Opm::UnitSystem&       usys,
+                                  const ::Opm::Connection&       conn,
+                                  const ::Opm::data::Connection& xcon,
+                                  const double                   depth)
     {
         this->i_.push_back(conn.getI() + 1);
         this->j_.push_back(conn.getJ() + 1);
@@ -236,48 +278,158 @@ namespace {
         this->host_.emplace_back();
     }
 
-    WellRFT
-    createWellRFT(const int                                 reportStep,
-                  const std::string&                        wname,
-                  const ::Opm::UnitSystem&                  usys,
-                  const ::Opm::EclipseGrid&                 grid,
-                  const ::Opm::Schedule&                    sched,
-                  const std::vector<Opm::data::Connection>& xcon)
+    // =======================================================================
+
+    class WellRFTOutputData
     {
-        auto rft = WellRFT{ xcon.size() };
+    public:
+        enum class DataTypes {
+            RFT,
+        };
 
-        for (const auto& conn : sched.getWell(wname, reportStep).getConnections()) {
-            const auto i = static_cast<std::size_t>(conn.getI());
-            const auto j = static_cast<std::size_t>(conn.getJ());
-            const auto k = static_cast<std::size_t>(conn.getK());
+        explicit WellRFTOutputData(const std::vector<DataTypes>&                types,
+                                   const double                                 elapsed,
+                                   const ::Opm::RestartIO::InteHEAD::TimePoint& timePoint,
+                                   const ::Opm::UnitSystem&                     usys,
+                                   const ::Opm::EclipseGrid&                    grid,
+                                   const ::Opm::Well&                           well);
 
-            if (! grid.cellActive(i, j, k)) {
-                // Inactive cell.  Ignore.
+        void addDynamicData(const Opm::data::Well& wellSol);
+
+        void write(::Opm::EclIO::OutputStream::RFT& rftFile) const;
+
+    private:
+        using DataHandler = std::function<
+            void(const Opm::data::Well& wellSol)
+        >;
+
+        using RecordWriter = std::function<
+            void(::Opm::EclIO::OutputStream::RFT& rftFile)
+        >;
+
+        using CreateTypeHandler = void (WellRFTOutputData::*)();
+
+        std::reference_wrapper<const Opm::UnitSystem>  usys_;
+        std::reference_wrapper<const Opm::EclipseGrid> grid_;
+        std::reference_wrapper<const Opm::Well>        well_;
+        double                                         elapsed_{};
+        Opm::RestartIO::InteHEAD::TimePoint            timeStamp_{};
+
+        std::optional<RFTRecord> rft_{};
+
+        std::vector<DataHandler>  dataHandlers_{};
+        std::vector<RecordWriter> recordWriters_{};
+
+        static std::map<DataTypes, CreateTypeHandler> creators_;
+
+        void initialiseRFTHandlers();
+        bool haveOutputData() const;
+        bool haveRFTData() const;
+
+        void writeHeader(::Opm::EclIO::OutputStream::RFT& rftFile) const;
+
+        std::vector<Opm::EclIO::PaddedOutputString<8>> wellETC() const;
+        std::string dataTypeString() const;
+        std::string wellTypeString() const;
+    };
+
+    WellRFTOutputData::WellRFTOutputData(const std::vector<DataTypes>&                types,
+                                         const double                                 elapsed,
+                                         const ::Opm::RestartIO::InteHEAD::TimePoint& timeStamp,
+                                         const ::Opm::UnitSystem&                     usys,
+                                         const ::Opm::EclipseGrid&                    grid,
+                                         const ::Opm::Well&                           well)
+        : usys_     { std::cref(usys) }
+        , grid_     { std::cref(grid) }
+        , well_     { std::cref(well) }
+        , elapsed_  { elapsed         }
+        , timeStamp_{ timeStamp       }
+    {
+        for (const auto& type : types) {
+            auto handler = creators_.find(type);
+            if (handler == creators_.end()) {
                 continue;
             }
 
-            const auto ix = grid.getGlobalIndex(i, j, k);
-            auto xconPos = std::find_if(xcon.begin(), xcon.end(),
-                [ix](const ::Opm::data::Connection& c)
-            {
-                return c.index == ix;
-            });
+            (this->*handler->second)();
+        }
+    }
 
-            if (xconPos == xcon.end()) {
-                // RFT data not available for this connection.  Unexpected.
-                continue;
-            }
+    bool WellRFTOutputData::haveOutputData() const
+    {
+        return this->haveRFTData();
+    }
 
-            rft.add(usys, conn, *xconPos, grid.getCellDepth(ix));
+    void WellRFTOutputData::addDynamicData(const Opm::data::Well& wellSol)
+    {
+        for (const auto& handler : this->dataHandlers_) {
+            handler(wellSol);
+        }
+    }
+
+    void WellRFTOutputData::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
+    {
+        if (! this->haveOutputData()) {
+            return;
         }
 
-        return rft;
+        this->writeHeader(rftFile);
+
+        for (const auto& recordWriter : this->recordWriters_) {
+            recordWriter(rftFile);
+        }
+    }
+
+    void WellRFTOutputData::initialiseRFTHandlers()
+    {
+        if (this->well_.get().getConnections().empty()) {
+            return;
+        }
+
+        this->rft_ = RFTRecord{ this->well_.get().getConnections().size() };
+
+        this->dataHandlers_.emplace_back(
+            [this](const Opm::data::Well& wellSol)
+        {
+            this->rft_->collectRecordData(this->usys_, this->grid_,
+                                          this->well_, wellSol);
+        });
+
+        this->recordWriters_.emplace_back(
+            [this](::Opm::EclIO::OutputStream::RFT& rftFile)
+        {
+            this->rft_->write(rftFile);
+        });
+    }
+
+    bool WellRFTOutputData::haveRFTData() const
+    {
+        return this->rft_.has_value()
+            && (this->rft_->nConn() > std::size_t{0});
+    }
+
+    void WellRFTOutputData::writeHeader(::Opm::EclIO::OutputStream::RFT& rftFile) const
+    {
+        {
+            const auto time = this->usys_.get()
+                .from_si(::Opm::UnitSystem::measure::time, this->elapsed_);
+
+            rftFile.write("TIME", std::vector<float> {
+                static_cast<float>(time)
+            });
+        }
+
+        rftFile.write("DATE", std::vector<int> {
+                this->timeStamp_.day,   // 1..31
+                this->timeStamp_.month, // 1..12
+                this->timeStamp_.year,
+            });
+
+        rftFile.write("WELLETC", this->wellETC());
     }
 
     std::vector<Opm::EclIO::PaddedOutputString<8>>
-    wellETC(const std::string&       wellName,
-            const std::string&       dataType,
-            const ::Opm::UnitSystem& usys)
+    WellRFTOutputData::wellETC() const
     {
         using UT = ::Opm::UnitSystem::UnitType;
         auto ret = std::vector<Opm::EclIO::PaddedOutputString<8>>(16);
@@ -285,17 +437,17 @@ namespace {
         // Note: ret[etcIx::LGR] is well's LGR.  Default constructed
         // (i.e., blank) string is sufficient to represent no LGR.
 
-        ret[etcIx::Well] = wellName;
+        ret[etcIx::Well] = this->well_.get().name();
 
-          // 'P' -> PLT, 'R' -> RFT, 'S' -> Segment
-        ret[etcIx::DataType] = dataType;
+        // 'P' -> PLT, 'R' -> RFT, 'S' -> Segment
+        ret[etcIx::DataType] = this->dataTypeString();
 
-        // We support "standard" well type only.
-        ret[etcIx::WellType] = "STANDARD";
+        // STANDARD or MULTISEG only.
+        ret[etcIx::WellType] = this->wellTypeString();
 
-        RftUnits::fill(usys, ret);
+        RftUnits::fill(this->usys_, ret);
 
-        switch (usys.getType()) {
+        switch (this->usys_.get().getType()) {
         case UT::UNIT_TYPE_METRIC:
             RftUnits::exceptions::metric(ret);
             break;
@@ -320,67 +472,28 @@ namespace {
         return ret;
     }
 
-    void writeWellHeader(const double                     elapsed,
-                         const std::string&               wellName,
-                         const ::Opm::Schedule&           sched,
-                         const ::Opm::UnitSystem&         usys,
-                         ::Opm::EclIO::OutputStream::RFT& rftFile)
+    std::string WellRFTOutputData::dataTypeString() const
     {
-        {
-            const auto time =
-                usys.from_si(::Opm::UnitSystem::measure::time, elapsed);
+        auto tstring = std::string{};
+        if (this->haveRFTData()) { tstring += 'R';}
 
-            rftFile.write("TIME", std::vector<float> {
-                static_cast<float>(time)
-            });
-        }
-
-        {
-            const auto timePoint = ::Opm::RestartIO::
-                getSimulationTimePoint(sched.getStartTime(), elapsed);
-
-            rftFile.write("DATE", std::vector<int> {
-                timePoint.day,   // 1..31
-                timePoint.month, // 1..12
-                timePoint.year,
-            });
-        }
-
-        rftFile.write("WELLETC", wellETC(wellName, "R", usys));
+        return tstring;
     }
 
-    void write(const WellRFT& rft, ::Opm::EclIO::OutputStream::RFT& rftFile)
+    std::string WellRFTOutputData::wellTypeString() const
     {
-        rftFile.write("CONIPOS", rft.conI());
-        rftFile.write("CONJPOS", rft.conJ());
-        rftFile.write("CONKPOS", rft.conK());
-
-        rftFile.write("HOSTGRID", rft.hostgrid());
-
-        rftFile.write("DEPTH"   , rft.depth());
-        rftFile.write("PRESSURE", rft.pressure());
-        rftFile.write("SWAT"    , rft.swat());
-        rftFile.write("SGAS"    , rft.sgas());
+        return this->well_.get().isMultiSegment()
+            ? "MULTISEG"
+            : "STANDARD";
     }
 
-    void writeWellRFT(const int                                 reportStep,
-                      const double                              elapsed,
-                      const std::string&                        wname,
-                      const ::Opm::UnitSystem&                  usys,
-                      const ::Opm::EclipseGrid&                 grid,
-                      const ::Opm::Schedule&                    sched,
-                      const std::vector<Opm::data::Connection>& xcon,
-                      ::Opm::EclIO::OutputStream::RFT&          rftFile)
-    {
-        const auto rft =
-            createWellRFT(reportStep, wname, usys, grid, sched, xcon);
-
-        if (rft.nConn() > std::size_t{0}) {
-            writeWellHeader(elapsed, wname, sched, usys, rftFile);
-            write(rft, rftFile);
-        }
-    }
+    std::map<WellRFTOutputData::DataTypes, WellRFTOutputData::CreateTypeHandler>
+    WellRFTOutputData::creators_{
+        { WellRFTOutputData::DataTypes::RFT, &WellRFTOutputData::initialiseRFTHandlers },
+    };
 } // Anonymous namespace
+
+// ===========================================================================
 
 void Opm::RftIO::write(const int                        reportStep,
                        const double                     elapsed,
@@ -396,17 +509,39 @@ void Opm::RftIO::write(const int                        reportStep,
         return;
     }
 
+    const auto timePoint = ::Opm::RestartIO::
+        getSimulationTimePoint(schedule.getStartTime(), elapsed);
+
     for (const auto& wname : schedule.wellNames(reportStep)) {
-        if (! (rftCfg.rft(wname) ||
-               rftCfg.plt(wname)))
-        {
+        auto rftTypes = std::vector<WellRFTOutputData::DataTypes>{};
+
+        if (rftCfg.rft(wname) || rftCfg.plt(wname)) {
+            rftTypes.push_back(WellRFTOutputData::DataTypes::RFT);
+        }
+
+        if (rftTypes.empty()) {
             // RFT output not requested for 'wname' at this time.
             continue;
         }
 
-        // RFT output requested for 'wname' at this time.
-        writeWellRFT(reportStep, elapsed, wname, usys, grid,
-                     schedule, wellSol.at(wname).connections,
-                     rftFile);
+        auto xwPos = wellSol.find(wname);
+        if (xwPos == wellSol.end()) {
+            // No dynamic data available for 'wname' at this time.
+            continue;
+        }
+
+        // RFT output requested for 'wname' at this time and dynamic data is
+        // available.  Collect requisite information.
+        auto rftOutput = WellRFTOutputData {
+            rftTypes, elapsed, timePoint, usys, grid,
+            schedule[reportStep].wells(wname)
+        };
+
+        rftOutput.addDynamicData(xwPos->second);
+
+        // Emit RFT record for 'wname'.  This transparently handles wells
+        // without connections--e.g., if the well is only connected in
+        // inactive/deactivated cells.
+        rftOutput.write(rftFile);
     }
 }
