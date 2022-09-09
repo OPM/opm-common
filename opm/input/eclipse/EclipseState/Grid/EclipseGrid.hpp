@@ -60,7 +60,6 @@ namespace Opm {
           These constructors will make a copy of the src grid, with
           zcorn and or actnum have been adjustments.
         */
-        EclipseGrid(const EclipseGrid& src) = default;
         EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum);
         EclipseGrid(const EclipseGrid& src, const double* zcorn, const std::vector<int>& actnum);
 
