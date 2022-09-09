@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(Python_Constructor) {
     BOOST_CHECK(python_on.enabled());
 
     //.enabled() Can only have one Python interpreter active at any time
-    BOOST_CHECK_THROW(Python(Python::Enable::ON), std::logic_error);
+    BOOST_CHECK_THROW(Python python_throw(Python::Enable::ON), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(Python_Constructor2) {
