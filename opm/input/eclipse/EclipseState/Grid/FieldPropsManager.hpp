@@ -43,6 +43,8 @@ public:
     // The default constructed fieldProps object is **NOT** usable
     FieldPropsManager() = default;
     FieldPropsManager(const Deck& deck, const Phases& ph, const EclipseGrid& grid, const TableManager& tables);
+    virtual ~FieldPropsManager() = default;
+
     virtual void reset_actnum(const std::vector<int>& actnum);
     const std::string& default_region() const;
     virtual std::vector<int> actnum() const;

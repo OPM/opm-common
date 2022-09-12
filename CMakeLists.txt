@@ -163,6 +163,14 @@ macro (install_hook)
           PATTERN *.hpp)
 endmacro (install_hook)
 
+# Used to append entries from one list to another.
+# The output list is suitable for use in setup.py subtitution
+macro(append_quoted OUT IN)
+  foreach(ENTRY ${${IN}})
+    list(APPEND ${OUT} "'${ARGN}${ENTRY}'")
+  endforeach()
+endmacro()
+
 # If opm-common is configured to embed the python interpreter we must make sure
 # that all downstream modules link libpython transitively. Due to the required
 # integration with Python+cmake machinery provided by pybind11 this is done by
@@ -385,33 +393,37 @@ if (OPM_ENABLE_PYTHON)
   endif()
 
   set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
+  set(SETUP_PY_FLAGS "'-std=c++17'")
 
   # Generate versioned setup.py
   if (pybind11_INCLUDE_DIRS)
-    string(REGEX REPLACE ";" "', '"  _tmp "${pybind11_INCLUDE_DIRS}")
-    set(SETUP_PY_PYBIND_INCLUDE_DIR "'${_tmp}'")
+    append_quoted(SETUP_PY_INCLUDE_DIRS pybind11_INCLUDE_DIRS)
   endif()
 
   if (TARGET fmt::fmt)
      get_target_property(SETUP_PY_FMT_LIBS fmt::fmt LOCATION)
      get_target_property(FMT_FLAGS fmt::fmt INTERFACE_COMPILE_DEFINITIONS)
-     foreach(flag ${FMT_FLAGS})
-       set(SETUP_PY_FMT_FLAGS "${SETUP_PY_FMT_FLAGS} '-D${flag}',")
-     endforeach()
-     list(APPEND opm-common_PYTHON_LINKAGE "'${SETUP_PY_FMT_LIBS}'")
+     append_quoted(SETUP_PY_FLAGS FMT_FLAGS "-D")
+     append_quoted(opm-common_PYTHON_LINKAGE SETUP_PY_FMT_LIBS)
   else()
-    set(SETUP_PY_FMT_FLAGS "'-DFMT_HEADER_ONLY'")
+    list(APPEND SETUP_PY_FLAGS "'-DFMT_HEADER_ONLY'")
   endif()
 
   if(cjson_FOUND)
-    list(APPEND opm-common_PYTHON_LINKAGE "'${cjson_LIBRARIES}'")
+    append_quoted(opm-common_PYTHON_LINKAGE cjson_LIBRARIES)
+    append_quoted(SETUP_PY_INCLUDE_DIRS cjson_INCLUDE_DIRS)
   endif()
 
-  # opm-common_PYTHON_LINKAGE is used verbatim in a listin python.
-  # Hence items need to be comma separated.
-  if (opm-common_PYTHON_LINKAGE)
-    string(REPLACE ";" "," SETUP_PY_LINKAGE "${opm-common_PYTHON_LINKAGE}")
+  if(OpenMP_FOUND)
+    append_quoted(opm-common_PYTHON_LINKAGE OpenMP_CXX_LIBRARIES)
+    append_quoted(SETUP_PY_FLAGS OpenMP_CXX_FLAGS)
+    append_quoted(SETUP_PY_INCLUDE_DIRS OpenMP_CXX_INCLUDE_DIRS)
   endif()
+
+  # Items need to be comma separated for setup.py generation
+  string(REPLACE ";" "," SETUP_PY_LINKAGE "${opm-common_PYTHON_LINKAGE}")
+  string(REPLACE ";" "," SETUP_PY_FLAGS "${SETUP_PY_FLAGS}")
+  string(REPLACE ";" "," SETUP_PY_INCLUDE_DIRS "${SETUP_PY_INCLUDE_DIRS}")
 
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
   file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
