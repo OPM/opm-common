@@ -108,6 +108,16 @@ public:
     { return 38.2e-3; /* [mol/cm^3] */ }
 
     /*!
+     * \brief Critical volume of \f$H_2\f$ [m2/kmol].
+     */
+    static Scalar criticalVolume() {return 6.45e-2; }
+
+    /*!
+     * \brief Acentric factor of \f$H_2\f$.
+     */
+    static Scalar acentricFactor() { return -0.22; }
+
+    /*!
     * \brief The vapor pressure in \f$\mathrm{[Pa]}\f$ of pure molecular hydrogen
     *        at a given temperature.
     *
