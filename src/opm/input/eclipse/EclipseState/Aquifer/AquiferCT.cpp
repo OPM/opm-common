@@ -61,6 +61,7 @@ namespace {
         aquifer.thickness        = rst_aquifer.thickness;
         aquifer.angle_fraction   = rst_aquifer.angle_fraction;
         aquifer.initial_pressure = rst_aquifer.initial_pressure;
+        //aquifer.initial_temperature = rst_aquifer.initial_temperature;
 
         return aquifer;
     }

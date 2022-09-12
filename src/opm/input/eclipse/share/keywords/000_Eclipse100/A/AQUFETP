@@ -58,8 +58,7 @@
       "item": 9,
       "name": "TEMP",
       "value_type": "DOUBLE",
-      "dimension": "Temperature",
-      "comment": "Not supported"
+      "dimension": "Temperature"
     }
   ]
 }

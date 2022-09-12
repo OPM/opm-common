@@ -306,6 +306,7 @@ AQUTAB
         const auto compr           = 1.5312e-4*compressibilityUnit();
         const auto datumDepth      = 2000.0*depthUnit();
         const auto initialPressure = 250.0*pressureUnit();
+        const auto initialTemperature = 20*temperatureUnit();
 
         auto properties = std::vector<Opm::Aquifetp::AQUFETP_data>{};
 
@@ -317,7 +318,7 @@ AQUTAB
 
             auto& fetp = properties
                 .emplace_back(aquiferID, pvtTable, prodIndex, compr,
-                              initialVolume, datumDepth, initialPressure);
+                              initialVolume, datumDepth, initialPressure, initialTemperature);
 
             fetp.finishInitialisation(waterProperties());
         }
@@ -330,7 +331,7 @@ AQUTAB
 
             auto& fetp = properties
                 .emplace_back(aquiferID, pvtTable, prodIndex, compr,
-                              initialVolume, datumDepth, initialPressure);
+                              initialVolume, datumDepth, initialPressure, initialTemperature);
 
             fetp.finishInitialisation(waterProperties());
         }

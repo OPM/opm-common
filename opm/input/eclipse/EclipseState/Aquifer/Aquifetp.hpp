@@ -57,7 +57,8 @@ class Aquifetp {
                      const double C_t_,
                      const double V0_,
                      const double d0_,
-                     const double p0_);
+                     const double p0_,
+                     const double t0_);
 
         int aquiferID{};
         int pvttableID{};
@@ -68,6 +69,7 @@ class Aquifetp {
         double datum_depth{};
 
         std::optional<double> initial_pressure{};
+        std::optional<double> initial_temperature{};
 
         static AQUFETP_data serializeObject();
 
@@ -89,6 +91,7 @@ class Aquifetp {
             serializer(this->initial_watvolume);
             serializer(this->datum_depth);
             serializer(this->initial_pressure);
+            serializer(this->initial_temperature);
             serializer(this->time_constant_);
             serializer(this->water_density_);
             serializer(this->water_viscosity_);

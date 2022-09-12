@@ -48,6 +48,7 @@ namespace {
         aquifer.initial_watvolume = rst_aquifer.initial_watvolume;
         aquifer.datum_depth       = rst_aquifer.datum_depth;
         aquifer.initial_pressure  = rst_aquifer.initial_pressure;
+        //aquifer.initial_temperature = rst_aquifer.initial_temperature;
 
         return aquifer;
     }
@@ -68,6 +69,9 @@ Aquifetp::AQUFETP_data::AQUFETP_data(const DeckRecord& record, const TableManage
     if (record.getItem<AQUFETP::P0>().hasValue(0))
         this->initial_pressure = record.getItem<AQUFETP::P0>().getSIDouble(0);
 
+    if (record.getItem<AQUFETP::TEMP>().hasValue(0))
+        this->initial_temperature = record.getItem<AQUFETP::TEMP>().getSIDouble(0);
+
     this->finishInitialisation(tables);
 }
 
@@ -80,6 +84,7 @@ bool Aquifetp::AQUFETP_data::operator==(const Aquifetp::AQUFETP_data& other) con
         && (this->initial_watvolume == other.initial_watvolume)
         && (this->datum_depth == other.datum_depth)
         && (this->initial_pressure == other.initial_pressure)
+        && (this->initial_temperature == other.initial_temperature)
         && (this->timeConstant() == other.timeConstant())
         && (this->waterDensity() == other.waterDensity())
         && (this->waterViscosity() == other.waterViscosity())
@@ -92,7 +97,8 @@ Aquifetp::AQUFETP_data::AQUFETP_data(const int aquiferID_,
                                      const double C_t_,
                                      const double V0_,
                                      const double d0_,
-                                     const double p0_)
+                                     const double p0_,
+                                     const double t0_)
     : aquiferID        (aquiferID_)
     , pvttableID       (pvttableID_)
     , prod_index       (J_)
@@ -100,12 +106,13 @@ Aquifetp::AQUFETP_data::AQUFETP_data(const int aquiferID_,
     , initial_watvolume(V0_)
     , datum_depth      (d0_)
     , initial_pressure (p0_)
+    , initial_temperature (t0_)
 {}
 
 Aquifetp::AQUFETP_data Aquifetp::AQUFETP_data::serializeObject()
 {
     auto ret = AQUFETP_data {
-        1, 2, 3.0, 4.0, 5.0, 6.0, 7.0
+        1, 2, 3.0, 4.0, 5.0, 6.0, 7.0, 11.0
     };
 
     ret.time_constant_ = 8.0;
