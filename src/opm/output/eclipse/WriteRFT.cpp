@@ -160,6 +160,49 @@ namespace {
         }
     } // namespace RftUnits
 
+    std::optional<std::vector<Opm::data::Connection>::const_iterator>
+    findConnResults(const std::size_t                         cellIndex,
+                    const std::vector<Opm::data::Connection>& xcon)
+    {
+        auto pos = std::find_if(xcon.begin(), xcon.end(),
+                                [cellIndex](const Opm::data::Connection& xc)
+                                {
+                                    return xc.index == cellIndex;
+                                });
+
+        return (pos != xcon.end())
+            ? std::optional{pos} // C++17 class template argument deduction
+            : std::nullopt;
+    }
+
+    template <typename ConnectionIsActive, typename ConnOp>
+    void connectionLoop(const Opm::WellConnections& connections,
+                        ConnectionIsActive&&        connectionIsActive,
+                        ConnOp&&                    connOp)
+    {
+        for (auto connPos = connections.begin(), end = connections.end();
+             connPos != end; ++connPos)
+        {
+            if (! connectionIsActive(connPos)) {
+                // Inactive cell/connection.  Ignore.
+                continue;
+            }
+
+            connOp(connPos);
+        }
+    }
+
+    template <typename ConnOp>
+    void connectionLoop(const Opm::WellConnections& connections,
+                        const Opm::EclipseGrid&     grid,
+                        ConnOp&&                    connOp)
+    {
+        connectionLoop(connections,
+                       [&grid](Opm::WellConnections::const_iterator connPos)
+                       { return grid.cellActive(connPos->global_index()); },
+                       std::forward<ConnOp>(connOp));
+    }
+
     // =======================================================================
 
     class RFTRecord
@@ -214,29 +257,22 @@ namespace {
                                       const ::Opm::Well&        well,
                                       const ::Opm::data::Well&  wellSol)
     {
+        using ConnPos = ::Opm::WellConnections::const_iterator;
+
         const auto& xcon = wellSol.connections;
 
-        for (const auto& connection : well.getConnections()) {
-            const auto ix = connection.global_index();
+        connectionLoop(well.getConnections(), grid,
+            [this, &usys, &xcon](ConnPos connPos)
+        {
+            const auto xconPos =
+                findConnResults(connPos->global_index(), xcon);
 
-            if (! grid.cellActive(ix)) {
-                // Inactive cell.  Ignore.
-                continue;
+            if (! xconPos.has_value()) {
+                return;
             }
 
-            auto xconPos = std::find_if(xcon.begin(), xcon.end(),
-                [ix](const ::Opm::data::Connection& c)
-            {
-                return c.index == ix;
-            });
-
-            if (xconPos == xcon.end()) {
-                // RFT data not available for this connection.  Unexpected.
-                continue;
-            }
-
-            this->addConnection(usys, connection, *xconPos);
-        }
+            this->addConnection(usys, *connPos, *xconPos.value());
+        });
     }
 
     void RFTRecord::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
