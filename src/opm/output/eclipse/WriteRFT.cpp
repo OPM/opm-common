@@ -190,8 +190,7 @@ namespace {
 
         void addConnection(const ::Opm::UnitSystem&       usys,
                            const ::Opm::Connection&       conn,
-                           const ::Opm::data::Connection& xcon,
-                           const double                   depth);
+                           const ::Opm::data::Connection& xcon);
     };
 
     RFTRecord::RFTRecord(const std::size_t nconn)
@@ -236,7 +235,7 @@ namespace {
                 continue;
             }
 
-            this->addConnection(usys, connection, *xconPos, grid.getCellDepth(ix));
+            this->addConnection(usys, connection, *xconPos);
         }
     }
 
@@ -256,8 +255,7 @@ namespace {
 
     void RFTRecord::addConnection(const ::Opm::UnitSystem&       usys,
                                   const ::Opm::Connection&       conn,
-                                  const ::Opm::data::Connection& xcon,
-                                  const double                   depth)
+                                  const ::Opm::data::Connection& xcon)
     {
         this->i_.push_back(conn.getI() + 1);
         this->j_.push_back(conn.getJ() + 1);
@@ -269,7 +267,7 @@ namespace {
             return usys.from_si(meas, x);
         };
 
-        this->depth_.push_back(cvrt(M::length  , depth));
+        this->depth_.push_back(cvrt(M::length  , conn.depth()));
         this->press_.push_back(cvrt(M::pressure, xcon.cell_pressure));
 
         this->swat_.push_back(xcon.cell_saturation_water);
@@ -294,7 +292,7 @@ namespace {
                                    const ::Opm::EclipseGrid&                    grid,
                                    const ::Opm::Well&                           well);
 
-        void addDynamicData(const Opm::data::Well& wellSol);
+        void addDynamicData(const ::Opm::data::Well& wellSol);
 
         void write(::Opm::EclIO::OutputStream::RFT& rftFile) const;
 
