@@ -15,7 +15,8 @@ namespace Opm {
                       0.0, 0.0,
                       false,
                       false,
-                      0)
+                      0,
+                      false)
     {}
 
     EquilRecord::EquilRecord(const double datum_depth_arg, const double datum_depth_pc_arg,
@@ -23,7 +24,8 @@ namespace Opm {
                              const double goc_depth      , const double goc_pc,
                              const bool   live_oil_init  ,
                              const bool   wet_gas_init   ,
-                             const int    target_accuracy)
+                             const int    target_accuracy,
+                             const bool   humid_gas_init )
         : datum_depth(datum_depth_arg)
         , datum_depth_ps(datum_depth_pc_arg)
         , water_oil_contact_depth(woc_depth)
@@ -33,6 +35,7 @@ namespace Opm {
         , live_oil_init_proc(live_oil_init)
         , wet_gas_init_proc(wet_gas_init)
         , init_target_accuracy(target_accuracy)
+        , humid_gas_init_proc(humid_gas_init)
     {}
 
     double EquilRecord::datumDepth() const {
@@ -71,6 +74,10 @@ namespace Opm {
         return this->init_target_accuracy;
     }
 
+    bool EquilRecord::humidGasInitConstantRvw() const {
+        return this->humid_gas_init_proc;
+    }
+
     bool EquilRecord::operator==(const EquilRecord& data) const {
         return datum_depth == data.datum_depth &&
                datum_depth_ps == data.datum_depth_ps &&
@@ -82,7 +89,8 @@ namespace Opm {
                data.gas_oil_contact_capillary_pressure &&
                live_oil_init_proc == data.live_oil_init_proc &&
                wet_gas_init_proc == data.wet_gas_init_proc &&
-               init_target_accuracy == data.init_target_accuracy;
+               init_target_accuracy == data.init_target_accuracy &&
+               humid_gas_init_proc == data.humid_gas_init_proc;
     }
 
     /* ----------------------------------------------------------------- */
@@ -101,18 +109,19 @@ namespace Opm {
             const auto live_oil_init = record.getItem<EQUIL::BLACK_OIL_INIT>().get<int>(0) <= 0;
             const auto wet_gas_init = record.getItem<EQUIL::BLACK_OIL_INIT_WG>().get<int>(0) <= 0;
             const auto target_accuracy = record.getItem<EQUIL::OIP_INIT>().get<int>(0);
+            const auto humid_gas_init = record.getItem<EQUIL::BLACK_OIL_INIT_HG>().get<int>(0) <= 0;
 
             this->m_records.emplace_back(datum_depth_arg, datum_depth_pc_arg,
                                          woc_depth      , woc_pc,
                                          goc_depth      , goc_pc,
-                                         live_oil_init, wet_gas_init, target_accuracy);
+                                         live_oil_init, wet_gas_init, target_accuracy, humid_gas_init);
         }
     }
 
     Equil Equil::serializeObject()
     {
         Equil result;
-        result.m_records = {{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, true, false, 1}};
+        result.m_records = {{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, true, false, 1, false}};
 
         return result;
     }
