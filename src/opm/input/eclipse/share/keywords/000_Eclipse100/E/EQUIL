@@ -81,6 +81,12 @@
       "name": "EQLOPT5",
       "value_type": "INT",
       "comment": "This item is ECLIPSE300 specific"
+    },
+    {
+      "item": 12,
+      "name": "BLACK_OIL_INIT_HG",
+      "value_type": "INT",
+      "default": 0
     }
   ]
 }

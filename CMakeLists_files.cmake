@@ -758,6 +758,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp
        opm/input/eclipse/EclipseState/Tables/TableEnums.hpp
        opm/input/eclipse/EclipseState/Tables/RvvdTable.hpp
+       opm/input/eclipse/EclipseState/Tables/RvwvdTable.hpp
        opm/input/eclipse/EclipseState/Tables/TableContainer.hpp
        opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp
        opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp

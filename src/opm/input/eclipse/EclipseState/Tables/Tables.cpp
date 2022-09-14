@@ -65,6 +65,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RvwvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PermfactTable.hpp>
@@ -1031,6 +1032,20 @@ const TableColumn& RvvdTable::getDepthColumn() const {
 }
 
 const TableColumn& RvvdTable::getRvColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+RvwvdTable::RvwvdTable( const DeckItem& item, const int tableID ) {
+    m_schema.addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "RVWVD"    ,  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    SimpleTable::init(item, tableID);
+}
+
+const TableColumn& RvwvdTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0); 
+}
+
+const TableColumn& RvwvdTable::getRvwvdColumn() const {
     return SimpleTable::getColumn(1);
 }
 
