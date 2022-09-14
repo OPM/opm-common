@@ -375,6 +375,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_ESmry.cpp
     tests/test_EInit.cpp
     tests/test_ExtESmry.cpp
+    tests/test_Serialization.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
@@ -635,6 +636,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/ActiveGridCells.hpp
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
+      opm/common/utility/Serializer.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
