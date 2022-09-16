@@ -77,8 +77,8 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_schema.serializeOp(serializer);
-            m_columns.serializeOp(serializer);
+            serializer(m_schema);
+            serializer(m_columns);
             serializer(m_jfunc);
         }
 

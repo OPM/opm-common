@@ -102,7 +102,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(m_name);
-        serializer.vector(actions);
+        serializer(actions);
     }
 
     static TranCalculator serializeObject()

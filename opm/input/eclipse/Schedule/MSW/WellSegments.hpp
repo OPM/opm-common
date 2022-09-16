@@ -111,7 +111,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(m_comp_pressure_drop);
-            serializer.vector(m_segments);
+            serializer(m_segments);
             serializer(segment_number_to_index);
         }
 

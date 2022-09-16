@@ -55,9 +55,9 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.map(wlists);
-        serializer.map(well_wlist_names);
-        serializer.map(no_wlists_well);
+        serializer(wlists);
+        serializer(well_wlist_names);
+        serializer(no_wlists_well);
     }
 
 private:

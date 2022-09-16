@@ -231,15 +231,15 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-          serializer(index);
-          rates.serializeOp(serializer);
-          serializer(pressure);
-          serializer(reservoir_rate);
-          serializer(cell_pressure);
-          serializer(cell_saturation_water);
-          serializer(cell_saturation_gas);
-          serializer(effective_Kh);
-          serializer(trans_factor);
+            serializer(index);
+            serializer(rates);
+            serializer(pressure);
+            serializer(reservoir_rate);
+            serializer(cell_pressure);
+            serializer(cell_saturation_water);
+            serializer(cell_saturation_gas);
+            serializer(effective_Kh);
+            serializer(trans_factor);
         }
 
         static Connection serializeObject()
@@ -290,7 +290,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-          serializer(values_);
+            serializer(values_);
         }
 
         static SegmentPressures serializeObject()
@@ -337,8 +337,8 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            rates.serializeOp(serializer);
-            pressures.serializeOp(serializer);
+            serializer(rates);
+            serializer(pressures);
             serializer(segNumber);
         }
 
@@ -453,46 +453,46 @@ namespace Opm {
 
         bool operator==(const Well& well2) const
         {
-          return rates == well2.rates &&
-                 bhp == well2.bhp &&
-                 thp == well2.thp &&
-                 temperature == well2.temperature &&
-                 control == well2.control &&
-                 dynamicStatus == well2.dynamicStatus &&
-                 connections == well2.connections &&
-                 segments == well2.segments &&
-                 current_control == well2.current_control &&
-                 guide_rates == well2.guide_rates;
+            return rates == well2.rates &&
+                   bhp == well2.bhp &&
+                   thp == well2.thp &&
+                   temperature == well2.temperature &&
+                   control == well2.control &&
+                   dynamicStatus == well2.dynamicStatus &&
+                   connections == well2.connections &&
+                   segments == well2.segments &&
+                   current_control == well2.current_control &&
+                   guide_rates == well2.guide_rates;
         }
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-          rates.serializeOp(serializer);
-          serializer(bhp);
-          serializer(thp);
-          serializer(temperature);
-          serializer(control);
-          serializer(dynamicStatus);
-          serializer.vector(connections);
-          serializer.map(segments);
-          current_control.serializeOp(serializer);
-          guide_rates.serializeOp(serializer);
+            serializer(rates);
+            serializer(bhp);
+            serializer(thp);
+            serializer(temperature);
+            serializer(control);
+            serializer(dynamicStatus);
+            serializer(connections);
+            serializer(segments);
+            serializer(current_control);
+            serializer(guide_rates);
         }
 
         static Well serializeObject()
         {
-          return Well{Rates::serializeObject(),
-                      1.0,
-                      2.0,
-                      3.0,
-                      4,
-                      ::Opm::Well::Status::SHUT,
-                      {Connection::serializeObject()},
-                      {{0, Segment::serializeObject()}},
-                      CurrentControl::serializeObject(),
-                      GuideRateValue::serializeObject()
-                 };
+            return Well{Rates::serializeObject(),
+                        1.0,
+                        2.0,
+                        3.0,
+                        4,
+                        ::Opm::Well::Status::SHUT,
+                        {Connection::serializeObject()},
+                        {{0, Segment::serializeObject()}},
+                        CurrentControl::serializeObject(),
+                        GuideRateValue::serializeObject()
+                   };
         }
     };
 
@@ -572,7 +572,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-          serializer.map(*this);
+            serializer(static_cast<std::map<std::string,Well>&>(*this));
         }
 
         static Wells serializeObject()

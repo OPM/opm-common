@@ -111,9 +111,9 @@ struct GroupInjTarget {
     void serializeOp(Serializer& serializer)
     {
         serializer(m_model);
-        serializer.map(wells);
-        serializer.map(production_groups);
-        serializer.map(injection_groups);
+        serializer(wells);
+        serializer(production_groups);
+        serializer(injection_groups);
     }
 
 private:

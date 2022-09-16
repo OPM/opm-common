@@ -112,8 +112,8 @@ namespace Opm { namespace data {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            production.serializeOp(serializer);
-            injection.serializeOp(serializer);
+            serializer(production);
+            serializer(injection);
         }
 
         static GroupGuideRates serializeObject()
@@ -159,8 +159,8 @@ namespace Opm { namespace data {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            currentControl.serializeOp(serializer);
-            guideRates.serializeOp(serializer);
+            serializer(currentControl);
+            serializer(guideRates);
         }
 
         static GroupData serializeObject()
@@ -260,16 +260,16 @@ namespace Opm { namespace data {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer.map(groupData);
-            serializer.map(nodeData);
+            serializer(groupData);
+            serializer(nodeData);
         }
 
         static GroupAndNetworkValues serializeObject()
         {
-          return GroupAndNetworkValues{
-                      {{"test_data", GroupData::serializeObject()}},
-                      {{"test_node", NodeData::serializeObject()}}
-                 };
+            return GroupAndNetworkValues{
+                        {{"test_data", GroupData::serializeObject()}},
+                        {{"test_node", NodeData::serializeObject()}}
+                   };
         }
 
     private:

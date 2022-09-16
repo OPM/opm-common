@@ -52,7 +52,7 @@ public:
     {
         serializer(m_name);
         serializer(m_transMult);
-        serializer.vector(m_faceList);
+        serializer(m_faceList);
     }
 
 private:

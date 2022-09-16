@@ -69,8 +69,8 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(this->id_);
-            serializer.vector(this->cells_);
-            serializer.vector(this->connections_);
+            serializer(this->cells_);
+            serializer(this->connections_);
         }
 
         private:

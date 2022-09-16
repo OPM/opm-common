@@ -139,12 +139,12 @@ The first row actually corresponds to saturated values.
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_outerColumnSchema.serializeOp(serializer);
-            m_outerColumn.serializeOp(serializer);
-            m_underSaturatedSchema.serializeOp(serializer);
-            m_saturatedSchema.serializeOp(serializer);
-            serializer.vector(m_underSaturatedTables);
-            m_saturatedTable.serializeOp(serializer);
+            serializer(m_outerColumnSchema);
+            serializer(m_outerColumn);
+            serializer(m_underSaturatedSchema);
+            serializer(m_saturatedSchema);
+            serializer(m_underSaturatedTables);
+            serializer(m_saturatedTable);
         }
 
     protected:

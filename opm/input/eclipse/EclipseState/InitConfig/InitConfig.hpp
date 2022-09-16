@@ -63,8 +63,8 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            equil.serializeOp(serializer);
-            foamconfig.serializeOp(serializer);
+            serializer(equil);
+            serializer(foamconfig);
             serializer(m_filleps);
             serializer(m_gravity);
             serializer(m_restartRequested);

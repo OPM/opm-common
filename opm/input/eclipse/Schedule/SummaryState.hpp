@@ -130,14 +130,14 @@ public:
     {
       serializer(sim_start);
       serializer(elapsed);
-      serializer.map(values);
-      serializer.map(well_values);
-      serializer.set(m_wells);
+      serializer(values);
+      serializer(well_values);
+      serializer(m_wells);
       serializer(well_names);
-      serializer.map(group_values);
-      serializer.set(m_groups);
+      serializer(group_values);
+      serializer(m_groups);
       serializer(group_names);
-      serializer.map(conn_values);
+      serializer(conn_values);
     }
 
     static SummaryState serializeObject()

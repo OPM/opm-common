@@ -205,7 +205,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
         serializer(write_rst_file);
-        serializer.map(keywords);
+        serializer(keywords);
         serializer(basic);
         serializer(freq);
         serializer(save);

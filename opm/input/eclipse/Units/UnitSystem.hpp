@@ -133,7 +133,7 @@ namespace Opm {
         {
             serializer(m_name);
             serializer(m_unittype);
-            serializer.map(m_dimensions);
+            serializer(m_dimensions);
             serializer(m_use_count);
             if (!serializer.isSerializing())
                 init();

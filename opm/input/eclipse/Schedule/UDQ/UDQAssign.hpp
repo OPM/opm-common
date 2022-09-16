@@ -111,7 +111,7 @@ public:
     {
         serializer(m_keyword);
         serializer(m_var_type);
-        serializer.vector(records);
+        serializer(records);
     }
 
 private:

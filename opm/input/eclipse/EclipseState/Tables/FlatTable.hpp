@@ -21,7 +21,7 @@ struct FlatTable : public std::vector< T > {
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(*this);
+        serializer(static_cast<std::vector<T>&>(*this));
     }
 };
 
@@ -57,7 +57,7 @@ public:
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(this->table_);
+        serializer(this->table_);
     }
 
 protected:

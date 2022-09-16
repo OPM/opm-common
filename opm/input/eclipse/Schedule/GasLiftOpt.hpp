@@ -279,8 +279,8 @@ public:
         serializer(m_min_eco_gradient);
         serializer(m_min_wait);
         serializer(m_all_newton);
-        serializer.map(m_groups);
-        serializer.map(m_wells);
+        serializer(m_groups);
+        serializer(m_wells);
     }
 private:
     double m_increment = 0;

@@ -58,7 +58,7 @@ class Solution : public std::map< std::string, data::CellData > {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-          serializer.map(*this);
+          serializer(static_cast<Base&>(*this));
           serializer(si);
         }
 

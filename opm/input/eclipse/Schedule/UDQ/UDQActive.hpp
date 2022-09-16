@@ -178,8 +178,8 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(input_data);
-        serializer.vector(output_data);
+        serializer(input_data);
+        serializer(output_data);
     }
 
 private:

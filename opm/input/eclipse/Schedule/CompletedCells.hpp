@@ -107,7 +107,7 @@ public:
             serializer(this->k);
             serializer(this->depth);
             serializer(this->props);
-            serializer.array(this->dimensions);
+            serializer(this->dimensions);
         }
 
         Cell(std::size_t g, std::size_t i_, std::size_t j_, std::size_t k_)
@@ -132,8 +132,8 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        this->dims.serializeOp(serializer);
-        serializer.map(this->cells);
+        serializer(this->dims);
+        serializer(this->cells);
     }
 
 private:

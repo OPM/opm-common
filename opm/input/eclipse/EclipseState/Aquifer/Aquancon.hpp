@@ -105,7 +105,7 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer.map(this->cells);
+                serializer(this->cells);
             }
 
         private:

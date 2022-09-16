@@ -58,9 +58,9 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_ThresholdPressure.serializeOp(serializer);
-            m_bcconfig.serializeOp(serializer);
-            m_rock_config.serializeOp(serializer);
+            serializer(m_ThresholdPressure);
+            serializer(m_bcconfig);
+            serializer(m_rock_config);
             serializer(m_useCPR);
             serializer(m_DISGAS);
             serializer(m_VAPOIL);

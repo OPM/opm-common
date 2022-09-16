@@ -55,9 +55,9 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(m_branches);
+        serializer(m_branches);
         serializer(insert_indexed_node_names);
-        serializer.map(m_nodes);
+        serializer(m_nodes);
     }
 
 private:

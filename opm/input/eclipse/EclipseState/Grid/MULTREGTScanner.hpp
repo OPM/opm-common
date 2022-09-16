@@ -105,7 +105,7 @@ namespace Opm {
             serializer(nx);
             serializer(ny);
             serializer(nz);
-            serializer.vector(m_records);
+            serializer(m_records);
             ExternalSearchMap searchMap = getSearchMap();
             serializer(searchMap);
             if (m_searchMap.empty())

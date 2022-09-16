@@ -55,7 +55,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        m_faults.serializeOp(serializer);
+        serializer(m_faults);
     }
 
 private:

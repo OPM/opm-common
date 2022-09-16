@@ -114,9 +114,9 @@ public:
         serializer(m_min_wait);
         serializer(m_start_time);
         serializer(m_id);
-        serializer.vector(keywords);
-        condition.serializeOp(serializer);
-        serializer.vector(m_conditions);
+        serializer(keywords);
+        serializer(condition);
+        serializer(m_conditions);
     }
 
 private:

@@ -88,8 +88,8 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        lhs.serializeOp(serializer);
-        rhs.serializeOp(serializer);
+        serializer(lhs);
+        serializer(rhs);
         serializer(logic);
         serializer(cmp);
         serializer(cmp_string);

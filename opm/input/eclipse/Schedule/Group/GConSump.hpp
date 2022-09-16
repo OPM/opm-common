@@ -50,11 +50,11 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                consumption_rate.serializeOp(serializer);
-                import_rate.serializeOp(serializer);
+                serializer(consumption_rate);
+                serializer(import_rate);
                 serializer(network_node);
                 serializer(udq_undefined);
-                unit_system.serializeOp(serializer);
+                serializer(unit_system);
             }
         };
 
@@ -77,7 +77,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer.map(groups);
+            serializer(groups);
         }
 
     private:

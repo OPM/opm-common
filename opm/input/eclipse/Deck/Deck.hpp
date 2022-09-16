@@ -116,8 +116,8 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer.vector(keywordList);
-                defaultUnits.serializeOp(serializer);
+                serializer(keywordList);
+                serializer(defaultUnits);
                 serializer(activeUnits);
                 serializer(m_dataFile);
                 serializer(input_path);

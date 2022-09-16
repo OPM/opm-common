@@ -486,15 +486,15 @@ namespace Opm {
             serializer(m_sumthin);
             serializer(this->m_rptonly);
             serializer(this->next_tstep);
-            m_tuning.serializeOp(serializer);
-            m_nupcol.serializeOp(serializer);
-            m_oilvap.serializeOp(serializer);
-            m_events.serializeOp(serializer);
-            m_wellgroup_events.serializeOp(serializer);
-            serializer.vector(m_geo_keywords);
-            m_message_limits.serializeOp(serializer);
+            serializer(m_tuning);
+            serializer(m_nupcol);
+            serializer(m_oilvap);
+            serializer(m_events);
+            serializer(m_wellgroup_events);
+            serializer(m_geo_keywords);
+            serializer(m_message_limits);
             serializer(m_whistctl_mode);
-            serializer.map(target_wellpi);
+            serializer(target_wellpi);
         }
 
 

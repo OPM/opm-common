@@ -118,19 +118,19 @@ namespace Opm {
         {
             // FieldPropsManager is handled through a different mechanism.
             // Do not add the member (i.e., field_props) to this list.
-            m_tables.serializeOp(serializer);
-            m_runspec.serializeOp(serializer);
-            m_eclipseConfig.serializeOp(serializer);
-            m_deckUnitSystem.serializeOp(serializer);
-            m_inputNnc.serializeOp(serializer);
-            m_gridDims.serializeOp(serializer);
-            m_simulationConfig.serializeOp(serializer);
-            aquifer_config.serializeOp(serializer);
-            m_transMult.serializeOp(serializer);
-            m_faults.serializeOp(serializer);
+            serializer(m_tables);
+            serializer(m_runspec);
+            serializer(m_eclipseConfig);
+            serializer(m_deckUnitSystem);
+            serializer(m_inputNnc);
+            serializer(m_gridDims);
+            serializer(m_simulationConfig);
+            serializer(aquifer_config);
+            serializer(m_transMult);
+            serializer(m_faults);
             serializer(m_title);
-            tracer_config.serializeOp(serializer);
-            m_micppara.serializeOp(serializer);
+            serializer(tracer_config);
+            serializer(m_micppara);
         }
 
         static bool rst_cmp(const EclipseState& full_state, const EclipseState& rst_state);

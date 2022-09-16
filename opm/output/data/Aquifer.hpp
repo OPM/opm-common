@@ -238,7 +238,7 @@ namespace Opm { namespace data {
        template<class Serializer>
        void serializeOp(Serializer& serializer)
        {
-           serializer.variant(options_);
+           serializer(options_);
        }
 
     private:
@@ -347,7 +347,7 @@ namespace Opm { namespace data {
             serializer(volume);
             serializer(initPressure);
             serializer(datumDepth);
-            typeData.serializeOp(serializer);
+            serializer(typeData);
         }
 
         static AquiferData serializeObjectF()

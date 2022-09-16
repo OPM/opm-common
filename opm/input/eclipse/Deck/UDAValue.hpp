@@ -88,7 +88,7 @@ public:
         serializer(numeric_value);
         serializer(double_value);
         serializer(string_value);
-        dim.serializeOp(serializer);
+        serializer(dim);
     }
 
     void operator*=(double rhs);

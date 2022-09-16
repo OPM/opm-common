@@ -57,12 +57,12 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                sales_target.serializeOp(serializer);
-                max_sales_rate.serializeOp(serializer);
-                min_sales_rate.serializeOp(serializer);
+                serializer(sales_target);
+                serializer(max_sales_rate);
+                serializer(min_sales_rate);
                 serializer(max_proc);
                 serializer(udq_undefined);
-                unit_system.serializeOp(serializer);
+                serializer(unit_system);
             }
         };
 
@@ -87,7 +87,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer.map(groups);
+            serializer(groups);
         }
 
     private:

@@ -46,8 +46,8 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_initConfig.serializeOp(serializer);
-            io_config.serializeOp(serializer);
+            serializer(m_initConfig);
+            serializer(io_config);
         }
 
     private:

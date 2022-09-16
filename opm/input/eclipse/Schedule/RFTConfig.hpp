@@ -71,9 +71,9 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(first_open_rft);
-        serializer.map(rft_state);
-        serializer.map(plt_state);
-        serializer.map(open_wells);
+        serializer(rft_state);
+        serializer(plt_state);
+        serializer(open_wells);
     }
 
 private:

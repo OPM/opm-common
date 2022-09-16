@@ -183,7 +183,7 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer.map(m_wellgroup_events);
+            serializer(m_wellgroup_events);
         }
     private:
         std::unordered_map<std::string, Events> m_wellgroup_events;

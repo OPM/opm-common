@@ -69,7 +69,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(data);
+        serializer(data);
     }
 
 private:

@@ -45,7 +45,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_columns.serializeOp(serializer);
+            serializer(m_columns);
         }
 
     private:
