@@ -3,7 +3,8 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
@@ -27,7 +28,14 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace {
     bool is_sentinel(const float raw_value)
@@ -76,8 +84,10 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     well_status(                                                     iwel[VI::IWell::Status]),
     active_control(                                                  iwel[VI::IWell::ActWCtrl]),
     vfp_table(                                                       iwel[VI::IWell::VFPTab]),
-    allow_xflow(                                                     iwel[VI::IWell::XFlow] == 1),
+    econ_workover_procedure(                                         iwel[VI::IWell::EconWorkoverProcedure]),
     preferred_phase(                                                 iwel[VI::IWell::PreferredPhase]),
+    allow_xflow(                                                     iwel[VI::IWell::XFlow] == 1),
+    econ_limit_end_run(                                              iwel[VI::IWell::EconLimitEndRun]),
     hist_requested_control(                                          iwel[VI::IWell::HistReqWCtrl]),
     msw_index(                                                       iwel[VI::IWell::MsWID]),
     completion_ordering(                                             iwel[VI::IWell::CompOrd]),
@@ -86,6 +96,8 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     wtest_config_reasons(                                            iwel[VI::IWell::WTestConfigReason]),
     wtest_close_reason(                                              iwel[VI::IWell::WTestCloseReason]),
     wtest_remaining(                                                 iwel[VI::IWell::WTestRemaining] -1),
+    econ_limit_quantity(                                             iwel[VI::IWell::EconLimitQuantity]),
+    econ_workover_procedure_2(                                       iwel[VI::IWell::EconWorkoverProcedure_2]),
     glift_active(                                                    iwel[VI::IWell::LiftOpt] == 1),
     glift_alloc_extra_gas(                                           iwel[VI::IWell::LiftOptAllocExtra] == 1),
     // The values orat_target -> bhp_target_float will be used in UDA values. The
@@ -105,6 +117,13 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     drainage_radius(     unit_system.to_si(M::length,                swel_value(swel[VI::SWell::DrainageRadius]))),
     efficiency_factor(   unit_system.to_si(M::identity,              swel[VI::SWell::EfficiencyFactor1])),
     alq_value(                                                       swel[VI::SWell::Alq_value]),
+    econ_limit_min_oil(  unit_system.to_si(M::liquid_surface_rate,   swel[VI::SWell::EconLimitMinOil])),
+    econ_limit_min_gas(  unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::EconLimitMinGas])),
+    econ_limit_max_wct(  keep_sentinel(swel[VI::SWell::EconLimitMaxWct], [](const double wct_) { return wct_; })),
+    econ_limit_max_gor(  keep_sentinel(swel[VI::SWell::EconLimitMaxGor], [&unit_system](const double gor_) { return unit_system.to_si(M::gas_oil_ratio, gor_); })),
+    econ_limit_max_wgr(  keep_sentinel(swel[VI::SWell::EconLimitMaxWgr], [&unit_system](const double wgr_) { return unit_system.to_si(M::oil_gas_ratio, wgr_); })),
+    econ_limit_max_wct_2(keep_sentinel(swel[VI::SWell::EconLimitMaxWct_2], [](const double wct_) { return wct_; })),
+    econ_limit_min_liq(  unit_system.to_si(M::liquid_surface_rate,   swel[VI::SWell::EconLimitMinLiq])),
     wtest_interval(      unit_system.to_si(M::time,                  swel[VI::SWell::WTestInterval])),
     wtest_startup(       unit_system.to_si(M::time,                  swel[VI::SWell::WTestStartupTime])),
     glift_max_rate(      unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::LOmaxRate])),
@@ -190,13 +209,15 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     }
 }
 
-const RstSegment RstWell::segment(int segment_number) const {
+const RstSegment&
+RstWell::segment(int segment_number) const
+{
     const auto& iter = std::find_if(this->segments.begin(), this->segments.end(), [segment_number](const RstSegment& segment) { return segment.segment == segment_number; });
+
     if (iter == this->segments.end())
         throw std::invalid_argument("No such segment");
 
     return *iter;
 }
 
-}
-}
+}} // namepace Opm::RestartIO

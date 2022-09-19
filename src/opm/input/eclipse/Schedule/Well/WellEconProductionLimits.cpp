@@ -17,14 +17,86 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 
-#include <cassert>
+#include <opm/io/eclipse/rst/well.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
-#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <cassert>
+#include <cmath>
+#include <stdexcept>
+#include <string>
 
+namespace {
+    bool is_finite(const float x)
+    {
+        const auto infty = 1.0e+20f;
+
+        return std::abs(x) < infty;
+    }
+
+    void assign_if_finite(const float value, double& x)
+    {
+        if (is_finite(value)) {
+            x = value;
+        }
+    }
+
+    Opm::WellEconProductionLimits::EconWorkover workover_procedure(const int procedure)
+    {
+        using Opm::RestartIO::Helpers::VectorItems::
+            IWell::Value::EconLimit::WOProcedure;
+
+        switch (procedure) {
+        case WOProcedure::None:
+            return Opm::WellEconProductionLimits::EconWorkover::NONE;
+
+        case WOProcedure::Con:
+            return Opm::WellEconProductionLimits::EconWorkover::CON;
+
+        case WOProcedure::ConAndBelow:
+            return Opm::WellEconProductionLimits::EconWorkover::CONP;
+
+        case WOProcedure::StopOrShut:
+            return Opm::WellEconProductionLimits::EconWorkover::WELL;
+
+        case WOProcedure::Plug:
+            return Opm::WellEconProductionLimits::EconWorkover::PLUG;
+
+        default:
+            return Opm::WellEconProductionLimits::EconWorkover::NONE;
+        }
+    }
+
+    Opm::WellEconProductionLimits::QuantityLimit limiting_quantity(const int quantity)
+    {
+        using Opm::RestartIO::Helpers::VectorItems::
+            IWell::Value::EconLimit::Quantity;
+
+        switch (quantity) {
+        case Quantity::Rate:
+            return Opm::WellEconProductionLimits::QuantityLimit::RATE;
+
+        case Quantity::Potential:
+            return Opm::WellEconProductionLimits::QuantityLimit::POTN;
+
+        default:
+            throw std::invalid_argument {
+                "Unknown restart file limiting quantity '"
+                + std::to_string(quantity) + '\''
+            };
+        }
+    }
+
+    constexpr bool limit_ends_run(const int econ_limit_end_run)
+    {
+        return econ_limit_end_run == Opm::RestartIO::Helpers::
+            VectorItems::IWell::Value::EconLimit::EndRun::Yes;
+    }
+}
 
 namespace Opm {
 
@@ -46,7 +118,6 @@ namespace Opm {
         , m_min_reservoir_fluid_rate(0.0)
     {
     }
-
 
     WellEconProductionLimits::WellEconProductionLimits(const DeckRecord& record)
         : m_min_oil_rate(record.getItem("MIN_OIL_PRODUCTION").get<UDAValue>(0).getSI())
@@ -88,6 +159,23 @@ namespace Opm {
                 throw std::invalid_argument("Unknown input: " + string_endrun + " for END_RUN_FLAG in WECON");
             }
         }
+    }
+
+    WellEconProductionLimits::WellEconProductionLimits(const RestartIO::RstWell& rstWell)
+        : WellEconProductionLimits{}
+    {
+        this->m_workover = workover_procedure(rstWell.econ_workover_procedure);
+        this->m_workover_secondary = workover_procedure(rstWell.econ_workover_procedure_2);
+        this->m_end_run = limit_ends_run(rstWell.econ_limit_end_run);
+        this->m_quantity_limit = limiting_quantity(rstWell.econ_limit_quantity);
+
+        assign_if_finite(rstWell.econ_limit_min_oil,   this->m_min_oil_rate);
+        assign_if_finite(rstWell.econ_limit_min_gas,   this->m_min_gas_rate);
+        assign_if_finite(rstWell.econ_limit_max_wct,   this->m_max_water_cut);
+        assign_if_finite(rstWell.econ_limit_max_gor,   this->m_max_gas_oil_ratio);
+        assign_if_finite(rstWell.econ_limit_max_wgr,   this->m_max_water_gas_ratio);
+        assign_if_finite(rstWell.econ_limit_max_wct_2, this->m_secondary_max_water_cut);
+        assign_if_finite(rstWell.econ_limit_min_liq,   this->m_min_liquid_rate);
     }
 
     WellEconProductionLimits WellEconProductionLimits::serializeObject()

@@ -3,7 +3,8 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
@@ -19,24 +20,27 @@
 #ifndef RST_WELL
 #define RST_WELL
 
-#include <array>
-#include <vector>
-#include <string>
-#include <unordered_map>
-
-
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
+
+#include <array>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 class UnitSystem;
+} // namespace Opm
 
-namespace RestartIO {
+namespace Opm { namespace RestartIO {
 
 struct RstHeader;
 
-struct RstWell {
+struct RstWell
+{
     RstWell(const ::Opm::UnitSystem& unit_system,
             const RstHeader& header,
             const std::string& group_arg,
@@ -69,8 +73,10 @@ struct RstWell {
     int well_status;
     int active_control;
     int vfp_table;
-    bool allow_xflow;
+    int econ_workover_procedure;
     int preferred_phase;
+    bool allow_xflow;
+    int econ_limit_end_run;
     int hist_requested_control;
     int msw_index;
     int completion_ordering;
@@ -79,6 +85,8 @@ struct RstWell {
     int wtest_config_reasons;
     int wtest_close_reason;
     int wtest_remaining;
+    int econ_limit_quantity;
+    int econ_workover_procedure_2;
     bool glift_active;
     bool glift_alloc_extra_gas;
 
@@ -96,6 +104,13 @@ struct RstWell {
     float drainage_radius;
     float efficiency_factor;
     float alq_value;
+    float econ_limit_min_oil;
+    float econ_limit_min_gas;
+    float econ_limit_max_wct;
+    float econ_limit_max_gor;
+    float econ_limit_max_wgr;
+    float econ_limit_max_wct_2;
+    float econ_limit_min_liq;
     float wtest_interval;
     float wtest_startup;
     float glift_max_rate;
@@ -130,16 +145,11 @@ struct RstWell {
     double water_void_rate;
     double gas_void_rate;
 
-    const RstSegment segment(int segment_number) const;
+    const RstSegment& segment(int segment_number) const;
     std::vector<RstConnection> connections;
     std::vector<RstSegment> segments;
 };
 
+}} // namespace Opm::RestartIO
 
-}
-}
-
-
-
-
-#endif
+#endif // RST_WELL

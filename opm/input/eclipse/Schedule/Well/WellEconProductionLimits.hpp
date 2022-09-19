@@ -22,6 +22,10 @@
 
 #include <string>
 
+namespace Opm { namespace RestartIO {
+    struct RstWell;
+}} // namespace Opm::RestartIO
+
 namespace Opm {
 
     class DeckRecord;
@@ -52,9 +56,9 @@ namespace Opm {
         static std::string EconWorkover2String(EconWorkover enumValue);
         static EconWorkover EconWorkoverFromString(const std::string& stringValue);
 
-
-        explicit WellEconProductionLimits(const DeckRecord& record);
         WellEconProductionLimits();
+        explicit WellEconProductionLimits(const DeckRecord& record);
+        explicit WellEconProductionLimits(const RestartIO::RstWell& rstWell);
 
         static WellEconProductionLimits serializeObject();
 

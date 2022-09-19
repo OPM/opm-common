@@ -169,6 +169,44 @@ Well::InjectorCMode injector_cmode_from_int(const int imode)
     };
 }
 
+bool haveEconomicLimits(const Opm::RestartIO::RstWell& rst_well)
+{
+    namespace Limits = Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::EconLimit;
+
+    auto is_finite = [](const float x)
+    {
+        const auto infty = 1.0e+20f;
+
+        return std::abs(x) < infty;
+    };
+
+    auto is_nonzero = [](const float x)
+    {
+        return std::abs(x) > 0.0f;
+    };
+
+    return (rst_well.econ_workover_procedure   != Limits::WOProcedure::None)
+        || (rst_well.econ_workover_procedure_2 != Limits::WOProcedure::None)
+        || (rst_well.econ_limit_end_run        == Limits::EndRun::Yes)
+        || (rst_well.econ_limit_quantity       != Limits::Rate)
+        || is_nonzero(rst_well.econ_limit_min_oil)
+        || is_nonzero(rst_well.econ_limit_min_gas)
+        || is_nonzero(rst_well.econ_limit_min_liq)
+        || is_finite (rst_well.econ_limit_max_wct)
+        || is_finite (rst_well.econ_limit_max_gor)
+        || is_finite (rst_well.econ_limit_max_wgr)
+        || is_finite (rst_well.econ_limit_max_wct_2);
+}
+
+std::shared_ptr<Opm::WellEconProductionLimits>
+economicLimits(const Opm::RestartIO::RstWell& rst_well)
+{
+    return haveEconomicLimits(rst_well)
+        ? std::make_shared<Opm::WellEconProductionLimits>(rst_well)
+        : std::make_shared<Opm::WellEconProductionLimits>();
+}
+
 constexpr Well::ProducerCMode def_whistctl_cmode = Well::ProducerCMode::CMODE_UNDEFINED;
 const static Well::WellGuideRate def_guide_rate = {true, -1, Well::GuideRateTarget::UNDEFINED, ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue};
 const static bool def_automatic_shutin = true;
@@ -198,7 +236,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     efficiency_factor(rst_well.efficiency_factor),
     solvent_fraction(def_solvent_fraction),
     prediction_mode(rst_well.hist_requested_control == 0),
-    econ_limits(std::make_shared<WellEconProductionLimits>()),
+    econ_limits(economicLimits(rst_well)),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
     micp_properties(std::make_shared<WellMICPProperties>()),

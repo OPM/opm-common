@@ -21,15 +21,18 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <memory>
-#include <vector>
-
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 
+#include <opm/io/eclipse/rst/connection.hpp>
+#include <opm/io/eclipse/rst/group.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
+#include <opm/io/eclipse/rst/segment.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
+
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
@@ -37,27 +40,43 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/io/eclipse/rst/connection.hpp>
-#include <opm/io/eclipse/rst/header.hpp>
-#include <opm/io/eclipse/rst/group.hpp>
-#include <opm/io/eclipse/rst/segment.hpp>
-#include <opm/io/eclipse/rst/well.hpp>
-#include <opm/io/eclipse/rst/state.hpp>
-
 #include <tests/WorkArea.hpp>
 
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace {
+    struct SimulationCase
+    {
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es    { deck }
+            , grid  { deck }
+            , sched { deck, es, std::make_shared<Opm::Python>() }
+        {}
+
+        // Order requirement: 'es' must be declared/initialised before 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid  grid;
+        Opm::Schedule     sched;
+        Opm::Parser       parser;
+    };
+
     Opm::Deck first_sim()
     {
         // Mostly copy of tests/FIRST_SIM.DATA
@@ -120,6 +139,12 @@ WCONPROD
 /
 WCONINJE
       'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /
+/
+
+WECON
+-- Adapted from opm-tests/wecon_test/3D_WECON.DATA
+-- Well_name  minOrate  minGrate  maxWCT  maxGOR  maxWGR  WOprocedure  flag  open_well  minEco  2maxWCT WOaction maxGLR minLrate maxT
+  'OP_1'      1.0       800       0.1     321.09  1.0e-3  CON          YES    1*         POTN    0.8     WELL     300.0   50      1* /
 /
 
 DATES             -- 2
@@ -198,26 +223,103 @@ TSTEP            -- 8
 
         return Opm::Parser{}.parseString(input);
     }
-} // namespace
 
-struct SimulationCase
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es    { deck }
-        , grid  { deck }
-        , sched { deck, es, std::make_shared<Opm::Python>() }
-    {}
+    void writeRstFile(const SimulationCase& simCase,
+                      const std::string&    baseName,
+                      const std::size_t     rptStep)
+    {
+        const auto& units    = simCase.es.getUnits();
+        const auto  sim_step = rptStep - 1;
 
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid  grid;
-    Opm::Schedule     sched;
-    Opm::Parser       parser;
-};
+        const auto sumState     = Opm::SummaryState { Opm::TimeService::now() };
+        const auto action_state = Opm::Action::State{};
+        const auto wtest_state  = Opm::WellTestState{};
+
+        const auto ih = Opm::RestartIO::Helpers::
+            createInteHead(simCase.es, simCase.grid, simCase.sched,
+                           0, sim_step, sim_step, sim_step);
+
+        const auto lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
+        const auto dh = Opm::RestartIO::Helpers::
+            createDoubHead(simCase.es, simCase.sched,
+                           sim_step, sim_step + 1, 0, 0);
+
+        auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
+        wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(),
+                                         sim_step, action_state,
+                                         wtest_state, sumState, ih);
+        wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(),
+                                        sim_step, {}, sumState);
+
+        auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
+        connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units,
+                                               {}, sumState, sim_step);
+
+        auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+        groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
+
+        const auto outputDir = std::string { "./" };
+
+        Opm::EclIO::OutputStream::Restart rstFile {
+            Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
+            static_cast<int>(rptStep),
+            Opm::EclIO::OutputStream::Formatted {false},
+            Opm::EclIO::OutputStream::Unified {true}
+        };
+
+        rstFile.write("INTEHEAD", ih);
+        rstFile.write("DOUBHEAD", dh);
+        rstFile.write("LOGIHEAD", lh);
+
+        rstFile.write("IGRP", groupData.getIGroup());
+        rstFile.write("SGRP", groupData.getSGroup());
+        rstFile.write("XGRP", groupData.getXGroup());
+        rstFile.write("ZGRP", groupData.getZGroup());
+
+        rstFile.write("IWEL", wellData.getIWell());
+        rstFile.write("SWEL", wellData.getSWell());
+        rstFile.write("XWEL", wellData.getXWell());
+        rstFile.write("ZWEL", wellData.getZWell());
+
+        rstFile.write("ICON", connectionData.getIConn());
+        rstFile.write("SCON", connectionData.getSConn());
+        rstFile.write("XCON", connectionData.getXConn());
+    }
+
+    Opm::RestartIO::RstState
+    loadRestart(const SimulationCase& simCase,
+                const std::string&    baseName,
+                const std::size_t     rptStep)
+    {
+        auto rstFile = std::make_shared<Opm::EclIO::ERst>(baseName + ".UNRST");
+        auto rstView = std::make_shared<Opm::EclIO::RestartFileView>
+            (std::move(rstFile), rptStep);
+
+        return Opm::RestartIO::RstState::
+            load(std::move(rstView), simCase.es.runspec(), simCase.parser);
+    }
+
+    Opm::RestartIO::RstState
+    makeRestartState(const SimulationCase& simCase,
+                     const std::string&    baseName,
+                     const std::size_t     rptStep,
+                     const std::string&    workArea)
+    {
+        // Recall: Constructor changes working directory of current process,
+        // destructor restores original working directory.  The non-trivial
+        // destructor also means that this object will not be tagged as
+        // "unused" in release builds.
+        WorkArea work_area{workArea};
+
+        writeRstFile(simCase, baseName, rptStep);
+        return loadRestart(simCase, baseName, rptStep);
+    }
+} // Anonymous namespace
 
 // =====================================================================
 
-BOOST_AUTO_TEST_CASE(group_test) {
+BOOST_AUTO_TEST_CASE(group_test)
+{
     const auto simCase = SimulationCase{first_sim()};
     const auto& units = simCase.es.getUnits();
     // Report Step 2: 2011-01-20 --> 2013-06-15
@@ -270,98 +372,235 @@ BOOST_AUTO_TEST_CASE(group_test) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(State_test) {
+BOOST_AUTO_TEST_CASE(State_test)
+{
     const auto simCase = SimulationCase{first_sim()};
-    const auto& units = simCase.es.getUnits();
+
     // Report Step 2: 2011-01-20 --> 2013-06-15
-    const auto rptStep = std::size_t{4};
-    const auto sim_step = rptStep - 1;
-    Opm::SummaryState sumState(Opm::TimeService::now());
-    Opm::Action::State action_state;
-    Opm::WellTestState wtest_state;
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_UDQRST" };
 
-    const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
-                                                            simCase.grid,
-                                                            simCase.sched,
-                                                            0,
-                                                            sim_step,
-                                                            sim_step,
-                                                            sim_step);
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep,
+                         "test_rstate");
 
-    const auto lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
+    const auto& well = state.get_well("OP_3");
+    BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
+}
 
-    const auto dh = Opm::RestartIO::Helpers::createDoubHead(simCase.es,
-                                                            simCase.sched,
-                                                            sim_step,
-                                                            sim_step+1,
-                                                            0, 0);
+BOOST_AUTO_TEST_CASE(Well_Economic_Limits)
+{
+    const auto simCase = SimulationCase{first_sim()};
 
-    auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step, action_state, wtest_state, sumState, ih);
-    wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(), sim_step, {} , sumState);
+    // Report Step 2: 2011-01-20 --> 2013-06-15
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_RST_WECON" };
 
-    auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, {} , sumState, sim_step);
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep,
+                         "test_rst_wecon");
 
-    auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
+    const auto& op_1 = state.get_well("OP_1");
 
-    {
-        WorkArea work_area("test_rstate");
-        std::string outputDir = "./";
-        std::string baseName = "TEST_UDQRST";
-        {
-            Opm::EclIO::OutputStream::Restart rstFile {Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
-                                                       rptStep,
-                                                       Opm::EclIO::OutputStream::Formatted {false},
-                                                       Opm::EclIO::OutputStream::Unified {true}};
-            rstFile.write("INTEHEAD", ih);
-            rstFile.write("DOUBHEAD", dh);
-            rstFile.write("LOGIHEAD", lh);
+    namespace Limits = Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::EconLimit;
 
-            const auto& iwel = wellData.getIWell();
-            const auto& swel = wellData.getSWell();
-            const auto& xwel = wellData.getXWell();
-            const auto& zwel8 = wellData.getZWell();
+    BOOST_CHECK_MESSAGE(op_1.econ_workover_procedure == Limits::WOProcedure::Con,
+                        "Well '" << op_1.name << "' must have work-over procedure 'Con'");
+    BOOST_CHECK_MESSAGE(op_1.econ_workover_procedure_2 == Limits::WOProcedure::StopOrShut,
+                        "Well '" << op_1.name << "' must have secondary work-over "
+                        "procedure 'StopOrShut' (WELL)");
+    BOOST_CHECK_MESSAGE(op_1.econ_limit_end_run == Limits::EndRun::Yes,
+                        "Well '" << op_1.name << "' must have end-run flag 'Yes'");
+    BOOST_CHECK_MESSAGE(op_1.econ_limit_quantity == Limits::Quantity::Potential,
+                        "Well '" << op_1.name << "' must have limiting "
+                        "quantity 'Potential'");
 
-            const auto& icon = connectionData.getIConn();
-            const auto& scon = connectionData.getSConn();
-            const auto& xcon = connectionData.getXConn();
+    BOOST_CHECK_CLOSE(op_1.econ_limit_min_oil  ,   1.0f / 86400.0f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_min_gas  , 800.0f / 86400.0f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_wct  ,   0.1f           , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_gor  , 321.09f          , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_wgr  ,   1.0e-3f        , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_max_wct_2,   0.8f           , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_1.econ_limit_min_liq  ,  50.0f / 86400.0f, 1.0e-7f);
 
-            const auto& zgrp8 = groupData.getZGroup();
-            const auto& igrp = groupData.getIGroup();
-            const auto& sgrp = groupData.getSGroup();
-            const auto& xgrp = groupData.getXGroup();
+    const auto& op_2 = state.get_well("OP_2");
 
-            std::vector<std::string> zwel;
-            for (const auto& s8 : zwel8)
-                zwel.push_back(s8.c_str());
+    BOOST_CHECK_MESSAGE(op_2.econ_workover_procedure == Limits::WOProcedure::None,
+                        "Well '" << op_2.name << "' must have work-over procedure 'None'");
+    BOOST_CHECK_MESSAGE(op_2.econ_workover_procedure_2 == Limits::WOProcedure::None,
+                        "Well '" << op_2.name << "' must have secondary work-over "
+                        "procedure 'None'");
+    BOOST_CHECK_MESSAGE(op_2.econ_limit_end_run == Limits::EndRun::No,
+                        "Well '" << op_2.name << "' must have end-run flag 'No'");
+    BOOST_CHECK_MESSAGE(op_2.econ_limit_quantity == Limits::Quantity::Rate,
+                        "Well '" << op_2.name << "' must have limiting "
+                        "quantity 'Rate'");
 
-            std::vector<std::string> zgrp;
-            for (const auto& s8 : zgrp8)
-                zgrp.push_back(s8.c_str());
+    BOOST_CHECK_CLOSE(op_2.econ_limit_min_oil  ,   0.0f    , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_min_gas  ,   0.0f    , 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_wct  ,   1.0e+20f, 1.0e-7f); // No limit => infinity
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_gor  ,   1.0e+20f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_wgr  ,   1.0e+20f, 1.0e-7f);
+    BOOST_CHECK_CLOSE(op_2.econ_limit_max_wct_2,   0.0f    , 1.0e-7f); // No limit => 0.0
+    BOOST_CHECK_CLOSE(op_2.econ_limit_min_liq  ,   0.0f    , 1.0e-7f);
+}
 
-            rstFile.write("IWEL", iwel);
-            rstFile.write("SWEL", swel);
-            rstFile.write("XWEL", xwel);
-            rstFile.write("ZWEL", zwel);
+BOOST_AUTO_TEST_CASE(Construct_Well_Economic_Limits_Object)
+{
+    const auto simCase = SimulationCase{first_sim()};
 
-            rstFile.write("ICON", icon);
-            rstFile.write("SCON", scon);
-            rstFile.write("XCON", xcon);
+    // Report Step 2: 2011-01-20 --> 2013-06-15
+    const auto rptStep  = std::size_t{4};
+    const auto baseName = std::string { "TEST_RST_WECON" };
 
-            rstFile.write("ZGRP", zgrp);
-            rstFile.write("IGRP", igrp);
-            rstFile.write("SGRP", sgrp);
-            rstFile.write("XGRP", xgrp);
-        }
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep,
+                         "test_rst_wecon");
 
-        auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST_UDQRST.UNRST");
-        auto rstView = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), rptStep);
+    const auto op_1 = std::string { "OP_1" };
+    const auto op_2 = std::string { "OP_2" };
+    const auto limit_op_1 = Opm::WellEconProductionLimits{ state.get_well(op_1) };
+    const auto limit_op_2 = Opm::WellEconProductionLimits{ state.get_well(op_2) };
 
-        auto state = Opm::RestartIO::RstState::load(std::move(rstView), simCase.es.runspec(), simCase.parser);
+    BOOST_CHECK_MESSAGE(limit_op_1.requireWorkover(),
+                        "Well '" << op_1 << "' must have a primary work-over procedure");
+    BOOST_CHECK_MESSAGE(limit_op_1.workover() == Opm::WellEconProductionLimits::EconWorkover::CON,
+                        "Well '" << op_1 << "' must have work-over procedure 'CON'");
 
-        const auto& well = state.get_well("OP_3");
-        BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
-    }
+    BOOST_CHECK_MESSAGE(limit_op_1.requireSecondaryWorkover(),
+                        "Well '" << op_1 << "' must have a secondary work-over procedure");
+    BOOST_CHECK_MESSAGE(limit_op_1.workoverSecondary() == Opm::WellEconProductionLimits::EconWorkover::WELL,
+                        "Well '" << op_1 << "' must have secondary work-over procedure 'WELL'");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.endRun(), "Well '" << op_1 << "' must have end-run flag 'true'");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.quantityLimit() == Opm::WellEconProductionLimits::QuantityLimit::POTN,
+                        "Well '" << op_1 << "' must have limiting quantity 'POTN'");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onAnyEffectiveLimit(),
+                        "Well '" << op_1 << "' must have active economic limits");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onAnyRatioLimit(),
+                        "Well '" << op_1 << "' must have active economic limits on ratios");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onAnyRateLimit(),
+                        "Well '" << op_1 << "' must have active economic limits on rates");
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMinOilRate(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on minimum oil rate");
+    BOOST_CHECK_CLOSE(limit_op_1.minOilRate(), 1.0 / 86400.0, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMinGasRate(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on minimum gas rate");
+    BOOST_CHECK_CLOSE(limit_op_1.minGasRate(), 800.0 / 86400.0, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMaxWaterCut(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum water-cut");
+    BOOST_CHECK_CLOSE(limit_op_1.maxWaterCut(), 0.1, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMaxGasOilRatio(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum gas-oil ratio");
+    BOOST_CHECK_CLOSE(limit_op_1.maxGasOilRatio(), 321.09, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMaxWaterGasRatio(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum water-gas ratio");
+    BOOST_CHECK_CLOSE(limit_op_1.maxWaterGasRatio(), 1.0e-3, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onSecondaryMaxWaterCut(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on maximum secondary water-cut");
+    BOOST_CHECK_CLOSE(limit_op_1.maxSecondaryMaxWaterCut(), 0.8, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(limit_op_1.onMinLiquidRate(),
+                        "Well '" << op_1 << "' must have active "
+                        "economic limits on minimum liquid rate");
+    BOOST_CHECK_CLOSE(limit_op_1.minLiquidRate(), 50.0 / 86400.0, 1.0e-5);
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.onMaxGasLiquidRatio(),
+                        "Well '" << op_1 << "' must NOT have active "
+                        "economic limits on maximum gas-liquid ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.onMaxTemperature(),
+                        "Well '" << op_1 << "' must NOT have active "
+                        "economic limits on maximum temperature");
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.onMinReservoirFluidRate(),
+                        "Well '" << op_1 << "' must NOT have active "
+                        "economic limits on minimum reservoir flow rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_1.validFollowonWell(),
+                        "Well '" << op_1 << "' must NOT have an "
+                        "active follow-on well");
+
+    // =======================================================================
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.requireWorkover(),
+                        "Well '" << op_2 << "' must NOT have a primary work-over procedure");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.requireSecondaryWorkover(),
+                        "Well '" << op_2 << "' must NOT have a secondary work-over procedure");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.endRun(), "Well '" << op_2 << "' must have end-run flag 'false'");
+
+    BOOST_CHECK_MESSAGE(limit_op_2.quantityLimit() == Opm::WellEconProductionLimits::QuantityLimit::RATE,
+                        "Well '" << op_2 << "' must have limiting quantity 'RATE'");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onAnyEffectiveLimit(),
+                        "Well '" << op_2 << "' must NOT have active economic limits");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onAnyRatioLimit(),
+                        "Well '" << op_2 << "' must NOT have active economic limits on ratios");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onAnyRateLimit(),
+                        "Well '" << op_2 << "' must NOT have active economic limits on rates");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinOilRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum oil rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinGasRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum gas rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxWaterCut(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum water-cut");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxGasOilRatio(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum gas-oil ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxWaterGasRatio(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum water-gas ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onSecondaryMaxWaterCut(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum secondary water-cut");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinLiquidRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum liquid rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxGasLiquidRatio(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum gas-liquid ratio");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMaxTemperature(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on maximum temperature");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.onMinReservoirFluidRate(),
+                        "Well '" << op_2 << "' must NOT have active "
+                        "economic limits on minimum reservoir flow rate");
+
+    BOOST_CHECK_MESSAGE(! limit_op_2.validFollowonWell(),
+                        "Well '" << op_2 << "' must NOT have an "
+                        "active follow-on well");
 }
