@@ -1402,10 +1402,12 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             }
         }
 
-        if (auto prtLog = OpmLog::getBackend<EclipsePRTLog>("ECLIPSEPRTLOG")) {
+        if (OpmLog::hasBackend("ECLIPSEPRTLOG")) {
+            auto prtLog = OpmLog::getBackend<EclipsePRTLog>("ECLIPSEPRTLOG");
             prtLog->addMessage(Log::MessageType::Warning, prt.str());
         }
-        if (auto consoleLog = OpmLog::getBackend<StreamLog>("STDOUT_LOGGER")) {
+        if (OpmLog::hasBackend("STDOUT_LOGGER")) {
+            auto consoleLog = OpmLog::getBackend<StreamLog>("STDOUT_LOGGER");
             consoleLog->addMessage(Log::MessageType::Warning, console.str());
         }
     }
