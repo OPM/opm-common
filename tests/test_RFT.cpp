@@ -24,47 +24,46 @@
 
 #include <opm/io/eclipse/ERft.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
+#include <opm/output/data/Groups.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/data/Groups.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/WriteRFT.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/common/utility/FileSystem.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <cstddef>
 #include <ctime>
-#include <map>
 #include <iomanip>
+#include <map>
 #include <ostream>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <opm/common/utility/FileSystem.hpp>
-#include <opm/common/utility/TimeService.hpp>
-
-using namespace Opm;
 
 namespace std { // hack...
     // For printing ERft::RftDate objects.  Needed by EQUAL_COLLECTIONS.
@@ -79,6 +78,21 @@ namespace std { // hack...
 }
 
 namespace {
+    struct Setup
+    {
+        explicit Setup(const std::string& deckfile)
+            : Setup{ ::Opm::Parser{}.parseFile(deckfile) }
+        {}
+
+        explicit Setup(const ::Opm::Deck& deck)
+            : es    { deck }
+            , sched { deck, es, std::make_shared<const ::Opm::Python>() }
+        {}
+
+        ::Opm::EclipseState es;
+        ::Opm::Schedule     sched;
+    };
+
     class RSet
     {
     public:
@@ -217,7 +231,7 @@ namespace {
         BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*0.250 + 0.250/2, tol);
     }
 
-    data::Solution createBlackoilState(int timeStepIdx, int numCells)
+    Opm::data::Solution createBlackoilState(int timeStepIdx, int numCells)
     {
         std::vector< double > pressure( numCells );
         std::vector< double > swat( numCells, 0 );
@@ -227,10 +241,10 @@ namespace {
             pressure[i] = timeStepIdx*1e5 + 1e4 + i;
         }
 
-        data::Solution sol;
-        sol.insert( "PRESSURE", UnitSystem::measure::pressure, pressure , data::TargetType::RESTART_SOLUTION );
-        sol.insert( "SWAT", UnitSystem::measure::identity, swat , data::TargetType::RESTART_SOLUTION );
-        sol.insert( "SGAS", UnitSystem::measure::identity, sgas, data::TargetType::RESTART_SOLUTION );
+        Opm::data::Solution sol;
+        sol.insert( "PRESSURE", Opm::UnitSystem::measure::pressure, pressure, Opm::data::TargetType::RESTART_SOLUTION );
+        sol.insert( "SWAT"    , Opm::UnitSystem::measure::identity, swat    , Opm::data::TargetType::RESTART_SOLUTION );
+        sol.insert( "SGAS"    , Opm::UnitSystem::measure::identity, sgas    , Opm::data::TargetType::RESTART_SOLUTION );
 
         return sol;
     }
@@ -251,13 +265,13 @@ BOOST_AUTO_TEST_SUITE(Using_EclipseIO)
 
 BOOST_AUTO_TEST_CASE(test_RFT)
 {
-    auto python = std::make_shared<Python>();
+    auto python = std::make_shared<Opm::Python>();
     const auto rset = RSet{ "TESTRFT" };
 
     const auto eclipse_data_filename = std::string{ "testrft.DATA" };
 
-    const auto deck = Parser{}.parseFile(eclipse_data_filename);
-    auto eclipseState = EclipseState { deck };
+    const auto deck = Opm::Parser{}.parseFile(eclipse_data_filename);
+    auto eclipseState = Opm::EclipseState { deck };
 
     eclipseState.getIOConfig().setOutputDir(rset.outputDir());
 
@@ -271,27 +285,27 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
 
-        const Schedule schedule(deck, eclipseState, python);
-        const SummaryConfig summary_config( deck, schedule, eclipseState.fieldProps(), eclipseState.aquifer() );
+        const Opm::Schedule schedule(deck, eclipseState, python);
+        const Opm::SummaryConfig summary_config( deck, schedule, eclipseState.fieldProps(), eclipseState.aquifer() );
 
-        EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
+        Opm::EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
 
         const auto start_time = schedule.posixStartTime();
         const auto step_time  = timeStamp(::Opm::EclIO::ERft::RftDate{ 2008, 10, 10 });
 
-        SummaryState st(TimeService::now());
-        Action::State action_state;
-        UDQState udq_state(1234);
-        WellTestState wtest_state;
+        Opm::SummaryState st(Opm::TimeService::now());
+        Opm::Action::State action_state;
+        Opm::UDQState udq_state(1234);
+        Opm::WellTestState wtest_state;
 
-        data::Rates r1, r2;
-        r1.set( data::Rates::opt::wat, 4.11 );
-        r1.set( data::Rates::opt::oil, 4.12 );
-        r1.set( data::Rates::opt::gas, 4.13 );
+        Opm::data::Rates r1, r2;
+        r1.set( Opm::data::Rates::opt::wat, 4.11 );
+        r1.set( Opm::data::Rates::opt::oil, 4.12 );
+        r1.set( Opm::data::Rates::opt::gas, 4.13 );
 
-        r2.set( data::Rates::opt::wat, 4.21 );
-        r2.set( data::Rates::opt::oil, 4.22 );
-        r2.set( data::Rates::opt::gas, 4.23 );
+        r2.set( Opm::data::Rates::opt::wat, 4.21 );
+        r2.set( Opm::data::Rates::opt::oil, 4.22 );
+        r2.set( Opm::data::Rates::opt::gas, 4.23 );
 
         std::vector<Opm::data::Connection> well1_comps(9);
         for (size_t i = 0; i < 9; ++i) {
@@ -322,7 +336,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
             std::move(well2_comps), SegRes{}, Ctrl{}
         };
 
-        RestartValue restart_value(std::move(solution), std::move(wells), std::move(group_nwrk), {});
+        Opm::RestartValue restart_value(std::move(solution), std::move(wells), std::move(group_nwrk), {});
 
         eclipseWriter.writeTimeStep( action_state,
                                      wtest_state,
@@ -388,13 +402,13 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(test_RFT2)
 {
-    auto python = std::make_shared<Python>();
+    auto python = std::make_shared<Opm::Python>();
     const auto rset = RSet{ "TESTRFT" };
 
     const auto eclipse_data_filename = std::string{ "testrft.DATA" };
 
-    const auto deck = Parser().parseFile( eclipse_data_filename );
-    auto eclipseState = EclipseState(deck);
+    const auto deck = Opm::Parser().parseFile( eclipse_data_filename );
+    auto eclipseState = Opm::EclipseState(deck);
 
     eclipseState.getIOConfig().setOutputDir(rset.outputDir());
 
@@ -408,27 +422,27 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
 
-        Schedule schedule(deck, eclipseState, python);
-        SummaryConfig summary_config( deck, schedule, eclipseState.fieldProps(), eclipseState.aquifer() );
-        SummaryState st(Opm::TimeService::now());
-        Action::State action_state;
-        UDQState udq_state(10);
-        WellTestState wtest_state;
+        Opm::Schedule schedule(deck, eclipseState, python);
+        Opm::SummaryConfig summary_config( deck, schedule, eclipseState.fieldProps(), eclipseState.aquifer() );
+        Opm::SummaryState st(Opm::TimeService::now());
+        Opm::Action::State action_state;
+        Opm::UDQState udq_state(10);
+        Opm::WellTestState wtest_state;
 
         const auto  start_time = schedule.posixStartTime();
         for (int counter = 0; counter < 2; counter++) {
-            EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
+            Opm::EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
             for (size_t step = 0; step < schedule.size(); step++) {
                 const auto step_time = schedule.simTime(step);
 
-                data::Rates r1, r2;
-                r1.set( data::Rates::opt::wat, 4.11 );
-                r1.set( data::Rates::opt::oil, 4.12 );
-                r1.set( data::Rates::opt::gas, 4.13 );
+                Opm::data::Rates r1, r2;
+                r1.set( Opm::data::Rates::opt::wat, 4.11 );
+                r1.set( Opm::data::Rates::opt::oil, 4.12 );
+                r1.set( Opm::data::Rates::opt::gas, 4.13 );
 
-                r2.set( data::Rates::opt::wat, 4.21 );
-                r2.set( data::Rates::opt::oil, 4.22 );
-                r2.set( data::Rates::opt::gas, 4.23 );
+                r2.set( Opm::data::Rates::opt::wat, 4.21 );
+                r2.set( Opm::data::Rates::opt::oil, 4.22 );
+                r2.set( Opm::data::Rates::opt::gas, 4.23 );
 
                 std::vector<Opm::data::Connection> well1_comps(9);
                 for (size_t i = 0; i < 9; ++i) {
@@ -458,7 +472,8 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                     std::move(well2_comps), SegRes{}, Ctrl{}
                 };
 
-                RestartValue restart_value(std::move(solution), std::move(wells), data::GroupAndNetworkValues(), {});
+                Opm::RestartValue restart_value(std::move(solution), std::move(wells),
+                                                Opm::data::GroupAndNetworkValues(), {});
 
                 eclipseWriter.writeTimeStep( action_state,
                                              wtest_state,
@@ -482,22 +497,6 @@ BOOST_AUTO_TEST_SUITE_END() // Using_EclipseIO
 BOOST_AUTO_TEST_SUITE(Using_Direct_Write)
 
 namespace {
-    struct Setup
-    {
-        explicit Setup(const std::string& deckfile)
-            : Setup{ ::Opm::Parser{}.parseFile(deckfile) }
-        {}
-
-        explicit Setup(const ::Opm::Deck& deck)
-            : es    { deck }
-            , sched { deck, es, std::make_shared<const ::Opm::Python>() }
-        {
-        }
-
-        ::Opm::EclipseState es;
-        ::Opm::Schedule     sched;
-    };
-
     std::vector<Opm::data::Connection>
     connRes_OP1(const ::Opm::EclipseGrid& grid)
     {
