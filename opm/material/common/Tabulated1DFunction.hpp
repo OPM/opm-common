@@ -455,8 +455,14 @@ private:
     template <class Evaluation>
     size_t findSegmentIndex_(const Evaluation& x, bool extrapolate = false) const
     {
+        if (!isfinite(x)) {
+            std::ostringstream sstream;
+            sstream << "We can not search for extrapolation/interpolation segment in an 1D table for non-finite value " << getValue(x) << " .";
+            throw std::runtime_error(sstream.str());
+        }
+
         if (!extrapolate && !applies(x))
-            throw std::logic_error("Tried to evaluate a tabulated function outside of its range");
+            throw std::logic_error("Trying to evaluate a tabulated function outside of its range");
 
         // we need at least two sampling points!
         if (numSamples() < 2) {
@@ -485,7 +491,7 @@ private:
             if (xValues_[lowerIdx] > x || x > xValues_[lowerIdx + 1]) {
                 std::ostringstream sstream;
                 sstream << "Problematic interpolation/extrapolation segment is found for the input value " << Opm::getValue(x)
-                        << "\nthe lowe index of the segment is " << lowerIdx << ", the size of the table is " << numSamples()
+                        << "\nthe lower index of the found segment is " << lowerIdx << ", the size of the table is " << numSamples()
                         << ",\nand the end values of the found segment are " << xValues_[lowerIdx] << " and " << xValues_[lowerIdx + 1]
                         << ", respectively.";
                 std::ostringstream sstream2;
