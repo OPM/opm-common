@@ -27,6 +27,7 @@
 #ifndef OPM_TABULATED_1D_FUNCTION_HPP
 #define OPM_TABULATED_1D_FUNCTION_HPP
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/material/densead/Math.hpp>
 #include <opm/material/common/Exceptions.hpp>
 
@@ -35,6 +36,7 @@
 #include <iostream>
 #include <tuple>
 #include <vector>
+#include <sstream>
 
 namespace Opm {
 /*!
@@ -454,10 +456,15 @@ private:
     size_t findSegmentIndex_(const Evaluation& x, bool extrapolate = false) const
     {
         if (!extrapolate && !applies(x))
-            throw NumericalIssue("Tried to evaluate a tabulated function outside of its range");
+            throw std::logic_error("Tried to evaluate a tabulated function outside of its range");
 
         // we need at least two sampling points!
-        assert(xValues_.size() >= 2);
+        if (numSamples() < 2) {
+            std::ostringstream sstream;
+            sstream << "We need at least two sampling points to do interpolation/extrapolation,"
+                       "and the table only contains {} sampling points" << numSamples();
+            throw std::logic_error(sstream.str());
+        }
 
         if (x <= xValues_[1])
             return 0;
@@ -475,8 +482,27 @@ private:
                     lowerIdx = pivotIdx;
             }
 
-            assert(xValues_[lowerIdx] <= x);
-            assert(x <= xValues_[lowerIdx + 1]);
+            if (xValues_[lowerIdx] > x || x > xValues_[lowerIdx + 1]) {
+                std::ostringstream sstream;
+                sstream << "Problematic interpolation/extrapolation segment is found for the input value " << Opm::getValue(x)
+                        << "\nthe lowe index of the segment is " << lowerIdx << ", the size of the table is " << numSamples()
+                        << ",\nand the end values of the found segment are " << xValues_[lowerIdx] << " and " << xValues_[lowerIdx + 1]
+                        << ", respectively.";
+                std::ostringstream sstream2;
+                sstream2 << " Outputting the problematic table for more information(with *** marking the found segment):";
+                for (size_t i = 0; i < numSamples(); ++i) {
+                    if (i % 10 == 0)
+                        sstream2 << "\n";
+                    if (i == lowerIdx)
+                        sstream2 << " ***";
+                    sstream2 << " " << xValues_[i];
+                    if (i == lowerIdx + 1)
+                        sstream2 << " ***";
+                }
+                sstream2<< "\n";
+                OpmLog::debug(sstream.str() + "\n" + sstream2.str());
+                throw std::runtime_error(sstream.str());
+            }
             return lowerIdx;
         }
     }
