@@ -52,6 +52,7 @@ BOOST_AUTO_TEST_SUITE ()
 BOOST_AUTO_TEST_CASE (copyable)
 {
     A<B> a1 {};
+    BOOST_CHECK_MESSAGE(!a1.get_aptr(), "Boolean context operator works. Initialization with nullptr works");
     a1.assign(B{1.1,2});
     BOOST_CHECK_MESSAGE(a1.get_aptr().get()->a == 1.1, "Able to assign new value to pointer");
     A<B> a2 = a1;
