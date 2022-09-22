@@ -205,6 +205,68 @@ namespace {
 
     // =======================================================================
 
+    class WellConnectionRecord
+    {
+    public:
+        explicit WellConnectionRecord(const std::size_t nconn = 0);
+
+        void collectRecordData(const ::Opm::EclipseGrid& grid,
+                               const ::Opm::Well&        well);
+
+        void write(::Opm::EclIO::OutputStream::RFT& rftFile) const;
+
+    private:
+        std::vector<int> i_;
+        std::vector<int> j_;
+        std::vector<int> k_;
+
+        std::vector<Opm::EclIO::PaddedOutputString<8>> host_;
+
+        void addConnection(const ::Opm::Connection& conn);
+    };
+
+    WellConnectionRecord::WellConnectionRecord(const std::size_t nconn)
+    {
+        if (nconn == std::size_t{0}) { return; }
+
+        this->i_.reserve(nconn);
+        this->j_.reserve(nconn);
+        this->k_.reserve(nconn);
+
+        this->host_.reserve(nconn);
+    }
+
+    void WellConnectionRecord::collectRecordData(const ::Opm::EclipseGrid& grid,
+                                                 const ::Opm::Well&        well)
+    {
+        using ConnPos = ::Opm::WellConnections::const_iterator;
+
+        connectionLoop(well.getConnections(), grid, [this](ConnPos connPos)
+        {
+            this->addConnection(*connPos);
+        });
+    }
+
+    void WellConnectionRecord::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
+    {
+        rftFile.write("CONIPOS", this->i_);
+        rftFile.write("CONJPOS", this->j_);
+        rftFile.write("CONKPOS", this->k_);
+
+        rftFile.write("HOSTGRID", this->host_);
+    }
+
+    void WellConnectionRecord::addConnection(const ::Opm::Connection& conn)
+    {
+        this->i_.push_back(conn.getI() + 1);
+        this->j_.push_back(conn.getJ() + 1);
+        this->k_.push_back(conn.getK() + 1);
+
+        this->host_.emplace_back();
+    }
+
+    // =======================================================================
+
     class RFTRecord
     {
     public:
@@ -215,21 +277,15 @@ namespace {
                                const ::Opm::Well&        well,
                                const ::Opm::data::Well&  wellSol);
 
-        std::size_t nConn() const { return this->i_.size(); }
+        std::size_t nConn() const { return this->depth_.size(); }
 
         void write(::Opm::EclIO::OutputStream::RFT& rftFile) const;
 
     private:
-        std::vector<int> i_;
-        std::vector<int> j_;
-        std::vector<int> k_;
-
         std::vector<float> depth_;
         std::vector<float> press_;
         std::vector<float> swat_;
         std::vector<float> sgas_;
-
-        std::vector<Opm::EclIO::PaddedOutputString<8>> host_;
 
         void addConnection(const ::Opm::UnitSystem&       usys,
                            const ::Opm::Connection&       conn,
@@ -238,18 +294,12 @@ namespace {
 
     RFTRecord::RFTRecord(const std::size_t nconn)
     {
-        if (nconn == 0) { return; }
-
-        this->i_.reserve(nconn);
-        this->j_.reserve(nconn);
-        this->k_.reserve(nconn);
+        if (nconn == std::size_t{0}) { return; }
 
         this->depth_.reserve(nconn);
         this->press_.reserve(nconn);
         this->swat_ .reserve(nconn);
         this->sgas_ .reserve(nconn);
-
-        this->host_.reserve(nconn);
     }
 
     void RFTRecord::collectRecordData(const ::Opm::UnitSystem&  usys,
@@ -277,12 +327,6 @@ namespace {
 
     void RFTRecord::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
     {
-        rftFile.write("CONIPOS", this->i_);
-        rftFile.write("CONJPOS", this->j_);
-        rftFile.write("CONKPOS", this->k_);
-
-        rftFile.write("HOSTGRID", this->host_);
-
         rftFile.write("DEPTH"   , this->depth_);
         rftFile.write("PRESSURE", this->press_);
         rftFile.write("SWAT"    , this->swat_);
@@ -293,10 +337,6 @@ namespace {
                                   const ::Opm::Connection&       conn,
                                   const ::Opm::data::Connection& xcon)
     {
-        this->i_.push_back(conn.getI() + 1);
-        this->j_.push_back(conn.getJ() + 1);
-        this->k_.push_back(conn.getK() + 1);
-
         using M = ::Opm::UnitSystem::measure;
         auto cvrt = [&usys](const M meas, const double x) -> float
         {
@@ -309,7 +349,6 @@ namespace {
         this->swat_.push_back(xcon.cell_saturation_water);
         this->sgas_.push_back(xcon.cell_saturation_gas);
 
-        this->host_.emplace_back();
     }
 
     // =======================================================================
@@ -349,13 +388,15 @@ namespace {
         double                                         elapsed_{};
         Opm::RestartIO::InteHEAD::TimePoint            timeStamp_{};
 
-        std::optional<RFTRecord> rft_{};
+        std::unique_ptr<WellConnectionRecord> wconns_{};
+        std::unique_ptr<RFTRecord>            rft_{};
 
         std::vector<DataHandler>  dataHandlers_{};
         std::vector<RecordWriter> recordWriters_{};
 
         static std::map<DataTypes, CreateTypeHandler> creators_;
 
+        void initialiseConnHandlers();
         void initialiseRFTHandlers();
         bool haveOutputData() const;
         bool haveRFTData() const;
@@ -379,6 +420,8 @@ namespace {
         , elapsed_  { elapsed         }
         , timeStamp_{ timeStamp       }
     {
+        this->initialiseConnHandlers();
+
         for (const auto& type : types) {
             auto handler = creators_.find(type);
             if (handler == creators_.end()) {
@@ -414,13 +457,36 @@ namespace {
         }
     }
 
+    void WellRFTOutputData::initialiseConnHandlers()
+    {
+        if (this->well_.get().getConnections().empty()) {
+            return;
+        }
+
+        this->wconns_ = std::make_unique<WellConnectionRecord>
+            (this->well_.get().getConnections().size());
+
+        this->dataHandlers_.emplace_back(
+            [this]([[maybe_unused]] const Opm::data::Well& wellSol)
+        {
+            this->wconns_->collectRecordData(this->grid_, this->well_);
+        });
+
+        this->recordWriters_.emplace_back(
+            [this](::Opm::EclIO::OutputStream::RFT& rftFile)
+        {
+            this->wconns_->write(rftFile);
+        });
+    }
+
     void WellRFTOutputData::initialiseRFTHandlers()
     {
         if (this->well_.get().getConnections().empty()) {
             return;
         }
 
-        this->rft_ = RFTRecord{ this->well_.get().getConnections().size() };
+        this->rft_ = std::make_unique<RFTRecord>
+            (this->well_.get().getConnections().size());
 
         this->dataHandlers_.emplace_back(
             [this](const Opm::data::Well& wellSol)
@@ -438,7 +504,7 @@ namespace {
 
     bool WellRFTOutputData::haveRFTData() const
     {
-        return this->rft_.has_value()
+        return (this->rft_ != nullptr)
             && (this->rft_->nConn() > std::size_t{0});
     }
 
