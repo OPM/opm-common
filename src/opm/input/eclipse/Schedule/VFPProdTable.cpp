@@ -399,11 +399,11 @@ void VFPProdTable::check() {
 
     if (error_count > 0) {
         const auto& location = this->m_location;
-        OpmLog::warning(fmt::format("VFPPROD table {0} has {1} nonmonotonic points of BHP(THP)\n"
+        OpmLog::warning(fmt::format("VFPPROD table {0} has {1} non-monotonic points of BHP(THP)\n"
                                     "In {2} line {3}\n"
                                     "This may cause convergence issues due to switching between BHP and THP control.\n",
-                                    error_count,
                                     m_table_num,
+                                    error_count,
                                     location.filename,
                                     location.lineno));
     }
