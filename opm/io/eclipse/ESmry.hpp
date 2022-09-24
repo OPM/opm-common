@@ -61,7 +61,8 @@ public:
 
     bool make_esmry_file();
 
-    time_point startdate() const { return startdat; }
+    time_point startdate() const { return tp_startdat; }
+    std::vector<int> start_v() const { return start_vect; }
 
     const std::vector<std::string>& keywordList() const;
     std::vector<std::string> keywordList(const std::string& pattern) const;
@@ -110,7 +111,8 @@ private:
     std::vector<SummaryNode> summaryNodes;
     std::unordered_map<std::string, std::string> kwunits;
 
-    time_point startdat;
+    time_point tp_startdat;
+    std::vector<int> start_vect;
 
     mutable double m_io_opening;
     mutable double m_io_loading;

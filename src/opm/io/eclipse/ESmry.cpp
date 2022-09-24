@@ -180,7 +180,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         std::vector<std::string> combindKeyList;
         combindKeyList.reserve(dimens[0]);
 
-        this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
+        start_vect = smspecList.back().get<int>("STARTDAT");
+        this->tp_startdat = make_date(start_vect);
 
         if ( have_lgr ) {
             for (unsigned int i=0; i<keywords.size(); i++) {
@@ -312,8 +313,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         std::vector<std::string> combindKeyList;
         combindKeyList.reserve(dimens[0]);
 
-        this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
-
         if (have_lgr) {
             for (size_t i = 0; i < keywords.size(); i++) {
                 Opm::EclIO::lgr_info lgr { lgrs[i], {numlx[i], numly[i], numlz[i]}};
@@ -375,7 +374,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     for (int i = 0; i < nSpecFiles; i++)
         arrayPos.push_back({});
 
-    // tskille: testing
     std::map<std::string, int> keyIndex;
     {
         size_t m = 0;
@@ -444,8 +442,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     int toReportStepNumber;
     int step = 0;
     specInd = nSpecFiles - 1;
-
-    //nVect = keywList.size();
 
     int index = 0;
     for (const auto& keyw : keywList) {
@@ -1044,16 +1040,20 @@ bool ESmry::make_esmry_file()
         this->loadData();
 
         {
-            Opm::TimeStampUTC ts( std::chrono::system_clock::to_time_t( startdat ));
+            std::vector<int> start_date_vect = start_vect;
 
-            std::vector<int> start_date_vect = {ts.day(), ts.month(), ts.year(), ts.hour(),
-                                                ts.minutes(), ts.seconds(), 0 };
+            int sec = start_date_vect[5] / 1000000;
+            int millisec = (start_date_vect[5] % 1000000) / 1000;
+
+            start_date_vect[5] = sec;
+            start_date_vect.push_back(millisec);
 
             std::vector<std::string> units;
             units.reserve(keyword.size());
 
             for (auto key : keyword)
                 units.push_back(kwunits.at(key));
+
 
             Opm::EclIO::EclOutput outFile(smryDataFile, false, std::ios::out);
 
@@ -1363,7 +1363,7 @@ std::vector<Opm::time_point> ESmry::dates() const {
     std::vector<Opm::time_point> d;
 
     for (const auto& t : this->get("TIME"))
-        d.push_back( this->startdat + std::chrono::duration_cast<std::chrono::seconds>( std::chrono::duration<double, std::chrono::seconds::period>( t * time_unit)));
+        d.push_back( this->tp_startdat + std::chrono::duration_cast<std::chrono::seconds>( std::chrono::duration<double, std::chrono::seconds::period>( t * time_unit)));
 
     return d;
 }
