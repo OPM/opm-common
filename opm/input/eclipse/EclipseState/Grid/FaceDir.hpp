@@ -28,12 +28,13 @@ namespace Opm {
     namespace FaceDir {
 
         enum DirEnum {
-            XPlus  = 1,
-            XMinus = 2,
-            YPlus  = 4,
-            YMinus = 8,
-            ZPlus  = 16,
-            ZMinus = 32
+            Unknown = 0,
+            XPlus   = 1,
+            XMinus  = 2,
+            YPlus   = 4,
+            YMinus  = 8,
+            ZPlus   = 16,
+            ZMinus  = 32
         };
         /**
            The MULTREGTScanner will use these values as bitmaps;
@@ -43,6 +44,7 @@ namespace Opm {
 
         DirEnum FromString(const std::string& stringValue);
         int     FromMULTREGTString(const std::string& stringValue);
+        const std::string toString(DirEnum dir);
     }
 }
 

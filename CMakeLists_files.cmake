@@ -365,6 +365,7 @@ list (APPEND TEST_SOURCE_FILES
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/rst_test.cpp
+    tests/test_CopyablePtr.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -990,6 +991,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WriteRPT.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
+        opm/utility/CopyablePtr.hpp
         opm/utility/EModel.hpp
         )
 endif()
