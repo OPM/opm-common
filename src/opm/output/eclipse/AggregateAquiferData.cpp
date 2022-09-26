@@ -219,6 +219,11 @@ namespace {
             using FDValue = VI::IAnalyticAquiferConn::Value::FaceDirection;
 
             switch (faceDir) {
+            case Opm::FaceDir::DirEnum::Unknown:
+                // Invalid.  Must not write aquifer data if we get here.
+                // Fall through to 'throw' below.
+                break;
+
             case Opm::FaceDir::DirEnum::XMinus: return FDValue::IMinus;
             case Opm::FaceDir::DirEnum::XPlus:  return FDValue::IPlus;
             case Opm::FaceDir::DirEnum::YMinus: return FDValue::JMinus;
