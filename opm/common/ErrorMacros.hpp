@@ -49,22 +49,22 @@
 // std::runtime_error.
 //
 // Usage: OPM_THROW(ExceptionClass, "Error message " << value);
-#define OPM_THROW(Exception, message)                                   \
-    do {                                                                \
-        std::ostringstream oss__;                                       \
-        oss__ << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
-        ::Opm::OpmLog::error(oss__.str());                                \
-        throw Exception(oss__.str());                                   \
+#define OPM_THROW(Exception, message)                                                        \
+    do {                                                                                     \
+        std::ostringstream opmErrorMacroOStringStream;                                       \
+        opmErrorMacroOStringStream << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
+        ::Opm::OpmLog::error(opmErrorMacroOStringStream.str());                              \
+        throw Exception(opmErrorMacroOStringStream.str());                                   \
     } while (false)
 
 // Same as OPM_THROW, except for not making an OpmLog::error() call.
 //
 // Usage: OPM_THROW_NOLOG(ExceptionClass, "Error message " << value);
-#define OPM_THROW_NOLOG(Exception, message)                             \
-    do {                                                                \
-        std::ostringstream oss__;                                       \
-        oss__ << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
-        throw Exception(oss__.str());                                   \
+#define OPM_THROW_NOLOG(Exception, message)                                                  \
+    do {                                                                                     \
+        std::ostringstream opmErrorMacroOStringStream;                                       \
+        opmErrorMacroOStringStream << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
+        throw Exception(opmErrorMacroOStringStream.str());                                   \
     } while (false)
 
 // throw an exception if a condition is true
