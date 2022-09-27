@@ -59,6 +59,9 @@ namespace {
 
     const std::string faceDir( FaceDir::DirEnum dir ) {
       switch (dir) {
+      case FaceDir::DirEnum::Unknown:
+        break;
+
       case FaceDir::DirEnum::XPlus:  return "X+";
       case FaceDir::DirEnum::XMinus: return "X-";
       case FaceDir::DirEnum::YPlus:  return "Y+";
