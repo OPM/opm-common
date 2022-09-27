@@ -140,11 +140,7 @@ void RFTConfig::first_open(const bool on)
 void RFTConfig::update(const std::string& wname, RFT mode)
 {
     if (mode == RFT::NO) {
-        auto iter = this->rft_state.find(wname);
-        if (iter != this->rft_state.end()) {
-            this->rft_state.erase(iter);
-        }
-
+        this->rft_state.erase(wname);
         return;
     }
 
@@ -160,30 +156,28 @@ void RFTConfig::update(const std::string& wname, RFT mode)
     this->rft_state.insert_or_assign(wname, mode);
 }
 
-void RFTConfig::update(const std::string& wname, const PLT mode)
+void RFTConfig::update_state(const std::string& wname,
+                             const PLT          mode,
+                             StateMap<PLT>&     state)
 {
     if (mode == PLT::NO) {
-        auto iter = this->plt_state.find(wname);
-        if (iter != this->plt_state.end()) {
-            this->plt_state.erase(iter);
-        }
-
-        return;
+        // Remove 'wname' from list of wells for which to output PLT-type
+        // data.
+        state.erase(wname);
     }
+    else {
+        state.insert_or_assign(wname, mode);
+    }
+}
 
-    this->plt_state[wname] = mode;
+void RFTConfig::update(const std::string& wname, const PLT mode)
+{
+    this->update_state(wname, mode, this->plt_state);
 }
 
 void RFTConfig::update_segment(const std::string& wname, const PLT mode)
 {
-    if (mode == PLT::NO) {
-        // Remove 'wname' from list of wells for which to output segment
-        // data.
-        this->seg_state.erase(wname);
-    }
-    else {
-        this->seg_state.insert_or_assign(wname, mode);
-    }
+    this->update_state(wname, mode, this->seg_state);
 }
 
 bool RFTConfig::active() const

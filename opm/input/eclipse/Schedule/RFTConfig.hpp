@@ -82,14 +82,21 @@ public:
     }
 
 private:
+    template <typename Kind>
+    using StateMap = std::unordered_map<std::string, Kind>;
+
     // Please make sure that member functions serializeOp(), operator==(),
     // and serializeObject() are also up to date when changing this list of
     // data members.
     bool first_open_rft = false;
-    std::unordered_map<std::string, RFT> rft_state;
-    std::unordered_map<std::string, PLT> plt_state;
-    std::unordered_map<std::string, PLT> seg_state;
-    std::unordered_map<std::string, bool> open_wells;
+    StateMap<RFT> rft_state{};
+    StateMap<PLT> plt_state{};
+    StateMap<PLT> seg_state{};
+    std::unordered_map<std::string, bool> open_wells{};
+
+    void update_state(const std::string& wname,
+                      const PLT          mode,
+                      StateMap<PLT>&     state);
 };
 
 } // namespace Opm
