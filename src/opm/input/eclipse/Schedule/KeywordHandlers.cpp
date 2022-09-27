@@ -2160,10 +2160,12 @@ Well{0} entered with disallowed 'FIELD' parent group:
 
             const auto RFTKey = rftKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_RFT>());
             const auto PLTKey = pltKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_PLT>());
+            const auto SEGKey = pltKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_SEGMENT>());
 
             for (const auto& well_name : well_names) {
                 new_rft.update(well_name, RFTKey);
                 new_rft.update(well_name, PLTKey);
+                new_rft.update_segment(well_name, SEGKey);
             }
         }
 

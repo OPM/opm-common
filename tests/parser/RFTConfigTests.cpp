@@ -409,7 +409,7 @@ TSTEP
    3*30 /
 
 WRFTPLT
-  'P' YES /
+  'P' YES NO REPT /
   'I' NO YES /
 /
 
@@ -418,7 +418,7 @@ TSTEP
    3*30 /
 
 WRFTPLT
-  '*' TIMESTEP /
+  '*' TIMESTEP NO TIMESTEP /
 /
 
 TSTEP
@@ -459,7 +459,7 @@ TSTEP
    30 30 30 /
 
 WRFTPLT
-  'P' 1* YES /
+  'P' 1* YES YES /
   'I' REPT /
 /
 
@@ -493,7 +493,7 @@ TSTEP
   30 30 /
 
 WRFTPLT
-  '*' TIMESTEP /
+  '*' TIMESTEP NO REPT /
 /
 
 TSTEP
@@ -543,6 +543,23 @@ BOOST_AUTO_TEST_CASE(All_Open)
     BOOST_CHECK_MESSAGE(!sched[14].rft_config().plt("P"), R"(Should NOT Output PLT Data for "P" at Step 14)");
     BOOST_CHECK_MESSAGE(!sched[15].rft_config().plt("P"), R"(Should NOT Output PLT Data for "P" at Step 15)");
 
+    BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 0)");
+    BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 1)");
+    BOOST_CHECK_MESSAGE(!sched[ 2].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 2)");
+    BOOST_CHECK_MESSAGE(!sched[ 3].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 3)");
+    BOOST_CHECK_MESSAGE(!sched[ 4].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 4)");
+    BOOST_CHECK_MESSAGE(!sched[ 5].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 5)");
+    BOOST_CHECK_MESSAGE(!sched[ 6].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 6)");
+    BOOST_CHECK_MESSAGE(!sched[ 7].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 7)");
+    BOOST_CHECK_MESSAGE(!sched[ 8].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 8)");
+    BOOST_CHECK_MESSAGE(!sched[ 9].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 9)");
+    BOOST_CHECK_MESSAGE( sched[10].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 10)");
+    BOOST_CHECK_MESSAGE( sched[11].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 11)");
+    BOOST_CHECK_MESSAGE( sched[12].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 12)");
+    BOOST_CHECK_MESSAGE( sched[13].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 13)");
+    BOOST_CHECK_MESSAGE( sched[14].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 14)");
+    BOOST_CHECK_MESSAGE( sched[15].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 15)");
+
     BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().rft("I"), R"(Should NOT Output RFT Data for "I" at Step 0)");
     BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().rft("I"), R"(Should NOT Output RFT Data for "I" at Step 1)");
     BOOST_CHECK_MESSAGE(!sched[ 2].rft_config().rft("I"), R"(Should NOT Output RFT Data for "I" at Step 2)");
@@ -588,8 +605,8 @@ BOOST_AUTO_TEST_CASE(All_Open)
     BOOST_CHECK_MESSAGE( sched[ 8].rft_config().active(), R"(RFT Config must be Active at Step 8)");
     BOOST_CHECK_MESSAGE( sched[ 9].rft_config().active(), R"(RFT Config must be Active at Step 9)");
     BOOST_CHECK_MESSAGE( sched[10].rft_config().active(), R"(RFT Config must be Active at Step 10)");
-    BOOST_CHECK_MESSAGE(!sched[11].rft_config().active(), R"(RFT Config must be Inactive at Step 11)");
-    BOOST_CHECK_MESSAGE(!sched[12].rft_config().active(), R"(RFT Config must be Inactive at Step 12)");
+    BOOST_CHECK_MESSAGE( sched[11].rft_config().active(), R"(RFT Config must be Active at Step 11)");
+    BOOST_CHECK_MESSAGE( sched[12].rft_config().active(), R"(RFT Config must be Active at Step 12)");
     BOOST_CHECK_MESSAGE( sched[13].rft_config().active(), R"(RFT Config must be Active at Step 13)");
     BOOST_CHECK_MESSAGE( sched[14].rft_config().active(), R"(RFT Config must be Active at Step 14)");
     BOOST_CHECK_MESSAGE( sched[15].rft_config().active(), R"(RFT Config must be Active at Step 15)");
@@ -646,6 +663,28 @@ BOOST_AUTO_TEST_CASE(Deferred_Open)
     BOOST_CHECK_MESSAGE(!sched[19].rft_config().plt("P"), R"(Should NOT Output PLT Data for "P" at Step 19)");
     BOOST_CHECK_MESSAGE(!sched[20].rft_config().plt("P"), R"(Should NOT Output PLT Data for "P" at Step 20)");
 
+    BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 0)");
+    BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 1)");
+    BOOST_CHECK_MESSAGE(!sched[ 2].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 2)");
+    BOOST_CHECK_MESSAGE(!sched[ 3].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 3)");
+    BOOST_CHECK_MESSAGE(!sched[ 4].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 4)");
+    BOOST_CHECK_MESSAGE(!sched[ 5].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 5)");
+    BOOST_CHECK_MESSAGE(!sched[ 6].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 6)");
+    BOOST_CHECK_MESSAGE(!sched[ 7].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 7)");
+    BOOST_CHECK_MESSAGE(!sched[ 8].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 8)");
+    BOOST_CHECK_MESSAGE(!sched[ 9].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 9)");
+    BOOST_CHECK_MESSAGE( sched[10].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 10)");
+    BOOST_CHECK_MESSAGE(!sched[11].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 11)");
+    BOOST_CHECK_MESSAGE(!sched[12].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 12)");
+    BOOST_CHECK_MESSAGE(!sched[13].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 13)");
+    BOOST_CHECK_MESSAGE(!sched[14].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 14)");
+    BOOST_CHECK_MESSAGE(!sched[15].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 15)");
+    BOOST_CHECK_MESSAGE(!sched[16].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 16)");
+    BOOST_CHECK_MESSAGE(!sched[17].rft_config().segment("P"), R"(Should NOT Output SEGMENT Data for "P" at Step 17)");
+    BOOST_CHECK_MESSAGE( sched[18].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 18)");
+    BOOST_CHECK_MESSAGE( sched[19].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 19)");
+    BOOST_CHECK_MESSAGE( sched[20].rft_config().segment("P"), R"(Should Output SEGMENT Data for "P" at Step 20)");
+
     BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().rft("I"), R"(Should NOT Output RFT Data for "I" at Step 0)");
     BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().rft("I"), R"(Should NOT Output RFT Data for "I" at Step 1)");
     BOOST_CHECK_MESSAGE(!sched[ 2].rft_config().rft("I"), R"(Should NOT Output RFT Data for "I" at Step 2)");
@@ -689,6 +728,28 @@ BOOST_AUTO_TEST_CASE(Deferred_Open)
     BOOST_CHECK_MESSAGE(!sched[18].rft_config().plt("I"), R"(Should NOT Output PLT Data for "I" at Step 18)");
     BOOST_CHECK_MESSAGE(!sched[19].rft_config().plt("I"), R"(Should NOT Output PLT Data for "I" at Step 19)");
     BOOST_CHECK_MESSAGE(!sched[20].rft_config().plt("I"), R"(Should NOT Output PLT Data for "I" at Step 20)");
+
+    BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 0)");
+    BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 1)");
+    BOOST_CHECK_MESSAGE(!sched[ 2].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 2)");
+    BOOST_CHECK_MESSAGE(!sched[ 3].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 3)");
+    BOOST_CHECK_MESSAGE(!sched[ 4].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 4)");
+    BOOST_CHECK_MESSAGE(!sched[ 5].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 5)");
+    BOOST_CHECK_MESSAGE(!sched[ 6].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 6)");
+    BOOST_CHECK_MESSAGE(!sched[ 7].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 7)");
+    BOOST_CHECK_MESSAGE(!sched[ 8].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 8)");
+    BOOST_CHECK_MESSAGE(!sched[ 9].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 9)");
+    BOOST_CHECK_MESSAGE(!sched[10].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 10)");
+    BOOST_CHECK_MESSAGE(!sched[11].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 11)");
+    BOOST_CHECK_MESSAGE(!sched[12].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 12)");
+    BOOST_CHECK_MESSAGE(!sched[13].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 13)");
+    BOOST_CHECK_MESSAGE(!sched[14].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 14)");
+    BOOST_CHECK_MESSAGE(!sched[15].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 15)");
+    BOOST_CHECK_MESSAGE(!sched[16].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 16)");
+    BOOST_CHECK_MESSAGE(!sched[17].rft_config().segment("I"), R"(Should NOT Output SEGMENT Data for "I" at Step 17)");
+    BOOST_CHECK_MESSAGE( sched[18].rft_config().segment("I"), R"(Should Output SEGMENT Data for "I" at Step 18)");
+    BOOST_CHECK_MESSAGE( sched[19].rft_config().segment("I"), R"(Should Output SEGMENT Data for "I" at Step 19)");
+    BOOST_CHECK_MESSAGE( sched[20].rft_config().segment("I"), R"(Should Output SEGMENT Data for "I" at Step 20)");
 
     BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().rft("P2"), R"(Should NOT Output RFT Data for "P2" at Step 0)");
     BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().rft("P2"), R"(Should NOT Output RFT Data for "P2" at Step 1)");
@@ -736,6 +797,28 @@ BOOST_AUTO_TEST_CASE(Deferred_Open)
     BOOST_CHECK_MESSAGE(!sched[18].rft_config().plt("P2"), R"(Should NOT Output PLT Data for "P2" at Step 18)");
     BOOST_CHECK_MESSAGE(!sched[19].rft_config().plt("P2"), R"(Should NOT Output PLT Data for "P2" at Step 19)");
     BOOST_CHECK_MESSAGE(!sched[20].rft_config().plt("P2"), R"(Should NOT Output PLT Data for "P2" at Step 20)");
+
+    BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 0)");
+    BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 1)");
+    BOOST_CHECK_MESSAGE(!sched[ 2].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 2)");
+    BOOST_CHECK_MESSAGE(!sched[ 3].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 3)");
+    BOOST_CHECK_MESSAGE(!sched[ 4].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 4)");
+    BOOST_CHECK_MESSAGE(!sched[ 5].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 5)");
+    BOOST_CHECK_MESSAGE(!sched[ 6].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 6)");
+    BOOST_CHECK_MESSAGE(!sched[ 7].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 7)");
+    BOOST_CHECK_MESSAGE(!sched[ 8].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 8)");
+    BOOST_CHECK_MESSAGE(!sched[ 9].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 9)");
+    BOOST_CHECK_MESSAGE(!sched[10].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 10)");
+    BOOST_CHECK_MESSAGE(!sched[11].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 11)");
+    BOOST_CHECK_MESSAGE(!sched[12].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 12)");
+    BOOST_CHECK_MESSAGE(!sched[13].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 13)");
+    BOOST_CHECK_MESSAGE(!sched[14].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 14)");
+    BOOST_CHECK_MESSAGE(!sched[15].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 15)");
+    BOOST_CHECK_MESSAGE(!sched[16].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 16)");
+    BOOST_CHECK_MESSAGE(!sched[17].rft_config().segment("P2"), R"(Should NOT Output SEGMENT Data for "P2" at Step 17)");
+    BOOST_CHECK_MESSAGE( sched[18].rft_config().segment("P2"), R"(Should Output SEGMENT Data for "P2" at Step 18)");
+    BOOST_CHECK_MESSAGE( sched[19].rft_config().segment("P2"), R"(Should Output SEGMENT Data for "P2" at Step 19)");
+    BOOST_CHECK_MESSAGE( sched[20].rft_config().segment("P2"), R"(Should Output SEGMENT Data for "P2" at Step 20)");
 
     BOOST_CHECK_MESSAGE(!sched[ 0].rft_config().active(), R"(RFT Config must be Inactive at Step 0)");
     BOOST_CHECK_MESSAGE(!sched[ 1].rft_config().active(), R"(RFT Config must be Inactive at Step 1)");

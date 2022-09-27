@@ -140,11 +140,7 @@ void RFTConfig::first_open(const bool on)
 void RFTConfig::update(const std::string& wname, RFT mode)
 {
     if (mode == RFT::NO) {
-        auto iter = this->rft_state.find(wname);
-        if (iter != this->rft_state.end()) {
-            this->rft_state.erase(iter);
-        }
-
+        this->rft_state.erase(wname);
         return;
     }
 
@@ -160,23 +156,33 @@ void RFTConfig::update(const std::string& wname, RFT mode)
     this->rft_state.insert_or_assign(wname, mode);
 }
 
-void RFTConfig::update(const std::string& wname, const PLT mode)
+void RFTConfig::update_state(const std::string& wname,
+                             const PLT          mode,
+                             StateMap<PLT>&     state)
 {
     if (mode == PLT::NO) {
-        auto iter = this->plt_state.find(wname);
-        if (iter != this->plt_state.end()) {
-            this->plt_state.erase(iter);
-        }
-
-        return;
+        // Remove 'wname' from list of wells for which to output PLT-type
+        // data.
+        state.erase(wname);
     }
+    else {
+        state.insert_or_assign(wname, mode);
+    }
+}
 
-    this->plt_state[wname] = mode;
+void RFTConfig::update(const std::string& wname, const PLT mode)
+{
+    this->update_state(wname, mode, this->plt_state);
+}
+
+void RFTConfig::update_segment(const std::string& wname, const PLT mode)
+{
+    this->update_state(wname, mode, this->seg_state);
 }
 
 bool RFTConfig::active() const
 {
-    return this->rft() || this->plt();
+    return this->rft() || this->plt() || this->segment();
 }
 
 bool RFTConfig::rft() const
@@ -204,6 +210,16 @@ bool RFTConfig::plt() const
 bool RFTConfig::plt(const std::string& wname) const
 {
     return this->plt_state.find(wname) != this->plt_state.end();
+}
+
+bool RFTConfig::segment() const
+{
+    return ! this->seg_state.empty();
+}
+
+bool RFTConfig::segment(const std::string& wname) const
+{
+    return this->seg_state.find(wname) != this->seg_state.end();
 }
 
 std::optional<RFTConfig>
@@ -256,9 +272,10 @@ std::optional<RFTConfig> RFTConfig::next() const
 
     const auto rft_has_yes = mapContains(this->rft_state, rft_is_yes);
     const auto plt_has_yes = mapContains(this->plt_state, plt_is_yes);
+    const auto seg_has_yes = mapContains(this->seg_state, plt_is_yes);
 
-    if (! (rft_has_yes || plt_has_yes)) {
-        // No 'YES' node in either the RFT or the PLT states.  Return
+    if (! (rft_has_yes || plt_has_yes || seg_has_yes)) {
+        // No 'YES' node in either the RFT, PLT, or SEG states.  Return
         // nullopt to signify that next block is unchanged from current.
         return {};
     }
@@ -274,6 +291,10 @@ std::optional<RFTConfig> RFTConfig::next() const
         pruneFromMapIf(new_rft->plt_state, plt_is_yes);
     }
 
+    if (seg_has_yes) {
+        pruneFromMapIf(new_rft->seg_state, plt_is_yes);
+    }
+
     return new_rft;
 }
 
@@ -282,6 +303,7 @@ bool RFTConfig::operator==(const RFTConfig& data) const
     return (this->first_open_rft == data.first_open_rft)
         && (this->rft_state == data.rft_state)
         && (this->plt_state == data.plt_state)
+        && (this->seg_state == data.seg_state)
         && (this->open_wells == data.open_wells);
 }
 
@@ -300,6 +322,9 @@ RFTConfig RFTConfig::serializeObject()
 
     // Trigger PLT output for P-2 at every timestep.
     rft_config.update("P-2", PLT::TIMESTEP);
+
+    // Trigger SEG output for P-3 at every report step.
+    rft_config.update_segment("P-3", PLT::REPT);
 
     // I-1 is an open well at this time.
     rft_config.open_wells.emplace("I-1", true);

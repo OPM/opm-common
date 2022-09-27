@@ -52,6 +52,7 @@ public:
     void first_open(bool on);
     void update(const std::string& wname, const PLT mode);
     void update(const std::string& wname, const RFT mode);
+    void update_segment(const std::string& wname, const PLT mode);
 
     bool active() const;
 
@@ -61,26 +62,41 @@ public:
     bool plt() const;
     bool plt(const std::string& wname) const;
 
+    bool segment() const;
+    bool segment(const std::string& wname) const;
+
     std::optional<RFTConfig> next() const;
     std::optional<RFTConfig> well_open(const std::string& wname) const;
 
     static RFTConfig serializeObject();
     bool operator==(const RFTConfig& data) const;
 
-    template<class Serializer>
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(first_open_rft);
-        serializer(rft_state);
-        serializer(plt_state);
-        serializer(open_wells);
+        serializer(this->first_open_rft);
+        serializer(this->rft_state);
+        serializer(this->plt_state);
+        serializer(this->seg_state);
+        serializer(this->open_wells);
     }
 
 private:
+    template <typename Kind>
+    using StateMap = std::unordered_map<std::string, Kind>;
+
+    // Please make sure that member functions serializeOp(), operator==(),
+    // and serializeObject() are also up to date when changing this list of
+    // data members.
     bool first_open_rft = false;
-    std::unordered_map<std::string, RFT> rft_state;
-    std::unordered_map<std::string, PLT> plt_state;
-    std::unordered_map<std::string, bool> open_wells;
+    StateMap<RFT> rft_state{};
+    StateMap<PLT> plt_state{};
+    StateMap<PLT> seg_state{};
+    std::unordered_map<std::string, bool> open_wells{};
+
+    void update_state(const std::string& wname,
+                      const PLT          mode,
+                      StateMap<PLT>&     state);
 };
 
 } // namespace Opm
