@@ -445,21 +445,12 @@ double ecl_sum_get_general_var(const EclIO::ESmry* smry,
     return smry->get(var)[timeIdx];
 }
 
-#if 0
-bool ecl_sum_has_well_var( const EclIO::ESmry* smry,
-                           const std::string&  wellname,
-                           const std::string&  variable )
-{
-    return smry->hasKey(variable + ':' + wellname);
-}
-#endif
-
 double ecl_sum_get_well_var( const EclIO::ESmry* smry,
                              const int           timeIdx,
                              const std::string&  wellname,
                              const std::string&  variable )
 {
-    return smry->get(variable + ':' + wellname)[timeIdx];
+    return smry->get(fmt::format("{}:{}", variable, wellname))[timeIdx];
 }
 
 double ecl_sum_get_group_var( const EclIO::ESmry* smry,
@@ -467,7 +458,16 @@ double ecl_sum_get_group_var( const EclIO::ESmry* smry,
                               const std::string&  groupname,
                               const std::string&  variable )
 {
-    return smry->get(variable + ':' + groupname)[timeIdx];
+    return smry->get(fmt::format("{}:{}", variable, groupname))[timeIdx];
+}
+
+double ecl_sum_get_well_completion_var( const EclIO::ESmry* smry,
+                                        const int           timeIdx,
+                                        const std::string&  wellname,
+                                        const std::string&  variable,
+                                        const int           completion)
+{
+    return smry->get(fmt::format("{}:{}:{}", variable, wellname, completion))[timeIdx];
 }
 
 double ecl_sum_get_well_connection_var( const EclIO::ESmry* smry,
@@ -478,8 +478,7 @@ double ecl_sum_get_well_connection_var( const EclIO::ESmry* smry,
                                         const int           j,
                                         const int           k)
 {
-    const auto ijk = std::to_string(i) + ',' + std::to_string(j) + ',' + std::to_string(k);
-    return smry->get(variable + ':' + wellname + ':' + ijk)[timeIdx];
+    return smry->get(fmt::format("{}:{}:{},{},{}", variable, wellname, i, j, k))[timeIdx];
 }
 
 bool ecl_sum_has_well_connection_var( const EclIO::ESmry* smry,
@@ -489,7 +488,7 @@ bool ecl_sum_has_well_connection_var( const EclIO::ESmry* smry,
                                       const int           j,
                                       const int           k)
 {
-    const auto key = fmt::format("{}:{}:{},{},{}", wellname, variable, i, j, k);
+    const auto key = fmt::format("{}:{}:{},{},{}", variable, wellname, i, j, k);
     return ecl_sum_has_key(smry, key);
 }
 
@@ -497,7 +496,6 @@ struct setup {
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
-    std::shared_ptr<Python> python;
     Schedule schedule;
     SummaryConfig config;
     data::Wells wells;
@@ -511,8 +509,7 @@ struct setup {
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
-        python( std::make_shared<Python>() ),
-        schedule( deck, es, python),
+        schedule( deck, es, std::make_shared<Python>()),
         config( deck, schedule, es.fieldProps(), es.aquifer()),
         wells( result_wells(w3_injector) ),
         grp_nwrk( result_group_nwrk() ),
@@ -520,6 +517,7 @@ struct setup {
         ta( "summary_test" )
     {}
 };
+
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(Summary)
@@ -1265,13 +1263,13 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
     BOOST_CHECK_CLOSE( 234.5,     ecl_sum_get_well_connection_var( resp, 2, "W_2", "CVPR", 2, 1, 2 ), 1e-5 );
     BOOST_CHECK_CLOSE(   0.0,     ecl_sum_get_well_connection_var( resp, 1, "W_3", "CVPR", 3, 1, 1 ), 1e-5 );
 
-    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_1", "WOPRL__1"), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPR", 1,1,1), 1e-5);
-    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_2", "WOPRL__2"), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_completion_var(resp, 1, "W_1", "WOPRL", 1), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPR", 1,1,1), 1e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_completion_var(resp, 1, "W_2", "WOPRL", 2), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
                                                                         ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,2), 1e-5);
-    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_3", "WOPRL__3"), ecl_sum_get_well_connection_var(resp, 1, "W_3", "COPR", 3,1,1), 1e-5);
-    BOOST_CHECK_EQUAL(ecl_sum_get_well_var(resp, 1, "W_2", "WOPRL__2"), ecl_sum_get_well_var(resp, 1, "W_2", "WOFRL__2"));
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_completion_var(resp, 1, "W_3", "WOPRL", 3), ecl_sum_get_well_connection_var(resp, 1, "W_3", "COPR", 3,1,1), 1e-5);
+    BOOST_CHECK_EQUAL(ecl_sum_get_well_completion_var(resp, 1, "W_2", "WOPRL", 2), ecl_sum_get_well_completion_var(resp, 1, "W_2", "WOFRL", 2));
 
-    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_1", "WOPRL__1"), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPRL", 1,1,1), 1e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_completion_var(resp, 1, "W_1", "WOPRL", 1), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPRL", 1,1,1), 1e-5);
     BOOST_CHECK_CLOSE(ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPRL", 2, 1, 1), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
                                                                                          ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,2), 1e-5);
     BOOST_CHECK_CLOSE(ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPRL", 2, 1, 2), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
