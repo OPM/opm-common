@@ -51,7 +51,7 @@ Opm::time_point make_date(const std::vector<int>& datetime) {
     auto minute = 0;
     auto second = 0;
 
-    if (datetime.size() == 6) {
+    if (datetime.size() == 7) {
         hour = datetime[3];
         minute = datetime[4];
         auto total_usec = datetime[5];
@@ -293,15 +293,15 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     if ((arrName != "START   ") or (arrType != Opm::EclIO::INTE))
         OPM_THROW(std::invalid_argument, "reading start, invalid esmry file " + inputFileName.string() );
 
-    std::vector<int> start_vect;
+
     try {
-        start_vect = Opm::EclIO::readBinaryInteArray(fileH, arr_size);
+        m_start_vect = Opm::EclIO::readBinaryInteArray(fileH, arr_size);
     } catch (const std::runtime_error& error)
     {
         return false;
     }
 
-    auto startdat = make_date(start_vect);
+    auto startdat = make_date(m_start_vect);
 
     try {
        Opm::EclIO::readBinaryHeader(fileH, arrName, arr_size, arrType, sizeOfElement);

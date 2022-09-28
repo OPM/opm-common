@@ -54,6 +54,7 @@ public:
     void loadData(const std::vector<std::string>& stringVect);
 
     time_point startdate() const { return m_startdat; }
+    std::vector<int> start_v() const { return m_start_vect; }
 
     bool hasKey(const std::string& key) const;
 
@@ -93,6 +94,7 @@ private:
     std::vector<uint64_t> m_rstep_offset;
 
     time_point m_startdat;
+    std::vector<int> m_start_vect;
 
     double m_io_opening;
     double m_io_loading;
