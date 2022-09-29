@@ -746,6 +746,7 @@ namespace Opm
         void handleWVFPEXP   (HandlerContext&);
         void handleWWPAVE    (HandlerContext&);
         void handleWPIMULT   (HandlerContext&);
+        void handleWINJMULT  (HandlerContext&);
         void handleWPMITAB   (HandlerContext&);
         void handleWPOLYMER  (HandlerContext&);
         void handleWRFT      (HandlerContext&);

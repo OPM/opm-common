@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <limits>
 
 namespace Opm {
 
@@ -76,6 +77,35 @@ namespace RestartIO {
             Defaulted,
         };
 
+        enum class InjMultMode {
+            WREV,
+            CREV,
+            CIRR,
+            NONE,
+        };
+
+        static InjMultMode injModeFromString(const std::string& str);
+
+        struct InjMult {
+            InjMultMode mode {InjMultMode::NONE};
+            double fracture_pressure {std::numeric_limits<double>::max()};
+            double multiplier_gradient {0.};
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(mode);
+                serializer(fracture_pressure);
+                serializer(multiplier_gradient);
+            }
+
+            bool operator==( const InjMult& rhs ) const {
+                return mode == rhs.mode
+                   &&  fracture_pressure == rhs.fracture_pressure
+                   &&  multiplier_gradient == rhs.multiplier_gradient;
+            }
+        };
+
 
         Connection();
         Connection(int i, int j , int k ,
@@ -120,6 +150,8 @@ namespace RestartIO {
         double connectionLength() const;
         double skinFactor() const;
         CTFKind kind() const;
+        InjMult injmult() const;
+        void setInjMult(const InjMult& inj_mult);
 
         void setState(State state);
         void setComplnum(int compnum);
@@ -163,6 +195,7 @@ namespace RestartIO {
             serializer(ijk);
             serializer(m_global_index);
             serializer(m_ctfkind);
+            serializer(m_injmult);
             serializer(m_sort_value);
             serializer(m_perf_range);
             serializer(m_defaultSatTabId);
@@ -186,6 +219,7 @@ namespace RestartIO {
 
         std::array<int,3> ijk;
         CTFKind m_ctfkind;
+        InjMult m_injmult;
         std::size_t m_global_index;
         /*
           The sort_value member is a peculiar quantity. The connections are

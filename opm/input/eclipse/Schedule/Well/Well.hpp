@@ -472,6 +472,7 @@ public:
     bool handleWELOPENConnections(const DeckRecord& record, Connection::State status);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
+    bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
     bool applyGlobalWPIMULT(double scale_factor);
 
     void filterConnections(const ActiveGridCells& grid);

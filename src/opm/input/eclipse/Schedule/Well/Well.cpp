@@ -1300,6 +1300,59 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
 }
 
 
+bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& location) {
+    // TODO: the this keyword, defaulted means it <=0.
+    // We need to check how the following works
+    auto match = [=] ( const Connection& c) -> bool {
+        if (!match_eq(c.getI()  , record, "I", -1)) return false;
+        if (!match_eq(c.getJ()  , record, "J", -1)) return false;
+        if (!match_eq(c.getK()  , record, "K", -1)) return false;
+
+        return true;
+    };
+
+    // if this record using WREV, with the current ideas, we will rewrite the information to all the connectios regarding
+    // using the WINJMULT record information
+    // if this record use CREV or CIRR, and previoiusly, the well is using WREV, we need to discard the WREV setup for
+    // all the connections. For the connections not specified in the record, the injmult information will be reset.
+    const std::string mode = record.getItem("MODE").getTrimmedString(0);
+    const double fracture_pressure = record.getItem("FRACTURING_PRESSURE").get<double>(0);
+    const double multiple_gradient = record.getItem("MULTIPLIER_GRADIENT").get<double>(0);
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    const Connection::InjMult inj_mult {Connection::injModeFromString(mode), fracture_pressure, multiple_gradient};
+
+    if (mode == "WREV") {
+        // all the connections will share the same INJMULT setup
+        for (auto c : *this->connections) {
+            c.setInjMult(inj_mult);
+            new_connections->add(c);
+        }
+    } else if (mode == "CREV" || mode == "CIRR"){
+        // check whether it was under WREV previously.
+        // if yes, we need to reset all the connections for injmult operation
+        const bool is_prev_wrev = this->connections->underWREVInjMultMode();
+        for (auto c : *this->connections) {
+            if (match(c)) {
+                c.setInjMult(inj_mult);
+            } else {
+                if (is_prev_wrev) {
+                    // reset the injMult information for this connection
+                    c.setInjMult({});
+                }
+            }
+            new_connections->add(c);
+        }
+    } else {
+        const std::string msg = fmt::format("unknown WINJMULT operation mode {} with keyword {}"
+                                             "at line {} in file {}", mode, location.keyword,
+                                             location.lineno, location.filename);
+        throw std::logic_error(msg);
+    }
+
+    return this->updateConnections(std::move(new_connections), false);
+}
+
+
 bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor)
 {
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);

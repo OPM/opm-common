@@ -311,6 +311,7 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
             && this->m_re == rhs.m_re
             && this->m_connection_length == rhs.m_connection_length
             && this->m_skin_factor == rhs.m_skin_factor
+            && this->m_injmult == rhs.m_injmult
             && this->m_Kh == rhs.m_Kh
             && this->sat_tableId == rhs.sat_tableId
             && this->open_state == rhs.open_state
@@ -352,6 +353,19 @@ Connection::State Connection::StateFromString( const std::string& stringValue ) 
         return State::AUTO;
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+Connection::InjMultMode Connection::injModeFromString(const std::string& str) {
+    if (str == "WREV")
+        return Connection::InjMultMode::WREV;
+    else if (str == "CREV")
+        return Connection::InjMultMode::CREV;
+    else if (str == "CIRR")
+        return Connection::InjMultMode::CIRR;
+    else if (str == "NONE")
+        return Connection::InjMultMode::NONE;
+    else
+        throw std::invalid_argument("Unknow enum INJMultMode string: " + str);
 }
 
 
@@ -440,6 +454,14 @@ std::string Connection::CTFKindToString(const CTFKind ctf_kind)
 
 Connection::CTFKind Connection::kind() const {
     return m_ctfkind;
+}
+
+Connection::InjMult Connection::injmult() const {
+    return m_injmult;
+}
+
+void Connection::setInjMult(const Connection::InjMult& inj_mult) {
+    m_injmult = inj_mult;
 }
 
 }
