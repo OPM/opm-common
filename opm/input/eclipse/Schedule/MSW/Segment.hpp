@@ -72,11 +72,24 @@ namespace Opm {
 
         Segment();
 
+        Segment(const Segment& src, double new_depth, double new_length, double new_volume, double new_x, double new_y);
+        Segment(const Segment& src, double new_depth, double new_length, double new_x, double new_y);
         Segment(const Segment& src, double new_depth, double new_length, double new_volume);
         Segment(const Segment& src, double new_depth, double new_length);
         Segment(const Segment& src, double new_volume);
-        Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
-                double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in);
+        Segment(const int segment_number_in,
+                const int branch_in,
+                const int outlet_segment_in,
+                const double length_in,
+                const double depth_in,
+                const double internal_diameter_in,
+                const double roughness_in,
+                const double cross_area_in,
+                const double volume_in,
+                const bool data_ready_in,
+                const double x_in,
+                const double y_in);
+
         Segment(const RestartIO::RstSegment& rst_segment);
 
         static Segment serializationTestObject();
@@ -86,6 +99,8 @@ namespace Opm {
         int outletSegment() const;
         double perfLength() const;
         double totalLength() const;
+        double node_X() const;
+        double node_Y() const;
         double depth() const;
         double internalDiameter() const;
         double roughness() const;
@@ -150,6 +165,8 @@ namespace Opm {
             serializer(m_cross_area);
             serializer(m_volume);
             serializer(m_data_ready);
+            serializer(m_x);
+            serializer(m_y);
             serializer(m_perf_length);
             serializer(m_icd);
         }
@@ -200,14 +217,18 @@ namespace Opm {
         // indicate if the data related to 'INC' or 'ABS' is ready
         // the volume will be updated at a final step.
         bool m_data_ready;
+        // Length of segment projected onto the X axis.  Not used in
+        // simulations, but needed for the SEG option in WRFTPLT.
+        double m_x{};
+        // Length of segment projected onto the Y axis.  Not used in
+        // simulations, but needed for the SEG option in WRFTPLT.
+        double m_y{};
 
         std::optional<double> m_perf_length;
         std::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
 
-        // We are not handling the length of segment projected onto the X-axis and Y-axis.
-        // They are not used in the simulations and we are not supporting the plotting.
-        // There are other three properties for segment related to thermal conduction,
-        // while they are not supported by the keyword at the moment.
+        // There are three other properties for the segment pertaining to
+        // thermal conduction.  These are not currently supported.
     };
 
 }
