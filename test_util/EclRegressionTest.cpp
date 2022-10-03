@@ -1002,9 +1002,16 @@ void ECLRegressionTest::results_smry()
         namespace fs = std::filesystem;
         std::string rsm_file = rootName2 + ".RSM";
         if (fs::is_regular_file(fs::path(rsm_file))) {
+            std::cout << "\nLoading RSM file " << rsm_file << "  .... " << std::flush;
             auto rsm = ERsm(rsm_file);
+            std::cout << " done " << std::endl << std::flush;;
+            
+            std::cout << "\nComparing RSM file against SMRY file  .... " << std::flush;
+        
             if (!cmp(smry2, rsm))
                 HANDLE_ERROR(std::runtime_error, "The RSM file did not compare equal to the summary file");
+            
+            std::cout << " done " << std::endl << std::flush;;
         }
 
     } else {
