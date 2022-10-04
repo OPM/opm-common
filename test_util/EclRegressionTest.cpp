@@ -889,7 +889,7 @@ void ECLRegressionTest::results_smry()
 
         ESmry smry2(fileName2, loadBaseRunData);
         smry2.loadData();
-        std::cout << "\nLoading summary file " << fileName2 << "  .... done" << std::endl;
+        std::cout << "Loading summary file " << fileName2 << "  .... done" << std::endl;
 
         deviations.clear();
 
@@ -999,25 +999,42 @@ void ECLRegressionTest::results_smry()
             }
         }
 
+    } else {
+        std::cout << "\n!Warning, summary files not found, hence not compared. \n" << std::endl;
+    }
+
+}
+
+void ECLRegressionTest::results_rsm()
+{
+    std::string fileName1,fileName2;
+    bool foundRsm2 = checkFileName(rootName2, "RSM", fileName2);
+    bool foundSmspec1 = checkFileName(rootName1, "SMSPEC", fileName1);
+
+    if ((foundRsm2) && (foundSmspec1)) {
+
+        ESmry smry2(fileName1, loadBaseRunData);
+        smry2.loadData();
+        std::cout << "\nLoading summary file " << fileName1 << "  .... done" << std::endl;
+
         namespace fs = std::filesystem;
         std::string rsm_file = rootName2 + ".RSM";
         if (fs::is_regular_file(fs::path(rsm_file))) {
             std::cout << "\nLoading RSM file " << rsm_file << "  .... " << std::flush;
             auto rsm = ERsm(rsm_file);
             std::cout << " done " << std::endl << std::flush;;
-            
+
             std::cout << "\nComparing RSM file against SMRY file  .... " << std::flush;
-        
+
             if (!cmp(smry2, rsm))
                 HANDLE_ERROR(std::runtime_error, "The RSM file did not compare equal to the summary file");
-            
+
             std::cout << " done " << std::endl << std::flush;;
         }
 
     } else {
-        std::cout << "\n!Warning, summary files not found, hence not compared. \n" << std::endl;
+        std::cout << "\n!Warning, summary and/or RSM - file not found, hence not compared. \n" << std::endl;
     }
-
 }
 
 

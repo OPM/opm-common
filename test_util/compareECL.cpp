@@ -49,6 +49,7 @@ static void printHelp() {
               << "    -t INIT  \t Compare two initial files (.INIT).\n"
               << "    -t RFT   \t Compare two RFT files (.RFT).\n"
               << "    -t SMRY  \t Compare two cases consistent of (unified) summary files.\n"
+              << "    -t RSM   \t Compare RSM file agaist a summary file.\n"
               << "-x Allow extra keywords in case number 2. These additional keywords (not found in case number1) will be ignored in the comparison.\n"
               << "\nExample usage of the program: \n\n"
               << "compareECL -k PRESSURE <path to first casefile> <path to second casefile> 1e-3 1e-5\n"
@@ -229,6 +230,8 @@ int main(int argc, char** argv) {
                 comparator.results_rst();
             } else if (fileTypeString == "SMRY") {
                 comparator.results_smry();
+            } else if (fileTypeString == "RSM") {
+                comparator.results_rsm();
             } else if (fileTypeString == "RFT") {
                 comparator.results_rft();
             } else {
@@ -244,6 +247,7 @@ int main(int argc, char** argv) {
             comparator.results_init();
             comparator.results_rst();
             comparator.results_smry();
+            comparator.results_rsm();
             comparator.results_rft();
         }
 
