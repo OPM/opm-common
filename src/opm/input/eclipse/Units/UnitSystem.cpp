@@ -1014,7 +1014,7 @@ namespace {
         init();
     }
 
-    UnitSystem UnitSystem::serializeObject()
+    UnitSystem UnitSystem::serializationTestObject()
     {
         return UnitSystem(UnitType::UNIT_TYPE_METRIC);
     }

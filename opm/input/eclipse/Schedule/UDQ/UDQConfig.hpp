@@ -54,7 +54,7 @@ namespace Opm {
         explicit UDQConfig(const UDQParams& params);
         UDQConfig(const UDQParams& params, const RestartIO::RstState& rst_state);
 
-        static UDQConfig serializeObject();
+        static UDQConfig serializationTestObject();
 
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;

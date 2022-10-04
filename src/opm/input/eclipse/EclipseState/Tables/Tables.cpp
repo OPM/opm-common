@@ -118,9 +118,9 @@ PvtgTable::PvtgTable( const DeckKeyword& keyword, size_t tableIdx ) :
         PvtxTable::init(keyword, tableIdx);
     }
 
-PvtgTable PvtgTable::serializeObject() {
+PvtgTable PvtgTable::serializationTestObject() {
     PvtgTable result;
-    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+    static_cast<PvtxTable&>(result) = PvtxTable::serializationTestObject();
 
     return result;
 }
@@ -144,9 +144,9 @@ PvtgwTable::PvtgwTable( const DeckKeyword& keyword, size_t tableIdx ) :
         PvtxTable::init(keyword, tableIdx);
     }
 
-PvtgwTable PvtgwTable::serializeObject() {
+PvtgwTable PvtgwTable::serializationTestObject() {
     PvtgwTable result;
-    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+    static_cast<PvtxTable&>(result) = PvtxTable::serializationTestObject();
 
     return result;
 }
@@ -172,9 +172,9 @@ PvtgwoTable::PvtgwoTable( const DeckKeyword& keyword, size_t tableIdx ) :
         PvtxTable::init(keyword, tableIdx);
     }
 
-PvtgwoTable PvtgwoTable::serializeObject() {
+PvtgwoTable PvtgwoTable::serializationTestObject() {
     PvtgwoTable result;
-    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+    static_cast<PvtxTable&>(result) = PvtxTable::serializationTestObject();
 
     return result;
 }
@@ -197,9 +197,9 @@ PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
         PvtxTable::init(keyword , tableIdx);
     }
 
-PvtoTable PvtoTable::serializeObject() {
+PvtoTable PvtoTable::serializationTestObject() {
     PvtoTable result;
-    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+    static_cast<PvtxTable&>(result) = PvtxTable::serializationTestObject();
 
     return result;
 }
@@ -259,9 +259,9 @@ PvtsolTable::PvtsolTable( const DeckKeyword& keyword, size_t tableIdx) :
         PvtxTable::init(keyword , tableIdx);
     }
 
-PvtsolTable PvtsolTable::serializeObject() {
+PvtsolTable PvtsolTable::serializationTestObject() {
     PvtsolTable result;
-    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+    static_cast<PvtxTable&>(result) = PvtxTable::serializationTestObject();
 
     return result;
 }
@@ -772,10 +772,10 @@ PlyshlogTable::PlyshlogTable(
     SimpleTable::init( dataRecord.getItem<ParserKeywords::PLYSHLOG::DATA>(), 1 );
 }
 
-PlyshlogTable PlyshlogTable::serializeObject()
+PlyshlogTable PlyshlogTable::serializationTestObject()
 {
     PlyshlogTable result;
-    static_cast<SimpleTable&>(result) = SimpleTable::serializeObject();
+    static_cast<SimpleTable&>(result) = SimpleTable::serializationTestObject();
     result.m_refPolymerConcentration = 1.0;
     result.m_refSalinity = 2.0;
     result.m_refTemperature = 3.0;
@@ -964,10 +964,10 @@ RocktabTable::RocktabTable(
     SimpleTable::init(item, tableID);
 }
 
-RocktabTable RocktabTable::serializeObject()
+RocktabTable RocktabTable::serializationTestObject()
 {
     RocktabTable result;
-    static_cast<SimpleTable&>(result) = Opm::SimpleTable::serializeObject();
+    static_cast<SimpleTable&>(result) = Opm::SimpleTable::serializationTestObject();
     result.m_isDirectional = true;
 
     return result;

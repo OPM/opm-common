@@ -69,7 +69,7 @@ namespace Opm {
             serializer(required);
         }
 
-        static RestartKey serializeObject()
+        static RestartKey serializationTestObject()
         {
             return RestartKey{"test_key", UnitSystem::measure::effective_Kh, true};
         }
@@ -123,17 +123,17 @@ namespace Opm {
           serializer(extra);
         }
 
-        static RestartValue serializeObject()
+        static RestartValue serializationTestObject()
         {
             auto res = RestartValue {
-                           data::Solution::serializeObject(),
-                           data::Wells::serializeObject(),
-                           data::GroupAndNetworkValues::serializeObject(),
-                           {{1, data::AquiferData::serializeObjectF()},
-                            {2, data::AquiferData::serializeObjectC()},
-                            {3, data::AquiferData::serializeObjectN()}}
+                           data::Solution::serializationTestObject(),
+                           data::Wells::serializationTestObject(),
+                           data::GroupAndNetworkValues::serializationTestObject(),
+                           {{1, data::AquiferData::serializationTestObjectF()},
+                            {2, data::AquiferData::serializationTestObjectC()},
+                            {3, data::AquiferData::serializationTestObjectN()}}
                        };
-            res.extra = {{RestartKey::serializeObject(), {1.0, 2.0}}};
+            res.extra = {{RestartKey::serializationTestObject(), {1.0, 2.0}}};
 
             return res;
         }

@@ -1515,12 +1515,12 @@ SummaryConfigNode::SummaryConfigNode(std::string keyword, const Category cat, Ke
     , loc      (std::move(loc_arg))
 {}
 
-SummaryConfigNode SummaryConfigNode::serializeObject()
+SummaryConfigNode SummaryConfigNode::serializationTestObject()
 {
     SummaryConfigNode result;
     result.keyword_ = "test1";
     result.category_ = Category::Region;
-    result.loc = KeywordLocation::serializeObject();
+    result.loc = KeywordLocation::serializationTestObject();
     result.type_ = Type::Pressure;
     result.name_ = "test2";
     result.number_ = 2;
@@ -1771,10 +1771,10 @@ SummaryConfig::SummaryConfig(const keyword_list& kwds,
     m_keywords(kwds), short_keywords(shortKwds), summary_keywords(smryKwds)
 {}
 
-SummaryConfig SummaryConfig::serializeObject()
+SummaryConfig SummaryConfig::serializationTestObject()
 {
     SummaryConfig result;
-    result.m_keywords = {SummaryConfigNode::serializeObject()};
+    result.m_keywords = {SummaryConfigNode::serializationTestObject()};
     result.short_keywords = {"test1"};
     result.summary_keywords = {"test2"};
 

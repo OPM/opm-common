@@ -46,7 +46,7 @@ public:
     AST() = default;
     explicit AST(const std::vector<std::string>& tokens);
 
-    static AST serializeObject();
+    static AST serializationTestObject();
 
     Result eval(const Context& context) const;
 

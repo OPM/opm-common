@@ -60,7 +60,7 @@ namespace Opm { namespace data {
             serializer(timeConstant);
         }
 
-        static FetkovichData serializeObject()
+        static FetkovichData serializationTestObject()
         {
           return FetkovichData{1.0, 2.0, 3.0};
         }
@@ -97,7 +97,7 @@ namespace Opm { namespace data {
             serializer(dimensionless_pressure);
         }
 
-        static CarterTracyData serializeObject()
+        static CarterTracyData serializationTestObject()
         {
             return CarterTracyData{1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
         }
@@ -123,7 +123,7 @@ namespace Opm { namespace data {
             serializer(initPressure);
         }
 
-        static NumericAquiferData serializeObject()
+        static NumericAquiferData serializationTestObject()
         {
             return NumericAquiferData{{1.0, 2.0, 3.0}};
         }
@@ -350,7 +350,7 @@ namespace Opm { namespace data {
             serializer(typeData);
         }
 
-        static AquiferData serializeObjectF()
+        static AquiferData serializationTestObjectF()
         {
             auto aquifer = AquiferData {1, 123.456, 56.78, 9.0e10, 290.0, 2515.5};
             auto* aquFet = aquifer.typeData.create<AquiferType::Fetkovich>();
@@ -361,7 +361,7 @@ namespace Opm { namespace data {
             return aquifer;
         }
 
-        static AquiferData serializeObjectC()
+        static AquiferData serializationTestObjectC()
         {
             auto aquifer = AquiferData {2, 123.456, 56.78, 9.0e10, 290.0, 2515.5};
             auto* aquCT = aquifer.typeData.create<AquiferType::CarterTracy>();
@@ -376,7 +376,7 @@ namespace Opm { namespace data {
             return aquifer;
         }
 
-        static AquiferData serializeObjectN()
+        static AquiferData serializationTestObjectN()
         {
           auto aquifer = AquiferData {3, 123.456, 56.78, 9.0e10, 290.0, 2515.5};
           auto* aquNum = aquifer.typeData.create<AquiferType::Numerical>();

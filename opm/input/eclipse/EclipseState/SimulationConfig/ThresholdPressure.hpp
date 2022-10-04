@@ -46,7 +46,7 @@ namespace Opm {
         {}
 
         //! \brief Returns an instance for serialization tests.
-        static ThresholdPressure serializeObject();
+        static ThresholdPressure serializationTestObject();
 
         /*
           The hasRegionBarrier() method checks if a threshold pressure

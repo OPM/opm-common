@@ -46,7 +46,7 @@ Actdims::Actdims(const Deck& deck)
     }
 }
 
-Actdims Actdims::serializeObject()
+Actdims Actdims::serializationTestObject()
 {
     Actdims result;
     result.keywords = 1;

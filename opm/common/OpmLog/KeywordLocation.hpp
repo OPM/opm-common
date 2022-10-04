@@ -53,7 +53,7 @@ public:
 
     std::string format(const std::string& msg_fmt) const;
 
-    static KeywordLocation serializeObject()
+    static KeywordLocation serializationTestObject()
     {
         KeywordLocation result;
         result.keyword = "KW";

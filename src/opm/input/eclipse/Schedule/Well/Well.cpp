@@ -469,7 +469,7 @@ Well::Well(const std::string& wname_arg,
     this->updateProduction(p);
 }
 
-Well Well::serializeObject()
+Well Well::serializationTestObject()
 {
     Well result;
     result.wname = "test1";
@@ -479,7 +479,7 @@ Well Well::serializeObject()
     result.headI = 3;
     result.headJ = 4;
     result.ref_depth = 5;
-    result.unit_system = UnitSystem::serializeObject();
+    result.unit_system = UnitSystem::serializationTestObject();
     result.udq_undefined = 6.0;
     result.status = Status::AUTO;
     result.drainage_radius = 7.0;
@@ -488,21 +488,21 @@ Well Well::serializeObject()
     result.pvt_table = 77;
     result.gas_inflow = GasInflowEquation::GPP;
     result.wtype = WellType(Phase::WATER);
-    result.guide_rate = WellGuideRate::serializeObject();
+    result.guide_rate = WellGuideRate::serializationTestObject();
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
-    result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializeObject());
-    result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
-    result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
-    result.micp_properties =  std::make_shared<WellMICPProperties>(WellMICPProperties::serializeObject());
-    result.brine_properties = std::make_shared<WellBrineProperties>(WellBrineProperties::serializeObject());
-    result.tracer_properties = std::make_shared<WellTracerProperties>(WellTracerProperties::serializeObject());
-    result.connections = std::make_shared<WellConnections>(WellConnections::serializeObject());
-    result.production = std::make_shared<Well::WellProductionProperties>(Well::WellProductionProperties::serializeObject());
-    result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializeObject());
-    result.segments = std::make_shared<WellSegments>(WellSegments::serializeObject());
-    result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializeObject());
+    result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializationTestObject());
+    result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializationTestObject());
+    result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializationTestObject());
+    result.micp_properties =  std::make_shared<WellMICPProperties>(WellMICPProperties::serializationTestObject());
+    result.brine_properties = std::make_shared<WellBrineProperties>(WellBrineProperties::serializationTestObject());
+    result.tracer_properties = std::make_shared<WellTracerProperties>(WellTracerProperties::serializationTestObject());
+    result.connections = std::make_shared<WellConnections>(WellConnections::serializationTestObject());
+    result.production = std::make_shared<Well::WellProductionProperties>(Well::WellProductionProperties::serializationTestObject());
+    result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializationTestObject());
+    result.segments = std::make_shared<WellSegments>(WellSegments::serializationTestObject());
+    result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
     result.m_pavg = PAvg();
 
     return result;

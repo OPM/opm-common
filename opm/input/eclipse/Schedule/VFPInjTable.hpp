@@ -46,7 +46,7 @@ public:
     VFPInjTable();
     VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
-    static VFPInjTable serializeObject();
+    static VFPInjTable serializationTestObject();
 
     inline const KeywordLocation& location() const {
         return this->m_location;

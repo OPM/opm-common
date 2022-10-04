@@ -38,10 +38,10 @@ namespace Opm {
     }
 
 
-    TableColumn TableColumn::serializeObject()
+    TableColumn TableColumn::serializationTestObject()
     {
         TableColumn result;
-        result.m_schema = Opm::ColumnSchema::serializeObject();
+        result.m_schema = Opm::ColumnSchema::serializationTestObject();
         result.m_name = "test2";
         result.m_values = {1.0, 2.0};
         result.m_default = {false, true};

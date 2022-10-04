@@ -62,7 +62,7 @@ public:
                 serializer(this->ntg);
             }
 
-            static Props serializeObject(){
+            static Props serializationTestObject(){
                 Props props;
                 props.permx = 10.0;
                 props.permy = 78.0;
@@ -91,7 +91,7 @@ public:
                    this->props == other.props;
         }
 
-        static Cell serializeObject() {
+        static Cell serializationTestObject() {
             Cell cell(0,1,1,1);
             cell.depth = 12345;
             cell.dimensions = {1.0,2.0,3.0};
@@ -127,7 +127,7 @@ public:
     std::pair<bool, Cell&> try_get(std::size_t i, std::size_t j, std::size_t k);
 
     bool operator==(const CompletedCells& other) const;
-    static CompletedCells serializeObject();
+    static CompletedCells serializationTestObject();
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

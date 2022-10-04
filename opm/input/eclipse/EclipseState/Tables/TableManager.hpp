@@ -67,7 +67,7 @@ namespace Opm {
         explicit TableManager( const Deck& deck );
         TableManager() = default;
 
-        static TableManager serializeObject();
+        static TableManager serializationTestObject();
 
         const TableContainer& getTables( const std::string& tableName ) const;
         const TableContainer& operator[](const std::string& tableName) const;

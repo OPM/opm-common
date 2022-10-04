@@ -69,7 +69,7 @@ namespace Opm {
             throw std::invalid_argument("Illegal JFUNC DIRECTION, must be XY, X, Y, or Z.  Was \"" + kw_dir + "\".");
     }
 
-    JFunc JFunc::serializeObject()
+    JFunc JFunc::serializationTestObject()
     {
         JFunc result;
         result.m_flag = Flag::BOTH;

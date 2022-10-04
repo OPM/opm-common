@@ -78,7 +78,7 @@ BCConfig::BCFace::BCFace(const DeckRecord& record) :
 {
 }
 
-BCConfig::BCFace BCConfig::BCFace::serializeObject()
+BCConfig::BCFace BCConfig::BCFace::serializationTestObject()
 {
     BCFace result;
     result.i1 = 10;
@@ -119,10 +119,10 @@ BCConfig::BCConfig(const Deck& deck) {
 }
 
 
-BCConfig BCConfig::serializeObject()
+BCConfig BCConfig::serializationTestObject()
 {
     BCConfig result;
-    result.m_faces = {BCFace::serializeObject()};
+    result.m_faces = {BCFace::serializationTestObject()};
 
     return result;
 }

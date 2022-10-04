@@ -39,7 +39,7 @@ bool WGNames::has_group(const std::string& gname) const {
     return (this->groups.count(gname) == 1);
 }
 
-WGNames WGNames::serializeObject() {
+WGNames WGNames::serializationTestObject() {
     WGNames wgn;
     wgn.add_well("W1");
     wgn.add_group("G1");

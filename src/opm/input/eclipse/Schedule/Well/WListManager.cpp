@@ -27,7 +27,7 @@
 
 namespace Opm {
 
-    WListManager WListManager::serializeObject()
+    WListManager WListManager::serializationTestObject()
     {
         WListManager result;
         result.wlists = {{"test1", WList({"test2", "test3"}, "test1")}};

@@ -36,7 +36,7 @@ namespace Opm {
         DeckRecord() = default;
         DeckRecord( std::vector< DeckItem >&& items, const bool check_for_duplicate_names = true );
 
-        static DeckRecord serializeObject();
+        static DeckRecord serializationTestObject();
 
         size_t size() const;
         void addItem( DeckItem deckItem );

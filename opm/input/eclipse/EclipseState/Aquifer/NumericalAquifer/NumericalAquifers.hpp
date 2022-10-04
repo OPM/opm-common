@@ -57,7 +57,7 @@ namespace Opm {
         void initConnections(const Deck& deck, const EclipseGrid& grid);
         void postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum);
 
-        static NumericalAquifers serializeObject();
+        static NumericalAquifers serializationTestObject();
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {

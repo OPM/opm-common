@@ -114,7 +114,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
                        0, Direction::X, CTFKind::DeckValue, 0, false)
     {}
 
-    Connection Connection::serializeObject()
+    Connection Connection::serializationTestObject()
     {
         Connection result;
         result.direction = Direction::Y;

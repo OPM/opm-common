@@ -27,7 +27,7 @@ class DeckRecord;
 
 struct WellMICPProperties
 {
-    static WellMICPProperties serializeObject();
+    static WellMICPProperties serializationTestObject();
 
     double m_microbialConcentration = 0.0;
     double m_oxygenConcentration = 0.0;

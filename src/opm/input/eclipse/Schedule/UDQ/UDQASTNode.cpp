@@ -102,7 +102,7 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 }
 
 
-UDQASTNode UDQASTNode::serializeObject()
+UDQASTNode UDQASTNode::serializationTestObject()
 {
     UDQASTNode result;
     result.var_type = UDQVarType::REGION_VAR;

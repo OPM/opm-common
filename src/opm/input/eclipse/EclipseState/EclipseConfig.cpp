@@ -40,11 +40,11 @@ namespace Opm {
     }
 
 
-    EclipseConfig EclipseConfig::serializeObject()
+    EclipseConfig EclipseConfig::serializationTestObject()
     {
         EclipseConfig result;
-        result.m_initConfig = InitConfig::serializeObject();
-        result.io_config = IOConfig::serializeObject();
+        result.m_initConfig = InitConfig::serializationTestObject();
+        result.io_config = IOConfig::serializationTestObject();
 
         return result;
     }

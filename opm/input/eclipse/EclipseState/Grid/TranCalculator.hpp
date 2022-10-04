@@ -105,7 +105,7 @@ public:
         serializer(actions);
     }
 
-    static TranCalculator serializeObject()
+    static TranCalculator serializationTestObject()
     {
         TranCalculator tran("test");
         tran.add_action(ScalarOperation::MIN, "FGOP");

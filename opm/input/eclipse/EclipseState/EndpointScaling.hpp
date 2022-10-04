@@ -30,7 +30,7 @@ class EndpointScaling {
         EndpointScaling() noexcept = default;
         explicit EndpointScaling( const Deck& );
 
-        static EndpointScaling serializeObject();
+        static EndpointScaling serializationTestObject();
 
         /* true if endpoint scaling is enabled, otherwise false */
         operator bool() const noexcept;

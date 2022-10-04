@@ -37,7 +37,7 @@ namespace Opm {
         AutoICD() = default;
         AutoICD(const DeckRecord& record);
 
-        static AutoICD serializeObject();
+        static AutoICD serializationTestObject();
 
         // the function will return a map
         // [

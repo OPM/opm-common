@@ -41,7 +41,7 @@ public:
 
     bool operator==(const WriteRestartFileEvents& that) const;
 
-    static WriteRestartFileEvents serializeObject();
+    static WriteRestartFileEvents serializationTestObject();
 
     template <class Serializer>
     void serializeOp(Serializer& serializer)

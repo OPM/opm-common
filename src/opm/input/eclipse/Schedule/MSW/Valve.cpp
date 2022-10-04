@@ -96,7 +96,7 @@ namespace Opm {
         }
     }
 
-    Valve Valve::serializeObject()
+    Valve Valve::serializationTestObject()
     {
         Valve result;
         result.m_con_flow_coeff = 1.0;

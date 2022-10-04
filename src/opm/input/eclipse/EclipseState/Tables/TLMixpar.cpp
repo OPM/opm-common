@@ -50,7 +50,7 @@ std::size_t TLMixpar::size() const {
     return this->data.size();
 }
 
-TLMixpar TLMixpar::serializeObject() {
+TLMixpar TLMixpar::serializationTestObject() {
     TLMixpar tlm;
     return tlm;
 }

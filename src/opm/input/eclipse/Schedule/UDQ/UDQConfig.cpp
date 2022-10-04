@@ -60,15 +60,15 @@ namespace Opm {
         }
     }
 
-    UDQConfig UDQConfig::serializeObject()
+    UDQConfig UDQConfig::serializationTestObject()
     {
         UDQConfig result;
-        result.udq_params = UDQParams::serializeObject();
+        result.udq_params = UDQParams::serializationTestObject();
         result.udqft = UDQFunctionTable(result.udq_params);
-        result.m_definitions = {{"test1", UDQDefine::serializeObject()}};
-        result.m_assignments = {{"test2", UDQAssign::serializeObject()}};
+        result.m_definitions = {{"test1", UDQDefine::serializationTestObject()}};
+        result.m_assignments = {{"test2", UDQAssign::serializationTestObject()}};
         result.units = {{"test3", "test4"}};
-        result.input_index.insert({"test5", UDQIndex::serializeObject()});
+        result.input_index.insert({"test5", UDQIndex::serializationTestObject()});
         result.type_count = {{UDQVarType::SCALAR, 5}};
 
         return result;

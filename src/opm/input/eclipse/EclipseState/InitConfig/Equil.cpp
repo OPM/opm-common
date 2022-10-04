@@ -118,7 +118,7 @@ namespace Opm {
         }
     }
 
-    Equil Equil::serializeObject()
+    Equil Equil::serializationTestObject()
     {
         Equil result;
         result.m_records = {{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, true, false, 1, false}};

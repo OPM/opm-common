@@ -118,7 +118,7 @@ The first row actually corresponds to saturated values.
         PvtxTable() = default;
         explicit PvtxTable(const std::string& columnName);
 
-        static PvtxTable serializeObject();
+        static PvtxTable serializationTestObject();
 
         const SimpleTable& getUnderSaturatedTable(size_t tableNumber) const;
         void init(const DeckKeyword& keyword, size_t tableIdx);

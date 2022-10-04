@@ -28,7 +28,7 @@ namespace Opm {
     class WellTracerProperties {
 
     public:
-        static WellTracerProperties serializeObject();
+        static WellTracerProperties serializationTestObject();
 
         void setConcentration(const std::string& name, const double& concentration);
         double getConcentration(const std::string& name) const;

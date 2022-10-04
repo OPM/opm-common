@@ -25,11 +25,11 @@
 
 namespace Opm {
 
-GConSale GConSale::serializeObject()
+GConSale GConSale::serializationTestObject()
 {
     GConSale result;
     result.groups = {{"test1", {UDAValue(1.0), UDAValue(2.0), UDAValue(3.0),
-                                MaxProcedure::PLUG, 4.0, UnitSystem::serializeObject()}}};
+                                MaxProcedure::PLUG, 4.0, UnitSystem::serializationTestObject()}}};
 
     return result;
 }

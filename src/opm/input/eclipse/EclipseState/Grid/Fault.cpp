@@ -27,12 +27,12 @@ namespace Opm {
     {
     }
 
-    Fault Fault::serializeObject()
+    Fault Fault::serializationTestObject()
     {
         Fault result;
         result.m_name = "test";
         result.m_transMult = 1.0;
-        result.m_faceList = {FaultFace::serializeObject()};
+        result.m_faceList = {FaultFace::serializationTestObject()};
 
         return result;
     }

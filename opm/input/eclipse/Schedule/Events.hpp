@@ -146,7 +146,7 @@ namespace Opm
 
     class Events {
     public:
-        static Events serializeObject();
+        static Events serializationTestObject();
 
         void addEvent(ScheduleEvents::Events event);
         bool hasEvent(uint64_t eventMask) const;
@@ -168,7 +168,7 @@ namespace Opm
 
     class WellGroupEvents {
     public:
-        static WellGroupEvents serializeObject();
+        static WellGroupEvents serializationTestObject();
 
         void addWell(const std::string& wname);
         void addGroup(const std::string& gname);

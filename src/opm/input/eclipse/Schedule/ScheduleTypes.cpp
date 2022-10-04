@@ -130,7 +130,7 @@ WellType::WellType(Phase phase) :
     WellType(true, phase)
 {}
 
-WellType WellType::serializeObject()
+WellType WellType::serializationTestObject()
 {
     WellType result;
     result.m_producer = true;

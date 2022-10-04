@@ -56,7 +56,7 @@ namespace Opm {
     }
 
 
-    MessageLimits MessageLimits::serializeObject()
+    MessageLimits MessageLimits::serializationTestObject()
     {
        MessageLimits result;
        result.message_print_limit = 12345;

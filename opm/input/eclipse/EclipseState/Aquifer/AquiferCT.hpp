@@ -81,7 +81,7 @@ namespace Opm {
             std::vector<double> dimensionless_time{};
             std::vector<double> dimensionless_pressure{};
 
-            static AQUCT_data serializeObject();
+            static AQUCT_data serializationTestObject();
 
             double timeConstant() const { return this->time_constant_; }
             double influxConstant() const { return this->influx_constant_; }
@@ -129,7 +129,7 @@ namespace Opm {
         void loadFromRestart(const RestartIO::RstAquifer& rst,
                              const TableManager&          tables);
 
-        static AquiferCT serializeObject();
+        static AquiferCT serializationTestObject();
 
         std::size_t size() const;
         std::vector<AquiferCT::AQUCT_data>::const_iterator begin() const;

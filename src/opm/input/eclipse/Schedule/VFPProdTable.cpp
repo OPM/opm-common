@@ -158,7 +158,7 @@ VFPProdTable::VFPProdTable(int table_num,
 }
 
 
-VFPProdTable VFPProdTable::serializeObject()
+VFPProdTable VFPProdTable::serializationTestObject()
 {
     VFPProdTable result;
     result.m_table_num = 1;
@@ -173,7 +173,7 @@ VFPProdTable VFPProdTable::serializeObject()
     result.m_gfr_data = {8.0};
     result.m_alq_data = {9.0, 10.0, 11.0};
     result.m_data = {12.0, 13.0, 14.0, 15.0, 16.0};
-    result.m_location = KeywordLocation::serializeObject();
+    result.m_location = KeywordLocation::serializationTestObject();
 
     return result;
 }

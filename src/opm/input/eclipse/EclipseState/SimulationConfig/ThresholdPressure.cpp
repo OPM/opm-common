@@ -127,7 +127,7 @@ namespace Opm {
         }
     }
 
-    ThresholdPressure ThresholdPressure::serializeObject()
+    ThresholdPressure ThresholdPressure::serializationTestObject()
     {
         ThresholdPressure result;
         result.m_active = false;

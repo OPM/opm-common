@@ -109,7 +109,7 @@ Aquifetp::AQUFETP_data::AQUFETP_data(const int aquiferID_,
     , initial_temperature (t0_)
 {}
 
-Aquifetp::AQUFETP_data Aquifetp::AQUFETP_data::serializeObject()
+Aquifetp::AQUFETP_data Aquifetp::AQUFETP_data::serializationTestObject()
 {
     auto ret = AQUFETP_data {
         1, 2, 3.0, 4.0, 5.0, 6.0, 7.0, 11.0
@@ -180,10 +180,10 @@ void Aquifetp::loadFromRestart(const RestartIO::RstAquifer& rst,
     }
 }
 
-Aquifetp Aquifetp::serializeObject()
+Aquifetp Aquifetp::serializationTestObject()
 {
     Aquifetp result;
-    result.m_aqufetp = { AQUFETP_data::serializeObject() };
+    result.m_aqufetp = { AQUFETP_data::serializationTestObject() };
 
     return result;
 }

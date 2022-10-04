@@ -139,15 +139,15 @@ ActionX::ActionX(const DeckKeyword& kw, const Actdims& actdims, std::time_t star
 }
 
 
-ActionX ActionX::serializeObject()
+ActionX ActionX::serializationTestObject()
 {
     ActionX result;
     result.m_name = "test";
     result.m_max_run = 1;
     result.m_min_wait = 2;
     result.m_start_time = 3;
-    result.keywords = {DeckKeyword::serializeObject()};
-    result.condition = Action::AST::serializeObject();
+    result.keywords = {DeckKeyword::serializationTestObject()};
+    result.condition = Action::AST::serializationTestObject();
     Quantity quant;
     quant.quantity = "test1";
     quant.args = {"test2"};

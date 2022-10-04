@@ -44,7 +44,7 @@ public:
     {
     }
 
-    static UDQIndex serializeObject()
+    static UDQIndex serializationTestObject()
     {
         UDQIndex result;
         result.insert_index = 1;

@@ -91,7 +91,7 @@ namespace data {
             serializer(target);
         }
 
-        static CellData serializeObject()
+        static CellData serializationTestObject()
         {
             return CellData{UnitSystem::measure::runtime,
                             {1.0, 2.0, 3.0},

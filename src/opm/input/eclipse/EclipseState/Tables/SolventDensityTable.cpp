@@ -24,7 +24,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
 
 namespace Opm {
-        SolventDensityTable SolventDensityTable::serializeObject()
+        SolventDensityTable SolventDensityTable::serializationTestObject()
         {
             SolventDensityTable result;
             result.m_tableValues = {1.0, 2.0, 3.0};

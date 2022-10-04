@@ -152,7 +152,7 @@ namespace Opm {
         explicit IOConfig( const Deck& );
         explicit IOConfig( const std::string& input_path );
 
-        static IOConfig serializeObject();
+        static IOConfig serializationTestObject();
 
         void setEclCompatibleRST(bool ecl_rst);
         bool getEclCompatibleRST() const;

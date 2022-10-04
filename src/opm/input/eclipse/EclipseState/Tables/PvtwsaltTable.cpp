@@ -30,7 +30,7 @@ namespace Opm {
         {
         }
 
-        PvtwsaltTable PvtwsaltTable::serializeObject()
+        PvtwsaltTable PvtwsaltTable::serializationTestObject()
         {
             PvtwsaltTable result;
             result.m_pRefValues = 1.0;

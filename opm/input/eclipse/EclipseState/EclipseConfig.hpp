@@ -34,7 +34,7 @@ namespace Opm {
         explicit EclipseConfig(const Deck& deck);
         EclipseConfig(const InitConfig& initConfig, const IOConfig& io_conf);
 
-        static EclipseConfig serializeObject();
+        static EclipseConfig serializationTestObject();
 
         InitConfig& init();
         IOConfig& io();

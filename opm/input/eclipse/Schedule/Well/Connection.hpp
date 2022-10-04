@@ -98,7 +98,7 @@ namespace RestartIO {
 
         Connection(const RestartIO::RstConnection& rst_connection, const ScheduleGrid& grid, const FieldPropsManager& fp);
 
-        static Connection serializeObject();
+        static Connection serializationTestObject();
 
         bool attachedToSegment() const;
         bool sameCoordinate(const int i, const int j, const int k) const;

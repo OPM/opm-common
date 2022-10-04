@@ -34,7 +34,7 @@ public:
 
     bool has_well(const std::string& wname) const;
     bool has_group(const std::string& gname) const;
-    static WGNames serializeObject();
+    static WGNames serializationTestObject();
     bool operator==(const WGNames& other) const;
 
     template<class Serializer>

@@ -155,7 +155,7 @@ std::vector<int> unique(const std::vector<int>& data) {
         }
     }
 
-    MULTREGTScanner MULTREGTScanner::serializeObject()
+    MULTREGTScanner MULTREGTScanner::serializationTestObject()
     {
         MULTREGTScanner result;
         result.nx = 1;

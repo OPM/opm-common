@@ -48,7 +48,7 @@ public:
 
 
     static RunCount from_string(std::string run_count);
-    static PyAction serializeObject();
+    static PyAction serializationTestObject();
     PyAction() = default;
     PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, const std::string& module_file);
     bool run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st,

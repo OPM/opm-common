@@ -52,7 +52,7 @@ public:
         serializer(m_name_list);
     }
 
-    static NameOrder serializeObject();
+    static NameOrder serializationTestObject();
 
     const std::string& operator[](std::size_t index) const;
     bool operator==(const NameOrder& other) const;
@@ -79,7 +79,7 @@ public:
         serializer(m_name_list);
         serializer(m_max_groups);
     }
-    static GroupOrder serializeObject();
+    static GroupOrder serializationTestObject();
 
     bool operator==(const GroupOrder& other) const;
     std::vector<std::string>::const_iterator begin() const;

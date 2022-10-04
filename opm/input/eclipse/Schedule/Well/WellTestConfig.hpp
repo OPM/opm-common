@@ -88,7 +88,7 @@ public:
         bool test_well(int num_attempt, double elapsed) const;
 
         static int inverse_ecl_reasons(int ecl_reasons);
-        static WTESTWell serializeObject();
+        static WTESTWell serializationTestObject();
         int ecl_reasons() const;
 
         template<class Serializer>
@@ -103,7 +103,7 @@ public:
         }
     };
 
-    static WellTestConfig serializeObject();
+    static WellTestConfig serializationTestObject();
 
     WellTestConfig() = default;
     WellTestConfig(const RestartIO::RstState& rst_state, int report_step);

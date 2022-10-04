@@ -110,7 +110,7 @@ public:
     TracerConfig() = default;
     TracerConfig(const UnitSystem& unit_system, const Deck& deck);
 
-    static TracerConfig serializeObject();
+    static TracerConfig serializationTestObject();
 
     size_t size() const;
     bool empty() const;

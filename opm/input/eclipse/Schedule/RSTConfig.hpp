@@ -200,7 +200,7 @@ public:
     void update(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors);
     void init_next();
     static RSTConfig first(const RSTConfig& src);
-    static RSTConfig serializeObject();
+    static RSTConfig serializationTestObject();
 
     template<class Serializer>
     void serializeOp(Serializer& serializer) {

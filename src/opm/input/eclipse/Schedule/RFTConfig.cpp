@@ -307,7 +307,7 @@ bool RFTConfig::operator==(const RFTConfig& data) const
         && (this->open_wells == data.open_wells);
 }
 
-RFTConfig RFTConfig::serializeObject()
+RFTConfig RFTConfig::serializationTestObject()
 {
     // Establish an object in a non-default state to enable testing the
     // serialization code.  These statements "simply" record a number of

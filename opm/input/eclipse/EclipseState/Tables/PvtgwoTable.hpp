@@ -31,7 +31,7 @@ namespace Opm {
         PvtgwoTable() = default;
         PvtgwoTable( const DeckKeyword& keyword, size_t tableIdx);
 
-        static PvtgwoTable serializeObject();
+        static PvtgwoTable serializationTestObject();
 
         bool operator==(const PvtgwoTable& data) const;
     };

@@ -24,7 +24,7 @@ namespace Opm {
     struct StandardCond {
         StandardCond();
 
-        static StandardCond serializeObject();
+        static StandardCond serializationTestObject();
 
         bool operator==(const StandardCond& data) const {
             return temperature == data.temperature &&

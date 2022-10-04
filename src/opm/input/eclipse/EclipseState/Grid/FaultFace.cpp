@@ -55,7 +55,7 @@ namespace Opm {
                 }
     }
 
-    FaultFace FaultFace::serializeObject()
+    FaultFace FaultFace::serializationTestObject()
     {
         FaultFace result;
         result.m_faceDir = FaceDir::YPlus;

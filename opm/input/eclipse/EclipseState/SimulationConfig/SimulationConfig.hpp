@@ -38,7 +38,7 @@ namespace Opm {
                          const Deck& deck,
                          const FieldPropsManager& fp);
 
-        static SimulationConfig serializeObject();
+        static SimulationConfig serializationTestObject();
 
         const RockConfig& rock_config() const;
         const ThresholdPressure& getThresholdPressure() const;

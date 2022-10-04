@@ -60,13 +60,13 @@ UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
 {
 }
 
-UDAValue UDAValue::serializeObject()
+UDAValue UDAValue::serializationTestObject()
 {
     UDAValue result;
     result.numeric_value = true;
     result.double_value = 1.0;
     result.string_value = "test";
-    result.dim = Dimension::serializeObject();
+    result.dim = Dimension::serializationTestObject();
 
     return result;
 }

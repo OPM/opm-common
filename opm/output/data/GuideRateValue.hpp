@@ -139,7 +139,7 @@ namespace Opm { namespace data {
            serializer(value_);
         }
 
-        static GuideRateValue serializeObject()
+        static GuideRateValue serializationTestObject()
         {
             GuideRateValue val;
             val.mask_ = std::bitset<Size>(1234);

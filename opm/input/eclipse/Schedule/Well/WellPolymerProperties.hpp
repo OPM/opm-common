@@ -32,7 +32,7 @@ namespace Opm {
         int m_skprwattable = -1;
         int m_skprpolytable = -1;
 
-        static WellPolymerProperties serializeObject();
+        static WellPolymerProperties serializationTestObject();
 
         bool operator==(const WellPolymerProperties& other) const;
         bool operator!=(const WellPolymerProperties& other) const;

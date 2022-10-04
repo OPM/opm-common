@@ -27,7 +27,7 @@ class DeckRecord;
 
 struct WellFoamProperties
 {
-    static WellFoamProperties serializeObject();
+    static WellFoamProperties serializationTestObject();
 
     double m_foamConcentration = 0.0;
     void handleWFOAM(const DeckRecord& rec);

@@ -79,7 +79,7 @@ public:
     ActionX(const DeckRecord& record, std::time_t start_time);
     explicit ActionX(const RestartIO::RstAction& rst_action);
 
-    static ActionX serializeObject();
+    static ActionX serializationTestObject();
 
     void addKeyword(const DeckKeyword& kw);
     bool ready(const State& state, std::time_t sim_time) const;

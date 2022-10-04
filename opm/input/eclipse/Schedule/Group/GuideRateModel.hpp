@@ -65,7 +65,7 @@ public:
                           double damping_factor);
 
 
-    static GuideRateModel serializeObject();
+    static GuideRateModel serializationTestObject();
 
     double eval(double oil_pot, double gas_pot, double wat_pot) const;
     bool updateLINCOM(const UDAValue& alpha, const UDAValue& beta, const UDAValue& gamma) const;

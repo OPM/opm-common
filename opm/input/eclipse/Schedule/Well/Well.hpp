@@ -185,7 +185,7 @@ public:
         GuideRateTarget guide_phase;
         double scale_factor;
 
-        static WellGuideRate serializeObject()
+        static WellGuideRate serializationTestObject()
         {
             WellGuideRate result;
             result.available = true;
@@ -270,7 +270,7 @@ public:
         WellInjectionProperties();
         WellInjectionProperties(const UnitSystem& units, const std::string& wname);
 
-        static WellInjectionProperties serializeObject();
+        static WellInjectionProperties serializationTestObject();
 
         void handleWELTARG(WELTARGCMode cmode, const UDAValue& new_arg, double SIFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
@@ -406,7 +406,7 @@ public:
         WellProductionProperties();
         WellProductionProperties(const UnitSystem& units, const std::string& name_arg);
 
-        static WellProductionProperties serializeObject();
+        static WellProductionProperties serializationTestObject();
 
         bool hasProductionControl(ProducerCMode controlModeArg) const {
             return (m_productionControls & static_cast<int>(controlModeArg)) != 0;
@@ -507,7 +507,7 @@ public:
          const UnitSystem& unit_system,
          double udq_undefined);
 
-    static Well serializeObject();
+    static Well serializationTestObject();
 
     bool isMultiSegment() const;
     bool isAvailableForGroupControl() const;

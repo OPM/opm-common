@@ -51,7 +51,7 @@ namespace Opm {
              ICDStatus status,
              double scalingFactor);
 
-        static SICD serializeObject();
+        static SICD serializationTestObject();
 
         // the function will return a map
         // [

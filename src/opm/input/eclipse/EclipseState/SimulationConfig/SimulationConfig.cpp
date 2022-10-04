@@ -100,12 +100,12 @@ namespace Opm {
         }
     }
 
-    SimulationConfig SimulationConfig::serializeObject()
+    SimulationConfig SimulationConfig::serializationTestObject()
     {
         SimulationConfig result;
-        result.m_ThresholdPressure = ThresholdPressure::serializeObject();
-        result.m_bcconfig = BCConfig::serializeObject();
-        result.m_rock_config = RockConfig::serializeObject();
+        result.m_ThresholdPressure = ThresholdPressure::serializationTestObject();
+        result.m_bcconfig = BCConfig::serializationTestObject();
+        result.m_rock_config = RockConfig::serializationTestObject();
         result.m_useCPR = false;
         result.m_DISGAS = true;
         result.m_VAPOIL = false;

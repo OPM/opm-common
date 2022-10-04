@@ -178,7 +178,7 @@ namespace Opm {
         assign_if_finite(rstWell.econ_limit_min_liq,   this->m_min_liquid_rate);
     }
 
-    WellEconProductionLimits WellEconProductionLimits::serializeObject()
+    WellEconProductionLimits WellEconProductionLimits::serializationTestObject()
     {
         WellEconProductionLimits result;
         result.m_min_oil_rate = 1.0;

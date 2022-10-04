@@ -71,7 +71,7 @@ namespace Opm {
         explicit WellSegments(const DeckKeyword& keyword);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
-        static WellSegments serializeObject();
+        static WellSegments serializationTestObject();
 
         std::size_t size() const;
         double depthTopSegment() const;

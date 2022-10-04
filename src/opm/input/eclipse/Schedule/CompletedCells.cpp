@@ -53,9 +53,9 @@ bool Opm::CompletedCells::operator==(const Opm::CompletedCells& other) const {
 }
 
 
-Opm::CompletedCells Opm::CompletedCells::serializeObject() {
+Opm::CompletedCells Opm::CompletedCells::serializationTestObject() {
     Opm::CompletedCells cells(2,3,4);
-    cells.cells.emplace(7, Opm::CompletedCells::Cell::serializeObject());
+    cells.cells.emplace(7, Opm::CompletedCells::Cell::serializationTestObject());
     return cells;
 }
 

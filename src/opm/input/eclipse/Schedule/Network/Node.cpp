@@ -68,7 +68,7 @@ bool Node::operator==(const Node& other) const {
 }
 
 
-Node Node::serializeObject()
+Node Node::serializationTestObject()
 {
   Node result;
   result.m_name = "test";

@@ -78,11 +78,11 @@ namespace Opm {
             this->setRestart( input_path + "/" + root, step );
     }
 
-    InitConfig InitConfig::serializeObject()
+    InitConfig InitConfig::serializationTestObject()
     {
         InitConfig result;
-        result.equil = Equil::serializeObject();
-        result.foamconfig = FoamConfig::serializeObject();
+        result.equil = Equil::serializationTestObject();
+        result.foamconfig = FoamConfig::serializationTestObject();
         result.m_filleps = true;
         result.m_gravity = false;
         result.m_restartRequested = true;

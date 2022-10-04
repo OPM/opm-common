@@ -62,11 +62,11 @@ class Solution : public std::map< std::string, data::CellData > {
           serializer(si);
         }
 
-        static Solution serializeObject()
+        static Solution serializationTestObject()
         {
             Solution sol;
             sol.si = false;
-            sol.insert({"test_data", CellData::serializeObject()});
+            sol.insert({"test_data", CellData::serializationTestObject()});
 
             return sol;
         }

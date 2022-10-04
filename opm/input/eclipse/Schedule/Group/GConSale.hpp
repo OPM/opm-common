@@ -73,7 +73,7 @@ namespace Opm {
             MaxProcedure max_proc;
         };
 
-        static GConSale serializeObject();
+        static GConSale serializationTestObject();
         
         bool has(const std::string& name) const;
         const GCONSALEGroup& get(const std::string& name) const;

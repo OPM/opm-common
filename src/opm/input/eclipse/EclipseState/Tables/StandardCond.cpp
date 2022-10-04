@@ -34,7 +34,7 @@ StandardCond::StandardCond() {
 }
 
 
-StandardCond StandardCond::serializeObject()
+StandardCond StandardCond::serializationTestObject()
 {
     StandardCond result;
     result.temperature = 1.0;

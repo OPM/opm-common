@@ -45,7 +45,7 @@ public:
     UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg);
     UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector);
 
-    static UDQASTNode serializeObject();
+    static UDQASTNode serializationTestObject();
 
     UDQSet eval(UDQVarType eval_target, const UDQContext& context) const;
 

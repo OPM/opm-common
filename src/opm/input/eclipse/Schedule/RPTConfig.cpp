@@ -44,7 +44,7 @@ namespace {
 
 namespace Opm {
 
-RPTConfig RPTConfig::serializeObject() {
+RPTConfig RPTConfig::serializationTestObject() {
     RPTConfig rptc;
     rptc.m_mnemonics.emplace( "KEY", 100 );
     return rptc;

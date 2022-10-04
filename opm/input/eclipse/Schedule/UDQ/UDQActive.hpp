@@ -161,7 +161,7 @@ public:
         UDAControl control;
     };
 
-    static UDQActive serializeObject();
+    static UDQActive serializationTestObject();
     UDQActive() = default;
     static std::vector<RstRecord> load_rst(const UnitSystem& units,
                                            const UDQConfig& udq_config,

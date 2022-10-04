@@ -29,7 +29,7 @@ namespace Opm {
     class WVFPEXP
     {
     public:
-        static WVFPEXP serializeObject();
+        static WVFPEXP serializationTestObject();
 
         void update(const DeckRecord& record);
 

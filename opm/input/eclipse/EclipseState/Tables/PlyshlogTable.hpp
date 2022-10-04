@@ -34,7 +34,7 @@ namespace Opm {
         PlyshlogTable() = default;
         PlyshlogTable(const DeckRecord& indexRecord, const DeckRecord& dataRecord);
 
-        static PlyshlogTable serializeObject();
+        static PlyshlogTable serializationTestObject();
 
         double getRefPolymerConcentration() const;
         double getRefSalinity() const;

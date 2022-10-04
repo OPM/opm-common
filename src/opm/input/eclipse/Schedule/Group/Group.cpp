@@ -246,13 +246,13 @@ Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg,
 }
 
 
-Group Group::serializeObject()
+Group Group::serializationTestObject()
 {
     Group result;
     result.m_name = "test1";
     result.m_insert_index = 1;
     result.udq_undefined = 3.0;
-    result.unit_system = UnitSystem::serializeObject();
+    result.unit_system = UnitSystem::serializationTestObject();
     result.group_type = GroupType::PRODUCTION;
     result.gefac = 4.0;
     result.transfer_gefac = true;
@@ -260,10 +260,10 @@ Group Group::serializeObject()
     result.parent_group = "test2";
     result.m_wells = {{"test3", "test4"}, {"test5", "test6"}};
     result.m_groups = {{"test7", "test8"}, {"test9", "test10"}};
-    result.injection_properties = {{Opm::Phase::OIL, GroupInjectionProperties::serializeObject()}};
-    result.production_properties = GroupProductionProperties::serializeObject();
+    result.injection_properties = {{Opm::Phase::OIL, GroupInjectionProperties::serializationTestObject()}};
+    result.production_properties = GroupProductionProperties::serializationTestObject();
     result.m_topup_phase = Phase::OIL;
-    result.m_gpmaint = GPMaint::serializeObject();
+    result.m_gpmaint = GPMaint::serializationTestObject();
 
     return result;
 }
@@ -385,7 +385,7 @@ Group::GroupInjectionProperties::GroupInjectionProperties(std::string group_name
     , target_void_fraction { unit_system.getDimension(UnitSystem::measure::identity) }
 {}
 
-Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject()
+Group::GroupInjectionProperties Group::GroupInjectionProperties::serializationTestObject()
 {
     Group::GroupInjectionProperties result{"G"};
     result.phase = Phase::OIL;
@@ -493,7 +493,7 @@ Group::GroupProductionProperties::GroupProductionProperties(const UnitSystem& un
 {
 }
 
-Group::GroupProductionProperties Group::GroupProductionProperties::serializeObject()
+Group::GroupProductionProperties Group::GroupProductionProperties::serializationTestObject()
 {
     Group::GroupProductionProperties result(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "Group123");
     result.name = "Group123";

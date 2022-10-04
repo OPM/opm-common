@@ -106,7 +106,7 @@ public:
     /// Construct from input deck.
     NNC(const EclipseGrid& grid, const Deck& deck);
 
-    static NNC serializeObject();
+    static NNC serializationTestObject();
 
     bool addNNC(const size_t cell1, const size_t cell2, const double trans);
     const std::vector<NNCdata>& input() const { return m_input; }

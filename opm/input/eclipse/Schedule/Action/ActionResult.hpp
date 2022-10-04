@@ -88,7 +88,7 @@ public:
         serializer(this->well_set);
     }
 
-    static WellSet serializeObject();
+    static WellSet serializationTestObject();
 
 private:
     std::unordered_set<std::string> well_set;
@@ -121,7 +121,7 @@ public:
         serializer(this->matching_wells);
     }
 
-    static Result serializeObject();
+    static Result serializationTestObject();
 
 private:
     void assign(bool value);

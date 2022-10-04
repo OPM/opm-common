@@ -172,7 +172,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     }
 
 
-    NNC NNC::serializeObject()
+    NNC NNC::serializationTestObject()
     {
         NNC result;
         result.m_input= {{1,2,1.0},{2,3,2.0}};

@@ -256,9 +256,9 @@ namespace Opm {
             }
 
 
-            static map_member<K,T> serializeObject() {
+            static map_member<K,T> serializationTestObject() {
                 map_member<K,T> map_object;
-                T value_object = T::serializeObject();
+                T value_object = T::serializationTestObject();
                 K key = value_object.name();
                 map_object.m_data.emplace( key, std::make_shared<T>( std::move(value_object) ));
                 return map_object;
@@ -295,7 +295,7 @@ namespace Opm {
         bool first_in_year() const;
 
         bool operator==(const ScheduleState& other) const;
-        static ScheduleState serializeObject();
+        static ScheduleState serializationTestObject();
 
         void update_tuning(Tuning tuning);
         Tuning& tuning();

@@ -23,7 +23,7 @@
 namespace Opm {
 
 
-    Events Events::serializeObject()
+    Events Events::serializationTestObject()
     {
         Events result;
         result.m_events = 12345;
@@ -52,7 +52,7 @@ namespace Opm {
     }
 
 
-    WellGroupEvents WellGroupEvents::serializeObject() {
+    WellGroupEvents WellGroupEvents::serializationTestObject() {
         WellGroupEvents wg;
         wg.addWell("WG1");
         wg.addGroup("GG1");

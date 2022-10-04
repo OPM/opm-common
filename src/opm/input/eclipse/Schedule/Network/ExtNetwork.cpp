@@ -25,7 +25,7 @@
 namespace Opm {
 namespace Network {
 
-ExtNetwork ExtNetwork::serializeObject() {
+ExtNetwork ExtNetwork::serializationTestObject() {
     ExtNetwork object;
     return object;
 }

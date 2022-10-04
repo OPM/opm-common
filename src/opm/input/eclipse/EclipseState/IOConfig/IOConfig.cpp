@@ -86,7 +86,7 @@ namespace Opm {
         this->setBaseName(basename(input_path));
     }
 
-    IOConfig IOConfig::serializeObject()
+    IOConfig IOConfig::serializationTestObject()
     {
         IOConfig result;
         result.m_write_INIT_file = true;

@@ -94,7 +94,7 @@ public:
     UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value, std::size_t report_step);
     UDQAssign(const std::string& keyword, const std::unordered_set<std::string>& selector, double value, std::size_t report_step);
 
-    static UDQAssign serializeObject();
+    static UDQAssign serializationTestObject();
 
     const std::string& keyword() const;
     UDQVarType var_type() const;

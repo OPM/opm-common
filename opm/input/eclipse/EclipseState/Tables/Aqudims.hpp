@@ -38,7 +38,7 @@ namespace Opm {
 
         explicit Aqudims(const Deck& deck);
 
-        static Aqudims serializeObject()
+        static Aqudims serializationTestObject()
         {
             Aqudims result;
             result.m_mxnaqn = 1;

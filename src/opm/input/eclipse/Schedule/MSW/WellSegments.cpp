@@ -55,11 +55,11 @@ namespace Opm {
     }
 
 
-    WellSegments WellSegments::serializeObject()
+    WellSegments WellSegments::serializationTestObject()
     {
         WellSegments result;
         result.m_comp_pressure_drop = CompPressureDrop::HF_;
-        result.m_segments = {Opm::Segment::serializeObject()};
+        result.m_segments = {Opm::Segment::serializationTestObject()};
         result.segment_number_to_index = {{1, 2}};
 
         return result;

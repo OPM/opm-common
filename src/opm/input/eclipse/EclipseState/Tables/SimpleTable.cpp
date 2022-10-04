@@ -44,11 +44,11 @@ namespace Opm {
     }
 
 
-    SimpleTable SimpleTable::serializeObject()
+    SimpleTable SimpleTable::serializationTestObject()
     {
         SimpleTable result;
-        result.m_schema = Opm::TableSchema::serializeObject();
-        result.m_columns.insert({"test3", Opm::TableColumn::serializeObject()});
+        result.m_schema = Opm::TableSchema::serializationTestObject();
+        result.m_columns.insert({"test3", Opm::TableColumn::serializationTestObject()});
         result.m_jfunc = true;
 
         return result;

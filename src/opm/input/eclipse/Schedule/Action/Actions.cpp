@@ -31,11 +31,11 @@ Actions::Actions(const std::vector<ActionX>& action, const std::vector<PyAction>
 {}
 
 
-Actions Actions::serializeObject()
+Actions Actions::serializationTestObject()
 {
     Actions result;
-    result.actions = {ActionX::serializeObject()};
-    result.pyactions = {PyAction::serializeObject()};
+    result.actions = {ActionX::serializationTestObject()};
+    result.pyactions = {PyAction::serializationTestObject()};
 
     return result;
 }

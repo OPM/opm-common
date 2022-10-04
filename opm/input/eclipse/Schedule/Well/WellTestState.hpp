@@ -114,7 +114,7 @@ public:
                    this->wtest_report_step == other.wtest_report_step;
         }
 
-        static WTestWell serializeObject();
+        static WTestWell serializationTestObject();
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -162,7 +162,7 @@ public:
                    this->num_attempt == other.num_attempt;
         }
 
-        static ClosedCompletion serializeObject();
+        static ClosedCompletion serializationTestObject();
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -279,7 +279,7 @@ public:
     }
 
 
-    static WellTestState serializeObject();
+    static WellTestState serializationTestObject();
     bool operator==(const WellTestState& other) const;
 
     std::optional<WellTestState::RestartWell> restart_well(const Opm::WellTestConfig& config, const std::string& wname) const;

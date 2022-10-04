@@ -34,7 +34,7 @@ namespace Opm {
         ColumnSchema(const std::string& name , Table::ColumnOrderEnum order, Table::DefaultAction defaultAction);
         ColumnSchema(const std::string& name , Table::ColumnOrderEnum order, double defaultValue);
 
-        static ColumnSchema serializeObject();
+        static ColumnSchema serializationTestObject();
 
         const std::string& name() const;
         bool validOrder( double value1 , double value2) const;

@@ -40,7 +40,7 @@ namespace Opm {
         PvtoTable() = default;
         PvtoTable(const DeckKeyword& keyword, size_t tableIdx);
 
-        static PvtoTable serializeObject();
+        static PvtoTable serializationTestObject();
 
         bool operator==(const PvtoTable& data) const;
 

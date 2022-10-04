@@ -154,7 +154,7 @@ namespace {
       this->m_volume = new_volume;
   }
 
-  Segment Segment::serializeObject()
+  Segment Segment::serializationTestObject()
   {
       Segment result;
       result.m_segment_number = 1;
@@ -168,7 +168,7 @@ namespace {
       result.m_cross_area = 10.0;
       result.m_volume = 11.0;
       result.m_data_ready = true;
-      result.m_icd = SICD::serializeObject();
+      result.m_icd = SICD::serializationTestObject();
       return result;
   }
 

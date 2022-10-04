@@ -28,7 +28,7 @@
 
 namespace Opm {
 
-    WVFPEXP WVFPEXP::serializeObject()
+    WVFPEXP WVFPEXP::serializationTestObject()
     {
         WVFPEXP result;
         result.m_explicit = true;

@@ -32,7 +32,7 @@ public:
     Actdims();
     explicit Actdims(const Deck& deck);
 
-    static Actdims serializeObject();
+    static Actdims serializationTestObject();
 
     std::size_t max_keywords() const;
     std::size_t max_line_count() const;

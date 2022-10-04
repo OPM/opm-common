@@ -278,23 +278,23 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
     }
 
     /*
-      In general the serializeObject() instances are used as targets for
+      In general the serializationTestObject() instances are used as targets for
       deserialization, i.e. the serialized buffer is unpacked into this
       instance. However the Schedule object is a top level object, and the
       simulator will instantiate and manage a Schedule object to unpack into, so
       the instance created here is only for testing.
     */
-    Schedule Schedule::serializeObject()
+    Schedule Schedule::serializationTestObject()
     {
         Schedule result;
 
-        result.m_static = ScheduleStatic::serializeObject();
-        result.m_sched_deck = ScheduleDeck::serializeObject();
-        result.action_wgnames = Action::WGNames::serializeObject();
+        result.m_static = ScheduleStatic::serializationTestObject();
+        result.m_sched_deck = ScheduleDeck::serializationTestObject();
+        result.action_wgnames = Action::WGNames::serializationTestObject();
         result.exit_status = EXIT_FAILURE;
-        result.snapshots = { ScheduleState::serializeObject() };
-        result.restart_output = WriteRestartFileEvents::serializeObject();
-        result.completed_cells = CompletedCells::serializeObject();
+        result.snapshots = { ScheduleState::serializationTestObject() };
+        result.restart_output = WriteRestartFileEvents::serializationTestObject();
+        result.completed_cells = CompletedCells::serializationTestObject();
 
         return result;
     }

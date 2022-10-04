@@ -38,10 +38,10 @@ AST::AST(const std::vector<std::string>& tokens) {
     this->condition.reset( new Action::ASTNode(condition_node) );
 }
 
-AST AST::serializeObject()
+AST AST::serializationTestObject()
 {
     AST result;
-    result.condition = std::make_shared<ASTNode>(ASTNode::serializeObject());
+    result.condition = std::make_shared<ASTNode>(ASTNode::serializationTestObject());
 
     return result;
 }

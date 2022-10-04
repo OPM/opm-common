@@ -33,7 +33,7 @@ namespace Opm {
         explicit UDQParams(const Deck& deck);
         UDQParams();
 
-        static UDQParams serializeObject();
+        static UDQParams serializationTestObject();
 
         bool reseed() const;
         int rand_seed() const noexcept;

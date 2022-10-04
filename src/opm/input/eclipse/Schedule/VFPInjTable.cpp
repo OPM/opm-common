@@ -178,7 +178,7 @@ VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_
 }
 
 
-VFPInjTable VFPInjTable::serializeObject()
+VFPInjTable VFPInjTable::serializationTestObject()
 {
     VFPInjTable result;
     result.m_table_num = 1;
@@ -187,7 +187,7 @@ VFPInjTable VFPInjTable::serializeObject()
     result.m_flo_data = {3.0, 4.0};
     result.m_thp_data = {5.0, 6.0};
     result.m_data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-    result.m_location = KeywordLocation::serializeObject();
+    result.m_location = KeywordLocation::serializationTestObject();
 
     return result;
 }

@@ -127,7 +127,7 @@ namespace Opm {
         return this->m_aquifers.size();
     }
 
-    NumericalAquifers NumericalAquifers::serializeObject() {
+    NumericalAquifers NumericalAquifers::serializationTestObject() {
         NumericalAquifers result;
         result.m_aquifers  = {{1, SingleNumericalAquifer{1}}};
         return result;

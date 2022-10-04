@@ -100,7 +100,7 @@ const GasLiftOpt::Well& GasLiftOpt::well(const std::string& wname) const {
     return iter->second;
 }
 
-GasLiftOpt GasLiftOpt::serializeObject() {
+GasLiftOpt GasLiftOpt::serializationTestObject() {
     GasLiftOpt glo;
     glo.m_increment = 0;
     glo.m_min_eco_gradient = 100;

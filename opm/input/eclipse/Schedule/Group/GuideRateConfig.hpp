@@ -89,7 +89,7 @@ struct GroupInjTarget {
     }
 };
 
-    static GuideRateConfig serializeObject();
+    static GuideRateConfig serializationTestObject();
 
     const GuideRateModel& model() const;
     bool has_model() const;

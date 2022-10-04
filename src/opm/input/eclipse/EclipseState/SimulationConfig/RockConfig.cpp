@@ -82,7 +82,7 @@ RockConfig::RockComp::RockComp(double pref_arg, double comp_arg) :
     compressibility(comp_arg)
 {}
 
-RockConfig RockConfig::serializeObject()
+RockConfig RockConfig::serializationTestObject()
 {
     RockConfig result;
     result.m_active = true;

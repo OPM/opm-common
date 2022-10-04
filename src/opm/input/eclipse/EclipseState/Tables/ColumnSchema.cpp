@@ -48,7 +48,7 @@ namespace Opm {
     {
     }
 
-    ColumnSchema ColumnSchema::serializeObject()
+    ColumnSchema ColumnSchema::serializationTestObject()
     {
         ColumnSchema result;
         result.m_name = "test1";

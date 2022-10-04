@@ -29,7 +29,7 @@ namespace Opm {
     public:
         PvtsolTable() = default;
         PvtsolTable(const DeckKeyword& keyword, size_t tableIdx);
-        static PvtsolTable serializeObject();
+        static PvtsolTable serializationTestObject();
         bool operator==(const PvtsolTable& data) const;
     };
 }

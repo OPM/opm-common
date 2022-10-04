@@ -56,7 +56,7 @@ std::vector<UDQActive::RstRecord> UDQActive::load_rst(const UnitSystem& units,
     return records;
 }
 
-UDQActive UDQActive::serializeObject()
+UDQActive UDQActive::serializationTestObject()
 {
     UDQActive result;
     result.input_data = {{1, "test1", "test2", UDAControl::WCONPROD_ORAT}};
