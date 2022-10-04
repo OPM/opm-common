@@ -93,7 +93,7 @@ namespace Opm {
             void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
             void loadFromRestart(const RestartIO::RstAquifer& rst_aquifers);
 
-            static Aquancon serializeObject();
+            static Aquancon serializationTestObject();
 
             const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data() const;
             bool operator==(const Aquancon& other) const;

@@ -61,7 +61,7 @@ struct RockComp {
     RockConfig();
     RockConfig(const Deck& deck, const FieldPropsManager& fp);
 
-    static RockConfig serializeObject();
+    static RockConfig serializationTestObject();
 
     bool active() const;
     const std::vector<RockConfig::RockComp>& comp() const;

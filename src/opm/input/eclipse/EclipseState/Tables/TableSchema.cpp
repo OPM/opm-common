@@ -22,10 +22,10 @@
 
 namespace Opm {
 
-    TableSchema TableSchema::serializeObject()
+    TableSchema TableSchema::serializationTestObject()
     {
         TableSchema result;
-        result.m_columns.insert({"test1", ColumnSchema::serializeObject()});
+        result.m_columns.insert({"test1", ColumnSchema::serializationTestObject()});
 
         return result;
     }

@@ -95,7 +95,7 @@ Tuning::Tuning() {
 }
 
 
-Tuning Tuning::serializeObject() {
+Tuning Tuning::serializationTestObject() {
     Tuning result;
     result.TSINIT = 1.0;
     result.TSMAXZ = 2.0;

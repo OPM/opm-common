@@ -31,7 +31,7 @@ namespace Opm {
         {
         }
 
-        RwgsaltTable RwgsaltTable::serializeObject()
+        RwgsaltTable RwgsaltTable::serializationTestObject()
         {
             RwgsaltTable result;
             result.m_tableValues = {1.0, 2.0, 3.0};

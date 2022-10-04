@@ -30,7 +30,7 @@ namespace Opm {
         MessageLimits();
         explicit MessageLimits(const Deck& deck);
 
-        static MessageLimits serializeObject();
+        static MessageLimits serializationTestObject();
 
         ///Get all the value from MESSAGES keyword.
         int getMessagePrintLimit() const;

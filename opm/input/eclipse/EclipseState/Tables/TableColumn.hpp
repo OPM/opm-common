@@ -36,7 +36,7 @@ namespace Opm {
 
         TableColumn(const TableColumn& c2) { *this = c2; }
 
-        static TableColumn serializeObject();
+        static TableColumn serializationTestObject();
 
         size_t size( ) const;
         const std::string& name() const;

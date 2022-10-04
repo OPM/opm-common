@@ -111,15 +111,15 @@ namespace Opm
         }
 
 
-        static ScheduleStatic serializeObject() {
+        static ScheduleStatic serializationTestObject() {
             auto python = std::make_shared<Python>(Python::Enable::OFF);
             ScheduleStatic st(python);
-            st.m_deck_message_limits = MessageLimits::serializeObject();
-            st.m_runspec = Runspec::serializeObject();
+            st.m_deck_message_limits = MessageLimits::serializationTestObject();
+            st.m_runspec = Runspec::serializationTestObject();
             st.m_unit_system = UnitSystem::newFIELD();
             st.m_input_path = "Some/funny/path";
-            st.rst_config = RSTConfig::serializeObject();
-            st.rst_info = ScheduleRestartInfo::serializeObject();
+            st.rst_config = RSTConfig::serializationTestObject();
+            st.rst_info = ScheduleRestartInfo::serializationTestObject();
             return st;
         }
 
@@ -200,7 +200,7 @@ namespace Opm
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
-        static Schedule serializeObject();
+        static Schedule serializationTestObject();
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
@@ -534,7 +534,7 @@ namespace Opm
 
         // Please update the member functions
         //   - operator==(const Schedule&) const
-        //   - serializeObject()
+        //   - serializationTestObject()
         //   - serializeOp(Serializer&)
         // when you update/change this list of data members.
         ScheduleStatic m_static;

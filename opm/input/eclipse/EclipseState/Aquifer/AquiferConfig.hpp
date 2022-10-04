@@ -53,7 +53,7 @@ public:
     void loadFromRestart(const RestartIO::RstAquifer& aquifers,
                          const TableManager&          tables);
 
-    static AquiferConfig serializeObject();
+    static AquiferConfig serializationTestObject();
 
     bool active() const;
     const AquiferCT& ct() const;

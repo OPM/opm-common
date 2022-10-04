@@ -61,7 +61,7 @@ public:
         BCFace() = default;
         explicit BCFace(const DeckRecord& record);
 
-        static BCFace serializeObject();
+        static BCFace serializationTestObject();
 
         bool operator==(const BCFace& other) const;
 
@@ -85,7 +85,7 @@ public:
     BCConfig() = default;
     explicit BCConfig(const Deck& deck);
 
-    static BCConfig serializeObject();
+    static BCConfig serializationTestObject();
 
     std::size_t size() const;
     std::vector<BCFace>::const_iterator begin() const;

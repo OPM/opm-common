@@ -263,55 +263,55 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     }
 
 
-    TableManager TableManager::serializeObject()
+    TableManager TableManager::serializationTestObject()
     {
         TableManager result;
-        result.m_simpleTables = {{"test", TableContainer::serializeObject()}};
-        result.m_pvtgTables = {PvtgTable::serializeObject()};
-        result.m_pvtgwTables = {PvtgwTable::serializeObject()};
-        result.m_pvtgwoTables = {PvtgwoTable::serializeObject()};
-        result.m_pvtoTables = {PvtoTable::serializeObject()};
-        result.m_rock2dTables = {Rock2dTable::serializeObject()};
-        result.m_rock2dtrTables = {Rock2dtrTable::serializeObject()};
-        result.m_pvtwTable = PvtwTable::serializeObject();
-        result.m_pvcdoTable = PvcdoTable::serializeObject();
-        result.m_densityTable = DensityTable::serializeObject();
-        result.m_diffCoeffTable = DiffCoeffTable::serializeObject();
-        result.m_plyvmhTable = PlyvmhTable::serializeObject();
-        result.m_rockTable = RockTable::serializeObject();
-        result.m_plmixparTable = PlmixparTable::serializeObject();
-        result.m_shrateTable = ShrateTable::serializeObject();
-        result.m_stone1exTable = Stone1exTable::serializeObject();
-        result.m_viscrefTable = ViscrefTable::serializeObject();
-        result.m_watdentTable = WatdentTable::serializeObject();
-        result.m_sgofletTable = SgofletTable::serializeObject();
-        result.m_swofletTable = SwofletTable::serializeObject();
-        result.m_pvtwsaltTables = {PvtwsaltTable::serializeObject()};
-        result.m_rwgsaltTables = {RwgsaltTable::serializeObject()};
-        result.m_bdensityTables = {BrineDensityTable::serializeObject()};
-        result.m_sdensityTables = {SolventDensityTable::serializeObject()};
-        result.m_plymwinjTables = {{1, Opm::PlymwinjTable::serializeObject()}};
-        result.m_skprwatTables =  {{2, Opm::SkprwatTable::serializeObject()}};
-        result.m_skprpolyTables = {{3, Opm::SkprpolyTable::serializeObject()}};
-        result.m_tabdims = Tabdims::serializeObject();
-        result.m_regdims = Regdims::serializeObject();
-        result.m_eqldims = Eqldims::serializeObject();
+        result.m_simpleTables = {{"test", TableContainer::serializationTestObject()}};
+        result.m_pvtgTables = {PvtgTable::serializationTestObject()};
+        result.m_pvtgwTables = {PvtgwTable::serializationTestObject()};
+        result.m_pvtgwoTables = {PvtgwoTable::serializationTestObject()};
+        result.m_pvtoTables = {PvtoTable::serializationTestObject()};
+        result.m_rock2dTables = {Rock2dTable::serializationTestObject()};
+        result.m_rock2dtrTables = {Rock2dtrTable::serializationTestObject()};
+        result.m_pvtwTable = PvtwTable::serializationTestObject();
+        result.m_pvcdoTable = PvcdoTable::serializationTestObject();
+        result.m_densityTable = DensityTable::serializationTestObject();
+        result.m_diffCoeffTable = DiffCoeffTable::serializationTestObject();
+        result.m_plyvmhTable = PlyvmhTable::serializationTestObject();
+        result.m_rockTable = RockTable::serializationTestObject();
+        result.m_plmixparTable = PlmixparTable::serializationTestObject();
+        result.m_shrateTable = ShrateTable::serializationTestObject();
+        result.m_stone1exTable = Stone1exTable::serializationTestObject();
+        result.m_viscrefTable = ViscrefTable::serializationTestObject();
+        result.m_watdentTable = WatdentTable::serializationTestObject();
+        result.m_sgofletTable = SgofletTable::serializationTestObject();
+        result.m_swofletTable = SwofletTable::serializationTestObject();
+        result.m_pvtwsaltTables = {PvtwsaltTable::serializationTestObject()};
+        result.m_rwgsaltTables = {RwgsaltTable::serializationTestObject()};
+        result.m_bdensityTables = {BrineDensityTable::serializationTestObject()};
+        result.m_sdensityTables = {SolventDensityTable::serializationTestObject()};
+        result.m_plymwinjTables = {{1, Opm::PlymwinjTable::serializationTestObject()}};
+        result.m_skprwatTables =  {{2, Opm::SkprwatTable::serializationTestObject()}};
+        result.m_skprpolyTables = {{3, Opm::SkprpolyTable::serializationTestObject()}};
+        result.m_tabdims = Tabdims::serializationTestObject();
+        result.m_regdims = Regdims::serializationTestObject();
+        result.m_eqldims = Eqldims::serializationTestObject();
         result.hasImptvd = true;
         result.hasEnptvd = true;
         result.hasEqlnum = true;
         result.hasShrate = true;
-        result.jfunc = Opm::JFunc::serializeObject();
-        result.oilDenT = DenT::serializeObject();
-        result.gasDenT = DenT::serializeObject();
-        result.watDenT = DenT::serializeObject();
-        result.oilJT = JouleThomson::serializeObject();
-        result.gasJT = JouleThomson::serializeObject();
-        result.watJT = JouleThomson::serializeObject();
-        result.stcond = StandardCond::serializeObject();
+        result.jfunc = Opm::JFunc::serializationTestObject();
+        result.oilDenT = DenT::serializationTestObject();
+        result.gasDenT = DenT::serializationTestObject();
+        result.watDenT = DenT::serializationTestObject();
+        result.oilJT = JouleThomson::serializationTestObject();
+        result.gasJT = JouleThomson::serializationTestObject();
+        result.watJT = JouleThomson::serializationTestObject();
+        result.stcond = StandardCond::serializationTestObject();
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
         result.m_salinity = 1.0;
-        result.m_tlmixpar = TLMixpar::serializeObject();
+        result.m_tlmixpar = TLMixpar::serializationTestObject();
         return result;
     }
 

@@ -52,7 +52,7 @@ struct RunState {
         this->run_count += 1;
     }
 
-    static RunState serializeObject()
+    static RunState serializationTestObject()
     {
         RunState rs;
         rs.run_count = 100;
@@ -97,7 +97,7 @@ public:
     }
 
 
-    static State serializeObject();
+    static State serializationTestObject();
     bool operator==(const State& other) const;
 
 private:

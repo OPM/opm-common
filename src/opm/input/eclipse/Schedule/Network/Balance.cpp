@@ -169,7 +169,7 @@ const std::optional<double>& Balance::min_tstep() const {
     return this->m_min_tstep;
 }
 
-Balance Balance::serializeObject() {
+Balance Balance::serializationTestObject() {
     Balance balance;
     balance.calc_interval = 0.;
     balance.calc_mode = Balance::CalcMode::NUPCOL;

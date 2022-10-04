@@ -34,7 +34,7 @@ DenT::entry::entry(const DeckRecord& record) :
 {
 }
 
-DenT DenT::serializeObject()
+DenT DenT::serializationTestObject()
 {
     DenT result;
     result.m_records = {{1,2,3}, {4,5,6}};

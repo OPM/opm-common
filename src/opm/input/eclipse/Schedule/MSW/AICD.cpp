@@ -28,9 +28,9 @@
 
 namespace Opm {
 
-AutoICD AutoICD::serializeObject() {
+AutoICD AutoICD::serializationTestObject() {
     AutoICD aicd;
-    static_cast<SICD&>(aicd) = SICD::serializeObject();
+    static_cast<SICD&>(aicd) = SICD::serializationTestObject();
     aicd.m_flow_rate_exponent = 1.0;
     aicd.m_visc_exponent = 2.0;
     aicd.m_oil_density_exponent = 3.0;

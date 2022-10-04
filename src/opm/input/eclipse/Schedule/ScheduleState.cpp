@@ -281,43 +281,43 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
 
 
 
-ScheduleState ScheduleState::serializeObject() {
+ScheduleState ScheduleState::serializationTestObject() {
     auto t1 = TimeService::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
     ts.m_sim_step = 123;
     ts.m_month_num = 12;
     ts.m_year_num = 66;
-    ts.vfpprod = map_member<int, VFPProdTable>::serializeObject();
-    ts.vfpinj = map_member<int, VFPInjTable>::serializeObject();
-    ts.groups = map_member<std::string, Group>::serializeObject();
-    ts.m_events = Events::serializeObject();
-    ts.m_nupcol = Nupcol::serializeObject();
-    ts.update_oilvap( Opm::OilVaporizationProperties::serializeObject() );
-    ts.m_message_limits = MessageLimits::serializeObject();
+    ts.vfpprod = map_member<int, VFPProdTable>::serializationTestObject();
+    ts.vfpinj = map_member<int, VFPInjTable>::serializationTestObject();
+    ts.groups = map_member<std::string, Group>::serializationTestObject();
+    ts.m_events = Events::serializationTestObject();
+    ts.m_nupcol = Nupcol::serializationTestObject();
+    ts.update_oilvap( Opm::OilVaporizationProperties::serializationTestObject() );
+    ts.m_message_limits = MessageLimits::serializationTestObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
     ts.target_wellpi = {{"WELL1", 1000}, {"WELL2", 2000}};
 
     ts.m_sumthin = 12.345;
     ts.m_rptonly = true;
 
-    ts.pavg.update( PAvg::serializeObject() );
-    ts.wtest_config.update( WellTestConfig::serializeObject() );
-    ts.gconsump.update( GConSump::serializeObject() );
-    ts.gconsale.update( GConSale::serializeObject() );
-    ts.wlist_manager.update( WListManager::serializeObject() );
-    ts.rpt_config.update( RPTConfig::serializeObject() );
-    ts.actions.update( Action::Actions::serializeObject() );
-    ts.udq_active.update( UDQActive::serializeObject() );
-    ts.network.update( Network::ExtNetwork::serializeObject() );
-    ts.network_balance.update( Network::Balance::serializeObject() );
-    ts.well_order.update( NameOrder::serializeObject() );
-    ts.group_order.update( GroupOrder::serializeObject() );
-    ts.udq.update( UDQConfig::serializeObject() );
-    ts.guide_rate.update( GuideRateConfig::serializeObject() );
-    ts.glo.update( GasLiftOpt::serializeObject() );
-    ts.rft_config.update( RFTConfig::serializeObject() );
-    ts.rst_config.update( RSTConfig::serializeObject() );
+    ts.pavg.update( PAvg::serializationTestObject() );
+    ts.wtest_config.update( WellTestConfig::serializationTestObject() );
+    ts.gconsump.update( GConSump::serializationTestObject() );
+    ts.gconsale.update( GConSale::serializationTestObject() );
+    ts.wlist_manager.update( WListManager::serializationTestObject() );
+    ts.rpt_config.update( RPTConfig::serializationTestObject() );
+    ts.actions.update( Action::Actions::serializationTestObject() );
+    ts.udq_active.update( UDQActive::serializationTestObject() );
+    ts.network.update( Network::ExtNetwork::serializationTestObject() );
+    ts.network_balance.update( Network::Balance::serializationTestObject() );
+    ts.well_order.update( NameOrder::serializationTestObject() );
+    ts.group_order.update( GroupOrder::serializationTestObject() );
+    ts.udq.update( UDQConfig::serializationTestObject() );
+    ts.guide_rate.update( GuideRateConfig::serializationTestObject() );
+    ts.glo.update( GasLiftOpt::serializationTestObject() );
+    ts.rft_config.update( RFTConfig::serializationTestObject() );
+    ts.rst_config.update( RSTConfig::serializationTestObject() );
 
     return ts;
 }

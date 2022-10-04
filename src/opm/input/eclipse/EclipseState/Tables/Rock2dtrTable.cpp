@@ -29,7 +29,7 @@ namespace Opm {
         {
         }
 
-        Rock2dtrTable  Rock2dtrTable::serializeObject()
+        Rock2dtrTable  Rock2dtrTable::serializationTestObject()
         {
             Rock2dtrTable result;
 

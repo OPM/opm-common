@@ -31,7 +31,7 @@ class Deck;
       explicit MICPpara(const Deck& deck);
 
 
-      static MICPpara serializeObject()
+      static MICPpara serializationTestObject()
       {
           MICPpara mp;
           mp.m_density_biofilm = 100;

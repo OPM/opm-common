@@ -26,7 +26,7 @@
 
 namespace Opm {
 
-    WellPolymerProperties WellPolymerProperties::serializeObject()
+    WellPolymerProperties WellPolymerProperties::serializationTestObject()
     {
         WellPolymerProperties result;
         result.m_polymerConcentration = 1.0;

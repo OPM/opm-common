@@ -209,7 +209,7 @@ namespace Opm {
     }
 
 
-    Aquancon Aquancon::serializeObject()
+    Aquancon Aquancon::serializationTestObject()
     {
         Aquancon result;
         result.cells = {{1, {{2, 3, 4.0, 5.0, FaceDir::XPlus}}}};

@@ -43,7 +43,7 @@ namespace Opm {
 
     class PolyInjTable {
     public:
-        static PolyInjTable serializeObject();
+        static PolyInjTable serializationTestObject();
 
         int getTableNumber() const;
 

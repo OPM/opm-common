@@ -92,7 +92,7 @@ namespace Opm {
                         const FieldPropsManager* fp_arg,
                         const std::vector< const DeckKeyword* >& keywords);
 
-        static MULTREGTScanner serializeObject();
+        static MULTREGTScanner serializationTestObject();
 
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 

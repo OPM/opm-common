@@ -39,7 +39,7 @@ namespace Opm {
         m_SIoffset = SIoffset;
     }
 
-    Dimension Dimension::serializeObject()
+    Dimension Dimension::serializationTestObject()
     {
         return Dimension(1.0, 2.0);
     }

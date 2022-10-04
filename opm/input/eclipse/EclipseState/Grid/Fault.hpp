@@ -35,7 +35,7 @@ public:
     Fault() = default;
     explicit Fault(const std::string& faultName);
 
-    static Fault serializeObject();
+    static Fault serializationTestObject();
 
     const  std::string& getName() const;
     void   setTransMult(double transMult);

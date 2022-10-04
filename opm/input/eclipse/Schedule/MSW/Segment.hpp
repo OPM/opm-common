@@ -49,7 +49,7 @@ namespace Opm {
         void serializeOp(Serializer&) {
         }
 
-        static RegularSegment serializeObject() {
+        static RegularSegment serializationTestObject() {
             return RegularSegment();
         }
 
@@ -79,7 +79,7 @@ namespace Opm {
                 double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in);
         Segment(const RestartIO::RstSegment& rst_segment);
 
-        static Segment serializeObject();
+        static Segment serializationTestObject();
 
         int segmentNumber() const;
         int branchNumber() const;

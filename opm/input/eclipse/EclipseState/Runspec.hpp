@@ -60,7 +60,7 @@ class Phases {
         Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
                 bool polymw = false, bool foam = false, bool brine = false, bool zfraction = false ) noexcept;
 
-        static Phases serializeObject();
+        static Phases serializationTestObject();
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
@@ -83,7 +83,7 @@ public:
     Welldims() = default;
     explicit Welldims(const Deck& deck);
 
-    static Welldims serializeObject();
+    static Welldims serializationTestObject();
 
     int maxConnPerWell() const
     {
@@ -161,7 +161,7 @@ public:
     WellSegmentDims();
     explicit WellSegmentDims(const Deck& deck);
 
-    static WellSegmentDims serializeObject();
+    static WellSegmentDims serializationTestObject();
 
 
     int maxSegmentedWells() const
@@ -200,7 +200,7 @@ public:
     NetworkDims();
     explicit NetworkDims(const Deck& deck);
 
-    static NetworkDims serializeObject();
+    static NetworkDims serializationTestObject();
 
     int maxNONodes() const
     {
@@ -240,7 +240,7 @@ public:
     AquiferDimensions();
     explicit AquiferDimensions(const Deck& deck);
 
-    static AquiferDimensions serializeObject();
+    static AquiferDimensions serializationTestObject();
 
     int maxAnalyticAquifers() const
     {
@@ -272,7 +272,7 @@ public:
     EclHysterConfig() = default;
     explicit EclHysterConfig(const Deck& deck);
 
-    static EclHysterConfig serializeObject();
+    static EclHysterConfig serializationTestObject();
 
     /*!
      * \brief Specify whether hysteresis is enabled or not.
@@ -339,7 +339,7 @@ public:
                              const ThreePhaseOilKrModel model,
                              const KeywordFamily family);
 
-    static SatFuncControls serializeObject();
+    static SatFuncControls serializationTestObject();
 
     double minimumRelpermMobilityThreshold() const
     {
@@ -380,7 +380,7 @@ public:
     void update(int value);
     int value() const;
 
-    static Nupcol serializeObject();
+    static Nupcol serializationTestObject();
     bool operator==(const Nupcol& data) const;
 
     template<class Serializer>
@@ -414,7 +414,7 @@ public:
         serializer(this->min_iter);
     }
 
-    static Tracers serializeObject();
+    static Tracers serializationTestObject();
     bool operator==(const Tracers& data) const;
 
 private:
@@ -435,7 +435,7 @@ public:
     Runspec() = default;
     explicit Runspec( const Deck& );
 
-    static Runspec serializeObject();
+    static Runspec serializationTestObject();
 
     std::time_t start_time() const noexcept;
     const UDQParams& udqParams() const noexcept;

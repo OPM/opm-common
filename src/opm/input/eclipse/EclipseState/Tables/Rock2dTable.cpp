@@ -29,7 +29,7 @@ namespace Opm {
         {
         }
 
-        Rock2dTable Rock2dTable::serializeObject()
+        Rock2dTable Rock2dTable::serializationTestObject()
         {
             Rock2dTable result;
             result.m_pvmultValues = {{1.0,2.0},{3.0,4.0}};

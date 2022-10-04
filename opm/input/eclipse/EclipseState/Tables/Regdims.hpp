@@ -48,7 +48,7 @@ namespace Opm {
             m_NPLMIX( nplmix )
         {}
 
-        static Regdims serializeObject()
+        static Regdims serializationTestObject()
         {
             return Regdims(1, 2, 3, 4, 5);
         }

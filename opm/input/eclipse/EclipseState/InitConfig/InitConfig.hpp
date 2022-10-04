@@ -35,7 +35,7 @@ namespace Opm {
         InitConfig();
         explicit InitConfig(const Deck& deck);
 
-        static InitConfig serializeObject();
+        static InitConfig serializationTestObject();
 
         void setRestart( const std::string& root, int step);
         bool restartRequested() const;

@@ -42,7 +42,7 @@ namespace Opm {
             m_nstrvd( nstrvd )
         { }
 
-        static Eqldims serializeObject()
+        static Eqldims serializationTestObject()
         {
             return Eqldims(1, 2, 3, 4, 5);
         }

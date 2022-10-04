@@ -35,7 +35,7 @@ class WListManager {
 public:
     WListManager() = default;
     explicit WListManager(const RestartIO::RstState& rst_state);
-    static WListManager serializeObject();
+    static WListManager serializationTestObject();
 
     std::size_t WListSize() const;
     bool hasList(const std::string&) const;

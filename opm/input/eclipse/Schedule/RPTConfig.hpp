@@ -44,7 +44,7 @@ public:
     std::size_t size() const { return this->m_mnemonics.size(); };
     unsigned& at(const std::string& key) { return this->m_mnemonics.at(key); };
 
-    static RPTConfig serializeObject();
+    static RPTConfig serializationTestObject();
     bool operator==(const RPTConfig& other) const;
 
 private:

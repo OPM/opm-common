@@ -76,7 +76,7 @@ namespace Opm {
         this->m_sim_rng.seed( this->random_seed );
     }
 
-    UDQParams UDQParams::serializeObject()
+    UDQParams UDQParams::serializationTestObject()
     {
         UDQParams result;
         result.reseed_rng = true;

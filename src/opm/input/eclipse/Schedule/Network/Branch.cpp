@@ -32,7 +32,7 @@ constexpr int invalid_vfp_table = 9999;
 }
 
 
-Branch Branch::serializeObject() {
+Branch Branch::serializationTestObject() {
     Branch object;
     return object;
 }

@@ -74,7 +74,7 @@ namespace Opm {
     }
 
 
-    WellTestState::WTestWell WellTestState::WTestWell::serializeObject() {
+    WellTestState::WTestWell WellTestState::WTestWell::serializationTestObject() {
         return WTestWell("Name", WellTestConfig::Reason::GROUP, 123.45);
     }
 
@@ -154,7 +154,7 @@ namespace Opm {
         return output;
     }
 
-    WellTestState::ClosedCompletion WellTestState::ClosedCompletion::serializeObject() {
+    WellTestState::ClosedCompletion WellTestState::ClosedCompletion::serializationTestObject() {
         ClosedCompletion c;
         c.wellName = "ABC";
         c.last_test = 0.781;
@@ -242,7 +242,7 @@ namespace Opm {
     }
 
 
-    WellTestState WellTestState::serializeObject() {
+    WellTestState WellTestState::serializationTestObject() {
         WellTestState ws;
         ws.close_well("W1", WellTestConfig::Reason::PHYSICAL, 100);
         ws.close_completion("W1", 3, 200);

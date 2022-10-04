@@ -23,11 +23,11 @@
 
 namespace Opm {
 
-GConSump GConSump::serializeObject()
+GConSump GConSump::serializationTestObject()
 {
     GConSump result;
     result.groups = {{"test1", {UDAValue(1.0), UDAValue(2.0), "test2", 3.0,
-                                UnitSystem::serializeObject()}}};
+                                UnitSystem::serializationTestObject()}}};
 
     return result;
 }

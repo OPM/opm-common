@@ -59,7 +59,7 @@ namespace Opm {
     {}
 
 
-    Well::WellProductionProperties Well::WellProductionProperties::serializeObject()
+    Well::WellProductionProperties Well::WellProductionProperties::serializationTestObject()
     {
         Well::WellProductionProperties result;
         result.name = "test";

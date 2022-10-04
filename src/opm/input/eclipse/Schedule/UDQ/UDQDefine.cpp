@@ -206,11 +206,11 @@ void UDQDefine::update_status(UDQUpdate update, std::size_t report_step) {
 
 
 
-UDQDefine UDQDefine::serializeObject()
+UDQDefine UDQDefine::serializationTestObject()
 {
     UDQDefine result;
     result.m_keyword = "test1";
-    result.ast = std::make_shared<UDQASTNode>(UDQASTNode::serializeObject());
+    result.ast = std::make_shared<UDQASTNode>(UDQASTNode::serializationTestObject());
     result.m_var_type = UDQVarType::SEGMENT_VAR;
     result.string_data = "test2";
     result.m_location = KeywordLocation{"KEYWOR", "file", 100};

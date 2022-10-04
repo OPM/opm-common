@@ -67,7 +67,7 @@ public:
               const ParseContext& parseContext,
               T&& errors);
 
-    static UDQDefine serializeObject();
+    static UDQDefine serializationTestObject();
 
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;

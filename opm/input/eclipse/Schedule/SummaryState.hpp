@@ -140,7 +140,7 @@ public:
       serializer(conn_values);
     }
 
-    static SummaryState serializeObject()
+    static SummaryState serializationTestObject()
     {
         auto st = SummaryState{TimeService::from_time_t(101)};
 

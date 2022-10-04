@@ -82,7 +82,7 @@ public:
                  const std::vector<double>& data);
     static Dimension ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem& unit_system);
 
-    static VFPProdTable serializeObject();
+    static VFPProdTable serializationTestObject();
 
     inline int getTableNum() const {
         return m_table_num;

@@ -30,7 +30,7 @@ namespace Opm {
         SkprwatTable() = default;
         explicit SkprwatTable(const DeckKeyword& table);
 
-        static SkprwatTable serializeObject();
+        static SkprwatTable serializationTestObject();
 
         const std::vector<std::vector<double>>& getSkinPressures() const;
 

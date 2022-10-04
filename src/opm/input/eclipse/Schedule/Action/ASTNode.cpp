@@ -71,7 +71,7 @@ ASTNode::ASTNode(TokenType type_arg, FuncType func_type_arg, const std::string& 
     arg_list(strip_quotes(arg_list_arg))
 {}
 
-ASTNode ASTNode::serializeObject()
+ASTNode ASTNode::serializationTestObject()
 {
     ASTNode result;
     result.type = ::number;

@@ -69,7 +69,7 @@ PAvg::PAvg(double inner_weight, double conn_weight, DepthCorrection depth_correc
     m_open_connections(use_open_connections)
 {}
 
-PAvg PAvg::serializeObject() {
+PAvg PAvg::serializationTestObject() {
     return PAvg(0.10, 0.30, PAvg::DepthCorrection::NONE, false);
 }
 

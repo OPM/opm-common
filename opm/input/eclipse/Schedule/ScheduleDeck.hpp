@@ -68,7 +68,7 @@ namespace Opm {
         std::vector<DeckKeyword>::const_iterator end() const;
 
         bool operator==(const ScheduleBlock& other) const;
-        static ScheduleBlock serializeObject();
+        static ScheduleBlock serializationTestObject();
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_time_type);
@@ -98,7 +98,7 @@ namespace Opm {
 
         ScheduleRestartInfo(const RestartIO::RstState * rst, const Deck& deck);
         bool operator==(const ScheduleRestartInfo& other) const;
-        static ScheduleRestartInfo serializeObject();
+        static ScheduleRestartInfo serializationTestObject();
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -137,7 +137,7 @@ namespace Opm {
         double seconds(std::size_t timeStep) const;
 
         bool operator==(const ScheduleDeck& other) const;
-        static ScheduleDeck serializeObject();
+        static ScheduleDeck serializationTestObject();
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_restart_time);

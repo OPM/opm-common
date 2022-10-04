@@ -30,7 +30,7 @@ namespace Opm {
         PlymwinjTable() = default;
         explicit PlymwinjTable(const DeckKeyword& table);
 
-        static PlymwinjTable serializeObject();
+        static PlymwinjTable serializationTestObject();
 
         const std::vector<std::vector<double>>& getMoleWeights() const;
         bool operator==(const PlymwinjTable& data) const;

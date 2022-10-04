@@ -180,7 +180,7 @@ bool Opm::WriteRestartFileEvents::operator==(const WriteRestartFileEvents& that)
 }
 
 Opm::WriteRestartFileEvents
-Opm::WriteRestartFileEvents::serializeObject()
+Opm::WriteRestartFileEvents::serializationTestObject()
 {
     auto events = WriteRestartFileEvents{};
 

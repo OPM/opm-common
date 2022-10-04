@@ -50,7 +50,7 @@ namespace Opm {
         TransMult() = default;
         TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp);
 
-        static TransMult serializeObject();
+        static TransMult serializationTestObject();
 
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;

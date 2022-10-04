@@ -69,7 +69,7 @@ namespace Opm {
             Deck( const Deck& );
             Deck( Deck&& );
 
-            static Deck serializeObject();
+            static Deck serializationTestObject();
 
             Deck& operator=(const Deck& rhs);
             bool operator==(const Deck& data) const;

@@ -29,7 +29,7 @@ namespace Opm {
     public:
         PvtwsaltTable();
 
-        static PvtwsaltTable serializeObject();
+        static PvtwsaltTable serializationTestObject();
 
         void init(const Opm::DeckRecord& record0, const Opm::DeckRecord& record1);
         size_t size() const;

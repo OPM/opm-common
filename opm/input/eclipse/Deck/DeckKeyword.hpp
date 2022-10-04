@@ -46,7 +46,7 @@ namespace Opm {
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, const UnitSystem& system_active, const UnitSystem& system_default);
 
-        static DeckKeyword serializeObject();
+        static DeckKeyword serializationTestObject();
 
         const std::string& name() const;
         void setFixedSize();

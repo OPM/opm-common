@@ -39,7 +39,7 @@ public:
     FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record);
     explicit FoamData(const DeckRecord& FOAMROCK_record);
 
-    static FoamData serializeObject();
+    static FoamData serializationTestObject();
 
     double referenceSurfactantConcentration() const;
     double exponent() const;
@@ -80,7 +80,7 @@ public:
     FoamConfig() = default;
     explicit FoamConfig(const Deck&);
 
-    static FoamConfig serializeObject();
+    static FoamConfig serializationTestObject();
 
     const FoamData& getRecord(std::size_t index) const;
 

@@ -49,7 +49,7 @@ namespace Opm {
         : m_nx(nx), m_ny(ny), m_nz(nz)
     {}
 
-    GridDims GridDims::serializeObject()
+    GridDims GridDims::serializationTestObject()
     {
         return { 1, 2, 3 };
     }

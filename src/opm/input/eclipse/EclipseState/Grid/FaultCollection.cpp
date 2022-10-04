@@ -57,10 +57,10 @@ namespace Opm {
         }
     }
 
-    FaultCollection FaultCollection::serializeObject()
+    FaultCollection FaultCollection::serializationTestObject()
     {
         FaultCollection result;
-        result.m_faults.insert({"test", Fault::serializeObject()});
+        result.m_faults.insert({"test", Fault::serializationTestObject()});
 
         return result;
     }

@@ -60,7 +60,7 @@ namespace Opm {
         explicit WellEconProductionLimits(const DeckRecord& record);
         explicit WellEconProductionLimits(const RestartIO::RstWell& rstWell);
 
-        static WellEconProductionLimits serializeObject();
+        static WellEconProductionLimits serializationTestObject();
 
         // TODO: not handling things related to m_secondary_max_water_cut
         // for the moment.

@@ -48,7 +48,7 @@ namespace Opm {
               double pipeCrossA,
               ICDStatus stat);
 
-        static Valve serializeObject();
+        static Valve serializationTestObject();
 
         // the function will return a map
         // [

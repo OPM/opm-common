@@ -46,7 +46,7 @@ namespace Opm {
         DeckItem( const std::string&, UDAValue, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
         DeckItem( const std::string&, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
 
-        static DeckItem serializeObject();
+        static DeckItem serializationTestObject();
 
         const std::string& name() const;
 

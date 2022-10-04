@@ -37,7 +37,7 @@ public:
     FaultCollection();
     FaultCollection(const GRIDSection& gridSection, const GridDims& grid);
 
-    static FaultCollection serializeObject();
+    static FaultCollection serializationTestObject();
 
     size_t size() const;
     bool hasFault(const std::string& faultName) const;

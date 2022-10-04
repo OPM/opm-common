@@ -64,13 +64,13 @@ void AquiferConfig::loadFromRestart(const RestartIO::RstAquifer& aquifers,
     this->aqconn.loadFromRestart(aquifers);
 }
 
-AquiferConfig AquiferConfig::serializeObject()
+AquiferConfig AquiferConfig::serializationTestObject()
 {
     AquiferConfig result;
-    result.aquifetp = Aquifetp::serializeObject();
-    result.aquiferct = AquiferCT::serializeObject();
-    result.aqconn = Aquancon::serializeObject();
-    result.numerical_aquifers = NumericalAquifers::serializeObject();
+    result.aquifetp = Aquifetp::serializationTestObject();
+    result.aquiferct = AquiferCT::serializationTestObject();
+    result.aqconn = Aquancon::serializationTestObject();
+    result.numerical_aquifers = NumericalAquifers::serializationTestObject();
 
     return result;
 }

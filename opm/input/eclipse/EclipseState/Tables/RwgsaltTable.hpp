@@ -30,7 +30,7 @@ namespace Opm {
     public:
         RwgsaltTable();
 
-        static RwgsaltTable serializeObject();
+        static RwgsaltTable serializationTestObject();
 
         void init(const Opm::DeckRecord& record1);
         size_t size() const;

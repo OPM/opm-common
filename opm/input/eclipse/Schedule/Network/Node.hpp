@@ -42,7 +42,7 @@ public:
     void add_gas_lift_gas(bool add_gas);
     void as_choke(const std::string& target_group);
 
-    static Node serializeObject();
+    static Node serializationTestObject();
     bool operator==(const Node& other) const;
 
     template<class Serializer>

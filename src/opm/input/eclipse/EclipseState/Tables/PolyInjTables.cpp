@@ -37,7 +37,7 @@
 namespace Opm{
 
     // PolyInjTable
-    PolyInjTable PolyInjTable::serializeObject()
+    PolyInjTable PolyInjTable::serializationTestObject()
     {
         PolyInjTable result;
         result.m_throughputs = {1.0};
@@ -79,10 +79,10 @@ namespace Opm{
 
 
     // PlymwinjTable
-    PlymwinjTable PlymwinjTable::serializeObject()
+    PlymwinjTable PlymwinjTable::serializationTestObject()
     {
         PlymwinjTable result;
-        static_cast<PolyInjTable&>(result) = PolyInjTable::serializeObject();
+        static_cast<PolyInjTable&>(result) = PolyInjTable::serializationTestObject();
 
         return result;
     }
@@ -137,10 +137,10 @@ namespace Opm{
 
 
     // SkprwatTable
-    SkprwatTable SkprwatTable::serializeObject()
+    SkprwatTable SkprwatTable::serializationTestObject()
     {
         SkprwatTable result;
-        static_cast<PolyInjTable&>(result) = PolyInjTable::serializeObject();
+        static_cast<PolyInjTable&>(result) = PolyInjTable::serializationTestObject();
 
         return result;
     }
@@ -194,10 +194,10 @@ namespace Opm{
     }
 
     // SkprpolyTable
-    SkprpolyTable SkprpolyTable::serializeObject()
+    SkprpolyTable SkprpolyTable::serializationTestObject()
     {
         SkprpolyTable result;
-        static_cast<PolyInjTable&>(result) = PolyInjTable::serializeObject();
+        static_cast<PolyInjTable&>(result) = PolyInjTable::serializationTestObject();
         result.m_ref_polymer_concentration = 3.0;
 
         return result;

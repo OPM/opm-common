@@ -133,7 +133,7 @@ namespace Opm {
                 serializer(vaporized_water);
             }
 
-            static Rates serializeObject()
+            static Rates serializationTestObject()
             {
                 Rates rat1;
                 rat1.set(opt::wat, 1.0);
@@ -242,9 +242,9 @@ namespace Opm {
             serializer(trans_factor);
         }
 
-        static Connection serializeObject()
+        static Connection serializationTestObject()
         {
-            return Connection{1, Rates::serializeObject(),
+            return Connection{1, Rates::serializationTestObject(),
                               2.0, 3.0, 4.0, 5.0,
                               6.0, 7.0, 8.0};
         }
@@ -293,7 +293,7 @@ namespace Opm {
             serializer(values_);
         }
 
-        static SegmentPressures serializeObject()
+        static SegmentPressures serializationTestObject()
         {
             SegmentPressures spres;
             spres[Value::Pressure] = 1.0;
@@ -342,10 +342,10 @@ namespace Opm {
             serializer(segNumber);
         }
 
-        static Segment serializeObject()
+        static Segment serializationTestObject()
         {
-            return Segment{Rates::serializeObject(),
-                           SegmentPressures::serializeObject(),
+            return Segment{Rates::serializationTestObject(),
+                           SegmentPressures::serializationTestObject(),
                            10
                    };
         }
@@ -396,7 +396,7 @@ namespace Opm {
             serializer(inj);
         }
 
-        static CurrentControl serializeObject()
+        static CurrentControl serializationTestObject()
         {
           return CurrentControl{false,
                                 ::Opm::Well::ProducerCMode::BHP,
@@ -480,18 +480,18 @@ namespace Opm {
             serializer(guide_rates);
         }
 
-        static Well serializeObject()
+        static Well serializationTestObject()
         {
-            return Well{Rates::serializeObject(),
+            return Well{Rates::serializationTestObject(),
                         1.0,
                         2.0,
                         3.0,
                         4,
                         ::Opm::Well::Status::SHUT,
-                        {Connection::serializeObject()},
-                        {{0, Segment::serializeObject()}},
-                        CurrentControl::serializeObject(),
-                        GuideRateValue::serializeObject()
+                        {Connection::serializationTestObject()},
+                        {{0, Segment::serializationTestObject()}},
+                        CurrentControl::serializationTestObject(),
+                        GuideRateValue::serializationTestObject()
                    };
         }
     };
@@ -575,10 +575,10 @@ namespace Opm {
             serializer(static_cast<std::map<std::string,Well>&>(*this));
         }
 
-        static Wells serializeObject()
+        static Wells serializationTestObject()
         {
             Wells w;
-            w.insert({"test_well", Well::serializeObject()});
+            w.insert({"test_well", Well::serializationTestObject()});
 
             return w;
         }

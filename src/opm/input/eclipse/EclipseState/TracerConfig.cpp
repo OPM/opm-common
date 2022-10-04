@@ -157,7 +157,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
     }
 }
 
-TracerConfig TracerConfig::serializeObject()
+TracerConfig TracerConfig::serializationTestObject()
 {
     TracerConfig result;
     result.tracers = {{"test", "", Phase::OIL, {1.0}}};

@@ -64,7 +64,7 @@ namespace Opm {
         TableContainer();
         explicit TableContainer( size_t maxTables );
 
-        static TableContainer serializeObject();
+        static TableContainer serializationTestObject();
 
         bool empty() const;
 

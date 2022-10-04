@@ -33,7 +33,7 @@ JouleThomson::entry::entry(const DeckRecord& record) :
 {
 }
 
-JouleThomson JouleThomson::serializeObject()
+JouleThomson JouleThomson::serializationTestObject()
 {
    JouleThomson result;
     result.m_records = {{1,2}, {3,4}};

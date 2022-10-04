@@ -49,7 +49,7 @@ public:
     AlqEQ alq_eq() const;
     std::optional<double> alq_value() const;
 
-    static Branch serializeObject();
+    static Branch serializationTestObject();
     bool operator==(const Branch& other) const;
 
     template<class Serializer>

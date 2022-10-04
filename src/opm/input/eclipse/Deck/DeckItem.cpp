@@ -113,7 +113,7 @@ DeckItem::DeckItem( const std::string& nm, UDAValue, const std::vector<Dimension
 {
 }
 
-DeckItem DeckItem::serializeObject()
+DeckItem DeckItem::serializationTestObject()
 {
     DeckItem result;
     result.dval = {1.0};
@@ -124,8 +124,8 @@ DeckItem DeckItem::serializeObject()
     result.item_name = "test2";
     result.value_status = {value::status::deck_value};
     result.raw_data = false;
-    result.active_dimensions = {Dimension::serializeObject()};
-    result.default_dimensions = {Dimension::serializeObject()};
+    result.active_dimensions = {Dimension::serializationTestObject()};
+    result.default_dimensions = {Dimension::serializationTestObject()};
 
     return result;
 }

@@ -68,7 +68,7 @@ public:
     std::optional<RFTConfig> next() const;
     std::optional<RFTConfig> well_open(const std::string& wname) const;
 
-    static RFTConfig serializeObject();
+    static RFTConfig serializationTestObject();
     bool operator==(const RFTConfig& data) const;
 
     template <class Serializer>
@@ -86,7 +86,7 @@ private:
     using StateMap = std::unordered_map<std::string, Kind>;
 
     // Please make sure that member functions serializeOp(), operator==(),
-    // and serializeObject() are also up to date when changing this list of
+    // and serializationTestObject() are also up to date when changing this list of
     // data members.
     bool first_open_rft = false;
     StateMap<RFT> rft_state{};

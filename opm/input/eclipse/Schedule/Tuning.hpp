@@ -29,7 +29,7 @@ namespace Opm {
         double value() const;
         bool every_report() const;
         bool operator==(const NextStep& other) const;
-        static NextStep serializeObject();
+        static NextStep serializationTestObject();
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -46,7 +46,7 @@ namespace Opm {
     struct Tuning {
         Tuning();
 
-        static Tuning serializeObject();
+        static Tuning serializationTestObject();
 
         // Record1
         double TSINIT;

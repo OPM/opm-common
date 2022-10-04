@@ -177,7 +177,7 @@ Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, b
 
 {}
 
-Phases Phases::serializeObject()
+Phases Phases::serializationTestObject()
 {
     return Phases(true, true, true, false, true, false, true, false);
 }
@@ -222,7 +222,7 @@ Welldims::Welldims(const Deck& deck)
     }
 }
 
-Welldims Welldims::serializeObject()
+Welldims Welldims::serializationTestObject()
 {
     Welldims result;
     result.nWMax = 1;
@@ -231,7 +231,7 @@ Welldims Welldims::serializeObject()
     result.nGMax = 4;
     result.nWlistPrWellMax = 5;
     result.nDynWlistMax = 6;
-    result.m_location = KeywordLocation::serializeObject();
+    result.m_location = KeywordLocation::serializationTestObject();
     return result;
 }
 
@@ -252,7 +252,7 @@ WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
     }
 }
 
-WellSegmentDims WellSegmentDims::serializeObject()
+WellSegmentDims WellSegmentDims::serializationTestObject()
 {
     WellSegmentDims result;
     result.nSegWellMax = 1;
@@ -291,7 +291,7 @@ bool NetworkDims::active() const {
 }
 
 
-NetworkDims NetworkDims::serializeObject()
+NetworkDims NetworkDims::serializationTestObject()
 {
     NetworkDims result;
     result.nMaxNoNodes = 1;
@@ -327,7 +327,7 @@ AquiferDimensions::AquiferDimensions(const Deck& deck)
     }
 }
 
-AquiferDimensions AquiferDimensions::serializeObject()
+AquiferDimensions AquiferDimensions::serializationTestObject()
 {
     auto dim = AquiferDimensions{};
 
@@ -414,7 +414,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         }
     }
 
-EclHysterConfig EclHysterConfig::serializeObject()
+EclHysterConfig EclHysterConfig::serializationTestObject()
 {
     EclHysterConfig result;
     result.activeHyst = true;
@@ -467,7 +467,7 @@ SatFuncControls::SatFuncControls(const double tolcritArg,
     , satfunc_family(family)
 {}
 
-SatFuncControls SatFuncControls::serializeObject()
+SatFuncControls SatFuncControls::serializationTestObject()
 {
     return SatFuncControls {
         1.0, ThreePhaseOilKrModel::Stone2, KeywordFamily::Family_I
@@ -498,7 +498,7 @@ void Nupcol::update(int value) {
     this->nupcol_value = std::max(value, this->min_nupcol);
 }
 
-Nupcol Nupcol::serializeObject() {
+Nupcol Nupcol::serializationTestObject() {
     Nupcol nc;
     nc.update(123);
     return nc;
@@ -525,7 +525,7 @@ bool Tracers::operator==(const Tracers& other) const {
         this->min_iter == other.min_iter;
 }
 
-Tracers Tracers::serializeObject() {
+Tracers Tracers::serializationTestObject() {
     Tracers tracers;
     tracers.m_oil_tracers = 123;
     tracers.m_gas_tracers = 77;
@@ -624,21 +624,21 @@ Runspec::Runspec( const Deck& deck )
     }
 }
 
-Runspec Runspec::serializeObject()
+Runspec Runspec::serializationTestObject()
 {
     Runspec result;
-    result.active_phases = Phases::serializeObject();
-    result.m_tabdims = Tabdims::serializeObject();
-    result.m_regdims = Regdims::serializeObject();
-    result.endscale = EndpointScaling::serializeObject();
-    result.welldims = Welldims::serializeObject();
-    result.wsegdims = WellSegmentDims::serializeObject();
-    result.aquiferdims = AquiferDimensions::serializeObject();
-    result.udq_params = UDQParams::serializeObject();
-    result.hystpar = EclHysterConfig::serializeObject();
-    result.m_actdims = Actdims::serializeObject();
-    result.m_sfuncctrl = SatFuncControls::serializeObject();
-    result.m_nupcol = Nupcol::serializeObject();
+    result.active_phases = Phases::serializationTestObject();
+    result.m_tabdims = Tabdims::serializationTestObject();
+    result.m_regdims = Regdims::serializationTestObject();
+    result.endscale = EndpointScaling::serializationTestObject();
+    result.welldims = Welldims::serializationTestObject();
+    result.wsegdims = WellSegmentDims::serializationTestObject();
+    result.aquiferdims = AquiferDimensions::serializationTestObject();
+    result.udq_params = UDQParams::serializationTestObject();
+    result.hystpar = EclHysterConfig::serializationTestObject();
+    result.m_actdims = Actdims::serializationTestObject();
+    result.m_sfuncctrl = SatFuncControls::serializationTestObject();
+    result.m_nupcol = Nupcol::serializationTestObject();
     result.m_co2storage = true;
     result.m_micp = true;
 

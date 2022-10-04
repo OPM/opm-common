@@ -44,7 +44,7 @@ namespace Opm
         OilVaporizationProperties();
         explicit OilVaporizationProperties(const size_t numPvtReginIdx);
 
-        static OilVaporizationProperties serializeObject();
+        static OilVaporizationProperties serializationTestObject();
 
         static void updateDRSDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
         static void updateDRSDTCON(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);

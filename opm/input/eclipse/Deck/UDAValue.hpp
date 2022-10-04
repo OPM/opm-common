@@ -51,7 +51,7 @@ public:
     void update(const std::string& s);
     void update_value(const UDAValue& other);
 
-    static UDAValue serializeObject();
+    static UDAValue serializationTestObject();
 
     /*
       The get<double>() and get<std::string>() methods will throw an

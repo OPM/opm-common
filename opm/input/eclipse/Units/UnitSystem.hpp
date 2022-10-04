@@ -89,7 +89,7 @@ namespace Opm {
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
         explicit UnitSystem(const std::string& deck_name);
 
-        static UnitSystem serializeObject();
+        static UnitSystem serializationTestObject();
 
         const std::string& getName() const;
         UnitType getType() const;

@@ -50,7 +50,7 @@ namespace Opm {
         JouleThomson() = default;
         explicit JouleThomson(const DeckKeyword& keyword);
 
-        static JouleThomson serializeObject();
+        static JouleThomson serializationTestObject();
 
         const entry& operator[](const std::size_t index) const;
         bool operator==(const JouleThomson& other) const;

@@ -94,7 +94,7 @@ namespace {
 
 namespace Opm {
 
-EndpointScaling EndpointScaling::serializeObject()
+EndpointScaling EndpointScaling::serializationTestObject()
 {
     EndpointScaling result;
     result.options = std::bitset<4>{13};

@@ -146,7 +146,7 @@ struct GroupInjectionProperties {
     double guide_rate = 0;
     GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
 
-    static GroupInjectionProperties serializeObject();
+    static GroupInjectionProperties serializationTestObject();
 
     int injection_controls = 0;
     bool operator==(const GroupInjectionProperties& other) const;
@@ -203,7 +203,7 @@ struct GroupProductionProperties {
     GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     bool available_group_control = true;
-    static GroupProductionProperties serializeObject();
+    static GroupProductionProperties serializationTestObject();
 
     int production_controls = 0;
     bool operator==(const GroupProductionProperties& other) const;
@@ -248,7 +248,7 @@ struct ProductionControls {
     Group(const std::string& group_name, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system);
     Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system);
 
-    static Group serializeObject();
+    static Group serializationTestObject();
 
     std::size_t insert_index() const;
     const std::string& name() const;

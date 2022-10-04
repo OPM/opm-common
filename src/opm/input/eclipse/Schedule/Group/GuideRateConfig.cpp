@@ -23,10 +23,10 @@
 
 namespace Opm {
 
-GuideRateConfig GuideRateConfig::serializeObject()
+GuideRateConfig GuideRateConfig::serializationTestObject()
 {
     GuideRateConfig result;
-    result.m_model = GuideRateModel::serializeObject();
+    result.m_model = GuideRateModel::serializationTestObject();
     result.wells = {{"test1", WellTarget{1.0, Well::GuideRateTarget::COMB, 2.0}}};
     result.production_groups = {{"test2", GroupProdTarget{1.0, Group::GuideRateProdTarget::COMB}}};
     result.injection_groups = {{{Phase::OIL, "test3"}, GroupInjTarget{1.0, Group::GuideRateInjTarget::NETV}}};

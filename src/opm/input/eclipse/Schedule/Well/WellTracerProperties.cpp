@@ -24,7 +24,7 @@
 
 namespace Opm {
 
-    WellTracerProperties WellTracerProperties::serializeObject()
+    WellTracerProperties WellTracerProperties::serializationTestObject()
     {
         WellTracerProperties result;
         result.m_tracerConcentrations = {{"test", 1.0}, {"test2", 2.0}};

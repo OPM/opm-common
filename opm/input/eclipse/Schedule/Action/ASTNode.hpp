@@ -20,7 +20,7 @@ public:
     ASTNode(double value);
     ASTNode(TokenType type_arg, FuncType func_type_arg, const std::string& func_arg, const std::vector<std::string>& arg_list_arg);
 
-    static ASTNode serializeObject();
+    static ASTNode serializationTestObject();
 
     Action::Result eval(const Action::Context& context) const;
     Action::Value value(const Action::Context& context) const;

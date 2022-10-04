@@ -34,7 +34,7 @@ namespace Opm {
         explicit GridDims(const std::array<int, 3>& xyz);
         GridDims(std::size_t nx, std::size_t ny, std::size_t nz);
 
-        static GridDims serializeObject();
+        static GridDims serializationTestObject();
 
         explicit GridDims(const Deck& deck);
 

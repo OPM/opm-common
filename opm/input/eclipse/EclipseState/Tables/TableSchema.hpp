@@ -30,7 +30,7 @@ namespace Opm {
 
     class TableSchema {
     public:
-        static TableSchema serializeObject();
+        static TableSchema serializationTestObject();
 
         void addColumn( ColumnSchema );
         const ColumnSchema& getColumn( const std::string& name ) const;

@@ -53,7 +53,7 @@ PyAction::RunCount PyAction::from_string(std::string run_count) {
     throw std::invalid_argument("RunCount string: " + run_count + " not recognized ");
 }
 
-PyAction PyAction::serializeObject()
+PyAction PyAction::serializationTestObject()
 {
     PyAction result;
 

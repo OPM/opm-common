@@ -166,7 +166,7 @@ AquiferCT::AQUCT_data::AQUCT_data(const int aqID,
     , initial_temperature(T0_)
 {}
 
-AquiferCT::AQUCT_data AquiferCT::AQUCT_data::serializeObject()
+AquiferCT::AQUCT_data AquiferCT::AQUCT_data::serializationTestObject()
 {
     auto ret = AQUCT_data {
         1, 2, 3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
@@ -258,9 +258,9 @@ void AquiferCT::loadFromRestart(const RestartIO::RstAquifer& rst,
     }
 }
 
-AquiferCT AquiferCT::serializeObject()
+AquiferCT AquiferCT::serializationTestObject()
 {
-    return { { AQUCT_data::serializeObject() } };
+    return { { AQUCT_data::serializationTestObject() } };
 }
 
 std::size_t AquiferCT::size() const {

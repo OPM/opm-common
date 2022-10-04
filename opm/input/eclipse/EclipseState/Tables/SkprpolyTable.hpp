@@ -30,7 +30,7 @@ namespace Opm {
         SkprpolyTable() = default;
         explicit SkprpolyTable(const DeckKeyword& table);
 
-        static SkprpolyTable serializeObject();
+        static SkprpolyTable serializationTestObject();
 
         double referenceConcentration() const;
 

@@ -29,7 +29,7 @@ namespace Opm {
     public:
         Rock2dtrTable();
 
-        static Rock2dtrTable serializeObject();
+        static Rock2dtrTable serializationTestObject();
 
         void init(const Opm::DeckRecord& record, size_t tableIdx);
         size_t size() const;

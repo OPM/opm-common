@@ -495,7 +495,7 @@ void RSTConfig::update(const DeckKeyword& keyword, const ParseContext& parseCont
 }
 
 
-RSTConfig RSTConfig::serializeObject() {
+RSTConfig RSTConfig::serializationTestObject() {
     RSTConfig rst_config;
     rst_config.basic = 10;
     rst_config.freq = {};

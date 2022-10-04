@@ -33,7 +33,7 @@ namespace Opm {
                      bool hasStressOption,
                      const int tableID);
 
-        static RocktabTable serializeObject();
+        static RocktabTable serializationTestObject();
 
         const TableColumn& getPressureColumn() const;
         const TableColumn& getPoreVolumeMultiplierColumn() const;

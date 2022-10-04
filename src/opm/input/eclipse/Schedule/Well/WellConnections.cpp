@@ -152,13 +152,13 @@ namespace Opm {
         , m_connections(connections)
     {}
 
-    WellConnections WellConnections::serializeObject()
+    WellConnections WellConnections::serializationTestObject()
     {
         WellConnections result;
         result.m_ordering = Connection::Order::DEPTH;
         result.headI = 1;
         result.headJ = 2;
-        result.m_connections = {Connection::serializeObject()};
+        result.m_connections = {Connection::serializationTestObject()};
 
         return result;
     }

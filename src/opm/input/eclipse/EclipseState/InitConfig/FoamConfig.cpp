@@ -70,7 +70,7 @@ FoamData::FoamData(const DeckRecord& FOAMROCK_record)
 }
 
 FoamData
-FoamData::serializeObject()
+FoamData::serializationTestObject()
 {
     FoamData result;
     result.reference_surfactant_concentration_ = 1.0;
@@ -165,10 +165,10 @@ FoamConfig::FoamConfig(const Deck& deck)
 }
 
 FoamConfig
-FoamConfig::serializeObject()
+FoamConfig::serializationTestObject()
 {
     FoamConfig result;
-    result.data_ = {Opm::FoamData::serializeObject()};
+    result.data_ = {Opm::FoamData::serializationTestObject()};
     result.transport_phase_ = Phase::GAS;
     result.mobility_model_ = MobilityModel::TAB;
 

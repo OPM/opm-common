@@ -85,7 +85,7 @@ namespace Opm {
     }
 
 
-    SICD SICD::serializeObject()
+    SICD SICD::serializationTestObject()
     {
         SICD result;
         result.m_strength = 1.0;

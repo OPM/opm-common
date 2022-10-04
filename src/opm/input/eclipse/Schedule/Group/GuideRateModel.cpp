@@ -66,7 +66,7 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
         throw std::invalid_argument("Invalid value for F must be in interval [-3,3]");
 }
 
-GuideRateModel GuideRateModel::serializeObject()
+GuideRateModel GuideRateModel::serializationTestObject()
 {
     GuideRateModel result;
     result.time_interval = 1.0;

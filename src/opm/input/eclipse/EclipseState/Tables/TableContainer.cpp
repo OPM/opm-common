@@ -35,12 +35,12 @@ namespace Opm {
     {
     }
 
-    TableContainer TableContainer::serializeObject()
+    TableContainer TableContainer::serializationTestObject()
     {
         TableContainer result;
         result.m_maxTables = 2;
-        result.addTable(0, std::make_shared<Opm::SimpleTable>(Opm::SimpleTable::serializeObject()));
-        result.addTable(1, std::make_shared<Opm::SimpleTable>(Opm::SimpleTable::serializeObject()));
+        result.addTable(0, std::make_shared<Opm::SimpleTable>(Opm::SimpleTable::serializationTestObject()));
+        result.addTable(1, std::make_shared<Opm::SimpleTable>(Opm::SimpleTable::serializationTestObject()));
 
         return result;
     }

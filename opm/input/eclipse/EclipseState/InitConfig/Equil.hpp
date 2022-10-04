@@ -62,7 +62,7 @@ namespace Opm {
             Equil() = default;
             explicit Equil( const DeckKeyword& );
 
-            static Equil serializeObject();
+            static Equil serializationTestObject();
 
             const EquilRecord& getRecord( size_t id ) const;
 

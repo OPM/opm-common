@@ -52,7 +52,7 @@ public:
         serializer(m_open_connections);
     }
 
-    static PAvg serializeObject();
+    static PAvg serializationTestObject();
 
     bool operator==(const PAvg& other) const;
     bool operator!=(const PAvg& other) const;

@@ -45,7 +45,7 @@ namespace Opm {
 
         explicit Tabdims(const Deck& deck);
 
-        static Tabdims serializeObject()
+        static Tabdims serializationTestObject()
         {
             Tabdims result;
             result.m_ntsfun = 1;

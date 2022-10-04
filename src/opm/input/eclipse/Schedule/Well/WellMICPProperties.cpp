@@ -22,7 +22,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
-Opm::WellMICPProperties Opm::WellMICPProperties::serializeObject()
+Opm::WellMICPProperties Opm::WellMICPProperties::serializationTestObject()
 {
     Opm::WellMICPProperties result;
     result.m_microbialConcentration = 1.0;

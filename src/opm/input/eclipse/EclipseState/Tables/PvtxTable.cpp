@@ -46,15 +46,15 @@ namespace Opm {
 
     }
 
-    PvtxTable PvtxTable::serializeObject()
+    PvtxTable PvtxTable::serializationTestObject()
     {
         PvtxTable result;
-        result.m_outerColumnSchema = ColumnSchema::serializeObject();
-        result.m_outerColumn = TableColumn::serializeObject();
-        result.m_underSaturatedSchema = TableSchema::serializeObject();
-        result.m_saturatedSchema = TableSchema::serializeObject();
-        result.m_underSaturatedTables = {SimpleTable::serializeObject()};
-        result.m_saturatedTable = SimpleTable::serializeObject();
+        result.m_outerColumnSchema = ColumnSchema::serializationTestObject();
+        result.m_outerColumn = TableColumn::serializationTestObject();
+        result.m_underSaturatedSchema = TableSchema::serializationTestObject();
+        result.m_saturatedSchema = TableSchema::serializationTestObject();
+        result.m_underSaturatedTables = {SimpleTable::serializationTestObject()};
+        result.m_saturatedTable = SimpleTable::serializationTestObject();
 
         return result;
     }

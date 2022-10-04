@@ -82,7 +82,7 @@ public:
         }
 
 
-        static Group serializeObject() {
+        static Group serializationTestObject() {
             Group group;
             group.m_name = "GR";
             group.m_max_lift_gas  = 100;
@@ -217,7 +217,7 @@ public:
             serializer(m_alloc_extra_gas);
         }
 
-        static Well serializeObject() {
+        static Well serializationTestObject() {
             Well well;
             well.m_name = "WELL";
             well.m_max_rate = 2000;
@@ -269,7 +269,7 @@ public:
     bool has_group(const std::string& group) const;
     std::size_t num_wells() const;
 
-    static GasLiftOpt serializeObject();
+    static GasLiftOpt serializationTestObject();
     bool operator==(const GasLiftOpt& other) const;
 
     template<class Serializer>

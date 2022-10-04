@@ -36,7 +36,7 @@ namespace Opm {
          m_maxDRVDT(numPvtRegionIdx, -1.0)
     {  }
 
-    OilVaporizationProperties OilVaporizationProperties::serializeObject()
+    OilVaporizationProperties OilVaporizationProperties::serializationTestObject()
     {
         OilVaporizationProperties result;
         result.m_type = OilVaporization::VAPPARS;

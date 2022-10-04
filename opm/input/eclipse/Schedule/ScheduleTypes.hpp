@@ -42,7 +42,7 @@ public:
     explicit WellType(Phase welspecs_phase);
     WellType() = default;
 
-    static WellType serializeObject();
+    static WellType serializationTestObject();
 
     bool injector() const;
     bool producer() const;

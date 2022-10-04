@@ -24,7 +24,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 
 namespace Opm {
-        BrineDensityTable BrineDensityTable::serializeObject()
+        BrineDensityTable BrineDensityTable::serializationTestObject()
         {
             BrineDensityTable result;
             result.m_tableValues = {1.0, 2.0, 3.0};

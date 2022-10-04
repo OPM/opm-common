@@ -69,7 +69,7 @@ namespace Opm { namespace data {
             serializer(currentWaterInjectionConstraint);
         }
 
-        static GroupConstraints serializeObject()
+        static GroupConstraints serializationTestObject()
         {
             return GroupConstraints{Group::ProductionCMode::GRAT,
                                     Group::InjectionCMode::RATE,
@@ -116,10 +116,10 @@ namespace Opm { namespace data {
             serializer(injection);
         }
 
-        static GroupGuideRates serializeObject()
+        static GroupGuideRates serializationTestObject()
         {
-            return GroupGuideRates{GuideRateValue::serializeObject(),
-                                   GuideRateValue::serializeObject()};
+            return GroupGuideRates{GuideRateValue::serializationTestObject(),
+                                   GuideRateValue::serializationTestObject()};
         }
     };
 
@@ -163,10 +163,10 @@ namespace Opm { namespace data {
             serializer(guideRates);
         }
 
-        static GroupData serializeObject()
+        static GroupData serializationTestObject()
         {
-          return GroupData{GroupConstraints::serializeObject(),
-                           GroupGuideRates::serializeObject()};
+          return GroupData{GroupConstraints::serializationTestObject(),
+                           GroupGuideRates::serializationTestObject()};
         }
     };
 
@@ -200,7 +200,7 @@ namespace Opm { namespace data {
             serializer(pressure);
         }
 
-        static NodeData serializeObject()
+        static NodeData serializationTestObject()
         {
             return NodeData{10.0};
         }
@@ -264,11 +264,11 @@ namespace Opm { namespace data {
             serializer(nodeData);
         }
 
-        static GroupAndNetworkValues serializeObject()
+        static GroupAndNetworkValues serializationTestObject()
         {
             return GroupAndNetworkValues{
-                        {{"test_data", GroupData::serializeObject()}},
-                        {{"test_node", NodeData::serializeObject()}}
+                        {{"test_data", GroupData::serializationTestObject()}},
+                        {{"test_node", NodeData::serializationTestObject()}}
                    };
         }
 

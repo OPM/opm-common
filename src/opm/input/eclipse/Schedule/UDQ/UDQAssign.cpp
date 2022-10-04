@@ -41,7 +41,7 @@ UDQAssign::UDQAssign(const std::string& keyword, const std::unordered_set<std::s
     this->add_record(rst_selector, value, report_step);
 }
 
-UDQAssign UDQAssign::serializeObject()
+UDQAssign UDQAssign::serializationTestObject()
 {
     UDQAssign result;
     result.m_keyword = "test";

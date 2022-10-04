@@ -54,7 +54,7 @@ std::vector<std::string> NameOrder::sort(std::vector<std::string> names) const {
     return names;
 }
 
-NameOrder NameOrder::serializeObject() {
+NameOrder NameOrder::serializationTestObject() {
     NameOrder wo;
     wo.add("W1");
     wo.add("W2");
@@ -112,7 +112,7 @@ const std::vector<std::string>& GroupOrder::names() const {
 }
 
 
-GroupOrder GroupOrder::serializeObject() {
+GroupOrder GroupOrder::serializationTestObject() {
     GroupOrder go(123);
     go.add("G1");
     go.add("G2");

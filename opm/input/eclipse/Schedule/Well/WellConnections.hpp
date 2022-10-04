@@ -50,7 +50,7 @@ namespace Opm {
         WellConnections(const Connection::Order ordering, const int headI, const int headJ,
                         const std::vector<Connection>& connections);
 
-        static WellConnections serializeObject();
+        static WellConnections serializationTestObject();
 
         // cppcheck-suppress noExplicitConstructor
         template <class Grid>

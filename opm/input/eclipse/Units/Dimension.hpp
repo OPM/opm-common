@@ -30,7 +30,7 @@ namespace Opm {
         Dimension(double SIfactor,
                   double SIoffset = 0.0);
 
-        static Dimension serializeObject();
+        static Dimension serializationTestObject();
 
         double getSIScaling() const;
         double getSIOffset() const;

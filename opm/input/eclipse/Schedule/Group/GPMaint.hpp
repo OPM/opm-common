@@ -51,7 +51,7 @@ friend class GPMaint;
 
     GPMaint() = default;
     GPMaint(std::size_t report_step, const DeckRecord& record);
-    static GPMaint serializeObject();
+    static GPMaint serializationTestObject();
 
     double pressure_target() const;
     double prop_constant() const;

@@ -52,7 +52,7 @@ namespace Opm {
         DenT() = default;
         explicit DenT(const DeckKeyword& keyword);
 
-        static DenT serializeObject();
+        static DenT serializationTestObject();
 
         const entry& operator[](const std::size_t index) const;
         bool operator==(const DenT& other) const;

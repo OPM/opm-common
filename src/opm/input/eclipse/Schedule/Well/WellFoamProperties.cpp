@@ -22,7 +22,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
-Opm::WellFoamProperties Opm::WellFoamProperties::serializeObject()
+Opm::WellFoamProperties Opm::WellFoamProperties::serializationTestObject()
 {
     Opm::WellFoamProperties result;
     result.m_foamConcentration = 1.0;

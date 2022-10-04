@@ -52,12 +52,12 @@ namespace Opm {
     {
     }
 
-    DeckKeyword DeckKeyword::serializeObject()
+    DeckKeyword DeckKeyword::serializationTestObject()
     {
         DeckKeyword result;
         result.m_keywordName = "test";
-        result.m_location = KeywordLocation::serializeObject();
-        result.m_recordList = {DeckRecord::serializeObject()};
+        result.m_location = KeywordLocation::serializationTestObject();
+        result.m_recordList = {DeckRecord::serializationTestObject()};
         result.m_isDataKeyword = true;
         result.m_slashTerminated = true;
         result.m_isDoubleRecordKeyword = true;

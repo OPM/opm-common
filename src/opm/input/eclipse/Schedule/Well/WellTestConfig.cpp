@@ -33,7 +33,7 @@ WellTestConfig::WTESTWell::WTESTWell(const std::string& name_arg, int shut_reaso
     begin_report_step(begin_report_step_arg)
 {}
 
-WellTestConfig::WTESTWell WellTestConfig::WTESTWell::serializeObject() {
+WellTestConfig::WTESTWell WellTestConfig::WTESTWell::serializationTestObject() {
     return WellTestConfig::WTESTWell("name", static_cast<int>(Reason::PHYSICAL), 100, 1, 674, 56);
 }
 
@@ -93,10 +93,10 @@ int WellTestConfig::WTESTWell::inverse_ecl_reasons(int ecl_reasons) {
 
 
 
-WellTestConfig WellTestConfig::serializeObject()
+WellTestConfig WellTestConfig::serializationTestObject()
 {
     WellTestConfig result;
-    result.wells.emplace(  "W1", WellTestConfig::WTESTWell::serializeObject() );
+    result.wells.emplace(  "W1", WellTestConfig::WTESTWell::serializationTestObject() );
     return result;
 }
 

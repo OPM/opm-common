@@ -105,10 +105,10 @@ bool State::operator==(const State& other) const {
 }
 
 
-State State::serializeObject() {
+State State::serializationTestObject() {
     State st;
-    st.run_state.insert(std::make_pair( std::make_pair("ACTION", 100), RunState::serializeObject()));
-    st.last_result.insert( std::make_pair("ACTION", Result::serializeObject()));
+    st.run_state.insert(std::make_pair( std::make_pair("ACTION", 100), RunState::serializationTestObject()));
+    st.last_result.insert( std::make_pair("ACTION", Result::serializationTestObject()));
     st.m_python_result.insert( std::make_pair("PYACTION", false) );
     return st;
 }

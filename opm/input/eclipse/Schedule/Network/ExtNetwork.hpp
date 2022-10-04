@@ -50,7 +50,7 @@ public:
     int NoOfBranches() const;
 
     bool operator==(const ExtNetwork& other) const;
-    static ExtNetwork serializeObject();
+    static ExtNetwork serializationTestObject();
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

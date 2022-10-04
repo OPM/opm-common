@@ -53,7 +53,7 @@ double GPMaint::time_constant() const {
     return this->m_time_constant;
 }
 
-GPMaint GPMaint::serializeObject() {
+GPMaint GPMaint::serializationTestObject() {
     GPMaint gpm;
     gpm.m_flow_target = FlowTarget::SURF_GINJ;
     gpm.m_region_name = "FIPNUM";

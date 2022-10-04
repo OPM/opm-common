@@ -91,12 +91,12 @@ const DeckView& Deck::global_view() const {
     {
     }
 
-    Deck Deck::serializeObject()
+    Deck Deck::serializationTestObject()
     {
         Deck result;
-        result.keywordList = {DeckKeyword::serializeObject()};
-        result.defaultUnits = UnitSystem::serializeObject();
-        result.activeUnits = UnitSystem::serializeObject();
+        result.keywordList = {DeckKeyword::serializationTestObject()};
+        result.defaultUnits = UnitSystem::serializationTestObject();
+        result.activeUnits = UnitSystem::serializationTestObject();
         result.m_dataFile = "test1";
         result.input_path = "test2";
         result.unit_system_access_count = 1;

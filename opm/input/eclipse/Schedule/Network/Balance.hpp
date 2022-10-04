@@ -49,7 +49,7 @@ public:
     explicit Balance(bool network_active);
     explicit Balance(const RestartIO::RstNetbalan& netbalan);
 
-    static Balance serializeObject();
+    static Balance serializationTestObject();
 
     CalcMode mode() const;
     double interval() const;

@@ -22,7 +22,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
-Opm::WellBrineProperties Opm::WellBrineProperties::serializeObject()
+Opm::WellBrineProperties Opm::WellBrineProperties::serializationTestObject()
 {
     Opm::WellBrineProperties result;
     result.m_saltConcentration = 1.0;

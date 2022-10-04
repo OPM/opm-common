@@ -62,7 +62,7 @@ namespace Opm {
         }
     }
 
-    TransMult TransMult::serializeObject()
+    TransMult TransMult::serializationTestObject()
     {
         TransMult result;
         result.m_nx = 1;
@@ -70,7 +70,7 @@ namespace Opm {
         result.m_nz = 3;
         result.m_trans = {{FaceDir::YPlus, {4.0, 5.0}}};
         result.m_names = {{FaceDir::ZPlus, "test1"}};
-        result.m_multregtScanner = MULTREGTScanner::serializeObject();
+        result.m_multregtScanner = MULTREGTScanner::serializationTestObject();
 
         return result;
     }

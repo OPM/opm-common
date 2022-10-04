@@ -55,7 +55,7 @@ public:
 
     bool operator==(const UDQState& other) const;
 
-    static UDQState serializeObject() {
+    static UDQState serializationTestObject() {
         UDQState st;
         st.undef_value = 78;
         st.scalar_values = {{"FU1", 100}, {"FU2", 200}};

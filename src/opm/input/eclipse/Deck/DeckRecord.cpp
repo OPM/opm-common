@@ -55,10 +55,10 @@ namespace Opm {
         }
     }
 
-    DeckRecord DeckRecord::serializeObject()
+    DeckRecord DeckRecord::serializationTestObject()
     {
         DeckRecord result;
-        result.m_items = {DeckItem::serializeObject()};
+        result.m_items = {DeckItem::serializationTestObject()};
 
         return result;
     }

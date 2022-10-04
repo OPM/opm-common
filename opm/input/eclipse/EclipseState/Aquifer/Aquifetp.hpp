@@ -71,7 +71,7 @@ class Aquifetp {
         std::optional<double> initial_pressure{};
         std::optional<double> initial_temperature{};
 
-        static AQUFETP_data serializeObject();
+        static AQUFETP_data serializationTestObject();
 
         double timeConstant() const { return this->time_constant_; }
         double waterDensity() const { return this->water_density_; }
@@ -110,7 +110,7 @@ class Aquifetp {
     void loadFromRestart(const RestartIO::RstAquifer& rst,
                          const TableManager&          tables);
 
-    static Aquifetp serializeObject();
+    static Aquifetp serializationTestObject();
 
     const std::vector<Aquifetp::AQUFETP_data>& data() const;
 

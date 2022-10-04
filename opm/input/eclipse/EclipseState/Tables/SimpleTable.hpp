@@ -39,7 +39,7 @@ namespace Opm {
         SimpleTable(TableSchema, const DeckItem& deckItem, const int tableID);
         explicit SimpleTable( TableSchema );
 
-        static SimpleTable serializeObject();
+        static SimpleTable serializationTestObject();
 
         void addColumns();
         //! \brief Initialize deck item.

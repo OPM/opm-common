@@ -34,7 +34,7 @@ public:
     JFunc();
     explicit JFunc(const Deck& deck);
 
-    static JFunc serializeObject();
+    static JFunc serializationTestObject();
 
     double alphaFactor() const;
     double betaFactor() const;
