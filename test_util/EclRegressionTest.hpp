@@ -98,6 +98,7 @@ public:
     void results_rst();
     void results_init();
     void results_smry();
+    void results_rsm();
     void results_rft();
 
 private:

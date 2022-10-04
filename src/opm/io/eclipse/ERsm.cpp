@@ -213,8 +213,17 @@ void ERsm::load_block(std::deque<std::string>& lines, std::size_t& vector_length
             double value;
             if (keyword == "WSTAT")
                 value = convert_wstat(data_row[data_index + 1]);
-            else
-                value = std::stod(data_row[data_index + 1]) * mult_list[data_index + 1];
+            else {
+
+                try {
+                    value = std::stod(data_row[data_index + 1]) * mult_list[data_index + 1];
+                } catch (...) {
+                    std::string message = "Error loading RSM file. Not able to convert '";
+                    message = message +  data_row[data_index + 1] + "' to a float value";
+                    throw std::runtime_error(message);
+                }
+            }
+
             block_data[data_index].data.push_back(value);
         }
 
