@@ -38,7 +38,7 @@ macro (opm_compile opm)
   endif()
   set (${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
   if (${opm}_SOURCES)
-        add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE} ${${opm}_SOURCES})
+        add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE} ${${opm}_SOURCES} ${${opm}_HEADERS})
         set_target_properties (${${opm}_TARGET} PROPERTIES
           SOVERSION ${${opm}_VERSION}
           VERSION ${${opm}_VERSION}
