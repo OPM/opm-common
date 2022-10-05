@@ -231,6 +231,10 @@ if (OPM_ENABLE_PYTHON)
     # Directory to install common (for opm modules) python scripts
     include (GNUInstallDirs)
     set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
+    set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
+                                       set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
+    set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
+                                         set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
   endif()
   # We always need the PYTHON_INCLUDE_DIR. Unfortunately
   # When we build pypi packages CMake will fail to determine
