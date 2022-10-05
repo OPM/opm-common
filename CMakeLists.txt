@@ -32,13 +32,13 @@ set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "#ENABLE_ECL_INPUT is needed by opm-common
                                        set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
                                        set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
                                        list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
-                                       include(OpmPackage) #Make macros availabe after find_package(opm-common)")
+                                       include(OpmPackage) #Make macros available after find_package(opm-common)")
 
 set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
                                    set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
                                    set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
                                    list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
-                                   include(OpmPackage) #Make macros availabe after find_package(opm-common)")
+                                   include(OpmPackage) #Make macros available after find_package(opm-common)")
 if(ENABLE_ECL_OUTPUT)
   set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                         set(COMPARE_ECL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareECL)
@@ -136,6 +136,7 @@ macro (sources_hook)
     list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserInit.cpp)
     foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
         list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp)
+        list(INSERT opm-common_HEADERS 0 ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp)
     endforeach()
     if (OPM_ENABLE_EMBEDDED_PYTHON)
       list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)

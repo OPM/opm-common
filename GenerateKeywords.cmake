@@ -52,75 +52,26 @@ set( genkw_argv keyword_list.argv
   opm/input/eclipse/Parser/ParserKeywords
   ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp)
 
-set( _tmp_output
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/B.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/C.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/D.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/E.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/F.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/G.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/H.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/I.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/J.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/K.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/L.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/M.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/N.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/O.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/P.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Q.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/R.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/S.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/T.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/U.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/V.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/W.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/X.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Y.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Z.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp)
+foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
+  list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/${name}.cpp
+                          ${PROJECT_BINARY_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp)
+  list(APPEND _target_output ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp
+                             ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp)
+endforeach()
 
+foreach(name TestKeywords.cpp ParserInit.cpp)
+  list(APPEND _target_output ${PROJECT_BINARY_DIR}/${name})
+  list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/${name})
+endforeach()
 
-set( _target_output
-  ${PROJECT_BINARY_DIR}/ParserKeywords/A.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/B.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/C.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/D.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/E.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/F.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/G.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/H.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/I.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/J.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/K.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/L.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/M.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/N.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/O.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/P.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/Q.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/R.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/S.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/T.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/U.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/V.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/W.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/X.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/Y.cpp
-  ${PROJECT_BINARY_DIR}/ParserKeywords/Z.cpp
-  ${PROJECT_BINARY_DIR}/TestKeywords.cpp
-  ${PROJECT_BINARY_DIR}/ParserInit.cpp)
-
+list(APPEND _target_output ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp)
+list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp)
 
 if (OPM_ENABLE_PYTHON)
   list(APPEND genkw_argv ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
   list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
   list(APPEND _target_output ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
 endif()
-
-
 
 add_custom_command( OUTPUT
   ${_tmp_output}
@@ -130,5 +81,5 @@ add_custom_command( OUTPUT
 # To avoid some rebuilds
 add_custom_command(OUTPUT
   ${_target_output}
-  DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
+  DEPENDS ${_tmp_output}
   COMMAND ${CMAKE_COMMAND} -DBASE_DIR=${PROJECT_BINARY_DIR} -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake)
