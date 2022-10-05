@@ -17,42 +17,38 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <memory>
-#include <stdexcept>
-#include <set>
-
-
 #define BOOST_TEST_MODULE WellConnectionsTests
 #include <boost/test/unit_test.hpp>
 
-#include <string>
-
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include "src/opm/input/eclipse/Schedule/MSW/Compsegs.hpp"
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
-
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <memory>
+#include <set>
+#include <stdexcept>
+#include <string>
 
 BOOST_AUTO_TEST_CASE(AICDWellTest) {
 
@@ -662,13 +658,15 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_EQUAL(segment2.crossArea(), valv2.pipeCrossArea());
 }
 
-
-Opm::Schedule make_schedule(const std::string& fname) {
-    Opm::Parser parser;
-    Opm::Deck deck = parser.parseFile(fname);
-    Opm::EclipseState st(deck);
-    return Opm::Schedule(deck, st);
-}
+namespace {
+    Opm::Schedule make_schedule(const std::string& fname)
+    {
+        Opm::Parser parser;
+        Opm::Deck deck = parser.parseFile(fname);
+        Opm::EclipseState st(deck);
+        return Opm::Schedule(deck, st);
+    }
+} // Anonymous namespace
 
 
 BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
@@ -736,4 +734,256 @@ BOOST_AUTO_TEST_CASE(MULTIPLE_WELSEGS) {
     const auto& segments2 = well2.getSegments();
 
     BOOST_CHECK(segments1 == segments2);
+}
+
+BOOST_AUTO_TEST_CASE(Node_XY_ABS_Individual)
+{
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+
+GRID
+
+DXV
+  20*100 /
+
+DYV
+  20*100 /
+
+DZV
+  20*10 /
+
+DEPTHZ
+  441*2000.0 /
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 20 'OPEN' /
+/
+
+WELSEGS
+'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' 123.456 789.012 /
+2         2      1      1    2537.5 2537.5  0.3  0.00010 2* 123.456 789.012 /
+3         3      1      2    2562.5 2562.5  0.2  0.00010 2* 123.456 789.012 /
+4         4      2      2    2737.5 2537.5  0.2  0.00010 2* 123.456 789.012 /
+6         6      2      4    3037.5 2539.5  0.2  0.00010 2* 123.456 789.012 /
+7         7      2      6    3337.5 2534.5  0.2  0.00010 2* 123.456 789.012 /
+8         8      3      7    3337.6 2534.5  0.2  0.00015 2* 123.456 789.012 /
+/
+
+)");
+
+    const auto es    = ::Opm::EclipseState { deck };
+    const auto sched = ::Opm::Schedule { deck, es, std::make_shared<const ::Opm::Python>() };
+
+    const auto& segments = sched[0].wells("PROD01").getSegments();
+    for (const auto& segment : segments) {
+        BOOST_CHECK_CLOSE(segment.node_X(), 123.456, 1.0e-8);
+        BOOST_CHECK_CLOSE(segment.node_Y(), 789.012, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Node_XY_ABS_Range)
+{
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+
+GRID
+
+DXV
+  20*100 /
+
+DYV
+  20*100 /
+
+DZV
+  20*10 /
+
+DEPTHZ
+  441*2000.0 /
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 20 'OPEN' /
+/
+
+WELSEGS
+'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' 123.456 789.012 /
+2         2      1      1    2537.5 2537.5  0.3  0.00010 2* 123.456 789.012 /
+3         3      1      2    2562.5 2562.5  0.2  0.00010 2* 123.456 789.012 /
+4         7      2      2    2737.5 2537.5  0.2  0.00010 2* 123.456 789.012 /
+8         8      3      7    3337.6 2534.5  0.2  0.00015 2* 123.456 789.012 /
+/
+
+)");
+
+    const auto es    = ::Opm::EclipseState { deck };
+    const auto sched = ::Opm::Schedule { deck, es, std::make_shared<const ::Opm::Python>() };
+
+    const auto& segments = sched[0].wells("PROD01").getSegments();
+    for (const auto& segment : segments) {
+        BOOST_CHECK_CLOSE(segment.node_X(), 123.456, 1.0e-8);
+        BOOST_CHECK_CLOSE(segment.node_Y(), 789.012, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Node_XY_INC_Individual)
+{
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+
+GRID
+
+DXV
+  20*100 /
+
+DYV
+  20*100 /
+
+DZV
+  20*10 /
+
+DEPTHZ
+  441*2000.0 /
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 20 'OPEN' /
+/
+
+WELSEGS
+-- Name      Dep 1          Tlen 1      Vol 1     Len&Dep     PresDrop
+   PROD01     2557.18408     0.00000     1*        INC         'HF-'    'HO' 12.3 45.6 /
+-- First Seg     Last Seg     Branch Num     Outlet Seg     Length       Depth Change     Diam        Rough
+-- Main Stem Segments
+   2             2            1              1              5.09434      4.95609          0.15200     0.0000100 2* 10.1 20.2 /
+   3             3            1              2              10.21718     9.93992          0.15200     0.0000100 2* 10.1 20.2 /
+   4             4            1              3              10.24573     9.96769          0.15200     0.0000100 2* 10.1 20.2 /
+   5             5            1              4              10.24574     9.96770          0.15200     0.0000100 2* 10.1 20.2 /
+   6             6            1              5              6.40355      6.22978          0.15200     0.0000100 2* 10.1 20.2 /
+   7             7            1              6              6.40355      6.22978          0.15200     0.0000100 2* 10.1 20.2 /
+   8             8            1              7              10.24567     9.96764          0.15200     0.0000100 2* 10.1 20.2 /
+   9             9            1              8              10.24571     9.96767          0.15200     0.0000100 2* 10.1 20.2 /
+   10            10           1              9              10.24570     9.96767          0.15200     0.0000100 2* 10.1 20.2 /
+   11            11           1              10             10.24571     9.96767          0.15200     0.0000100 2* 10.1 20.2 /
+   12            12           1              11             5.97902      5.81677          0.15200     0.0000100 2* 10.1 20.2 /
+/
+)");
+
+    const auto es    = ::Opm::EclipseState { deck };
+    const auto sched = ::Opm::Schedule { deck, es, std::make_shared<const ::Opm::Python>() };
+
+    auto i = 0;
+    const auto& segments = sched[0].wells("PROD01").getSegments();
+    for (const auto& segment : segments) {
+        BOOST_CHECK_CLOSE(segment.node_X(), 12.3 + i*10.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(segment.node_Y(), 45.6 + i*20.2, 1.0e-8);
+
+        ++i;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Node_XY_INC_Range)
+{
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+
+GRID
+
+DXV
+  20*100 /
+
+DYV
+  20*100 /
+
+DZV
+  20*10 /
+
+DEPTHZ
+  441*2000.0 /
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 20 'OPEN' /
+/
+
+WELSEGS
+-- Name      Dep 1          Tlen 1      Vol 1     Len&Dep     PresDrop
+   PROD01     2557.18408     0.00000     1*        INC         'HF-'    'HO' 12.3 45.6 /
+-- First Seg     Last Seg     Branch Num     Outlet Seg     Length       Depth Change     Diam        Rough
+-- Main Stem Segments
+   2             12           1              1              5.09434      4.95609          0.15200     0.0000100 2* 10.1 20.2 /
+/
+)");
+
+    const auto es    = ::Opm::EclipseState { deck };
+    const auto sched = ::Opm::Schedule { deck, es, std::make_shared<const ::Opm::Python>() };
+
+    auto i = 0;
+    const auto& segments = sched[0].wells("PROD01").getSegments();
+    for (const auto& segment : segments) {
+        BOOST_CHECK_CLOSE(segment.node_X(), 12.3 + i*10.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(segment.node_Y(), 45.6 + i*20.2, 1.0e-8);
+
+        ++i;
+    }
 }

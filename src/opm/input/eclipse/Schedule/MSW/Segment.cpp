@@ -17,8 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/io/eclipse/rst/segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
+
+#include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 
@@ -26,52 +28,49 @@
 #include <stdexcept>
 #include <string>
 
-namespace Opm {
 namespace {
 
-static constexpr double invalid_value = -1.e100;
+    static constexpr double invalid_value = -1.0e100;
 
-}
+    double if_invalid_value(const double rst_value)
+    {
+        return (rst_value == 0.0)
+            ? invalid_value
+            : rst_value;
+    }
 
+} // Anonymous namespace
 
+namespace Opm {
 
     Segment::Segment()
-    : m_segment_number(-1),
-      m_branch(-1),
-      m_outlet_segment(-1),
-      m_total_length(invalid_value),
-      m_depth(invalid_value),
-      m_internal_diameter(invalid_value),
-      m_roughness(invalid_value),
-      m_cross_area(invalid_value),
-      m_volume(invalid_value),
-      m_data_ready(false)
-    {
-    }
+        : m_segment_number(-1)
+        , m_branch(-1)
+        , m_outlet_segment(-1)
+        , m_total_length(invalid_value)
+        , m_depth(invalid_value)
+        , m_internal_diameter(invalid_value)
+        , m_roughness(invalid_value)
+        , m_cross_area(invalid_value)
+        , m_volume(invalid_value)
+        , m_data_ready(false)
+        , m_x(0.0)
+        , m_y(0.0)
+    {}
 
-namespace {
-
-    double if_invalid_value(double rst_value) {
-        if (rst_value == 0)
-            return invalid_value;
-
-        return rst_value;
-    }
-
-}
-
-
-    Segment::Segment(const RestartIO::RstSegment& rst_segment):
-        m_segment_number(rst_segment.segment),
-        m_branch(rst_segment.branch),
-        m_outlet_segment(rst_segment.outlet_segment),
-        m_total_length( rst_segment.dist_bhp_ref ),
-        m_depth(rst_segment.bhp_ref_dz),
-        m_internal_diameter(if_invalid_value(rst_segment.diameter)),
-        m_roughness(if_invalid_value(rst_segment.roughness)),
-        m_cross_area(if_invalid_value(rst_segment.area)),
-        m_volume(rst_segment.volume),
-        m_data_ready(true)
+    Segment::Segment(const RestartIO::RstSegment& rst_segment)
+        : m_segment_number(rst_segment.segment)
+        , m_branch(rst_segment.branch)
+        , m_outlet_segment(rst_segment.outlet_segment)
+        , m_total_length( rst_segment.dist_bhp_ref )
+        , m_depth(rst_segment.bhp_ref_dz)
+        , m_internal_diameter(if_invalid_value(rst_segment.diameter))
+        , m_roughness(if_invalid_value(rst_segment.roughness))
+        , m_cross_area(if_invalid_value(rst_segment.area))
+        , m_volume(rst_segment.volume)
+        , m_data_ready(true)
+        , m_x(0.0)
+        , m_y(0.0)
     {
         if (rst_segment.segment_type == SegmentType::SICD) {
             double scalingFactor = -1;  // The scaling factor will be and updated from the simulator.
@@ -116,81 +115,119 @@ namespace {
         }
     }
 
+    Segment::Segment(const int segment_number_in,
+                     const int branch_in,
+                     const int outlet_segment_in,
+                     const double length_in,
+                     const double depth_in,
+                     const double internal_diameter_in,
+                     const double roughness_in,
+                     const double cross_area_in,
+                     const double volume_in,
+                     const bool data_ready_in,
+                     const double x_in,
+                     const double y_in)
+        : m_segment_number(segment_number_in)
+        , m_branch(branch_in)
+        , m_outlet_segment(outlet_segment_in)
+        , m_total_length(length_in)
+        , m_depth(depth_in)
+        , m_internal_diameter(internal_diameter_in)
+        , m_roughness(roughness_in)
+        , m_cross_area(cross_area_in)
+        , m_volume(volume_in)
+        , m_data_ready(data_ready_in)
+        , m_x(x_in)
+        , m_y(y_in)
+    {}
 
-
-    Segment::Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
-                     double internal_diameter_in, double roughness_in, double cross_area_in,
-                     double volume_in, bool data_ready_in)
-    : m_segment_number(segment_number_in),
-      m_branch(branch_in),
-      m_outlet_segment(outlet_segment_in),
-      m_total_length(length_in),
-      m_depth(depth_in),
-      m_internal_diameter(internal_diameter_in),
-      m_roughness(roughness_in),
-      m_cross_area(cross_area_in),
-      m_volume(volume_in),
-      m_data_ready(data_ready_in)
+    Segment::Segment(const Segment& src,
+                     const double   new_depth,
+                     const double   new_length,
+                     const double   new_volume,
+                     const double   new_x,
+                     const double   new_y)
+        : Segment { src, new_depth, new_length, new_volume }
     {
+        this->m_x = new_x;
+        this->m_y = new_y;
     }
 
-  Segment::Segment(const Segment& src, double new_depth, double new_length):
-      Segment(src)
-  {
-      this->m_depth = new_depth;
-      this->m_total_length = new_length;
-      this->m_data_ready = true;
-  }
+    Segment::Segment(const Segment& src,
+                     const double   new_depth,
+                     const double   new_length,
+                     const double   new_x,
+                     const double   new_y)
+        : Segment { src, new_depth, new_length }
+    {
+        this->m_x = new_x;
+        this->m_y = new_y;
+    }
 
-  Segment::Segment(const Segment& src, double new_depth, double new_length, double new_volume):
-    Segment(src, new_depth, new_length)
-   {
-       this->m_volume = new_volume;
-   }
+    Segment::Segment(const Segment& src,
+                     const double   new_depth,
+                     const double   new_length,
+                     const double   new_volume)
+        : Segment { src, new_depth, new_length }
+    {
+        this->m_volume = new_volume;
+    }
 
-  Segment::Segment(const Segment& src, double new_volume):
-      Segment(src)
-  {
-      this->m_volume = new_volume;
-  }
+    Segment::Segment(const Segment& src,
+                     const double   new_depth,
+                     const double   new_length)
+        : Segment(src)
+    {
+        this->m_depth = new_depth;
+        this->m_total_length = new_length;
+        this->m_data_ready = true;
+    }
 
-  Segment Segment::serializationTestObject()
-  {
-      Segment result;
-      result.m_segment_number = 1;
-      result.m_branch = 2;
-      result.m_outlet_segment = 3;
-      result.m_inlet_segments = {4, 5};
-      result.m_total_length = 6.0;
-      result.m_depth = 7.0;
-      result.m_internal_diameter = 8.0;
-      result.m_roughness = 9.0;
-      result.m_cross_area = 10.0;
-      result.m_volume = 11.0;
-      result.m_data_ready = true;
-      result.m_icd = SICD::serializationTestObject();
-      return result;
-  }
+    Segment::Segment(const Segment& src, const double new_volume)
+        : Segment(src)
+    {
+        this->m_volume = new_volume;
+    }
+
+    Segment Segment::serializationTestObject()
+    {
+        Segment result;
+        result.m_segment_number = 1;
+        result.m_branch = 2;
+        result.m_outlet_segment = 3;
+        result.m_inlet_segments = {4, 5};
+        result.m_total_length = 6.0;
+        result.m_depth = 7.0;
+        result.m_internal_diameter = 8.0;
+        result.m_roughness = 9.0;
+        result.m_cross_area = 10.0;
+        result.m_volume = 11.0;
+        result.m_data_ready = true;
+        result.m_x = 12.0;
+        result.m_y = 13.0;
+        result.m_perf_length = 14.0;
+        result.m_icd = SICD::serializationTestObject();
+        return result;
+    }
 
     int Segment::segmentNumber() const {
         return m_segment_number;
     }
 
-
     int Segment::branchNumber() const {
         return m_branch;
     }
-
 
     int Segment::outletSegment() const {
         return m_outlet_segment;
     }
 
-
     double Segment::totalLength() const {
         return m_total_length;
     }
 
+    double Segment::node_X() const { return this->m_x; }
+    double Segment::node_Y() const { return this->m_y; }
 
     double Segment::depth() const {
         return m_depth;
@@ -204,11 +241,9 @@ namespace {
         return m_internal_diameter;
     }
 
-
     double Segment::roughness() const {
         return m_roughness;
     }
-
 
     double Segment::crossArea() const {
         return m_cross_area;
@@ -262,7 +297,10 @@ namespace {
             && this->m_volume            == rhs.m_volume
             && this->m_perf_length       == rhs.m_perf_length
             && this->m_icd               == rhs.m_icd
-            && this->m_data_ready        == rhs.m_data_ready;
+            && this->m_data_ready        == rhs.m_data_ready
+            && (this->m_x                == rhs.m_x)
+            && (this->m_y                == rhs.m_y)
+            ;
     }
 
     bool Segment::operator!=( const Segment& rhs ) const {
@@ -284,8 +322,6 @@ namespace {
     const AutoICD& Segment::autoICD() const {
         return std::get<AutoICD>(this->m_icd);
     }
-
-
 
     void Segment::updateValve(const Valve& input_valve) {
         // we need to update some values for the vale
@@ -318,7 +354,6 @@ namespace {
         this->m_icd= valve;
     }
 
-
     void Segment::updateValve__(Valve& valve, const double segment_length) {
         if (valve.pipeAdditionalLength() < 0)
             valve.setPipeAdditionalLength(segment_length);
@@ -331,11 +366,9 @@ namespace {
         this->updateValve__(new_valve, segment_length);
     }
 
-
-   void Segment::updatePerfLength(double perf_length) {
-       this->m_perf_length = perf_length;
-   }
-
+    void Segment::updatePerfLength(double perf_length) {
+        this->m_perf_length = perf_length;
+    }
 
     const Valve& Segment::valve() const {
         return std::get<Valve>(this->m_icd);
@@ -370,6 +403,5 @@ namespace {
             throw std::invalid_argument("Unhandeled segment type: " + std::to_string(ecl_id));
         }
     }
-}
 
-
+} // namespace Opm

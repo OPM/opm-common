@@ -120,23 +120,22 @@ namespace Opm {
         void processINC(double depth_top, double length_top);
         void process(LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
-        void addSegment(int segment_number,
-                        int branch,
-                        int outlet_segment,
-                        double length,
-                        double depth,
-                        double internal_diameter,
-                        double roughness,
-                        double cross_area,
-                         double volume,
-                        bool data_ready);
+        void addSegment(const int segment_number,
+                        const int branch,
+                        const int outlet_segment,
+                        const double length,
+                        const double depth,
+                        const double internal_diameter,
+                        const double roughness,
+                        const double cross_area,
+                        const double volume,
+                        const bool data_ready,
+                        const double node_x,
+                        const double node_y);
         const Segment& topSegment() const;
 
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop;
-        // There are X and Y cooridnate of the nodal point of the top segment
-        // Since they are not used for simulations and we are not supporting plotting,
-        // we are not handling them at the moment.
         // There are other three properties for segment related to thermal conduction,
         // while they are not supported by the keyword at the moment.
 
