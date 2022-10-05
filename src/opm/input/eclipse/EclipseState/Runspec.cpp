@@ -381,15 +381,17 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
 	*    phase and the imbibition curve for the relperm of the wetting phase
 	*/
         const auto& ehystrKeyword = deck["EHYSTR"].back();
-        if (deck.hasKeyword("NOHYKR"))
+        std::string whereFlag = ehystrKeyword.getRecord(0).getItem("limiting_hyst_flag").getTrimmedString(0);
+
+        if (deck.hasKeyword("NOHYKR") || whereFlag == "PC")
             krHystMod = -1;
         else {
             krHystMod = ehystrKeyword.getRecord(0).getItem("relative_perm_hyst").get<int>(0);
 
-            if (krHystMod != 0 && krHystMod != 1)
+            if (krHystMod != 0 && krHystMod != 1 && krHystMod != 2 && krHystMod != 3)
                 throw std::runtime_error(
-                    "Only the Carlson relative permeability hysteresis models (indicated by '0' or "
-                    "'1' for the second item of the 'EHYSTR' keyword) are supported");
+                    "Only the Carlson or Killough relative permeability hysteresis models (indicated by '0', "
+                    "'1', '2', or '3' for the second item of the 'EHYSTR' keyword) are supported");
         }
 
         // this is slightly screwed: it is possible to specify contradicting hysteresis
@@ -401,17 +403,22 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
 	* -1: capillary pressure hysteresis is disabled
 	* 0: use the Killough model for capillary pressure hysteresis
 	*/
-        std::string whereFlag =
-            ehystrKeyword.getRecord(0).getItem("limiting_hyst_flag").getTrimmedString(0);
         if (deck.hasKeyword("NOHYPC") || whereFlag == "KR")
             pcHystMod = -1;
         else {
             // if capillary pressure hysteresis is enabled, Eclipse always uses the
             // Killough model
             pcHystMod = 0;
-
-            throw std::runtime_error("Capillary pressure hysteresis is not supported yet");
+            curvatureCapPrsValue = ehystrKeyword.getRecord(0).getItem("curvature_capillary_pressure_hyst").get<double>(0);
+            if (curvatureCapPrsValue <= 0.0)
+                throw std::runtime_error(
+                    "Only positive values allowed for the 'capillary pressure curvature parameter' "
+                    "(the first item of the 'EHYSTR' keyword).");
         }
+
+        // Killough model: Regularisation for trapped critical saturation calculations
+        if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3)
+            modParamTrappedValue = ehystrKeyword.getRecord(0).getItem("mod_param_trapped").get<double>(0);
     }
 
 EclHysterConfig EclHysterConfig::serializationTestObject()
@@ -420,6 +427,8 @@ EclHysterConfig EclHysterConfig::serializationTestObject()
     result.activeHyst = true;
     result.pcHystMod = 1;
     result.krHystMod = 2;
+    result.modParamTrappedValue = 3;
+    result.curvatureCapPrsValue = 4;
 
     return result;
 }
@@ -433,10 +442,18 @@ int EclHysterConfig::pcHysteresisModel() const
 int EclHysterConfig::krHysteresisModel() const
     { return krHystMod; }
 
+double EclHysterConfig::modParamTrapped() const
+    { return modParamTrappedValue; }
+
+double EclHysterConfig::curvatureCapPrs() const
+    { return curvatureCapPrsValue; }
+
 bool EclHysterConfig::operator==(const EclHysterConfig& data) const {
     return this->active() == data.active() &&
            this->pcHysteresisModel() == data.pcHysteresisModel() &&
-           this->krHysteresisModel() == data.krHysteresisModel();
+           this->krHysteresisModel() == data.krHysteresisModel() &&
+           this->modParamTrapped() == data.modParamTrapped() &&
+           this->curvatureCapPrs() == data.curvatureCapPrs();
 }
 
 SatFuncControls::SatFuncControls()
