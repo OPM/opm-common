@@ -47,6 +47,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -191,6 +192,12 @@ COMPDAT
 /
 WCONPROD
       'OP_4' 'OPEN' 'ORAT' 20000  4* 1000 /
+/
+
+WVFPEXP
+ 'OP_1' 1*    'YES' /
+ 'OP_2' 'EXP' 'NO'  'YES1' /
+ 'OP_3' 'EXP' 'YES' 'YES2' /
 /
 
 DATES             -- 5
@@ -683,4 +690,102 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Guide_Rates_Group_Control_Object)
                         "Well '" << op_3.name() << "' must have guiderate phase 'RES'");
     BOOST_CHECK_CLOSE(op_3.getGuideRate(), -1.0, 1.0e-7);
     BOOST_CHECK_CLOSE(op_3.getGuideRateScalingFactor(), 0.625, 1.0e-7);
+}
+
+BOOST_AUTO_TEST_CASE(Explicit_THP_Control_Options)
+{
+    namespace WVfpExp = Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::WVfpExp;
+
+    const auto simCase = SimulationCase{first_sim()};
+
+    const auto rptStep  = std::size_t{5};
+    const auto baseName = std::string { "TEST_RST_WVFPEXP" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "test_rst_wvfpexp");
+
+    const auto& op_1 = state.get_well("OP_1");
+    const auto& op_2 = state.get_well("OP_2");
+    const auto& op_3 = state.get_well("OP_3");
+    const auto& op_4 = state.get_well("OP_4");
+
+    BOOST_CHECK_EQUAL(op_1.thp_lookup_procedure_vfptable, WVfpExp::Lookup::Implicit);
+    BOOST_CHECK_EQUAL(op_1.close_if_thp_stabilised,
+                      static_cast<int>(WVfpExp::CloseStabilised::Yes));
+    BOOST_CHECK_EQUAL(op_1.prevent_thpctrl_if_unstable,
+                      static_cast<int>(WVfpExp::PreventTHP::No));
+
+    BOOST_CHECK_EQUAL(op_2.thp_lookup_procedure_vfptable, WVfpExp::Lookup::Explicit);
+    BOOST_CHECK_EQUAL(op_2.close_if_thp_stabilised,
+                      static_cast<int>(WVfpExp::CloseStabilised::No));
+    BOOST_CHECK_EQUAL(op_2.prevent_thpctrl_if_unstable,
+                      static_cast<int>(WVfpExp::PreventTHP::Yes1));
+
+    BOOST_CHECK_EQUAL(op_3.thp_lookup_procedure_vfptable, WVfpExp::Lookup::Explicit);
+    BOOST_CHECK_EQUAL(op_3.close_if_thp_stabilised,
+                      static_cast<int>(WVfpExp::CloseStabilised::Yes));
+    BOOST_CHECK_EQUAL(op_3.prevent_thpctrl_if_unstable,
+                      static_cast<int>(WVfpExp::PreventTHP::Yes2));
+
+    BOOST_CHECK_EQUAL(op_4.thp_lookup_procedure_vfptable, WVfpExp::Lookup::Implicit);
+    BOOST_CHECK_EQUAL(op_4.close_if_thp_stabilised,
+                      static_cast<int>(WVfpExp::CloseStabilised::No));
+    BOOST_CHECK_EQUAL(op_4.prevent_thpctrl_if_unstable,
+                      static_cast<int>(WVfpExp::PreventTHP::No));
+}
+
+BOOST_AUTO_TEST_CASE(Construct_Well_Explicit_THP_Control_Options_Object)
+{
+    const auto simCase = SimulationCase{first_sim()};
+
+    const auto rptStep  = std::size_t{5};
+    const auto baseName = std::string { "TEST_RST_WVFPEXP" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "test_rst_wvfpexp");
+
+    auto makeTHPOptions = [&state, rptStep](const std::string& well_name)
+    {
+        return Opm::Well {
+            state.get_well(well_name),
+            static_cast<int>(rptStep),
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            1.0e+20
+        }.getWVFPEXP();
+    };
+
+    const auto op_1 = makeTHPOptions("OP_1");
+    const auto op_2 = makeTHPOptions("OP_2");
+    const auto op_3 = makeTHPOptions("OP_3");
+    const auto op_4 = makeTHPOptions("OP_4");
+
+    // 1* YES /
+    BOOST_CHECK_MESSAGE(! op_1.explicit_lookup(), "Well 'OP_1' must have IMPLICIT THP lookup");
+    BOOST_CHECK_MESSAGE(  op_1.shut(),            "Well 'OP_1' must SHUT if operating in stabilised region");
+    BOOST_CHECK_MESSAGE(! op_1.prevent(),         "Well 'OP_1' must NOT prevent switching to THP control when constrained to unstable VFP table region");
+    BOOST_CHECK_MESSAGE(! op_1.report_first(),    "Well 'OP_1' must NOT report first time THP control switching prevented");
+    BOOST_CHECK_MESSAGE(! op_1.report_every(),    "Well 'OP_1' must NOT report every time THP control switching prevented");
+
+    // EXP NO YES1 /
+    BOOST_CHECK_MESSAGE(  op_2.explicit_lookup(), "Well 'OP_2' must have EXPLICIT THP lookup");
+    BOOST_CHECK_MESSAGE(! op_2.shut(),            "Well 'OP_2' must remain open if operating in stabilised region");
+    BOOST_CHECK_MESSAGE(  op_2.prevent(),         "Well 'OP_2' must prevent switching to THP control when constrained to unstable VFP table region");
+    BOOST_CHECK_MESSAGE(  op_2.report_first(),    "Well 'OP_2' must report first time THP control switching prevented");
+    BOOST_CHECK_MESSAGE(! op_2.report_every(),    "Well 'OP_2' must NOT report every time THP control switching prevented");
+
+    // EXP YES YES2 /
+    BOOST_CHECK_MESSAGE(  op_3.explicit_lookup(), "Well 'OP_3' must have EXPLICIT THP lookup");
+    BOOST_CHECK_MESSAGE(  op_3.shut(),            "Well 'OP_3' must SHUT if operating in stabilised region");
+    BOOST_CHECK_MESSAGE(  op_3.prevent(),         "Well 'OP_3' must prevent switching to THP control when constrained to unstable VFP table region");
+    BOOST_CHECK_MESSAGE(! op_3.report_first(),    "Well 'OP_3' must NOT report first time THP control switching prevented");
+    BOOST_CHECK_MESSAGE(  op_3.report_every(),    "Well 'OP_3' must report every time THP control switching prevented");
+
+    // All defaults.
+    BOOST_CHECK_MESSAGE(! op_4.explicit_lookup(), "Well 'OP_4' must have IMPLICIT THP lookup");
+    BOOST_CHECK_MESSAGE(! op_4.shut(),            "Well 'OP_4' must remain open if operating in stabilised region");
+    BOOST_CHECK_MESSAGE(! op_4.prevent(),         "Well 'OP_4' must NOT prevent switching to THP control when constrained to unstable VFP table region");
+    BOOST_CHECK_MESSAGE(! op_4.report_first(),    "Well 'OP_4' must NOT report first time THP control switching prevented");
+    BOOST_CHECK_MESSAGE(! op_4.report_every(),    "Well 'OP_4' must NOT report every time THP control switching prevented");
 }

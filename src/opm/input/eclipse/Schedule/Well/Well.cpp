@@ -245,6 +245,15 @@ Opm::Well::WellGuideRate guideRate(const Opm::RestartIO::RstWell& rst_well)
     };
 }
 
+std::shared_ptr<Opm::WVFPEXP>
+explicitTHPOptions(const Opm::RestartIO::RstWell& rst_well)
+{
+    auto options = std::make_shared<Opm::WVFPEXP>();
+    options->update(rst_well);
+
+    return options;
+}
+
 constexpr Opm::Well::ProducerCMode def_whistctl_cmode = Opm::Well::ProducerCMode::CMODE_UNDEFINED;
 const static bool def_automatic_shutin = true;
 constexpr double def_solvent_fraction = 0;
@@ -284,7 +293,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
-    wvfpexp(std::make_shared<WVFPEXP>()),
+    wvfpexp(explicitTHPOptions(rst_well)),
     status(status_from_int(rst_well.well_status))
 {
     if (this->wtype.producer()) {

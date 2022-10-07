@@ -89,6 +89,9 @@ struct RstWell
     int wtest_remaining;
     int econ_limit_quantity;
     int econ_workover_procedure_2;
+    int thp_lookup_procedure_vfptable;
+    int close_if_thp_stabilised;
+    int prevent_thpctrl_if_unstable;
     bool glift_active;
     bool glift_alloc_extra_gas;
 

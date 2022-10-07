@@ -19,6 +19,9 @@
 
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
+#include <opm/io/eclipse/rst/well.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -57,6 +60,24 @@ namespace Opm {
             m_prevent = Prevent::ReportEvery;
         else
             m_prevent = Prevent::No;
+    }
+
+    void WVFPEXP::update(const RestartIO::RstWell& rst_well) {
+        namespace Value = Opm::RestartIO::Helpers::
+            VectorItems::IWell::Value::WVfpExp;
+
+        this->m_explicit = rst_well.thp_lookup_procedure_vfptable == Value::Lookup::Explicit;
+        this->m_shut = rst_well.close_if_thp_stabilised == static_cast<int>(Value::CloseStabilised::Yes);
+
+        if (rst_well.prevent_thpctrl_if_unstable == static_cast<int>(Value::PreventTHP::Yes1)) {
+            this->m_prevent = Prevent::ReportFirst;
+        }
+        else if (rst_well.prevent_thpctrl_if_unstable == static_cast<int>(Value::PreventTHP::Yes2)) {
+            this->m_prevent = Prevent::ReportEvery;
+        }
+        else {
+            this->m_prevent = Prevent::No;
+        }
     }
 
     bool WVFPEXP::explicit_lookup() const {
