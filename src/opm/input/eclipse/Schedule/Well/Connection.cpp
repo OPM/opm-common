@@ -387,9 +387,9 @@ Connection::Direction Connection::DirectionFromString(const std::string& s )
 {
     Direction direction;
 
-    if      (s == "X") { direction = Direction::X; }
-    else if (s == "Y") { direction = Direction::Y; }
-    else if (s == "Z") { direction = Direction::Z; }
+    if      ((s == "X") || (s == "x")) { direction = Direction::X; }
+    else if ((s == "Y") || (s == "y")) { direction = Direction::Y; }
+    else if ((s == "Z") || (s == "z")) { direction = Direction::Z; }
     else {
         std::string msg = "Unsupported completion direction " + s;
         throw std::invalid_argument(msg);
