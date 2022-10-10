@@ -725,6 +725,54 @@ namespace {
 
     // -----------------------------------------------------------------------
 
+    class OrderSegments
+    {
+    public:
+        explicit OrderSegments(const ::Opm::WellSegments& wellSegs)
+            : wellSegs_{ std::cref(wellSegs) }
+        {}
+
+        bool operator()(const int i1, const int i2) const;
+
+    private:
+        std::reference_wrapper<const ::Opm::WellSegments> wellSegs_;
+    };
+
+    // i1 < i2 if one of the following relations hold
+    //
+    // 1) i1's branch number is smaller than i2's branch number
+    // 2) i1 and i2 are on the same branch, but i1 is i2's outlet segment
+    // 3) Neither are each other's outlet segments, but i1 is closer to the
+    //    well head along the tubing.
+    bool OrderSegments::operator()(const int i1, const int i2) const
+    {
+        const auto& s1 = this->wellSegs_.get()[i1];
+        const auto& s2 = this->wellSegs_.get()[i2];
+
+        const auto b1 = s1.branchNumber();
+        const auto b2 = s2.branchNumber();
+
+        if (b1 != b2) {
+            // i1 not on same branch as i2.  Order by branch number.
+            return b1 < b2;
+        }
+
+        if (s2.outletSegment() == s1.segmentNumber()) {
+            // i1 is i2's outlet
+            return true;
+        }
+
+        if (s1.outletSegment() == s2.segmentNumber()) {
+            // i2 is i1's outlet
+            return false;
+        }
+
+        // Neither is each other's outlet.  Order by distance along tubing.
+        return s1.totalLength() < s2.totalLength();
+    }
+
+    // -----------------------------------------------------------------------
+
     class PLTRecordMSW : public PLTRecord
     {
     public:
@@ -733,19 +781,6 @@ namespace {
         void write(::Opm::EclIO::OutputStream::RFT& rftFile) const override;
 
     private:
-        class OrderSegments
-        {
-        public:
-            explicit OrderSegments(const ::Opm::WellSegments& wellSegs)
-                : wellSegs_{ std::cref(wellSegs) }
-            {}
-
-            bool operator()(const int i1, const int i2) const;
-
-        private:
-            std::reference_wrapper<const ::Opm::WellSegments> wellSegs_;
-        };
-
         class OrderSegConns
         {
         public:
@@ -922,41 +957,6 @@ namespace {
         }
 
         return getConnectionId(this->segmentConns_.last(out).value());
-    }
-
-    // -----------------------------------------------------------------------
-
-    // i1 < i2 if one of the following relations hold
-    //
-    // 1) i1's branch number is smaller than i2's branch number
-    // 2) i1 and i2 are on the same branch, but i1 is i2's outlet segment
-    // 3) Neither are each other's outlet segments, but i1 is closer to the
-    //    well head along the tubing.
-    bool PLTRecordMSW::OrderSegments::operator()(const int i1, const int i2) const
-    {
-        const auto& s1 = this->wellSegs_.get()[i1];
-        const auto& s2 = this->wellSegs_.get()[i2];
-
-        const auto b1 = s1.branchNumber();
-        const auto b2 = s2.branchNumber();
-
-        if (b1 != b2) {
-            // i1 not on same branch as i2.  Order by branch number.
-            return b1 < b2;
-        }
-
-        if (s2.outletSegment() == s1.segmentNumber()) {
-            // i1 is i2's outlet
-            return true;
-        }
-
-        if (s1.outletSegment() == s2.segmentNumber()) {
-            // i2 is i1's outlet
-            return false;
-        }
-
-        // Neither is each other's outlet.  Order by distance along tubing.
-        return s1.totalLength() < s2.totalLength();
     }
 
     // -----------------------------------------------------------------------
