@@ -364,7 +364,60 @@ namespace {
 
     // =======================================================================
 
-    class PLTFlowRate
+    class PLTPhaseQuantity
+    {
+    public:
+        explicit PLTPhaseQuantity(const std::size_t n = 0);
+        virtual ~PLTPhaseQuantity() = default;
+
+        const std::vector<float>& oil() const { return this->oil_; }
+        const std::vector<float>& gas() const { return this->gas_; }
+        const std::vector<float>& water() const { return this->water_; }
+
+    protected:
+        void addOil  (const ::Opm::UnitSystem& usys, const float x);
+        void addGas  (const ::Opm::UnitSystem& usys, const float x);
+        void addWater(const ::Opm::UnitSystem& usys, const float x);
+
+    private:
+        std::vector<float> oil_{};
+        std::vector<float> gas_{};
+        std::vector<float> water_{};
+
+        [[nodiscard]] virtual ::Opm::UnitSystem::measure oilUnit() const = 0;
+        [[nodiscard]] virtual ::Opm::UnitSystem::measure gasUnit() const = 0;
+        [[nodiscard]] virtual ::Opm::UnitSystem::measure waterUnit() const = 0;
+    };
+
+    void PLTPhaseQuantity::addOil(const ::Opm::UnitSystem& usys, const float x)
+    {
+        this->oil_.push_back(usys.from_si(this->oilUnit(), x));
+    }
+
+    void PLTPhaseQuantity::addGas(const ::Opm::UnitSystem& usys, const float x)
+    {
+        this->gas_.push_back(usys.from_si(this->gasUnit(), x));
+    }
+
+    void PLTPhaseQuantity::addWater(const ::Opm::UnitSystem& usys, const float x)
+    {
+        this->water_.push_back(usys.from_si(this->waterUnit(), x));
+    }
+
+    PLTPhaseQuantity::PLTPhaseQuantity(const std::size_t n)
+    {
+        if (n == std::size_t{0}) {
+            return;
+        }
+
+        this->oil_.reserve(n);
+        this->gas_.reserve(n);
+        this->water_.reserve(n);
+    }
+
+    // -----------------------------------------------------------------------
+
+    class PLTFlowRate : public PLTPhaseQuantity
     {
     public:
         explicit PLTFlowRate(const std::size_t nconn = 0);
@@ -372,40 +425,33 @@ namespace {
         void addConnection(const ::Opm::UnitSystem&  usys,
                            const ::Opm::data::Rates& rates);
 
-        const std::vector<float>& oil() const { return this->oil_; }
-        const std::vector<float>& gas() const { return this->gas_; }
-        const std::vector<float>& water() const { return this->water_; }
-
     private:
-        std::vector<float> oil_{};
-        std::vector<float> gas_{};
-        std::vector<float> water_{};
+        [[nodiscard]] Opm::UnitSystem::measure oilUnit() const override
+        { return Opm::UnitSystem::measure::liquid_surface_rate; }
+
+        [[nodiscard]] Opm::UnitSystem::measure gasUnit() const override
+        { return Opm::UnitSystem::measure::gas_surface_rate; }
+
+        [[nodiscard]] Opm::UnitSystem::measure waterUnit() const override
+        { return Opm::UnitSystem::measure::liquid_surface_rate; }
     };
 
     PLTFlowRate::PLTFlowRate(const std::size_t nconn)
-    {
-        if (nconn == std::size_t{0}) {
-            return;
-        }
-
-        this->oil_.reserve(nconn);
-        this->gas_.reserve(nconn);
-        this->water_.reserve(nconn);
-    }
+        : PLTPhaseQuantity{nconn}
+    {}
 
     void PLTFlowRate::addConnection(const ::Opm::UnitSystem&  usys,
                                     const ::Opm::data::Rates& rates)
     {
-        using M = Opm::UnitSystem::measure;
         using rt = Opm::data::Rates::opt;
 
         // Note negative sign on call to rates.get() here.  Flow reports
         // positive injection rates and negative production rates but we
         // need the opposite sign convention for this report.
 
-        this->oil_.push_back(usys.from_si(M::liquid_surface_rate, -rates.get(rt::oil, 0.0)));
-        this->gas_.push_back(usys.from_si(M::gas_surface_rate, -rates.get(rt::gas, 0.0)));
-        this->water_.push_back(usys.from_si(M::liquid_surface_rate, -rates.get(rt::wat, 0.0)));
+        this->addOil  (usys, -rates.get(rt::oil, 0.0));
+        this->addGas  (usys, -rates.get(rt::gas, 0.0));
+        this->addWater(usys, -rates.get(rt::wat, 0.0));
     }
 
     // -----------------------------------------------------------------------
