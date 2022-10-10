@@ -10,12 +10,14 @@
     },
     {
       "name": "FRACTURING_PRESSURE",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
     },
     {
       "name": "MULTIPLIER_GRADIENT",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "1/Pressure"
     },
     {
       "name": "MODE",

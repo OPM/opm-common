@@ -1316,8 +1316,8 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
     // if this record use CREV or CIRR, and previoiusly, the well is using WREV, we need to discard the WREV setup for
     // all the connections. For the connections not specified in the record, the injmult information will be reset.
     const std::string mode = record.getItem("MODE").getTrimmedString(0);
-    const double fracture_pressure = record.getItem("FRACTURING_PRESSURE").get<double>(0);
-    const double multiple_gradient = record.getItem("MULTIPLIER_GRADIENT").get<double>(0);
+    const double fracture_pressure = record.getItem("FRACTURING_PRESSURE").getSIDouble(0);
+    const double multiple_gradient = record.getItem("MULTIPLIER_GRADIENT").getSIDouble(0);
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
     const Connection::InjMult inj_mult {Connection::injModeFromString(mode), fracture_pressure, multiple_gradient};
 

@@ -91,6 +91,11 @@ namespace RestartIO {
             double fracture_pressure {std::numeric_limits<double>::max()};
             double multiplier_gradient {0.};
 
+            bool active() const
+            {
+                return mode != InjMultMode::NONE;
+            }
+
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
