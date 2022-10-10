@@ -116,6 +116,9 @@ public:
 
         oilWaterSystem_ = (twoPhaseSystem == EclOilWaterSystem);
 
+        if (!config().enableHysteresis())
+            return;
+
         if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0) {
             if (twoPhaseSystem == EclGasOilSystem) {
                 Sncrd_ = info.Sgcr+info.Swl;
@@ -161,6 +164,9 @@ public:
                              EclTwoPhaseSystemType twoPhaseSystem)
     {
         imbibitionParams_ = value;
+
+        if (!config().enableHysteresis())
+            return;
 
         // Killough hysteresis model for nonw kr
         if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0) {
@@ -470,7 +476,7 @@ private:
     Scalar pcmaxd_;  // max pc for drain
     Scalar pcmaxi_;  // max pc for imb
 
-    Scalar curvatureCapPrs_; // curvature parameter used for capillary pressure hysteresis 
+    Scalar curvatureCapPrs_; // curvature parameter used for capillary pressure hysteresis
 };
 
 } // namespace Opm

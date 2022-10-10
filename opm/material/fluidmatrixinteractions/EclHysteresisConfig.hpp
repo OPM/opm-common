@@ -43,8 +43,8 @@ public:
     EclHysteresisConfig()
     {
         enableHysteresis_ = false;
-        pcHysteresisModel_ = 0;
-        krHysteresisModel_ = 0;
+        pcHysteresisModel_ = -1;
+        krHysteresisModel_ = -1;
     }
 
     /*!
