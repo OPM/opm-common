@@ -53,6 +53,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -612,6 +613,8 @@ namespace {
                    const std::function<int(int)>& binId,
                    Cmp&&                          cmp);
 
+        int maxBinId() const { return this->maxId_; }
+
         IndexRange bin(const int binId) const
         {
             this->verifyValid(binId);
@@ -1010,13 +1013,320 @@ namespace {
         return this->wellConns_.get()[connIdx].perf_range()->second;
     }
 
+    // -----------------------------------------------------------------------
+
+    class SegmentRecord
+    {
+    public:
+        explicit SegmentRecord(const std::size_t nseg = 0);
+
+        void collectRecordData(const ::Opm::UnitSystem& usys,
+                               const ::Opm::Well&       well,
+                               const ::Opm::data::Well& wellSol);
+
+        std::size_t nSeg() const { return this->neighbour_id_.size(); }
+
+        void write(::Opm::EclIO::OutputStream::RFT& rftFile) const;
+
+    private:
+        PLTFlowRate rate_{};
+
+        std::vector<int> neighbour_id_{};
+        std::vector<int> branch_id_{};
+
+        std::vector<int> branch_start_segment_{};
+        std::vector<int> branch_end_segment_{};
+
+        std::vector<float> diameter_{};
+        std::vector<float> depth_{};
+        std::vector<float> start_length_{};
+        std::vector<float> end_length_{};
+        std::vector<float> x_coord_{};
+        std::vector<float> y_coord_{};
+        std::vector<float> pressure_{};
+        std::vector<float> strength_{};
+        std::vector<float> icd_setting_{};
+
+        void defineBranches(const ::Opm::WellSegments& segments);
+
+        void addSegment(const ::Opm::UnitSystem&    usys,
+                        const ::Opm::WellSegments&  segments,
+                        const ::Opm::Segment&       segment,
+                        const ::Opm::data::Segment& segSol);
+
+        void recordPhysicalLocation(const ::Opm::UnitSystem&   usys,
+                                    const ::Opm::WellSegments& segments,
+                                    const ::Opm::Segment&      segment);
+
+        void recordSegmentConnectivity(const ::Opm::Segment& segment);
+
+        void recordSegmentProperties(const ::Opm::UnitSystem& usys,
+                                     const ::Opm::Segment& segment);
+
+        void recordDynamicState(const ::Opm::UnitSystem&    usys,
+                                const ::Opm::Segment&       segment,
+                                const ::Opm::data::Segment& segSol);
+
+        void recordAutoICDTypeProperties(const ::Opm::UnitSystem& usys,
+                                         const ::Opm::Segment& segment);
+        void recordRegularTypeProperties(const ::Opm::UnitSystem& usys,
+                                         const ::Opm::Segment& segment);
+        void recordSpiralICDTypeProperties(const ::Opm::UnitSystem& usys,
+                                           const ::Opm::Segment& segment);
+        void recordValveTypeProperties(const ::Opm::UnitSystem& usys,
+                                       const ::Opm::Segment& segment);
+    };
+
+    SegmentRecord::SegmentRecord(const std::size_t nseg)
+        : rate_{ nseg }
+    {
+        if (nseg == std::size_t{0}) {
+            return;
+        }
+
+        this->neighbour_id_.reserve(nseg);
+        this->branch_id_.reserve(nseg);
+
+        this->diameter_.reserve(nseg);
+        this->depth_.reserve(nseg);
+        this->start_length_.reserve(nseg);
+        this->end_length_.reserve(nseg);
+        this->x_coord_.reserve(nseg);
+        this->y_coord_.reserve(nseg);
+        this->pressure_.reserve(nseg);
+        this->strength_.reserve(nseg);
+        this->icd_setting_.reserve(nseg);
+    }
+
+    void SegmentRecord::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
+    {
+        rftFile.write("SEGDIAM", this->diameter_);
+        rftFile.write("SEGDEPTH", this->depth_);
+        rftFile.write("SEGLENST", this->start_length_);
+        rftFile.write("SEGLENEN", this->end_length_);
+
+        rftFile.write("SEGXCORD", this->x_coord_);
+        rftFile.write("SEGYCORD", this->y_coord_);
+        rftFile.write("SEGPRES", this->pressure_);
+
+        rftFile.write("SEGORAT", this->rate_.oil());
+        rftFile.write("SEGWRAT", this->rate_.water());
+        rftFile.write("SEGGRAT", this->rate_.gas());
+
+        rftFile.write("SEGSSTR", this->strength_);
+        rftFile.write("SEGSFOPN", this->icd_setting_);
+        rftFile.write("SEGBRNO", this->branch_id_);
+        rftFile.write("SEGNXT", this->neighbour_id_);
+
+        rftFile.write("BRNST", this->branch_start_segment_);
+        rftFile.write("BRNEN", this->branch_end_segment_);
+    }
+
+    void SegmentRecord::collectRecordData(const ::Opm::UnitSystem& usys,
+                                          const ::Opm::Well&       well,
+                                          const ::Opm::data::Well& wellSol)
+    {
+        const auto& segments = well.getSegments();
+        const auto& xseg = wellSol.segments;
+
+        for (const auto& segment : segments) {
+            auto segSolPos = xseg.find(segment.segmentNumber());
+            if (segSolPos == xseg.end()) {
+                continue;
+            }
+
+            this->addSegment(usys, segments, segment, segSolPos->second);
+        }
+
+        if (this->nSeg() > std::size_t{0}) {
+            this->defineBranches(segments);
+        }
+    }
+
+    void SegmentRecord::defineBranches(const ::Opm::WellSegments& wellSegs)
+    {
+        auto branchSegments = CSRIndexRelation {};
+        const auto minBranchID = 1;
+
+        branchSegments.build(wellSegs.size(), minBranchID,
+            [&wellSegs](const int ix) { return wellSegs[ix].branchNumber(); },
+            OrderSegments { wellSegs });
+
+        const auto maxBranchID = branchSegments.maxBinId();
+        this->branch_start_segment_.assign(maxBranchID, 0);
+        this->branch_end_segment_  .assign(maxBranchID, 0);
+
+        auto segNum = [&wellSegs](const int segIx) {
+            return wellSegs[segIx].segmentNumber();
+        };
+
+        for (auto branch = minBranchID; branch <= maxBranchID; ++branch) {
+            auto [begin, end] = branchSegments.bin(branch);
+            if (end == begin) {
+                // Empty branch (no segments).  Unexpected.
+                continue;
+            }
+
+            const auto branchIx = branch - minBranchID;
+            this->branch_start_segment_[branchIx] = segNum(*begin);
+            this->branch_end_segment_  [branchIx] = segNum(*(end - 1));
+        }
+    }
+
+    void SegmentRecord::addSegment(const ::Opm::UnitSystem&   usys,
+                                   const ::Opm::WellSegments& segments,
+                                   const ::Opm::Segment&      segment,
+                                   const Opm::data::Segment&  segSol)
+    {
+        this->recordPhysicalLocation(usys, segments, segment);
+        this->recordSegmentConnectivity(segment);
+        this->recordSegmentProperties(usys, segment);
+        this->recordDynamicState(usys, segment, segSol);
+    }
+
+    void SegmentRecord::recordPhysicalLocation(const ::Opm::UnitSystem&   usys,
+                                               const ::Opm::WellSegments& segments,
+                                               const ::Opm::Segment&      segment)
+    {
+        auto cvrt = [&usys](const double x) -> float
+        {
+            return usys.from_si(::Opm::UnitSystem::measure::length, x);
+        };
+
+        {
+            const auto diam = std::max(0.0, segment.internalDiameter());
+            this->diameter_.push_back(cvrt(diam));
+        }
+
+        this->depth_.push_back(cvrt(segment.depth()));
+
+        {
+            const auto outletNum = segment.outletSegment();
+            const auto start = (outletNum <= 0)
+                ? 0.0           // 'segment' is top segment
+                : segments.getFromSegmentNumber(outletNum).totalLength();
+
+            this->start_length_.push_back(cvrt(start));
+        }
+
+        this->end_length_.push_back(cvrt(segment.totalLength()));
+        this->x_coord_.push_back(cvrt(segment.node_X()));
+        this->y_coord_.push_back(cvrt(segment.node_Y()));
+    }
+
+    void SegmentRecord::recordSegmentConnectivity(const ::Opm::Segment& segment)
+    {
+        this->neighbour_id_.push_back(segment.outletSegment());
+        this->branch_id_   .push_back(segment.branchNumber());
+    }
+
+    void SegmentRecord::recordSegmentProperties(const ::Opm::UnitSystem& usys,
+                                                const ::Opm::Segment&    segment)
+    {
+        using TypeProperties = void(SegmentRecord::*)
+            (const ::Opm::UnitSystem& usys,
+             const ::Opm::Segment&    segment);
+
+        static const auto handlers = std::array<TypeProperties, 4> {
+            &SegmentRecord::recordRegularTypeProperties,
+            &SegmentRecord::recordSpiralICDTypeProperties,
+            &SegmentRecord::recordAutoICDTypeProperties,
+            &SegmentRecord::recordValveTypeProperties,
+        };
+
+        const auto ix = static_cast<std::size_t>(segment.segmentType());
+        if (ix < handlers.size()) {
+            (this->*handlers[ix])(usys, segment);
+        }
+        else {
+            // Unknown segment type.  Treat as "regular".
+            this->recordRegularTypeProperties(usys, segment);
+        }
+    }
+
+    void SegmentRecord::recordDynamicState(const ::Opm::UnitSystem&               usys,
+                                           [[maybe_unused]] const ::Opm::Segment& segment,
+                                           const ::Opm::data::Segment&            segSol)
+    {
+        using M = ::Opm::UnitSystem::measure;
+        using SegPress = ::Opm::data::SegmentPressures::Value;
+
+        this->pressure_.push_back(usys.from_si(M::pressure, segSol.pressures[SegPress::Pressure]));
+        this->rate_.addConnection(usys, segSol.rates);
+    }
+
+    void SegmentRecord::recordAutoICDTypeProperties(const ::Opm::UnitSystem& usys,
+                                                    const ::Opm::Segment&    segment)
+    {
+        this->strength_.push_back(usys.from_si(::Opm::UnitSystem::measure::aicd_strength,
+                                               segment.autoICD().strength()));
+        this->icd_setting_.push_back(1.0f);
+    }
+
+    void SegmentRecord::recordRegularTypeProperties([[maybe_unused]] const ::Opm::UnitSystem& usys,
+                                                    [[maybe_unused]] const ::Opm::Segment&    segment)
+    {
+        this->strength_.push_back(0.0f);
+        this->icd_setting_.push_back(1.0f);
+    }
+
+    void SegmentRecord::recordSpiralICDTypeProperties(const ::Opm::UnitSystem& usys,
+                                                      const ::Opm::Segment&    segment)
+    {
+        this->strength_.push_back(usys.from_si(::Opm::UnitSystem::measure::icd_strength,
+                                               segment.spiralICD().strength()));
+        this->icd_setting_.push_back(1.0f);
+    }
+
+    double valveMaximumCrossSectionalArea(const ::Opm::Segment& segment)
+    {
+        assert ((segment.segmentNumber() > 1) && segment.isValve());
+
+        // Data sources in order of preference:
+        //
+        //   1. WSEGVALV(10) (= valve.conMaxCrossArea()), if set
+        //   2. WSEGVALV( 8) (= valve.pipeCrossArea()), if set
+        //   3. WELSEGS ( 9) (= segment.crossArea())
+
+        const auto& valve = segment.valve();
+        if (const auto ac_max = valve.conMaxCrossArea(); ac_max > 0.0) {
+            return ac_max;
+        }
+
+        if (const auto ac_max = valve.pipeCrossArea(); ac_max > 0.0) {
+            return ac_max;
+        }
+
+        return segment.crossArea();
+    }
+
+    // ICD setting ("SEGSFOPN") for valves is cross-sectional area in valve
+    // constriction (Ac) relative to maximum cross-sectional area in value
+    // constriction (Ac_max).
+    double valveICDSetting(const ::Opm::Segment& segment)
+    {
+        assert ((segment.segmentNumber() > 1) && segment.isValve());
+
+        const auto Ac     = segment.valve().conCrossArea();
+        const auto Ac_max = valveMaximumCrossSectionalArea(segment);
+
+        return Ac / Ac_max;
+    }
+
+    void SegmentRecord::recordValveTypeProperties([[maybe_unused]] const ::Opm::UnitSystem& usys,
+                                                  const ::Opm::Segment&                     segment)
+    {
+        this->strength_.push_back(0.0f);
+        this->icd_setting_.push_back(valveICDSetting(segment));
+    }
+
     // =======================================================================
 
     class WellRFTOutputData
     {
     public:
         enum class DataTypes {
-            RFT, PLT,
+            RFT, PLT, SEG,
         };
 
         explicit WellRFTOutputData(const std::vector<DataTypes>&                types,
@@ -1054,6 +1364,7 @@ namespace {
         std::unique_ptr<WellConnectionRecord> wconns_{};
         std::unique_ptr<RFTRecord>            rft_{};
         std::unique_ptr<PLTRecord>            plt_{};
+        std::unique_ptr<SegmentRecord>        seg_{};
 
         std::vector<DataHandler>  dataHandlers_{};
         std::vector<RecordWriter> recordWriters_{};
@@ -1063,10 +1374,12 @@ namespace {
         void initialiseConnHandlers();
         void initialiseRFTHandlers();
         void initialisePLTHandlers();
+        void initialiseSEGHandlers();
 
         bool haveOutputData() const;
         bool haveRFTData() const;
         bool havePLTData() const;
+        bool haveSEGData() const;
 
         void writeHeader(::Opm::EclIO::OutputStream::RFT& rftFile) const;
 
@@ -1102,7 +1415,8 @@ namespace {
     bool WellRFTOutputData::haveOutputData() const
     {
         return this->haveRFTData()
-            || this->havePLTData();
+            || this->havePLTData()
+            || this->haveSEGData();
     }
 
     void WellRFTOutputData::addDynamicData(const Opm::data::Well& wellSol)
@@ -1196,6 +1510,30 @@ namespace {
         });
     }
 
+    void WellRFTOutputData::initialiseSEGHandlers()
+    {
+        const auto& well = this->well_.get();
+
+        if (!well.isMultiSegment() || well.getSegments().empty()) {
+            return;
+        }
+
+        this->seg_ = std::make_unique<SegmentRecord>
+            (well.getSegments().size());
+
+        this->dataHandlers_.emplace_back(
+            [this](const Opm::data::Well& wellSol)
+        {
+            this->seg_->collectRecordData(this->usys_, this->well_, wellSol);
+        });
+
+        this->recordWriters_.emplace_back(
+            [this](::Opm::EclIO::OutputStream::RFT& rftFile)
+        {
+            this->seg_->write(rftFile);
+        });
+    }
+
     bool WellRFTOutputData::haveRFTData() const
     {
         return (this->rft_ != nullptr)
@@ -1206,6 +1544,12 @@ namespace {
     {
         return (this->plt_ != nullptr)
             && (this->plt_->nConn() > std::size_t{0});
+    }
+
+    bool WellRFTOutputData::haveSEGData() const
+    {
+        return (this->seg_ != nullptr)
+            && (this->seg_->nSeg() > std::size_t{0});
     }
 
     void WellRFTOutputData::writeHeader(::Opm::EclIO::OutputStream::RFT& rftFile) const
@@ -1275,8 +1619,9 @@ namespace {
     std::string WellRFTOutputData::dataTypeString() const
     {
         auto tstring = std::string{};
-        if (this->haveRFTData()) { tstring += 'R';}
-        if (this->havePLTData()) { tstring += 'P';}
+        if (this->haveRFTData()) { tstring += 'R'; }
+        if (this->havePLTData()) { tstring += 'P'; }
+        if (this->haveSEGData()) { tstring += 'S'; }
 
         return tstring;
     }
@@ -1292,6 +1637,7 @@ namespace {
     WellRFTOutputData::creators_{
         { WellRFTOutputData::DataTypes::RFT, &WellRFTOutputData::initialiseRFTHandlers },
         { WellRFTOutputData::DataTypes::PLT, &WellRFTOutputData::initialisePLTHandlers },
+        { WellRFTOutputData::DataTypes::SEG, &WellRFTOutputData::initialiseSEGHandlers },
     };
 } // Anonymous namespace
 
@@ -1310,6 +1656,10 @@ namespace {
 
         if (rft_config.plt(well_name)) {
             rftTypes.push_back(WellRFTOutputData::DataTypes::PLT);
+        }
+
+        if (rft_config.segment(well_name)) {
+            rftTypes.push_back(WellRFTOutputData::DataTypes::SEG);
         }
 
         return rftTypes;
