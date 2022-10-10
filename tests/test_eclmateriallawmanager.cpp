@@ -248,7 +248,7 @@ static const char* hysterDeckString =
     "\n"
     "\n"
     "EHYSTR\n"
-    "0.1   0  0.1 1* KR /\n"
+    "0.1   0  0.1 1* BOTH /\n"
     "\n"
     "SATOPTS\n"
     "HYSTER /\n"
