@@ -331,8 +331,8 @@ private:
     bool activeHyst  { false };
 
     // the capillary pressure and the relperm hysteresis models to be used
-    int pcHystMod { 0 };
-    int krHystMod { 0 };
+    int pcHystMod { -1 };
+    int krHystMod { -1 };
     // regularisation parameter used for Killough model
     double modParamTrappedValue { 0.1 };
     // curvature parameter for capillary pressure
