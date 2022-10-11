@@ -128,35 +128,41 @@ macro (find_and_append_package_to prefix name)
     # We even need to repeat the search for opm-common once as this is done
     # in the top most CMakeLists.txt without querying defines, setting dependencies
     # and the likes which is only done via opm_find_package
-    if ( (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND )
-         OR _search_components GREATER -1)
-      string(REGEX MATCH "(opm)-.*" _is_opm ${name})
-      if(NOT _is_opm)
-        # When using Boost >= 1.70 and e.g. CMake 3.18 we need to make sure that
-        # subsequent searches are using config mode too. Otherwise the library
-        # list will be completely messed up. We use a set Boost_Dir to detect that
-        # previous searches were done using config mode.
-        if("${name}" STREQUAL "Boost" AND Boost_DIR)
-          set(_CONFIG_MODE CONFIG)
-        else()
-          set(_CONFIG_MODE "")
-        endif()
-        find_package (${name} ${ARGN} ${_CONFIG_MODE})
+    string(REGEX MATCH "(opm)-.*" _is_opm ${name})
+    if(NOT _is_opm)
+      # When using Boost >= 1.70 and e.g. CMake 3.18 we need to make sure that
+      # subsequent searches are using config mode too. Otherwise the library
+      # list will be completely messed up. We use a set Boost_Dir to detect that
+      # previous searches were done using config mode.
+      if("${name}" STREQUAL "Boost" AND Boost_DIR)
+        set(_CONFIG_MODE CONFIG)
       else()
-        if(${name}_DIR)
-          find_package (${name} ${${prefix}_VERSION_MAJOR}.${${prefix}_VERSION_MINOR} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
-        else()
-          find_package (${name} ${${prefix}_VERSION_MAJOR}.${${prefix}_VERSION_MINOR} ${ARGN} NO_MODULE)
-        endif()
-        include(FindPackageHandleStandardArgs)
-        if(${name}_FOUND AND ${name}_LIBRARY STREQUAL "")
-          find_package_handle_standard_args(${name}
-                                            REQUIRED_VARS ${name}_INCLUDE_DIRS)
-        else()
-          find_package_handle_standard_args(${name}
-                                            REQUIRED_VARS ${name}_LIBRARY)
-        endif()
-      endif ()
+        set(_CONFIG_MODE "")
+      endif()
+      find_package (${name} ${ARGN} ${_CONFIG_MODE})
+    else()
+      if(${name}_DIR)
+        find_package (${name} ${${prefix}_VERSION_MAJOR}.${${prefix}_VERSION_MINOR} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
+      else()
+        find_package (${name} ${${prefix}_VERSION_MAJOR}.${${prefix}_VERSION_MINOR} ${ARGN} NO_MODULE)
+      endif()
+      include(FindPackageHandleStandardArgs)
+      if( CMAKE_VERSION VERSION_GREATER_EQUAL "3.17")
+	# For some reason we will e.g. call
+	# find_package_handle_standard_args(opm-common)
+	# in a find_package(opm-material) call and this will
+	# usuallly print an annoying warnig. Prevent this at least
+	# for cmake >=3.17
+	# \todo Check why/whether these calls are even needed.
+	set(_NAME_MISMATCHED "NAME_MISMATCHED")
+      endif()
+      if(${name}_FOUND AND ${name}_LIBRARY STREQUAL "")
+        find_package_handle_standard_args(${name}
+          REQUIRED_VARS ${name}_INCLUDE_DIRS ${_NAME_MISMATCHED})
+      else()
+        find_package_handle_standard_args(${name}
+          REQUIRED_VARS ${name}_LIBRARY ${_NAME_MISMATCHED})
+      endif()
     endif ()
     if (NOT DEFINED ${name}_FOUND)
       set (${name}_FOUND "${${NAME}_FOUND}")
