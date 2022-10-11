@@ -126,7 +126,25 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
 }
 
 
+BOOST_AUTO_TEST_CASE(Compdat_Direction) {
+    BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("X") == Opm::Connection::Direction::X,
+                        R"(Direction "X" must be Direction::X)");
+    BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("x") == Opm::Connection::Direction::X,
+                        R"(Direction "x" must be Direction::X)");
+    BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("Y") == Opm::Connection::Direction::Y,
+                        R"(Direction "Y" must be Direction::Y)");
+    BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("y") == Opm::Connection::Direction::Y,
+                        R"(Direction "y" must be Direction::Y)");
+    BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("Z") == Opm::Connection::Direction::Z,
+                        R"(Direction "Z" must be Direction::Z)");
+    BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("z") == Opm::Connection::Direction::Z,
+                        R"(Direction "z" must be Direction::Z)");
 
+    BOOST_CHECK_THROW(Opm::Connection::DirectionFromString(""), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::Connection::DirectionFromString("XX"), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::Connection::DirectionFromString("X-"), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::Connection::DirectionFromString("HeLlo"), std::invalid_argument);
+}
 
 
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
