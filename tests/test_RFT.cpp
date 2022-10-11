@@ -379,6 +379,173 @@ namespace {
         this->end_length_   = rft.getRft<float>("CONLENEN", well, date);
     }
 
+    class SegmentResults
+    {
+    public:
+        explicit SegmentResults(const ::Opm::EclIO::ERft&          rft,
+                                const std::string&                 well,
+                                const ::Opm::EclIO::ERft::RftDate& date);
+
+        std::size_t numSegments() const
+        {
+            return this->diameter_.size();
+        }
+
+        std::size_t numBranches() const
+        {
+            return this->branch_start_segment_.size();
+        }
+
+        float diameter(const int segNum) const
+        {
+            return this->value(segNum, this->diameter_);
+        }
+
+        float depth(const int segNum) const
+        {
+            return this->value(segNum, this->depth_);
+        }
+
+        float start(const int segNum) const
+        {
+            return this->value(segNum, this->start_length_);
+        }
+
+        float end(const int segNum) const
+        {
+            return this->value(segNum, this->end_length_);
+        }
+
+        float node_X(const int segNum) const
+        {
+            return this->value(segNum, this->node_X_);
+        }
+
+        float node_Y(const int segNum) const
+        {
+            return this->value(segNum, this->node_Y_);
+        }
+
+        float pressure(const int segNum) const
+        {
+            return this->value(segNum, this->pressure_);
+        }
+
+        float orat(const int segNum) const
+        {
+            return this->value(segNum, this->orat_);
+        }
+
+        float wrat(const int segNum) const
+        {
+            return this->value(segNum, this->wrat_);
+        }
+
+        float grat(const int segNum) const
+        {
+            return this->value(segNum, this->grat_);
+        }
+
+        float icd_strength(const int segNum) const
+        {
+            return this->value(segNum, this->icd_strength_);
+        }
+
+        float icd_setting(const int segNum) const
+        {
+            return this->value(segNum, this->icd_setting_);
+        }
+
+        int branch(const int segNum) const
+        {
+            return this->value(segNum, this->branch_id_);
+        }
+
+        int neighbour(const int segNum) const
+        {
+            return this->value(segNum, this->neighbour_id_);
+        }
+
+        int branchStartSegment(const int branchNum) const
+        {
+            return this->value(branchNum, this->branch_start_segment_);
+        }
+
+        int branchEndSegment(const int branchNum) const
+        {
+            return this->value(branchNum, this->branch_end_segment_);
+        }
+
+    private:
+        std::vector<float> diameter_{};
+        std::vector<float> depth_{};
+        std::vector<float> start_length_{};
+        std::vector<float> end_length_{};
+        std::vector<float> node_X_{};
+        std::vector<float> node_Y_{};
+        std::vector<float> pressure_{};
+        std::vector<float> orat_{};
+        std::vector<float> wrat_{};
+        std::vector<float> grat_{};
+        std::vector<float> icd_strength_{};
+        std::vector<float> icd_setting_{};
+
+        std::vector<int> branch_id_{};
+        std::vector<int> neighbour_id_{};
+        std::vector<int> branch_start_segment_{};
+        std::vector<int> branch_end_segment_{};
+
+        template <typename T, class A>
+        T value(const int segNum, const std::vector<T, A>& vector) const
+        {
+            return vector[ static_cast<std::size_t>(segNum - 1) ];
+        }
+    };
+
+    SegmentResults::SegmentResults(const ::Opm::EclIO::ERft&          rft,
+                                   const std::string&                 well,
+                                   const ::Opm::EclIO::ERft::RftDate& date)
+    {
+        BOOST_REQUIRE(rft.hasArray("SEGDIAM", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGDEPTH", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGLENST", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGLENEN", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGXCORD", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGYCORD", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGPRES", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGORAT", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGWRAT", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGGRAT", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGSSTR", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGSFOPN", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGBRNO", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGNXT", well, date));
+        BOOST_REQUIRE(rft.hasArray("BRNST", well, date));
+        BOOST_REQUIRE(rft.hasArray("BRNEN", well, date));
+
+        this->diameter_ = rft.getRft<float>("SEGDIAM", well, date);
+        this->depth_ = rft.getRft<float>("SEGDEPTH" , well, date);
+
+        this->start_length_ = rft.getRft<float>("SEGLENST", well, date);
+        this->end_length_   = rft.getRft<float>("SEGLENEN", well, date);
+
+        this->node_X_ = rft.getRft<float>("SEGXCORD", well, date);
+        this->node_Y_ = rft.getRft<float>("SEGYCORD", well, date);
+
+        this->pressure_ = rft.getRft<float>("SEGPRES", well, date);
+        this->orat_ = rft.getRft<float>("SEGORAT", well, date);
+        this->wrat_ = rft.getRft<float>("SEGWRAT", well, date);
+        this->grat_ = rft.getRft<float>("SEGGRAT", well, date);
+
+        this->icd_strength_ = rft.getRft<float>("SEGSSTR", well, date);
+        this->icd_setting_ = rft.getRft<float>("SEGSFOPN", well, date);
+
+        this->branch_id_ = rft.getRft<int>("SEGBRNO", well, date);
+        this->neighbour_id_ = rft.getRft<int>("SEGNXT", well, date);
+        this->branch_start_segment_ = rft.getRft<int>("BRNST", well, date);
+        this->branch_end_segment_ = rft.getRft<int>("BRNEN", well, date);
+    }
+
     void verifyRFTFile(const std::string& rft_filename)
     {
         using RftDate = ::Opm::EclIO::ERft::RftDate;
@@ -3287,3 +3454,1093 @@ BOOST_AUTO_TEST_CASE(Multisegment_Well)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // PLTData
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(SegmentData)
+
+namespace {
+    Opm::Deck segmentDataSet()
+    {
+        return ::Opm::Parser{}.parseString(R"(RUNSPEC
+TITLE
+  'BASE1' 'MSW' 'HFA'
+
+NOECHO
+
+DIMENS
+ 6 8 7 /
+
+START
+ 1 'JAN' 2000 /
+
+OIL
+WATER
+GAS
+DISGAS
+VAPOIL
+METRIC
+
+TABDIMS
+ 1 1 5 20 1* 20 /
+
+EQLDIMS
+ 1 /
+
+REGDIMS
+ 1 1 /
+
+WELLDIMS
+ 2 7 2 2 /
+
+WSEGDIMS
+ 1 12 1 /
+
+UNIFIN
+UNIFOUT
+
+-- =====================================================================
+
+GRID
+
+GRIDFILE
+ 0 1 /
+
+INIT
+NEWTRAN
+
+GRIDUNIT
+ 'METRES' /
+
+SPECGRID
+ 6 8 7 1 'F' /
+
+DXV
+ 6*100 /
+
+DYV
+ 8*100 /
+
+DZV
+ 7*10 /
+
+DEPTHZ
+ 63*2700 /
+
+PERMX
+ 48*72 48*135 48*355 48*50 48*200 48*130 48*55 /
+
+PORO
+ 48*0.25 48*0.2 48*0.2 48*0.2 48*0.2 48*0.18 48*0.18 /
+
+COPY
+ 'PERMX' 'PERMY' /
+ 'PERMX' 'PERMZ' /
+/
+
+MULTIPLY
+ 'PERMZ' 0.1 /
+/
+
+MULTZ
+ 48*1 48*1 48*1
+ 48*0
+ 48*1 48*1 48*1 /
+
+MULTNUM
+ 48*1 48*1
+ 48*2 48*2 48*2
+ 48*3 48*3 /
+
+-- =====================================================================
+
+PROPS
+
+SWOF
+ 0 0 1 0
+ 1 1 0 0 /
+
+SGOF
+ 0 0 1 0
+ 1 1 0 0 /
+
+ROCK
+ 280 5.6e-05 /
+
+PVTW
+ 247.7 1.03665 4.1726e-05 0.2912 9.9835e-05 /
+
+DENSITY
+ 861 999.1 1.01735 /
+
+PVTO
+ 0   1   1.07033 0.645
+    25   1.06657 0.668
+    50   1.06293 0.691
+    75   1.05954 0.714
+   100   1.05636 0.736 /
+
+ 17.345  25   1.14075 0.484
+         50   1.1351  0.506
+         75   1.12989 0.527
+        100   1.12508 0.548 /
+
+ 31.462  50   1.1843  0.439
+         75   1.178   0.459
+        100   1.17219 0.479 /
+
+ 45.089  75   1.22415 0.402
+        100   1.21728 0.421
+        150   1.2051  0.458
+        200   1.19461 0.494 /
+
+ 58.99 100   1.26373 0.37
+       150   1.24949 0.405
+       200   1.23732 0.439
+       225   1.23186 0.456 /
+
+ 88.618 150   1.34603 0.316
+        200   1.32975 0.346
+        225   1.32253 0.361
+        250   1.31582 0.376 /
+
+ 120.85 200   1.43292 0.273
+        225   1.42343 0.286
+        250   1.41467 0.299
+        275   1.40656 0.312 /
+
+ 138.134 225   1.47867 0.255
+         250   1.46868 0.267
+         275   1.45945 0.279
+         294.6 1.45269 0.288 /
+
+ 156.324 250   1.52632 0.239
+         275   1.51583 0.25
+         294.6 1.50816 0.258
+         300   1.50613 0.261 /
+
+ 175.509 275   1.5761  0.224
+         294.6 1.56741 0.232
+         300   1.5651  0.234
+         324   1.55533 0.244 /
+
+ 191.323 294.6 1.61682 0.214
+         300   1.61428 0.216
+         324   1.60352 0.225
+         350   1.59271 0.235 /
+
+ 195.818 300 1.62835 0.211
+         324 1.6173  0.22
+         350 1.60621 0.23
+         400 1.58707 0.248 /
+
+ 216.43 324 1.68095 0.199
+        350 1.66851 0.208
+        400 1.64713 0.226
+        450 1.62847 0.243
+        500 1.612   0.26 /
+ /
+
+PVTG
+   1   2.123e-06    1.877001 0.01037
+       0            1.352546 0.011247 /
+  25   5.99e-06     0.050493 0.012925
+       0            0.050477 0.012932 /
+  50   4.9422e-06   0.024609 0.01373
+       0            0.024612 0.013734 /
+  75   6.1628e-06   0.016094 0.014475
+       0            0.016102 0.014475 /
+ 100   8.6829e-06   0.011902 0.015347
+       0            0.011915 0.015334 /
+ 150   1.91019e-05  0.007838 0.017699
+       0            0.00786  0.017591 /
+ 200   4.14858e-05  0.005938 0.020947
+       0            0.005967 0.020506 /
+ 225   5.95434e-05  0.005349 0.022888
+       0            0.005377 0.022116 /
+ 250   8.3633e-05   0.004903 0.025025
+       0            0.004925 0.023767 /
+ 275   0.0001148977 0.004561 0.027355
+       0            0.004571 0.025418 /
+ 294.6 0.0001452455 0.00435  0.029325
+       0            0.004344 0.026696 /
+ 300   0.0001546223 0.004299 0.029893
+       0            0.004288 0.027044 /
+ 324   0.000202062  0.004107 0.032559
+       0.0001546223 0.004098 0.031456
+       0.0001452455 0.004097 0.031237
+       0.0001148977 0.004093 0.030521
+       8.3633e-05   0.004089 0.029767
+       5.95434e-05  0.004088 0.029165
+       4.14858e-05  0.004087 0.028702
+       1.91019e-05  0.004085 0.028173
+       8.6829e-06   0.004068 0.028353
+       0            0.004066 0.028567 /
+ /
+
+-- =====================================================================
+
+REGIONS
+
+SATNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+EQLNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+PVTNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+-- =====================================================================
+
+SOLUTION
+
+EQUIL
+ 2730 300 2750 0 1650 0 1 1 0 /
+
+RSVD
+ 2650 156.324
+ 2750 138.134 /
+
+RVVD
+ 2600 0.00739697
+ 2750 0.00639697 /
+
+RPTSOL
+ 'THPRES' 'FIP=2' /
+
+RPTRST
+ 'BASIC=5' FREQ=6 /
+
+-- =====================================================================
+
+SUMMARY
+
+ALL
+
+-- =====================================================================
+
+SCHEDULE
+
+GRUPTREE
+ 'TEST' 'FIELD' /
+/
+
+WELSPECS
+ 'P1' 'TEST' 1 2 1* 'OIL' 0 'STD' 'STOP' 'YES' 0 'SEG' 0 /
+ 'I1' 'TEST' 6 8 1* 'WATER' /
+/
+
+COMPDAT
+ 'P1' 2 3 2 2 'OPEN' 1* 52.08337 0.216 1* 0 1* 'Z' /
+ 'P1' 2 3 3 3 'OPEN' 1* 366.2544 0.216 1* 0 1* 'Y' /
+ 'P1' 2 4 3 3 'OPEN' 1* 388.4829 0.216 1* 0 1* 'Y' /
+ 'P1' 3 4 3 3 'OPEN' 1* 203.6268 0.216 1* 0 1* 'Y' /
+ 'P1' 3 5 3 3 'OPEN' 1* 571.7222 0.216 1* 0 1* 'Y' /
+ 'P1' 3 6 3 3 'OPEN' 1* 389.4535 0.216 1* 0 1* 'Y' /
+ 'I1' 6 8 5 7 'OPEN' 1* 1*       0.216 1* 0 1* 'Z' /
+/
+
+WELSEGS
+ 'P1' 2620.17107 0 1* 'INC' 'HFA' /
+  2  2 1  1  38.17432  3.32249 0.102 1e-05 /
+  3  3 1  2  62.22322  5.41558 0.102 1e-05 /
+  4  4 1  3  54.33161  4.72874 0.102 1e-05 /
+  5  5 1  4 119.18735 10.34614 0.102 1e-05 /
+  6  6 1  5 263.64361 14.87775 0.102 1e-05 /
+  7  7 1  6 360.47928 11.28317 0.102 1e-05 /
+  8  8 1  7 282.92022  5.30723 0.102 1e-05 /
+  9  9 1  8 370.26595  5.85843 0.102 1e-05 /
+ 10 10 1  9 458.85844  9.23286 0.102 1e-05 /
+ 11 11 1 10 266.98559  6.56172 0.102 1e-05 /
+/
+
+COMPSEGS
+ 'P1' /
+ 2 3 2 1  233.61     362.82114 /
+ 2 3 3 1  362.82114  712.29909 /
+ 2 4 3 1  712.29909 1083.7797  /
+ 3 4 3 1 1083.7797  1278.13953 /
+ 3 5 3 1 1278.13953 1824.3116  /
+ 3 6 3 1 1824.3116  2195.85641 /
+/
+
+WCONPROD
+ 'P1' 'OPEN' 'ORAT' 8000 4* 65 /
+/
+
+WCONINJE
+ 'I1' 'WATER' 'OPEN' 'RATE' 5000 1* 450 /
+/
+
+TSTEP
+ 1 /
+
+WRFTPLT
+ 'P1' 'YES' 'YES' 'YES' /
+/
+
+TSTEP
+ 2 3 5 10*10 20*20 30*30 /
+
+END
+
+)");
+    }
+
+    Opm::Deck valveDataSet()
+    {
+        return ::Opm::Parser{}.parseString(R"(RUNSPEC
+TITLE
+  'BASE1' 'MSW' 'HFA'
+
+NOECHO
+
+DIMENS
+ 6 8 7 /
+
+START
+ 1 'JAN' 2000 /
+
+OIL
+WATER
+GAS
+DISGAS
+VAPOIL
+METRIC
+
+TABDIMS
+ 1 1 5 20 1* 20 /
+
+EQLDIMS
+ 1 /
+
+REGDIMS
+ 1 1 /
+
+WELLDIMS
+ 2 7 2 2 /
+
+WSEGDIMS
+ 1 12 1 /
+
+UNIFIN
+UNIFOUT
+
+-- =====================================================================
+
+GRID
+
+GRIDFILE
+ 0 1 /
+
+INIT
+NEWTRAN
+
+GRIDUNIT
+ 'METRES' /
+
+SPECGRID
+ 6 8 7 1 'F' /
+
+DXV
+ 6*100 /
+
+DYV
+ 8*100 /
+
+DZV
+ 7*10 /
+
+DEPTHZ
+ 63*2700 /
+
+PERMX
+ 48*72 48*135 48*355 48*50 48*200 48*130 48*55 /
+
+PORO
+ 48*0.25 48*0.2 48*0.2 48*0.2 48*0.2 48*0.18 48*0.18 /
+
+COPY
+ 'PERMX' 'PERMY' /
+ 'PERMX' 'PERMZ' /
+/
+
+MULTIPLY
+ 'PERMZ' 0.1 /
+/
+
+MULTZ
+ 48*1 48*1 48*1
+ 48*0
+ 48*1 48*1 48*1 /
+
+MULTNUM
+ 48*1 48*1
+ 48*2 48*2 48*2
+ 48*3 48*3 /
+
+-- =====================================================================
+
+PROPS
+
+SWOF
+ 0 0 1 0
+ 1 1 0 0 /
+
+SGOF
+ 0 0 1 0
+ 1 1 0 0 /
+
+ROCK
+ 280 5.6e-05 /
+
+PVTW
+ 247.7 1.03665 4.1726e-05 0.2912 9.9835e-05 /
+
+DENSITY
+ 861 999.1 1.01735 /
+
+PVTO
+ 0   1   1.07033 0.645
+    25   1.06657 0.668
+    50   1.06293 0.691
+    75   1.05954 0.714
+   100   1.05636 0.736 /
+
+ 17.345  25   1.14075 0.484
+         50   1.1351  0.506
+         75   1.12989 0.527
+        100   1.12508 0.548 /
+
+ 31.462  50   1.1843  0.439
+         75   1.178   0.459
+        100   1.17219 0.479 /
+
+ 45.089  75   1.22415 0.402
+        100   1.21728 0.421
+        150   1.2051  0.458
+        200   1.19461 0.494 /
+
+ 58.99 100   1.26373 0.37
+       150   1.24949 0.405
+       200   1.23732 0.439
+       225   1.23186 0.456 /
+
+ 88.618 150   1.34603 0.316
+        200   1.32975 0.346
+        225   1.32253 0.361
+        250   1.31582 0.376 /
+
+ 120.85 200   1.43292 0.273
+        225   1.42343 0.286
+        250   1.41467 0.299
+        275   1.40656 0.312 /
+
+ 138.134 225   1.47867 0.255
+         250   1.46868 0.267
+         275   1.45945 0.279
+         294.6 1.45269 0.288 /
+
+ 156.324 250   1.52632 0.239
+         275   1.51583 0.25
+         294.6 1.50816 0.258
+         300   1.50613 0.261 /
+
+ 175.509 275   1.5761  0.224
+         294.6 1.56741 0.232
+         300   1.5651  0.234
+         324   1.55533 0.244 /
+
+ 191.323 294.6 1.61682 0.214
+         300   1.61428 0.216
+         324   1.60352 0.225
+         350   1.59271 0.235 /
+
+ 195.818 300 1.62835 0.211
+         324 1.6173  0.22
+         350 1.60621 0.23
+         400 1.58707 0.248 /
+
+ 216.43 324 1.68095 0.199
+        350 1.66851 0.208
+        400 1.64713 0.226
+        450 1.62847 0.243
+        500 1.612   0.26 /
+ /
+
+PVTG
+   1   2.123e-06    1.877001 0.01037
+       0            1.352546 0.011247 /
+  25   5.99e-06     0.050493 0.012925
+       0            0.050477 0.012932 /
+  50   4.9422e-06   0.024609 0.01373
+       0            0.024612 0.013734 /
+  75   6.1628e-06   0.016094 0.014475
+       0            0.016102 0.014475 /
+ 100   8.6829e-06   0.011902 0.015347
+       0            0.011915 0.015334 /
+ 150   1.91019e-05  0.007838 0.017699
+       0            0.00786  0.017591 /
+ 200   4.14858e-05  0.005938 0.020947
+       0            0.005967 0.020506 /
+ 225   5.95434e-05  0.005349 0.022888
+       0            0.005377 0.022116 /
+ 250   8.3633e-05   0.004903 0.025025
+       0            0.004925 0.023767 /
+ 275   0.0001148977 0.004561 0.027355
+       0            0.004571 0.025418 /
+ 294.6 0.0001452455 0.00435  0.029325
+       0            0.004344 0.026696 /
+ 300   0.0001546223 0.004299 0.029893
+       0            0.004288 0.027044 /
+ 324   0.000202062  0.004107 0.032559
+       0.0001546223 0.004098 0.031456
+       0.0001452455 0.004097 0.031237
+       0.0001148977 0.004093 0.030521
+       8.3633e-05   0.004089 0.029767
+       5.95434e-05  0.004088 0.029165
+       4.14858e-05  0.004087 0.028702
+       1.91019e-05  0.004085 0.028173
+       8.6829e-06   0.004068 0.028353
+       0            0.004066 0.028567 /
+ /
+
+-- =====================================================================
+
+REGIONS
+
+SATNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+EQLNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+PVTNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+-- =====================================================================
+
+SOLUTION
+
+EQUIL
+ 2730 300 2750 0 1650 0 1 1 0 /
+
+RSVD
+ 2650 156.324
+ 2750 138.134 /
+
+RVVD
+ 2600 0.00739697
+ 2750 0.00639697 /
+
+RPTSOL
+ 'THPRES' 'FIP=2' /
+
+RPTRST
+ 'BASIC=5' FREQ=6 /
+
+-- =====================================================================
+
+SUMMARY
+
+ALL
+
+-- =====================================================================
+
+SCHEDULE
+
+GRUPTREE
+ 'TEST' 'FIELD' /
+/
+
+WELSPECS
+ 'P1' 'TEST' 1 2 1* 'OIL' 0 'STD' 'STOP' 'YES' 0 'SEG' 0 /
+ 'I1' 'TEST' 6 8 1* 'WATER' /
+/
+
+COMPDAT
+ 'P1' 2 3 2 2 'OPEN' 1* 52.08337 0.216 1* 0 1* 'Z' /
+ 'P1' 2 3 3 3 'OPEN' 1* 366.2544 0.216 1* 0 1* 'Y' /
+ 'P1' 2 4 3 3 'OPEN' 1* 388.4829 0.216 1* 0 1* 'Y' /
+ 'P1' 3 4 3 3 'OPEN' 1* 203.6268 0.216 1* 0 1* 'Y' /
+ 'P1' 3 5 3 3 'OPEN' 1* 571.7222 0.216 1* 0 1* 'Y' /
+ 'P1' 3 6 3 3 'OPEN' 1* 389.4535 0.216 1* 0 1* 'Y' /
+ 'I1' 6 8 5 7 'OPEN' 1* 1*       0.216 1* 0 1* 'Z' /
+/
+
+WELSEGS
+ 'P1' 2620.17107 0 1* 'INC' 'HFA' /
+  2  2 1  1  38.17432  3.32249 0.102 1e-05 /
+  3  3 1  2  62.22322  5.41558 0.102 1e-05 /
+  4  4 1  3  54.33161  4.72874 0.102 1e-05 /
+  5  5 1  4 119.18735 10.34614 0.102 1e-05 /
+  6  6 1  5 263.64361 14.87775 0.102 1e-05 /
+  7  7 1  6 360.47928 11.28317 0.102 1e-05 /
+  8  8 1  7 282.92022  5.30723 0.102 1e-05 /
+  9  9 1  8 370.26595  5.85843 0.102 1e-05 /
+ 10 10 1  9 458.85844  9.23286 0.102 1e-05 /
+ 11 11 1 10 266.98559  6.56172 0.102 1e-05 /
+/
+
+COMPSEGS
+ 'P1' /
+ 2 3 2 1  233.61     362.82114 /
+ 2 3 3 1  362.82114  712.29909 /
+ 2 4 3 1  712.29909 1083.7797  /
+ 3 4 3 1 1083.7797  1278.13953 /
+ 3 5 3 1 1278.13953 1824.3116  /
+ 3 6 3 1 1824.3116  2195.85641 /
+/
+
+WSEGVALV
+ 'P1' 11 0.7 6.0e-5 5* 1.2e-4 /
+ 'P1' 10 0.7 6.0e-5 3* 1.2e-4 /
+ 'P1'  9 0.7 6.0e-5 /
+/
+
+WCONPROD
+ 'P1' 'OPEN' 'ORAT' 8000 4* 65 /
+/
+
+WCONINJE
+ 'I1' 'WATER' 'OPEN' 'RATE' 5000 1* 450 /
+/
+
+TSTEP
+ 1 /
+
+WRFTPLT
+ 'P1' 'NO' 'NO' 'YES' /
+/
+
+TSTEP
+ 2 3 5 10*10 20*20 30*30 /
+
+END
+
+)");
+    }
+
+    std::vector<int> cellIndex(const ::Opm::EclipseGrid&             grid,
+                               const std::vector<std::array<int,3>>& ijk)
+    {
+        auto cellIx = std::vector<int>{};
+        cellIx.reserve(ijk.size());
+
+        std::transform(ijk.begin(), ijk.end(), std::back_inserter(cellIx),
+                       [&grid](const auto& ijk_entry)
+                       {
+                           return grid.getGlobalIndex(ijk_entry[0] - 1,
+                                                      ijk_entry[1] - 1,
+                                                      ijk_entry[2] - 1);
+                       });
+
+        return cellIx;
+    }
+
+    std::vector<int> cellIndex_P1(const ::Opm::EclipseGrid& grid)
+    {
+        return cellIndex(grid, {
+                {2, 3, 2},
+                {2, 3, 3},
+                {2, 4, 3},
+                {3, 4, 3},
+                {3, 5, 3},
+                {3, 6, 3},
+            });
+    }
+
+    std::vector<Opm::data::Connection>
+    connRes_P1(const ::Opm::EclipseGrid& grid)
+    {
+        using rt = ::Opm::data::Rates::opt;
+
+        const auto cellIx = cellIndex_P1(grid);
+
+        const auto ncon = static_cast<int>(cellIx.size());
+
+        auto xcon = std::vector<Opm::data::Connection>{};
+        xcon.reserve(ncon);
+
+        const auto m3_d = ::Opm::UnitSystem::newMETRIC()
+            .to_si(::Opm::UnitSystem::measure::liquid_surface_rate, 1.0);
+
+        const auto m3cp_db = ::Opm::UnitSystem::newMETRIC()
+            .to_si(::Opm::UnitSystem::measure::transmissibility, 1.0);
+
+        for (auto con = 0; con < ncon; ++con) {
+            auto& c = xcon.emplace_back();
+
+            c.index = cellIx[con];
+
+            c.cell_pressure = (120 + con*10)*::Opm::unit::barsa;
+            c.pressure = (120 - (ncon - con)*10)*::Opm::unit::barsa;
+
+            // Negative rates for producing connections
+            c.rates.set(rt::oil, -  100*con*m3_d)
+                   .set(rt::gas, - 1000*con*m3_d)
+                   .set(rt::wat, -   10*con*m3_d);
+
+            c.cell_saturation_gas   = 0.15;
+            c.cell_saturation_water = 0.3 + con/static_cast<double>(2 * ncon);
+            c.trans_factor          = 0.98765*m3cp_db;
+        }
+
+        return xcon;
+    }
+
+    Opm::data::Segment segSol_P1(const std::size_t segNum)
+    {
+        const auto m3_d = ::Opm::UnitSystem::newMETRIC()
+            .to_si(::Opm::UnitSystem::measure::liquid_surface_rate, 1.0);
+
+        const auto barsa = ::Opm::UnitSystem::newMETRIC()
+            .to_si(::Opm::UnitSystem::measure::pressure, 1.0);
+
+        // Note sign.  P1 is a producer.
+        auto xs = Opm::data::Segment{};
+        xs.rates.set(Opm::data::Rates::opt::oil, - ( 123.0 -  10.0 *(segNum - 1))*m3_d)
+                .set(Opm::data::Rates::opt::gas, - (2345.0 - 123.4 *(segNum - 1))*m3_d)
+                .set(Opm::data::Rates::opt::wat, - (  34.5 -   2.34*(segNum - 1))*m3_d);
+
+        xs.pressures[Opm::data::SegmentPressures::Value::Pressure] = (135.7 + 9.0*(segNum - 1))*barsa;
+
+        xs.segNumber = segNum;
+
+        return xs;
+    }
+
+    ::Opm::data::Well wellSol_P1(const ::Opm::EclipseGrid& grid)
+    {
+        auto xw = ::Opm::data::Well{};
+        xw.connections = connRes_P1(grid);
+
+        for (auto segNum = std::size_t{1}; segNum <= std::size_t{11}; ++segNum) {
+            xw.segments.insert_or_assign(segNum, segSol_P1(segNum));
+        }
+
+        return xw;
+    }
+
+    ::Opm::data::Wells wellSol(const ::Opm::EclipseGrid& grid)
+    {
+        auto xw = ::Opm::data::Wells{};
+
+        xw["P1"] = wellSol_P1(grid);
+
+        return xw;
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Static_Data)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTSEG" };
+    const auto model = Setup{ segmentDataSet() };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 1;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xSEG = SegmentResults {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    BOOST_REQUIRE_EQUAL(xSEG.numSegments(), std::size_t{11});
+    BOOST_REQUIRE_EQUAL(xSEG.numBranches(), std::size_t{1});
+
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 1),  0);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 2),  1);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 3),  2);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 4),  3);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 5),  4);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 6),  5);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 7),  6);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 8),  7);
+    BOOST_CHECK_EQUAL(xSEG.neighbour( 9),  8);
+    BOOST_CHECK_EQUAL(xSEG.neighbour(10),  9);
+    BOOST_CHECK_EQUAL(xSEG.neighbour(11), 10);
+
+    BOOST_CHECK_EQUAL(xSEG.branchStartSegment(1),  1);
+    BOOST_CHECK_EQUAL(xSEG.branchEndSegment(1),  11);
+
+    BOOST_CHECK_CLOSE(xSEG.diameter( 1), 0.0f  , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 2), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 3), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 4), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 5), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 6), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 7), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 8), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter( 9), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter(10), 0.102f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.diameter(11), 0.102f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.depth( 1), 2.62017107e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 2), 2.62349356e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 3), 2.62890914e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 4), 2.63363788e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 5), 2.64398402e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 6), 2.65886177e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 7), 2.67014494e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 8), 2.67545217e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth( 9), 2.68131060e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth(10), 2.69054346e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.depth(11), 2.69710518e3f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.start( 1), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 2), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 3), 3.81743200e1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 4), 1.00397540e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 5), 1.54729150e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 6), 2.73916500e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 7), 5.37560110e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 8), 8.98039390e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start( 9), 1.18095961e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start(10), 1.55122556e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.start(11), 2.01008400e3f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.end( 1), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 2), 3.81743200e1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 3), 1.00397540e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 4), 1.54729150e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 5), 2.73916500e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 6), 5.37560110e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 7), 8.98039390e2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 8), 1.18095961e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end( 9), 1.55122556e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end(10), 2.01008400e3f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.end(11), 2.27706959e3f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.node_X( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 3), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 5), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_X(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 3), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 5), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.node_Y(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 3), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 5), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 1), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 2), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 3), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 4), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 5), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 6), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 7), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 8), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 9), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(10), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(11), 1.0f, 1.0e-5f);
+
+    BOOST_CHECK_EQUAL(xSEG.branch( 1), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 2), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 3), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 4), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 5), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 6), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 7), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 8), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch( 9), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch(10), 1);
+    BOOST_CHECK_EQUAL(xSEG.branch(11), 1);
+}
+
+BOOST_AUTO_TEST_CASE(Segment_Pressure)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTSEG" };
+    const auto model = Setup{ segmentDataSet() };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 1;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xSEG = SegmentResults {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    BOOST_CHECK_CLOSE(xSEG.pressure( 1), 135.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 2), 144.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 3), 153.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 4), 162.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 5), 171.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 6), 180.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 7), 189.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 8), 198.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure( 9), 207.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure(10), 216.7f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.pressure(11), 225.7f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(Segment_Phase_Rates)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTSEG" };
+    const auto model = Setup{ segmentDataSet() };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 1;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xSEG = SegmentResults {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    BOOST_CHECK_CLOSE(xSEG.orat( 1), 123.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 2), 113.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 3), 103.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 4),  93.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 5),  83.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 6),  73.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 7),  63.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 8),  53.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat( 9),  43.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat(10),  33.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.orat(11),  23.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.grat( 1), 2345.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 2), 2221.6f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 3), 2098.2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 4), 1974.8f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 5), 1851.4f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 6), 1728.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 7), 1604.6f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 8), 1481.2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat( 9), 1357.8f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat(10), 1234.4f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.grat(11), 1111.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.wrat( 1), 34.50f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 2), 32.16f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 3), 29.82f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 4), 27.48f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 5), 25.14f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 6), 22.80f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 7), 20.46f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 8), 18.12f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat( 9), 15.78f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat(10), 13.44f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wrat(11), 11.10f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(Valve)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTVALVE" };
+    const auto model = Setup{ valveDataSet() };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 1;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xSEG = SegmentResults {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    auto dfltArea = [](const float diam) -> float {
+        return 3.14159'26535'89793'23846'26433'83279'50288f * (diam / 2) * (diam / 2);
+    };
+
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 1), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 2), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 3), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 4), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 5), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 6), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 7), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 8), 1.0f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 9), 6.0e-5f / dfltArea(0.102f), 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(10), 0.5f                      , 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(11), 0.5f                      , 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SegmentData
