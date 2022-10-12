@@ -124,7 +124,7 @@ macro (find_opm_package module deps header lib defs prog conf)
   # without config.h
   config_cmd_line (${module}_CMD_CONFIG ${module}_CONFIG_VARS)
 
-  if(prog)
+  if(NOT "${prog}" STREQUAL "")
     # check that we can compile a small test-program
     include (CMakePushCheckState)
     cmake_push_check_state ()
@@ -138,13 +138,16 @@ macro (find_opm_package module deps header lib defs prog conf)
     list (APPEND CMAKE_REQUIRED_DEFINITIONS ${${module}_CMD_CONFIG})
     check_cxx_source_compiles ("${prog}" HAVE_${MODULE})
     cmake_pop_check_state ()
-  else(prog)
+  else()
     if(${module}_FOUND)
       # No test code provided, mark compilation as successful
-      # if module was founf
-      set(HAVE_${MODULE} 1)
+      # if module was found
+      # Has to be cached because of scope. Otherwise it is not accessible
+      # where it is used.
+      set(HAVE_${MODULE} 1 CACHE BOOL "${module} found")
+      mark_as_advanced(HAVE_${MODULE})
     endif(${module}_FOUND)
-  endif(prog)
+  endif()
 
   # write status message in the same manner as everyone else
   include (FindPackageHandleStandardArgs)
