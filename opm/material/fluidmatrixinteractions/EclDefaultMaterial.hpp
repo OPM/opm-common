@@ -439,7 +439,7 @@ public:
             //
             // Though be aware that from a physical perspective this is definitively
             // incorrect!
-            params.oilWaterParams().update(/*pcSw=*/  1.0 - So,
+            params.oilWaterParams().update(/*pcSw=*/  Sw, //1.0 - So, (Effect is significant vs benchmark.)
                                            /*krwSw=*/ 1.0 - So,
                                            /*krnSw=*/ 1.0 - So);
 

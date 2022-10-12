@@ -43,8 +43,8 @@ public:
     EclHysteresisConfig()
     {
         enableHysteresis_ = false;
-        pcHysteresisModel_ = 0;
-        krHysteresisModel_ = 0;
+        pcHysteresisModel_ = -1;
+        krHysteresisModel_ = -1;
     }
 
     /*!
@@ -85,6 +85,10 @@ public:
      *    phase and the drainage curve for the relperm of the wetting phase
      * 1: use the Carlson model for relative permeability hysteresis of the non-wetting
      *    phase and the imbibition curve for the relperm of the wetting phase
+     * 2: use the Killough model for relative permeability hysteresis of the non-wetting
+     *    phase and the drainage curve for the relperm of the wetting phase
+     * 3: use the Killough model for relative permeability hysteresis of the non-wetting
+     *    phase and the imbibition curve for the relperm of the wetting phase
      */
     void setKrHysteresisModel(int value)
     { krHysteresisModel_ = value; }
@@ -93,10 +97,27 @@ public:
      * \brief Return the type of the hysteresis model which is used for relative permeability.
      *
      * -1: relperm hysteresis is disabled
-     * 0: use the Carlson model for relative permeability hysteresis
+     * 0/1: use the Carlson model for relative permeability hysteresis
+     * 2/3: use the Killough model for relative permeability hysteresis
      */
     int krHysteresisModel() const
     { return krHysteresisModel_; }
+
+    /*!
+     * \brief Regularisation parameter used for Killough model.
+     *
+     * default: 0.1
+     */
+    double modParamTrapped() const
+    { return modParamTrapped_; }
+
+    /*!
+     * \brief Curvature parameter used for capillary pressure hysteresis.
+     *
+     * default: 0.1
+     */
+    double curvatureCapPrs() const
+    { return curvatureCapPrs_; }
 
 #if HAVE_ECL_INPUT
     /*!
@@ -115,6 +136,8 @@ public:
 
         krHysteresisModel_ = runspec.hysterPar().krHysteresisModel();
         pcHysteresisModel_ = runspec.hysterPar().pcHysteresisModel();
+        modParamTrapped_ = runspec.hysterPar().modParamTrapped();
+        curvatureCapPrs_ = runspec.hysterPar().curvatureCapPrs();
     }
 #endif
 
@@ -125,6 +148,8 @@ private:
     // the capillary pressure and the relperm hysteresis models to be used
     int pcHysteresisModel_;
     int krHysteresisModel_;
+    double modParamTrapped_;
+    double curvatureCapPrs_;
 };
 
 } // namespace Opm

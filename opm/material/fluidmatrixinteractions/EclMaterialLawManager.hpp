@@ -303,7 +303,9 @@ public:
                 gasOilDrainParams.setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
                 gasOilDrainParams.finalize();
 
-                gasOilParams->setDrainageParams(gasOilDrainParams);
+                gasOilParams->setDrainageParams(gasOilDrainParams,
+                                                gasOilScaledInfo,
+                                                EclGasOilSystem);
             }
 
             if (hasOil && hasWater) {
@@ -314,7 +316,9 @@ public:
                 oilWaterDrainParams.setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
                 oilWaterDrainParams.finalize();
 
-                oilWaterParams->setDrainageParams(oilWaterDrainParams);
+                oilWaterParams->setDrainageParams(oilWaterDrainParams,
+                                                  owinfo,
+                                                  EclOilWaterSystem);
             }
 
             if (hasGas && hasWater && !hasOil) {
@@ -325,7 +329,9 @@ public:
                 gasWaterDrainParams.setEffectiveLawParams(gasWaterEffectiveParamVector_[satRegionIdx]);
                 gasWaterDrainParams.finalize();
 
-                gasWaterParams->setDrainageParams(gasWaterDrainParams);
+                gasWaterParams->setDrainageParams(gasWaterDrainParams,
+                                                  gasWaterScaledInfo,
+                                                  EclGasWaterSystem);
             }
 
             if (enableHysteresis()) {
@@ -373,7 +379,7 @@ public:
                     oilWaterImbParamsHyst.finalize();
 
                     oilWaterParams->setImbibitionParams(oilWaterImbParamsHyst,
-                                                        gasOilScaledImbInfo,
+                                                        oilWaterScaledImbInfo,
                                                         EclOilWaterSystem);
                 }
 

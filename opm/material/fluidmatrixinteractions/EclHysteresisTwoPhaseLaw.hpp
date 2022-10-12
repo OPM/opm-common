@@ -148,20 +148,57 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
-        // TODO: capillary pressure hysteresis
-        return EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
-/*
+        // if no pc hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().pcHysteresisModel() < 0)
             return EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
 
-        if (Sw < params.SwMdc())
+        // Initial imbibition process
+        if (params.initialImb()) {
+            if (Sw >= params.pcSwMic()) {
+                return EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), Sw);
+            }
+            else { // Reversal
+                const Evaluation& F = (1.0/(params.pcSwMic()-Sw+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
+                     / (1.0/(params.pcSwMic()-params.Swcrd()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs());
+
+                const Evaluation& Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
+                const Evaluation& Pci = EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), Sw);
+                const Evaluation& pc_Killough = Pci+F*(Pcd-Pci);
+
+                return pc_Killough;
+            }
+        }
+
+        // Initial drainage process
+        if (Sw <= params.pcSwMdc())
             return EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
 
-        const Evaluation& SwEff = Sw;
+        // Reversal
+        Scalar Swma = 1.0-params.Sncrt();
+        if (Sw >= Swma) {
+            const Evaluation& Pci = EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), Sw);
+            return Pci;
+        }
+        else {
+            Scalar pciwght = params.pcWght(); // Align pci and pcd at Swir
+            //const Evaluation& SwEff = params.Swcri()+(Sw-params.pcSwMdc())/(Swma-params.pcSwMdc())*(Swma-params.Swcri());
+            const Evaluation& SwEff = Sw; // This is Killough 1976, Gives significantly better fit compared to benchmark then the above "scaling"
+            const Evaluation& Pci = pciwght*EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), SwEff);
 
-        //return EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), SwEff);
-        return EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwEff);
-*/
+            const Evaluation& Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
+
+            if (Pci == Pcd)
+                return Pcd;
+
+            const Evaluation& F = (1.0/(Sw-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
+                                / (1.0/(Swma-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs());
+
+            const Evaluation& pc_Killough = Pcd+F*(Pci-Pcd);
+
+            return pc_Killough;
+        }
+
+        return 0.0;
     }
 
     /*!
@@ -234,12 +271,12 @@ public:
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
             return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
 
-        if (params.config().krHysteresisModel() == 0)
+        if (params.config().krHysteresisModel() == 0 || params.config().krHysteresisModel() == 2)
             // use drainage curve for wetting phase
             return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
 
         // use imbibition curve for wetting phase
-        assert(params.config().krHysteresisModel() == 1);
+        assert(params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3);
         return EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Sw);
     }
 
@@ -265,8 +302,15 @@ public:
         if (Sw <= params.krnSwMdc())
             return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
 
-        return EffectiveLaw::twoPhaseSatKrn(params.imbibitionParams(),
-                                            Sw + params.deltaSwImbKrn());
+        if (params.config().krHysteresisModel() <= 1) { //Carlson
+            return EffectiveLaw::twoPhaseSatKrn(params.imbibitionParams(),
+                                                Sw + params.deltaSwImbKrn());
+        }
+
+        // Killough
+        assert(params.config().krHysteresisModel() == 2 || params.config().krHysteresisModel() == 3);
+        Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
+        return params.krnWght()*EffectiveLaw::twoPhaseSatKrn(params.imbibitionParams(),1.0-Snorm);
     }
 };
 
