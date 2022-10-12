@@ -300,6 +300,20 @@ public:
      */
     int krHysteresisModel() const;
 
+    /*!
+     * \brief Regularisation parameter used for Killough model.
+     *
+     * default: 0.1
+     */
+    double modParamTrapped() const;
+
+    /*!
+     * \brief Curvature parameter used for capillary pressure hysteresis.
+     *
+     * default: 0.1
+     */
+    double curvatureCapPrs() const;
+
     bool operator==(const EclHysterConfig& data) const;
 
     template<class Serializer>
@@ -308,6 +322,8 @@ public:
         serializer(activeHyst);
         serializer(pcHystMod);
         serializer(krHystMod);
+        serializer(modParamTrappedValue);
+        serializer(curvatureCapPrsValue);
     }
 
 private:
@@ -315,8 +331,12 @@ private:
     bool activeHyst  { false };
 
     // the capillary pressure and the relperm hysteresis models to be used
-    int pcHystMod { 0 };
-    int krHystMod { 0 };
+    int pcHystMod { -1 };
+    int krHystMod { -1 };
+    // regularisation parameter used for Killough model
+    double modParamTrappedValue { 0.1 };
+    // curvature parameter for capillary pressure
+    double curvatureCapPrsValue { 0.1 };
 };
 
 class SatFuncControls {

@@ -7,7 +7,7 @@
   "items": [
     {
       "item": 1,
-      "name": "curvature_caplillary_pressure_hyst",
+      "name": "curvature_capillary_pressure_hyst",
       "value_type": "DOUBLE",
       "default": 0.1,
       "comment": "Not used"
