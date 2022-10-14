@@ -20,7 +20,13 @@
 #ifndef OPM_OUTPUT_WELLS_HPP
 #define OPM_OUTPUT_WELLS_HPP
 
+#include <opm/output/data/GuideRateValue.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
+#include <opm/json/JsonObject.hpp>
+
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <initializer_list>
 #include <map>
@@ -29,10 +35,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-
-#include <opm/json/JsonObject.hpp>
-#include <opm/output/data/GuideRateValue.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 namespace Opm {
 
@@ -316,16 +318,151 @@ namespace Opm {
         }
     };
 
-    struct Segment {
-        Rates rates;
-        SegmentPressures pressures;
-        std::size_t segNumber;
+    class SegmentPhaseQuantity
+    {
+    public:
+        enum class Item : std::size_t {
+            Oil, Gas, Water,
+
+            // -- Must be last enumerator --
+            NumItems,
+        };
+
+        void clear()
+        {
+            this->has_ = static_cast<unsigned char>(0);
+            this->value_.fill(0.0);
+        }
+
+        constexpr bool has(const Item p) const
+        {
+            const auto i = this->index(p);
+
+            return (i < Size) && this->hasItem(i);
+        }
+
+        bool operator==(const SegmentPhaseQuantity& vec) const
+        {
+            return (this->has_   == vec.has_)
+                && (this->value_ == vec.value_);
+        }
+
+        double get(const Item p) const
+        {
+            if (! this->has(p)) {
+                throw std::invalid_argument {
+                    "Request for Unset Item Value for " + this->itemName(p)
+                };
+            }
+
+            return this->value_[ this->index(p) ];
+        }
+
+        SegmentPhaseQuantity& set(const Item p, const double value)
+        {
+            const auto i = this->index(p);
+
+            if (i >= Size) {
+                throw std::invalid_argument {
+                    "Cannot Assign Item Value for Unsupported Item '"
+                    + this->itemName(p) + '\''
+                };
+            }
+
+            this->has_ |= 1 << i;
+            this->value_[i] = value;
+
+            return *this;
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            buffer.write(this->has_);
+
+            for (const auto& x : this->value_) {
+                buffer.write(x);
+            }
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            this->clear();
+            buffer.read(this->has_);
+
+            for (auto& x : this->value_) {
+                buffer.read(x);
+            }
+        }
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->has_);
+            serializer(this->value_);
+        }
+
+        static SegmentPhaseQuantity serializationTestObject()
+        {
+            return SegmentPhaseQuantity{}
+                .set(Item::Oil  , 1.0)
+                .set(Item::Gas  , 7.0)
+                .set(Item::Water, 2.9);
+        }
+
+    private:
+        enum { Size = static_cast<std::size_t>(Item::NumItems) };
+
+        /// Whether or not item has a defined value.  We use the bottom
+        /// 'Size' bits.
+        unsigned char has_{};
+
+        /// Numerical value of each item.
+        std::array<double, Size> value_{};
+
+        constexpr std::size_t index(const Item p) const noexcept
+        {
+            return static_cast<std::size_t>(p);
+        }
+
+        bool hasItem(const std::size_t i) const
+        {
+            return (this->has_ & (1 << i)) != 0;
+        }
+
+        std::string itemName(const Item p) const
+        {
+            switch (p) {
+            case Item::Oil:   return "Oil";
+            case Item::Gas:   return "Gas";
+            case Item::Water: return "Water";
+
+            case Item::NumItems:
+                return "Out of bounds (NumItems)";
+            }
+
+            return "Unknown (" + std::to_string(this->index(p)) + ')';
+        }
+    };
+
+    struct Segment
+    {
+        Rates rates{};
+        SegmentPressures pressures{};
+        SegmentPhaseQuantity velocity{};
+        SegmentPhaseQuantity holdup{};
+        SegmentPhaseQuantity viscosity{};
+        std::size_t segNumber{};
 
         bool operator==(const Segment& seg2) const
         {
-          return rates == seg2.rates &&
-                 pressures == seg2.pressures &&
-                 segNumber == seg2.segNumber;
+            return (rates == seg2.rates)
+                && (pressures == seg2.pressures)
+                && (velocity == seg2.velocity)
+                && (holdup == seg2.holdup)
+                && (viscosity == seg2.viscosity)
+                && (segNumber == seg2.segNumber);
         }
 
         template <class MessageBufferType>
@@ -334,20 +471,27 @@ namespace Opm {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
-        template<class Serializer>
+        template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(rates);
-            serializer(pressures);
-            serializer(segNumber);
+            serializer(this->rates);
+            serializer(this->pressures);
+            serializer(this->velocity);
+            serializer(this->holdup);
+            serializer(this->viscosity);
+            serializer(this->segNumber);
         }
 
         static Segment serializationTestObject()
         {
-            return Segment{Rates::serializationTestObject(),
-                           SegmentPressures::serializationTestObject(),
-                           10
-                   };
+            return {
+                Rates::serializationTestObject(),
+                SegmentPressures::serializationTestObject(),
+                SegmentPhaseQuantity::serializationTestObject(), // velocity
+                SegmentPhaseQuantity::serializationTestObject(), // holdup
+                SegmentPhaseQuantity::serializationTestObject(), // viscosity
+                10
+            };
         }
     };
 
@@ -797,7 +941,6 @@ namespace Opm {
             buffer.write(this->trans_factor);
     }
 
-
     void Connection::init_json(Json::JsonObject& json_data) const {
         auto json_rates = json_data.add_object("rates");
         this->rates.init_json(json_rates);
@@ -813,10 +956,14 @@ namespace Opm {
     }
 
     template <class MessageBufferType>
-    void Segment::write(MessageBufferType& buffer) const {
+    void Segment::write(MessageBufferType& buffer) const
+    {
         buffer.write(this->segNumber);
         this->rates.write(buffer);
         this->pressures.write(buffer);
+        this->velocity.write(buffer);
+        this->holdup.write(buffer);
+        this->viscosity.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -913,10 +1060,14 @@ namespace Opm {
    }
 
     template <class MessageBufferType>
-    void Segment::read(MessageBufferType& buffer) {
+    void Segment::read(MessageBufferType& buffer)
+    {
         buffer.read(this->segNumber);
         this->rates.read(buffer);
         this->pressures.read(buffer);
+        this->velocity.read(buffer);
+        this->holdup.read(buffer);
+        this->viscosity.read(buffer);
     }
 
     template <class MessageBufferType>
