@@ -28,7 +28,6 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 
-
 namespace Opm {
 
     class UnitSystem {
@@ -60,6 +59,7 @@ namespace Opm {
             gas_surface_rate,
             rate,
             geometric_volume_rate,
+            pipeflow_velocity,
             transmissibility,
             effective_Kh,
             mass,
@@ -171,8 +171,7 @@ namespace Opm {
         */
         mutable std::size_t m_use_count = 0;
     };
-}
 
+} // namespace Opm
 
-#endif
-
+#endif  // UNITSYSTEM_H

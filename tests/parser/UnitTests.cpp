@@ -288,6 +288,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::geometric_volume_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::pipeflow_velocity , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::transmissibility , 1.0 ) , 1.157407407407407e-13 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
@@ -326,6 +327,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::geometric_volume_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::pipeflow_velocity , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::transmissibility , 1.0 ) , 8.64e+12 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
@@ -373,6 +375,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_surface_rate , 1.0 ) , 3.277412800000001e-04 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::rate , 1.0 ) , 1.840130728333334e-06 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::geometric_volume_rate, 1.0 ) , 3.2774128e-07 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::pipeflow_velocity, 1.0 ) , 0.3048 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::transmissibility , 1.0 ) , 2.668883979653090e-13 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::effective_Kh , 1.0 ) , 3.008142116950407e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::mass , 1.0 ) , 0.45359237 , 1.0e-10 );
@@ -412,6 +415,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_surface_rate , 1.0 ) , 3.051187204736614e+03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::rate , 1.0 ) , 5.434396505653337e+05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::geometric_volume_rate, 3.2774128e-07 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::pipeflow_velocity, 1.0 ) , 3.280839895013123e+00 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::transmissibility , 1.0 ) , 3.746884494132199e+12 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::effective_Kh , 1.0 ) , 3.324311023622047e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::mass , 1.0 ) , 2.204622621848776e+00 , 1.0e-10 );
@@ -459,6 +463,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_surface_rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::geometric_volume_rate, 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::pipeflow_velocity, 1.0 ) , 0.01 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::transmissibility , 1.0 ) , 2.741453518655592e-18 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160130e-18 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::mass , 1.0 ) , 1.0e-3 , 1.0e-10 );
@@ -498,6 +503,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_surface_rate , 1.0 ) , 3.6e9 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::rate , 1.0 ) , 3.6e9 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::geometric_volume_rate, 1.0 ) , 3.6e9 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::pipeflow_velocity, 1.0 ) , 100.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::transmissibility , 1.0 ) , 3.647699999999999e+17 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+17 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::mass , 1.0 ) , 1.0e3 , 1.0e-10 );
@@ -546,6 +552,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::geometric_volume_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::pipeflow_velocity , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::transmissibility , 1.0 ) , 1.142272299439830e-13 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
@@ -585,6 +592,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::geometric_volume_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::pipeflow_velocity , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::transmissibility , 1.0 ) , 8.75448e+12 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );

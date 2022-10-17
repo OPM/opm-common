@@ -90,6 +90,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -111,6 +112,7 @@ namespace {
         1 / ( Metric::GasSurfaceVolume / Metric::Time ),
         1 / ( Metric::ReservoirVolume / Metric::Time ),
         1 / ( Metric::GeomVolume / Metric::Time ),
+        1 / Metric::Length,     // Pipeflow velocity: Length / Second.
         1 / Metric::Transmissibility,
         1 / (Metric::Permeability * Metric::Length),
         1 / Metric::Mass,
@@ -154,6 +156,7 @@ namespace {
         Metric::GasSurfaceVolume / Metric::Time,
         Metric::ReservoirVolume / Metric::Time,
         Metric::GeomVolume / Metric::Time,
+        Metric::Length,         // Pipeflow velocity: Length / Second.
         Metric::Transmissibility,
         Metric::Permeability * Metric::Length,
         Metric::Mass,
@@ -197,6 +200,7 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "SM3/DAY",  // Should possibly be RM3/DAY
+        "M/SEC",    // pipeflow velocity
         "CPR3/DAY/BARS",
         "MDM",
         "KG",
@@ -282,6 +286,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_field[] = {
@@ -303,6 +308,7 @@ namespace {
         1 / ( Field::GasSurfaceVolume / Field::Time ),
         1 / ( Field::ReservoirVolume / Field::Time ),
         1 / ( Field::GeomVolume / Field::Time ),
+        1 / Field::Length,     // Pipeflow velocity: Length / Second.
         1 / Field::Transmissibility,
         1 / (Field::Permeability * Field::Length),
         1 / Field::Mass,
@@ -346,6 +352,7 @@ namespace {
          Field::GasSurfaceVolume / Field::Time,
          Field::ReservoirVolume / Field::Time,
          Field::GeomVolume / Field::Time,
+         Field::Length,         // Pipeflow velocity: Length / Second.
          Field::Transmissibility,
          Field::Permeability * Field::Length,
          Field::Mass,
@@ -389,6 +396,7 @@ namespace {
         "MSCF/DAY",
         "RB/DAY",
         "FT3/DAY",   // Should possibly be RFT3/DAY
+        "FT/SEC",    // Pipeflow velocity
         "CPRB/DAY/PSI",
         "MDFT",
         "LB",
@@ -474,6 +482,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_lab[] = {
@@ -495,6 +504,7 @@ namespace {
         1 / ( Lab::GasSurfaceVolume / Lab::Time ),
         1 / ( Lab::ReservoirVolume / Lab::Time ),
         1 / ( Lab::GeomVolume / Lab::Time ),
+        1 / Lab::Length,        // Pipeflow velocity: Length / Second
         1 / Lab::Transmissibility,
         1 / (Lab::Permeability * Lab::Length),
         1 / Lab::Mass,
@@ -538,6 +548,7 @@ namespace {
         Lab::GasSurfaceVolume / Lab::Time,
         Lab::ReservoirVolume / Lab::Time,
         Lab::GeomVolume / Lab::Time,
+        Lab::Length,            // Pipeflow velocity: Length / Second
         Lab::Transmissibility,
         Lab::Permeability * Lab::Length,
         Lab::Mass,
@@ -581,6 +592,7 @@ namespace {
         "SCC/HR",
         "RCC/HR",
         "SCC/HR",   // Should possibly be RCC/HR
+        "CM/SEC",   // Pipeflow velocity
         "CPRCC/HR/ATM",
         "MDCC",
         "G",
@@ -666,6 +678,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_pvt_m[] = {
@@ -687,6 +700,7 @@ namespace {
         1 / ( PVT_M::GasSurfaceVolume / PVT_M::Time ),
         1 / ( PVT_M::ReservoirVolume / PVT_M::Time ),
         1 / ( PVT_M::GeomVolume / PVT_M::Time ),
+        1 / PVT_M::Length,      // Pipeflow velocity: Length / Second
         1 / PVT_M::Transmissibility,
         1 / (PVT_M::Permeability * PVT_M::Length),
         1 / PVT_M::Mass,
@@ -730,6 +744,7 @@ namespace {
         PVT_M::GasSurfaceVolume / PVT_M::Time,
         PVT_M::ReservoirVolume / PVT_M::Time,
         PVT_M::GeomVolume / PVT_M::Time,
+        PVT_M::Length,          // Pipeflow velocity: Length / Second
         PVT_M::Transmissibility,
         PVT_M::Permeability * PVT_M::Length,
         PVT_M::Mass,
@@ -773,6 +788,7 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "SM3/DAY",     // Should possibly be SM3/DAY
+        "M/SEC",       // Pipeflow velocity
         "CPR3/DAY/ATM",
         "MDM",
         "KG",
@@ -858,9 +874,11 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_input[] = {
+        1,
         1,
         1,
         1,
@@ -944,6 +962,7 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static constexpr const char* input_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -965,6 +984,7 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "SM3/DAY",
+        "M/SEC",                // Pipeflow velocity.
         "CPR3/DAY/BARS",
         "MDM",
         "KG",
@@ -1545,4 +1565,4 @@ namespace {
         };
     }
 
-}
+} // namespace Opm
