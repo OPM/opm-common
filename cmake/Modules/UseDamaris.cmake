@@ -1,4 +1,4 @@
-if(USE_DAMARIS_LIB)
+if(USE_DAMARIS_LIB AND MPI_Found)
   if (Damaris_FOUND)
     set(HAVE_DAMARIS 1)
     message(STATUS "The Damaris library was found: ${Damaris_VERSION} ${Damaris_DIR}")
