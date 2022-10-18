@@ -21,11 +21,6 @@ if(USE_DAMARIS_LIB)
     message(STATUS "The Damaris library was requested but NOT found")
   endif()
 else()  # User did not request Damaris support
-  if (Damaris_FOUND)
-    message(STATUS "The Damaris library was NOT requested but was found: ${Damaris_VERSION} ${Damaris_DIR}")
-  else()
-    message(STATUS "The Damaris library was NOT requested and was NOT found")
-  endif()
   unset(HAVE_DAMARIS)
 endif()
 
