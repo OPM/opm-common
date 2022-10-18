@@ -73,6 +73,18 @@ BOOST_AUTO_TEST_CASE(CheckComposite) {
     BOOST_CHECK_THROW( FaceDir::FromString("YX") , std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(CheckIntersection) {
+    BOOST_CHECK_EQUAL(FaceDir::FromIntersectionIndex(0), FaceDir::XMinus);
+    BOOST_CHECK_EQUAL(FaceDir::FromIntersectionIndex(1), FaceDir::XPlus);
+    BOOST_CHECK_EQUAL(FaceDir::FromIntersectionIndex(2), FaceDir::YMinus);
+    BOOST_CHECK_EQUAL(FaceDir::FromIntersectionIndex(3), FaceDir::YPlus);
+    BOOST_CHECK_EQUAL(FaceDir::FromIntersectionIndex(4), FaceDir::ZMinus);
+    BOOST_CHECK_EQUAL(FaceDir::FromIntersectionIndex(5), FaceDir::ZPlus);
+
+    BOOST_CHECK_THROW(FaceDir::FromIntersectionIndex(-1), std::invalid_argument);
+    BOOST_CHECK_THROW(FaceDir::FromIntersectionIndex(6), std::invalid_argument);
+}
+
 
 }
 

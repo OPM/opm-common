@@ -96,5 +96,16 @@ namespace Opm {
                 throw std::runtime_error("This should not happen");
             return fmt::format("{}",fmt::join(ret, "|"));
         }
+
+        DirEnum FromIntersectionIndex(int idx)
+        {
+            const std::vector<FaceDir::DirEnum> mapping =
+                {XMinus, XPlus, YMinus, YPlus, ZMinus, ZPlus};
+
+            if (idx < 0 || idx > 5)
+                throw std::invalid_argument("Wrong face direction");
+
+            return mapping[idx];
+        }
     }
 }
