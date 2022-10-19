@@ -35,6 +35,9 @@ BCType bctype(const std::string& s) {
     if (s == "FREE")
         return BCType::FREE;
 
+    if (s == "DIRICHLET")
+        return BCType::DIRICHLET;
+
     throw std::invalid_argument("Not recognized boundary condition type: " + s);
 }
 
@@ -74,7 +77,9 @@ BCConfig::BCFace::BCFace(const DeckRecord& record) :
     bctype(fromstring::bctype(record.getItem("TYPE").get<std::string>(0))),
     dir(FaceDir::FromString(record.getItem("DIRECTION").get<std::string>(0))),
     component(fromstring::component(record.getItem("COMPONENT").get<std::string>(0))),
-    rate(record.getItem("RATE").getSIDouble(0))
+    rate(record.getItem("RATE").getSIDouble(0)),
+    pressure(record.getItem("PRESSURE").getSIDouble(0)),
+    temperature(record.getItem("TEMPERATURE").getSIDouble(0))
 {
 }
 
@@ -91,6 +96,8 @@ BCConfig::BCFace BCConfig::BCFace::serializationTestObject()
     result.dir = FaceDir::XPlus;
     result.component = BCComponent::GAS;
     result.rate = 100.0;
+    result.pressure = 101.0;
+    result.temperature = 102.0;
 
     return result;
 }
@@ -106,7 +113,9 @@ bool BCConfig::BCFace::operator==(const BCConfig::BCFace& other) const {
            this->bctype == other.bctype &&
            this->dir == other.dir &&
            this->component == other.component &&
-           this->rate == other.rate;
+           this->rate == other.rate &&
+           this->pressure == other.pressure &&
+           this->temperature == other.temperature;
 }
 
 
