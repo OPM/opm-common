@@ -188,7 +188,7 @@ namespace Opm { namespace data {
             double well_potential_gas = 0.0;
             double brine = 0.0;
             double alq = 0.0;
-            std::map<std::string, double> tracer;
+            std::map<std::string, double> tracer{};
             double micp = 0.0;
             double vaporized_water = 0.0;
     };
@@ -244,16 +244,16 @@ namespace Opm { namespace data {
         using global_index = size_t;
         static const constexpr int restart_size = 6;
 
-        global_index index;
-        Rates rates;
-        double pressure;
-        double reservoir_rate;
-        double cell_pressure;
-        double cell_saturation_water;
-        double cell_saturation_gas;
-        double effective_Kh;
-        double trans_factor;
-        double d_factor;
+        global_index index{};
+        Rates rates{};
+        double pressure{};
+        double reservoir_rate{};
+        double cell_pressure{};
+        double cell_saturation_water{};
+        double cell_saturation_gas{};
+        double effective_Kh{};
+        double trans_factor{};
+        double d_factor{};
         double compact_mult{1.0}; // Rock compaction transmissibility multiplier (ROCKTAB)
 
         ConnectionFiltrate filtrate;
@@ -1155,6 +1155,7 @@ namespace Opm { namespace data {
             buffer.write(this->well_potential_gas);
             buffer.write(this->brine);
             buffer.write(this->alq);
+
             //tracer:
             unsigned int size = this->tracer.size();
             buffer.write(size);
@@ -1162,6 +1163,7 @@ namespace Opm { namespace data {
                 buffer.write(name);
                 buffer.write(rate);
             }
+
             buffer.write(this->micp);
             buffer.write(this->vaporized_water);
     }
@@ -1316,6 +1318,7 @@ namespace Opm { namespace data {
             buffer.read(this->well_potential_gas);
             buffer.read(this->brine);
             buffer.read(this->alq);
+
             //tracer:
             unsigned int size;
             buffer.read(size);
@@ -1326,6 +1329,7 @@ namespace Opm { namespace data {
                 buffer.read(tracer_rate);
                 this->tracer.emplace(tracer_name, tracer_rate);
             }
+
             buffer.read(this->micp);
             buffer.read(this->vaporized_water);
     }
