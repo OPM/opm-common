@@ -413,6 +413,17 @@ public:
                                               const Evaluation& /*temperature*/,
                                               const Evaluation& /*pressure*/) const
     { return 0.0; }
+
+     /*!
+     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
+     */
+    template <class Evaluation = Scalar>
+    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
+                                              const Evaluation& /*temperature*/,
+                                              const Evaluation& /*pressure*/, 
+                                              const Evaluation& /*saltConcentration*/) const
+    { return 0.0; }
+
     
 
     /*!

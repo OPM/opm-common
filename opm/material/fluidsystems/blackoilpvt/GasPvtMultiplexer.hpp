@@ -302,6 +302,16 @@ public:
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure)); return 0; }
+    
+    /*!
+     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
+     */
+    template <class Evaluation = Scalar>
+    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& temperature,
+                                              const Evaluation& pressure, 
+                                              const Evaluation& saltConcentration) const
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure, saltConcentration)); return 0; }
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]

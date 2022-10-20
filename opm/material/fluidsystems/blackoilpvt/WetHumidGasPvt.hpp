@@ -73,6 +73,7 @@ public:
               const std::vector<TabulatedTwoDFunction>& inverseGasBMuRvSat,
               const std::vector<TabulatedOneDFunction>& inverseSaturatedGasBMu,
               const std::vector<TabulatedOneDFunction>& saturatedWaterVaporizationFactorTable,
+              const std::vector<TabulatedTwoDFunction>& saturatedWaterVaporizationSaltFactorTable,
               const std::vector<TabulatedOneDFunction>& saturatedOilVaporizationFactorTable,
               const std::vector<TabulatedOneDFunction>& saturationPressure,
               Scalar vapPar1)
@@ -88,6 +89,7 @@ public:
         , inverseGasBMuRvSat_(inverseGasBMuRvSat) // Bg^-1*Mug evaluated at saturated oil-gas ratio (Rv) values; pvtgw
         , inverseSaturatedGasBMu_(inverseSaturatedGasBMu) //pvtgw
         , saturatedWaterVaporizationFactorTable_(saturatedWaterVaporizationFactorTable) //pvtgw
+        , saturatedWaterVaporizationSaltFactorTable_(saturatedWaterVaporizationSaltFactorTable) //rwgsalt
         , saturatedOilVaporizationFactorTable_(saturatedOilVaporizationFactorTable) //pvtg
         , saturationPressure_(saturationPressure)
         , vapPar1_(vapPar1)
@@ -120,6 +122,34 @@ public:
 
             setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
         }
+
+        enableRwgSalt_ = !eclState.getTableManager().getRwgSaltTables().empty();
+        if (enableRwgSalt_)
+        {
+             const auto& rwgsaltTables = eclState.getTableManager().getRwgSaltTables();
+             
+             for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+                const auto& rwgsaltTable = rwgsaltTables[regionIdx];
+                const auto& saturatedTable = rwgsaltTable.getSaturatedTable();
+                assert(saturatedTable.numRows() > 1);
+
+                auto& waterVaporizationFac = saturatedWaterVaporizationSaltFactorTable_[regionIdx];
+                for (unsigned outerIdx = 0; outerIdx < saturatedTable.numRows(); ++ outerIdx) {
+                    const auto& underSaturatedTable = rwgsaltTable.getUnderSaturatedTable(outerIdx);
+                    Scalar pg = saturatedTable.get("PG" , outerIdx);
+                    waterVaporizationFac.appendXPos(pg);
+
+                    size_t numRows = underSaturatedTable.numRows();
+                    for (size_t innerIdx = 0; innerIdx < numRows; ++ innerIdx) {
+                        Scalar saltConcentration = underSaturatedTable.get("C_SALT" , innerIdx);
+                        Scalar rvwSat= underSaturatedTable.get("RVW" , innerIdx);
+                    
+                        waterVaporizationFac.appendSamplePoint(outerIdx, saltConcentration, rvwSat);
+                   }
+               }
+            }
+        }
+
         // Table PVTGW
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
             const auto& pvtgwTable = pvtgwTables[regionIdx];
@@ -293,13 +323,13 @@ public:
                                  pvtgTable.getUnderSaturatedTable(xIdx),
                                  pvtgTable.getUnderSaturatedTable(masterTableIdx));
             }
-        } //end PVTGW
+        }
         vapPar1_ = 0.0;
         const auto& oilVap = schedule[0].oilvap();
         if (oilVap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS) {
             vapPar1_ = oilVap.vap1();
         }
-        
+
         initEnd();
     }
 
@@ -422,6 +452,7 @@ public:
         gasMuRvwSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
         gasMuRvSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
         saturatedWaterVaporizationFactorTable_.resize(numRegions);
+        saturatedWaterVaporizationSaltFactorTable_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
         saturatedOilVaporizationFactorTable_.resize(numRegions);
         saturationPressure_.resize(numRegions);
     }
@@ -654,6 +685,23 @@ public:
         return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
     }
 
+    /*!
+    * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the water phase.
+    */
+    template <class Evaluation>
+    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& /*temperature*/,
+                                              const Evaluation& pressure,
+                                              const Evaluation& saltConcentration) const
+    {
+        if (enableRwgSalt_)
+            return saturatedWaterVaporizationSaltFactorTable_[regionIdx].eval(pressure, saltConcentration, /*extrapolate=*/true);
+        else {
+            return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        }
+
+    }
+
    template <class Evaluation>
     Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& /*temperature*/,
@@ -794,11 +842,14 @@ public:
     const std::vector<TabulatedOneDFunction>& saturatedWaterVaporizationFactorTable() const {
         return saturatedWaterVaporizationFactorTable_;
     }
-     
+
+    const std::vector<TabulatedTwoDFunction>& saturatedWaterVaporizationSaltFactorTable() const {
+        return saturatedWaterVaporizationSaltFactorTable_;
+    }
+
     const std::vector<TabulatedOneDFunction>& saturatedOilVaporizationFactorTable() const {
         return saturatedOilVaporizationFactorTable_;
     }
-
 
     const std::vector<TabulatedOneDFunction>& saturationPressure() const {
         return saturationPressure_;
@@ -862,9 +913,11 @@ private:
     std::vector<TabulatedTwoDFunction> inverseGasBMuRvSat_;
     std::vector<TabulatedOneDFunction> inverseSaturatedGasBMu_;
     std::vector<TabulatedOneDFunction> saturatedWaterVaporizationFactorTable_;
+    std::vector<TabulatedTwoDFunction> saturatedWaterVaporizationSaltFactorTable_;
     std::vector<TabulatedOneDFunction> saturatedOilVaporizationFactorTable_;
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
+    bool enableRwgSalt_;
     Scalar vapPar1_;
 };
 

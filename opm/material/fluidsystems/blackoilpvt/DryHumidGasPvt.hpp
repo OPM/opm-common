@@ -110,6 +110,33 @@ public:
             setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
         }
 
+        enableRwgSalt_ = !eclState.getTableManager().getRwgSaltTables().empty();
+        if (enableRwgSalt_)
+        {
+             const auto& rwgsaltTables = eclState.getTableManager().getRwgSaltTables();
+             
+             for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+                const auto& rwgsaltTable = rwgsaltTables[regionIdx];
+                const auto& saturatedTable = rwgsaltTable.getSaturatedTable();
+                assert(saturatedTable.numRows() > 1);
+
+                auto& waterVaporizationFac = saturatedWaterVaporizationSaltFactorTable_[regionIdx];
+                for (unsigned outerIdx = 0; outerIdx < saturatedTable.numRows(); ++ outerIdx) {
+                    const auto& underSaturatedTable = rwgsaltTable.getUnderSaturatedTable(outerIdx);
+                    Scalar pg = saturatedTable.get("PG" , outerIdx);
+                    waterVaporizationFac.appendXPos(pg);
+
+                    size_t numRows = underSaturatedTable.numRows();
+                    for (size_t innerIdx = 0; innerIdx < numRows; ++ innerIdx) {
+                        Scalar saltConcentration = underSaturatedTable.get("C_SALT" , innerIdx);
+                        Scalar rvwSat= underSaturatedTable.get("RVW" , innerIdx);
+                    
+                        waterVaporizationFac.appendSamplePoint(outerIdx, saltConcentration, rvwSat);
+                   }
+               }
+            }
+        }
+        
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
             const auto& pvtgwTable = pvtgwTables[regionIdx];
 
@@ -479,6 +506,22 @@ public:
     }
 
     /*!
+    * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the water phase.
+    */
+    template <class Evaluation>
+    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& /*temperature*/,
+                                              const Evaluation& pressure,
+                                              const Evaluation& saltConcentration) const
+    {
+        if (enableRwgSalt_)
+            return saturatedWaterVaporizationSaltFactorTable_[regionIdx].eval(pressure, saltConcentration, /*extrapolate=*/true);
+        else {
+            return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        }
+    }
+
+    /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
      */
     template <class Evaluation>
@@ -598,6 +641,10 @@ public:
         return saturatedWaterVaporizationFactorTable_;
     }
 
+    const std::vector<TabulatedTwoDFunction>& saturatedWaterVaporizationSaltFactorTable() const {
+        return saturatedWaterVaporizationSaltFactorTable_;
+    }
+
     const std::vector<TabulatedOneDFunction>& saturationPressure() const {
         return saturationPressure_;
     }
@@ -658,8 +705,10 @@ private:
     std::vector<TabulatedTwoDFunction> inverseGasBMu_;
     std::vector<TabulatedOneDFunction> inverseSaturatedGasBMu_;
     std::vector<TabulatedOneDFunction> saturatedWaterVaporizationFactorTable_;
+    std::vector<TabulatedTwoDFunction> saturatedWaterVaporizationSaltFactorTable_;
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
+    bool enableRwgSalt_;
     Scalar vapPar1_;
 };
 
