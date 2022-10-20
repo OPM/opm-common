@@ -9,20 +9,10 @@
   },
   "items": [
     {
-      "item": 1,
-      "name": "SOLUBILITY",
+      "name": "DATA",
       "value_type": "DOUBLE",
       "size_type": "ALL",
-      "dimension": "Density"
-    },
-    {
-      "item": 2,
-      "name": "DENSITY",
-      "value_type": "DOUBLE",
-      "size_type": "ALL",
-      "default": 2170.0,
-      "dimension": "Density",
-      "description": "Density of the solid salt"
+      "dimension": ["Density","Density"]
     }
   ]
 }
