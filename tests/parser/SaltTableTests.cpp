@@ -28,16 +28,17 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 // generic table classes
+#include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+// keyword specific table classes
 #include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PermfactTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-
-// keyword specific table classes
 
 #include <stdexcept>
 #include <iostream>
@@ -64,7 +65,11 @@ BOOST_AUTO_TEST_CASE( Brine ) {
         "\n"
         "RWGSALT\n"
         " 300 0.0 0.00013 \n"
-        " 600 0.5 0.000132 \n"
+        "     70.0 0.00012 \n"
+        "     140.0 0.00011 /\n"
+        " 600 0.5 0.00016 \n"
+        "     70.0 0.00015 \n"
+        "     140.0 0.00014 /\n"
         "/ \n"
         "PERMFACT\n"
         "0 0 \n"
@@ -113,14 +118,39 @@ BOOST_AUTO_TEST_CASE( Brine ) {
 
     const auto& RwgsaltTable1 = RwgsaltTables[0];
 
-    BOOST_CHECK_EQUAL (RwgsaltTable1.getPressureColumn().size(), 2U);
-    BOOST_CHECK_CLOSE (RwgsaltTable1.getPressureColumn()[1], Metric::Pressure * 600, 1e-5);
+    const auto& underSaturatedTable = RwgsaltTable1.getUnderSaturatedTable(0);
+    BOOST_CHECK_EQUAL(underSaturatedTable.numColumns( ) , 2);
+    BOOST_CHECK_EQUAL(underSaturatedTable.numRows( ) , 3);
+    { 
+        UnitSystem units(UnitSystem::UnitType::UNIT_TYPE_METRIC );
+        {
+            const auto& col = underSaturatedTable.getColumn(0);
+            BOOST_CHECK_CLOSE(col[0] , units.to_si(UnitSystem::measure::salinity, 0.0), 1e-3);
+            BOOST_CHECK_CLOSE(col[2] , units.to_si(UnitSystem::measure::salinity, 140.0), 1e-3);
+        }
+        {
+            const auto& col = underSaturatedTable.getColumn(1);
+            BOOST_CHECK_EQUAL(col[0] ,  0.00013);
+            BOOST_CHECK_EQUAL(col[2] ,  0.00011);
+        } 
+    }
 
-    BOOST_CHECK_EQUAL (RwgsaltTable1.getSaltConcentrationColumn().size(), 2U);
-    BOOST_CHECK_CLOSE (RwgsaltTable1.getSaltConcentrationColumn()[1], 0.5, 1e-5);
-
-    BOOST_CHECK_EQUAL (RwgsaltTable1.getVaporizedWaterGasRatioColumn().size(), 2U);
-    BOOST_CHECK_CLOSE (RwgsaltTable1.getVaporizedWaterGasRatioColumn()[0], 0.00013, 1e-5);
+    const auto& saturatedTable = RwgsaltTable1.getSaturatedTable();
+    BOOST_CHECK_EQUAL(saturatedTable.numColumns( ) , 3);
+    BOOST_CHECK_EQUAL(saturatedTable.numRows( ) , 2);
+    { 
+        UnitSystem units(UnitSystem::UnitType::UNIT_TYPE_METRIC );
+        {
+            const auto& col = saturatedTable.getColumn(0);
+            BOOST_CHECK_CLOSE(col[0] , units.to_si(UnitSystem::measure::pressure, 300.0), 1e-3);
+            BOOST_CHECK_CLOSE(col[1] , units.to_si(UnitSystem::measure::pressure, 600.0), 1e-3);
+        }
+        {
+            const auto& col = saturatedTable.getColumn(2);
+            BOOST_CHECK_EQUAL(col[0] ,  0.00013);
+            BOOST_CHECK_EQUAL(col[1] ,  0.00016);
+        } 
+    }
 
     const auto& BdensityTables = tables.getBrineDensityTables( );
     const auto& BdensityTable1 = BdensityTables[0];

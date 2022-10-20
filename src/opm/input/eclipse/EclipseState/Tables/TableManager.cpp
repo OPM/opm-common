@@ -1492,21 +1492,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         assert(regionIdx == numTables);
     }
 
-    // template <class TableType>
-    // void TableManager::initRwgsaltTables(const Deck& deck,  std::vector<TableType>& rwgtables ) {
-
-    //     size_t numTables = m_tabdims.getNumPVTTables();
-    //     rwgtables.resize(numTables);
-
-    //     const auto& keyword = deck["RWGSALT"].back();
-    //     size_t regionIdx = 0;
-    //     for (const auto& record : keyword) {
-    //         rwgtables[regionIdx].init(record);
-    //         ++regionIdx;
-    //     }
-    //     assert(regionIdx == numTables);
-    // }
-
     template <class TableType>
     void TableManager::initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables ) {
 
