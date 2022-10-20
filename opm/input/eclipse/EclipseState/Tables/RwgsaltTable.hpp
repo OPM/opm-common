@@ -20,39 +20,21 @@
 #ifndef OPM_PARSER_RWGSALT_TABLE_HPP
 #define	OPM_PARSER_RWGSALT_TABLE_HPP
 
-#include <vector>
+#include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
 
 namespace Opm {
 
-    class DeckKeyword;
+class DeckKeyword;
 
-    class RwgsaltTable {
-    public:
-        RwgsaltTable();
+class RwgsaltTable : public PvtxTable { 
+public:
+    RwgsaltTable() = default;
+    RwgsaltTable( const DeckKeyword& keyword, size_t tableIdx);
 
-        static RwgsaltTable serializationTestObject();
+    static RwgsaltTable serializationTestObject();
 
-        void init(const Opm::DeckRecord& record1);
-        size_t size() const;
-        std::vector<double> getPressureColumn() const;
-        std::vector<double> getSaltConcentrationColumn() const;
-        std::vector<double> getVaporizedWaterGasRatioColumn() const;
-        const std::vector<double>& getTableValues() const;
-
-        bool operator==(const RwgsaltTable& data) const;
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(m_tableValues);
-        }
-
-    protected:
-
-        std::vector <double> m_tableValues;
-
-    };
-
+    bool operator==(const RwgsaltTable& data) const;
+};
 }
 
 #endif
