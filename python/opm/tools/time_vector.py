@@ -1,5 +1,3 @@
-# To be removed once the OPM version of this file is updated
-
 import datetime
 from operator import attrgetter
 
