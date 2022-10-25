@@ -179,6 +179,83 @@ namespace {
         }
     }
 
+    void Schedule::handleWELTRAJ(HandlerContext& handlerContext)  {
+        std::unordered_set<std::string> wells;
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            auto wellnames = this->wellNames(wellNamePattern, handlerContext );
+
+            for (const auto& name : wellnames) {
+                auto well2 = this->snapshots.back().wells.get(name);
+                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
+                connections->loadWELTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location());
+                //what to do here?  need here something like updateTrajectory 
+                //maybe new method WellConnection::addTrajectory?
+                if (well2.updateConnections(connections, handlerContext.grid)) {
+                    this->snapshots.back().wells.update( well2 );
+                    wells.insert( name );
+                }
+
+                if (connections->empty() && well2.getConnections().empty()) {
+                    const auto& location = handlerContext.keyword.location();
+                    auto msg = fmt::format("Problem with COMPDAT/{}\n"
+                                           "In {} line {}\n"
+                                           "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
+                    OpmLog::warning(msg);
+                }
+                this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+            }
+        }
+        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+
+        // In the case the wells reference depth has been defaulted in the
+        // WELSPECS keyword we need to force a calculation of the wells
+        // reference depth exactly when the COMPDAT keyword has been completely
+        // processed.
+        // for (const auto& wname : wells) {
+        //     auto& well = this->snapshots.back().wells.get( wname );
+        //     well.updateRefDepth();
+        //     this->snapshots.back().wells.update( std::move(well));
+        // }
+    }
+    void Schedule::handleWELCOMPL(HandlerContext& handlerContext)  {
+        std::unordered_set<std::string> wells;
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            auto wellnames = this->wellNames(wellNamePattern, handlerContext );
+
+            for (const auto& name : wellnames) {
+                auto well2 = this->snapshots.back().wells.get(name);
+                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
+                connections->loadWELCOMPL(record, handlerContext.grid, name, handlerContext.keyword.location());
+                // if (well2.updateConnections(connections, handlerContext.grid)) {
+                //     this->snapshots.back().wells.update( well2 );
+                //     wells.insert( name );
+                // }
+
+                // if (connections->empty() && well2.getConnections().empty()) {
+                //     const auto& location = handlerContext.keyword.location();
+                //     auto msg = fmt::format("Problem with COMPDAT/{}\n"
+                //                            "In {} line {}\n"
+                //                            "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
+                //     OpmLog::warning(msg);
+                // }
+                // this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+            }
+        }
+        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+
+        // In the case the wells reference depth has been defaulted in the
+        // WELSPECS keyword we need to force a calculation of the wells
+        // reference depth exactly when the COMPDAT keyword has been completely
+        // processed.
+        // for (const auto& wname : wells) {
+        //     auto& well = this->snapshots.back().wells.get( wname );
+        //     well.updateRefDepth();
+        //     this->snapshots.back().wells.update( std::move(well));
+        // }
+    }
+
     void Schedule::handleCOMPLUMP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2298,11 +2375,13 @@ Well{0} entered with disallowed 'FIELD' parent group:
             { "WCONPROD", &Schedule::handleWCONPROD  },
             { "WECON"   , &Schedule::handleWECON     },
             { "WEFAC"   , &Schedule::handleWEFAC     },
+            { "WELCOMPL", &Schedule::handleWELCOMPL  },
             { "WELOPEN" , &Schedule::handleWELOPEN   },
             { "WELPI"   , &Schedule::handleWELPI     },
             { "WELSEGS" , &Schedule::handleWELSEGS   },
             { "WELSPECS", &Schedule::handleWELSPECS  },
             { "WELTARG" , &Schedule::handleWELTARG   },
+            { "WELTRAJ" , &Schedule::handleWELTRAJ   },
             { "WFOAM"   , &Schedule::handleWFOAM     },
             { "WGRUPCON", &Schedule::handleWGRUPCON  },
             { "WHISTCTL", &Schedule::handleWHISTCTL  },

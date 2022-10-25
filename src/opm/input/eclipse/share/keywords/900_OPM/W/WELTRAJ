@@ -1,0 +1,37 @@
+{
+  "name": "WELTRAJ",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "item": 1,
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "item": 2,
+      "name": "X",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 3,
+      "name": "Y",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 4,
+      "name": "TVDEPTH",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 5,
+      "name": "AHDEPTH",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    }
+  ]
+}

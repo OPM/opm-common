@@ -731,11 +731,13 @@ namespace Opm
         void handleWCONPROD  (HandlerContext&);
         void handleWECON     (HandlerContext&);
         void handleWEFAC     (HandlerContext&);
+        void handleWELCOMPL  (HandlerContext&);
         void handleWELOPEN   (HandlerContext&);
         void handleWELPI     (HandlerContext&);
         void handleWELSEGS   (HandlerContext&);
         void handleWELSPECS  (HandlerContext&);
         void handleWELTARG   (HandlerContext&);
+        void handleWELTRAJ   (HandlerContext&);
         void handleWFOAM     (HandlerContext&);
         void handleWGRUPCON  (HandlerContext&);
         void handleWHISTCTL  (HandlerContext&);

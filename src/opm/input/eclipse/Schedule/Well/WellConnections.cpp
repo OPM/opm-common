@@ -1,4 +1,4 @@
-/*
+/*addConnectioncell
   Copyright 2013 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -46,6 +46,18 @@
 #include <vector>
 
 #include <stddef.h>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/ActiveGridCells.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/io/eclipse/rst/connection.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp> //testing
 
 #include <fmt/format.h>
 
@@ -441,6 +453,55 @@ namespace Opm {
             }
         }
     }
+    
+     void WellConnections::loadWELCOMPL(const DeckRecord& record,
+                                      const ScheduleGrid& grid,
+                                      const std::string& wname,
+                                      const KeywordLocation& location) {
+
+        const std::string& completionNamePattern = record.getItem("COMPLETION").getTrimmedString(0);
+        
+        //Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
+        //based on the data of wellCOMPL and trajectory data the ijk coordinates should be derived here.
+        //unclear how to get trajectory data in this method
+        const auto& ahdepth_upper = record.getItem("AHDEPTH_UPPER");
+        const auto& ahdepth_lower = record.getItem("AHDEPTH_LOWER");
+        const auto& diameterItem = record.getItem("DIAMETER");
+        double skin_factor = record.getItem("SKIN").getSIDouble(0);
+        
+        double rw;
+        if (diameterItem.hasValue(0))
+            rw = 0.50 * diameterItem.getSIDouble(0);
+        else
+            // The Eclipse100 manual does not specify a default value for the wellbore
+            // diameter, but the Opm codebase has traditionally implemented a default
+            // value of one foot. The same default value is used by Eclipse300.
+            rw = 0.5*unit::feet;
+        
+        //const auto& test = grid.cells;
+    }
+
+    void WellConnections::loadWELTRAJ(const DeckRecord& record,
+                                      const ScheduleGrid& grid,
+                                      const std::string& wname,
+                                      const KeywordLocation& location) {
+
+        //const std::string& completionNamePattern = record.getItem("COMPLETION").getTrimmedString(0);
+        
+        //Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
+        ////should we use loadWELTRAJ we may assume (?) that only once a trajectory is created?
+        //(1) how to store data read in here????
+        //(2) how to get info from here to loadWELCOMPL???????
+        this->x_coordinate = record.getItem("X").getSIDouble(0);
+        const auto& y_coordinate = record.getItem("Y");
+        const int I = 8;
+        const int J = 8;
+        const int K = 2;
+      
+        const CompletedCells::Cell& cell = grid.get_cell(I, J, K);
+    }
+
+    
 
     std::size_t WellConnections::size() const {
         return m_connections.size();
