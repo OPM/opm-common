@@ -446,6 +446,51 @@ namespace {
             return this->value(segNum, this->grat_);
         }
 
+        float ovel(const int segNum) const
+        {
+            return this->value(segNum, this->ovel_);
+        }
+
+        float wvel(const int segNum) const
+        {
+            return this->value(segNum, this->wvel_);
+        }
+
+        float gvel(const int segNum) const
+        {
+            return this->value(segNum, this->gvel_);
+        }
+
+        float hf_o(const int segNum) const
+        {
+            return this->value(segNum, this->hf_o_);
+        }
+
+        float hf_w(const int segNum) const
+        {
+            return this->value(segNum, this->hf_w_);
+        }
+
+        float hf_g(const int segNum) const
+        {
+            return this->value(segNum, this->hf_g_);
+        }
+
+        float ovis(const int segNum) const
+        {
+            return this->value(segNum, this->ovis_);
+        }
+
+        float wvis(const int segNum) const
+        {
+            return this->value(segNum, this->wvis_);
+        }
+
+        float gvis(const int segNum) const
+        {
+            return this->value(segNum, this->gvis_);
+        }
+
         float icd_strength(const int segNum) const
         {
             return this->value(segNum, this->icd_strength_);
@@ -487,6 +532,15 @@ namespace {
         std::vector<float> orat_{};
         std::vector<float> wrat_{};
         std::vector<float> grat_{};
+        std::vector<float> ovel_{};
+        std::vector<float> wvel_{};
+        std::vector<float> gvel_{};
+        std::vector<float> hf_o_{};
+        std::vector<float> hf_w_{};
+        std::vector<float> hf_g_{};
+        std::vector<float> ovis_{};
+        std::vector<float> wvis_{};
+        std::vector<float> gvis_{};
         std::vector<float> icd_strength_{};
         std::vector<float> icd_setting_{};
 
@@ -516,6 +570,15 @@ namespace {
         BOOST_REQUIRE(rft.hasArray("SEGORAT", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGWRAT", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGGRAT", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGOVEL", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGWVEL", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGGVEL", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGOHF", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGWHF", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGGHF", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGOVIS", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGWVIS", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGGVIS", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGSSTR", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGSFOPN", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGBRNO", well, date));
@@ -536,6 +599,18 @@ namespace {
         this->orat_ = rft.getRft<float>("SEGORAT", well, date);
         this->wrat_ = rft.getRft<float>("SEGWRAT", well, date);
         this->grat_ = rft.getRft<float>("SEGGRAT", well, date);
+
+        this->ovel_ = rft.getRft<float>("SEGOVEL", well, date);
+        this->wvel_ = rft.getRft<float>("SEGWVEL", well, date);
+        this->gvel_ = rft.getRft<float>("SEGGVEL", well, date);
+
+        this->hf_o_ = rft.getRft<float>("SEGOHF", well, date);
+        this->hf_w_ = rft.getRft<float>("SEGWHF", well, date);
+        this->hf_g_ = rft.getRft<float>("SEGGHF", well, date);
+
+        this->ovis_ = rft.getRft<float>("SEGOVIS", well, date);
+        this->wvis_ = rft.getRft<float>("SEGWVIS", well, date);
+        this->gvis_ = rft.getRft<float>("SEGGVIS", well, date);
 
         this->icd_strength_ = rft.getRft<float>("SEGSSTR", well, date);
         this->icd_setting_ = rft.getRft<float>("SEGSFOPN", well, date);
@@ -4190,6 +4265,54 @@ END
         return xcon;
     }
 
+    Opm::data::SegmentPhaseQuantity phaseVelocity(const std::size_t segNum)
+    {
+        const auto metres_per_second = ::Opm::UnitSystem::newMETRIC()
+            .to_si(::Opm::UnitSystem::measure::pipeflow_velocity, 1.0);
+
+        const auto vel = - (12.0 - 1.0*(segNum - 1))*metres_per_second;
+
+        const auto v_oil = vel;
+        const auto v_wat = vel;
+        const auto v_gas = (segNum < 4) ? vel : 0.0; // No free gas in segments 4..11.
+
+        return Opm::data::SegmentPhaseQuantity{}
+            .set(Opm::data::SegmentPhaseQuantity::Item::Oil, v_oil)
+            .set(Opm::data::SegmentPhaseQuantity::Item::Gas, v_gas)
+            .set(Opm::data::SegmentPhaseQuantity::Item::Water, v_wat);
+    }
+
+    Opm::data::SegmentPhaseQuantity holdupFractions(const std::size_t segNum)
+    {
+        const auto resv_oil = 200.0 - 5*(segNum - 1);
+        const auto resv_wat = 100.0 - 2*(segNum - 1);
+        const auto resv_gas = (segNum < 4) // No free gas in segments 4..11
+            ? 5000.0 - 100*(segNum - 1)
+            : 0.0;
+
+        const auto resv_tot = resv_oil + resv_wat + resv_gas;
+
+        return Opm::data::SegmentPhaseQuantity{}
+            .set(Opm::data::SegmentPhaseQuantity::Item::Oil, resv_oil / resv_tot)
+            .set(Opm::data::SegmentPhaseQuantity::Item::Gas, resv_gas / resv_tot)
+            .set(Opm::data::SegmentPhaseQuantity::Item::Water, resv_wat / resv_tot);
+    }
+
+    Opm::data::SegmentPhaseQuantity phaseViscosity(const std::size_t segNum)
+    {
+        const auto cP = ::Opm::UnitSystem::newMETRIC()
+            .to_si(::Opm::UnitSystem::measure::viscosity, 1.0);
+
+        const auto mu_oil = (0.25 + 0.01*(segNum - 1))*cP;
+        const auto mu_gas = (0.25 + 0.005*(segNum - 1))*cP;
+        const auto mu_wat = 0.29*cP;
+
+        return Opm::data::SegmentPhaseQuantity{}
+            .set(Opm::data::SegmentPhaseQuantity::Item::Oil, mu_oil)
+            .set(Opm::data::SegmentPhaseQuantity::Item::Gas, mu_gas)
+            .set(Opm::data::SegmentPhaseQuantity::Item::Water, mu_wat);
+    }
+
     Opm::data::Segment segSol_P1(const std::size_t segNum)
     {
         const auto m3_d = ::Opm::UnitSystem::newMETRIC()
@@ -4206,6 +4329,9 @@ END
 
         xs.pressures[Opm::data::SegmentPressures::Value::Pressure] = (135.7 + 9.0*(segNum - 1))*barsa;
 
+        xs.velocity  = phaseVelocity(segNum);
+        xs.holdup    = holdupFractions(segNum);
+        xs.viscosity = phaseViscosity(segNum);
         xs.segNumber = segNum;
 
         return xs;
@@ -4495,6 +4621,204 @@ BOOST_AUTO_TEST_CASE(Segment_Phase_Rates)
     BOOST_CHECK_CLOSE(xSEG.wrat( 9), 15.78f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.wrat(10), 13.44f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.wrat(11), 11.10f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(Segment_Phase_Velocity)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTSEG" };
+    const auto model = Setup{ segmentDataSet() };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 1;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xSEG = SegmentResults {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    BOOST_CHECK_CLOSE(xSEG.ovel( 1), 12.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 2), 11.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 3), 10.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 4),  9.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 5),  8.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 6),  7.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 7),  6.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 8),  5.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel( 9),  4.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel(10),  3.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovel(11),  2.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.wvel( 1), 12.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 2), 11.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 3), 10.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 4),  9.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 5),  8.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 6),  7.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 7),  6.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 8),  5.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel( 9),  4.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel(10),  3.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvel(11),  2.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.gvel( 1), 12.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 2), 11.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 3), 10.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 4),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 5),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 6),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 7),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 8),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel( 9),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel(10),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvel(11),  0.0f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(Segment_Holdup_Fractions)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTSEG" };
+    const auto model = Setup{ segmentDataSet() };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 1;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xSEG = SegmentResults {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 1), 3.773585e-2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 2), 3.755055e-2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 3), 3.735745e-2f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 4), 6.630824e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 5), 6.617647e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 6), 6.603774e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 7), 6.589147e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 8), 6.573705e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o( 9), 6.557377e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o(10), 6.540084e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_o(11), 6.521739e-1f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 1), 1.886792e-2f, 3.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 2), 1.887156e-2f, 2.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 3), 1.887534e-2f, 2.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 4), 3.369176e-1f, 2.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 5), 3.382353e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 6), 3.396226e-1f, 2.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 7), 3.410853e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 8), 3.426295e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w( 9), 3.442623e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w(10), 3.459916e-1f, 2.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_w(11), 3.478261e-1f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 1), 9.433962e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 2), 9.435779e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 3), 9.437672e-1f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 4),         0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 5),         0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 6),         0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 7),         0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 8),         0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g( 9),         0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g(10),         0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.hf_g(11),         0.0f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(Segment_Phase_Viscosity)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTSEG" };
+    const auto model = Setup{ segmentDataSet() };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 1;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xSEG = SegmentResults {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    BOOST_CHECK_CLOSE(xSEG.ovis( 1), 0.25f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 2), 0.26f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 3), 0.27f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 4), 0.28f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 5), 0.29f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 6), 0.30f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 7), 0.31f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 8), 0.32f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis( 9), 0.33f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis(10), 0.34f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.ovis(11), 0.35f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.wvis( 1), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 2), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 3), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 4), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 5), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 6), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 7), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 8), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis( 9), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis(10), 0.29f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.wvis(11), 0.29f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.gvis( 1), 0.250f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 2), 0.255f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 3), 0.260f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 4), 0.265f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 5), 0.270f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 6), 0.275f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 7), 0.280f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 8), 0.285f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis( 9), 0.290f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis(10), 0.295f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.gvis(11), 0.300f, 1.0e-5f);
 }
 
 BOOST_AUTO_TEST_CASE(Valve)
