@@ -24,6 +24,7 @@
 #include <cstddef>
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 
 namespace Opm {
@@ -59,7 +60,7 @@ public:
         double rate;
 
         BCFace() = default;
-        explicit BCFace(const DeckRecord& record);
+        explicit BCFace(const DeckRecord& record, const GridDims& grid);
 
         static BCFace serializationTestObject();
 
