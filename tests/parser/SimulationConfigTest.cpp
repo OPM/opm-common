@@ -51,7 +51,6 @@ const std::string& inputStr = "RUNSPEC\n"
                               "EQLNUM\n"
                               "10*1 10*2 100*3 /\n "
                               "\n"
-
                               "SOLUTION\n"
                               "THPRES\n"
                               "1 2 12.0/\n"
@@ -62,7 +61,6 @@ const std::string& inputStr = "RUNSPEC\n"
 
 
 const std::string& inputStr_noTHPRES = "RUNSPEC\n"
-                                       "EQLOPTS\n"
                                        "DIMENS\n"
                                        "10 3 4 /\n"
                                        "\n"
@@ -75,12 +73,16 @@ const std::string& inputStr_noTHPRES = "RUNSPEC\n"
                                        "\n";
 
 const std::string& inputStr_cpr = "RUNSPEC\n"
+    "DIMENS\n"
+    "10 3 4 /\n"
     "CPR\n"
     "/\n"
     "SUMMARY\n";
 
 
 const std::string& inputStr_INVALID = "RUNSPEC\n"
+    "DIMENS\n"
+    "10 3 4 /\n"
     "CPR\n"
     "WEll 10 10 17/"
     "/\n"
@@ -88,11 +90,16 @@ const std::string& inputStr_INVALID = "RUNSPEC\n"
 
 
 
-const std::string& inputStr_cpr_in_SUMMARY = "SUMMARY\n"
+const std::string& inputStr_cpr_in_SUMMARY = "RUNSPEC\n"
+    "DIMENS\n"
+    "10 3 4 /\n"
+    "SUMMARY\n"
         "CPR\n"
         "well1 10 27 10/\n/\n";
 
 const std::string& inputStr_cpr_BOTH = "RUNSPEC\n"
+    "DIMENS\n"
+    "10 3 4 /\n"
     "CPR\n"
     "/\n"
     "SUMMARY\n"

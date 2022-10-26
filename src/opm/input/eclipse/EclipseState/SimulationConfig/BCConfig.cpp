@@ -64,18 +64,37 @@ BCComponent component(const std::string& s) {
 }
 }
 
-BCConfig::BCFace::BCFace(const DeckRecord& record) :
-    i1(record.getItem("I1").get<int>(0) - 1),
-    i2(record.getItem("I2").get<int>(0) - 1),
-    j1(record.getItem("J1").get<int>(0) - 1),
-    j2(record.getItem("J2").get<int>(0) - 1),
-    k1(record.getItem("K1").get<int>(0) - 1),
-    k2(record.getItem("K2").get<int>(0) - 1),
+BCConfig::BCFace::BCFace(const DeckRecord& record, const GridDims& grid) :
+    i1(0),
+    i2(grid.getNX() - 1),
+    j1(0),
+    j2(grid.getNY() - 1),
+    k1(0),
+    k2(grid.getNZ() - 1),
     bctype(fromstring::bctype(record.getItem("TYPE").get<std::string>(0))),
     dir(FaceDir::FromString(record.getItem("DIRECTION").get<std::string>(0))),
     component(fromstring::component(record.getItem("COMPONENT").get<std::string>(0))),
     rate(record.getItem("RATE").getSIDouble(0))
 {
+    using BC = ParserKeywords::BC;
+    if (const auto& I1 = record.getItem<BC::I1>(); ! I1.defaultApplied(0)) {
+        this->i1 = I1.get<int>(0) - 1;
+    }
+    if (const auto& I2 = record.getItem<BC::I2>(); ! I2.defaultApplied(0)) {
+        this->i2 = I2.get<int>(0) - 1;
+    }
+    if (const auto& J1 = record.getItem<BC::J1>(); ! J1.defaultApplied(0)) {
+        this->j1 = J1.get<int>(0) - 1;
+    }
+    if (const auto& J2 = record.getItem<BC::J2>(); ! J2.defaultApplied(0)) {
+        this->j2 = J2.get<int>(0) - 1;
+    }
+    if (const auto& K1 = record.getItem<BC::K1>(); ! K1.defaultApplied(0)) {
+        this->k1 = K1.get<int>(0) - 1;
+    }
+    if (const auto& K2 = record.getItem<BC::K2>(); ! K2.defaultApplied(0)) {
+        this->k2 = K2.get<int>(0) - 1;
+    }
 }
 
 BCConfig::BCFace BCConfig::BCFace::serializationTestObject()
@@ -112,9 +131,10 @@ bool BCConfig::BCFace::operator==(const BCConfig::BCFace& other) const {
 
 
 BCConfig::BCConfig(const Deck& deck) {
+    GridDims grid( deck );
     for (const auto& kw: deck.getKeywordList<ParserKeywords::BC>()) {
         for (const auto& record : *kw)
-            this->m_faces.emplace_back( record );
+            this->m_faces.emplace_back( record, grid );
     }
 }
 

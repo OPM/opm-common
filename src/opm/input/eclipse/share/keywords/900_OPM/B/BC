@@ -29,11 +29,11 @@
       "value_type": "INT"
     },
     {
-      "name": "TYPE",
+      "name": "DIRECTION",
       "value_type": "STRING"
     },
     {
-      "name": "DIRECTION",
+      "name": "TYPE",
       "value_type": "STRING"
     },
     {
