@@ -55,7 +55,6 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Modules) {
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
-    const auto& name = record0.getItem(0).get<std::string>(0);
     auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
     Action::PyAction pyaction(python, "ACT1", run_count, ok_module);

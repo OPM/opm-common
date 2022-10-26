@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Guide_Rates_Group_Control_Object)
     const auto state =
         makeRestartState(simCase, baseName, rptStep, "test_rst_wgrupcon");
 
-    auto makeRestartWell = [&state, rptStep](const std::string& well_name)
+    auto makeRestartWell = [&state](const std::string& well_name)
     {
         return Opm::Well {
             state.get_well(well_name),
@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Explicit_THP_Control_Options_Object)
     const auto state =
         makeRestartState(simCase, baseName, rptStep, "test_rst_wvfpexp");
 
-    auto makeTHPOptions = [&state, rptStep](const std::string& well_name)
+    auto makeTHPOptions = [&state](const std::string& well_name)
     {
         return Opm::Well {
             state.get_well(well_name),
