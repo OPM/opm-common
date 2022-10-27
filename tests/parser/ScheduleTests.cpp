@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 1).getStatus());
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 2).getStatus());
     BOOST_CHECK(Well::Status::SHUT == schedule.getWell("BAN", 3).getStatus());
-    BOOST_CHECK(Well::Status::SHUT == schedule.getWell("BAN", 4).getStatus()); // not allow to open
+    BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 4).getStatus());
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 5).getStatus());
 }
 
