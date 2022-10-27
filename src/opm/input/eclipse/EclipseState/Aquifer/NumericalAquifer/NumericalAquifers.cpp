@@ -90,8 +90,9 @@ namespace Opm {
             const size_t aqu_id = pair.first;
             const auto& aqu_cons = aquifer_connections.find(aqu_id);
             if (aqu_cons == aquifer_connections.end()) {
-                const auto error = fmt::format("Numerical aquifer {} does not have any connections\n", aqu_id);
-                throw std::runtime_error(error);
+                const auto msg = fmt::format("Numerical aquifer {} does not have any connections\n", aqu_id);
+                OpmLog::warning(msg);
+                continue;
             }
             auto& aquifer = pair.second;
             const auto& cons = aqu_cons->second;
