@@ -49,7 +49,7 @@ static void printHelp() {
               << "    -t INIT  \t Compare two initial files (.INIT).\n"
               << "    -t RFT   \t Compare two RFT files (.RFT).\n"
               << "    -t SMRY  \t Compare two cases consistent of (unified) summary files.\n"
-              << "    -t RSM   \t Compare RSM file agaist a summary file.\n"
+              << "    -t RSM   \t Compare RSM file against a summary file.\n"
               << "-x Allow extra keywords in case number 2. These additional keywords (not found in case number1) will be ignored in the comparison.\n"
               << "\nExample usage of the program: \n\n"
               << "compareECL -k PRESSURE <path to first casefile> <path to second casefile> 1e-3 1e-5\n"
