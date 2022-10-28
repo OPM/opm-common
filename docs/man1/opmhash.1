@@ -1,4 +1,4 @@
-.TH OPMHASH "1" "April 2022" "opmhash 2022.04" "User Commands"
+.TH OPMHASH "1" "October 2022" "opmhash 2022.10" "User Commands"
 .SH NAME
 opmhash \- Hasher for summary keywords in Eclipse files
 .SH DESCRIPTION
@@ -39,3 +39,11 @@ depends on the keyword order.
 \fB\-l\fR : Add filename and linenumber information to each keyword.
 .HP
 \fB\-s\fR : Short form \- only print the hash of the complete deck.
+.HP
+\fB\-S\fR : Silent form \- will not print any deck output.
+.PP
+It is possible to add multiple deck arguments, they are then scanned repeatedly,
+and the decks are compared. In the case of multiple deck arguments the exit
+status of the program will be zero if all are equal and nonzero in case of
+differences.
+
