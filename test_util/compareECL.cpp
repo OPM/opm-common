@@ -42,7 +42,7 @@ static void printHelp() {
               << "-l Only do comparison for the last Report Step. This option is only valid for restart files.\n"
               << "-n Do not throw on errors.\n"
               << "-p Print keywords in both cases and exit.\n"
-              << "-r compare a spesific report time step number in a restart file.\n"
+              << "-r compare a specific report time step number in a restart file.\n"
               << "-t Specify ECLIPSE filetype to compare, (default behaviour is that all files are compared if found). Different possible arguments are:\n"
               << "    -t UNRST \t Compare two unified restart files (.UNRST). This the default value, so it is the same as not passing option -t.\n"
               << "    -t EGRID  \t Compare two EGrid files (.EGRID).\n"
@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
 
         if (integrationTest && specificFileType) {
             if (fileTypeString=="EGRID" || fileTypeString=="INIT" || fileTypeString=="RFT") {
-                std::cerr << "Integration test and spesific file type, only valid for UNRST and SMRY" << std::endl;
+                std::cerr << "Integration test and specific file type, only valid for UNRST and SMRY" << std::endl;
                 return EXIT_FAILURE;
             }
         }

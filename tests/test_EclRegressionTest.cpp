@@ -499,18 +499,18 @@ BOOST_AUTO_TEST_CASE(results_init_1) {
     // should fail, even though using accept extra keywords option
     BOOST_CHECK_THROW(test1a.results_init(),std::runtime_error);
 
-    // check with spesific kewyword PORV, found in both cases and should be ok
+    // check with specific kewyword PORV, found in both cases and should be ok
     test1a.setAcceptExtraKeywords(false);
     test1a.compareSpesificKeyword("PORV");
 
     test1a.results_init();
 
-    // check with spesific kewyword PORO, found in second case only, should throw exeption
+    // check with specific kewyword PORO, found in second case only, should throw exeption
     test1a.compareSpesificKeyword("PORO");
 
     BOOST_CHECK_THROW(test1a.results_init(),std::runtime_error);
 
-    // check with spesific kewyword not found in any of the cases, should throw exeption
+    // check with specific kewyword not found in any of the cases, should throw exeption
     test1a.compareSpesificKeyword("XXXXX");
 
     BOOST_CHECK_THROW(test1a.results_init(),std::runtime_error);
@@ -723,20 +723,20 @@ BOOST_AUTO_TEST_CASE(results_unrst_1) {
     test2a.setAcceptExtraKeywords(true);
     test2a.results_rst();
 
-    // checking for spesific keyword PRESSURE, found in both cases
+    // checking for specific keyword PRESSURE, found in both cases
     test2a.setAcceptExtraKeywords(false);
     test2a.compareSpesificKeyword("PRESSURE");
 
     // test should be ok
     test2a.results_rst();
 
-    // checking for spesific keyword RS, only present in one of the cases
+    // checking for specific keyword RS, only present in one of the cases
     test2a.compareSpesificKeyword("RS");
 
     // should fail
     BOOST_CHECK_THROW(test2a.results_rst(),std::runtime_error);
 
-    // checking for spesific keyword XXXX, not found in any of the cases
+    // checking for specific keyword XXXX, not found in any of the cases
     test2a.compareSpesificKeyword("XXXX");
 
     // should fail
@@ -926,7 +926,7 @@ BOOST_AUTO_TEST_CASE(results_unrst_3) {
     ECLRegressionTest test2("TMP1", "TMP2", 1e-3, 1e-3);
     BOOST_CHECK_THROW(test2.results_rst(),std::runtime_error);
 
-    // check spesific keyword RS, should be OK
+    // check specific keyword RS, should be OK
 
     test2.compareSpesificKeyword("RS");
     test2.results_rst();
@@ -1231,7 +1231,7 @@ BOOST_AUTO_TEST_CASE(results_rft_1) {
 
     test1b.results_rft();
 
-    // accept extra keyword to false, but check for spesific keyword (PRESSSURE)
+    // accept extra keyword to false, but check for specific keyword (PRESSSURE)
 
     test1b.setAcceptExtraKeywords(false);
     test1b.compareSpesificKeyword("PRESSURE");
