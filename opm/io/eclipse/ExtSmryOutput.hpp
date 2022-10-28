@@ -63,6 +63,7 @@ private:
 
     std::array<int, 3> ijk_from_global_index(const GridDims& dims, int globInd) const;
     std::vector<std::string> make_modified_keys(const std::vector<std::string>& valueKeys, const GridDims& dims);
+    bool rename_tmpfile(const std::string& tmp_fname);
 };
 
 
