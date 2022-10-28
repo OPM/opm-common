@@ -34,7 +34,7 @@ static void printHelp() {
     std::cout << "\nList all arrays found in an EclFile specified on the command line. \n\n"
               << "\nThe program have one option which will only work on unified restart files:\n\n"
               << "-h Print help and exit.\n"
-              << "-r List array for a spesific report time step number. Option only valid for a unified restart file. \n\n";
+              << "-r List array for a specific report time step number. Option only valid for a unified restart file. \n\n";
 }
 
 void print_array_list(const std::vector<EclEntry>& array_list, const std::vector<int>& element_size)
