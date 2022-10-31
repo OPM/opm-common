@@ -46,8 +46,8 @@ if (METIS_INCLUDE_DIRS OR METIS_LIBRARIES)
   file(READ "${METIS_INCLUDE_DIRS}/metis.h" metisheader)
   string(REGEX MATCH "#define METIS_VER_MAJOR[ ]+([0-9]+)" METIS_MAJOR_VERSION ${metisheader})
   if(NOT METIS_API_VERSION AND METIS_MAJOR_VERSION)
-#    string(REGEX REPLACE ".*#define METIS_VER_MAJOR[ ]+([0-9]+).*" "\\1"
-#    METIS_MAJOR_VERSION "${metisheader}")
+    string(REGEX REPLACE ".*#define METIS_VER_MAJOR[ ]+([0-9]+).*" "\\1"
+    METIS_MAJOR_VERSION "${metisheader}")
     if(METIS_MAJOR_VERSION GREATER_EQUAL 3 AND METIS_MAJOR_VERSION LESS 5)
       set(METIS_API_VERSION "3")
     else()
