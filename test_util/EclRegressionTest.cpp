@@ -287,12 +287,12 @@ void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string>& keywords1
                                              std::vector<eclArrType>& arrayType2,
                                              const std::string& reference)
 {
-    auto search1 = std::find(keywords1.begin(), keywords1.end(), spesificKeyword);
-    auto search2 = std::find(keywords2.begin(), keywords2.end(), spesificKeyword);
+    auto search1 = std::find(keywords1.begin(), keywords1.end(), specificKeyword);
+    auto search2 = std::find(keywords2.begin(), keywords2.end(), specificKeyword);
 
     if (search1 == keywords1.end() && search2 == keywords2.end()) {
-        std::cout << "Testing specific keyword \"" << spesificKeyword << "\" in " << reference << ". Keyword not found in any of the cases ." << std::endl;
-        OPM_THROW(std::runtime_error, "\nTesting spesific keyword \"" << spesificKeyword << "\" in " << reference << ". Keyword not found in any of the cases .");
+        std::cout << "Testing specific keyword \"" << specificKeyword << "\" in " << reference << ". Keyword not found in any of the cases ." << std::endl;
+        OPM_THROW(std::runtime_error, "\nTesting specific keyword \"" << specificKeyword << "\" in " << reference << ". Keyword not found in any of the cases .");
     }
 
     eclArrType arrType;
@@ -301,23 +301,23 @@ void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string>& keywords1
         arrType = arrayType1[ind];
 
         if (search2 == keywords2.end()) {
-            std::cout << "Testing spesific kewyword in " << reference << ". Keyword found in fist case but not in second case." << std::endl;
-            OPM_THROW(std::runtime_error, "\nTesting spesific kewyword in " << reference << ". Keyword found in fist case but not in second case.");
+            std::cout << "Testing specific kewyword in " << reference << ". Keyword found in fist case but not in second case." << std::endl;
+            OPM_THROW(std::runtime_error, "\nTesting specific kewyword in " << reference << ". Keyword found in fist case but not in second case.");
         }
 
         keywords1.clear();
         arrayType1.clear();
-        keywords1.push_back(spesificKeyword);
+        keywords1.push_back(specificKeyword);
         arrayType1.push_back(arrType);
 
         keywords2.clear();
         arrayType2.clear();
-        keywords2.push_back(spesificKeyword);
+        keywords2.push_back(specificKeyword);
         arrayType2.push_back(arrType);
     } else {
         if (search2 != keywords2.end()) {
-            std::cout << "Testing spesific kewyword in " << reference << ". Keyword not found in fist case but found in second case." << std::endl;
-            OPM_THROW(std::runtime_error, "\nTesting spesific kewyword in " << reference << ". Keyword not found in fist case but found in second case.");
+            std::cout << "Testing specific kewyword in " << reference << ". Keyword not found in fist case but found in second case." << std::endl;
+            OPM_THROW(std::runtime_error, "\nTesting specific kewyword in " << reference << ". Keyword not found in fist case but found in second case.");
         }
 
         keywords1.clear();
@@ -585,7 +585,7 @@ void ECLRegressionTest::results_init()
         } else {
             std::cout << "\nComparing init files \n" << std::endl;
 
-            if (spesificKeyword.empty()) {
+            if (specificKeyword.empty()) {
                 if (keywords1.size() == keywords2.size() && keywords1 != keywords2) {
                     /*
                       If the keywords come in different order in the two files
@@ -693,23 +693,23 @@ void ECLRegressionTest::results_rst()
 
         deviations.clear();
 
-        if (spesificSequence > -1) {
-            auto search1 = std::find(seqnums1.begin(), seqnums1.end(), spesificSequence);
-            auto search2 = std::find(seqnums2.begin(), seqnums2.end(), spesificSequence);
+        if (specificSequence > -1) {
+            auto search1 = std::find(seqnums1.begin(), seqnums1.end(), specificSequence);
+            auto search2 = std::find(seqnums2.begin(), seqnums2.end(), specificSequence);
 
             if (search1 == seqnums1.end()) {
-                OPM_THROW(std::runtime_error, "\nSpecified sequence " << spesificSequence << " not found in restart files for case 1");
+                OPM_THROW(std::runtime_error, "\nSpecified sequence " << specificSequence << " not found in restart files for case 1");
             }
 
             if (search2 == seqnums2.end()) {
-                OPM_THROW(std::runtime_error, "\nSpecified sequence " << spesificSequence << " not found in restart files for case 2");
+                OPM_THROW(std::runtime_error, "\nSpecified sequence " << specificSequence << " not found in restart files for case 2");
             }
 
             seqnums1.clear();
-            seqnums1.push_back(spesificSequence);
+            seqnums1.push_back(specificSequence);
 
             seqnums2.clear();
-            seqnums2.push_back(spesificSequence);
+            seqnums2.push_back(specificSequence);
 
         } else if (onlyLastSequence) {
 
@@ -791,7 +791,7 @@ void ECLRegressionTest::results_rst()
             if (printKeywordOnly) {
                 printComparisonForKeywordLists(keywords1, keywords2, arrayType1, arrayType2);
             } else {
-                if (spesificKeyword.empty()) {
+                if (specificKeyword.empty()) {
                     compareKeywords(keywords1, keywords2, reference);
                 } else {
                     checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
@@ -946,7 +946,7 @@ void ECLRegressionTest::results_smry()
                 printMissingKeywords(keywords1, keywords2);
             }
         } else {
-            if (spesificKeyword.empty()) {
+            if (specificKeyword.empty()) {
                 compareKeywords(keywords1, keywords2, reference);
             } else {
                 checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
@@ -1114,7 +1114,7 @@ void ECLRegressionTest::results_rft()
             if (printKeywordOnly) {
                 printComparisonForKeywordLists(keywords1, keywords2, arrayType1, arrayType2);
             } else {
-                if (spesificKeyword.empty()) {
+                if (specificKeyword.empty()) {
                     compareKeywords(keywords1, keywords2, reference);
                 } else {
                     checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
