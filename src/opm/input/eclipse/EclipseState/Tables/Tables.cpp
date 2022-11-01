@@ -61,6 +61,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/PvtsolTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
@@ -267,6 +268,30 @@ PvtsolTable PvtsolTable::serializationTestObject() {
 }
 
 bool PvtsolTable::operator==(const PvtsolTable& data) const {
+    return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
+}
+
+RwgsaltTable::RwgsaltTable( const DeckKeyword& keyword, size_t tableIdx ) :
+    PvtxTable("P") {
+
+        m_underSaturatedSchema.addColumn( ColumnSchema( "C_SALT"  , Table::INCREASING , Table::DEFAULT_NONE ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "RVW"  , Table::RANDOM , Table::DEFAULT_LINEAR ));
+
+        m_saturatedSchema.addColumn( ColumnSchema( "PG" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "C_SALT"  , Table::INCREASING , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "RVW" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+
+        PvtxTable::init(keyword, tableIdx);
+    }
+
+RwgsaltTable RwgsaltTable::serializationTestObject() {
+    RwgsaltTable result;
+    static_cast<PvtxTable&>(result) = PvtxTable::serializationTestObject();
+
+    return result;
+}
+
+bool RwgsaltTable::operator==(const RwgsaltTable& data) const {
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 

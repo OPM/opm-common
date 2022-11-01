@@ -3,16 +3,21 @@
   "sections": [
     "PROPS"
   ],
-  "size": {
+  "num_tables": {
     "keyword": "TABDIMS",
     "item": "NTPVT"
   },
   "items": [
     {
+      "name": "GAS_PRESSURE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
+    },
+    {
       "name": "DATA",
       "value_type": "DOUBLE",
       "size_type": "ALL",
-      "dimension": ["Pressure","Mass/Length*Length*Length", "OilDissolutionFactor"]
+      "dimension": ["Mass/Length*Length*Length", "OilDissolutionFactor"]
     }
   ]
 }

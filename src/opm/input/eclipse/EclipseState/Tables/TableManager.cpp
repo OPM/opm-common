@@ -206,7 +206,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             initPvtwsaltTables(deck, m_pvtwsaltTables );
 
         if ( deck.hasKeyword( "RWGSALT") )
-            initRwgsaltTables(deck, m_rwgsaltTables );
+            initFullTables(deck, "RWGSALT", m_rwgsaltTables);
 
         if ( deck.hasKeyword( "BDENSITY") )
             initBrineTables(deck, m_bdensityTables );
@@ -1487,21 +1487,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         size_t regionIdx = 0;
         for (unsigned lineIdx = 0; lineIdx < numEntries; lineIdx += 2) {
             pvtwtables[regionIdx].init(keyword.getRecord(lineIdx), keyword.getRecord(lineIdx+1));
-            ++regionIdx;
-        }
-        assert(regionIdx == numTables);
-    }
-
-    template <class TableType>
-    void TableManager::initRwgsaltTables(const Deck& deck,  std::vector<TableType>& rwgtables ) {
-
-        size_t numTables = m_tabdims.getNumPVTTables();
-        rwgtables.resize(numTables);
-
-        const auto& keyword = deck["RWGSALT"].back();
-        size_t regionIdx = 0;
-        for (const auto& record : keyword) {
-            rwgtables[regionIdx].init(record);
             ++regionIdx;
         }
         assert(regionIdx == numTables);
