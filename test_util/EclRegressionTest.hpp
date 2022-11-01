@@ -80,10 +80,10 @@ public:
     }
 
     void compareSpesificKeyword(std::string keyword) {
-        this->spesificKeyword = std::move(keyword);
+        this->specificKeyword = std::move(keyword);
     }
     void compareSpesificRstReportStepNumber(int seqn) {
-        this->spesificSequence = seqn;
+        this->specificSequence = seqn;
     }
 
     void setLoadBaseRunData(bool loadArg) {
@@ -177,11 +177,11 @@ private:
 
     bool loadBaseRunData = false;
 
-    // spesific keyword to be compared
-    std::string spesificKeyword;
+    // specific keyword to be compared
+    std::string specificKeyword;
 
-    // spesific restart sequence to be compared
-    int spesificSequence = -1;
+    // specific restart sequence to be compared
+    int specificSequence = -1;
 
     // Accept extra keywords in the restart file of the 'new' simulation.
     bool acceptExtraKeywords = false;

@@ -119,7 +119,7 @@ static void printHelp() {
               << "-h Print help and exit.\n"
               << "-l List report step numbers in the selected restart file.\n"
               << "-i Enforce IX standard on output file.\n"
-              << "-r Extract and convert a spesific report time step number from a unified restart file. \n\n";
+              << "-r Extract and convert a specific report time step number from a unified restart file. \n\n";
 }
 
 int main(int argc, char **argv) {
