@@ -21,8 +21,6 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
-#include <cassert>
-
 
 namespace Opm {
 
@@ -52,7 +50,7 @@ namespace Opm {
 
     Valve::Valve(const DeckRecord& record)
         : m_con_flow_coeff(record.getItem("CV").get<double>(0))
-        , m_con_cross_area(record.getItem("AREA").get<double>(0))
+        , m_con_cross_area(record.getItem("AREA").getSIDouble(0))
     {
         // we initialize negative values for the values are defaulted
         const double value_for_default = -1.e100;
@@ -61,25 +59,25 @@ namespace Opm {
         if (record.getItem("EXTRA_LENGTH").defaultApplied(0)) {
             m_pipe_additional_length = value_for_default;
         } else {
-            m_pipe_additional_length = record.getItem("EXTRA_LENGTH").get<double>(0);
+            m_pipe_additional_length = record.getItem("EXTRA_LENGTH").getSIDouble(0);
         }
 
         if (record.getItem("PIPE_D").defaultApplied(0)) {
             m_pipe_diameter = value_for_default;
         } else {
-            m_pipe_diameter = record.getItem("PIPE_D").get<double>(0);
+            m_pipe_diameter = record.getItem("PIPE_D").getSIDouble(0);
         }
 
         if (record.getItem("ROUGHNESS").defaultApplied(0)) {
             m_pipe_roughness = value_for_default;
         } else {
-            m_pipe_roughness = record.getItem("ROUGHNESS").get<double>(0);
+            m_pipe_roughness = record.getItem("ROUGHNESS").getSIDouble(0);
         }
 
         if (record.getItem("PIPE_A").defaultApplied(0)) {
             m_pipe_cross_area = value_for_default;
         } else {
-            m_pipe_cross_area = record.getItem("PIPE_A").get<double>(0);
+            m_pipe_cross_area = record.getItem("PIPE_A").getSIDouble(0);
         }
 
         if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
@@ -92,7 +90,7 @@ namespace Opm {
         if (record.getItem("MAX_A").defaultApplied(0)) {
             m_con_max_cross_area = value_for_default;
         } else {
-            m_con_max_cross_area = record.getItem("MAX_A").get<double>(0);
+            m_con_max_cross_area = record.getItem("MAX_A").getSIDouble(0);
         }
     }
 
