@@ -46,6 +46,17 @@
       "value_type": "DOUBLE",
       "dimension": "Mass/Time*Length*Length",
       "default": 0
+    },
+    {
+      "name": "PRESSURE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "default": 1
+    },
+    {
+      "name": "TEMPERATURE",
+      "value_type": "DOUBLE",
+      "dimension": "Temperature"
     }
   ]
 }

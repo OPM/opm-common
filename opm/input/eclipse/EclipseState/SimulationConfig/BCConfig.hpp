@@ -34,7 +34,8 @@ class DeckRecord;
 
 enum class BCType {
      RATE,
-     FREE
+     FREE,
+     DIRICHLET
 };
 
 enum class BCComponent {
@@ -58,6 +59,8 @@ public:
         FaceDir::DirEnum dir;
         BCComponent component;
         double rate;
+        double pressure;
+        double temperature;
 
         BCFace() = default;
         explicit BCFace(const DeckRecord& record, const GridDims& grid);
@@ -79,6 +82,8 @@ public:
             serializer(dir);
             serializer(component);
             serializer(rate);
+            serializer(pressure);
+            serializer(temperature);
         }
     };
 
