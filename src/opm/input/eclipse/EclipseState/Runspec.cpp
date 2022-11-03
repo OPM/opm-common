@@ -37,9 +37,11 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
+#include <algorithm>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
+
 #include <fmt/format.h>
 
 namespace {
@@ -204,7 +206,7 @@ Welldims::Welldims(const Deck& deck)
         this->nCWMax = wd.getItem<WD::MAXCONN>().get<int>(0);
         this->nWGMax = wd.getItem<WD::MAX_GROUPSIZE>().get<int>(0);
 
-        // This is the E100 definition.  E300 instead uses
+        // Note: nGMax uses the E100 definition.  E300 instead uses
         //
         //   Max{ "MAXGROUPS", "MAXWELLS" }
         //
@@ -212,11 +214,13 @@ Welldims::Welldims(const Deck& deck)
         this->nGMax = wd.getItem<WD::MAXGROUPS>().get<int>(0);
         this->nWMax = wd.getItem<WD::MAXWELLS>().get<int>(0);
 
-        // maximum number of well lists pr well
-        this->nWlistPrWellMax = wd.getItem<WD::MAX_WELLIST_PR_WELL>().get<int>(0);
-        //maximum number of dynamic well lists
-        this->nDynWlistMax = wd.getItem<WD::MAX_DYNAMIC_WELLIST>().get<int>(0);
+        // Maximum number of well lists pr well.  Always at least 1.
+        this->nWlistPrWellMax =
+            std::max(WD::MAX_WELLIST_PR_WELL::defaultValue,
+                     wd.getItem<WD::MAX_WELLIST_PR_WELL>().get<int>(0));
 
+        // Maximum number of dynamic well lists
+        this->nDynWlistMax = wd.getItem<WD::MAX_DYNAMIC_WELLIST>().get<int>(0);
 
         this->m_location = keyword.location();
     }
