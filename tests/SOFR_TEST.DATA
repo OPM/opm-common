@@ -111,8 +111,37 @@ SOFR
   'PROD01'  21 /
 /
 
+SOFRF
+  'PROD01'  1 /
+  'PROD01'  10 /
+  'PROD01'  21 /
+/
+
+SOFRS
+  'PROD01'  1 /
+  'PROD01'  10 /
+  'PROD01'  21 /
+/
+
+SOGR
+  'PROD01' 5 /
+  'PROD01' 7 /
+/
+
 SGFR
   'PROD01' /
+/
+
+SGFRF
+  'PROD01'  2 /
+/
+
+SGFRS
+  'PROD01'  3 /
+/
+
+SGOR
+  1* 10 /
 /
 
 SPR
@@ -120,6 +149,10 @@ SPR
 /
 
 SWFR
+/
+
+SWGR
+  1* 3 /
 /
 
 SPRD

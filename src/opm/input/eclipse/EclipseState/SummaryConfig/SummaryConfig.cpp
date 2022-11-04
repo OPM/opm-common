@@ -225,8 +225,8 @@ struct SummaryConfigContext {
         static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
 
-            "OFR", "OFR+", "OFR-",
-            "GFR", "GFR+", "GFR-",
+            "OFR", "OFRF", "OFRS", "OFR+", "OFR-",
+            "GFR", "GFRF", "GFRS", "GFR+", "GFR-",
             "WFR", "WFR+", "WFR-",
 
             "OPGR", "GPGR", "WPGR", "VPGR",
@@ -252,8 +252,8 @@ struct SummaryConfigContext {
 
     bool is_ratio(const std::string& keyword) {
         static const keyword_set ratiokw {
-            "GLR", "GOR", "WCT",
-            "GLRH", "GORH", "WCTH",
+            "GLR" , "GOR" , "OGR", "WCT" , "WGR",
+            "GLRH", "GORH",        "WCTH",
         };
 
         return is_in_set(ratiokw, keyword.substr(1));
@@ -1099,63 +1099,67 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     {
         const auto& kw = keyword.name();
 
-        if (kw.size() > 5) {
+        if (kw.size() > std::string::size_type{5}) {
             // Easy check first--handles SUMMARY and SUMTHIN &c.
             return false;
         }
 
         const auto kw_whitelist = std::vector<const char*> {
-            "SOFR", "SGFR", "SWFR", "SWCT",
-            "SPR", "SPRD", "SPRDH", "SPRDF", "SPRDA",
+            "SOFR" , "SOFRF", "SOFRS",
+            "SGFR" , "SGFRF", "SGFRS",
+            "SWFR" ,
+            "SGOR" , "SOGR" , "SWCT" , "SWGR" ,
+            "SPR"  , "SPRD" , "SPRDH", "SPRDF", "SPRDA",
         };
 
         return std::any_of(kw_whitelist.begin(), kw_whitelist.end(),
-            [&kw](const char* known) -> bool
-            {
-                return kw == known;
-            });
+            [&kw](const char* known)
+        {
+            return kw == known;
+        });
     }
 
 
-    int maxNumWellSegments(const std::size_t /* last_timestep */,
-                           const Well&       well)
+    int maxNumWellSegments(const Well& well)
     {
         return well.isMultiSegment()
             ? well.getSegments().size() : 0;
     }
 
-    void makeSegmentNodes(const std::size_t            last_timestep,
-                          const int                    segID,
+    void makeSegmentNodes(const int                    segID,
                           const DeckKeyword&           keyword,
                           const Well&                  well,
                           SummaryConfig::keyword_list& list)
     {
-        if (!well.isMultiSegment())
+        if (!well.isMultiSegment()) {
             // Not an MSW.  Don't create summary vectors for segments.
             return;
+        }
 
         auto param = SummaryConfigNode {
             keyword.name(), SummaryConfigNode::Category::Segment, keyword.location()
         }
-        .namedEntity( well.name() )
-        .isUserDefined( is_udq(keyword.name()) );
+        .namedEntity(well.name())
+        .parameterType(parseKeywordType(keyword.name()))
+        .isUserDefined(is_udq(keyword.name()));
 
         if (segID < 1) {
-            // Segment number defaulted.  Allocate a summary
-            // vector for each segment.
-            const auto nSeg = maxNumWellSegments(last_timestep, well);
+            // Segment number defaulted.  Allocate a summary vector for each
+            // segment.
+            const auto nSeg = maxNumWellSegments(well);
 
-            for (auto segNumber = 0*nSeg; segNumber < nSeg; ++segNumber)
-                list.push_back( param.number(segNumber + 1) );
+            for (auto segNumber = 0*nSeg; segNumber < nSeg; ++segNumber) {
+                list.push_back(param.number(segNumber + 1));
+            }
         }
-        else
-            // Segment number specified.  Allocate single
-            // summary vector for that segment number.
-            list.push_back( param.number(segID) );
+        else {
+            // Segment number specified.  Allocate single summary vector for
+            // that segment number.
+            list.push_back(param.number(segID));
+        }
     }
 
-    void keywordSNoRecords(const std::size_t            last_timestep,
-                           const DeckKeyword&           keyword,
+    void keywordSNoRecords(const DeckKeyword&           keyword,
                            const Schedule&              schedule,
                            SummaryConfig::keyword_list& list)
     {
@@ -1169,13 +1173,12 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         const auto segID = -1;
 
-        for (const auto& well : schedule.getWellsatEnd())
-            makeSegmentNodes(last_timestep, segID, keyword,
-                             well, list);
+        for (const auto& well : schedule.getWellsatEnd()) {
+            makeSegmentNodes(segID, keyword, well, list);
+        }
     }
 
-    void keywordSWithRecords(const std::size_t            last_timestep,
-                             const ParseContext&          parseContext,
+    void keywordSWithRecords(const ParseContext&          parseContext,
                              ErrorGuard&                  errors,
                              const DeckKeyword&           keyword,
                              const Schedule&              schedule,
@@ -1203,17 +1206,19 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                 ? schedule.wellNames()
                 : schedule.wellNames(wellitem.getTrimmedString(0));
 
-            if (well_names.empty())
+            if (well_names.empty()) {
                 handleMissingWell(parseContext, errors, keyword.location(),
                                   wellitem.getTrimmedString(0));
+            }
 
             // Negative 1 (< 0) if segment ID defaulted.  Defaulted
             // segment number in record implies all segments.
             const auto segID = record.getItem(1).defaultApplied(0)
                 ? -1 : record.getItem(1).get<int>(0);
 
-            for (const auto& well_name : well_names)
-                makeSegmentNodes(last_timestep, segID, keyword, schedule.getWellatEnd(well_name), list);
+            for (const auto& well_name : well_names) {
+                makeSegmentNodes(segID, keyword, schedule.getWellatEnd(well_name), list);
+            }
         }
     }
 
@@ -1244,18 +1249,16 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             return;
         }
 
-        const auto last_timestep = schedule.size() - 1;
-
         if (! keyword.empty()) {
-            // Keyword with explicit records.
-            // Handle as alternatives SOFR and SPR above
-            keywordSWithRecords(last_timestep, parseContext, errors,
+            // Keyword with explicit records.  Handle as alternatives SOFR
+            // and SPR above
+            keywordSWithRecords(parseContext, errors,
                                 keyword, schedule, list);
         }
         else {
-            // Keyword with no explicit records.
-            // Handle as alternative SGFR above.
-            keywordSNoRecords(last_timestep, keyword, schedule, list);
+            // Keyword with no explicit records.  Handle as alternative SGFR
+            // above.
+            keywordSNoRecords(keyword, schedule, list);
         }
     }
 

@@ -1091,9 +1091,174 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
         BOOST_CHECK_MESSAGE(sofr->category() == SummaryConfigNode::Category::Segment,
             R"("SOFR" keyword category must be "Segment")"
         );
+
+        BOOST_CHECK_MESSAGE(sofr->type() == SummaryConfigNode::Type::Rate,
+            R"("SOFR" keyword type must be "Rate")"
+        );
+
         BOOST_CHECK_EQUAL(sofr->namedEntity(), "PROD01");
     }
 
+    // SOFRF PROD01 segments 1, 10, 21.
+    BOOST_CHECK(deck.hasKeyword("SOFRF"));
+    BOOST_CHECK(summary.hasKeyword("SOFRF"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFRF:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFRF:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:20"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFRF:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:26"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:PROD01:27"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRF:INJE01:1"));
+
+    {
+        auto sofrf = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SOFRF";
+        });
+
+        BOOST_REQUIRE(sofrf != summary.end());
+
+        BOOST_CHECK_MESSAGE(sofrf->category() == SummaryConfigNode::Category::Segment,
+            R"("SOFRF" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sofrf->type() == SummaryConfigNode::Type::Rate,
+            R"("SOFRF" keyword type must be "Rate")"
+        );
+
+        BOOST_CHECK_EQUAL(sofrf->namedEntity(), "PROD01");
+    }
+
+    // SOFRS PROD01 segments 1, 10, 21.
+    BOOST_CHECK(deck.hasKeyword("SOFRS"));
+    BOOST_CHECK(summary.hasKeyword("SOFRS"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFRS:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFRS:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:20"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFRS:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:26"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:PROD01:27"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SOFRS:INJE01:1"));
+
+    {
+        auto sofrs = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SOFRS";
+        });
+
+        BOOST_REQUIRE(sofrs != summary.end());
+
+        BOOST_CHECK_MESSAGE(sofrs->category() == SummaryConfigNode::Category::Segment,
+            R"("SOFRS" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sofrs->type() == SummaryConfigNode::Type::Rate,
+            R"("SOFRS" keyword type must be "Rate")"
+        );
+
+        BOOST_CHECK_EQUAL(sofrs->namedEntity(), "PROD01");
+    }
+
+    // SOGR PROD01 segments 5 and 7.
+    BOOST_CHECK(deck.hasKeyword("SOGR"));
+    BOOST_CHECK(summary.hasKeyword("SOGR"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:4"));
+    BOOST_CHECK(summary.hasSummaryKey("SOGR:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:6"));
+    BOOST_CHECK(summary.hasSummaryKey("SOGR:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:9"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:26"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:PROD01:27"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SOGR:INJE01:1"));
+
+    {
+        auto sogr = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SOGR";
+        });
+
+        BOOST_REQUIRE(sogr != summary.end());
+
+        BOOST_CHECK_MESSAGE(sogr->category() == SummaryConfigNode::Category::Segment,
+            R"("SOGR" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sogr->type() == SummaryConfigNode::Type::Ratio,
+            R"("SOGR" keyword type must be "Ratio")"
+        );
+
+        BOOST_CHECK_EQUAL(sogr->namedEntity(), "PROD01");
+    }
+
+    // SGFR in all segments of PROD01 
     BOOST_CHECK(deck.hasKeyword("SGFR"));
     BOOST_CHECK(summary.hasKeyword("SGFR"));
     BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:1"));
@@ -1123,6 +1288,180 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:25"));
     BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:26"));
     BOOST_CHECK(!summary.hasSummaryKey("SGFR:PROD01:27"));  // No such segment.
+
+    {
+        auto sgfr = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SGFR";
+        });
+
+        BOOST_REQUIRE(sgfr != summary.end());
+
+        BOOST_CHECK_MESSAGE(sgfr->category() == SummaryConfigNode::Category::Segment,
+            R"("SGFR" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sgfr->type() == SummaryConfigNode::Type::Rate,
+            R"("SGFR" keyword type must be "Rate")"
+        );
+
+        BOOST_CHECK_EQUAL(sgfr->namedEntity(), "PROD01");
+    }
+
+    // SGFRF in segment 2 of PROD01 
+    BOOST_CHECK(deck.hasKeyword("SGFRF"));
+    BOOST_CHECK(summary.hasKeyword("SGFRF"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:1"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFRF:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:9"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:26"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:27"));  // No such segment.
+
+    {
+        auto sgfrf = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SGFRF";
+        });
+
+        BOOST_REQUIRE(sgfrf != summary.end());
+
+        BOOST_CHECK_MESSAGE(sgfrf->category() == SummaryConfigNode::Category::Segment,
+            R"("SGFRF" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sgfrf->type() == SummaryConfigNode::Type::Rate,
+            R"("SGFRF" keyword type must be "Rate")"
+        );
+
+        BOOST_CHECK_EQUAL(sgfrf->namedEntity(), "PROD01");
+    }
+
+    // SGFRF in segment 3 of PROD01 
+    BOOST_CHECK(deck.hasKeyword("SGFRS"));
+    BOOST_CHECK(summary.hasKeyword("SGFRS"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:2"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFRS:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:9"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:26"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:27"));  // No such segment.
+
+    {
+        auto sgfrs = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SGFRS";
+        });
+
+        BOOST_REQUIRE(sgfrs != summary.end());
+
+        BOOST_CHECK_MESSAGE(sgfrs->category() == SummaryConfigNode::Category::Segment,
+            R"("SGFRS" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sgfrs->type() == SummaryConfigNode::Type::Rate,
+            R"("SGFRS" keyword type must be "Rate")"
+        );
+
+        BOOST_CHECK_EQUAL(sgfrs->namedEntity(), "PROD01");
+    }
+
+    // SGOR PROD01 segment 10 only.
+    BOOST_CHECK(deck.hasKeyword("SGOR"));
+    BOOST_CHECK(summary.hasKeyword("SGOR"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SGOR:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SGOR:INJE01:10"));
+
+    {
+        auto sgor = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SGOR";
+        });
+
+        BOOST_REQUIRE(sgor != summary.end());
+
+        BOOST_CHECK_MESSAGE(sgor->category() == SummaryConfigNode::Category::Segment,
+            R"("SGOR" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sgor->type() == SummaryConfigNode::Type::Ratio,
+            R"("SGOR" keyword type must be "Ratio")"
+        );
+
+        BOOST_CHECK_EQUAL(sgor->namedEntity(), "PROD01");
+    }
 
     // SPR PROD01 segment 10 only.
     BOOST_CHECK(deck.hasKeyword("SPR"));
@@ -1156,6 +1495,26 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
     BOOST_CHECK(!summary.hasSummaryKey("SPR:INJE01:10"));
 
+    {
+        auto spr = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SPR";
+        });
+
+        BOOST_REQUIRE(spr != summary.end());
+
+        BOOST_CHECK_MESSAGE(spr->category() == SummaryConfigNode::Category::Segment,
+            R"("SPR" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(spr->type() == SummaryConfigNode::Type::Pressure,
+            R"("SPR" keyword type must be "Pressure")"
+        );
+
+        BOOST_CHECK_EQUAL(spr->namedEntity(), "PROD01");
+    }
+
     // SWFR for all segments in all MS wells.
     BOOST_CHECK(deck.hasKeyword("SWFR"));
     BOOST_CHECK(summary.hasKeyword("SWFR"));
@@ -1187,6 +1546,78 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:26"));
 
     BOOST_CHECK(!summary.hasSummaryKey("SWFR:INJE01:1"));
+
+    {
+        auto swfr = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SWFR";
+        });
+
+        BOOST_REQUIRE(swfr != summary.end());
+
+        BOOST_CHECK_MESSAGE(swfr->category() == SummaryConfigNode::Category::Segment,
+            R"("SWFR" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(swfr->type() == SummaryConfigNode::Type::Rate,
+            R"("SWFR" keyword type must be "Rate")"
+        );
+
+        BOOST_CHECK_EQUAL(swfr->namedEntity(), "PROD01");
+    }
+
+    // SWGR for segment 3 in all MS wells.
+    BOOST_CHECK(deck.hasKeyword("SWGR"));
+    BOOST_CHECK(summary.hasKeyword("SWGR"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:2"));
+    BOOST_CHECK(summary.hasSummaryKey("SWGR:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:9"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SWGR:INJE01:1"));
+
+    {
+        auto swgr = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SWGR";
+        });
+
+        BOOST_REQUIRE(swgr != summary.end());
+
+        BOOST_CHECK_MESSAGE(swgr->category() == SummaryConfigNode::Category::Segment,
+            R"("SWGR" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(swgr->type() == SummaryConfigNode::Type::Ratio,
+            R"("SWGR" keyword type must be "Ratio")"
+        );
+
+        BOOST_CHECK_EQUAL(swgr->namedEntity(), "PROD01");
+    }
 
     // SPRD for all segments in all MS wells.
     BOOST_CHECK(deck.hasKeyword("SPRD"));
@@ -1220,6 +1651,26 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
     BOOST_CHECK(!summary.hasSummaryKey("SPRD:INJE01:1"));
 
+    {
+        auto sprd = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SPRD";
+        });
+
+        BOOST_REQUIRE(sprd != summary.end());
+
+        BOOST_CHECK_MESSAGE(sprd->category() == SummaryConfigNode::Category::Segment,
+            R"("SPRD" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sprd->type() == SummaryConfigNode::Type::Pressure,
+            R"("SPRD" keyword type must be "Pressure")"
+        );
+
+        BOOST_CHECK_EQUAL(sprd->namedEntity(), "PROD01");
+    }
+
     // SPRDH for all segments of MS well PROD01.
     BOOST_CHECK(deck.hasKeyword("SPRDH"));
     BOOST_CHECK(summary.hasKeyword("SPRDH"));
@@ -1252,6 +1703,26 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
     BOOST_CHECK(!summary.hasSummaryKey("SPRDH:INJE01:1"));
 
+    {
+        auto sprdh = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SPRDH";
+        });
+
+        BOOST_REQUIRE(sprdh != summary.end());
+
+        BOOST_CHECK_MESSAGE(sprdh->category() == SummaryConfigNode::Category::Segment,
+            R"("SPRDH" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sprdh->type() == SummaryConfigNode::Type::Pressure,
+            R"("SPRDH" keyword type must be "Pressure")"
+        );
+
+        BOOST_CHECK_EQUAL(sprdh->namedEntity(), "PROD01");
+    }
+
     // SPRDF for segments 10 and 16 of MS well PROD01.
     BOOST_CHECK(deck.hasKeyword("SPRDF"));
     BOOST_CHECK(summary.hasKeyword("SPRDF"));
@@ -1283,6 +1754,26 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:26"));
 
     BOOST_CHECK(!summary.hasSummaryKey("SPRDF:INJE01:1"));
+
+    {
+        auto sprdf = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SPRDF";
+        });
+
+        BOOST_REQUIRE(sprdf != summary.end());
+
+        BOOST_CHECK_MESSAGE(sprdf->category() == SummaryConfigNode::Category::Segment,
+            R"("SPRDF" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sprdf->type() == SummaryConfigNode::Type::Pressure,
+            R"("SPRDF" keyword type must be "Pressure")"
+        );
+
+        BOOST_CHECK_EQUAL(sprdf->namedEntity(), "PROD01");
+    }
 
     // SPRDA for segments 10 and 16 of all MS wells
     BOOST_CHECK(deck.hasKeyword("SPRDA"));
@@ -1317,6 +1808,26 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(!summary.hasSummaryKey("SPRDA:INJE01:1"));
     BOOST_CHECK(!summary.hasSummaryKey("SPRDA:INJE01:10"));
     BOOST_CHECK(!summary.hasSummaryKey("SPRDA:INJE01:16"));
+
+    {
+        auto sprda = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryConfigNode& node)
+        {
+            return node.keyword() == "SPRDA";
+        });
+
+        BOOST_REQUIRE(sprda != summary.end());
+
+        BOOST_CHECK_MESSAGE(sprda->category() == SummaryConfigNode::Category::Segment,
+            R"("SPRDA" keyword category must be "Segment")"
+        );
+
+        BOOST_CHECK_MESSAGE(sprda->type() == SummaryConfigNode::Type::Pressure,
+            R"("SPRDA" keyword type must be "Pressure")"
+        );
+
+        BOOST_CHECK_EQUAL(sprda->namedEntity(), "PROD01");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Summary_Network) {
