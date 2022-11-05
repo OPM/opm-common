@@ -20,6 +20,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/ExtSmryOutput.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
@@ -28,7 +29,6 @@
 #include <stdexcept>
 #include <string>
 #include <filesystem>
-
 
 namespace Opm { namespace EclIO {
 
@@ -99,8 +99,12 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
     {
         const auto tp = std::chrono::system_clock::now();
         auto sec_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
-        std::string tmp_file_name = "TMP_" + std::to_string(sec_since_epoch) + ".ESMRY";
 
+        std::filesystem::path esmry_file(m_outputFileName);
+        std::filesystem::path rootName = esmry_file.parent_path() / esmry_file.stem();           
+
+        std::string tmp_file_name = rootName.string() + "_TMP_" + std::to_string(sec_since_epoch) + ".ESMRY";
+        
         {
             Opm::EclIO::EclOutput outFile(tmp_file_name, m_fmt, std::ios::out);
 
@@ -123,14 +127,29 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
             }
         }
 
-        const std::filesystem::path from_file = tmp_file_name;
-        const std::filesystem::path to_file = m_outputFileName;
-        std::filesystem::rename(from_file, to_file);
-
-        m_last_write = std::chrono::system_clock::now();
+        if (rename_tmpfile(tmp_file_name)){
+            m_last_write = std::chrono::system_clock::now();
+        } else {
+            Opm::OpmLog::warning("Not able to rename temporary ESMRY file " + tmp_file_name);
+            std::filesystem::path tmp_file(tmp_file_name);        
+            std::filesystem::remove(tmp_file);
+        }
     }
 
     m_nTimeSteps++;
+}
+
+bool ExtSmryOutput::rename_tmpfile(const std::string& tmp_fname)
+{
+    try {
+        std::filesystem::path from_file(tmp_fname);
+        std::filesystem::path to_file(m_outputFileName);
+        std::filesystem::rename(from_file, to_file);
+    } catch (...){
+        return false;
+    }
+
+    return true;
 }
 
 
