@@ -3,6 +3,7 @@
 #include <iostream>
 #include <tuple>
 #include <getopt.h>
+#include <filesystem>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/ERst.hpp>
@@ -118,9 +119,95 @@ static void printHelp() {
               << "\nIn addition, the program takes these options (which must be given before the arguments):\n\n"
               << "-h Print help and exit.\n"
               << "-l List report step numbers in the selected restart file.\n"
+              << "-g Convert file to grdecl format.\n"
+              << "-o Specify output file name (only valid with grdecl option).\n"
               << "-i Enforce IX standard on output file.\n"
               << "-r Extract and convert a specific report time step number from a unified restart file. \n\n";
 }
+
+
+template <typename T>
+void writeGrdeclData(std::ofstream& ofileH, const std::string& name, const std::vector<T>& array)
+{
+    int ncol;
+    int w;
+    int pre;
+    bool is_string = false;
+    bool is_int = false;
+
+    if constexpr (std::is_same<T, float>::value){
+        ncol = 4;
+        w = 11;
+        pre = 7;
+    } else if constexpr (std::is_same<T, double>::value){
+        ncol = 3;
+        w = 21;
+        pre = 14;
+    } else if constexpr (std::is_same<T, int>::value){
+        ncol = 8;
+        w = 6;
+        is_int = true;
+    } else if constexpr (std::is_same<T, std::string>::value){
+        ncol = 5;
+        is_string = true;
+    }
+
+    int64_t data_size = static_cast<int64_t>(array.size());
+
+    ofileH << "\n" << name << std::endl;
+
+    for (int64_t n = 0; n < data_size; n++){
+        if (is_string)
+            ofileH << " " << array[n];
+        else if (is_int)
+            ofileH << " " << std::setw(w) << array[n];
+        else
+            ofileH << " " << std::setw(w) << std::setprecision(pre) << std::scientific << array[n];
+
+        if ((n+1) % ncol == 0)
+            ofileH << "\n";
+    }
+
+    ofileH << " /\n";
+}
+
+void open_grdecl_output(const std::string& output_fname, const std::string& input_file, std::ofstream& ofileH)
+{
+    if (output_fname.empty()) {
+        std::filesystem::path inputfile(input_file);
+        std::filesystem::path rootName = inputfile.stem();
+        std::filesystem::path path = inputfile.parent_path();
+        std::filesystem::path grdeclfile;
+
+        grdeclfile = path / rootName += ".grdecl";
+
+        if (std::filesystem::exists(grdeclfile)) {
+            std::cout << "\nError, cant make grdecl file " << grdeclfile.string() << ". File exists \n";
+            exit(1);
+        }
+
+        ofileH.open(grdeclfile, std::ios::out);
+
+    } else {
+        std::filesystem::path grdeclfile(output_fname);
+        std::filesystem::path path = grdeclfile.parent_path();
+            
+        if ((path.empty()) || (std::filesystem::exists(path))) {
+
+            if (std::filesystem::exists(grdeclfile)) {
+                std::cout << "\nError, cant make grdecl file " << grdeclfile.string() << ". File exists \n";
+                exit(1);
+            }
+                 
+        } else {
+            std::cout << "\n!Error, output directory : '" << path.string() << "' doesn't exist \n";
+            exit(1);
+        }
+
+        ofileH.open(grdeclfile.string(), std::ios::out);
+    }
+}
+
 
 int main(int argc, char **argv) {
 
@@ -129,14 +216,28 @@ int main(int argc, char **argv) {
     bool specificReportStepNumber  = false;
     bool listProperties            = false;
     bool enforce_ix_output         = false;
+    bool to_grdecl                 = false;
 
-    while ((c = getopt(argc, argv, "hr:li")) != -1) {
+    std::map<std::string, std::string> to_formatted = {{".EGRID", ".FEGRID"}, {".INIT", ".FINIT"}, {".SMSPEC", ".FSMSPEC"},
+        {".UNSMRY", ".FUNSMRY"}, {".UNRST", ".FUNRST"}, {".RFT", ".FRFT"}, {".ESMRY", ".FESMRY"}};
+
+    std::map<std::string, std::string> to_binary = {{".FEGRID", ".EGRID"}, {".FINIT", ".INIT"}, {".FSMSPEC", ".SMSPEC"},
+        {".FUNSMRY", ".UNSMRY"}, {".FUNRST", ".UNRST"}, {".FRFT", ".RFT"}, {".FESMRY", ".ESMRY"}};
+
+
+    std::string output_fname;
+
+
+    while ((c = getopt(argc, argv, "hr:ligo:")) != -1) {
         switch (c) {
         case 'h':
             printHelp();
             return 0;
         case 'l':
             listProperties=true;
+            break;
+        case 'g':
+            to_grdecl=true;
             break;
         case 'i':
             enforce_ix_output=true;
@@ -145,12 +246,20 @@ int main(int argc, char **argv) {
             specificReportStepNumber=true;
             reportStepNumber = atoi(optarg);
             break;
+        case 'o':
+            output_fname = optarg;
+            break;
         default:
             return EXIT_FAILURE;
         }
     }
 
     int argOffset = optind;
+
+    if ((!output_fname.empty()) && (!to_grdecl)){
+        std::cout << "\n!Error, option -o only valid whit option -g \n\n";
+        exit(1);
+    }
 
     // start reading
     auto start = std::chrono::system_clock::now();
@@ -165,6 +274,52 @@ int main(int argc, char **argv) {
     std::string rootN = filename.substr(0,p);
     std::string extension = filename.substr(p,l-p);
     std::string resFile;
+
+
+    if (to_grdecl) {
+    
+        auto array_list = file1.getList();
+        file1.loadData();
+
+        auto start_g = std::chrono::system_clock::now();
+
+        std::ofstream ofileH;
+        open_grdecl_output(output_fname, filename, ofileH);
+
+        for (size_t n = 0; n < array_list.size(); n ++) {
+            std::string name = std::get<0>(array_list[n]);
+            auto arr_type = std::get<1>(array_list[n]);
+
+            if (arr_type == Opm::EclIO::REAL) {
+                auto  data = file1.get<float>(n);
+                writeGrdeclData(ofileH, name, data);
+             } else if (arr_type == Opm::EclIO::DOUB) {
+                auto  data = file1.get<double>(n);
+                writeGrdeclData(ofileH, name, data);
+            } else if (arr_type == Opm::EclIO::INTE) {
+                auto  data = file1.get<int>(n);
+                writeGrdeclData(ofileH, name, data);
+            } else if (arr_type == Opm::EclIO::CHAR) {
+                auto  data = file1.get<std::string>(n);
+                writeGrdeclData(ofileH, name, data);
+            } else if (arr_type == Opm::EclIO::LOGI) {
+                std::cout << "\n!Warning, skipping array '" << name << " of type LOGI \n";
+            } else if (arr_type == Opm::EclIO::C0NN) {
+                std::cout << "\n!Warning, skipping array '" << name << " of type C0NN \n";
+            } else {
+                std::cout << "unknown data type for array " << name << std::endl;
+                exit(1);
+            }
+        }
+
+        auto end_g = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end_g-start_g;
+
+        std::cout << "\nruntime writing grdecl file : " << elapsed_seconds.count() << " seconds\n" << std::endl;
+
+        std::cout << std::endl;
+        return 0;
+    }
 
     if (listProperties) {
 
@@ -194,12 +349,6 @@ int main(int argc, char **argv) {
 
         return 0;
     }
-
-    std::map<std::string, std::string> to_formatted = {{".EGRID", ".FEGRID"}, {".INIT", ".FINIT"}, {".SMSPEC", ".FSMSPEC"},
-        {".UNSMRY", ".FUNSMRY"}, {".UNRST", ".FUNRST"}, {".RFT", ".FRFT"}, {".ESMRY", ".FESMRY"}};
-
-    std::map<std::string, std::string> to_binary = {{".FEGRID", ".EGRID"}, {".FINIT", ".INIT"}, {".FSMSPEC", ".SMSPEC"},
-        {".FUNSMRY", ".UNSMRY"}, {".FUNRST", ".UNRST"}, {".FRFT", ".RFT"}, {".FESMRY", ".ESMRY"}};
 
     if (formattedOutput) {
 
