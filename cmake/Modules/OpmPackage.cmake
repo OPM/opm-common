@@ -124,7 +124,7 @@ macro (find_opm_package module deps header lib defs prog conf)
   # without config.h
   config_cmd_line (${module}_CMD_CONFIG ${module}_CONFIG_VARS)
 
-  if(NOT "${prog}" STREQUAL "")
+  if(prog) # always evaluates to false, but makes tests with DUNE 2.6-2.7 work
     # check that we can compile a small test-program
     include (CMakePushCheckState)
     cmake_push_check_state ()
