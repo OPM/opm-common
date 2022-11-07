@@ -108,7 +108,18 @@ if(NOT @opm-project_NAME@_FOUND)
   # The settings in this block do not mix well with the DEST_PREFIX
   # setting.
   if (NOT DEST_PREFIX)
-    # This is required to include OpmPackage
+    # if this file is not processed using the OPM CMake system but
+    # simply by a call to find_package(module) then the CMAKE_MODULE_PATH
+    # might not include the location of the OPM cmake module yet.
+    # Hence we search for opm-common using config mode to set it up.
+    # The check for opm-common_PREFIX is there to not do this in
+    # opm-common-config.cmake
+    if(NOT opm-common_PREFIX
+        AND NOT opm-common_FOUND)
+      # This needed to find the path to the CMake modules
+      find_package(opm-common CONFIG)
+    endif()
+    # This is required to include OpmPackage /opm-common-prereq.cmake
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
 
     # extra code from variable OPM_PROJECT_EXTRA_CODE
