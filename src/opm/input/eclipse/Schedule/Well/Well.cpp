@@ -1533,7 +1533,10 @@ double Well::alq_value() const {
 }
 
 double Well::temperature() const {
-    return this->well_temperature;
+    if (!this->wtype.producer())
+        return this->well_temperature;
+
+    throw std::runtime_error("Can only ask for temperature in an injector");
 }
 void Well::setWellTemperature(const double temp) {
     this->well_temperature = temp;
@@ -1812,7 +1815,7 @@ bool Well::operator==(const Well& data) const {
         && (this->getProductionProperties() == data.getProductionProperties())
         && (this->m_pavg == data.m_pavg)
         && (this->getInjectionProperties() == data.getInjectionProperties())
-        && (this->temperature() == data.temperature())
+        && (this->well_temperature == data.well_temperature)
         ;
 }
 

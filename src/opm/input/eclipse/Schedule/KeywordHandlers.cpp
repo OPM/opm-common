@@ -1654,8 +1654,8 @@ Well{0} entered with disallowed 'FIELD' parent group:
 
             for (const auto& well_name : well_names) {
                 const auto& well = this->getWell(well_name, handlerContext.currentStep);
-                const double current_temp = well.temperature();
-                if (current_temp != temp && !well.isProducer()) {
+                const double current_temp = !well.isProducer()? well.temperature(): 0.0;
+                if (current_temp != temp) {
                     auto well2 = this->snapshots.back().wells( well_name );
                     well2.setWellTemperature(temp);
                     this->snapshots.back().wells.update( std::move(well2) );
@@ -1976,7 +1976,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
 
             for (const auto& well_name : well_names) {
                 const auto& well = this->getWell(well_name, handlerContext.currentStep);
-                const double current_temp = well.temperature();
+                const double current_temp = !well.isProducer()? well.temperature(): 0.0;
                 if (current_temp != temp) {
                     auto well2 = this->snapshots.back().wells( well_name );
                     well2.setWellTemperature(temp);
