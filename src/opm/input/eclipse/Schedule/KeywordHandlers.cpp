@@ -1653,19 +1653,11 @@ Well{0} entered with disallowed 'FIELD' parent group:
             const double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
             for (const auto& well_name : well_names) {
-                // TODO: Is this the right approach? Setting the well temperature only
-                // has an effect on injectors, but specifying it for producers won't hurt
-                // and wells can also switch their injector/producer status. Note that
-                // modifying the injector properties for producer wells currently leads
-                // to a very weird segmentation fault downstream. For now, let's take the
-                // water route.
                 const auto& well = this->getWell(well_name, handlerContext.currentStep);
-                const double current_temp = well.getInjectionProperties().temperature;
+                const double current_temp = well.temperature();
                 if (current_temp != temp && !well.isProducer()) {
                     auto well2 = this->snapshots.back().wells( well_name );
-                    auto inj = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
-                    inj->temperature = temp;
-                    well2.updateInjection(inj);
+                    well2.setWellTemperature(temp);
                     this->snapshots.back().wells.update( std::move(well2) );
                 }
             }
@@ -1983,20 +1975,11 @@ Well{0} entered with disallowed 'FIELD' parent group:
             double temp = record.getItem("TEMP").getSIDouble(0);
 
             for (const auto& well_name : well_names) {
-                // TODO: Is this the right approach? Setting the well temperature only
-                // has an effect on injectors, but specifying it for producers won't hurt
-                // and wells can also switch their injector/producer status. Note that
-                // modifying the injector properties for producer wells currently leads
-                // to a very weird segmentation fault downstream. For now, let's take the
-                // water route.
-
                 const auto& well = this->getWell(well_name, handlerContext.currentStep);
-                const double current_temp = well.getInjectionProperties().temperature;
-                if (current_temp != temp && !well.isProducer()) {
+                const double current_temp = well.temperature();
+                if (current_temp != temp) {
                     auto well2 = this->snapshots.back().wells( well_name );
-                    auto inj = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
-                    inj->temperature = temp;
-                    well2.updateInjection(inj);
+                    well2.setWellTemperature(temp);
                     this->snapshots.back().wells.update( std::move(well2) );
                 }
             }

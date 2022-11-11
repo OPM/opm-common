@@ -47,7 +47,6 @@ namespace Opm {
           reservoirInjectionRate(units.getDimension(UnitSystem::measure::rate)),
           BHPTarget(units.getDimension(UnitSystem::measure::pressure)),
           THPTarget(units.getDimension(UnitSystem::measure::pressure)),
-          temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
           BHPH(0),
           THPH(0),
           VFPTableNumber(0),
@@ -69,7 +68,6 @@ namespace Opm {
         result.THPTarget = UDAValue(3.0);
         result.bhp_hist_limit = 4.0;
         result.thp_hist_limit = 5.0;
-        result.temperature = 6.0;
         result.BHPH = 7.0;
         result.THPH = 8.0;
         result.VFPTableNumber = 9;
@@ -238,7 +236,6 @@ namespace Opm {
     bool Well::WellInjectionProperties::operator==(const Well::WellInjectionProperties& other) const {
         if ((surfaceInjectionRate == other.surfaceInjectionRate) &&
             (reservoirInjectionRate == other.reservoirInjectionRate) &&
-            (temperature == other.temperature) &&
             (BHPTarget == other.BHPTarget) &&
             (THPTarget == other.THPTarget) &&
             (BHPH == other.BHPH) &&
@@ -280,7 +277,6 @@ namespace Opm {
             << "Well::WellInjectionProperties { "
             << "surfacerate: "      << wp.surfaceInjectionRate << ", "
             << "reservoir rate "    << wp.reservoirInjectionRate << ", "
-            << "temperature: "      << wp.temperature << ", "
             << "BHP target: "       << wp.BHPTarget << ", "
             << "THP target: "       << wp.THPTarget << ", "
             << "BHPH: "             << wp.BHPH << ", "
@@ -306,7 +302,6 @@ namespace Opm {
             controls.bhp_limit = this->bhp_hist_limit;
             controls.thp_limit = this->thp_hist_limit;
         }
-        controls.temperature = this->temperature;
         controls.injector_type = this->injectorType;
         controls.cmode = this->controlMode;
         controls.vfp_table_number = this->VFPTableNumber;
