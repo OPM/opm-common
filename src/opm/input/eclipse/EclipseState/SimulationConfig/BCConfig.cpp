@@ -67,6 +67,7 @@ BCComponent component(const std::string& s) {
 }
 }
 
+using BC = ParserKeywords::BC;
 BCConfig::BCFace::BCFace(const DeckRecord& record, const GridDims& grid) :
     i1(0),
     i2(grid.getNX() - 1),
@@ -74,14 +75,17 @@ BCConfig::BCFace::BCFace(const DeckRecord& record, const GridDims& grid) :
     j2(grid.getNY() - 1),
     k1(0),
     k2(grid.getNZ() - 1),
-    bctype(fromstring::bctype(record.getItem("TYPE").get<std::string>(0))),
-    dir(FaceDir::FromString(record.getItem("DIRECTION").get<std::string>(0))),
-    component(fromstring::component(record.getItem("COMPONENT").get<std::string>(0))),
-    rate(record.getItem("RATE").getSIDouble(0)),
-    pressure(record.getItem("PRESSURE").getSIDouble(0)),
-    temperature(record.getItem("TEMPERATURE").getSIDouble(0))
+    bctype(fromstring::bctype(record.getItem<BC::TYPE>().get<std::string>(0))),
+    dir(FaceDir::FromString(record.getItem<BC::DIRECTION>().get<std::string>(0))),
+    component(fromstring::component(record.getItem<BC::COMPONENT>().get<std::string>(0))),
+    rate(record.getItem<BC::RATE>().getSIDouble(0))
 {
-    using BC = ParserKeywords::BC;
+    if (const auto& P = record.getItem<BC::PRESSURE>(); ! P.defaultApplied(0)) {
+        pressure = P.getSIDouble(0);
+    }
+    if (const auto& T = record.getItem<BC::TEMPERATURE>(); ! T.defaultApplied(0)) {
+        temperature = T.getSIDouble(0);
+    }
     if (const auto& I1 = record.getItem<BC::I1>(); ! I1.defaultApplied(0)) {
         this->i1 = I1.get<int>(0) - 1;
     }

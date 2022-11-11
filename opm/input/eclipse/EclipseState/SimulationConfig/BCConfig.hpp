@@ -59,8 +59,8 @@ public:
         FaceDir::DirEnum dir;
         BCComponent component;
         double rate;
-        double pressure;
-        double temperature;
+        std::optional<double> pressure;
+        std::optional<double> temperature;
 
         BCFace() = default;
         explicit BCFace(const DeckRecord& record, const GridDims& grid);
