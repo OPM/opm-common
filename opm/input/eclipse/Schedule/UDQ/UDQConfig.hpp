@@ -20,20 +20,22 @@
 #ifndef UDQINPUT_HPP_
 #define UDQINPUT_HPP_
 
-#include <string>
-#include <unordered_map>
-#include <map>
-#include <unordered_set>
-
-#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
 
+#include <cstddef>
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace Opm {
 
@@ -43,12 +45,16 @@ namespace Opm {
     class KeywordLocation;
     class WellMatcher;
 
-    namespace RestartIO {
-        struct RstState;
-    }
+} // namespace Opm
 
+namespace Opm { namespace RestartIO {
+    struct RstState;
+}} // namespace Opm::RestartIO
 
-    class UDQConfig {
+namespace Opm {
+
+    class UDQConfig
+    {
     public:
         UDQConfig() = default;
         explicit UDQConfig(const UDQParams& params);
@@ -91,7 +97,6 @@ namespace Opm {
         bool operator==(const UDQConfig& config) const;
         void required_summary(std::unordered_set<std::string>& summary_keys) const;
 
-
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -113,20 +118,16 @@ namespace Opm {
         void eval_assign(std::size_t report_step, SummaryState& st, UDQState& udq_state, UDQContext& context) const;
         void eval_define(std::size_t report_step, UDQState& udq_state, UDQContext& context) const;
 
-
         UDQParams udq_params;
         UDQFunctionTable udqft;
 
-
-        /*
-          The choices of datastructures are strongly motivated by the
-          constraints imposed by the Eclipse formatted restart files; for
-          writing restart files it is essential to keep meticolous control over
-          the ordering of the keywords. In this class the ordering is mainly
-          maintained by the input_index map which keeps track of the insert
-          order of each keyword, and whether the keyword is currently DEFINE'ed
-          or ASSIGN'ed.
-        */
+        // The choices of data structures are strongly motivated by the
+        // constraints imposed by the ECLIPSE formatted restart files; for
+        // writing restart files it is essential to keep meticulous control
+        // over the ordering of the keywords.  In this class the ordering is
+        // mainly maintained by the input_index map which keeps track of the
+        // insert order of each keyword, and whether the keyword is
+        // currently DEFINE'ed or ASSIGN'ed.
         std::unordered_map<std::string, UDQDefine> m_definitions;
         std::unordered_map<std::string, UDQAssign> m_assignments;
         std::unordered_map<std::string, std::string> units;

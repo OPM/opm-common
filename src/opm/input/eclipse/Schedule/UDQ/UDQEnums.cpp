@@ -28,367 +28,407 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Opm { namespace UDQ {
-
 namespace {
 
-    const std::set<UDQTokenType> cmp_func = {UDQTokenType::binary_cmp_eq,
-                                             UDQTokenType::binary_cmp_ne,
-                                             UDQTokenType::binary_cmp_le,
-                                             UDQTokenType::binary_cmp_ge,
-                                             UDQTokenType::binary_cmp_lt,
-                                             UDQTokenType::binary_cmp_gt};
+    bool is_no_mix(const Opm::UDQVarType t)
+    {
+        return (t == Opm::UDQVarType::CONNECTION_VAR)
+            || (t == Opm::UDQVarType::REGION_VAR)
+            || (t == Opm::UDQVarType::SEGMENT_VAR)
+            || (t == Opm::UDQVarType::AQUIFER_VAR)
+            || (t == Opm::UDQVarType::BLOCK_VAR)
+            || (t == Opm::UDQVarType::WELL_VAR)
+            || (t == Opm::UDQVarType::GROUP_VAR)
+            ;
+    }
 
-    const std::set<UDQTokenType> binary_func  = {UDQTokenType::binary_op_add,
-                                                 UDQTokenType::binary_op_mul,
-                                                 UDQTokenType::binary_op_sub,
-                                                 UDQTokenType::binary_op_div,
-                                                 UDQTokenType::binary_op_pow,
-                                                 UDQTokenType::binary_op_uadd,
-                                                 UDQTokenType::binary_op_umul,
-                                                 UDQTokenType::binary_op_umin,
-                                                 UDQTokenType::binary_op_umax,
-                                                 UDQTokenType::binary_cmp_eq,
-                                                 UDQTokenType::binary_cmp_ne,
-                                                 UDQTokenType::binary_cmp_le,
-                                                 UDQTokenType::binary_cmp_ge,
-                                                 UDQTokenType::binary_cmp_lt,
-                                                 UDQTokenType::binary_cmp_gt};
+    bool is_valid_vartype(const Opm::UDQVarType t)
+    {
+        return is_no_mix(t)
+            || (t == Opm::UDQVarType::NONE)
+            || (t == Opm::UDQVarType::SCALAR)
+            || (t == Opm::UDQVarType::FIELD_VAR)
+            ;
+    }
 
-    const std::set<UDQTokenType> set_func = {UDQTokenType::binary_op_uadd,
-                                             UDQTokenType::binary_op_umul,
-                                             UDQTokenType::binary_op_umin,
-                                             UDQTokenType::binary_op_umax};
+    const auto cmp_func = std::set<Opm::UDQTokenType> {
+        Opm::UDQTokenType::binary_cmp_eq,
+        Opm::UDQTokenType::binary_cmp_ne,
+        Opm::UDQTokenType::binary_cmp_le,
+        Opm::UDQTokenType::binary_cmp_ge,
+        Opm::UDQTokenType::binary_cmp_lt,
+        Opm::UDQTokenType::binary_cmp_gt,
+    };
 
-    const std::set<UDQTokenType> scalar_func = {UDQTokenType::scalar_func_sum,
-                                                UDQTokenType::scalar_func_avea,
-                                                UDQTokenType::scalar_func_aveg,
-                                                UDQTokenType::scalar_func_aveh,
-                                                UDQTokenType::scalar_func_max,
-                                                UDQTokenType::scalar_func_min,
-                                                UDQTokenType::scalar_func_norm1,
-                                                UDQTokenType::scalar_func_norm2,
-                                                UDQTokenType::scalar_func_normi,
-                                                UDQTokenType::scalar_func_prod};
+    const auto binary_func = std::set<Opm::UDQTokenType> {
+        Opm::UDQTokenType::binary_op_add,
+        Opm::UDQTokenType::binary_op_mul,
+        Opm::UDQTokenType::binary_op_sub,
+        Opm::UDQTokenType::binary_op_div,
+        Opm::UDQTokenType::binary_op_pow,
+        Opm::UDQTokenType::binary_op_uadd,
+        Opm::UDQTokenType::binary_op_umul,
+        Opm::UDQTokenType::binary_op_umin,
+        Opm::UDQTokenType::binary_op_umax,
+        Opm::UDQTokenType::binary_cmp_eq,
+        Opm::UDQTokenType::binary_cmp_ne,
+        Opm::UDQTokenType::binary_cmp_le,
+        Opm::UDQTokenType::binary_cmp_ge,
+        Opm::UDQTokenType::binary_cmp_lt,
+        Opm::UDQTokenType::binary_cmp_gt,
+    };
 
+    const auto set_func = std::set<Opm::UDQTokenType> {
+        Opm::UDQTokenType::binary_op_uadd,
+        Opm::UDQTokenType::binary_op_umul,
+        Opm::UDQTokenType::binary_op_umin,
+        Opm::UDQTokenType::binary_op_umax,
+    };
 
-    const std::set<UDQTokenType> unary_elemental_func = {UDQTokenType::elemental_func_randn,
-                                                         UDQTokenType::elemental_func_randu,
-                                                         UDQTokenType::elemental_func_rrandn,
-                                                         UDQTokenType::elemental_func_rrandu,
-                                                         UDQTokenType::elemental_func_abs,
-                                                         UDQTokenType::elemental_func_def,
-                                                         UDQTokenType::elemental_func_exp,
-                                                         UDQTokenType::elemental_func_idv,
-                                                         UDQTokenType::elemental_func_ln,
-                                                         UDQTokenType::elemental_func_log,
-                                                         UDQTokenType::elemental_func_nint,
-                                                         UDQTokenType::elemental_func_sorta,
-                                                         UDQTokenType::elemental_func_sortd,
-                                                         UDQTokenType::elemental_func_undef};
+    const auto scalar_func = std::set<Opm::UDQTokenType> {
+        Opm::UDQTokenType::scalar_func_sum,
+        Opm::UDQTokenType::scalar_func_avea,
+        Opm::UDQTokenType::scalar_func_aveg,
+        Opm::UDQTokenType::scalar_func_aveh,
+        Opm::UDQTokenType::scalar_func_max,
+        Opm::UDQTokenType::scalar_func_min,
+        Opm::UDQTokenType::scalar_func_norm1,
+        Opm::UDQTokenType::scalar_func_norm2,
+        Opm::UDQTokenType::scalar_func_normi,
+        Opm::UDQTokenType::scalar_func_prod,
+    };
 
+    const auto unary_elemental_func = std::set<Opm::UDQTokenType> {
+        Opm::UDQTokenType::elemental_func_randn,
+        Opm::UDQTokenType::elemental_func_randu,
+        Opm::UDQTokenType::elemental_func_rrandn,
+        Opm::UDQTokenType::elemental_func_rrandu,
+        Opm::UDQTokenType::elemental_func_abs,
+        Opm::UDQTokenType::elemental_func_def,
+        Opm::UDQTokenType::elemental_func_exp,
+        Opm::UDQTokenType::elemental_func_idv,
+        Opm::UDQTokenType::elemental_func_ln,
+        Opm::UDQTokenType::elemental_func_log,
+        Opm::UDQTokenType::elemental_func_nint,
+        Opm::UDQTokenType::elemental_func_sorta,
+        Opm::UDQTokenType::elemental_func_sortd,
+        Opm::UDQTokenType::elemental_func_undef,
+    };
 
-    const std::unordered_map<std::string, UDQTokenType> func_type = {{"+", UDQTokenType::binary_op_add},
-                                                                     {"-", UDQTokenType::binary_op_sub},
-                                                                     {"/", UDQTokenType::binary_op_div},
-                                                                     {"DIV", UDQTokenType::binary_op_div},
-                                                                     {"*", UDQTokenType::binary_op_mul},
-                                                                     {"^", UDQTokenType::binary_op_pow},
-                                                                     {"UADD", UDQTokenType::binary_op_uadd},
-                                                                     {"UMUL", UDQTokenType::binary_op_umul},
-                                                                     {"UMIN", UDQTokenType::binary_op_umin},
-                                                                     {"UMAX", UDQTokenType::binary_op_umax},
-                                                                     {"==", UDQTokenType::binary_cmp_eq},
-                                                                     {"!=", UDQTokenType::binary_cmp_ne},
-                                                                     {"<=", UDQTokenType::binary_cmp_le},
-                                                                     {">=", UDQTokenType::binary_cmp_ge},
-                                                                     {"<", UDQTokenType::binary_cmp_lt},
-                                                                     {">", UDQTokenType::binary_cmp_gt},
-                                                                     {"RANDN", UDQTokenType::elemental_func_randn},
-                                                                     {"RANDU", UDQTokenType::elemental_func_randu},
-                                                                     {"RRNDN", UDQTokenType::elemental_func_rrandn},
-                                                                     {"RRNDU", UDQTokenType::elemental_func_rrandu},
-                                                                     {"ABS", UDQTokenType::elemental_func_abs},
-                                                                     {"DEF", UDQTokenType::elemental_func_def},
-                                                                     {"EXP", UDQTokenType::elemental_func_exp},
-                                                                     {"IDV", UDQTokenType::elemental_func_idv},
-                                                                     {"LN", UDQTokenType::elemental_func_ln},
-                                                                     {"LOG", UDQTokenType::elemental_func_log},
-                                                                     {"NINT", UDQTokenType::elemental_func_nint},
-                                                                     {"SORTA", UDQTokenType::elemental_func_sorta},
-                                                                     {"SORTD", UDQTokenType::elemental_func_sortd},
-                                                                     {"UNDEF", UDQTokenType::elemental_func_undef},
-                                                                     {"SUM", UDQTokenType::scalar_func_sum},
-                                                                     {"AVEA", UDQTokenType::scalar_func_avea},
-                                                                     {"AVEG", UDQTokenType::scalar_func_aveg},
-                                                                     {"AVEH", UDQTokenType::scalar_func_aveh},
-                                                                     {"MAX", UDQTokenType::scalar_func_max},
-                                                                     {"MIN", UDQTokenType::scalar_func_min},
-                                                                     {"NORM1", UDQTokenType::scalar_func_norm1},
-                                                                     {"NORM2", UDQTokenType::scalar_func_norm2},
-                                                                     {"NORMI", UDQTokenType::scalar_func_normi},
-                                                                     {"PROD", UDQTokenType::scalar_func_prod}};
+    const auto func_type = std::unordered_map<std::string, Opm::UDQTokenType> {
+        {"+"    , Opm::UDQTokenType::binary_op_add},
+        {"-"    , Opm::UDQTokenType::binary_op_sub},
+        {"/"    , Opm::UDQTokenType::binary_op_div},
+        {"DIV"  , Opm::UDQTokenType::binary_op_div},
+        {"*"    , Opm::UDQTokenType::binary_op_mul},
+        {"^"    , Opm::UDQTokenType::binary_op_pow},
+        {"UADD" , Opm::UDQTokenType::binary_op_uadd},
+        {"UMUL" , Opm::UDQTokenType::binary_op_umul},
+        {"UMIN" , Opm::UDQTokenType::binary_op_umin},
+        {"UMAX" , Opm::UDQTokenType::binary_op_umax},
+        {"=="   , Opm::UDQTokenType::binary_cmp_eq},
+        {"!="   , Opm::UDQTokenType::binary_cmp_ne},
+        {"<="   , Opm::UDQTokenType::binary_cmp_le},
+        {">="   , Opm::UDQTokenType::binary_cmp_ge},
+        {"<"    , Opm::UDQTokenType::binary_cmp_lt},
+        {">"    , Opm::UDQTokenType::binary_cmp_gt},
+        {"RANDN", Opm::UDQTokenType::elemental_func_randn},
+        {"RANDU", Opm::UDQTokenType::elemental_func_randu},
+        {"RRNDN", Opm::UDQTokenType::elemental_func_rrandn},
+        {"RRNDU", Opm::UDQTokenType::elemental_func_rrandu},
+        {"ABS"  , Opm::UDQTokenType::elemental_func_abs},
+        {"DEF"  , Opm::UDQTokenType::elemental_func_def},
+        {"EXP"  , Opm::UDQTokenType::elemental_func_exp},
+        {"IDV"  , Opm::UDQTokenType::elemental_func_idv},
+        {"LN"   , Opm::UDQTokenType::elemental_func_ln},
+        {"LOG"  , Opm::UDQTokenType::elemental_func_log},
+        {"NINT" , Opm::UDQTokenType::elemental_func_nint},
+        {"SORTA", Opm::UDQTokenType::elemental_func_sorta},
+        {"SORTD", Opm::UDQTokenType::elemental_func_sortd},
+        {"UNDEF", Opm::UDQTokenType::elemental_func_undef},
+        {"SUM"  , Opm::UDQTokenType::scalar_func_sum},
+        {"AVEA" , Opm::UDQTokenType::scalar_func_avea},
+        {"AVEG" , Opm::UDQTokenType::scalar_func_aveg},
+        {"AVEH" , Opm::UDQTokenType::scalar_func_aveh},
+        {"MAX"  , Opm::UDQTokenType::scalar_func_max},
+        {"MIN"  , Opm::UDQTokenType::scalar_func_min},
+        {"NORM1", Opm::UDQTokenType::scalar_func_norm1},
+        {"NORM2", Opm::UDQTokenType::scalar_func_norm2},
+        {"NORMI", Opm::UDQTokenType::scalar_func_normi},
+        {"PROD" , Opm::UDQTokenType::scalar_func_prod},
+    };
 
+} // Anonymous namespace
 
-}
+namespace Opm { namespace UDQ {
 
-UDQVarType targetType(const std::string& keyword) {
+UDQVarType targetType(const std::string& keyword)
+{
+    const char first_char = keyword[0];
+    switch (first_char) {
+    case 'C': return UDQVarType::CONNECTION_VAR;
+    case 'R': return UDQVarType::REGION_VAR;
+    case 'F': return UDQVarType::FIELD_VAR;
+    case 'S': return UDQVarType::SEGMENT_VAR;
+    case 'A': return UDQVarType::AQUIFER_VAR;
+    case 'B': return UDQVarType::BLOCK_VAR;
+    case 'W': return UDQVarType::WELL_VAR;
+    case 'G': return UDQVarType::GROUP_VAR;
 
-    char first_char =  keyword[0];
-    switch(first_char) {
-    case 'C':
-        return UDQVarType::CONNECTION_VAR;
-    case 'R':
-        return UDQVarType::REGION_VAR;
-    case 'F':
-        return UDQVarType::FIELD_VAR;
-    case 'S':
-        return UDQVarType::SEGMENT_VAR;
-    case 'A':
-        return UDQVarType::AQUIFER_VAR;
-    case 'B':
-        return UDQVarType::BLOCK_VAR;
-    case 'W':
-        return UDQVarType::WELL_VAR;
-    case 'G':
-        return UDQVarType::GROUP_VAR;
     default:
-        const auto& double_value = try_parse_double(keyword);
-        if (double_value.has_value())
+        if (const auto double_value = try_parse_double(keyword);
+            double_value.has_value())
+        {
             return UDQVarType::SCALAR;
+        }
 
         return UDQVarType::NONE;
     }
-
 }
 
-UDQVarType targetType(const std::string& keyword, const std::vector<std::string>& selector) {
-    auto tt = targetType(keyword);
-
-    if (tt == UDQVarType::WELL_VAR || tt == UDQVarType::GROUP_VAR) {
-        if (selector.empty())
+UDQVarType targetType(const std::string&              keyword,
+                      const std::vector<std::string>& selector)
+{
+    const auto tt = targetType(keyword);
+    if ((tt == UDQVarType::WELL_VAR) || (tt == UDQVarType::GROUP_VAR)) {
+        if (selector.empty() || (selector.front().find("*") != std::string::npos)) {
             return tt;
-        else {
-            const auto& wgname = selector[0];
-            if (wgname.find("*") != std::string::npos)
-                return tt;
         }
     }
 
     return UDQVarType::SCALAR;
 }
 
+UDQVarType varType(const std::string& keyword)
+{
+    if ((keyword.size() < std::string::size_type{2}) || (keyword[1] != 'U')) {
+        throw std::invalid_argument("Keyword: '" + keyword + "' is not of UDQ type");
+    }
 
-UDQVarType varType(const std::string& keyword) {
-    if (keyword[1] != 'U')
-        throw std::invalid_argument("Keyword: " + keyword + " is not of UDQ type");
+    const char first_char =  keyword[0];
+    switch (first_char) {
+    case 'W': return UDQVarType::WELL_VAR;
+    case 'G': return UDQVarType::GROUP_VAR;
+    case 'C': return UDQVarType::CONNECTION_VAR;
+    case 'R': return UDQVarType::REGION_VAR;
+    case 'F': return UDQVarType::FIELD_VAR;
+    case 'S': return UDQVarType::SEGMENT_VAR;
+    case 'A': return UDQVarType::AQUIFER_VAR;
+    case 'B': return UDQVarType::BLOCK_VAR;
 
-    char first_char =  keyword[0];
-    switch(first_char) {
-    case 'W':
-        return UDQVarType::WELL_VAR;
-    case 'G':
-        return UDQVarType::GROUP_VAR;
-    case 'C':
-        return UDQVarType::CONNECTION_VAR;
-    case 'R':
-        return UDQVarType::REGION_VAR;
-    case 'F':
-        return UDQVarType::FIELD_VAR;
-    case 'S':
-        return UDQVarType::SEGMENT_VAR;
-    case 'A':
-        return UDQVarType::AQUIFER_VAR;
-    case 'B':
-        return UDQVarType::BLOCK_VAR;
     default:
         throw std::invalid_argument("Keyword: " + keyword + " is not of UDQ type");
     }
-
 }
 
-
-UDQAction actionType(const std::string& action_string) {
-    if (action_string == "ASSIGN")
+UDQAction actionType(const std::string& action_string)
+{
+    if (action_string == "ASSIGN") {
         return UDQAction::ASSIGN;
+    }
 
-    if (action_string == "DEFINE")
+    if (action_string == "DEFINE") {
         return UDQAction::DEFINE;
+    }
 
-    if (action_string == "UNITS")
+    if (action_string == "UNITS") {
         return UDQAction::UNITS;
+    }
 
-    if (action_string == "UPDATE")
+    if (action_string == "UPDATE") {
         return UDQAction::UPDATE;
+    }
 
     throw std::invalid_argument("Invalid action string " + action_string);
 }
 
-
-UDQUpdate updateType(const std::string& update_string) {
-    if (update_string == "ON")
+UDQUpdate updateType(const std::string& update_string)
+{
+    if (update_string == "ON") {
         return UDQUpdate::ON;
+    }
 
-    if (update_string == "OFF")
+    if (update_string == "OFF") {
         return UDQUpdate::OFF;
+    }
 
-    if (update_string == "NEXT")
+    if (update_string == "NEXT") {
         return UDQUpdate::NEXT;
+    }
 
     throw std::invalid_argument("Invalid status update string " + update_string);
 }
 
-UDQUpdate updateType(int int_value) {
+UDQUpdate updateType(const int int_value)
+{
     switch (int_value) {
     case 0: return UDQUpdate::OFF;
     case 1: return UDQUpdate::NEXT;
     case 2: return UDQUpdate::ON;
+
     default:
         throw std::logic_error("Invalid integer for UDQUpdate type");
     }
 }
 
-
-bool binaryFunc(UDQTokenType token_type) {
-    return (binary_func.count(token_type) > 0);
+bool binaryFunc(const UDQTokenType token_type)
+{
+    return binary_func.find(token_type) != binary_func.end();
 }
 
-bool scalarFunc(UDQTokenType token_type) {
-    return (scalar_func.count(token_type) > 0);
+bool scalarFunc(const UDQTokenType token_type)
+{
+    return scalar_func.find(token_type) != scalar_func.end();
 }
 
-bool elementalUnaryFunc(UDQTokenType token_type) {
-    return (unary_elemental_func.count(token_type) > 0);
+bool elementalUnaryFunc(const UDQTokenType token_type)
+{
+    return unary_elemental_func.find(token_type) != unary_elemental_func.end();
 }
 
-bool cmpFunc(UDQTokenType token_type) {
-    return (cmp_func.count(token_type) > 0);
+bool cmpFunc(const UDQTokenType token_type)
+{
+    return cmp_func.find(token_type) != cmp_func.end();
 }
 
-bool setFunc(UDQTokenType token_type) {
-    return (set_func.count(token_type) > 0);
+bool setFunc(const UDQTokenType token_type)
+{
+    return set_func.find(token_type) != set_func.end();
 }
 
+UDQTokenType funcType(const std::string& func_name)
+{
+    {
+        auto func = func_type.find(func_name);
+        if (func != func_type.end()) {
+            return func->second;
+        }
+    }
 
-UDQTokenType funcType(const std::string& func_name) {
-    if (func_type.count(func_name) > 0)
-        return func_type.at(func_name);
-
-    if (func_name.substr(0,2) == "TU") {
+    if (func_name.substr(0, 2) == "TU") {
         return UDQTokenType::table_lookup;
     }
 
     return UDQTokenType::error;
 }
 
-UDQTokenType tokenType(const std::string& token) {
-    auto token_type = funcType(token);
-    if (token_type == UDQTokenType::error) {
-        if (token == "(")
-            token_type = UDQTokenType::open_paren;
-        else if (token == ")")
-            token_type = UDQTokenType::close_paren;
-        else {
-            auto value = try_parse_double(token);
-            if (value.has_value())
-                token_type = UDQTokenType::number;
-            else
-                token_type = UDQTokenType::ecl_expr;
-        }
+UDQTokenType tokenType(const std::string& token)
+{
+    if (const auto token_type = funcType(token);
+        token_type != UDQTokenType::error)
+    {
+        return token_type;
     }
-    return token_type;
+
+    if (token == "(") {
+        return UDQTokenType::open_paren;
+    }
+
+    if (token == ")") {
+        return UDQTokenType::close_paren;
+    }
+
+    if (const auto number = try_parse_double(token);
+        number.has_value())
+    {
+        return UDQTokenType::number;
+    }
+
+    return UDQTokenType::ecl_expr;
 }
 
+UDQVarType coerce(const UDQVarType t1, const UDQVarType t2)
+{
+    if (! (is_valid_vartype(t1) && is_valid_vartype(t2))) {
+        // Note: Can't use typeName() here since that would throw another
+        // exception.
+        throw std::logic_error {
+            "Cannot coerce between " + std::to_string(static_cast<int>(t1))
+            + " and " + std::to_string(static_cast<int>(t2))
+        };
+    }
 
-UDQVarType coerce(UDQVarType t1, UDQVarType t2) {
-    if (t1 == t2)
-        return t1;
-
-    if (t1 == UDQVarType::WELL_VAR ) {
-        if (t2 == UDQVarType::GROUP_VAR)
-            throw std::logic_error("Can not coerce well variable and group variable");
-
+    if (t1 == t2) {
         return t1;
     }
 
-    if (t1 == UDQVarType::GROUP_VAR ) {
-        if (t2 == UDQVarType::WELL_VAR)
-            throw std::logic_error("Can not coerce well variable and group variable");
+    const auto is_restricted_t1 = is_no_mix(t1);
+    const auto is_restricted_t2 = is_no_mix(t2);
 
+    if (is_restricted_t1 && is_restricted_t2) {
+        // t1 != t2, but neither can be coerced into the other.
+        throw std::logic_error {
+            "Cannot coerce between " + typeName(t1) + " and " + typeName(t2)
+        };
+    }
+
+    if (is_restricted_t1) {
         return t1;
     }
 
-    if (t2 == UDQVarType::WELL_VAR ) {
-        if (t1 == UDQVarType::GROUP_VAR)
-            throw std::logic_error("Can not coerce well variable and group variable");
-
+    if (is_restricted_t2) {
         return t2;
     }
 
-    if (t2 == UDQVarType::GROUP_VAR ) {
-        if (t1 == UDQVarType::WELL_VAR)
-            throw std::logic_error("Can not coerce well variable and group variable");
-
+    if (t1 == UDQVarType::NONE) {
         return t2;
     }
 
-    if (t1 == UDQVarType::NONE)
-        return t2;
-
-    if (t2 == UDQVarType::NONE)
+    if (t2 == UDQVarType::NONE) {
         return t1;
+    }
 
     return t1;
 }
 
-
-
-
-std::string typeName(UDQVarType var_type) {
+std::string typeName(const UDQVarType var_type)
+{
     switch (var_type) {
     case UDQVarType::NONE:
         return "NONE";
+
     case UDQVarType::SCALAR:
         return "SCALAR";
+
     case UDQVarType::WELL_VAR:
         return "WELL_VAR";
+
     case UDQVarType::CONNECTION_VAR:
         return "CONNECTION_VAR";
+
     case UDQVarType::FIELD_VAR:
         return "FIELD_VAR";
+
     case UDQVarType::GROUP_VAR:
         return "GROUP_VAR";
+
     case UDQVarType::REGION_VAR:
         return "REGION_VAR";
+
     case UDQVarType::SEGMENT_VAR:
         return "SEGMENT_VAR";
+
     case UDQVarType::AQUIFER_VAR:
         return "AQUIFER_VAR";
+
     case UDQVarType::BLOCK_VAR:
         return "BLOCK_VAR";
+
     default:
         throw std::runtime_error("Should not be here: " + std::to_string(static_cast<int>(var_type)));
     }
 }
 
-bool trailingSpace(UDQTokenType token_type) {
-    if (binaryFunc(token_type))
-        return true;
-
-    if (cmpFunc(token_type))
-        return true;
-
-    return false;
+bool trailingSpace(const UDQTokenType token_type)
+{
+    return binaryFunc(token_type)
+        || cmpFunc(token_type);
 }
 
-bool leadingSpace(UDQTokenType token_type) {
-    if (binaryFunc(token_type))
-        return true;
-
-    if (cmpFunc(token_type))
-        return true;
-
-    return false;
+bool leadingSpace(const UDQTokenType token_type)
+{
+    return binaryFunc(token_type)
+        || cmpFunc(token_type);
 }
 
 namespace {
@@ -401,7 +441,7 @@ namespace {
             throw std::logic_error {
                 "Unrecognized enum type (" +
                 std::to_string(static_cast<int>(control)) +
-                "- internal error"
+                ") - internal error"
             };
         }
 
@@ -683,5 +723,4 @@ std::string controlName(const UDAControl control)
     };
 }
 
-
-}} // Opm::UDQ
+}} // namespace Opm::UDQ

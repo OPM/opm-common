@@ -36,47 +36,57 @@ namespace {
 
 namespace Opm {
 
-UDQToken::UDQToken(const std::string& string_token, UDQTokenType token_type_) :
-    token_type(token_type_)
+UDQToken::UDQToken(const std::string& string_token,
+                   const UDQTokenType token_type_)
+    : token_type(token_type_)
 {
-    if (this->token_type == UDQTokenType::number)
+    if (this->token_type == UDQTokenType::number) {
         this->m_value = stod(string_token);
-    else
+    }
+    else {
         this->m_value = string_token;
-
+    }
 }
 
-UDQToken::UDQToken(const std::string& string_token, const std::vector<std::string>& selector_):
-    token_type(UDQTokenType::ecl_expr),
-    m_value(string_token),
-    m_selector(selector_)
+UDQToken::UDQToken(const std::string&              string_token,
+                   const std::vector<std::string>& selector_)
+    : token_type(UDQTokenType::ecl_expr)
+    , m_value   (string_token)
+    , m_selector(selector_)
+{}
+
+const std::variant<std::string, double>& UDQToken::value() const
 {
-}
-
-const std::variant<std::string, double>& UDQToken::value() const {
     return this->m_value;
 }
 
-const std::vector<std::string>& UDQToken::selector() const {
+const std::vector<std::string>& UDQToken::selector() const
+{
     return this->m_selector;
 }
 
-UDQTokenType UDQToken::type() const {
+UDQTokenType UDQToken::type() const
+{
     return this->token_type;
 }
 
-std::string UDQToken::str() const {
+std::string UDQToken::str() const
+{
     if (std::holds_alternative<std::string>(this->m_value)) {
-        if (this->m_selector.empty())
+        if (this->m_selector.empty()) {
             return std::get<std::string>(this->m_value);
+        }
 
         std::string quoted_selector;
-        for (const auto& s : this->m_selector)
+        for (const auto& s : this->m_selector) {
             quoted_selector += " '" + s + "'";
+        }
 
         return std::get<std::string>(this->m_value) + quoted_selector;
-    } else
+    }
+    else {
         return format_double(std::get<double>(this->m_value));
+    }
 }
 
 } // namespace Opm

@@ -16,12 +16,21 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <algorithm>
-#include <cmath>
-#include <fmt/format.h>
+
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -216,12 +225,13 @@ UDQSet UDQSet::groups(const std::string& name, const std::vector<std::string>& g
 }
 
 
-bool UDQSet::has(const std::string& name) const {
-    for (const auto& res : this->values) {
-        if (res.wgname() == name)
-            return true;
-    }
-    return false;
+bool UDQSet::has(const std::string& name) const
+{
+    return std::any_of(this->values.begin(), this->values.end(),
+                       [&name](const UDQScalar& value)
+                       {
+                           return value.wgname() == name;
+                       });
 }
 
 std::size_t UDQSet::size() const {
@@ -342,25 +352,36 @@ std::vector<double> UDQSet::defined_values() const {
 }
 
 
-std::size_t UDQSet::defined_size() const {
-    std::size_t dsize = 0;
-    for (const auto& v : this->values) {
-        if (v)
-            dsize += 1;
-    }
-    return dsize;
+std::size_t UDQSet::defined_size() const
+{
+    return std::count_if(this->values.begin(), this->values.end(),
+                         [](const UDQScalar& value)
+                         {
+                             return value.defined();
+                         });
 }
 
-const UDQScalar& UDQSet::operator[](std::size_t index) const {
-    if (index >= this->size())
+const UDQScalar& UDQSet::operator[](std::size_t index) const
+{
+    if (index >= this->size()) {
         throw std::out_of_range("Index out of range in UDQset::operator[]");
+    }
+
     return this->values[index];
 }
 
-const UDQScalar& UDQSet::operator[](const std::string& wgname) const {
-    auto value_iter = std::find_if( this->values.begin(), this->values.end(), [&wgname](const UDQScalar& value) { return (value.wgname() == wgname );});
-    if (value_iter == this->values.end())
+const UDQScalar& UDQSet::operator[](const std::string& wgname) const
+{
+    auto value_iter = std::find_if(this->values.begin(), this->values.end(),
+                                   [&wgname](const UDQScalar& value)
+                                   {
+                                       return value.wgname() == wgname;
+                                   });
+
+    if (value_iter == this->values.end()) {
         throw std::out_of_range("No such well/group: " + wgname);
+    }
+
     return *value_iter;
 }
 
@@ -453,54 +474,58 @@ UDQScalar operator/(double lhs, const UDQScalar& rhs) {
 
 namespace {
 
-bool is_scalar(const UDQSet& udq_set) {
-    if (udq_set.var_type() == UDQVarType::SCALAR)
-        return true;
+bool is_scalar(const UDQSet& udq_set)
+{
+    const auto vtype = udq_set.var_type();
 
-    if (udq_set.var_type() == UDQVarType::FIELD_VAR)
-        return true;
-
-    return false;
+    return (vtype == UDQVarType::SCALAR)
+        || (vtype == UDQVarType::FIELD_VAR);
 }
 
-
-/*
-  If one result set is scalar and the other represents a set of wells/groups,
-  the scalar result is promoted to a set of the right type.
-
-  This function is quite subconcious about FIELD / SCALAR.
-*/
+// If one result set is scalar and the other represents a set of
+// wells/groups, the scalar result is promoted to a set of the right type.
+//
+// This function is quite subconscious about FIELD / SCALAR.
 std::pair<UDQSet, UDQSet> udq_cast(const UDQSet& lhs, const UDQSet& rhs)
 {
-    if (lhs.var_type() == rhs.var_type())
-        return std::make_pair(lhs,rhs);
+    if (lhs.var_type() == rhs.var_type()) {
+        return { lhs, rhs };
+    }
 
-    if (lhs.size() == rhs.size())
-        return std::make_pair(lhs,rhs);
+    if (is_scalar(lhs) && is_scalar(rhs)) {
+        return { lhs, rhs };
+    }
 
     if (is_scalar(lhs)) {
-        if (rhs.var_type() == UDQVarType::WELL_VAR)
-            return std::make_pair(UDQSet::wells(lhs.name(), rhs.wgnames(), lhs[0].get()), rhs);
+        if (rhs.var_type() == UDQVarType::WELL_VAR) {
+            return { UDQSet::wells(lhs.name(), rhs.wgnames(), lhs[0].get()), rhs };
+        }
 
-        if (rhs.var_type() == UDQVarType::GROUP_VAR)
-            return std::make_pair(UDQSet::groups(lhs.name(), rhs.wgnames(), lhs[0].get()), rhs);
+        if (rhs.var_type() == UDQVarType::GROUP_VAR) {
+            return { UDQSet::groups(lhs.name(), rhs.wgnames(), lhs[0].get()), rhs };
+        }
     }
 
     if (is_scalar(rhs)) {
-        if (lhs.var_type() == UDQVarType::WELL_VAR)
-            return std::make_pair(lhs, UDQSet::wells(rhs.name(), lhs.wgnames(), rhs[0].get()));
+        if (lhs.var_type() == UDQVarType::WELL_VAR) {
+            return { lhs, UDQSet::wells(rhs.name(), lhs.wgnames(), rhs[0].get()) };
+        }
 
-        if (lhs.var_type() == UDQVarType::GROUP_VAR)
-            return std::make_pair(lhs, UDQSet::groups(rhs.name(), lhs.wgnames(), rhs[0].get()));
+        if (lhs.var_type() == UDQVarType::GROUP_VAR) {
+            return { lhs, UDQSet::groups(rhs.name(), lhs.wgnames(), rhs[0].get()) };
+        }
     }
 
-    auto msg = fmt::format("Type/size mismatch when combining UDQs {}(size={}, type={}) and {}(size={}, type={})",
-                           lhs.name(), lhs.size(), static_cast<int>(lhs.var_type()),
-                           rhs.name(), rhs.size(), static_cast<int>(rhs.var_type()));
-    throw std::logic_error(msg);
+    throw std::logic_error {
+        fmt::format("Type/size mismatch when combining UDQs "
+                    "{}(size={}, type={}) and "
+                    "{}(size={}, type={})",
+                    lhs.name(), lhs.size(), UDQ::typeName(lhs.var_type()),
+                    rhs.name(), rhs.size(), UDQ::typeName(rhs.var_type()))
+    };
 }
 
-}
+} // Anonymous namespace
 
 UDQSet operator+(const UDQSet&lhs, const UDQSet& rhs) {
     auto [left,right] = udq_cast(lhs, rhs);
@@ -584,4 +609,4 @@ bool UDQSet::operator==(const UDQSet& other) const {
            this->values == other.values;
 }
 
-}
+} // namespace Opm
