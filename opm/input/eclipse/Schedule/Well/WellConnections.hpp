@@ -92,8 +92,6 @@ namespace Opm {
 
         void loadWELTRAJ(const DeckRecord& record, const ScheduleGrid& grid, const std::string& wname, const KeywordLocation& location);
 
-        using const_iterator = std::vector< Connection >::const_iterator;
-
         void add(Connection);
         std::size_t size() const;
         bool empty() const;
@@ -189,9 +187,9 @@ namespace Opm {
         void orderMSW();
         void orderDEPTH();
 
-        Connection::Order m_ordering = Connection::Order::TRACK;
-        int headI, headJ;
-        std::vector< Connection > m_connections;
+        // Connection::Order m_ordering = Connection::Order::TRACK;
+        // int headI, headJ;
+        // std::vector< Connection > m_connections;
         double x_coordinate;
 
     };

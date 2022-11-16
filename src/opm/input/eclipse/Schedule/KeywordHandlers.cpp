@@ -219,6 +219,9 @@ namespace {
         // }
     }
     void Schedule::handleWELCOMPL(HandlerContext& handlerContext)  {
+        //WELTRAJ should have been read first: ijk of trajectory is known
+        //update of connection
+
         std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
