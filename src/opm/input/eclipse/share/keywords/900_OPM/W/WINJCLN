@@ -10,7 +10,8 @@
     },
     {
       "name": "FRAC_REMOVE",
-      "value_type": "1",
+      "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 1.0
     },
     {

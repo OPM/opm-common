@@ -14,20 +14,24 @@
     },
     {
       "name": "FILTER_CAKE_PERM",
-      "value_type": "Permeability"
+      "value_type": "DOUBLE",
+      "dimension": "Permeability"
     },
     {
       "name": "FILTER_CAKE_PORO",
-      "value_type": "1",
+      "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 0.3
     },
     {
       "name": "FILTER_CAKE_RADIUS",
-      "value_type": "Length"
+      "value_type": "DOUBLE",
+      "dimension": "Length"
     },
     {
       "name": "FILTER_CAKE_AREA",
-      "value_type": "Length"
+      "value_type": "DOUBLE",
+      "dimension": "Length"
     },
     {
       "name": "I",
