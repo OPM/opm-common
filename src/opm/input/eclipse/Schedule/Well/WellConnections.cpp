@@ -1,4 +1,4 @@
-/*addConnectioncell
+/*
   Copyright 2013 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -454,7 +454,7 @@ namespace Opm {
         }
     }
     
-     void WellConnections::loadWELCOMPL(const DeckRecord& record,
+    void WellConnections::loadWELCOMPL(const DeckRecord& record,
                                       const ScheduleGrid& grid,
                                       const std::string& wname,
                                       const KeywordLocation& location) {
@@ -462,7 +462,7 @@ namespace Opm {
         const std::string& completionNamePattern = record.getItem("COMPLETION").getTrimmedString(0);
         
         //Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
-        //based on the data of wellCOMPL and trajectory data the ijk coordinates should be derived here.
+        //based on the data of WELCOMPL and trajectory data the ijk coordinates should be derived here.
         //unclear how to get trajectory data in this method
         const auto& ahdepth_upper = record.getItem("AHDEPTH_UPPER");
         const auto& ahdepth_lower = record.getItem("AHDEPTH_LOWER");
@@ -481,24 +481,48 @@ namespace Opm {
         //const auto& test = grid.cells;
     }
 
+    
     void WellConnections::loadWELTRAJ(const DeckRecord& record,
                                       const ScheduleGrid& grid,
                                       const std::string& wname,
                                       const KeywordLocation& location) {
 
-        //const std::string& completionNamePattern = record.getItem("COMPLETION").getTrimmedString(0);
-        
-        //Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
         ////should we use loadWELTRAJ we may assume (?) that only once a trajectory is created?
-        //(1) how to store data read in here????
-        //(2) how to get info from here to loadWELCOMPL???????
+        //step 1: read in the well trajectory and calculate the well-cell indices
+        //step 2: how to get info from here to loadWELCOMPL???????
         this->x_coordinate = record.getItem("X").getSIDouble(0);
         const auto& y_coordinate = record.getItem("Y");
         const int I = 8;
         const int J = 8;
-        const int K = 2;
-      
-        const CompletedCells::Cell& cell = grid.get_cell(I, J, K);
+        const int k = 2;
+        double CF = 0.0;
+        double Kh = 0.0;
+        double rw = 0.0;
+        double r0 = 0.0;
+        double re = 0.0;
+        double connection_length = 0.0;
+        double skin_factor = 0.0;
+        int satTableId = 0;
+        std::size_t noConn =0;
+        bool defaultSatTable = true;
+        
+        const CompletedCells::Cell& cell = grid.get_cell(I, J, k);
+        this->addConnection(I,J,k,
+                                    cell.global_index,
+                                    cell.depth,
+                                    Connection::State::OPEN,
+                                    CF,
+                                    Kh,
+                                    rw,
+                                    r0,
+                                    re,
+                                    connection_length,
+                                    skin_factor,
+                                    satTableId,
+                                    Connection::Direction::X,
+                                    Connection::CTFKind::DeckValue,
+                                    noConn,
+                                    defaultSatTable);
     }
 
     
