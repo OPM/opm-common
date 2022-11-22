@@ -73,6 +73,10 @@ namespace Opm {
         return m_segments.size();
     }
 
+    bool WellSegments::empty() const {
+        return this->m_segments.empty();
+    }
+
     const Segment& WellSegments::topSegment() const {
         return this->m_segments[0];
     }

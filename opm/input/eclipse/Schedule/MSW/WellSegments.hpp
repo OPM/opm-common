@@ -74,6 +74,7 @@ namespace Opm {
         static WellSegments serializationTestObject();
 
         std::size_t size() const;
+        bool empty() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;
         double volumeTopSegment() const;
