@@ -31,6 +31,7 @@
 
 #include <opm/common/utility/shmatch.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -294,7 +295,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
     wvfpexp(explicitTHPOptions(rst_well)),
-    status(status_from_int(rst_well.well_status))
+    status(status_from_int(rst_well.well_status)),
+    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
 {
     if (this->wtype.producer()) {
         auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
@@ -471,7 +473,9 @@ Well::Well(const std::string& wname_arg,
     production(std::make_shared<WellProductionProperties>(unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
     wvfpexp(std::make_shared<WVFPEXP>()),
-    status(Status::SHUT)
+    status(Status::SHUT),
+    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
+
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
@@ -513,6 +517,7 @@ Well Well::serializationTestObject()
     result.segments = std::make_shared<WellSegments>(WellSegments::serializationTestObject());
     result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
     result.m_pavg = PAvg();
+    result.well_temperature = 10.0;
 
     return result;
 }
@@ -1529,9 +1534,12 @@ double Well::alq_value() const {
 
 double Well::temperature() const {
     if (!this->wtype.producer())
-        return this->injection->temperature;
+        return this->well_temperature;
 
-    throw std::runtime_error("Can not ask for temperature in a producer");
+    throw std::runtime_error("Can only ask for temperature in an injector");
+}
+void Well::setWellTemperature(const double temp) {
+    this->well_temperature = temp;
 }
 
 std::ostream& operator<<(std::ostream& os, const Well::Status& st) {
@@ -1807,6 +1815,7 @@ bool Well::operator==(const Well& data) const {
         && (this->getProductionProperties() == data.getProductionProperties())
         && (this->m_pavg == data.m_pavg)
         && (this->getInjectionProperties() == data.getInjectionProperties())
+        && (this->well_temperature == data.well_temperature)
         ;
 }
 

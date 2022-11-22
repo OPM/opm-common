@@ -228,7 +228,6 @@ public:
         InjectorCMode cmode = InjectorCMode::CMODE_UNDEFINED;
         double surface_rate;
         double reservoir_rate;
-        double temperature;
         int    vfp_table_number;
         bool   prediction_mode;
         double rs_rv_inj;
@@ -253,7 +252,6 @@ public:
         double  bhp_hist_limit = 0.0;
         double  thp_hist_limit = 0.0;
 
-        double  temperature;
         double  BHPH;
         double  THPH;
         int     VFPTableNumber;
@@ -315,7 +313,6 @@ public:
             serializer(THPTarget);
             serializer(bhp_hist_limit);
             serializer(thp_hist_limit);
-            serializer(temperature);
             serializer(BHPH);
             serializer(THPH);
             serializer(VFPTableNumber);
@@ -638,6 +635,7 @@ public:
     bool segmented_density_calculation() const { return true; }
     double alq_value() const;
     double temperature() const;
+    void setWellTemperature(const double temp);
     bool hasInjected( ) const;
     bool hasProduced( ) const;
     bool updateHasInjected( );
@@ -690,6 +688,7 @@ public:
         serializer(segments);
         serializer(wvfpexp);
         serializer(m_pavg);
+        serializer(well_temperature);
     }
 
 private:
@@ -734,6 +733,7 @@ private:
     std::shared_ptr<WVFPEXP> wvfpexp;
     Status status;
     PAvg m_pavg;
+    double well_temperature;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

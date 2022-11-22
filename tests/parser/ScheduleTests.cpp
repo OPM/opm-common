@@ -2225,18 +2225,19 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
                 'W3' 'G2'  6 6 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
             /
 
-            WCONINJE
-            'W2' 'WATER' 'OPEN' 'RATE' 20000 4*  /
-            'W3' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            WTEMP
+                'W*' 40.0 /
             /
 
             DATES             -- 2
                 15  OKT 2008 /
             /
 
-            WTEMP
-                'W*' 40.0 /
+            WCONINJE
+            'W2' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            'W3' 'WATER' 'OPEN' 'RATE' 20000 4*  /
             /
+
     )";
 
     auto deck = Parser().parseString(input);
@@ -2247,14 +2248,14 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
     Runspec runspec (deck);
     Schedule schedule( deck, grid, fp, runspec, python);
 
-    BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 1).getInjectionProperties().temperature, 1e-5);
-    BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 2).getInjectionProperties().temperature, 1e-5);
+    BOOST_CHECK_THROW(schedule.getWell("W1", 1).temperature(), std::runtime_error);
+    BOOST_CHECK_THROW(schedule.getWell("W1", 2).temperature(), std::runtime_error);
 
-    BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).getInjectionProperties().temperature, 1e-5);
-    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).getInjectionProperties().temperature, 1e-5);
+    BOOST_CHECK_THROW(schedule.getWell("W2", 1).temperature(), std::runtime_error);
+    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).temperature(), 1e-5);
 
-    BOOST_CHECK_CLOSE(288.71, schedule.getWell("W3", 1).getInjectionProperties().temperature, 1e-5);
-    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).getInjectionProperties().temperature, 1e-5);
+    BOOST_CHECK_THROW(schedule.getWell("W3", 1).temperature(), std::runtime_error);
+    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).temperature(), 1e-5);
 }
 
 
@@ -2294,15 +2295,14 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
         Runspec runspec (deck);
         Schedule schedule( deck, grid, fp, runspec, python);
 
-        // Producerwell - currently setting temperature only acts on injectors.
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 1).getInjectionProperties().temperature, 1e-5);
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 2).getInjectionProperties().temperature, 1e-5);
+        BOOST_CHECK_THROW(schedule.getWell("W1", 1).temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W1", 2).temperature(), std::runtime_error);
 
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).getInjectionProperties().temperature, 1e-5);
-        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).getInjectionProperties().temperature, 1e-5);
+        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).temperature(), 1e-5);
+        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).temperature(), 1e-5);
 
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W3", 1).getInjectionProperties().temperature, 1e-5);
-        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).getInjectionProperties().temperature, 1e-5);
+        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).temperature(), 1e-5);
+        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).temperature(), 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
