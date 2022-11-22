@@ -17,32 +17,33 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef UDQINPUT__HPP_
 #define UDQINPUT__HPP_
 
-#include <variant>
-
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+
+#include <cstddef>
+#include <string>
+#include <variant>
 
 namespace Opm {
 
-class UDQAssign;
-class UDQDefine;
-
-class UDQIndex {
+class UDQIndex
+{
 public:
     UDQIndex() = default;
 
-    UDQIndex(std::size_t insert_index_arg, std::size_t typed_insert_index_arg, UDQAction action_arg, UDQVarType var_type_arg) :
-        insert_index(insert_index_arg),
-        typed_insert_index(typed_insert_index_arg),
-        action(action_arg),
-        var_type(var_type_arg)
-    {
-    }
+    UDQIndex(const std::size_t insert_index_arg,
+             const std::size_t typed_insert_index_arg,
+             const UDQAction   action_arg,
+             const UDQVarType  var_type_arg)
+        : insert_index      (insert_index_arg)
+        , typed_insert_index(typed_insert_index_arg)
+        , action            (action_arg)
+        , var_type          (var_type_arg)
+    {}
 
     static UDQIndex serializationTestObject()
     {
@@ -55,14 +56,16 @@ public:
         return result;
     }
 
-    bool operator==(const UDQIndex& data) const {
-        return insert_index == data.insert_index &&
-               typed_insert_index == data.typed_insert_index &&
-               action == data.action &&
-               var_type == data.var_type;
+    bool operator==(const UDQIndex& data) const
+    {
+        return (insert_index == data.insert_index)
+            && (typed_insert_index == data.typed_insert_index)
+            && (action == data.action)
+            && (var_type == data.var_type)
+            ;
     }
 
-    template<class Serializer>
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(insert_index);
@@ -77,16 +80,16 @@ public:
     UDQVarType var_type;
 };
 
-
-class UDQInput{
+class UDQInput
+{
 public:
     UDQInput(const UDQIndex& index, const UDQDefine& udq_define, const std::string& unit);
     UDQInput(const UDQIndex& index, const UDQAssign& udq_assign, const std::string& unit);
 
-    template<typename T>
+    template <typename T>
     const T& get() const;
 
-    template<typename T>
+    template <typename T>
     bool is() const;
 
     const std::string& keyword() const;
@@ -95,14 +98,14 @@ public:
     const UDQIndex index;
 
     bool operator==(const UDQInput& other) const;
+
 private:
     std::variant<UDQDefine, UDQAssign> value;
-    const std::string m_keyword;
+    std::string m_keyword;
     UDQVarType m_var_type;
-    const std::string m_unit;
+    std::string m_unit;
 };
-}
 
+} // namespace Opm
 
-
-#endif
+#endif // UDQINPUT__HPP_

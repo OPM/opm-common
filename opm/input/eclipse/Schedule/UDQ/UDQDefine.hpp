@@ -17,22 +17,25 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef UDQ_DEFINE_HPP
 #define UDQ_DEFINE_HPP
 
+#include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQToken.hpp>
+
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+
+#include <cstddef>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
-
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/common/OpmLog/KeywordLocation.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQToken.hpp>
 
 namespace Opm {
 
@@ -40,7 +43,12 @@ class UDQASTNode;
 class ParseContext;
 class ErrorGuard;
 
-class UDQDefine{
+} // Namespace Opm
+
+namespace Opm {
+
+class UDQDefine
+{
 public:
     UDQDefine();
 
@@ -73,7 +81,7 @@ public:
     const std::string& keyword() const;
     const std::string& input_string() const;
     const KeywordLocation& location() const;
-    UDQVarType  var_type() const;
+    UDQVarType var_type() const;
     std::set<UDQTokenType> func_tokens() const;
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
     void update_status(UDQUpdate update_status, std::size_t report_step);
@@ -82,7 +90,7 @@ public:
 
     bool operator==(const UDQDefine& data) const;
 
-    template<class Serializer>
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_keyword);
@@ -104,8 +112,7 @@ private:
     UDQUpdate m_update_status;
     mutable std::optional<std::string> string_data;
 };
-}
 
+} // Namespace Opm
 
-
-#endif
+#endif // UDQ_DEFINE_HPP

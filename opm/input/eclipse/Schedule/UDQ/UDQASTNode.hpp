@@ -20,6 +20,10 @@
 #ifndef UDQASTNODE_HPP
 #define UDQASTNODE_HPP
 
+#include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+
 #include <memory>
 #include <set>
 #include <string>
@@ -27,16 +31,13 @@
 #include <variant>
 #include <vector>
 
-#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-
-
-
 namespace Opm {
 
-class UDQASTNode {
+class UDQASTNode
+{
 public:
+    UDQVarType var_type = UDQVarType::NONE;
+
     UDQASTNode();
     explicit UDQASTNode(UDQTokenType type_arg);
     explicit UDQASTNode(double scalar_value);
@@ -48,21 +49,20 @@ public:
     static UDQASTNode serializationTestObject();
 
     UDQSet eval(UDQVarType eval_target, const UDQContext& context) const;
-
     bool valid() const;
-    UDQVarType var_type = UDQVarType::NONE;
     std::set<UDQTokenType> func_tokens() const;
+
     void update_type(const UDQASTNode& arg);
     void set_left(const UDQASTNode& arg);
     void set_right(const UDQASTNode& arg);
-    UDQASTNode* get_left() const;
-    UDQASTNode* get_right() const;
     void scale(double sign_factor);
 
+    UDQASTNode* get_left() const;
+    UDQASTNode* get_right() const;
     bool operator==(const UDQASTNode& data) const;
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
 
-    template<class Serializer>
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(var_type);
@@ -76,13 +76,34 @@ public:
 
 private:
     UDQTokenType type;
-    void func_tokens(std::set<UDQTokenType>& tokens) const;
 
     std::variant<std::string, double> value;
     double sign = 1.0;
     std::vector<std::string> selector;
     std::shared_ptr<UDQASTNode> left;
     std::shared_ptr<UDQASTNode> right;
+
+    UDQSet eval_expression(const UDQContext& context) const;
+
+    UDQSet eval_well_expression(const std::string& string_value,
+                                const UDQContext&  context) const;
+
+    UDQSet eval_group_expression(const std::string& string_value,
+                                 const UDQContext&  context) const;
+
+    UDQSet eval_scalar_function(const UDQVarType  target_type,
+                                const UDQContext& context) const;
+
+    UDQSet eval_elemental_unary_function(const UDQVarType  target_type,
+                                         const UDQContext& context) const;
+
+    UDQSet eval_binary_function(const UDQVarType  target_type,
+                                const UDQContext& context) const;
+
+    UDQSet eval_number(const UDQVarType  target_type,
+                       const UDQContext& context) const;
+
+    void func_tokens(std::set<UDQTokenType>& tokens) const;
 };
 
 UDQASTNode operator*(const UDQASTNode&lhs, double rhs);

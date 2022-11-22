@@ -20,17 +20,19 @@
 #ifndef UDQSET_HPP
 #define UDQSET_HPP
 
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+
+#include <cstddef>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-
 namespace Opm {
 
-class UDQScalar {
+class UDQScalar
+{
 public:
     UDQScalar() = default;
     explicit UDQScalar(double value);
@@ -60,12 +62,14 @@ public:
 };
 
 
-class UDQSet {
+class UDQSet
+{
 public:
     UDQSet(const std::string& name, UDQVarType var_type);
     UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames);
     UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
     UDQSet(const std::string& name, std::size_t size);
+
     static UDQSet scalar(const std::string& name, const std::optional<double>& scalar_value);
     static UDQSet scalar(const std::string& name, double value);
     static UDQSet empty(const std::string& name);
@@ -84,6 +88,7 @@ public:
 
     bool has(const std::string& name) const;
     std::size_t size() const;
+
     void operator+=(const UDQSet& rhs);
     void operator+=(double rhs);
     void operator-=(const UDQSet& rhs);
@@ -105,6 +110,7 @@ public:
     void name(const std::string& name);
     UDQVarType var_type() const;
     bool operator==(const UDQSet& other) const;
+
 private:
     UDQSet() = default;
 

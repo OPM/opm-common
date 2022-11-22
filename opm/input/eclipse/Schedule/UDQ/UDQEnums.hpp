@@ -25,40 +25,41 @@
 
 namespace Opm {
 
-/*
-  The UDQ variables can be of of many different types. In addition they can be
-  either scalars or vector sets. The arch example of a vector set is well
-  variables - in the expressions:
+// The UDQ variables can be of many different types.  Additionally they can
+// be either scalars or vector sets.  The archetypal example of a vector set
+// is well variables.  For instance, in the expressions:
+//
+//   UDQ
+//      DEFINE WUBHP WBHP * 1.15 /
+//      DEFINE WUORAT 1000 /
+//   /
+//
+// we define two UDQ values 'WUBHP' and 'WUORAT'.  Both of these UDQ values
+// will apply to all wells; the WUBHP vector will correspond to the normal
+// BHP scaled up 15%, the WUORAT has the scalar value 1000 for all wells.
+// The well sets can be constrained with a well name.  If the well name is a
+// template, we get a well set.  Otherwise, i.e., if the well name is fully
+// qualified we have a scalar:
+//
+//   UDQ
+//      DEFINE WUWCT   WWCT 'OP*' /
+//      DEFINE FUORAT  WOPR 'OPX' * 100 /
+//   /
+//
+// Here the UDQ WUCWT corresponds to the well WWCT for all wells matching
+// the template 'OP*', and it is undefined for other wells.  The UDQ FUORAT
+// is a scalar, given by the WOPR of well 'OPX' - multiplied by 100.
+//
+// There are clearly rules for how the different variable types can be
+// combined in expressions, and what will be resulting type from an
+// expression - unfortunately that is not yet very well implemented in the
+// opm codebase.  In UDQParser.cpp there is a function static_type_check and
+// in UDQDefine there is a function dynamic_type_check - these functions try
+// to verfiy that the type conversions are legitimate, but currently they
+// are woefully inadequate.
 
-    UDQ
-       DEFINE WUBHP WBHP * 1.15 /
-       DEFINE WUORAT 1000 /
-    /
-
-  we define two UDQ values 'WUBHP' and 'WUORAT'. Both of these UDQ values will
-  apply to all wells; the WUBHP vector will correspond to the normal BHP scaled
-  up 15%, the WUORAT has the scalar value 1000 for all the wells. The well sets
-  can be qualified with a wellname, if the wellname has a wildcard we will get a
-  well set, if the wellname is fully qualified we have a scalar:
-
-  UDQ
-     DEFINE WUWCT   WWCT 'OP*' /
-     DEFINE FUORAT  WOPR 'OPX' * 100 /
-  /
-
-  Here the UDQ WUCWT corresponds to the well WWCT for all wells matching the
-  name 'OP*', and it is undefined for the remaing wells. The UDQ FUORAT is a
-  scalar, given by the WOPR of well 'OPX' - multiplied by 100.
-
-  There are clearly rules for how the different variable types can be combined
-  in expressions, and what will be resulting type from an expression -
-  unfortunately that is not yet very well implemented in the opm codebase. In
-  UDQParser.cpp there is a function static_type_check and in UDQDefine there is
-  a function dynamic_type_check - these functions try to verfiy that the type
-  conversions are legitimate, but currently they are woefully inadequate.
-*/
-
-enum class UDQVarType {
+enum class UDQVarType
+{
     NONE = 0,
     SCALAR = 1,
     CONNECTION_VAR = 2,
@@ -68,10 +69,11 @@ enum class UDQVarType {
     AQUIFER_VAR = 6,
     BLOCK_VAR = 7,
     WELL_VAR = 8,
-    GROUP_VAR = 9
+    GROUP_VAR = 9,
 };
 
-enum class UDQTokenType{
+enum class UDQTokenType
+{
     error = 0,
     number = 1,
     open_paren = 2,
@@ -123,23 +125,26 @@ enum class UDQTokenType{
     //
     table_lookup = 47,
     //
-    end = 100
+    end = 100,
 };
 
-enum class UDQAction {
+enum class UDQAction
+{
     ASSIGN,
     DEFINE,
     UNITS,
-    UPDATE
+    UPDATE,
 };
 
-enum class UDQUpdate {
+enum class UDQUpdate
+{
     ON,
     OFF,
-    NEXT
+    NEXT,
 };
 
-enum class UDAControl {
+enum class UDAControl
+{
     WCONPROD_ORAT,
     WCONPROD_WRAT,
     WCONPROD_GRAT,
@@ -173,7 +178,8 @@ enum class UDAControl {
     WELTARG_LIFT,
 };
 
-enum class UDAKeyword {
+enum class UDAKeyword
+{
     WCONPROD,
     WCONINJE,
     WELTARG,
@@ -187,11 +193,15 @@ namespace UDQ {
     UDQVarType targetType(const std::string& keyword);
     UDQVarType varType(const std::string& keyword);
     UDQVarType coerce(UDQVarType t1, UDQVarType t2);
+
     UDQAction actionType(const std::string& action_string);
+
     UDQUpdate updateType(const std::string& update_string);
     UDQUpdate updateType(int int_value);
+
     UDQTokenType tokenType(const std::string& func_name);
     UDQTokenType funcType(const std::string& func_name);
+
     bool binaryFunc(UDQTokenType token_type);
     bool elementalUnaryFunc(UDQTokenType token_type);
     bool scalarFunc(UDQTokenType token_type);
@@ -208,12 +218,15 @@ namespace UDQ {
 
     std::string typeName(UDQVarType var_type);
     std::string controlName(UDAControl control);
+
     UDAKeyword keyword(UDAControl control);
     int udaCode(UDAControl control);
     UDAControl udaControl(int uda_code);
 
     constexpr double restart_default = -0.3E+21;
-} // UDQ
-} // Opm
 
-#endif  // UDQ_ENUMS_HPP
+} // namespace UDQ
+
+} // namespace Opm
+
+#endif // UDQ_ENUMS_HPP
