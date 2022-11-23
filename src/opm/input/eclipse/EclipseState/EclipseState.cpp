@@ -143,6 +143,7 @@ namespace Opm {
 
         this->applyMULTXYZ();
         this->initFaults(deck);
+        m_simulationConfig.m_ThresholdPressure.readFaults(deck,m_faults);
 
         if (this->getInitConfig().restartRequested()) {
             verify_consistent_restart_information(deck.get<ParserKeywords::RESTART>().back(),

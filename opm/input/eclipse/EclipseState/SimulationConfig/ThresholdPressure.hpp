@@ -20,6 +20,7 @@
 #ifndef OPM_TRESHOLD_PRESSURES_HPP
 #define OPM_TRESHOLD_PRESSURES_HPP
 
+#include <cstddef>
 #include <map>
 #include <vector>
 
@@ -27,6 +28,7 @@ namespace Opm {
 
 
     class Deck;
+    class FaultCollection;
     class FieldPropsManager;
 
     class ThresholdPressure {
@@ -44,6 +46,11 @@ namespace Opm {
             , m_restart(false)
             , m_irreversible(false)
         {}
+
+
+        //! \brief Reads the THPRESFT keyword if present.
+        void readFaults(const Deck& deck,
+                        const FaultCollection& faults);
 
         //! \brief Returns an instance for serialization tests.
         static ThresholdPressure serializationTestObject();
@@ -73,6 +80,11 @@ namespace Opm {
           hasThresholdPressure(r1,r2) first to be safe.
         */
         double getThresholdPressure(int r1 , int r2) const;
+
+        //! \brief Returns threshold pressure for a fault.
+        double getThresholdPressureFault(int idx) const;
+
+        size_t ftSize() const;
         size_t size() const;
         bool active() const;
         bool restart() const;
@@ -89,6 +101,7 @@ namespace Opm {
             serializer(m_irreversible);
             serializer(m_thresholdPressureTable);
             serializer(m_pressureTable);
+            serializer(m_thresholdFaultTable);
         }
 
     private:
@@ -102,6 +115,7 @@ namespace Opm {
 
         std::vector<std::pair<bool,double>> m_thresholdPressureTable;
         std::map<std::pair<int,int> , std::pair<bool , double> > m_pressureTable;
+        std::vector<double> m_thresholdFaultTable;
     };
 } //namespace Opm
 
