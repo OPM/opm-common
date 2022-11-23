@@ -21,6 +21,7 @@
 #define OPM_ROCK_CONFIG_HPP
 
 #include <string>
+#include <vector>
 
 namespace Opm {
 
