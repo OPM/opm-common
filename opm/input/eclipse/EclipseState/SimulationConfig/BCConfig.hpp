@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <cstddef>
+#include <optional>
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>

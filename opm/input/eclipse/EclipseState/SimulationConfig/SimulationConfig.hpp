@@ -71,6 +71,7 @@ namespace Opm {
         }
 
     private:
+        friend class EclipseState;
         ThresholdPressure m_ThresholdPressure;
         BCConfig m_bcconfig;
         RockConfig m_rock_config;

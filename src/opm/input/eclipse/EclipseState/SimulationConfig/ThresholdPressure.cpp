@@ -18,7 +18,9 @@
  */
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/shmatch.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
@@ -127,6 +129,38 @@ namespace Opm {
         }
     }
 
+    void ThresholdPressure::readFaults(const Deck& deck,
+                                       const FaultCollection& faults)
+    {
+        if (!DeckSection::hasGRID(deck) || !DeckSection::hasSOLUTION(deck))
+            return;
+
+        GRIDSection gridSection( deck );
+
+        const bool thpresftKeyword  = gridSection.hasKeyword<ParserKeywords::THPRESFT>();
+        if (!thpresftKeyword)
+            return;
+
+        // extract the multipliers from the deck keyword
+        m_thresholdFaultTable.resize(faults.size(), -1.0);
+        for (const auto& thpresft : gridSection.get<ParserKeywords::THPRESFT>()) {
+            for (size_t recordIdx = 0; recordIdx < thpresft.size(); ++ recordIdx) {
+                const DeckRecord& record = thpresft.getRecord(recordIdx);
+
+                const std::string& faultName = record.getItem("FAULT_NAME").getTrimmedString(0);
+                double thpresValue = record.getItem("VALUE").getSIDouble(0);
+
+                for (size_t faultIdx = 0; faultIdx < faults.size(); faultIdx++) {
+                    auto& fault = faults.getFault(faultIdx);
+                    if (!shmatch(faultName, fault.getName()))
+                        continue;
+
+                    m_thresholdFaultTable[faultIdx] = thpresValue;
+                }
+            }
+        }
+    }
+
     ThresholdPressure ThresholdPressure::serializationTestObject()
     {
         ThresholdPressure result;
@@ -166,9 +200,11 @@ namespace Opm {
             }
         }
 
-
     }
 
+    double ThresholdPressure::getThresholdPressureFault(int idx) const {
+        return m_thresholdFaultTable[idx];
+    }
 
     std::pair<int,int> ThresholdPressure::makeIndex(int r1 , int r2) const {
         if (this->m_irreversible)
@@ -197,6 +233,10 @@ namespace Opm {
 
     size_t ThresholdPressure::size() const {
         return m_pressureTable.size();
+    }
+
+    size_t ThresholdPressure::ftSize() const {
+        return m_thresholdFaultTable.size();
     }
 
     bool ThresholdPressure::active() const {

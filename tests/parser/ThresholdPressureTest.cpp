@@ -26,7 +26,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -51,6 +53,39 @@ THPRES
 1 3 5.0/
 2 3 33.0 /
 2 3 7.0/
+/
+)";
+
+const std::string& inputStrft = R"(
+RUNSPEC
+EQLOPTS
+THPRES /
+DIMENS
+10 10 10 /
+
+REGIONS
+EQLNUM
+   120*3 /
+SOLUTION
+THPRES
+1 2 12.0/
+1 3 5.0/
+2 3 33.0 /
+2 3 7.0/
+/
+
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+FAULTS
+  'F1'  1  1  1  4   1  4  'X' /
+/
+THPRESFT
+  'F1' 1.0 /
 /
 )";
 
@@ -235,7 +270,7 @@ struct Setup
     InitConfig initConfig;
     ThresholdPressure threshPres;
 
-    explicit Setup(const std::string& input) :
+    explicit Setup(const std::string& input, bool ft = false) :
             deck(createDeck(ParseContext(), input)),
             tablemanager(deck),
             grid(10, 3, 4),
@@ -243,6 +278,12 @@ struct Setup
             initConfig(deck),
             threshPres(initConfig.restartRequested(), deck, fp)
     {
+        if (ft) {
+            GRIDSection gridSection(deck);
+            GridDims dims(deck);
+            auto faults = FaultCollection(gridSection, dims);
+            threshPres.readFaults(deck, faults);
+        }
     }
 
     explicit Setup(const std::string& input, const ParseContext& parseContextArg) :
@@ -340,4 +381,10 @@ BOOST_AUTO_TEST_CASE(Irreversible) {
     Setup s(inputStrIrrevers2);
     const auto& thp = s.threshPres;
     BOOST_CHECK(thp.getThresholdPressure(1,2) == -thp.getThresholdPressure(2,1));
+}
+
+BOOST_AUTO_TEST_CASE(Faults) {
+    Setup s(inputStrft, true);
+    const auto& thp = s.threshPres;
+    BOOST_CHECK(thp.getThresholdPressureFault(0) == 100000.0);
 }
