@@ -87,48 +87,83 @@ static const char* deckString1 =
     "PROPS\n"
     "\n";
 
-template <class Evaluation, class BrinePvt, class Co2Pvt>
-void ensurePvtApi(const BrinePvt& brinePvt, const Co2Pvt& co2Pvt)
+
+static const char* deckString2 =
+    "RUNSPEC\n"
+    "\n"
+    "DIMENS\n"
+    "   10 10 3 /\n"
+    "\n"
+    "TABDIMS\n"
+    " * 1 /\n"
+    "\n"
+    "WATER\n"
+    "GAS\n"
+    "CO2STORE\n"
+    "\n"
+    "DISGASW\n"
+    "\n"
+    "METRIC\n"
+    "\n"
+    "GRID\n"
+    "\n"
+    "DX\n"
+    "   	300*1000 /\n"
+    "DY\n"
+    "	300*1000 /\n"
+    "DZ\n"
+    "	100*20 100*30 100*50 /\n"
+    "\n"
+    "TOPS\n"
+    "	100*1234 /\n"
+    "\n"
+    "PORO\n"
+    "  300*0.15 /\n"
+    "PROPS\n"
+    "\n";
+
+template <class Evaluation, class BrinePvt>
+void ensurePvtApiBrine(const BrinePvt& brinePvt)
 {
     // we don't want to run this, we just want to make sure that it compiles
     while (0) {
         Evaluation temperature = 273.15 + 20.0;
         Evaluation pressure = 1e5;
-        Evaluation Rs = 0.0;
+        Evaluation saltconcentration = 0.0;
+        Evaluation rs = 0.0;
+        Evaluation tmp;
+
+        ////
+        // Water PVT API
+        /////
+        tmp = brinePvt.viscosity(/*regionIdx=*/0,
+                                 temperature,
+                                 pressure,
+                                 rs,
+                                 saltconcentration);
+        tmp = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                    temperature,
+                                                    pressure,
+                                                    rs,
+                                                    saltconcentration);
+
+        // prevent GCC from producing a "variable assigned but unused" warning
+        tmp = 2.0*tmp;
+    }
+}
+
+template <class Evaluation, class Co2Pvt>
+void ensurePvtApiGas(const Co2Pvt& co2Pvt)
+{
+    // we don't want to run this, we just want to make sure that it compiles
+    while (0) {
+        Evaluation temperature = 273.15 + 20.0;
+        Evaluation pressure = 1e5;
         Evaluation Rv = 0.0;
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
         Evaluation tmp;
-
-        /////
-        // brine PVT API
-        /////
-        tmp = brinePvt.viscosity(/*regionIdx=*/0,
-                               temperature,
-                               pressure,
-                               Rs);
-        tmp = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                  temperature,
-                                                  pressure,
-                                                  Rs);
-        tmp = brinePvt.saturatedViscosity(/*regionIdx=*/0,
-                                        temperature,
-                                        pressure);
-        tmp = brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                           temperature,
-                                                           pressure);
-        tmp = brinePvt.saturationPressure(/*regionIdx=*/0,
-                                        temperature,
-                                        Rs);
-        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure);
-        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure,
-                                                   So,
-                                                   maxSo);
 
         /////
         // co2 PVT API
@@ -166,27 +201,83 @@ void ensurePvtApi(const BrinePvt& brinePvt, const Co2Pvt& co2Pvt)
     }
 }
 
+template <class Evaluation, class BrinePvt>
+void ensurePvtApiBrineOil(const BrinePvt& brinePvt)
+{
+    // we don't want to run this, we just want to make sure that it compiles
+    while (0) {
+        Evaluation temperature = 273.15 + 20.0;
+        Evaluation pressure = 1e5;
+        Evaluation Rs = 0.0;
+        Evaluation So = 0.5;
+        Evaluation maxSo = 1.0;
+        Evaluation tmp;
+
+        /////
+        // brine PVT API
+        /////
+        tmp = brinePvt.viscosity(/*regionIdx=*/0,
+                               temperature,
+                               pressure,
+                               Rs);
+        tmp = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                  temperature,
+                                                  pressure,
+                                                  Rs);
+        tmp = brinePvt.saturatedViscosity(/*regionIdx=*/0,
+                                        temperature,
+                                        pressure);
+        tmp = brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure);
+        tmp = brinePvt.saturationPressure(/*regionIdx=*/0,
+                                        temperature,
+                                        Rs);
+        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
+                                                   temperature,
+                                                   pressure);
+        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
+                                                   temperature,
+                                                   pressure,
+                                                   So,
+                                                   maxSo);
+    }
+}
+
 template <class Scalar>
 inline void testAll()
 {
     Opm::Parser parser;
     auto python = std::make_shared<Opm::Python>();
 
-    auto deck = parser.parseString(deckString1);
-    Opm::EclipseState eclState(deck);
-    Opm::Schedule schedule(deck, eclState, python);
+    auto deck1 = parser.parseString(deckString1);
+    Opm::EclipseState eclState1(deck1);
+    Opm::Schedule schedule1(deck1, eclState1, python);
 
-    Opm::GasPvtMultiplexer<Scalar> co2Pvt;
-    Opm::OilPvtMultiplexer<Scalar> brinePvt;
+    Opm::GasPvtMultiplexer<Scalar> co2Pvt_oil;
+    Opm::OilPvtMultiplexer<Scalar> brinePvt_oil;
 
-    co2Pvt.initFromState(eclState, schedule);
-    brinePvt.initFromState(eclState, schedule);
+    co2Pvt_oil.initFromState(eclState1, schedule1);
+    brinePvt_oil.initFromState(eclState1, schedule1);
 
     typedef Opm::DenseAd::Evaluation<Scalar, 1> FooEval;
-    ensurePvtApi<Scalar>(brinePvt, co2Pvt);
-    ensurePvtApi<FooEval>(brinePvt, co2Pvt);
-}
+    ensurePvtApiGas<Scalar>(co2Pvt_oil);
+    ensurePvtApiBrineOil<FooEval>(brinePvt_oil);
 
+    auto deck2 = parser.parseString(deckString2);
+    Opm::EclipseState eclState2(deck2);
+    Opm::Schedule schedule2(deck2, eclState2, python);
+
+    Opm::GasPvtMultiplexer<Scalar> co2Pvt;
+    Opm::WaterPvtMultiplexer<Scalar> brinePvt;
+
+    co2Pvt.initFromState(eclState2, schedule2);
+    brinePvt.initFromState(eclState2, schedule2);
+
+    typedef Opm::DenseAd::Evaluation<Scalar, 1> FooEval;
+    ensurePvtApiGas<Scalar>(co2Pvt);
+    ensurePvtApiBrine<FooEval>(brinePvt);
+}
 
 int main(int argc, char **argv)
 {
@@ -194,6 +285,5 @@ int main(int argc, char **argv)
 
     testAll<double>();
     testAll<float>();
-
     return 0;
 }

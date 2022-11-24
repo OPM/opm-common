@@ -150,8 +150,9 @@ public:
     {
         if (!eclState.runspec().phases().active(Phase::OIL))
             return;
-        // TODO move the BrineCo2 approach to the waterPvtMultiplexer
-        // when a proper gas-water simulator is supported
+
+        // The co2Storage option both works with oil + gas
+        // and water/brine + gas
         if (eclState.runspec().co2Storage())
             setApproach(OilPvtApproach::BrineCo2);
         else if (enableThermal && eclState.getSimulationConfig().isThermal())

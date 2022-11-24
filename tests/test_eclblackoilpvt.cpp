@@ -141,6 +141,7 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         Evaluation pressure = 1e5;
         Evaluation saltconcentration = 0.0;
         Evaluation Rs = 0.0;
+        Evaluation Rsw = 0.0;
         Evaluation Rv = 0.0;
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
@@ -153,10 +154,12 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         tmp = waterPvt.viscosity(/*regionIdx=*/0,
                                  temperature,
                                  pressure,
+                                 Rsw,
                                  saltconcentration);
         tmp = waterPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                     temperature,
                                                     pressure,
+                                                    Rsw,
                                                     saltconcentration);
 
         /////
@@ -257,6 +260,7 @@ inline void testAll()
     tmp = constCompWaterPvt.viscosity(/*regionIdx=*/0,
                                       /*temperature=*/273.15 + 20.0,
                                       /*pressure=*/1e5,
+                                      /*disgas_in_water*/0.0,
                                       /*saltconcentration=*/0.0);
     if (std::abs(tmp - refTmp)  > tolerance)
         throw std::logic_error("The reference water viscosity at region 0 is supposed to be "+std::to_string(refTmp)
@@ -266,6 +270,7 @@ inline void testAll()
     tmp = constCompWaterPvt.viscosity(/*regionIdx=*/1,
                                       /*temperature=*/273.15 + 20.0,
                                       /*pressure=*/2e5,
+                                      /*disgas_in_water*/0.0,
                                       /*saltconcentration=*/0.0);
     if (std::abs(tmp - refTmp)  > tolerance)
         throw std::logic_error("The reference water viscosity at region 1 is supposed to be "+std::to_string(refTmp)

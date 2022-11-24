@@ -84,6 +84,7 @@ void ensureBlackoilApi()
         typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
         FluidState fluidState;
         Evaluation XoG = 0.0;
+        Evaluation XwG = 0.0;
         Evaluation XgO = 0.0;
         Evaluation Rs = 0.0;
         Evaluation Rv = 0.0;
@@ -115,6 +116,7 @@ void ensureBlackoilApi()
         FluidSystem::initBegin(numPvtRegions);
         FluidSystem::setEnableDissolvedGas(true);
         FluidSystem::setEnableVaporizedOil(true);
+        FluidSystem::setEnableDissolvedGasInWater(true);
         FluidSystem::setGasPvt(gasPvt);
         FluidSystem::setOilPvt(oilPvt);
         FluidSystem::setWaterPvt(waterPvt);
@@ -133,6 +135,7 @@ void ensureBlackoilApi()
         [[maybe_unused]] Scalar rhoRefOil = FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx,
                                                                     /*regionIdx=*/0);
         dummy = FluidSystem::convertXoGToRs(XoG, /*regionIdx=*/0);
+        dummy = FluidSystem::convertXwGToRsw(XwG, /*regionIdx=*/0);
         dummy = FluidSystem::convertXgOToRv(XgO, /*regionIdx=*/0);
         dummy = FluidSystem::convertXoGToxoG(XoG, /*regionIdx=*/0);
         dummy = FluidSystem::convertXgOToxgO(XgO, /*regionIdx=*/0);
