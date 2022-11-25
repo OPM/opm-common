@@ -188,6 +188,25 @@ namespace Opm
         return (index_map.count(global_index) > 0);
     }
 
+    bool SummaryState::has_segment_var(const std::string& well,
+                                       const std::string& var,
+                                       const std::size_t  segment) const
+    {
+        // Segment Values = [var][well][segment] -> double
+
+        auto varPos = this->segment_values.find(var);
+        if (varPos == this->segment_values.end()) {
+            return false;
+        }
+
+        auto wellPos = varPos->second.find(well);
+        if (wellPos == varPos->second.end()) {
+            return false;
+        }
+
+        return wellPos->second.find(segment) != wellPos->second.end();
+    }
+
     void SummaryState::update(const std::string& key, double value) {
         if (is_total(key))
             this->values[key] += value;
@@ -265,6 +284,23 @@ namespace Opm
         }
     }
 
+    void SummaryState::update_segment_var(const std::string& well,
+                                          const std::string& var,
+                                          const std::size_t  segment,
+                                          const double       value)
+    {
+        auto& val_ref  = this->values[var + ':' + well + ':' + std::to_string(segment)];
+        auto& sval_ref = this->segment_values[var][well][segment];
+
+        if (is_total(var)) {
+            val_ref  += value;
+            sval_ref += value;
+        }
+        else {
+            val_ref = sval_ref = value;
+        }
+    }
+
     double SummaryState::get(const std::string& key) const
     {
         const auto iter = this->values.find(key);
@@ -303,6 +339,13 @@ namespace Opm
         return this->conn_values.at(var).at(well).at(global_index);
     }
 
+    double SummaryState::get_segment_var(const std::string& well,
+                                         const std::string& var,
+                                         const std::size_t  segment) const
+    {
+        return this->segment_values.at(var).at(well).at(segment);
+    }
+
     double SummaryState::get_well_var(const std::string& well, const std::string& var, double default_value) const
     {
         if (this->has_well_var(well, var))
@@ -324,6 +367,27 @@ namespace Opm
         if (this->has_conn_var(well, var, global_index))
             return this->get_conn_var(well, var, global_index);
         return default_value;
+    }
+
+    double SummaryState::get_segment_var(const std::string& well,
+                                         const std::string& var,
+                                         const std::size_t  segment,
+                                         const double       default_value) const
+    {
+        auto varPos = this->segment_values.find(var);
+        if (varPos == this->segment_values.end()) {
+            return default_value;
+        }
+
+        auto wellPos = varPos->second.find(well);
+        if (wellPos == varPos->second.end()) {
+            return default_value;
+        }
+
+        auto valPos = wellPos->second.find(segment);
+        return (valPos == wellPos->second.end())
+            ? default_value
+            : valPos->second;
     }
 
     const std::vector<std::string>& SummaryState::wells() const
@@ -363,17 +427,21 @@ namespace Opm
         this->group_names.reset();
 
         this->m_wells.insert(buffer.m_wells.begin(), buffer.m_wells.end());
-        for (const auto& [well, value] : buffer.well_values) {
-            this->well_values.insert_or_assign(well, value);
+        for (const auto& [var, vals] : buffer.well_values) {
+            this->well_values.insert_or_assign(var, vals);
         }
 
         this->m_groups.insert(buffer.m_groups.begin(), buffer.m_groups.end());
-        for (const auto& [group, value] : buffer.group_values) {
-            this->group_values.insert_or_assign(group, value);
+        for (const auto& [var, vals] : buffer.group_values) {
+            this->group_values.insert_or_assign(var, vals);
         }
 
-        for (const auto& [conn, value] : buffer.conn_values) {
-            this->conn_values.insert_or_assign(conn, value);
+        for (const auto& [var, vals] : buffer.conn_values) {
+            this->conn_values.insert_or_assign(var, vals);
+        }
+
+        for (const auto& [var, vals] : buffer.segment_values) {
+            this->segment_values.insert_or_assign(var, vals);
         }
     }
 
@@ -408,7 +476,46 @@ namespace Opm
             && (this->group_values == other.group_values)
             && (this->m_groups == other.m_groups)
             && (this->groups() == other.groups())
-            && (this->conn_values == other.conn_values);
+            && (this->conn_values == other.conn_values)
+            && (this->segment_values == other.segment_values);
+    }
+
+    SummaryState SummaryState::serializationTestObject()
+    {
+        auto st = SummaryState{TimeService::from_time_t(101)};
+
+        st.elapsed = 1.0;
+        st.values = {{"test1", 2.0}};
+        st.well_values = {{"test2", {{"test3", 3.0}}}};
+        st.m_wells = {"test4"};
+        st.well_names = {"test5"};
+        st.group_values = {{"test6", {{"test7", 4.0}}}},
+        st.m_groups = {"test7"};
+        st.group_names = {"test8"},
+        st.conn_values = {{"test9", {{"test10", {{5, 6.0}}}}}};
+
+        {
+            auto& sval = st.segment_values["SU1"];
+            sval.emplace("W1", std::unordered_map<std::size_t, double> {
+                    { std::size_t{ 1},  123.456   },
+                    { std::size_t{ 2},   17.29    },
+                    { std::size_t{10}, -  2.71828 },
+                });
+
+            sval.emplace("W6", std::unordered_map<std::size_t, double> {
+                    { std::size_t{ 7}, 3.1415926535 },
+                });
+        }
+
+        {
+            auto& sval = st.segment_values["SUVIS"];
+            sval.emplace("I2", std::unordered_map<std::size_t, double> {
+                    { std::size_t{17},  29.0   },
+                    { std::size_t{42}, - 1.618 },
+                });
+        }
+
+        return st;
     }
 
     std::ostream& operator<<(std::ostream& stream, const SummaryState& st)
