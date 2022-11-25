@@ -999,13 +999,10 @@ quantity crate_resv( const fn_args& args ) {
     return { v, rate_unit<rt::reservoir_oil>() };
 }
 
-template< rt phase>
-inline quantity srate( const fn_args& args ) {
-    const quantity zero = { 0, rate_unit< phase >() };
-    // The args.num value is the literal value which will go to the
-    // NUMS array in the eclispe SMSPEC file; the values in this array
-    // are offset 1 - whereas we need to use this index here to look
-    // up a connection with offset 0.
+template <rt phase>
+inline quantity srate(const fn_args& args)
+{
+    const quantity zero = { 0, rate_unit<phase>() };
     if (args.schedule_wells.empty()) {
         return zero;
     }
@@ -1020,22 +1017,22 @@ inline quantity srate( const fn_args& args ) {
 
     const auto& well_data = xwPos->second;
 
-    const size_t segNumber = args.num;
-    const auto& segment = well_data.segments.find(segNumber);
-
-    if (segment == well_data.segments.end())
+    const auto segNumber = static_cast<std::size_t>(args.num);
+    auto segPos = well_data.segments.find(segNumber);
+    if (segPos == well_data.segments.end()) {
         return zero;
+    }
 
-    const double eff_fac = efac(args.eff_factors, name);
-    auto v = segment->second.rates.get( phase, 0.0 ) * eff_fac;
+    const auto eff_fac = efac(args.eff_factors, name);
 
-    //switch sign of rate - opposite convention in flow vs eclipse
-    v *= -1;
+    // Switch sign of rate--opposite convention in Flow vs ECLIPSE.
+    const auto v = -segPos->second.rates.get(phase, 0.0) * eff_fac;
 
-    if (phase == rt::polymer || phase == rt::brine)
+    if ((phase == rt::polymer) || (phase == rt::brine)) {
         return { v, measure::mass_rate };
+    }
 
-    return { v, rate_unit< phase >() };
+    return { v, rate_unit<phase>() };
 }
 
 inline quantity trans_factors ( const fn_args& args ) {
@@ -2156,16 +2153,25 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
     { "RHPV"  , rhpv },
-    //Multisegment well segment data
-    { "SOFR", srate< rt::oil > },
-    { "SWFR", srate< rt::wat > },
-    { "SGFR", srate< rt::gas > },
-    { "SWCT", div(srate<rt::wat>, sum(srate<rt::wat>, srate<rt::oil>)) },
-    { "SPR", segpress<Opm::data::SegmentPressures::Value::Pressure> },
-    { "SPRD", segpress<Opm::data::SegmentPressures::Value::PDrop> },
+
+    // Segment summary vectors for multi-segmented wells.
+    { "SOFR" , srate<rt::oil> },
+    { "SOFRF", sub(srate<rt::oil>, srate<rt::vaporized_oil>) }, // Free oil flow
+    { "SOFRS", srate<rt::vaporized_oil> },                      // Solution oil flow
+    { "SGFR" , srate<rt::gas> },
+    { "SGFRF", sub(srate<rt::gas>, srate<rt::dissolved_gas>) }, // Free gas flow
+    { "SGFRS", srate<rt::dissolved_gas> },                      // Solution gas flow
+    { "SWFR" , srate<rt::wat> },
+    { "SGOR" , div(srate<rt::gas>, srate<rt::oil>) },
+    { "SOGR" , div(srate<rt::oil>, srate<rt::gas>) },
+    { "SWCT" , div(srate<rt::wat>, sum(srate<rt::wat>, srate<rt::oil>)) },
+    { "SWGR" , div(srate<rt::wat>, srate<rt::gas>) },
+    { "SPR"  , segpress<Opm::data::SegmentPressures::Value::Pressure> },
+    { "SPRD" , segpress<Opm::data::SegmentPressures::Value::PDrop> },
     { "SPRDH", segpress<Opm::data::SegmentPressures::Value::PDropHydrostatic> },
     { "SPRDF", segpress<Opm::data::SegmentPressures::Value::PDropFriction> },
     { "SPRDA", segpress<Opm::data::SegmentPressures::Value::PDropAccel> },
+
     // Well productivity index
     { "WPI", preferred_phase_productivty_index },
     { "WPIW", potential_rate< rt::productivity_index_water >},
