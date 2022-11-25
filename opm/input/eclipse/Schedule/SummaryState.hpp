@@ -20,53 +20,52 @@
 #ifndef SUMMARY_STATE_H
 #define SUMMARY_STATE_H
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <chrono>
 #include <iosfwd>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_map>
-#include <set>
 #include <vector>
-
-#include <opm/common/utility/TimeService.hpp>
 
 namespace Opm {
 
 class UDQSet;
 
-/*
-  The purpose of this class is to serve as a small container object for
-  computed, ready to use summary values. The values will typically be used by
-  the UDQ, WTEST and ACTIONX calculations. Observe that all value *have been
-  converted to the correct output units*.
+// The purpose of this class is to serve as a small container object for
+// computed, ready to use summary values. The values will typically be used
+// by the UDQ, WTEST and ACTIONX calculations. Observe that all value *have
+// been converted to the correct output units*.
+//
+// The main key used to access the content of this container is the eclipse
+// style colon separated string - i.e. 'WWCT:OPX' to get the watercut in
+// well 'OPX'.  The main usage of the SummaryState class is a temporary
+// holding ground while assembling data for the summary output, but it is
+// also used as a context object when evaulating the condition in ACTIONX
+// keywords. For that reason some of the data is duplicated both in the
+// general structure and a specialized structure:
+//
+//     SummaryState st;
+//
+//     st.add_well_var("OPX", "WWCT", 0.75);
+//     st.add("WGOR:OPY", 120);
+//
+//     // The WWCT:OPX key has been added with the specialized add_well_var()
+//     // method and this data is available both with the general
+//     // st.has("WWCT:OPX") and the specialized st.has_well_var("OPX", "WWCT");
+//     st.has("WWCT:OPX") => True
+//     st.has_well_var("OPX", "WWCT") => True
+//
+//
+//     // The WGOR:OPY key is added with the general add("WGOR:OPY") and is *not*
+//     // accessible through the specialized st.has_well_var("OPY", "WGOR").
+//     st.has("WGOR:OPY") => True
+//     st.has_well_var("OPY", "WGOR") => False
 
-  The main key used to access the content of this container is the eclipse style
-  colon separated string - i.e. 'WWCT:OPX' to get the watercut in well 'OPX'.
-  The main usage of the SummaryState class is a temporary holding ground while
-  assembling data for the summary output, but it is also used as a context
-  object when evaulating the condition in ACTIONX keywords. For that reason some
-  of the data is duplicated both in the general structure and a specialized
-  structure:
-
-      SummaryState st;
-
-      st.add_well_var("OPX", "WWCT", 0.75);
-      st.add("WGOR:OPY", 120);
-
-      // The WWCT:OPX key has been added with the specialized add_well_var()
-      // method and this data is available both with the general
-      // st.has("WWCT:OPX") and the specialized st.has_well_var("OPX", "WWCT");
-      st.has("WWCT:OPX") => True
-      st.has_well_var("OPX", "WWCT") => True
-
-
-      // The WGOR:OPY key is added with the general add("WGOR:OPY") and is *not*
-      // accessible through the specialized st.has_well_var("OPY", "WGOR").
-      st.has("WGOR:OPY") => True
-      st.has_well_var("OPY", "WGOR") => False
-*/
-
-class SummaryState {
+class SummaryState
+{
 public:
     typedef std::unordered_map<std::string, double>::const_iterator const_iterator;
     explicit SummaryState(time_point sim_start_arg);
@@ -77,12 +76,11 @@ public:
     // Only used for testing purposes.
     SummaryState() : SummaryState(std::time_t{0}) {}
 
-    /*
-      The canonical way to update the SummaryState is through the update_xxx()
-      methods which will inspect the variable and either accumulate or just
-      assign, depending on whether it represents a total or not. The set()
-      method is low level and unconditionally do an assignment. 
-    */
+    // The canonical way to update the SummaryState is through the
+    // update_xxx() methods which will inspect the variable and either
+    // accumulate or just assign, depending on whether it represents a total
+    // or not. The set() method is low level and unconditionally do an
+    // assignment.
     void set(const std::string& key, double value);
 
     bool erase(const std::string& key);
@@ -180,5 +178,6 @@ private:
 
 std::ostream& operator<<(std::ostream& stream, const SummaryState& st);
 
-}
-#endif
+} // namespace Opm
+
+#endif  // SUMMARY_STATE_H

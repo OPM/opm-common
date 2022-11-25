@@ -17,16 +17,22 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <unordered_map>
-#include <cstring>
-#include <ctime>
-#include <ostream>
-#include <iomanip>
-
-#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
-namespace Opm{
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
+#include <cstddef>
+#include <cstring>
+#include <ctime>
+#include <iomanip>
+#include <ostream>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 namespace {
 
     bool is_total(const std::string& key) {
@@ -101,51 +107,92 @@ namespace {
             l.push_back(pair.first);
         return l;
     }
-}
 
+} // Anonymous namespace
 
-    SummaryState::SummaryState(time_point sim_start_arg):
-        sim_start(sim_start_arg)
+namespace Opm
+{
+
+    SummaryState::SummaryState(time_point sim_start_arg)
+        : sim_start(sim_start_arg)
     {
         this->update_elapsed(0);
     }
 
-    SummaryState::SummaryState(std::time_t sim_start_arg):
-        SummaryState(TimeService::from_time_t(sim_start_arg))
+    SummaryState::SummaryState(std::time_t sim_start_arg)
+        : SummaryState { TimeService::from_time_t(sim_start_arg) }
     {}
 
-
-    void SummaryState::update_elapsed(double delta) {
-        this->elapsed += delta;
+    void SummaryState::set(const std::string& key, double value)
+    {
+        this->values.insert_or_assign(key, value);
     }
 
-
-    double SummaryState::get_elapsed() const {
-        return this->elapsed;
+    bool SummaryState::erase(const std::string& key) {
+        return (this->values.erase(key) > 0);
     }
 
+    bool SummaryState::erase_well_var(const std::string& well, const std::string& var)
+    {
+        std::string key = var + ":" + well;
+        if (!this->erase(key))
+            return false;
+
+        erase_var(this->well_values, this->m_wells, var, well);
+        this->well_names.reset();
+        return true;
+    }
+
+    bool SummaryState::erase_group_var(const std::string& group, const std::string& var)
+    {
+        std::string key = var + ":" + group;
+        if (!this->erase(key))
+            return false;
+
+        erase_var(this->group_values, this->m_groups, var, group);
+        this->group_names.reset();
+        return true;
+    }
+
+    bool SummaryState::has(const std::string& key) const
+    {
+        return this->values.find(key) != this->values.end();
+    }
+
+    bool SummaryState::has_well_var(const std::string& well, const std::string& var) const
+    {
+        return has_var(this->well_values, var, well);
+    }
+
+    bool SummaryState::has_well_var(const std::string& var) const
+    {
+        return this->well_values.count(var) != 0;
+    }
+
+    bool SummaryState::has_group_var(const std::string& group, const std::string& var) const
+    {
+        return has_var(this->group_values, var, group);
+    }
+
+    bool SummaryState::has_group_var(const std::string& var) const
+    {
+        return this->group_values.count(var) != 0;
+    }
+
+    bool SummaryState::has_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const
+    {
+        if (!has_var(this->conn_values, var, well))
+            return false;
+
+        const auto& index_map = this->conn_values.at(var).at(well);
+        return (index_map.count(global_index) > 0);
+    }
 
     void SummaryState::update(const std::string& key, double value) {
         if (is_total(key))
             this->values[key] += value;
         else
             this->values[key] = value;
-    }
-
-
-    void SummaryState::update_group_var(const std::string& group, const std::string& var, double value) {
-        std::string key = var + ":" + group;
-        if (is_total(var)) {
-            this->values[key] += value;
-            this->group_values[var][group] += value;
-        } else {
-            this->values[key] = value;
-            this->group_values[var][group] = value;
-        }
-        if (this->m_groups.count(group) == 0) {
-            this->m_groups.insert(group);
-            this->group_names.reset();
-        }
     }
 
     void SummaryState::update_well_var(const std::string& well, const std::string& var, double value) {
@@ -163,15 +210,51 @@ namespace {
         }
     }
 
-    bool SummaryState::has_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const {
-        if (!has_var(this->conn_values, var, well))
-            return false;
-
-        const auto& index_map = this->conn_values.at(var).at(well);
-        return (index_map.count(global_index) > 0);
+    void SummaryState::update_group_var(const std::string& group, const std::string& var, double value) {
+        std::string key = var + ":" + group;
+        if (is_total(var)) {
+            this->values[key] += value;
+            this->group_values[var][group] += value;
+        } else {
+            this->values[key] = value;
+            this->group_values[var][group] = value;
+        }
+        if (this->m_groups.count(group) == 0) {
+            this->m_groups.insert(group);
+            this->group_names.reset();
+        }
     }
 
-    void SummaryState::update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value) {
+    void SummaryState::update_elapsed(double delta)
+    {
+        this->elapsed += delta;
+    }
+
+    void SummaryState::update_udq(const UDQSet& udq_set, double undefined_value)
+    {
+        const auto var_type = udq_set.var_type();
+        if (var_type == UDQVarType::WELL_VAR) {
+            const std::vector<std::string> wells = this->wells(); // Intentional copy
+            for (const auto& well : wells) {
+                const auto& udq_value = udq_set[well].value();
+                this->update_well_var(well, udq_set.name(), udq_value.value_or(undefined_value));
+            }
+        }
+        else if (var_type == UDQVarType::GROUP_VAR) {
+            const std::vector<std::string> groups = this->groups(); // Intentional copy
+            for (const auto& group : groups) {
+                const auto& udq_value = udq_set[group].value();
+                this->update_group_var(group, udq_set.name(), udq_value.value_or(undefined_value));
+            }
+        }
+        else {
+            const auto& udq_var = udq_set[0].value();
+            this->update(udq_set.name(), udq_var.value_or(undefined_value));
+        }
+    }
+
+    void SummaryState::update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value)
+    {
         std::string key = var + ":" + well + ":" + std::to_string(global_index);
         if (is_total(var)) {
             this->values[key] += value;
@@ -182,79 +265,8 @@ namespace {
         }
     }
 
-    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const {
-        return this->conn_values.at(var).at(well).at(global_index);
-    }
-
-    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double default_value) const {
-        if (this->has_conn_var(well, var, global_index))
-            return this->get_conn_var(well, var, global_index);
-        return default_value;
-    }
-
-
-    void SummaryState::update_udq(const UDQSet& udq_set, double undefined_value) {
-        auto var_type = udq_set.var_type();
-        if (var_type == UDQVarType::WELL_VAR) {
-            const std::vector<std::string> wells = this->wells();
-            for (const auto& well : wells) {
-                const auto& udq_value = udq_set[well].value();
-                this->update_well_var(well, udq_set.name(), udq_value.value_or(undefined_value));
-            }
-        } else if (var_type == UDQVarType::GROUP_VAR) {
-            const std::vector<std::string> groups = this->groups();
-            for (const auto& group : groups) {
-                const auto& udq_value = udq_set[group].value();
-                this->update_group_var(group, udq_set.name(), udq_value.value_or(undefined_value));
-            }
-        } else {
-            const auto& udq_var = udq_set[0].value();
-            this->update(udq_set.name(), udq_var.value_or(undefined_value));
-        }
-    }
-
-
-    void SummaryState::set(const std::string& key, double value) {
-        this->values[key] = value;
-    }
-
-    bool SummaryState::erase(const std::string& key) {
-        return (this->values.erase(key) > 0);
-    }
-
-    bool SummaryState::erase_well_var(const std::string& well, const std::string& var) {
-        std::string key = var + ":" + well;
-        if (!this->erase(key))
-            return false;
-
-        erase_var(this->well_values, this->m_wells, var, well);
-        this->well_names.reset();
-        return true;
-    }
-
-    bool SummaryState::erase_group_var(const std::string& group, const std::string& var) {
-        std::string key = var + ":" + group;
-        if (!this->erase(key))
-            return false;
-
-        erase_var(this->group_values, this->m_groups, var, group);
-        this->group_names.reset();
-        return true;
-    }
-
-    bool SummaryState::has(const std::string& key) const {
-        return (this->values.find(key) != this->values.end());
-    }
-
-    double SummaryState::get(const std::string& key, double default_value) const {
-        const auto iter = this->values.find(key);
-        if (iter == this->values.end())
-            return default_value;
-
-        return iter->second;
-    }
-
-    double SummaryState::get(const std::string& key) const {
+    double SummaryState::get(const std::string& key) const
+    {
         const auto iter = this->values.find(key);
         if (iter == this->values.end())
             throw std::out_of_range("No such key: " + key);
@@ -262,88 +274,88 @@ namespace {
         return iter->second;
     }
 
-    bool SummaryState::has_well_var(const std::string& well, const std::string& var) const {
-        return has_var(this->well_values, var, well);
+    double SummaryState::get(const std::string& key, double default_value) const
+    {
+        const auto iter = this->values.find(key);
+        if (iter == this->values.end())
+            return default_value;
+
+        return iter->second;
     }
 
-    bool SummaryState::has_well_var(const std::string& var) const {
-        return this->well_values.count(var) != 0;
+    double SummaryState::get_elapsed() const
+    {
+        return this->elapsed;
     }
 
-    double SummaryState::get_well_var(const std::string& well, const std::string& var) const {
+    double SummaryState::get_well_var(const std::string& well, const std::string& var) const
+    {
         return this->well_values.at(var).at(well);
     }
 
-    double SummaryState::get_well_var(const std::string& well, const std::string& var, double default_value) const {
+    double SummaryState::get_group_var(const std::string& group, const std::string& var) const
+    {
+        return this->group_values.at(var).at(group);
+    }
+
+    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const
+    {
+        return this->conn_values.at(var).at(well).at(global_index);
+    }
+
+    double SummaryState::get_well_var(const std::string& well, const std::string& var, double default_value) const
+    {
         if (this->has_well_var(well, var))
             return this->get_well_var(well, var);
 
         return default_value;
     }
 
-    bool SummaryState::has_group_var(const std::string& group, const std::string& var) const {
-        return has_var(this->group_values, var, group);
-    }
-
-    bool SummaryState::has_group_var(const std::string& var) const {
-        return this->group_values.count(var) != 0;
-    }
-
-    double SummaryState::get_group_var(const std::string& group, const std::string& var) const {
-        return this->group_values.at(var).at(group);
-    }
-
-    double SummaryState::get_group_var(const std::string& group, const std::string& var, double default_value) const {
+    double SummaryState::get_group_var(const std::string& group, const std::string& var, double default_value) const
+    {
         if (this->has_group_var(group, var))
             return this->get_group_var(group, var);
 
         return default_value;
     }
 
-    SummaryState::const_iterator SummaryState::begin() const {
-        return this->values.begin();
+    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double default_value) const
+    {
+        if (this->has_conn_var(well, var, global_index))
+            return this->get_conn_var(well, var, global_index);
+        return default_value;
     }
 
-
-    SummaryState::const_iterator SummaryState::end() const {
-        return this->values.end();
-    }
-
-
-    std::vector<std::string> SummaryState::wells(const std::string& var) const {
-        return var2_list(this->well_values, var);
-    }
-
-
-    const std::vector<std::string>& SummaryState::wells() const {
-        if (!this->well_names)
+    const std::vector<std::string>& SummaryState::wells() const
+    {
+        if (!this->well_names) {
             this->well_names = std::vector<std::string>(this->m_wells.begin(), this->m_wells.end());
+        }
 
         return *this->well_names;
     }
 
-
-    std::vector<std::string> SummaryState::groups(const std::string& var) const {
-        return var2_list(this->group_values, var);
+    std::vector<std::string> SummaryState::wells(const std::string& var) const
+    {
+        return var2_list(this->well_values, var);
     }
 
-
-    const std::vector<std::string>& SummaryState::groups() const {
-        if (!this->group_names)
+    const std::vector<std::string>& SummaryState::groups() const
+    {
+        if (!this->group_names) {
             this->group_names = std::vector<std::string>(this->m_groups.begin(), this->m_groups.end());
+        }
 
         return *this->group_names;
     }
 
-    std::size_t SummaryState::num_wells() const {
-        return this->m_wells.size();
+    std::vector<std::string> SummaryState::groups(const std::string& var) const
+    {
+        return var2_list(this->group_values, var);
     }
 
-    std::size_t SummaryState::size() const {
-        return this->values.size();
-    }
-
-    void  SummaryState::append(const SummaryState& buffer) {
+    void SummaryState::append(const SummaryState& buffer)
+    {
         this->sim_start = buffer.sim_start;
         this->elapsed = buffer.elapsed;
         this->values = buffer.values;
@@ -365,8 +377,42 @@ namespace {
         }
     }
 
+    SummaryState::const_iterator SummaryState::begin() const
+    {
+        return this->values.begin();
+    }
 
-    std::ostream& operator<<(std::ostream& stream, const SummaryState& st) {
+    SummaryState::const_iterator SummaryState::end() const
+    {
+        return this->values.end();
+    }
+
+    std::size_t SummaryState::num_wells() const
+    {
+        return this->m_wells.size();
+    }
+
+    std::size_t SummaryState::size() const
+    {
+        return this->values.size();
+    }
+
+    bool SummaryState::operator==(const SummaryState& other) const
+    {
+        return (this->sim_start == other.sim_start)
+            && (this->elapsed == other.elapsed)
+            && (this->values == other.values)
+            && (this->well_values == other.well_values)
+            && (this->m_wells == other.m_wells)
+            && (this->wells() == other.wells())
+            && (this->group_values == other.group_values)
+            && (this->m_groups == other.m_groups)
+            && (this->groups() == other.groups())
+            && (this->conn_values == other.conn_values);
+    }
+
+    std::ostream& operator<<(std::ostream& stream, const SummaryState& st)
+    {
         stream << "Simulated seconds: " << st.get_elapsed() << std::endl;
         for (const auto& value_pair : st)
             stream << std::setw(17) << value_pair.first << ": " << value_pair.second << std::endl;
@@ -374,17 +420,4 @@ namespace {
         return stream;
     }
 
-
-    bool SummaryState::operator==(const SummaryState& other) const {
-        return this->sim_start == other.sim_start &&
-               this->elapsed == other.elapsed &&
-               this->values == other.values &&
-               this->well_values == other.well_values &&
-               this->m_wells == other.m_wells &&
-               this->wells() == other.wells() &&
-               this->group_values == other.group_values &&
-               this->m_groups == other.m_groups &&
-               this->groups() == other.groups() &&
-               this->conn_values == other.conn_values;
-    }
-}
+} // namespace Opm
