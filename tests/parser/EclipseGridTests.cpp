@@ -31,8 +31,6 @@
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #define BOOST_TEST_MODULE EclipseGridTests
