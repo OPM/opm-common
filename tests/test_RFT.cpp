@@ -58,6 +58,7 @@
 #include <array>
 #include <cstddef>
 #include <ctime>
+#include <functional>
 #include <iomanip>
 #include <iterator>
 #include <map>
@@ -4357,36 +4358,42 @@ END
 
         return xw;
     }
+
+    SegmentResults readWriteSegmentRFTData(std::function<Opm::Deck()> dataSet = &segmentDataSet,
+                                           const std::string&         caseName = "TESTSEG")
+    {
+        using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+        const auto rset  = RSet { caseName };
+        const auto model = Setup{ dataSet() };
+
+        {
+            auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+                rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+                ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+            };
+
+            const auto  reportStep = 1;
+            const auto  elapsed    = model.sched.seconds(reportStep);
+            const auto& grid       = model.es.getInputGrid();
+
+            ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                                grid, model.sched, wellSol(grid), rftFile);
+        }
+
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        return SegmentResults {
+            rft, "P1", RftDate{ 2000, 1, 2 }
+        };
+    }
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(Static_Data)
 {
-    using RftDate = ::Opm::EclIO::ERft::RftDate;
-
-    const auto rset  = RSet { "TESTSEG" };
-    const auto model = Setup{ segmentDataSet() };
-
-    {
-        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
-            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
-            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
-        };
-
-        const auto  reportStep = 1;
-        const auto  elapsed    = model.sched.seconds(reportStep);
-        const auto& grid       = model.es.getInputGrid();
-
-        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
-                            grid, model.sched, wellSol(grid), rftFile);
-    }
-
-    const auto rft = ::Opm::EclIO::ERft {
-        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
-    };
-
-    const auto xSEG = SegmentResults {
-        rft, "P1", RftDate{ 2000, 1, 2 }
-    };
+    const auto xSEG = readWriteSegmentRFTData();
 
     BOOST_REQUIRE_EQUAL(xSEG.numSegments(), std::size_t{11});
     BOOST_REQUIRE_EQUAL(xSEG.numBranches(), std::size_t{1});
@@ -4517,32 +4524,7 @@ BOOST_AUTO_TEST_CASE(Static_Data)
 
 BOOST_AUTO_TEST_CASE(Segment_Pressure)
 {
-    using RftDate = ::Opm::EclIO::ERft::RftDate;
-
-    const auto rset  = RSet { "TESTSEG" };
-    const auto model = Setup{ segmentDataSet() };
-
-    {
-        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
-            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
-            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
-        };
-
-        const auto  reportStep = 1;
-        const auto  elapsed    = model.sched.seconds(reportStep);
-        const auto& grid       = model.es.getInputGrid();
-
-        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
-                            grid, model.sched, wellSol(grid), rftFile);
-    }
-
-    const auto rft = ::Opm::EclIO::ERft {
-        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
-    };
-
-    const auto xSEG = SegmentResults {
-        rft, "P1", RftDate{ 2000, 1, 2 }
-    };
+    const auto xSEG = readWriteSegmentRFTData();
 
     BOOST_CHECK_CLOSE(xSEG.pressure( 1), 135.7f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.pressure( 2), 144.7f, 1.0e-5f);
@@ -4559,32 +4541,7 @@ BOOST_AUTO_TEST_CASE(Segment_Pressure)
 
 BOOST_AUTO_TEST_CASE(Segment_Phase_Rates)
 {
-    using RftDate = ::Opm::EclIO::ERft::RftDate;
-
-    const auto rset  = RSet { "TESTSEG" };
-    const auto model = Setup{ segmentDataSet() };
-
-    {
-        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
-            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
-            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
-        };
-
-        const auto  reportStep = 1;
-        const auto  elapsed    = model.sched.seconds(reportStep);
-        const auto& grid       = model.es.getInputGrid();
-
-        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
-                            grid, model.sched, wellSol(grid), rftFile);
-    }
-
-    const auto rft = ::Opm::EclIO::ERft {
-        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
-    };
-
-    const auto xSEG = SegmentResults {
-        rft, "P1", RftDate{ 2000, 1, 2 }
-    };
+    const auto xSEG = readWriteSegmentRFTData();
 
     BOOST_CHECK_CLOSE(xSEG.orat( 1), 123.0f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.orat( 2), 113.0f, 1.0e-5f);
@@ -4625,32 +4582,7 @@ BOOST_AUTO_TEST_CASE(Segment_Phase_Rates)
 
 BOOST_AUTO_TEST_CASE(Segment_Phase_Velocity)
 {
-    using RftDate = ::Opm::EclIO::ERft::RftDate;
-
-    const auto rset  = RSet { "TESTSEG" };
-    const auto model = Setup{ segmentDataSet() };
-
-    {
-        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
-            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
-            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
-        };
-
-        const auto  reportStep = 1;
-        const auto  elapsed    = model.sched.seconds(reportStep);
-        const auto& grid       = model.es.getInputGrid();
-
-        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
-                            grid, model.sched, wellSol(grid), rftFile);
-    }
-
-    const auto rft = ::Opm::EclIO::ERft {
-        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
-    };
-
-    const auto xSEG = SegmentResults {
-        rft, "P1", RftDate{ 2000, 1, 2 }
-    };
+    const auto xSEG = readWriteSegmentRFTData();
 
     BOOST_CHECK_CLOSE(xSEG.ovel( 1), 12.0f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.ovel( 2), 11.0f, 1.0e-5f);
@@ -4691,32 +4623,7 @@ BOOST_AUTO_TEST_CASE(Segment_Phase_Velocity)
 
 BOOST_AUTO_TEST_CASE(Segment_Holdup_Fractions)
 {
-    using RftDate = ::Opm::EclIO::ERft::RftDate;
-
-    const auto rset  = RSet { "TESTSEG" };
-    const auto model = Setup{ segmentDataSet() };
-
-    {
-        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
-            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
-            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
-        };
-
-        const auto  reportStep = 1;
-        const auto  elapsed    = model.sched.seconds(reportStep);
-        const auto& grid       = model.es.getInputGrid();
-
-        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
-                            grid, model.sched, wellSol(grid), rftFile);
-    }
-
-    const auto rft = ::Opm::EclIO::ERft {
-        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
-    };
-
-    const auto xSEG = SegmentResults {
-        rft, "P1", RftDate{ 2000, 1, 2 }
-    };
+    const auto xSEG = readWriteSegmentRFTData();
 
     BOOST_CHECK_CLOSE(xSEG.hf_o( 1), 3.773585e-2f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.hf_o( 2), 3.755055e-2f, 1.0e-5f);
@@ -4757,32 +4664,7 @@ BOOST_AUTO_TEST_CASE(Segment_Holdup_Fractions)
 
 BOOST_AUTO_TEST_CASE(Segment_Phase_Viscosity)
 {
-    using RftDate = ::Opm::EclIO::ERft::RftDate;
-
-    const auto rset  = RSet { "TESTSEG" };
-    const auto model = Setup{ segmentDataSet() };
-
-    {
-        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
-            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
-            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
-        };
-
-        const auto  reportStep = 1;
-        const auto  elapsed    = model.sched.seconds(reportStep);
-        const auto& grid       = model.es.getInputGrid();
-
-        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
-                            grid, model.sched, wellSol(grid), rftFile);
-    }
-
-    const auto rft = ::Opm::EclIO::ERft {
-        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
-    };
-
-    const auto xSEG = SegmentResults {
-        rft, "P1", RftDate{ 2000, 1, 2 }
-    };
+    const auto xSEG = readWriteSegmentRFTData();
 
     BOOST_CHECK_CLOSE(xSEG.ovis( 1), 0.25f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.ovis( 2), 0.26f, 1.0e-5f);
@@ -4823,32 +4705,7 @@ BOOST_AUTO_TEST_CASE(Segment_Phase_Viscosity)
 
 BOOST_AUTO_TEST_CASE(Valve)
 {
-    using RftDate = ::Opm::EclIO::ERft::RftDate;
-
-    const auto rset  = RSet { "TESTVALVE" };
-    const auto model = Setup{ valveDataSet() };
-
-    {
-        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
-            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
-            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
-        };
-
-        const auto  reportStep = 1;
-        const auto  elapsed    = model.sched.seconds(reportStep);
-        const auto& grid       = model.es.getInputGrid();
-
-        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
-                            grid, model.sched, wellSol(grid), rftFile);
-    }
-
-    const auto rft = ::Opm::EclIO::ERft {
-        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
-    };
-
-    const auto xSEG = SegmentResults {
-        rft, "P1", RftDate{ 2000, 1, 2 }
-    };
+    const auto xSEG = readWriteSegmentRFTData(&valveDataSet, "TESTVALVE");
 
     auto dfltArea = [](const float diam) -> float {
         return 3.14159'26535'89793'23846'26433'83279'50288f * (diam / 2) * (diam / 2);
