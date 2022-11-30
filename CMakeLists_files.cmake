@@ -348,7 +348,6 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_ActiveGridCells.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_cubic.cpp
@@ -364,6 +363,7 @@ list (APPEND TEST_SOURCE_FILES
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/rst_test.cpp
+    tests/test_ActiveGridCells.cpp
     tests/test_CopyablePtr.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
