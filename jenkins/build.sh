@@ -12,15 +12,13 @@ declare -A upstreamRev
 
 # Downstreams and revisions
 declare -a downstreams
-downstreams=(opm-material
-             opm-grid
+downstreams=(opm-grid
              opm-models
              opm-simulators
              opm-upscaling
              )
 
 declare -A downstreamRev
-downstreamRev[opm-material]=master
 downstreamRev[opm-grid]=master
 downstreamRev[opm-models]=master
 downstreamRev[opm-simulators]=master
