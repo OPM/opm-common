@@ -209,14 +209,14 @@ namespace Opm {
 
         bool equal(const EclipseGrid& other) const;
         static bool hasDVDEPTHZKeywords(const Deck&);
-        
+
         /*
-          For ALugrid we can *only* use the keyword <DXV, DXYV, DZV, DEPTHZ> so to  
+          For ALugrid we can *only* use the keyword <DXV, DXYV, DZV, DEPTHZ> so to
           initialize a Regular Cartesian Grid; further we need equidistant mesh
-          spacing in each direction to initialize ALuGrid (mandatory for  
+          spacing in each direction to initialize ALuGrid (mandatory for
           mesh refinement!).
         */
-        
+
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
 
@@ -236,8 +236,13 @@ namespace Opm {
         bool m_useActnumFromGdfile = false;
 
         // Input grid data.
+        mutable std::optional<std::vector<double>> m_input_zcorn;
+        mutable std::optional<std::vector<double>> m_input_coord;
+
         std::vector<double> m_zcorn;
         std::vector<double> m_coord;
+
+
         std::vector<int> m_actnum;
         std::optional<MapAxes> m_mapaxes;
 
