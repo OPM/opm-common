@@ -346,10 +346,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         if (deck.hasKeyword<ParserKeywords::MINPV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
             throw std::invalid_argument("Can not have both MINPV and MINPVFIL in the deck.");
-        } else if(deck.hasKeyword<ParserKeywords::MINPORV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
+        } else if(deck.hasKeyword<ParserKeywords::MINPORV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {   
             throw std::invalid_argument("Can not have both MINPORV and MINPVFIL in the deck.");
         }
-
+        
         m_minpvVector.resize(getCartesianSize(), 0.0);
         if (deck.hasKeyword<ParserKeywords::MINPV>()) {
             const auto& record = deck.get<ParserKeywords::MINPV>( ).back().getRecord(0);
@@ -1069,7 +1069,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             CoordMapper cm(this->getNX(), this->getNY());
             std::vector<double> zcorn( zm.size() );
             std::vector<double> coord( cm.size() );
-            {
+            {                    
                 std::vector<double> depth(tops);
                 for (std::size_t k = 0; k < this->getNZ(); k++) {
                     for (std::size_t j = 0; j < this->getNY(); j++) {
@@ -1142,9 +1142,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     {
         m_coord = coord;
         m_zcorn = zcorn;
-
-        m_input_coord = coord;
-        m_input_zcorn = zcorn;
 
         ZcornMapper mapper( getNX(), getNY(), getNZ());
         zcorn_fixed = mapper.fixupZCORN( m_zcorn );
@@ -1238,7 +1235,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         else
             return false;
     }
-
+    
     bool EclipseGrid::hasEqualDVDEPTHZ(const Deck& deck) {
         const std::vector<double>& DXV = deck.get<ParserKeywords::DXV>().back().getSIDoubleData();
         const std::vector<double>& DYV = deck.get<ParserKeywords::DYV>().back().getSIDoubleData();
@@ -1246,13 +1243,13 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         const std::vector<double>& DEPTHZ = deck.get<ParserKeywords::DEPTHZ>().back().getSIDoubleData();
         if (EclipseGrid::allEqual(DXV) &&
             EclipseGrid::allEqual(DYV)&&
-            EclipseGrid::allEqual(DZV)&&
+            EclipseGrid::allEqual(DZV)&& 
             EclipseGrid::allEqual(DEPTHZ))
             return true;
         else
             return false;
     }
-
+    
     bool EclipseGrid::hasDTOPSKeywords(const Deck& deck) {
         if ((deck.hasKeyword<ParserKeywords::DX>() || deck.hasKeyword<ParserKeywords::DXV>()) &&
             (deck.hasKeyword<ParserKeywords::DY>() || deck.hasKeyword<ParserKeywords::DYV>()) &&
@@ -1383,12 +1380,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
         }
     }
-
+    
     bool EclipseGrid::allEqual(const std::vector<double> &v) {
         auto comp = [](double x, double y) { return std::fabs(x - y) < 1e-12; };
         return std::equal(v.begin() + 1, v.end(), v.begin(), comp);
     }
-
+    
     bool EclipseGrid::equal(const EclipseGrid& other) const {
 
         //double reltol = 1.0e-6;
@@ -1709,26 +1706,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<float> coord_f;
         coord_f.resize(m_coord.size());
 
-        auto convert_length = [&units](const double x) { return static_cast<float>(units.from_si(length, x)); };
-
-        if (m_input_coord.has_value()) {
-            std::transform(m_input_coord.value().begin(), m_input_coord.value().end(), coord_f.begin(), convert_length);
-        } else {
-            std::transform(m_coord.begin(), m_coord.end(), coord_f.begin(), convert_length);
+        for (size_t n=0; n< m_coord.size(); n++){
+            coord_f[n] = static_cast<double>(units.from_si(length, m_coord[n]));
         }
 
         // create zcorn vector of floats with input units, converted from SI
         std::vector<float> zcorn_f;
         zcorn_f.resize(m_zcorn.size());
 
-        if (m_input_coord.has_value()) {
-            std::transform(m_input_zcorn.value().begin(), m_input_zcorn.value().end(), zcorn_f.begin(), convert_length);
-        } else {
-            std::transform(m_zcorn.begin(), m_zcorn.end(), zcorn_f.begin(), convert_length);
+        for (size_t n=0; n< m_zcorn.size(); n++){
+            zcorn_f[n] = static_cast<double>(units.from_si(length, m_zcorn[n]));
         }
-
-        m_input_coord.reset();
-        m_input_zcorn.reset();
 
         std::vector<int> filehead(100,0);
         filehead[0] = 3;                     // version number
