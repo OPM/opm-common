@@ -66,18 +66,16 @@ include(Findopm-tests)
 # with the find module
 include (${project}-prereqs)
 
-if(ENABLE_ECL_INPUT)
-  # source_hook runs before config_hook and the former needs fmt, hence this
-  # needs to be here.
-  if(fmt_FOUND)
-    # OpmSatellites will not add the library, do it here.
-    list(APPEND opm-common_LIBRARIES fmt::fmt)
-  else()
-    add_definitions(-DFMT_HEADER_ONLY)
-    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
-    # Not sure why this is needed.
-    list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
-  endif()
+# source_hook runs before config_hook and the former needs fmt, hence this
+# needs to be here.
+if(fmt_FOUND)
+  # OpmSatellites will not add the library, do it here.
+  list(APPEND opm-common_LIBRARIES fmt::fmt)
+else()
+  add_definitions(-DFMT_HEADER_ONLY)
+  include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
+  # Not sure why this is needed.
+  list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
 endif()
 
 if(OPM_ENABLE_EMBEDDED_PYTHON AND NOT OPM_ENABLE_PYTHON)
@@ -263,7 +261,7 @@ endif()
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
-if (ENABLE_MOCKSIM)
+if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   add_library(mocksim
               msim/src/msim.cpp)
   target_link_libraries(mocksim opmcommon)
