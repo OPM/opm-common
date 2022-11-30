@@ -261,7 +261,7 @@ endif()
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
-if (ENABLE_MOCKSIM)
+if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   add_library(mocksim
               msim/src/msim.cpp)
   target_link_libraries(mocksim opmcommon)
