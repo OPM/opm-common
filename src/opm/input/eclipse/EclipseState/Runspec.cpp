@@ -630,9 +630,14 @@ Runspec::Runspec( const Deck& deck )
         if (runspecSection.hasKeyword<ParserKeywords::CO2STORE>() ||
                 runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
             m_co2storage = true;
-            std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used \n"
-                              "See the OPM manual for details on the used models.";
-            OpmLog::note(msg);
+            if (phases().active(Phase::GAS) && (phases().active(Phase::OIL) || phases().active(Phase::WATER))) {
+                std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used \n"
+                                  "See the OPM manual for details on the used models.";
+                OpmLog::note(msg);
+            } else {
+                throw std::runtime_error("The CO2 storage option is given. Activate GAS and WATER or OIL ");
+            }
+
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::MICP>()) {
