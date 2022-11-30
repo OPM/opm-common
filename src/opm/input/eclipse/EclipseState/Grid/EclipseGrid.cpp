@@ -303,6 +303,14 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             apply_GRIDUNIT(deck.getActiveUnitSystem(), grid_units.value(), this->m_coord);
             if (this->m_rv.has_value())
                 apply_GRIDUNIT(deck.getActiveUnitSystem(), grid_units.value(), this->m_rv.value());
+
+            if (this->m_input_coord.has_value()) {
+                apply_GRIDUNIT(deck.getActiveUnitSystem(), grid_units.value(), this->m_input_coord.value());
+            }
+
+            if (this->m_input_zcorn.has_value()) {
+                apply_GRIDUNIT(deck.getActiveUnitSystem(), grid_units.value(), this->m_input_zcorn.value());
+            }
         }
     }
 }
