@@ -52,6 +52,7 @@ namespace Opm {
  * keywords.
  */
 
+#if HAVE_ECL_INPUT
 namespace {
 
 std::vector<double> try_get(const FieldPropsManager& fp, const std::string& keyword) {
@@ -62,8 +63,7 @@ std::vector<double> try_get(const FieldPropsManager& fp, const std::string& keyw
 }
 
 }
-
-
+#endif
 
 class EclEpsGridProperties
 {
