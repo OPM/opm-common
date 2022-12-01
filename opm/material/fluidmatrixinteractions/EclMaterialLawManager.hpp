@@ -42,9 +42,7 @@
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
-#if HAVE_OPM_COMMON
 #include <opm/common/OpmLog/OpmLog.hpp>
-#endif
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -505,10 +503,8 @@ public:
     {
         MaterialLawParams& mlp = const_cast<MaterialLawParams&>(materialLawParams_[elemIdx]);
 
-#if HAVE_OPM_COMMON
         if (enableHysteresis())
             OpmLog::warning("Warning: Using non-default satnum regions for connection is not tested in combination with hysteresis");
-#endif
         // Currently we don't support COMPIMP. I.e. use the same table lookup for the hysteresis curves.
         // unsigned impRegionIdx = satRegionIdx;
 

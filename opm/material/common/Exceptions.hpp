@@ -27,9 +27,7 @@
 #ifndef OPM_MATERIAL_EXCEPTIONS_HPP
 #define OPM_MATERIAL_EXCEPTIONS_HPP
 
-#if HAVE_OPM_COMMON
 #include <opm/common/Exceptions.hpp>
-#endif
 
 #include <dune/common/exceptions.hh>
 
@@ -38,19 +36,11 @@
 // the opm-material specific exception classes
 namespace Opm {
 class NumericalIssue
-#if HAVE_OPM_COMMON
     : public NumericalProblem
-#else
-    : public std::runtime_error
-#endif
 {
 public:
     explicit NumericalIssue(const std::string &message)
-#if HAVE_OPM_COMMON
       : NumericalProblem(message)
-#else
-      : std::runtime_error(message)
-#endif
     {}
 };
 }

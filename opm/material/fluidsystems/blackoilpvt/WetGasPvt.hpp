@@ -37,9 +37,7 @@
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #endif
 
-#if HAVE_OPM_COMMON
 #include <opm/common/OpmLog/OpmLog.hpp>
-#endif
 
 namespace Opm {
 
@@ -645,9 +643,7 @@ public:
         errlog << "Finding saturation pressure did not converge:"
                << " pSat = " << pSat
                << ", Rv = " << Rv;
-#if HAVE_OPM_COMMON
         OpmLog::debug("Wet gas saturation pressure", errlog.str());
-#endif
         throw NumericalIssue(errlog.str());
     }
 

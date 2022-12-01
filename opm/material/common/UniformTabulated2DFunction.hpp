@@ -31,11 +31,7 @@
 #include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
-#if HAVE_OPM_COMMON
 #include <opm/common/OpmLog/OpmLog.hpp>
-#else
-#include <iostream>
-#endif
 
 #include <vector>
 
@@ -212,11 +208,7 @@ public:
             }
             else
             {
-#if HAVE_OPM_COMMON
                 OpmLog::warning("PVT Table evaluation:" + msg + ". Will use extrapolation");
-#else
-                std::cerr << "warning: "<< msg<<std::endl;
-#endif
             }
 
         };

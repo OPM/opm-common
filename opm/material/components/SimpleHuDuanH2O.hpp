@@ -36,11 +36,7 @@
 #include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
-#if HAVE_OPM_COMMON
 #include <opm/common/OpmLog/OpmLog.hpp>
-#else
-#include <iostream>
-#endif
 
 #include <cmath>
 #include <sstream>
@@ -356,11 +352,7 @@ public:
                 << "(T = " << temperature << ")";
             if(extrapolate)
             {
-#if HAVE_OPM_COMMON
                 OpmLog::warning(oss.str());
-#else
-                std::cerr << "warning: "<< oss.str() <<std::endl;
-#endif
             }
             else
                 throw NumericalIssue(oss.str());
@@ -391,11 +383,7 @@ private:
                 << "pressures below 100MPa. (T = " << T << ", p=" << pressure;
             if(extrapolate)
             {
-#if HAVE_OPM_COMMON
                 OpmLog::warning(oss.str());
-#else
-                std::cerr << "warning: "<< oss.str() <<std::endl;
-#endif
             }
             else
                 throw NumericalIssue(oss.str());
