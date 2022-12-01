@@ -1,0 +1,29 @@
+.TH CO2BRINEPVT "1" "April 2022" "co2brinepvt" "User Commands"
+.SH NAME
+co2brinepvt \- compute and print pvt properties for co2 with brine
+.SH DESCRIPTION
+co2brinepvt computes PVT properties of a brine/co2 system
+for a given phase (oil or brine), pressure, temperature, salinity and rs.
+The properties support are: density, the inverse phase formation volume factor (invB), viscosity,
+saturated dissolution factor (rsSat)
+See CO2STORE in the OPM manual for more details.
+.PP
+.SH Synopsis
+co2brinepvt <prop> <phase> <p> <T> <salinity> <rs>
+.br
+where
+.br
+prop = {density, invB, B, viscosity, rsSat, diffusionCoefficient}
+.br
+phase = {CO2, brine}
+.br
+p: pressure in pascal
+.br
+T: temperature in kelvin
+.br
+salinity(optional): salt molality in mol/kg
+.nr
+rs(optional): amount of dissolved CO2 in Brine in SM3/SM3
+.PP
+.SH OPTIONS
+\fB\-\-h\fR/\-\-help Print help and exit.
