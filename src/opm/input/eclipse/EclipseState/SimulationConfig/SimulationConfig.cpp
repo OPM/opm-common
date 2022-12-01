@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
@@ -49,6 +50,7 @@ namespace Opm {
     SimulationConfig::SimulationConfig() :
         m_useCPR(false),
         m_DISGAS(false),
+        m_DISGASW(false),
         m_VAPOIL(false),
         m_VAPWAT(false),
         m_isThermal(false),
@@ -65,6 +67,7 @@ namespace Opm {
         m_rock_config(deck, fp),
         m_useCPR(false),
         m_DISGAS(false),
+        m_DISGASW(false),
         m_VAPOIL(false),
         m_VAPWAT(false),
         m_isThermal(false),
@@ -82,6 +85,9 @@ namespace Opm {
             }
             if (runspec.hasKeyword<ParserKeywords::DISGAS>()) {
                 m_DISGAS = true;
+            }
+            if (runspec.hasKeyword<ParserKeywords::DISGASW>()) {
+                m_DISGASW = true;
             }
             if (runspec.hasKeyword<ParserKeywords::VAPOIL>()) {
                 m_VAPOIL = true;
@@ -108,6 +114,7 @@ namespace Opm {
         result.m_rock_config = RockConfig::serializationTestObject();
         result.m_useCPR = false;
         result.m_DISGAS = true;
+        result.m_DISGASW = true;
         result.m_VAPOIL = false;
         result.m_VAPWAT = false;
         result.m_isThermal = true;
@@ -141,6 +148,10 @@ namespace Opm {
         return m_DISGAS;
     }
 
+    bool SimulationConfig::hasDISGASW() const {
+        return m_DISGASW;
+    }
+
     bool SimulationConfig::hasVAPOIL() const {
         return m_VAPOIL;
     }
@@ -167,6 +178,7 @@ namespace Opm {
                this->rock_config() == data.rock_config() &&
                this->useCPR() == data.useCPR() &&
                this->hasDISGAS() == data.hasDISGAS() &&
+               this->hasDISGASW() == data.hasDISGASW() &&
                this->hasVAPOIL() == data.hasVAPOIL() &&
                this->hasVAPWAT() == data.hasVAPWAT() &&
                this->isThermal() == data.isThermal() &&
@@ -180,6 +192,7 @@ namespace Opm {
                full_config.rock_config() == rst_config.rock_config() &&
                full_config.useCPR() == rst_config.useCPR() &&
                full_config.hasDISGAS() == rst_config.hasDISGAS() &&
+               full_config.hasDISGASW() == rst_config.hasDISGASW() &&
                full_config.hasVAPOIL() == rst_config.hasVAPOIL() &&
                full_config.hasVAPWAT() == rst_config.hasVAPWAT() &&
                full_config.isThermal() == rst_config.isThermal() &&

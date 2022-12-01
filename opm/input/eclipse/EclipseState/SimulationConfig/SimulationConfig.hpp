@@ -46,6 +46,7 @@ namespace Opm {
         bool useThresholdPressure() const;
         bool useCPR() const;
         bool hasDISGAS() const;
+        bool hasDISGASW() const;
         bool hasVAPOIL() const;
         bool hasVAPWAT() const;
         bool isThermal() const;
@@ -63,6 +64,7 @@ namespace Opm {
             serializer(m_rock_config);
             serializer(m_useCPR);
             serializer(m_DISGAS);
+            serializer(m_DISGASW);
             serializer(m_VAPOIL);
             serializer(m_VAPWAT);
             serializer(m_isThermal);
@@ -77,6 +79,7 @@ namespace Opm {
         RockConfig m_rock_config;
         bool m_useCPR;
         bool m_DISGAS;
+        bool m_DISGASW;
         bool m_VAPOIL;
         bool m_VAPWAT;
         bool m_isThermal;
