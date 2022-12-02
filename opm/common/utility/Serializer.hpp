@@ -283,7 +283,7 @@ protected:
             bool has = false;
             (*this)(has);
             if (has) {
-                T res;
+                T res{};
                 (*this)(res);
                 const_cast<std::optional<T>&>(data) = res;
             }
