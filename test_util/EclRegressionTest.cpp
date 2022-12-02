@@ -1044,9 +1044,9 @@ void ECLRegressionTest::results_rft()
     bool foundRft1 = checkFileName(rootName1, "RFT", fileName1);
     bool foundRft2 = checkFileName(rootName2, "RFT", fileName2);
 
-    if ((foundRft1) && (not foundRft2)){
-        std::string message ="test case rft file " + rootName2 + ".RFT not found";
-	std::cout << message << std::endl;
+    if ((!foundRft1 && foundRft2) || (foundRft1 && !foundRft2)) {
+        std::string message ="test case rft file " + (foundRft1 ? rootName1 : rootName2) + ".RFT not found";
+        std::cout << message << std::endl;
         OPM_THROW(std::runtime_error, message);
     }
 
