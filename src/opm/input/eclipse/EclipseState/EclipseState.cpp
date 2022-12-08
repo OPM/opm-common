@@ -153,7 +153,7 @@ namespace Opm {
     catch (const OpmInputError& opm_error) {
         OpmLog::error(opm_error.what());
         throw;
-    }
+    } 
     catch (const std::exception& std_error) {
         OpmLog::error(fmt::format("\nAn error occurred while creating the reservoir properties\n"
                                   "Internal error: {}\n", std_error.what()));
@@ -361,6 +361,8 @@ namespace Opm {
 
 
     void EclipseState::setMULTFLT(const DeckSection& section) {
+        // Set error to false
+        bool error = false;
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
             OpmLog::info(OpmInputError::format("\nApplying {keyword} in {file} line {line}", faultsKeyword.location()));
@@ -374,15 +376,21 @@ namespace Opm {
                     m_faults.setTransMult( faultName , multFlt );
                     logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
                 }
-                catch(const std::exception& e)
+                catch(const std::exception& std_error)
                 {
-                    auto msg = fmt::format("Could not set fault transmissibility multiplier {} for fault {}: {}",
-                                           multFlt, faultName, e.what());
-                    OPM_THROW(std::invalid_argument, msg);
+                    OpmLog::error(fmt::format("\nMULTFLT: Cannot set fault transmissibility multiplier\n" 
+                       "MULTFLT(FLTNAME) equals {} and MULT(FLT-TRS) equals {}\n"
+                       "Error creating reservoir properties: {}" , faultName, multFlt, std_error.what()));
+                    error = true;
                 }
             }
         }
-    }
+        // Throw if errors
+        if (error) {
+            throw std::invalid_argument("Error Processing MULTFLT");
+       }
+    } 
+    
 
     void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
         OpmLog::error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
