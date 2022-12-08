@@ -1090,6 +1090,7 @@ set( keywords
 
      900_OPM/B/BC
      900_OPM/C/CO2STOR
+     900_OPM/D/DISGASW
      900_OPM/D/DRSDTCON
      900_OPM/E/EXIT
      900_OPM/G/GCOMPIDX

@@ -1029,6 +1029,42 @@ BOOST_AUTO_TEST_CASE(Co2Storage) {
 
 }
 
+BOOST_AUTO_TEST_CASE(Co2Storage_watergas) {
+    const std::string input = R"(
+    RUNSPEC
+    WATER
+    GAS
+    CO2STORE
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    const auto& phases = runspec.phases();
+    BOOST_CHECK_EQUAL( 2U, phases.size() );
+    BOOST_CHECK( phases.active( Phase::WATER ) );
+    BOOST_CHECK( phases.active( Phase::GAS ) );
+    BOOST_CHECK( runspec.co2Storage() );
+
+
+}
+
+BOOST_AUTO_TEST_CASE(Co2Storage_oilwater) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    WATER
+    CO2STORE
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+    BOOST_CHECK_THROW( Runspec{deck}, std::runtime_error );
+}
+
 BOOST_AUTO_TEST_CASE(NUPCOL_DEFAULT) {
     Nupcol np;
     auto default_value = ParserKeywords::NUPCOL::NUM_ITER::defaultValue;
