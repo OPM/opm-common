@@ -312,7 +312,7 @@ public:
               const EclEpsConfig& config,
               EclTwoPhaseSystemType epsSystemType)
     {
-        if (epsSystemType == EclOilWaterSystem) {
+        if (epsSystemType == EclTwoPhaseSystemType::OilWater) {
             // saturation scaling for capillary pressure
             saturationPcPoints_[0] = epsInfo.Swl;
             saturationPcPoints_[2] = saturationPcPoints_[1] = epsInfo.Swu;
@@ -342,7 +342,8 @@ public:
             maxKrn_ = epsInfo.maxKrow;
         }
         else {
-            assert((epsSystemType == EclGasOilSystem) ||(epsSystemType == EclGasWaterSystem) );
+            assert(epsSystemType == EclTwoPhaseSystemType::GasOil ||
+                   epsSystemType == EclTwoPhaseSystemType::GasWater);
 
             // saturation scaling for capillary pressure
             saturationPcPoints_[0] = 1.0 - epsInfo.Swl - epsInfo.Sgu;
