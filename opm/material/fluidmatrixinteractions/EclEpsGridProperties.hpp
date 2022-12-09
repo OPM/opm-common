@@ -25,26 +25,17 @@
 #ifndef OPM_ECL_EPS_GRID_PROPERTIES_HPP
 #define OPM_ECL_EPS_GRID_PROPERTIES_HPP
 
-#include "EclEpsConfig.hpp"
-
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
+#include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
 
 #include <cstddef>
-#include <string>
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+#endif
+
 /*!
  * \brief Collects all grid properties which are relevant for end point scaling.
  *
@@ -52,71 +43,14 @@ namespace Opm {
  * keywords.
  */
 
-#if HAVE_ECL_INPUT
-namespace {
-
-std::vector<double> try_get(const FieldPropsManager& fp, const std::string& keyword) {
-    if (fp.has_double(keyword))
-        return fp.get_double(keyword);
-
-    return {};
-}
-
-}
-#endif
-
 class EclEpsGridProperties
 {
 
 public:
 #if HAVE_ECL_INPUT
-
     EclEpsGridProperties(const EclipseState& eclState,
-                         bool useImbibition)
-    {
-        const std::string kwPrefix = useImbibition ? "I" : "";
-
-        const auto& fp = eclState.fieldProps();
-
-        compressed_satnum = useImbibition
-            ? fp.get_int("IMBNUM") : fp.get_int("SATNUM");
-
-        this->compressed_swl = try_get( fp, kwPrefix+"SWL");
-        this->compressed_sgl = try_get( fp, kwPrefix+"SGL");
-        this->compressed_swcr = try_get( fp, kwPrefix+"SWCR");
-        this->compressed_sgcr = try_get( fp, kwPrefix+"SGCR");
-        this->compressed_sowcr = try_get( fp, kwPrefix+"SOWCR");
-        this->compressed_sogcr = try_get( fp, kwPrefix+"SOGCR");
-        this->compressed_swu = try_get( fp, kwPrefix+"SWU");
-        this->compressed_sgu = try_get( fp, kwPrefix+"SGU");
-        this->compressed_pcw = try_get( fp, kwPrefix+"PCW");
-        this->compressed_pcg = try_get( fp, kwPrefix+"PCG");
-        this->compressed_krw = try_get( fp, kwPrefix+"KRW");
-        this->compressed_krwr = try_get( fp, kwPrefix+"KRWR");
-        this->compressed_kro = try_get( fp, kwPrefix+"KRO");
-        this->compressed_krorg = try_get( fp, kwPrefix+"KRORG");
-        this->compressed_krorw = try_get( fp, kwPrefix+"KRORW");
-        this->compressed_krg = try_get( fp, kwPrefix+"KRG");
-        this->compressed_krgr = try_get( fp, kwPrefix+"KRGR");
-
-        // _may_ be needed to calculate the Leverett capillary pressure scaling factor
-        if (fp.has_double("PORO"))
-            this->compressed_poro = fp.get_double("PORO");
-
-        this->compressed_permx = fp.has_double("PERMX")
-            ? fp.get_double("PERMX")
-            : std::vector<double>(this->compressed_satnum.size());
-
-        this->compressed_permy = fp.has_double("PERMY")
-            ? fp.get_double("PERMY") : this->compressed_permx;
-
-        this->compressed_permz = fp.has_double("PERMZ")
-            ? fp.get_double("PERMZ") : this->compressed_permx;
-    }
-
+                         bool useImbibition);
 #endif
-
-
 
     unsigned satRegion(std::size_t active_index) const {
         return this->compressed_satnum[active_index] - 1;

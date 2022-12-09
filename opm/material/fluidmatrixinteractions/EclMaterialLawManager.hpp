@@ -45,6 +45,13 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
