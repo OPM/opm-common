@@ -355,18 +355,6 @@ Connection::State Connection::StateFromString( const std::string& stringValue ) 
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
-Connection::InjMultMode Connection::injModeFromString(const std::string& str) {
-    if (str == "WREV")
-        return Connection::InjMultMode::WREV;
-    else if (str == "CREV")
-        return Connection::InjMultMode::CREV;
-    else if (str == "CIRR")
-        return Connection::InjMultMode::CIRR;
-    else if (str == "NONE")
-        return Connection::InjMultMode::NONE;
-    else
-        throw std::invalid_argument("Unknow enum INJMultMode string: " + str);
-}
 
 
 std::string Connection::Direction2String(const Direction enumValue)
@@ -462,6 +450,10 @@ Connection::InjMult Connection::injmult() const {
 
 void Connection::setInjMult(const Connection::InjMult& inj_mult) {
     m_injmult = inj_mult;
+}
+
+void Connection::clearInjMult() {
+    this->setInjMult({});
 }
 
 }

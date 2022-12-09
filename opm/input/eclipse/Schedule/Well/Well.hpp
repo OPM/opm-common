@@ -76,6 +76,15 @@ class Well {
 public:
     using Status = WellStatus;
 
+    enum class InjMultMode {
+        WREV,
+        CREV,
+        CIRR,
+        NONE,
+    };
+
+    static InjMultMode injModeFromString(const std::string& str);
+
     /*
       The elements in this enum are used as bitmasks to keep track
       of which controls are present, i.e. the 2^n structure must
@@ -383,6 +392,7 @@ public:
     Status getStatus() const;
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
+    InjMultMode getInjMultMode() const;
 
     bool hasConnections() const;
     const std::vector<const Connection *> getConnections(int completion) const;
@@ -585,6 +595,7 @@ private:
     Status status;
     PAvg m_pavg;
     double well_temperature;
+    InjMultMode inj_mult_mode = InjMultMode::NONE;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

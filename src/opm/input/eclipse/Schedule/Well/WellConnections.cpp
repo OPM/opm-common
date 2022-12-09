@@ -284,17 +284,6 @@ namespace Opm {
         }
     }
 
-    bool WellConnections::underWREVInjMultMode() const {
-        // TODO: if the first connection is under WREV, all the connections should be under WREV
-        // how we can guarantee that?
-        // and hesitate to add extra member to this class
-        if (this->m_connections.empty()) {
-            return false;
-        }
-        const bool first_con_wrev = this->m_connections[0].injmult().mode == Connection::InjMultMode::WREV;
-        return first_con_wrev;
-    }
-
     void WellConnections::addConnection(const int i, const int j, const int k,
                                         const std::size_t global_index,
                                         const int complnum,

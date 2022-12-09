@@ -153,8 +153,6 @@ namespace Opm {
         void applyWellPIScaling(const double       scaleFactor,
                                 std::vector<bool>& scalingApplicable);
 
-        bool underWREVInjMultMode() const;
-
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {

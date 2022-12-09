@@ -77,35 +77,28 @@ namespace RestartIO {
             Defaulted,
         };
 
-        enum class InjMultMode {
-            WREV,
-            CREV,
-            CIRR,
-            NONE,
-        };
 
-        static InjMultMode injModeFromString(const std::string& str);
 
         struct InjMult {
-            InjMultMode mode {InjMultMode::NONE};
+            bool is_active {false};
             double fracture_pressure {std::numeric_limits<double>::max()};
             double multiplier_gradient {0.};
 
             bool active() const
             {
-                return mode != InjMultMode::NONE;
+                return is_active;
             }
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer(mode);
+                serializer(is_active);
                 serializer(fracture_pressure);
                 serializer(multiplier_gradient);
             }
 
             bool operator==( const InjMult& rhs ) const {
-                return mode == rhs.mode
+                return is_active == rhs.is_active
                    &&  fracture_pressure == rhs.fracture_pressure
                    &&  multiplier_gradient == rhs.multiplier_gradient;
             }
@@ -157,6 +150,7 @@ namespace RestartIO {
         CTFKind kind() const;
         InjMult injmult() const;
         void setInjMult(const InjMult& inj_mult);
+        void clearInjMult();
 
         void setState(State state);
         void setComplnum(int compnum);

@@ -564,6 +564,19 @@ bool Well::updateWellGuideRate(double guide_rate_arg) {
     return false;
 }
 
+Well::InjMultMode Well::injModeFromString(const std::string& str) {
+    if (str == "WREV")
+        return InjMultMode::WREV;
+    else if (str == "CREV")
+        return InjMultMode::CREV;
+    else if (str == "CIRR")
+        return InjMultMode::CIRR;
+    else if (str == "NONE")
+        return InjMultMode::NONE;
+    else
+        throw std::invalid_argument("Unknow enum INJMultMode string: " + str);
+    }
+
 
 bool Well::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
     if (this->wtype.producer()) {
@@ -1311,15 +1324,16 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
         return true;
     };
 
-    // if this record using WREV, with the current ideas, we will rewrite the information to all the connectios regarding
-    // using the WINJMULT record information
-    // if this record use CREV or CIRR, and previoiusly, the well is using WREV, we need to discard the WREV setup for
-    // all the connections. For the connections not specified in the record, the injmult information will be reset.
+    // check whether it was under WREV previously.
+    // if yes, we need to reset all the connections for injmult operation
+    const bool is_prev_wrev = this->inj_mult_mode == InjMultMode::WREV;
+
     const std::string mode = record.getItem("MODE").getTrimmedString(0);
+    this->inj_mult_mode = injModeFromString(mode);
     const double fracture_pressure = record.getItem("FRACTURING_PRESSURE").getSIDouble(0);
     const double multiple_gradient = record.getItem("MULTIPLIER_GRADIENT").getSIDouble(0);
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
-    const Connection::InjMult inj_mult {Connection::injModeFromString(mode), fracture_pressure, multiple_gradient};
+    const Connection::InjMult inj_mult {true, fracture_pressure, multiple_gradient};
 
     if (mode == "WREV") {
         // all the connections will share the same INJMULT setup
@@ -1328,16 +1342,17 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
             new_connections->add(c);
         }
     } else if (mode == "CREV" || mode == "CIRR"){
-        // check whether it was under WREV previously.
-        // if yes, we need to reset all the connections for injmult operation
-        const bool is_prev_wrev = this->connections->underWREVInjMultMode();
         for (auto c : *this->connections) {
             if (match(c)) {
                 c.setInjMult(inj_mult);
             } else {
+                // if previously defined with WREV for the well, for all the connections
+                // not specified in the new CREV or CIRR records, we do not consider they have
+                // an active WINJMULT setup
                 if (is_prev_wrev) {
                     // reset the injMult information for this connection
-                    c.setInjMult({});
+                    // basically, disable the injMult for this connection
+                    c.clearInjMult();
                 }
             }
             new_connections->add(c);
@@ -1697,4 +1712,8 @@ int Opm::Well::eclipseControlMode(const Well&         well,
 
         return eclipseControlMode(ctrl.cmode, well.injectorType());
     }
+}
+
+Opm::Well::InjMultMode Opm::Well::getInjMultMode() const {
+    return this->inj_mult_mode;
 }
