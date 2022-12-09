@@ -106,6 +106,7 @@ macro (config_hook)
                                          set(HAVE_ECL_INPUT 1)")
       set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                             set(HAVE_ECL_INPUT 1)")
+      set(HAVE_ECL_INPUT 1)
     endif()
     if(ENABLE_ECL_OUTPUT)
       set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
@@ -120,6 +121,7 @@ macro (config_hook)
       set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
     endif()
   endif()
+
 endmacro (config_hook)
 
 macro (prereqs_hook)
@@ -341,6 +343,21 @@ if(ENABLE_ECL_INPUT)
     )
 
 endif()
+
+# Explicitly link tests needing dune-common.
+# To avoid pulling dune-common into the opm-common interface
+find_package(dune-common REQUIRED)
+opm_need_version_of ("dune-common")
+target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
+string(REPLACE " " ";" dflags ${dune-common_CXX_FLAGS})
+target_compile_options(dunecommon INTERFACE ${dflags})
+target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
+target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
+target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
+foreach(tgt test_co2brine_ptflash test_immiscibleflash test_ncpflash
+            test_pengrobinson test_threecomponents_ptflash)
+  target_link_libraries(${tgt} dunecommon)
+endforeach()
 
 # Install build system files and documentation
 install(DIRECTORY cmake

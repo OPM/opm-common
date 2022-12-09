@@ -4,12 +4,18 @@
 # defines that must be present in config.h for our headers
 set (opm-common_CONFIG_VAR
 	HAVE_OPENMP
+	HAVE_TYPE_TRAITS
+	HAVE_VALGRIND
+	HAVE_FINAL
+	HAVE_ECL_INPUT
 	)
 
 # dependencies
 set (opm-common_DEPS
 	# compile with C99 support if available
 	"C99"
+	# valgrind client requests
+	"Valgrind"
 )
 
 list(APPEND opm-common_DEPS

@@ -348,16 +348,30 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
+      tests/test_2dtables.cpp
+      tests/test_blackoilfluidstate.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
+      tests/test_co2brine_ptflash.cpp
+      tests/test_components.cpp
+      tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
+      tests/test_densead.cpp
+      tests/test_fluidmatrixinteractions.cpp
+      tests/test_fluidsystems.cpp
+      tests/test_immiscibleflash.cpp
       tests/test_messagelimiter.cpp
+      tests/test_ncpflash.cpp
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp
       tests/test_OpmLog.cpp
       tests/test_param.cpp
+      tests/test_pengrobinson.cpp
       tests/test_RootFinders.cpp
       tests/test_sparsevector.cpp
+      tests/test_spline.cpp
+      tests/test_tabulation.cpp
+      tests/test_threecomponents_ptflash.cpp
       tests/test_uniformtablelinear.cpp
 )
 if(ENABLE_ECL_INPUT)
@@ -365,6 +379,10 @@ if(ENABLE_ECL_INPUT)
     tests/rst_test.cpp
     tests/test_ActiveGridCells.cpp
     tests/test_CopyablePtr.cpp
+    tests/test_co2brinepvt.cpp
+    tests/test_eclblackoilfluidsystem.cpp
+    tests/test_eclblackoilpvt.cpp
+    tests/test_eclmateriallawmanager.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -601,6 +619,7 @@ if(ENABLE_ECL_INPUT)
     examples/rst_deck.cpp
     examples/wellgraph.cpp
     examples/make_ext_smry.cpp
+    examples/co2brinepvt.cpp
   )
 endif()
 
@@ -615,6 +634,8 @@ if(ENABLE_ECL_INPUT)
     examples/opmhash.cpp
     examples/rst_deck.cpp
     examples/make_esmry.cpp
+    examples/co2brinepvt.cpp
+    examples/co2brinepvt.cpp
   )
 endif()
 
@@ -659,6 +680,209 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/shmatch.hpp
       opm/common/utility/String.hpp
       opm/common/utility/TimeService.hpp
+      opm/material/components/Lnapl.hpp
+      opm/material/components/N2.hpp
+      opm/material/components/H2.hpp
+      opm/material/components/Unit.hpp
+      opm/material/components/iapws/Common.hpp
+      opm/material/components/iapws/Region1.hpp
+      opm/material/components/iapws/Region4.hpp
+      opm/material/components/iapws/Region2.hpp
+      opm/material/components/Dnapl.hpp
+      opm/material/components/NullComponent.hpp
+      opm/material/components/H2O.hpp
+      opm/material/components/TabulatedComponent.hpp
+      opm/material/components/Xylene.hpp
+      opm/material/components/SimpleH2O.hpp
+      opm/material/components/CO2.hpp
+      opm/material/components/Mesitylene.hpp
+      opm/material/components/SimpleCO2.hpp
+      opm/material/components/C10.hpp
+      opm/material/components/SimpleHuDuanH2O.hpp
+      opm/material/components/Component.hpp
+      opm/material/components/Air.hpp
+      opm/material/components/C1.hpp
+      opm/material/components/Brine.hpp
+      opm/material/fluidstates/BlackOilFluidState.hpp
+      opm/material/fluidstates/NonEquilibriumFluidState.hpp
+      opm/material/fluidstates/FluidStateSaturationModules.hpp
+      opm/material/fluidstates/FluidStateCompositionModules.hpp
+      opm/material/fluidstates/PressureOverlayFluidState.hpp
+      opm/material/fluidstates/CompositionalFluidState.hpp
+      opm/material/fluidstates/FluidStateEnthalpyModules.hpp
+      opm/material/fluidstates/FluidStatePressureModules.hpp
+      opm/material/fluidstates/ModularFluidState.hpp
+      opm/material/fluidstates/FluidStateTemperatureModules.hpp
+      opm/material/fluidstates/SimpleModularFluidState.hpp
+      opm/material/fluidstates/FluidStateViscosityModules.hpp
+      opm/material/fluidstates/TemperatureOverlayFluidState.hpp
+      opm/material/fluidstates/ImmiscibleFluidState.hpp
+      opm/material/fluidstates/SaturationOverlayFluidState.hpp
+      opm/material/fluidstates/FluidStateFugacityModules.hpp
+      opm/material/fluidstates/FluidStateDensityModules.hpp
+      opm/material/constraintsolvers/ComputeFromReferencePhase.hpp
+      opm/material/constraintsolvers/PTFlash.hpp
+      opm/material/constraintsolvers/CompositionFromFugacities.hpp
+      opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp
+      opm/material/constraintsolvers/NcpFlash.hpp
+      opm/material/constraintsolvers/ImmiscibleFlash.hpp
+      opm/material/IdealGas.hpp
+      opm/material/binarycoefficients/H2O_Mesitylene.hpp
+      opm/material/binarycoefficients/H2O_Air.hpp
+      opm/material/binarycoefficients/H2O_N2.hpp
+      opm/material/binarycoefficients/Air_Mesitylene.hpp
+      opm/material/binarycoefficients/FullerMethod.hpp
+      opm/material/binarycoefficients/H2O_Xylene.hpp
+      opm/material/binarycoefficients/H2O_CO2.hpp
+      opm/material/binarycoefficients/Air_Xylene.hpp
+      opm/material/binarycoefficients/Brine_CO2.hpp
+      opm/material/binarycoefficients/HenryIapws.hpp
+      opm/material/Constants.hpp
+      opm/material/fluidsystems/NullParameterCache.hpp
+      opm/material/fluidsystems/BaseFluidSystem.hpp
+      opm/material/fluidsystems/BlackOilDefaultIndexTraits.hpp
+      opm/material/fluidsystems/ParameterCacheBase.hpp
+      opm/material/fluidsystems/H2ON2LiquidPhaseFluidSystem.hpp
+      opm/material/fluidsystems/BrineCO2FluidSystem.hpp
+      opm/material/fluidsystems/GasPhase.hpp
+      opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp
+      opm/material/fluidsystems/BlackOilFluidSystem.hpp
+      opm/material/fluidsystems/LiquidPhase.hpp
+      opm/material/fluidsystems/PTFlashParameterCache.hpp
+      opm/material/fluidsystems/Spe5ParameterCache.hpp
+      opm/material/fluidsystems/H2OAirMesityleneFluidSystem.hpp
+      opm/material/fluidsystems/H2OAirXyleneFluidSystem.hpp
+      opm/material/fluidsystems/SinglePhaseFluidSystem.hpp
+      opm/material/fluidsystems/Spe5FluidSystem.hpp
+      opm/material/fluidsystems/blackoilpvt/SolventPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp
+      opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp
+      opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp
+      opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.hpp
+      opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.hpp
+      opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/WetGasPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/DeadOilPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/LiveOilPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/OilPvtThermal.hpp
+      opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.hpp
+      opm/material/fluidsystems/blackoilpvt/GasPvtThermal.hpp
+      opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.hpp
+      opm/material/fluidsystems/H2OAirFluidSystem.hpp
+      opm/material/fluidsystems/H2ON2FluidSystem.hpp
+      opm/material/fluidmatrixinteractions/EclTwoPhaseMaterial.hpp
+      opm/material/fluidmatrixinteractions/SatCurveMultiplexerParams.hpp
+      opm/material/fluidmatrixinteractions/EclTwoPhaseMaterialParams.hpp
+      opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLawParams.hpp
+      opm/material/fluidmatrixinteractions/ParkerLenhardParams.hpp
+      opm/material/fluidmatrixinteractions/ThreePhaseParkerVanGenuchtenParams.hpp
+      opm/material/fluidmatrixinteractions/RegularizedVanGenuchtenParams.hpp
+      opm/material/fluidmatrixinteractions/MaterialTraits.hpp
+      opm/material/fluidmatrixinteractions/VanGenuchtenParams.hpp
+      opm/material/fluidmatrixinteractions/VanGenuchten.hpp
+      opm/material/fluidmatrixinteractions/LinearMaterial.hpp
+      opm/material/fluidmatrixinteractions/ParkerLenhard.hpp
+      opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp
+      opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp
+      opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLaw.hpp
+      opm/material/fluidmatrixinteractions/EclHysteresisConfig.hpp
+      opm/material/fluidmatrixinteractions/RegularizedBrooksCoreyParams.hpp
+      opm/material/fluidmatrixinteractions/EclMultiplexerMaterialParams.hpp
+      opm/material/fluidmatrixinteractions/NullMaterial.hpp
+      opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp
+      opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLawParams.hpp
+      opm/material/fluidmatrixinteractions/TwoPhaseLETCurvesParams.hpp
+      opm/material/fluidmatrixinteractions/EclStone2Material.hpp
+      opm/material/fluidmatrixinteractions/NullMaterialParams.hpp
+      opm/material/fluidmatrixinteractions/LinearMaterialParams.hpp
+      opm/material/fluidmatrixinteractions/EclStone1Material.hpp
+      opm/material/fluidmatrixinteractions/EclMultiplexerMaterial.hpp
+      opm/material/fluidmatrixinteractions/EclStone1MaterialParams.hpp
+      opm/material/fluidmatrixinteractions/EclEpsConfig.hpp
+      opm/material/fluidmatrixinteractions/EclStone2MaterialParams.hpp
+      opm/material/fluidmatrixinteractions/EffToAbsLawParams.hpp
+      opm/material/fluidmatrixinteractions/RegularizedBrooksCorey.hpp
+      opm/material/fluidmatrixinteractions/SplineTwoPhaseMaterial.hpp
+      opm/material/fluidmatrixinteractions/EffToAbsLaw.hpp
+      opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp
+      opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterialParams.hpp
+      opm/material/fluidmatrixinteractions/SplineTwoPhaseMaterialParams.hpp
+      opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp
+      opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp
+      opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
+      opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp
+      opm/material/fluidmatrixinteractions/EclDefaultMaterialParams.hpp
+      opm/material/fluidmatrixinteractions/ThreePhaseParkerVanGenuchten.hpp
+      opm/material/fluidmatrixinteractions/BrooksCoreyParams.hpp
+      opm/material/fluidmatrixinteractions/BrooksCorey.hpp
+      opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterial.hpp
+      opm/material/checkFluidSystem.hpp
+      opm/material/viscositymodels/LBC.hpp
+      opm/material/viscositymodels/LBCco2rich.hpp
+      opm/material/common/Valgrind.hpp
+      opm/material/common/EnsureFinalized.hpp
+      opm/material/common/quad.hpp
+      opm/material/common/OpmFinal.hpp
+      opm/material/common/Spline.hpp
+      opm/material/common/PolynomialUtils.hpp
+      opm/material/common/UniformXTabulated2DFunction.hpp
+      opm/material/common/MathToolbox.hpp
+      opm/material/common/TridiagonalMatrix.hpp
+      opm/material/common/ResetLocale.hpp
+      opm/material/common/HasMemberGeneratorMacros.hpp
+      opm/material/common/UniformTabulated2DFunction.hpp
+      opm/material/common/FastSmallVector.hpp
+      opm/material/common/ConditionalStorage.hpp
+      opm/material/common/Exceptions.hpp
+      opm/material/common/Means.hpp
+      opm/material/common/IntervalTabulated2DFunction.hpp
+      opm/material/common/Tabulated1DFunction.hpp
+      opm/material/components/co2tables.inc
+      opm/material/densead/Evaluation9.hpp
+      opm/material/densead/Evaluation8.hpp
+      opm/material/densead/Evaluation7.hpp
+      opm/material/densead/Evaluation.hpp
+      opm/material/densead/Evaluation5.hpp
+      opm/material/densead/Evaluation3.hpp
+      opm/material/densead/Evaluation4.hpp
+      opm/material/densead/Evaluation11.hpp
+      opm/material/densead/DynamicEvaluation.hpp
+      opm/material/densead/Math.hpp
+      opm/material/densead/Evaluation1.hpp
+      opm/material/densead/Evaluation12.hpp
+      opm/material/densead/Evaluation2.hpp
+      opm/material/densead/EvaluationSpecializations.hpp
+      opm/material/densead/Evaluation10.hpp
+      opm/material/densead/Evaluation6.hpp
+      opm/material/eos/PengRobinson.hpp
+      opm/material/eos/PengRobinsonParams.hpp
+      opm/material/eos/PengRobinsonParamsMixture.hpp
+      opm/material/eos/PengRobinsonMixture.hpp
+      opm/material/thermal/ConstantSolidHeatCapLawParams.hpp
+      opm/material/thermal/ConstantSolidHeatCapLaw.hpp
+      opm/material/thermal/EclHeatcrLaw.hpp
+      opm/material/thermal/SomertonThermalConductionLawParams.hpp
+      opm/material/thermal/EclThcLawParams.hpp
+      opm/material/thermal/EclSpecrockLawParams.hpp
+      opm/material/thermal/EclThconrLaw.hpp
+      opm/material/thermal/EclThconrLawParams.hpp
+      opm/material/thermal/FluidThermalConductionLaw.hpp
+      opm/material/thermal/EclThcLaw.hpp
+      opm/material/thermal/FluidThermalConductionLawParams.hpp
+      opm/material/thermal/EclHeatcrLawParams.hpp
+      opm/material/thermal/NullThermalConductionLaw.hpp
+      opm/material/thermal/EclSolidEnergyLawMultiplexer.hpp
+      opm/material/thermal/EclThermalConductionLawMultiplexerParams.hpp
+      opm/material/thermal/EclThermalConductionLawMultiplexer.hpp
+      opm/material/thermal/EclSolidEnergyLawMultiplexerParams.hpp
+      opm/material/thermal/EclThermalLawManager.hpp
+      opm/material/thermal/SomertonThermalConductionLaw.hpp
+      opm/material/thermal/EclSpecrockLaw.hpp
+      opm/material/thermal/NullSolidEnergyLaw.hpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
