@@ -37,6 +37,7 @@
 #include <opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisConfig.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
