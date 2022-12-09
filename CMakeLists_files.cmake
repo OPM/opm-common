@@ -232,6 +232,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Units/UnitSystem.cpp
     src/opm/input/eclipse/Utility/Functional.cpp
     src/opm/material/fluidmatrixinteractions/EclEpsConfig.cpp
+    src/opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
   )
 
 
