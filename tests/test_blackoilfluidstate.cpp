@@ -44,7 +44,7 @@ int main()
         typedef typename Opm::BlackOilFluidSystem<Scalar> FluidSystem;
         typedef Opm::BlackOilFluidState<Scalar, FluidSystem> FluidState;
 
-        FluidState fs;
+        FluidState fs{};
         checkFluidState<Evaluation>(fs);
     }
 
@@ -54,7 +54,7 @@ int main()
         typedef typename Opm::BlackOilFluidSystem<Scalar> FluidSystem;
         typedef Opm::BlackOilFluidState<Scalar, FluidSystem> FluidState;
 
-        FluidState fs;
+        FluidState fs{};
         checkFluidState<Evaluation>(fs);
     }
 
@@ -64,7 +64,7 @@ int main()
         typedef typename Opm::BlackOilFluidSystem<Scalar> FluidSystem;
         typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
 
-        FluidState fs;
+        FluidState fs{};
         checkFluidState<Evaluation>(fs);
     }
 
