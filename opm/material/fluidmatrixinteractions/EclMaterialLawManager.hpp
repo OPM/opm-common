@@ -48,6 +48,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -146,9 +147,9 @@ public:
         gasOilConfig = std::make_shared<EclEpsConfig>();
         oilWaterConfig = std::make_shared<EclEpsConfig>();
         gasWaterConfig = std::make_shared<EclEpsConfig>();
-        gasOilConfig->initFromState(eclState, EclGasOilSystem);
-        oilWaterConfig->initFromState(eclState, EclOilWaterSystem);
-        gasWaterConfig->initFromState(eclState, EclGasWaterSystem);
+        gasOilConfig->initFromState(eclState, EclTwoPhaseSystemType::GasOil);
+        oilWaterConfig->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
+        gasWaterConfig->initFromState(eclState, EclTwoPhaseSystemType::GasWater);
 
 
         const auto& tables = eclState.getTableManager();
@@ -276,14 +277,14 @@ public:
                                   eclState,
                                   epsGridProperties,
                                   elemIdx,
-                                  EclGasOilSystem);
+                                  EclTwoPhaseSystemType::GasOil);
 
             auto [owinfo, oilWaterScaledEpsPointDrainage] =
                 readScaledPoints_(*oilWaterConfig,
                                   eclState,
                                   epsGridProperties,
                                   elemIdx,
-                                  EclOilWaterSystem);
+                                  EclTwoPhaseSystemType::OilWater);
             oilWaterScaledEpsInfoDrainage_[elemIdx] = owinfo;
 
             auto [gasWaterScaledInfo, gasWaterScaledPoint] =
@@ -291,7 +292,7 @@ public:
                                   eclState,
                                   epsGridProperties,
                                   elemIdx,
-                                  EclGasWaterSystem);
+                                  EclTwoPhaseSystemType::GasWater);
 
             if (hasGas && hasOil) {
                 GasOilEpsTwoPhaseParams gasOilDrainParams;
@@ -303,7 +304,7 @@ public:
 
                 gasOilParams->setDrainageParams(gasOilDrainParams,
                                                 gasOilScaledInfo,
-                                                EclGasOilSystem);
+                                                EclTwoPhaseSystemType::GasOil);
             }
 
             if (hasOil && hasWater) {
@@ -316,7 +317,7 @@ public:
 
                 oilWaterParams->setDrainageParams(oilWaterDrainParams,
                                                   owinfo,
-                                                  EclOilWaterSystem);
+                                                  EclTwoPhaseSystemType::OilWater);
             }
 
             if (hasGas && hasWater && !hasOil) {
@@ -329,7 +330,7 @@ public:
 
                 gasWaterParams->setDrainageParams(gasWaterDrainParams,
                                                   gasWaterScaledInfo,
-                                                  EclGasWaterSystem);
+                                                  EclTwoPhaseSystemType::GasWater);
             }
 
             if (enableHysteresis()) {
@@ -338,21 +339,21 @@ public:
                                       eclState,
                                       *epsImbGridProperties,
                                       elemIdx,
-                                      EclGasOilSystem);
+                                      EclTwoPhaseSystemType::GasOil);
 
                 auto [oilWaterScaledImbInfo, oilWaterScaledImbPoint] =
                     readScaledPoints_(*oilWaterConfig,
                                       eclState,
                                       *epsImbGridProperties,
                                       elemIdx,
-                                      EclOilWaterSystem);
+                                      EclTwoPhaseSystemType::OilWater);
 
                 auto [gasWaterScaledImbInfo, gasWaterScaledImbPoint] =
                     readScaledPoints_(*gasWaterConfig,
                                       eclState,
                                       *epsImbGridProperties,
                                       elemIdx,
-                                      EclGasWaterSystem);
+                                      EclTwoPhaseSystemType::GasWater);
 
                 unsigned imbRegionIdx = imbnumRegionArray_[elemIdx];
                 if (hasGas && hasOil) {
@@ -365,7 +366,7 @@ public:
 
                     gasOilParams->setImbibitionParams(gasOilImbParamsHyst,
                                                       gasOilScaledImbInfo,
-                                                      EclGasOilSystem);
+                                                      EclTwoPhaseSystemType::GasOil);
                 }
 
                 if (hasOil && hasWater) {
@@ -378,7 +379,7 @@ public:
 
                     oilWaterParams->setImbibitionParams(oilWaterImbParamsHyst,
                                                         oilWaterScaledImbInfo,
-                                                        EclOilWaterSystem);
+                                                        EclTwoPhaseSystemType::OilWater);
                 }
 
                 if (hasGas && hasWater && !hasOil) {
@@ -391,7 +392,7 @@ public:
 
                     gasWaterParams->setImbibitionParams(gasWaterImbParamsHyst,
                                                         gasWaterScaledImbInfo,
-                                                        EclGasWaterSystem);
+                                                        EclTwoPhaseSystemType::GasWater);
                 }
             }
 
@@ -466,7 +467,9 @@ public:
             if (std::abs(pcowAtSw) > pcowAtSwThreshold) {
                 elemScaledEpsInfo.maxPcow *= pcow/pcowAtSw;
                 auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
-                elemEclEpsScalingPoints.init(elemScaledEpsInfo, *oilWaterEclEpsConfig_, EclOilWaterSystem);
+                elemEclEpsScalingPoints.init(elemScaledEpsInfo,
+                                             *oilWaterEclEpsConfig_,
+                                             EclTwoPhaseSystemType::OilWater);
             }
         }
 
@@ -707,7 +710,7 @@ private:
     void readGlobalEpsOptions_(const EclipseState& eclState)
     {
         oilWaterEclEpsConfig_ = std::make_shared<EclEpsConfig>();
-        oilWaterEclEpsConfig_->initFromState(eclState, EclOilWaterSystem);
+        oilWaterEclEpsConfig_->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
 
         enableEndPointScaling_ = eclState.getTableManager().hasTables("ENKRVD");
     }
@@ -1107,7 +1110,9 @@ private:
             return;
 
         dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
-        dest[satRegionIdx]->init(unscaledEpsInfo_[satRegionIdx], *config, EclGasOilSystem);
+        dest[satRegionIdx]->init(unscaledEpsInfo_[satRegionIdx],
+                                 *config,
+                                 EclTwoPhaseSystemType::GasOil);
     }
 
     template <class Container>
@@ -1121,7 +1126,9 @@ private:
             return;
 
         dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
-        dest[satRegionIdx]->init(unscaledEpsInfo_[satRegionIdx], *config, EclOilWaterSystem);
+        dest[satRegionIdx]->init(unscaledEpsInfo_[satRegionIdx],
+                                 *config,
+                                 EclTwoPhaseSystemType::OilWater);
     }
 
     template <class Container>
@@ -1135,7 +1142,9 @@ private:
             return;
 
         dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
-        dest[satRegionIdx]->init(unscaledEpsInfo_[satRegionIdx], *config, EclGasWaterSystem);
+        dest[satRegionIdx]->init(unscaledEpsInfo_[satRegionIdx],
+                                 *config,
+                                 EclTwoPhaseSystemType::GasWater);
     }
 
     std::tuple<EclEpsScalingPointsInfo<Scalar>,

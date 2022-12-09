@@ -114,19 +114,19 @@ public:
     {
         drainageParams_ = value;
 
-        oilWaterSystem_ = (twoPhaseSystem == EclOilWaterSystem);
+        oilWaterSystem_ = (twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
 
         if (!config().enableHysteresis())
             return;
 
         if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0) {
-            if (twoPhaseSystem == EclGasOilSystem) {
+            if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Sncrd_ = info.Sgcr+info.Swl;
                 Snmaxd_ = info.Sgu+info.Swl;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
             }
             else {
-                assert(twoPhaseSystem == EclOilWaterSystem);
+                assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Sncrd_ = info.Sowcr;
                 Snmaxd_ = 1.0 - info.Swl - info.Sgl;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
@@ -135,12 +135,12 @@ public:
 
         // Additional Killough hysteresis model for pc
         if (config().pcHysteresisModel() == 0) {
-            if (twoPhaseSystem == EclGasOilSystem) {
+            if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Swcrd_ = info.Sogcr;
                 pcmaxd_ = info.maxPcgo;
             }
             else {
-                assert(twoPhaseSystem == EclOilWaterSystem);
+                assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Swcrd_ = info.Swcr;
                 pcmaxd_ = -17.0; // At this point 'info.maxPcow' holds pre-swatinit value ...;
             }
@@ -170,24 +170,24 @@ public:
 
         // Killough hysteresis model for nonw kr
         if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0) {
-            if (twoPhaseSystem == EclGasOilSystem) {
+            if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Sncri_ = info.Sgcr+info.Swl;
             }
             else {
-                assert(twoPhaseSystem == EclOilWaterSystem);
+                assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Sncri_ = info.Sowcr;
             }
         }
 
         // Killough hysteresis model for pc
         if (config().pcHysteresisModel() == 0) {
-            if (twoPhaseSystem == EclGasOilSystem) {
+            if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Swcri_ = info.Sogcr;
                 Swmaxi_ = 1.0 - info.Sgl - info.Swl;
                 pcmaxi_ = info.maxPcgo;
             }
             else {
-                assert(twoPhaseSystem == EclOilWaterSystem);
+                assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Swcri_ = info.Swcr;
                 Swmaxi_ = info.Swu;
                 pcmaxi_ = info.maxPcow;

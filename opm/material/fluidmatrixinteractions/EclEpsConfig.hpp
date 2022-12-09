@@ -39,10 +39,10 @@ class EclipseState;
  * \brief Specified which fluids are involved in a given twophase material law for
  *        endpoint scaling.
  */
-enum EclTwoPhaseSystemType {
-    EclGasOilSystem,
-    EclOilWaterSystem,
-    EclGasWaterSystem
+enum class EclTwoPhaseSystemType {
+    GasOil,
+    OilWater,
+    GasWater
 };
 
 /*!

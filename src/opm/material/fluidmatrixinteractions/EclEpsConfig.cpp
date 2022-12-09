@@ -62,9 +62,9 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
         const auto flag = eclState.getTableManager().getJFunc().flag();
 
         enableLeverettScaling_ = (flag == JFunc::Flag::BOTH)
-            || ((twoPhaseSystemType == EclOilWaterSystem) &&
+            || ((twoPhaseSystemType == EclTwoPhaseSystemType::OilWater) &&
                 (flag == JFunc::Flag::WATER))
-            || ((twoPhaseSystemType == EclGasOilSystem) &&
+            || ((twoPhaseSystemType == EclTwoPhaseSystemType::GasOil) &&
                 (flag == JFunc::Flag::GAS));
     }
 
@@ -79,7 +79,7 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
     };
 
     // check if we are supposed to scale the Y axis of the capillary pressure
-    if (twoPhaseSystemType == EclOilWaterSystem) {
+    if (twoPhaseSystemType == EclTwoPhaseSystemType::OilWater) {
         this->setEnableThreePointKrwScaling(hasKR("WR"));
         this->setEnableThreePointKrnScaling(hasKR("ORW"));
 
@@ -87,7 +87,7 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
         this->enableKrwScaling_ = hasKR("W") || this->enableThreePointKrwScaling();
         this->enablePcScaling_  = hasPC("W") || fp.has_double("SWATINIT");
     }
-    else if (twoPhaseSystemType == EclGasOilSystem) {
+    else if (twoPhaseSystemType == EclTwoPhaseSystemType::GasOil) {
         this->setEnableThreePointKrwScaling(hasKR("ORG"));
         this->setEnableThreePointKrnScaling(hasKR("GR"));
 
@@ -96,7 +96,7 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
         this->enablePcScaling_  = hasPC("G");
     }
     else {
-        assert(twoPhaseSystemType == EclGasWaterSystem);
+        assert(twoPhaseSystemType == EclTwoPhaseSystemType::GasWater);
         //TODO enable endpoint scaling for gaswater system
     }
 
