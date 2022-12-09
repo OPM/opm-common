@@ -460,12 +460,12 @@ protected:
         Evaluation b4 = a4 + V*b3;
 
         // invert resulting cubic polynomial analytically
-        Evaluation allV[4];
+        std::array<Evaluation,4> allV;
         allV[0] = V;
-        int numSol = 1 + invertCubicPolynomial<Evaluation>(allV + 1, b1, b2, b3, b4);
+        int numSol = 1 + invertCubicPolynomial<Evaluation>(allV.data() + 1, b1, b2, b3, b4);
 
         // sort all roots of the derivative
-        std::sort(allV + 0, allV + numSol);
+        std::sort(allV.begin(), allV.begin() + numSol);
 
         // check whether the result is physical
         if (numSol != 4 || allV[numSol - 2] < b) {
