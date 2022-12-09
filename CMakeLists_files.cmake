@@ -635,7 +635,6 @@ if(ENABLE_ECL_INPUT)
     examples/rst_deck.cpp
     examples/make_esmry.cpp
     examples/co2brinepvt.cpp
-    examples/co2brinepvt.cpp
   )
 endif()
 
