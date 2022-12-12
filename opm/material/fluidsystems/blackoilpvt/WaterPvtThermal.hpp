@@ -259,7 +259,7 @@ public:
      /*!
      * \brief Returns true iff Joule-Thomson effect for the water phase is active.
      */
-    bool enableJouleThomsony() const
+    bool enableJouleThomson() const
     { return enableJouleThomson_; }
 
     /*!
