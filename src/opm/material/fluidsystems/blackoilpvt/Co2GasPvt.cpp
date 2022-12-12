@@ -24,6 +24,8 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -33,14 +35,17 @@ template<class Scalar>
 void Co2GasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
-    if( !eclState.getTableManager().getDensityTable().empty()) {
-        std::cerr << "WARNING: CO2STOR is enabled but DENSITY is in the deck. \n" <<
-                     "The surface density is computed based on CO2-BRINE PVT at standard conditions (STCOND) and DENSITY is ignored " << std::endl;
+    if (!eclState.getTableManager().getDensityTable().empty()) {
+        OpmLog::warning("CO2STOR is enabled but DENSITY is in the deck. \n"
+                        "The surface density is computed based on CO2-BRINE "
+                        "PVT at standard conditions (STCOND) and DENSITY is ignored");
     }
 
-    if( eclState.getTableManager().hasTables("PVDG") || !eclState.getTableManager().getPvtgTables().empty()) {
-        std::cerr << "WARNING: CO2STOR is enabled but PVDG or PVTG is in the deck. \n" <<
-                     "CO2 PVT properties are computed based on the Span-Wagner pvt model and PVDG/PVTG input is ignored. " << std::endl;
+    if (eclState.getTableManager().hasTables("PVDG") ||
+        !eclState.getTableManager().getPvtgTables().empty()) {
+        OpmLog::warning("CO2STOR is enabled but PVDG or PVTG is in the deck. \n"
+                        "CO2 PVT properties are computed based on the Span-Wagner "
+                        "pvt model and PVDG/PVTG input is ignored.");
     }
 
     // We only supported single pvt region for the co2-brine module
