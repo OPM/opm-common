@@ -1742,3 +1742,6 @@ bool Opm::Well::aciveWellInjMult() const {
 }
 
 
+void Opm::Well::setFilterConc(const double conc) {
+    this->m_filter_concentration = conc;
+}
