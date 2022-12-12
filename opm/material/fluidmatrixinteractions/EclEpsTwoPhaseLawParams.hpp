@@ -30,10 +30,6 @@
 #include "EclEpsConfig.hpp"
 #include "EclEpsScalingPoints.hpp"
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#endif
-
 #include <memory>
 #include <cassert>
 
@@ -44,7 +40,7 @@ namespace Opm {
  * \ingroup FluidMatrixInteractions
  *
  * \brief A default implementation of the parameters for the material law adapter class
- *        which implements ECL endpoint scaleing .
+ *        which implements ECL endpoint scaling.
  */
 template <class EffLawT>
 class EclEpsTwoPhaseLawParams : public EnsureFinalized
