@@ -40,18 +40,18 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/HasMemberGeneratorMacros.hpp>
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
-
 #include <array>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 namespace BlackOil {
 OPM_GENERATE_HAS_MEMBER(Rs, ) // Creates 'HasMember_Rs<T>'.
 OPM_GENERATE_HAS_MEMBER(Rv, ) // Creates 'HasMember_Rv<T>'.
@@ -227,115 +227,7 @@ public:
     /*!
      * \brief Initialize the fluid system using an ECL deck object
      */
-    static void initFromState(const EclipseState& eclState, const Schedule& schedule)
-    {
-        size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
-        initBegin(numRegions);
-
-        numActivePhases_ = 0;
-        std::fill_n(&phaseIsActive_[0], numPhases, false);
-
-
-        if (eclState.runspec().phases().active(Phase::OIL)) {
-            phaseIsActive_[oilPhaseIdx] = true;
-            ++ numActivePhases_;
-        }
-
-        if (eclState.runspec().phases().active(Phase::GAS)) {
-            phaseIsActive_[gasPhaseIdx] = true;
-            ++ numActivePhases_;
-        }
-
-        if (eclState.runspec().phases().active(Phase::WATER)) {
-            phaseIsActive_[waterPhaseIdx] = true;
-            ++ numActivePhases_;
-        }
-
-        // set the surface conditions using the STCOND keyword
-        surfaceTemperature = eclState.getTableManager().stCond().temperature;
-        surfacePressure = eclState.getTableManager().stCond().pressure;
-
-        // The reservoir temperature does not really belong into the table manager. TODO:
-        // change this in opm-parser
-        setReservoirTemperature(eclState.getTableManager().rtemp());
-
-        // this fluidsystem only supports two or three phases
-        assert(numActivePhases_ >= 1 && numActivePhases_ <= 3);
-
-        setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
-        setEnableVaporizedOil(eclState.getSimulationConfig().hasVAPOIL());
-        setEnableVaporizedWater(eclState.getSimulationConfig().hasVAPWAT());
-
-        if(eclState.getSimulationConfig().hasDISGASW()) {
-            if(eclState.runspec().co2Storage())
-                setEnableDissolvedGasInWater(eclState.getSimulationConfig().hasDISGASW());
-            else
-                throw std::runtime_error("DISGASW only supported in combination with CO2STORE");
-        }
-
-        if (phaseIsActive(gasPhaseIdx)) {
-            gasPvt_ = std::make_shared<GasPvt>();
-            gasPvt_->initFromState(eclState, schedule);
-        }
-
-        if (phaseIsActive(oilPhaseIdx)) {
-            oilPvt_ = std::make_shared<OilPvt>();
-            oilPvt_->initFromState(eclState, schedule);
-        }
-
-        if (phaseIsActive(waterPhaseIdx)) {
-            waterPvt_ = std::make_shared<WaterPvt>();
-            waterPvt_->initFromState(eclState, schedule);
-        }
-
-        // set the reference densities of all PVT regions
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-            setReferenceDensities(phaseIsActive(oilPhaseIdx)? oilPvt_->oilReferenceDensity(regionIdx):700.,
-                                  phaseIsActive(waterPhaseIdx)? waterPvt_->waterReferenceDensity(regionIdx):1000.,
-                                  phaseIsActive(gasPhaseIdx)? gasPvt_->gasReferenceDensity(regionIdx):2.,
-                                  regionIdx);
-        }
-
-        // set default molarMass and mappings
-        initEnd();
-
-        // use molarMass of CO2 and Brine as default
-        // when we are using the the CO2STORE option
-        if (eclState.runspec().co2Storage()) {
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-                if(phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
-                    molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
-                if(phaseIsActive(waterPhaseIdx))
-                    molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
-                assert(phaseIsActive(gasPhaseIdx));
-                molarMass_[regionIdx][gasCompIdx] = BrineCo2Pvt<Scalar>::CO2::molarMass();
-            }
-        }
-
-        setEnableDiffusion(eclState.getSimulationConfig().isDiffusive());
-        if(enableDiffusion()) {
-            const auto& diffCoeffTables = eclState.getTableManager().getDiffusionCoefficientTable();
-            if(!diffCoeffTables.empty()) {
-                // if diffusion coefficient table is empty we relay on the PVT model to
-                // to give us the coefficients.
-                diffusionCoefficients_.resize(numRegions,{0,0,0,0,0,0,0,0,0});
-                assert(diffCoeffTables.size() == numRegions);
-                for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-                    const auto& diffCoeffTable = diffCoeffTables[regionIdx];
-                    molarMass_[regionIdx][oilCompIdx] = diffCoeffTable.oil_mw;
-                    molarMass_[regionIdx][gasCompIdx] = diffCoeffTable.gas_mw;
-                    setDiffusionCoefficient(diffCoeffTable.gas_in_gas, gasCompIdx, gasPhaseIdx, regionIdx);
-                    setDiffusionCoefficient(diffCoeffTable.oil_in_gas, oilCompIdx, gasPhaseIdx, regionIdx);
-                    setDiffusionCoefficient(diffCoeffTable.gas_in_oil, gasCompIdx, oilPhaseIdx, regionIdx);
-                    setDiffusionCoefficient(diffCoeffTable.oil_in_oil, oilCompIdx, oilPhaseIdx, regionIdx);
-                    if(diffCoeffTable.gas_in_oil_cross_phase > 0 || diffCoeffTable.oil_in_oil_cross_phase > 0) {
-                        throw std::runtime_error("Cross phase diffusion is set in the deck, but not implemented in Flow. "
-                                                 "Please default DIFFC item 7 and item 8 or set it to zero.");
-                    }
-                }
-            }
-        }
-    }
+    static void initFromState(const EclipseState& eclState, const Schedule& schedule);
 #endif // HAVE_ECL_INPUT
 
     /*!
