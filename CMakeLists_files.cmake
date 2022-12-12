@@ -269,6 +269,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidsystems/blackoilpvt/OilPvtThermal.cpp
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
+    src/opm/material/thermal/EclThermalLawManager.cpp
   )
 
   list( APPEND PYTHON_CXX_SOURCE_FILES
