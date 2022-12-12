@@ -39,15 +39,15 @@
 #include <opm/material/components/co2tables.inc>
 
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
-
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
  * for a CO2-Brine system
@@ -74,6 +74,7 @@ public:
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
     explicit BrineCo2Pvt() = default;
+
     BrineCo2Pvt(const std::vector<Scalar>& brineReferenceDensity,
                 const std::vector<Scalar>& co2ReferenceDensity,
                 const std::vector<Scalar>& salinity)
@@ -98,42 +99,13 @@ public:
             brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, true);
         }
     }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for Brine-CO2 system using an ECL deck.
      *
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        if( !eclState.getTableManager().getDensityTable().empty()) {
-            std::cerr << "WARNING: CO2STOR is enabled but DENSITY is in the deck. \n" <<
-                         "The surface density is computed based on CO2-BRINE PVT at standard conditions (STCOND) and DENSITY is ignored " << std::endl;
-        }
-
-        if( eclState.getTableManager().hasTables("PVDO") || !eclState.getTableManager().getPvtoTables().empty()) {
-            std::cerr << "WARNING: CO2STOR is enabled but PVDO or PVTO is in the deck. \n" <<
-                         "BRINE PVT properties are computed based on the Hu et al. pvt model and PVDO/PVTO input is ignored. " << std::endl;
-        }
-
-        setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
-
-        // We only supported single pvt region for the co2-brine module
-        size_t numRegions = 1;
-        setNumRegions(numRegions);
-        size_t regionIdx = 0;
-        // Currently we only support constant salinity
-        const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-        const Scalar MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
-        // convert to mass fraction
-        Brine::salinity = 1 / ( 1 + 1 / (molality*MmNaCl)); //
-        salinity_[regionIdx] = Brine::salinity;
-        // set the surface conditions using the STCOND keyword
-        Scalar T_ref = eclState.getTableManager().stCond().temperature;
-        Scalar P_ref = eclState.getTableManager().stCond().pressure;
-
-        brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, extrapolate);
-        co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
