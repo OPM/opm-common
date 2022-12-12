@@ -24,9 +24,13 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -37,7 +41,11 @@ initFromState(const EclipseState& eclState, const Schedule&)
     const auto& pvdgTables = eclState.getTableManager().getPvdgTables();
     const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-    assert(pvdgTables.size() == densityTable.size());
+    if (pvdgTables.size() != densityTable.size()) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Table sizes mismatch. PVDG: {}, DensityTable: {}\n",
+                              pvdgTables.size(), densityTable.size()));
+    }
 
     size_t numRegions = pvdgTables.size();
     setNumRegions(numRegions);
