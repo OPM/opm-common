@@ -24,9 +24,13 @@
 #include <config.h>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -55,6 +59,13 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         ++numActivePhases_;
     }
 
+    // this fluidsystem only supports one, two or three phases
+    if (numActivePhases_ < 1 || numActivePhases_ > 3) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Fluidsystem supports 1-3 phases, but {} is active\n",
+                              numActivePhases_));
+    }
+
     // set the surface conditions using the STCOND keyword
     surfaceTemperature = eclState.getTableManager().stCond().temperature;
     surfacePressure = eclState.getTableManager().stCond().pressure;
@@ -62,9 +73,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // The reservoir temperature does not really belong into the table manager. TODO:
     // change this in opm-parser
     setReservoirTemperature(eclState.getTableManager().rtemp());
-
-    // this fluidsystem only supports two or three phases
-    assert(numActivePhases_ >= 1 && numActivePhases_ <= 3);
 
     setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
     setEnableVaporizedOil(eclState.getSimulationConfig().hasVAPOIL());
@@ -74,7 +82,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         if (eclState.runspec().co2Storage())
             setEnableDissolvedGasInWater(eclState.getSimulationConfig().hasDISGASW());
         else
-            throw std::runtime_error("DISGASW only supported in combination with CO2STORE");
+            OPM_THROW(std::runtime_error,
+                      "DISGASW only supported in combination with CO2STORE");
     }
 
     if (phaseIsActive(gasPhaseIdx)) {
@@ -111,7 +120,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                 molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
             if (phaseIsActive(waterPhaseIdx))
                 molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
-            assert(phaseIsActive(gasPhaseIdx));
+            if (!phaseIsActive(gasPhaseIdx)) {
+                OPM_THROW(std::runtime_error,
+                          "CO2STORE requires gas phase\n");
+            }
             molarMass_[regionIdx][gasCompIdx] = BrineCo2Pvt<Scalar>::CO2::molarMass();
         }
     }
@@ -123,7 +135,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             // if diffusion coefficient table is empty we relay on the PVT model to
             // to give us the coefficients.
             diffusionCoefficients_.resize(numRegions,{0,0,0,0,0,0,0,0,0});
-            assert(diffCoeffTables.size() == numRegions);
+            if (diffCoeffTables.size() != numRegions) {
+                OPM_THROW(std::runtime_error,
+                          fmt::format("Table sizes mismatch. DiffCoeffs: {}, NumRegions: {}\n",
+                                      diffCoeffTables.size(), numRegions));
+            }
             for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
                 const auto& diffCoeffTable = diffCoeffTables[regionIdx];
                 molarMass_[regionIdx][oilCompIdx] = diffCoeffTable.oil_mw;
@@ -133,8 +149,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                 setDiffusionCoefficient(diffCoeffTable.gas_in_oil, gasCompIdx, oilPhaseIdx, regionIdx);
                 setDiffusionCoefficient(diffCoeffTable.oil_in_oil, oilCompIdx, oilPhaseIdx, regionIdx);
                 if (diffCoeffTable.gas_in_oil_cross_phase > 0 || diffCoeffTable.oil_in_oil_cross_phase > 0) {
-                    throw std::runtime_error("Cross phase diffusion is set in the deck, but not implemented in Flow. "
-                                             "Please default DIFFC item 7 and item 8 or set it to zero.");
+                    OPM_THROW(std::runtime_error,
+                              "Cross phase diffusion is set in the deck, "
+                              "but not implemented in Flow. "
+                              "Please default DIFFC item 7 and item 8 "
+                              "or set it to zero.");
                 }
             }
         }
