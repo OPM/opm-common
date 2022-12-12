@@ -564,18 +564,16 @@ bool Well::updateWellGuideRate(double guide_rate_arg) {
     return false;
 }
 
-Well::InjMultMode Well::injModeFromString(const std::string& str) {
+Well::InjMultMode Well::injMultModeFromString(const std::string& str) {
     if (str == "WREV")
         return InjMultMode::WREV;
     else if (str == "CREV")
         return InjMultMode::CREV;
     else if (str == "CIRR")
         return InjMultMode::CIRR;
-    else if (str == "NONE")
-        return InjMultMode::NONE;
     else
         throw std::invalid_argument("Unknow enum INJMultMode string: " + str);
-    }
+}
 
 
 bool Well::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
@@ -1313,7 +1311,7 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
 }
 
 
-bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& location) {
+bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& /*location*/) {
     // TODO: the this keyword, defaulted means it <=0.
     // We need to check how the following works
     auto match = [=] ( const Connection& c) -> bool {
@@ -1328,20 +1326,21 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
     // if yes, we need to reset all the connections for injmult operation
     const bool is_prev_wrev = this->inj_mult_mode == InjMultMode::WREV;
 
-    const std::string mode = record.getItem("MODE").getTrimmedString(0);
-    this->inj_mult_mode = injModeFromString(mode);
+    // TODO: maybe location can be used in the string to mode function here
+    const InjMultMode mode = injMultModeFromString(record.getItem("MODE").getTrimmedString(0));
+    this->inj_mult_mode = mode;
     const double fracture_pressure = record.getItem("FRACTURING_PRESSURE").getSIDouble(0);
     const double multiple_gradient = record.getItem("MULTIPLIER_GRADIENT").getSIDouble(0);
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
     const Connection::InjMult inj_mult {true, fracture_pressure, multiple_gradient};
 
-    if (mode == "WREV") {
+    if (mode == InjMultMode::WREV) {
         // all the connections will share the same INJMULT setup
         for (auto c : *this->connections) {
             c.setInjMult(inj_mult);
             new_connections->add(c);
         }
-    } else if (mode == "CREV" || mode == "CIRR"){
+    } else if (mode == InjMultMode::CREV || mode == InjMultMode::CIRR){
         for (auto c : *this->connections) {
             if (match(c)) {
                 c.setInjMult(inj_mult);
@@ -1357,11 +1356,6 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
             }
             new_connections->add(c);
         }
-    } else {
-        const std::string msg = fmt::format("unknown WINJMULT operation mode {} with keyword {}"
-                                             "at line {} in file {}", mode, location.keyword,
-                                             location.lineno, location.filename);
-        throw std::logic_error(msg);
     }
 
     return this->updateConnections(std::move(new_connections), false);

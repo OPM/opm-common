@@ -83,7 +83,7 @@ public:
         NONE,
     };
 
-    static InjMultMode injModeFromString(const std::string& str);
+    static InjMultMode injMultModeFromString(const std::string& str);
 
     /*
       The elements in this enum are used as bitmasks to keep track
