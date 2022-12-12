@@ -30,10 +30,6 @@
 #include "EclHysteresisConfig.hpp"
 #include "EclEpsScalingPoints.hpp"
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#endif
-
 #include <cassert>
 #include <cmath>
 #include <memory>
