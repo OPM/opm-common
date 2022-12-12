@@ -24,11 +24,15 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -58,7 +62,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     if (enableThermalDensity_) {
         const auto& watDenT = tables.WatDenT();
 
-        assert(watDenT.size() == numRegions);
+        if (watDenT.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. WATDENT: {}, numRegions: {}\n",
+                                  watDenT.size(), numRegions));
+        }
+
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& record = watDenT[regionIdx];
 
@@ -69,7 +78,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         const auto& pvtwTables = tables.getPvtwTable();
 
-        assert(pvtwTables.size() == numRegions);
+        if (pvtwTables.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. PVTW: {}, numRegions: {}\n",
+                                  pvtwTables.size(), numRegions));
+        }
 
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
             pvtwRefPress_[regionIdx] = pvtwTables[regionIdx].reference_pressure;
@@ -81,7 +94,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     if (enableJouleThomson_) {
          const auto& watJT = tables.WatJT();
 
-        assert(watJT.size() == numRegions);
+        if (watJT.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. WATJT: {}, numRegions: {}\n",
+                                  watJT.size(), numRegions));
+        }
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& record = watJT[regionIdx];
 
@@ -92,16 +109,28 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     if (enableThermalViscosity_) {
         if (tables.getViscrefTable().empty())
-            throw std::runtime_error("VISCREF is required when WATVISCT is present");
+            OPM_THROW(std::runtime_error, "VISCREF is required when WATVISCT is present");
 
         const auto& watvisctTables = tables.getWatvisctTables();
         const auto& viscrefTables = tables.getViscrefTable();
 
         const auto& pvtwTables = tables.getPvtwTable();
 
-        assert(pvtwTables.size() == numRegions);
-        assert(watvisctTables.size() == numRegions);
-        assert(viscrefTables.size() == numRegions);
+        if (pvtwTables.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. PVTW: {}, numRegions: {}\n",
+                                  pvtwTables.size(), numRegions));
+        }
+        if (watvisctTables.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. WATVISCT: {}, numRegions: {}\n",
+                                  watvisctTables.size(), numRegions));
+        }
+        if (viscrefTables.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. VISCREF: {}, numRegions: {}\n",
+                                  viscrefTables.size(), numRegions));
+        }
 
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
             const auto& T = watvisctTables[regionIdx].getColumn("Temperature").vectorCopy();
