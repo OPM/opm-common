@@ -34,11 +34,13 @@
 #include "GasPvtThermal.hpp"
 #include "Co2GasPvt.hpp"
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+class EclipseState;
+class Schedule;
 #endif
 
-namespace Opm {
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall)                          \
     switch (gasPvtApproach_) {                                            \
     case GasPvtApproach::DryGas: {                                        \
@@ -153,26 +155,7 @@ public:
      *
      * This method assumes that the deck features valid DENSITY and PVDG keywords.
      */
-    void initFromState(const EclipseState& eclState, const Schedule& schedule)
-    {
-        if (!eclState.runspec().phases().active(Phase::GAS))
-            return;
-        if (eclState.runspec().co2Storage())
-            setApproach(GasPvtApproach::Co2Gas);
-        else if (enableThermal && eclState.getSimulationConfig().isThermal())
-            setApproach(GasPvtApproach::ThermalGas);
-        else if (!eclState.getTableManager().getPvtgwTables().empty() && !eclState.getTableManager().getPvtgTables().empty())
-            setApproach(GasPvtApproach::WetHumidGas);
-        else if (!eclState.getTableManager().getPvtgTables().empty())
-            setApproach(GasPvtApproach::WetGas);
-        else if (eclState.getTableManager().hasTables("PVDG"))
-            setApproach(GasPvtApproach::DryGas);
-        else if (!eclState.getTableManager().getPvtgwTables().empty())
-            setApproach(GasPvtApproach::DryHumidGas);
-       
-
-        OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
-    }
+    void initFromState(const EclipseState& eclState, const Schedule& schedule);
 #endif // HAVE_ECL_INPUT
 
     void setApproach(GasPvtApproach gasPvtAppr)
@@ -467,8 +450,6 @@ private:
     GasPvtApproach gasPvtApproach_;
     void* realGasPvt_;
 };
-
-#undef OPM_GAS_PVT_MULTIPLEXER_CALL
 
 } // namespace Opm
 
