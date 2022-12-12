@@ -27,11 +27,12 @@
 #ifndef OPM_ECL_HYSTERESIS_CONFIG_HPP
 #define OPM_ECL_HYSTERESIS_CONFIG_HPP
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+class Runspec;
 #endif
 
-namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
  *
@@ -40,13 +41,6 @@ namespace Opm {
 class EclHysteresisConfig
 {
 public:
-    EclHysteresisConfig()
-    {
-        enableHysteresis_ = false;
-        pcHysteresisModel_ = -1;
-        krHysteresisModel_ = -1;
-    }
-
     /*!
      * \brief Specify whether hysteresis is enabled or not.
      */
@@ -125,31 +119,18 @@ public:
      *
      * This requires that the opm-parser module is available.
      */
-    void initFromState(const Runspec& runspec)
-    {
-        enableHysteresis_ = false;
-
-        enableHysteresis_ = runspec.hysterPar().active();
-
-        if (!enableHysteresis_)
-            return;
-
-        krHysteresisModel_ = runspec.hysterPar().krHysteresisModel();
-        pcHysteresisModel_ = runspec.hysterPar().pcHysteresisModel();
-        modParamTrapped_ = runspec.hysterPar().modParamTrapped();
-        curvatureCapPrs_ = runspec.hysterPar().curvatureCapPrs();
-    }
+    void initFromState(const Runspec& runspec);
 #endif
 
 private:
     // enable hysteresis at all
-    bool enableHysteresis_;
+    bool enableHysteresis_{false};
 
     // the capillary pressure and the relperm hysteresis models to be used
-    int pcHysteresisModel_;
-    int krHysteresisModel_;
-    double modParamTrapped_;
-    double curvatureCapPrs_;
+    int pcHysteresisModel_{-1};
+    int krHysteresisModel_{-1};
+    double modParamTrapped_{};
+    double curvatureCapPrs_{};
 };
 
 } // namespace Opm
