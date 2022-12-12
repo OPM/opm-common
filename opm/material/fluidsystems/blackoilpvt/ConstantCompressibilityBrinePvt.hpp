@@ -29,17 +29,18 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
-#endif
-
 #include <vector>
 
 namespace Opm {
+
 template <class Scalar, bool enableThermal, bool enableBrine>
 class WaterPvtMultiplexer;
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        without vaporized oil.
@@ -64,59 +65,13 @@ public:
         , viscosityTables_(viscosityTables)
         , viscosibilityTables_(viscosibilityTables)
     { }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent water viscosity and density
      *        using a table stemming from the Eclipse PVTWSALT keyword.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& tableManager = eclState.getTableManager();
-        size_t numRegions = tableManager.getTabdims().getNumPVTTables();
-        const auto& densityTable = tableManager.getDensityTable();
-
-        formationVolumeTables_.resize(numRegions);
-        compressibilityTables_.resize(numRegions);
-        viscosityTables_.resize(numRegions);
-        viscosibilityTables_.resize(numRegions);
-        referencePressure_.resize(numRegions);
-
-        const auto& pvtwsaltTables = tableManager.getPvtwSaltTables();
-        if(!pvtwsaltTables.empty()){
-            assert(numRegions == pvtwsaltTables.size());
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-                const auto& pvtwsaltTable = pvtwsaltTables[regionIdx];
-                const auto& c = pvtwsaltTable.getSaltConcentrationColumn();
-
-                const auto& B = pvtwsaltTable.getFormationVolumeFactorColumn();
-                formationVolumeTables_[regionIdx].setXYContainers(c, B);
-
-                const auto& compressibility = pvtwsaltTable.getCompressibilityColumn();
-                compressibilityTables_[regionIdx].setXYContainers(c, compressibility);
-
-                const auto& viscositytable = pvtwsaltTable.getViscosityColumn();
-                viscosityTables_[regionIdx].setXYContainers(c, viscositytable);
-
-                const auto& viscosibility = pvtwsaltTable.getViscosibilityColumn();
-                viscosibilityTables_[regionIdx].setXYContainers(c, viscosibility);
-                referencePressure_[regionIdx] = pvtwsaltTable.getReferencePressureValue();
-            }
-        }
-        else {
-            throw std::runtime_error("PVTWSALT must be specified in BRINE runs\n");
-        }
-
-
-        size_t numPvtwRegions = numRegions;
-        setNumRegions(numPvtwRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numPvtwRegions; ++ regionIdx) {
-
-            waterReferenceDensity_[regionIdx] = densityTable[regionIdx].water;
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
