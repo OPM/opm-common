@@ -41,48 +41,48 @@
 namespace Opm {
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall)                          \
     switch (gasPvtApproach_) {                                            \
-    case GasPvtApproach::DryGasPvt: {                                     \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::DryGasPvt>();          \
+    case GasPvtApproach::DryGas: {                                        \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::DryGas>();             \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
-    case GasPvtApproach::DryHumidGasPvt: {                                \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::DryHumidGasPvt>();     \
+    case GasPvtApproach::DryHumidGas: {                                   \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::DryHumidGas>();        \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
-    case GasPvtApproach::WetHumidGasPvt: {                                \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::WetHumidGasPvt>();     \
+    case GasPvtApproach::WetHumidGas: {                                   \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::WetHumidGas>();        \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
-    case GasPvtApproach::WetGasPvt: {                                     \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::WetGasPvt>();          \
+    case GasPvtApproach::WetGas: {                                        \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::WetGas>();             \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
-    case GasPvtApproach::ThermalGasPvt: {                                 \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::ThermalGasPvt>();      \
+    case GasPvtApproach::ThermalGas: {                                    \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::ThermalGas>();         \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
-    case GasPvtApproach::Co2GasPvt: {                                     \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::Co2GasPvt>();          \
+    case GasPvtApproach::Co2Gas: {                                        \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();             \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
-    case GasPvtApproach::NoGasPvt:                                        \
+    case GasPvtApproach::NoGas:                                           \
         throw std::logic_error("Not implemented: Gas PVT of this deck!"); \
     } \
 
 enum class GasPvtApproach {
-    NoGasPvt,
-    DryGasPvt,
-    DryHumidGasPvt,
-    WetHumidGasPvt,
-    WetGasPvt,
-    ThermalGasPvt,
-    Co2GasPvt
+    NoGas,
+    DryGas,
+    DryHumidGas,
+    WetHumidGas,
+    WetGas,
+    ThermalGas,
+    Co2Gas
 };
 
 /*!
@@ -101,7 +101,7 @@ class GasPvtMultiplexer
 public:
     GasPvtMultiplexer()
     {
-        gasPvtApproach_ = GasPvtApproach::NoGasPvt;
+        gasPvtApproach_ = GasPvtApproach::NoGas;
         realGasPvt_ = nullptr;
     }
 
@@ -118,31 +118,31 @@ public:
     ~GasPvtMultiplexer()
     {
         switch (gasPvtApproach_) {
-        case GasPvtApproach::DryGasPvt: {
-            delete &getRealPvt<GasPvtApproach::DryGasPvt>();
+        case GasPvtApproach::DryGas: {
+            delete &getRealPvt<GasPvtApproach::DryGas>();
             break;
         }
-        case GasPvtApproach::DryHumidGasPvt: {
-            delete &getRealPvt<GasPvtApproach::DryHumidGasPvt>();
+        case GasPvtApproach::DryHumidGas: {
+            delete &getRealPvt<GasPvtApproach::DryHumidGas>();
             break;
         }
-        case GasPvtApproach::WetHumidGasPvt: {
-            delete &getRealPvt<GasPvtApproach::WetHumidGasPvt>();
+        case GasPvtApproach::WetHumidGas: {
+            delete &getRealPvt<GasPvtApproach::WetHumidGas>();
             break;
         }
-        case GasPvtApproach::WetGasPvt: {
-            delete &getRealPvt<GasPvtApproach::WetGasPvt>();
+        case GasPvtApproach::WetGas: {
+            delete &getRealPvt<GasPvtApproach::WetGas>();
             break;
         }
-        case GasPvtApproach::ThermalGasPvt: {
-            delete &getRealPvt<GasPvtApproach::ThermalGasPvt>();
+        case GasPvtApproach::ThermalGas: {
+            delete &getRealPvt<GasPvtApproach::ThermalGas>();
             break;
         }
-        case GasPvtApproach::Co2GasPvt: {
-            delete &getRealPvt<GasPvtApproach::Co2GasPvt>();
+        case GasPvtApproach::Co2Gas: {
+            delete &getRealPvt<GasPvtApproach::Co2Gas>();
             break;
         }
-        case GasPvtApproach::NoGasPvt:
+        case GasPvtApproach::NoGas:
             break;
         }
     }
@@ -158,17 +158,17 @@ public:
         if (!eclState.runspec().phases().active(Phase::GAS))
             return;
         if (eclState.runspec().co2Storage())
-            setApproach(GasPvtApproach::Co2GasPvt);
+            setApproach(GasPvtApproach::Co2Gas);
         else if (enableThermal && eclState.getSimulationConfig().isThermal())
-            setApproach(GasPvtApproach::ThermalGasPvt);
+            setApproach(GasPvtApproach::ThermalGas);
         else if (!eclState.getTableManager().getPvtgwTables().empty() && !eclState.getTableManager().getPvtgTables().empty())
-            setApproach(GasPvtApproach::WetHumidGasPvt);
+            setApproach(GasPvtApproach::WetHumidGas);
         else if (!eclState.getTableManager().getPvtgTables().empty())
-            setApproach(GasPvtApproach::WetGasPvt);
+            setApproach(GasPvtApproach::WetGas);
         else if (eclState.getTableManager().hasTables("PVDG"))
-            setApproach(GasPvtApproach::DryGasPvt);
+            setApproach(GasPvtApproach::DryGas);
         else if (!eclState.getTableManager().getPvtgwTables().empty())
-            setApproach(GasPvtApproach::DryHumidGasPvt);
+            setApproach(GasPvtApproach::DryHumidGas);
        
 
         OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
@@ -178,31 +178,31 @@ public:
     void setApproach(GasPvtApproach gasPvtAppr)
     {
         switch (gasPvtAppr) {
-        case GasPvtApproach::DryGasPvt:
+        case GasPvtApproach::DryGas:
             realGasPvt_ = new DryGasPvt<Scalar>;
             break;
 
-        case GasPvtApproach::DryHumidGasPvt:
+        case GasPvtApproach::DryHumidGas:
             realGasPvt_ = new DryHumidGasPvt<Scalar>;
             break;
         
-        case GasPvtApproach::WetHumidGasPvt:
+        case GasPvtApproach::WetHumidGas:
             realGasPvt_ = new WetHumidGasPvt<Scalar>;
             break;
 
-        case GasPvtApproach::WetGasPvt:
+        case GasPvtApproach::WetGas:
             realGasPvt_ = new WetGasPvt<Scalar>;
             break;
 
-        case GasPvtApproach::ThermalGasPvt:
+        case GasPvtApproach::ThermalGas:
             realGasPvt_ = new GasPvtThermal<Scalar>;
             break;
 
-        case GasPvtApproach::Co2GasPvt:
+        case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>;
             break;
 
-        case GasPvtApproach::NoGasPvt:
+        case GasPvtApproach::NoGas:
             throw std::logic_error("Not implemented: Gas PVT of this deck!");
         }
 
@@ -346,14 +346,14 @@ public:
 
     // get the parameter object for the dry gas case
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::DryGasPvt, DryGasPvt<Scalar> >::type& getRealPvt()
+    typename std::enable_if<approachV == GasPvtApproach::DryGas, DryGasPvt<Scalar> >::type& getRealPvt()
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<DryGasPvt<Scalar>* >(realGasPvt_);
     }
 
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::DryGasPvt, const DryGasPvt<Scalar> >::type& getRealPvt() const
+    typename std::enable_if<approachV == GasPvtApproach::DryGas, const DryGasPvt<Scalar> >::type& getRealPvt() const
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<const DryGasPvt<Scalar>* >(realGasPvt_);
@@ -361,14 +361,14 @@ public:
 
     // get the parameter object for the dry humid gas case
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::DryHumidGasPvt, DryHumidGasPvt<Scalar> >::type& getRealPvt()
+    typename std::enable_if<approachV == GasPvtApproach::DryHumidGas, DryHumidGasPvt<Scalar> >::type& getRealPvt()
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<DryHumidGasPvt<Scalar>* >(realGasPvt_);
     }
 
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::DryHumidGasPvt, const DryHumidGasPvt<Scalar> >::type& getRealPvt() const
+    typename std::enable_if<approachV == GasPvtApproach::DryHumidGas, const DryHumidGasPvt<Scalar> >::type& getRealPvt() const
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<const DryHumidGasPvt<Scalar>* >(realGasPvt_);
@@ -376,14 +376,14 @@ public:
 
     // get the parameter object for the wet humid gas case
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::WetHumidGasPvt, WetHumidGasPvt<Scalar> >::type& getRealPvt()
+    typename std::enable_if<approachV == GasPvtApproach::WetHumidGas, WetHumidGasPvt<Scalar> >::type& getRealPvt()
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<WetHumidGasPvt<Scalar>* >(realGasPvt_);
     }
 
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::WetHumidGasPvt, const WetHumidGasPvt<Scalar> >::type& getRealPvt() const
+    typename std::enable_if<approachV == GasPvtApproach::WetHumidGas, const WetHumidGasPvt<Scalar> >::type& getRealPvt() const
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<const WetHumidGasPvt<Scalar>* >(realGasPvt_);
@@ -391,14 +391,14 @@ public:
 
     // get the parameter object for the wet gas case
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::WetGasPvt, WetGasPvt<Scalar> >::type& getRealPvt()
+    typename std::enable_if<approachV == GasPvtApproach::WetGas, WetGasPvt<Scalar> >::type& getRealPvt()
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<WetGasPvt<Scalar>* >(realGasPvt_);
     }
 
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::WetGasPvt, const WetGasPvt<Scalar> >::type& getRealPvt() const
+    typename std::enable_if<approachV == GasPvtApproach::WetGas, const WetGasPvt<Scalar> >::type& getRealPvt() const
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<const WetGasPvt<Scalar>* >(realGasPvt_);
@@ -406,27 +406,27 @@ public:
 
     // get the parameter object for the thermal gas case
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::ThermalGasPvt, GasPvtThermal<Scalar> >::type& getRealPvt()
+    typename std::enable_if<approachV == GasPvtApproach::ThermalGas, GasPvtThermal<Scalar> >::type& getRealPvt()
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<GasPvtThermal<Scalar>* >(realGasPvt_);
     }
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::ThermalGasPvt, const GasPvtThermal<Scalar> >::type& getRealPvt() const
+    typename std::enable_if<approachV == GasPvtApproach::ThermalGas, const GasPvtThermal<Scalar> >::type& getRealPvt() const
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<const GasPvtThermal<Scalar>* >(realGasPvt_);
     }
 
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::Co2GasPvt, Co2GasPvt<Scalar> >::type& getRealPvt()
+    typename std::enable_if<approachV == GasPvtApproach::Co2Gas, Co2GasPvt<Scalar> >::type& getRealPvt()
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<Co2GasPvt<Scalar>* >(realGasPvt_);
     }
 
     template <GasPvtApproach approachV>
-    typename std::enable_if<approachV == GasPvtApproach::Co2GasPvt, const Co2GasPvt<Scalar> >::type& getRealPvt() const
+    typename std::enable_if<approachV == GasPvtApproach::Co2Gas, const Co2GasPvt<Scalar> >::type& getRealPvt() const
     {
         assert(gasPvtApproach() == approachV);
         return *static_cast<const Co2GasPvt<Scalar>* >(realGasPvt_);
@@ -440,22 +440,22 @@ public:
             return false;
 
         switch (gasPvtApproach_) {
-        case GasPvtApproach::DryGasPvt:
+        case GasPvtApproach::DryGas:
             return *static_cast<const DryGasPvt<Scalar>*>(realGasPvt_) ==
                    *static_cast<const DryGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::DryHumidGasPvt:
+        case GasPvtApproach::DryHumidGas:
             return *static_cast<const DryHumidGasPvt<Scalar>*>(realGasPvt_) ==
                    *static_cast<const DryHumidGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::WetHumidGasPvt:
+        case GasPvtApproach::WetHumidGas:
             return *static_cast<const WetHumidGasPvt<Scalar>*>(realGasPvt_) ==
                    *static_cast<const WetHumidGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::WetGasPvt:
+        case GasPvtApproach::WetGas:
             return *static_cast<const WetGasPvt<Scalar>*>(realGasPvt_) ==
                    *static_cast<const WetGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::ThermalGasPvt:
+        case GasPvtApproach::ThermalGas:
             return *static_cast<const GasPvtThermal<Scalar>*>(realGasPvt_) ==
                    *static_cast<const GasPvtThermal<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::Co2GasPvt:
+        case GasPvtApproach::Co2Gas:
             return *static_cast<const Co2GasPvt<Scalar>*>(realGasPvt_) ==
                     *static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_);
         default:
@@ -467,22 +467,22 @@ public:
     {
         gasPvtApproach_ = data.gasPvtApproach_;
         switch (gasPvtApproach_) {
-        case GasPvtApproach::DryGasPvt:
+        case GasPvtApproach::DryGas:
             realGasPvt_ = new DryGasPvt<Scalar>(*static_cast<const DryGasPvt<Scalar>*>(data.realGasPvt_));
             break;
-        case GasPvtApproach::DryHumidGasPvt:
+        case GasPvtApproach::DryHumidGas:
             realGasPvt_ = new DryHumidGasPvt<Scalar>(*static_cast<const DryHumidGasPvt<Scalar>*>(data.realGasPvt_));
             break;
-        case GasPvtApproach::WetHumidGasPvt:
+        case GasPvtApproach::WetHumidGas:
             realGasPvt_ = new WetHumidGasPvt<Scalar>(*static_cast<const WetHumidGasPvt<Scalar>*>(data.realGasPvt_));
             break;
-        case GasPvtApproach::WetGasPvt:
+        case GasPvtApproach::WetGas:
             realGasPvt_ = new WetGasPvt<Scalar>(*static_cast<const WetGasPvt<Scalar>*>(data.realGasPvt_));
             break;
-        case GasPvtApproach::ThermalGasPvt:
+        case GasPvtApproach::ThermalGas:
             realGasPvt_ = new GasPvtThermal<Scalar>(*static_cast<const GasPvtThermal<Scalar>*>(data.realGasPvt_));
             break;
-        case GasPvtApproach::Co2GasPvt:
+        case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>(*static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_));
             break;
         default:

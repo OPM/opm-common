@@ -521,8 +521,8 @@ public:
 
         // change the sat table it points to.
         switch (mlp.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach: {
-            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::EclStone1Approach>();
+        case EclMultiplexerApproach::Stone1: {
+            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone1>();
 
             realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
             realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
@@ -537,8 +537,8 @@ public:
         }
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach: {
-            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::EclStone2Approach>();
+        case EclMultiplexerApproach::Stone2: {
+            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone2>();
             realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
             realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
             realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
@@ -552,8 +552,8 @@ public:
         }
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach: {
-            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>();
+        case EclMultiplexerApproach::Default: {
+            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Default>();
             realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
             realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
             realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
@@ -567,8 +567,8 @@ public:
         }
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach: {
-            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>();
+        case EclMultiplexerApproach::TwoPhase: {
+            auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::TwoPhase>();
             realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
             realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
             realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
@@ -687,23 +687,23 @@ public:
     {
         auto& materialParams = materialLawParams_[elemIdx];
         switch (materialParams.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclStone1Approach>();
+        case EclMultiplexerApproach::Stone1: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
             return realParams.oilWaterParams().drainageParams().scaledPoints();
         }
 
-        case EclMultiplexerApproach::EclStone2Approach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclStone2Approach>();
+        case EclMultiplexerApproach::Stone2: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone2>();
             return realParams.oilWaterParams().drainageParams().scaledPoints();
         }
 
-        case EclMultiplexerApproach::EclDefaultApproach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>();
+        case EclMultiplexerApproach::Default: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Default>();
             return realParams.oilWaterParams().drainageParams().scaledPoints();
         }
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>();
+        case EclMultiplexerApproach::TwoPhase: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
             return realParams.oilWaterParams().drainageParams().scaledPoints();
         }
         default:
@@ -743,25 +743,25 @@ private:
         if (numEnabled == 0) {
             throw std::runtime_error("At least one fluid phase must be enabled. (Is: "+std::to_string(numEnabled)+")");
         } else if (numEnabled == 1) {
-            threePhaseApproach_ = EclMultiplexerApproach::EclOnePhaseApproach;
+            threePhaseApproach_ = EclMultiplexerApproach::OnePhase;
         } else if ( numEnabled == 2) {
-            threePhaseApproach_ = EclMultiplexerApproach::EclTwoPhaseApproach;
+            threePhaseApproach_ = EclMultiplexerApproach::TwoPhase;
             if (!gasEnabled)
-                twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseOilWater;
+                twoPhaseApproach_ = EclTwoPhaseApproach::OilWater;
             else if (!oilEnabled)
-                twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseGasWater;
+                twoPhaseApproach_ = EclTwoPhaseApproach::GasWater;
             else if (!waterEnabled)
-                twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseGasOil;
+                twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
         }
         else {
             assert(numEnabled == 3);
 
-            threePhaseApproach_ = EclMultiplexerApproach::EclDefaultApproach;
+            threePhaseApproach_ = EclMultiplexerApproach::Default;
             const auto& satctrls = runspec.saturationFunctionControls();
             if (satctrls.krModel() == SatFuncControls::ThreePhaseOilKrModel::Stone2)
-                threePhaseApproach_ = EclMultiplexerApproach::EclStone2Approach;
+                threePhaseApproach_ = EclMultiplexerApproach::Stone2;
             else if (satctrls.krModel() == SatFuncControls::ThreePhaseOilKrModel::Stone1)
-                threePhaseApproach_ = EclMultiplexerApproach::EclStone1Approach;
+                threePhaseApproach_ = EclMultiplexerApproach::Stone1;
         }
     }
 
@@ -801,8 +801,8 @@ private:
                 const auto& letSgofTab = tableManager.getSgofletTable()[satRegionIdx];
                 const std::vector<Scalar> dum; // dummy arg to comform with existing interface
 
-                effParams.setApproach(SatCurveMultiplexerApproach::LETApproach);
-                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LETApproach>();
+                effParams.setApproach(SatCurveMultiplexerApproach::LET);
+                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
 
                 // S=(So-Sogcr)/(1-Sogcr-Sgcr-Swco),  krog = Krt*S^L/[S^L+E*(1.0-S)^T]
                 const Scalar s_min_w = letSgofTab.s2_critical;
@@ -870,8 +870,8 @@ private:
             SoSamples[sampleIdx] = (1.0 - Swco) - sgofTable.get("SG", sampleIdx);
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoSamples, normalizeKrValues_(tolcrit, sgofTable.getColumn("KROG")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgofTable.getColumn("KRG")));
@@ -890,8 +890,8 @@ private:
             SoSamples[sampleIdx] = slgofTable.get("SL", sampleIdx) - Swco;
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoSamples, normalizeKrValues_(tolcrit, slgofTable.getColumn("KROG")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, slgofTable.getColumn("KRG")));
@@ -912,8 +912,8 @@ private:
             SoSamples[sampleIdx] = (1.0 - Swco) - sgfnTable.get("SG", sampleIdx);
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoColumn, normalizeKrValues_(tolcrit, sof3Table.getColumn("KROG")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
@@ -934,8 +934,8 @@ private:
             SoSamples[sampleIdx] = (1.0 - Swco) - sgfnTable.get("SG", sampleIdx);
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoColumn, normalizeKrValues_(tolcrit, sof2Table.getColumn("KRO")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
@@ -967,8 +967,8 @@ private:
                 const auto& swofTable = tableManager.getSwofTables().getTable<SwofTable>(satRegionIdx);
                 const std::vector<double> SwColumn = swofTable.getColumn("SW").vectorCopy();
 
-                effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+                effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
                 realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swofTable.getColumn("KRW")));
                 realParams.setKrnSamples(SwColumn, normalizeKrValues_(tolcrit, swofTable.getColumn("KROW")));
@@ -979,8 +979,8 @@ private:
                 const auto& letTab = tableManager.getSwofletTable()[satRegionIdx];
                 const std::vector<Scalar> dum; // dummy arg to conform with existing interface
 
-                effParams.setApproach(SatCurveMultiplexerApproach::LETApproach);
-                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LETApproach>();
+                effParams.setApproach(SatCurveMultiplexerApproach::LET);
+                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
 
                 // S=(Sw-Swcr)/(1-Sowcr-Swcr),  krw = Krt*S^L/[S^L+E*(1.0-S)^T]
                 const Scalar s_min_w = letTab.s1_critical;
@@ -1022,8 +1022,8 @@ private:
             const auto& swfnTable = tableManager.getSwfnTables().getTable<SwfnTable>(satRegionIdx);
             const std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
-            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
             realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
             realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
@@ -1084,8 +1084,8 @@ private:
             const SgfnTable& sgfnTable = tableManager.getSgfnTables().getTable<SgfnTable>( satRegionIdx );
             const SwfnTable& swfnTable = tableManager.getSwfnTables().getTable<SwfnTable>( satRegionIdx );
 
-            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
             std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
@@ -1185,8 +1185,8 @@ private:
         materialParams.setApproach(threePhaseApproach_);
 
         switch (materialParams.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclStone1Approach>();
+        case EclMultiplexerApproach::Stone1: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
             realParams.setGasOilParams(gasOilParams);
             realParams.setOilWaterParams(oilWaterParams);
             realParams.setSwl(epsInfo.Swl);
@@ -1200,8 +1200,8 @@ private:
             break;
         }
 
-        case EclMultiplexerApproach::EclStone2Approach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclStone2Approach>();
+        case EclMultiplexerApproach::Stone2: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone2>();
             realParams.setGasOilParams(gasOilParams);
             realParams.setOilWaterParams(oilWaterParams);
             realParams.setSwl(epsInfo.Swl);
@@ -1209,8 +1209,8 @@ private:
             break;
         }
 
-        case EclMultiplexerApproach::EclDefaultApproach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>();
+        case EclMultiplexerApproach::Default: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Default>();
             realParams.setGasOilParams(gasOilParams);
             realParams.setOilWaterParams(oilWaterParams);
             realParams.setSwl(epsInfo.Swl);
@@ -1218,8 +1218,8 @@ private:
             break;
         }
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>();
+        case EclMultiplexerApproach::TwoPhase: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
             realParams.setGasOilParams(gasOilParams);
             realParams.setOilWaterParams(oilWaterParams);
             realParams.setGasWaterParams(gasWaterParams);
@@ -1228,7 +1228,7 @@ private:
             break;
         }
 
-        case EclMultiplexerApproach::EclOnePhaseApproach: {
+        case EclMultiplexerApproach::OnePhase: {
             // Nothing to do, no parameters.
             break;
         }
@@ -1266,9 +1266,9 @@ private:
     OilWaterEffectiveParamVector oilWaterEffectiveParamVector_;
     GasWaterEffectiveParamVector gasWaterEffectiveParamVector_;
 
-    EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::EclDefaultApproach;
+    EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::Default;
     // this attribute only makes sense for twophase simulations!
-    enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseGasOil;
+    enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
 
     std::vector<MaterialLawParams> materialLawParams_;
 

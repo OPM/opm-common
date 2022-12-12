@@ -135,31 +135,31 @@ public:
                                    const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             Stone1Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>(),
+                                               params.template getRealParams<EclMultiplexerApproach::Stone1>(),
                                                fluidState);
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             Stone2Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>(),
+                                               params.template getRealParams<EclMultiplexerApproach::Stone2>(),
                                                fluidState);
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             DefaultMaterial::capillaryPressures(values,
-                                                params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>(),
+                                                params.template getRealParams<EclMultiplexerApproach::Default>(),
                                                 fluidState);
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
+        case EclMultiplexerApproach::TwoPhase:
             TwoPhaseMaterial::capillaryPressures(values,
-                                                 params.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>(),
+                                                 params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
                                                  fluidState);
             break;
 
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             values[0] = 0.0;
             break;
         }
@@ -176,27 +176,27 @@ public:
                                          const Params& params)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             Stone1Material::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             Stone2Material::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             DefaultMaterial::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Default>());
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
+        case EclMultiplexerApproach::TwoPhase:
             TwoPhaseMaterial::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
             break;
 
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             // Do nothing.
             break;
         }
@@ -213,27 +213,27 @@ public:
                                             Params& params)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             Stone1Material::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             Stone2Material::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             DefaultMaterial::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Default>());
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
+        case EclMultiplexerApproach::TwoPhase:
             TwoPhaseMaterial::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
             break;
 
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             // Do nothing.
             break;
         }
@@ -250,27 +250,27 @@ public:
                                        const Params& params)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             Stone1Material::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             Stone2Material::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             DefaultMaterial::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Default>());
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
+        case EclMultiplexerApproach::TwoPhase:
             TwoPhaseMaterial::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
             break;
 
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             // Do nothing.
             break;
         }
@@ -287,27 +287,27 @@ public:
                                           Params& params)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             Stone1Material::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             Stone2Material::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             DefaultMaterial::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::Default>());
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
+        case EclMultiplexerApproach::TwoPhase:
             TwoPhaseMaterial::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>());
+                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
             break;
 
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             // Do nothing.
             break;
         }
@@ -407,31 +407,31 @@ public:
                                        const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             Stone1Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>(),
+                                                   params.template getRealParams<EclMultiplexerApproach::Stone1>(),
                                                    fluidState);
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             Stone2Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>(),
+                                                   params.template getRealParams<EclMultiplexerApproach::Stone2>(),
                                                    fluidState);
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             DefaultMaterial::relativePermeabilities(values,
-                                                    params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>(),
+                                                    params.template getRealParams<EclMultiplexerApproach::Default>(),
                                                     fluidState);
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
+        case EclMultiplexerApproach::TwoPhase:
             TwoPhaseMaterial::relativePermeabilities(values,
-                                                     params.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>(),
+                                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
                                                      fluidState);
             break;
 
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             values[0] = 1.0;
             break;
 
@@ -449,19 +449,19 @@ public:
                                                const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             return Stone1Material::template relpermOilInOilGasSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>(),
+                (params.template getRealParams<EclMultiplexerApproach::Stone1>(),
                  fluidState);
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             return Stone2Material::template relpermOilInOilGasSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>(),
+                (params.template getRealParams<EclMultiplexerApproach::Stone2>(),
                  fluidState);
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             return DefaultMaterial::template relpermOilInOilGasSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>(),
+                (params.template getRealParams<EclMultiplexerApproach::Default>(),
                  fluidState);
 
         default:
@@ -479,19 +479,19 @@ public:
                                                  const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             return Stone1Material::template relpermOilInOilWaterSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>(),
+                (params.template getRealParams<EclMultiplexerApproach::Stone1>(),
                  fluidState);
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             return Stone2Material::template relpermOilInOilWaterSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>(),
+                (params.template getRealParams<EclMultiplexerApproach::Stone2>(),
                  fluidState);
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             return DefaultMaterial::template relpermOilInOilWaterSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>(),
+                (params.template getRealParams<EclMultiplexerApproach::Default>(),
                  fluidState);
 
         default:
@@ -543,26 +543,26 @@ public:
     static void updateHysteresis(Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
-            Stone1Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::EclStone1Approach>(),
+        case EclMultiplexerApproach::Stone1:
+            Stone1Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone1>(),
                                              fluidState);
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
-            Stone2Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::EclStone2Approach>(),
+        case EclMultiplexerApproach::Stone2:
+            Stone2Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone2>(),
                                              fluidState);
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
-            DefaultMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::EclDefaultApproach>(),
+        case EclMultiplexerApproach::Default:
+            DefaultMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Default>(),
                                               fluidState);
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
-            TwoPhaseMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::EclTwoPhaseApproach>(),
+        case EclMultiplexerApproach::TwoPhase:
+            TwoPhaseMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
                                                fluidState);
             break;
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             break;
         }
     }

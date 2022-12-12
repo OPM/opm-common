@@ -133,7 +133,7 @@ public:
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
-        case EclTwoPhaseApproach::EclTwoPhaseGasOil: {
+        case EclTwoPhaseApproach::GasOil: {
             const Evaluation& So =
                 decay<Evaluation>(fluidState.saturation(oilPhaseIdx));
 
@@ -142,7 +142,7 @@ public:
             break;
         }
 
-        case EclTwoPhaseApproach::EclTwoPhaseOilWater: {
+        case EclTwoPhaseApproach::OilWater: {
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
@@ -151,7 +151,7 @@ public:
             break;
         }
 
-        case EclTwoPhaseApproach::EclTwoPhaseGasWater: {
+        case EclTwoPhaseApproach::GasWater: {
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
@@ -321,7 +321,7 @@ public:
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
-        case EclTwoPhaseApproach::EclTwoPhaseGasOil: {
+        case EclTwoPhaseApproach::GasOil: {
             const Evaluation& So =
                 decay<Evaluation>(fluidState.saturation(oilPhaseIdx));
 
@@ -330,7 +330,7 @@ public:
             break;
         }
 
-        case EclTwoPhaseApproach::EclTwoPhaseOilWater: {
+        case EclTwoPhaseApproach::OilWater: {
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
@@ -339,7 +339,7 @@ public:
             break;
         }
 
-        case EclTwoPhaseApproach::EclTwoPhaseGasWater: {
+        case EclTwoPhaseApproach::GasWater: {
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
             
@@ -393,21 +393,21 @@ public:
     static void updateHysteresis(Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case EclTwoPhaseApproach::EclTwoPhaseGasOil: {
+        case EclTwoPhaseApproach::GasOil: {
             Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));
 
             params.gasOilParams().update(/*pcSw=*/So, /*krwSw=*/So, /*krnSw=*/So);
             break;
         }
 
-        case EclTwoPhaseApproach::EclTwoPhaseOilWater: {
+        case EclTwoPhaseApproach::OilWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
 
             params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
             break;
         }
 
-        case EclTwoPhaseApproach::EclTwoPhaseGasWater: {
+        case EclTwoPhaseApproach::GasWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
            
             params.gasWaterParams().update(/*pcSw=*/1.0, /*krwSw=*/0.0, /*krnSw=*/Sw);

@@ -41,11 +41,11 @@
 namespace Opm {
 
 enum class EclMultiplexerApproach {
-    EclDefaultApproach,
-    EclStone1Approach,
-    EclStone2Approach,
-    EclTwoPhaseApproach,
-    EclOnePhaseApproach
+    Default,
+    Stone1,
+    Stone2,
+    TwoPhase,
+    OnePhase
 };
 
 /*!
@@ -111,23 +111,23 @@ public:
         approach_ = newApproach;
 
         switch (approach()) {
-        case EclMultiplexerApproach::EclStone1Approach:
+        case EclMultiplexerApproach::Stone1:
             realParams_ = ParamPointerType(new Stone1Params, Deleter< Stone1Params > () );
             break;
 
-        case EclMultiplexerApproach::EclStone2Approach:
+        case EclMultiplexerApproach::Stone2:
             realParams_ = ParamPointerType(new Stone2Params, Deleter< Stone2Params > () );
             break;
 
-        case EclMultiplexerApproach::EclDefaultApproach:
+        case EclMultiplexerApproach::Default:
             realParams_ = ParamPointerType(new DefaultParams, Deleter< DefaultParams > () );
             break;
 
-        case EclMultiplexerApproach::EclTwoPhaseApproach:
+        case EclMultiplexerApproach::TwoPhase:
             realParams_ = ParamPointerType(new TwoPhaseParams, Deleter< TwoPhaseParams > () );
             break;
 
-        case EclMultiplexerApproach::EclOnePhaseApproach:
+        case EclMultiplexerApproach::OnePhase:
             // Do nothing, no parameters.
             break;
         }
@@ -138,7 +138,7 @@ public:
 
     // get the parameter object for the Stone1 case
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclStone1Approach, Stone1Params>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::Stone1, Stone1Params>::type&
     getRealParams()
     {
         assert(approach() == approachV);
@@ -146,7 +146,7 @@ public:
     }
 
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclStone1Approach, const Stone1Params>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::Stone1, const Stone1Params>::type&
     getRealParams() const
     {
         assert(approach() == approachV);
@@ -155,7 +155,7 @@ public:
 
     // get the parameter object for the Stone2 case
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclStone2Approach, Stone2Params>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::Stone2, Stone2Params>::type&
     getRealParams()
     {
         assert(approach() == approachV);
@@ -163,7 +163,7 @@ public:
     }
 
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclStone2Approach, const Stone2Params>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::Stone2, const Stone2Params>::type&
     getRealParams() const
     {
         assert(approach() == approachV);
@@ -172,7 +172,7 @@ public:
 
     // get the parameter object for the default case
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclDefaultApproach, DefaultParams>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::Default, DefaultParams>::type&
     getRealParams()
     {
         assert(approach() == approachV);
@@ -180,7 +180,7 @@ public:
     }
 
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclDefaultApproach, const DefaultParams>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::Default, const DefaultParams>::type&
     getRealParams() const
     {
         assert(approach() == approachV);
@@ -189,7 +189,7 @@ public:
 
     // get the parameter object for the twophase case
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclTwoPhaseApproach, TwoPhaseParams>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::TwoPhase, TwoPhaseParams>::type&
     getRealParams()
     {
         assert(approach() == approachV);
@@ -197,7 +197,7 @@ public:
     }
 
     template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::EclTwoPhaseApproach, const TwoPhaseParams>::type&
+    typename std::enable_if<approachV == EclMultiplexerApproach::TwoPhase, const TwoPhaseParams>::type&
     getRealParams() const
     {
         assert(approach() == approachV);

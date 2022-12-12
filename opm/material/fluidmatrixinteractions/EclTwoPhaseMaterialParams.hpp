@@ -34,9 +34,9 @@
 namespace Opm {
 
 enum class EclTwoPhaseApproach {
-    EclTwoPhaseGasOil,
-    EclTwoPhaseOilWater,
-    EclTwoPhaseGasWater
+    GasOil,
+    OilWater,
+    GasWater
 };
 
 /*!
