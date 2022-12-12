@@ -29,13 +29,13 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+class EclipseState;
+class Schedule;
 #endif
 
-namespace Opm {
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phase
  *        without dissolved gas.
@@ -61,40 +61,7 @@ public:
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVDO ECL keyword.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& pvdoTables = eclState.getTableManager().getPvdoTables();
-        const auto& densityTable = eclState.getTableManager().getDensityTable();
-
-        assert(pvdoTables.size() == densityTable.size());
-
-        size_t numRegions = pvdoTables.size();
-        setNumRegions(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            Scalar rhoRefO = densityTable[regionIdx].oil;
-            Scalar rhoRefG = densityTable[regionIdx].gas;
-            Scalar rhoRefW = densityTable[regionIdx].water;
-
-            setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
-
-            const auto& pvdoTable = pvdoTables.getTable<PvdoTable>(regionIdx);
-
-            const auto& BColumn(pvdoTable.getFormationFactorColumn());
-            std::vector<Scalar> invBColumn(BColumn.size());
-            for (unsigned i = 0; i < invBColumn.size(); ++i)
-                invBColumn[i] = 1/BColumn[i];
-
-            inverseOilB_[regionIdx].setXYArrays(pvdoTable.numRows(),
-                                                pvdoTable.getPressureColumn(),
-                                                invBColumn);
-            oilMu_[regionIdx].setXYArrays(pvdoTable.numRows(),
-                                          pvdoTable.getPressureColumn(),
-                                          pvdoTable.getViscosityColumn());
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif // HAVE_ECL_INPUT
 
     void setNumRegions(size_t numRegions)
