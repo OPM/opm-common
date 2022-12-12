@@ -24,11 +24,15 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/OilPvtThermal.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -57,13 +61,21 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // viscosity
     if (enableThermalViscosity_) {
         if (tables.getViscrefTable().empty())
-            throw std::runtime_error("VISCREF is required when OILVISCT is present");
+            OPM_THROW(std::runtime_error, "VISCREF is required when OILVISCT is present");
 
         const auto& oilvisctTables = tables.getOilvisctTables();
         const auto& viscrefTable = tables.getViscrefTable();
 
-        assert(oilvisctTables.size() == numRegions);
-        assert(viscrefTable.size() == numRegions);
+        if (oilvisctTables.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Tables sizes mismatch. OILVISCT: {}, NumRegions: {}\n",
+                                  oilvisctTables.size(), numRegions));
+        }
+        if (viscrefTable.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Tables sizes mismatch. VISCREF: {}, NumRegions: {}\n",
+                                  viscrefTable.size(), numRegions));
+        }
 
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& TCol = oilvisctTables[regionIdx].getColumn("Temperature").vectorCopy();
@@ -90,7 +102,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // temperature dependence of oil density
     const auto& oilDenT = tables.OilDenT();
     if (oilDenT.size() > 0) {
-        assert(oilDenT.size() == numRegions);
+        if (oilDenT.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Tables sizes mismatch. OILDENT: {}, NumRegions: {}\n",
+                                  oilDenT.size(), numRegions));
+        }
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& record = oilDenT[regionIdx];
 
@@ -103,8 +119,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // Joule Thomson
     if (enableJouleThomson_) {
         const auto& oilJT = tables.OilJT();
-
-        assert(oilJT.size() == numRegions);
+        if (oilJT.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Tables sizes mismatch. OILJT: {}, NumRegions: {}\n",
+                                  oilJT.size(), numRegions));
+        }
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& record = oilJT[regionIdx];
 
@@ -114,7 +133,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-        assert(densityTable.size() == numRegions);
+        if (densityTable.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Tables sizes mismatch. DensityTable: {}, NumRegions: {}\n",
+                                  densityTable.size(), numRegions));
+        }
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
              rhoRefG_[regionIdx] = densityTable[regionIdx].gas;
         }
