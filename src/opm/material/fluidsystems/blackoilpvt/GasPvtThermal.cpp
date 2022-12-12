@@ -24,11 +24,15 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/GasPvtThermal.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -72,7 +76,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     if (enableThermalDensity_) {
         const auto& gasDenT = tables.GasDenT();
 
-        assert(gasDenT.size() == numRegions);
+        if (gasDenT.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. GasDenT: {}, NumRegions: {}\n",
+                                  gasDenT.size(), numRegions));
+        }
+
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& record = gasDenT[regionIdx];
 
@@ -86,7 +95,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     if (enableJouleThomson_) {
         const auto& gasJT = tables.GasJT();
 
-        assert(gasJT.size() == numRegions);
+        if (gasJT.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. GasJT: {}, NumRegions: {}\n",
+                                  gasJT.size(), numRegions));
+        }
+
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& record = gasJT[regionIdx];
 
@@ -96,7 +110,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-        assert(densityTable.size() == numRegions);
+        if (densityTable.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. DensityTable: {}, NumRegions: {}\n",
+                                  densityTable.size(), numRegions));
+        }
+
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
              rhoRefO_[regionIdx] = densityTable[regionIdx].oil;
         }
