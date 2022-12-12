@@ -24,10 +24,14 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/WetGasPvt.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -38,7 +42,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     const auto& pvtgTables = eclState.getTableManager().getPvtgTables();
     const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-    assert(pvtgTables.size() == densityTable.size());
+    if (pvtgTables.size() != densityTable.size()) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Table sizes mismatch. PVTG: {}, Density: {}\n",
+                              pvtgTables.size(), densityTable.size()));
+    }
 
     size_t numRegions = pvtgTables.size();
     setNumRegions(numRegions);
@@ -55,7 +63,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         const auto& pvtgTable = pvtgTables[regionIdx];
 
         const auto& saturatedTable = pvtgTable.getSaturatedTable();
-        assert(saturatedTable.numRows() > 1);
+        if (saturatedTable.numRows() < 2) {
+            OPM_THROW(std::runtime_error,
+                      "Saturated PVTG table must have atleast two rows");
+        }
 
         auto& gasMu = gasMu_[regionIdx];
         auto& invGasB = inverseGasB_[regionIdx];
@@ -124,10 +135,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                     break;
             }
 
-            if (masterTableIdx >= saturatedTable.numRows())
-                throw std::runtime_error("PVTG tables are invalid: The last table must exhibit at least one "
+            if (masterTableIdx >= saturatedTable.numRows()) {
+                OPM_THROW(std::runtime_error,
+                          "PVTG tables are invalid: "
+                          "The last table must exhibit at least one "
                           "entry for undersaturated gas!");
-
+            }
 
             // extend the current table using the master table.
             extendPvtgTable_(regionIdx,
