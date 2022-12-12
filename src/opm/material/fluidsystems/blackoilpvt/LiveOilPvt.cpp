@@ -24,10 +24,14 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/LiveOilPvt.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -38,7 +42,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     const auto& pvtoTables = eclState.getTableManager().getPvtoTables();
     const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-    assert(pvtoTables.size() == densityTable.size());
+    if (pvtoTables.size() != densityTable.size()) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Table sizes mismatch. PVTO: {}, DensityTable: {}\n",
+                              pvtoTables.size(), densityTable.size()));
+    }
 
     size_t numRegions = pvtoTables.size();
     setNumRegions(numRegions);
@@ -52,11 +60,13 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     }
 
     // initialize the internal table objects
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
         const auto& pvtoTable = pvtoTables[regionIdx];
 
         const auto& saturatedTable = pvtoTable.getSaturatedTable();
-        assert(saturatedTable.numRows() > 1);
+        if (saturatedTable.numRows() < 2) {
+            OPM_THROW(std::runtime_error, "Saturated PVTO must have at least two rows.");
+        }
 
         auto& oilMu = oilMuTable_[regionIdx];
         auto& satOilMu = saturatedOilMuTable_[regionIdx];
@@ -126,8 +136,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             }
 
             if (masterTableIdx >= saturatedTable.numRows())
-                throw std::runtime_error("PVTO tables are invalid: The last table must exhibit at least one "
-                                         "entry for undersaturated oil!");
+                OPM_THROW(std::runtime_error,
+                          "PVTO tables are invalid: "
+                          "The last table must exhibit at least one "
+                          "entry for undersaturated oil!");
 
             // extend the current table using the master table.
             extendPvtoTable_(regionIdx,
