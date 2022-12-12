@@ -24,6 +24,8 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -33,14 +35,17 @@ template<class Scalar>
 void BrineCo2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
-    if( !eclState.getTableManager().getDensityTable().empty()) {
-        std::cerr << "WARNING: CO2STOR is enabled but DENSITY is in the deck. \n" <<
-                     "The surface density is computed based on CO2-BRINE PVT at standard conditions (STCOND) and DENSITY is ignored " << std::endl;
+    if (!eclState.getTableManager().getDensityTable().empty()) {
+        OpmLog::warning("CO2STOR is enabled but DENSITY is in the deck. \n"
+                        "The surface density is computed based on CO2-BRINE "
+                        "PVT at standard conditions (STCOND) and DENSITY is ignored");
     }
 
-    if( eclState.getTableManager().hasTables("PVDO") || !eclState.getTableManager().getPvtoTables().empty()) {
-        std::cerr << "WARNING: CO2STOR is enabled but PVDO or PVTO is in the deck. \n" <<
-                     "BRINE PVT properties are computed based on the Hu et al. pvt model and PVDO/PVTO input is ignored. " << std::endl;
+    if (eclState.getTableManager().hasTables("PVDO") ||
+        !eclState.getTableManager().getPvtoTables().empty()) {
+        OpmLog::warning("CO2STOR is enabled but PVDO or PVTO is in the deck.\n"
+                        "BRINE PVT properties are computed based on the Hu et al. "
+                        "pvt model and PVDO/PVTO input is ignored.");
     }
 
     setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
