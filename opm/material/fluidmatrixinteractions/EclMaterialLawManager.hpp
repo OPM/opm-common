@@ -747,11 +747,11 @@ private:
         } else if ( numEnabled == 2) {
             threePhaseApproach_ = EclMultiplexerApproach::TwoPhase;
             if (!gasEnabled)
-                twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseOilWater;
+                twoPhaseApproach_ = EclTwoPhaseApproach::OilWater;
             else if (!oilEnabled)
-                twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseGasWater;
+                twoPhaseApproach_ = EclTwoPhaseApproach::GasWater;
             else if (!waterEnabled)
-                twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseGasOil;
+                twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
         }
         else {
             assert(numEnabled == 3);
@@ -1268,7 +1268,7 @@ private:
 
     EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::Default;
     // this attribute only makes sense for twophase simulations!
-    enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::EclTwoPhaseGasOil;
+    enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
 
     std::vector<MaterialLawParams> materialLawParams_;
 
