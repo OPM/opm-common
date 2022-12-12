@@ -31,16 +31,15 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
-#endif
-
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        without vaporized oil.
@@ -64,56 +63,14 @@ public:
         , inverseGasBMu_(inverseGasBMu)
     {
     }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for dry gas using an ECL deck.
      *
      * This method assumes that the deck features valid DENSITY and PVDG keywords.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& pvdgTables = eclState.getTableManager().getPvdgTables();
-        const auto& densityTable = eclState.getTableManager().getDensityTable();
-
-        assert(pvdgTables.size() == densityTable.size());
-
-        size_t numRegions = pvdgTables.size();
-        setNumRegions(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            Scalar rhoRefO = densityTable[regionIdx].oil;
-            Scalar rhoRefG = densityTable[regionIdx].gas;
-            Scalar rhoRefW = densityTable[regionIdx].water;
-
-            setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
-
-            // determine the molar masses of the components
-            constexpr Scalar p = 1.01325e5; // surface pressure, [Pa]
-            constexpr Scalar T = 273.15 + 15.56; // surface temperature, [K]
-            constexpr Scalar MO = 175e-3; // [kg/mol]
-            Scalar MG = Constants<Scalar>::R*T*rhoRefG / p; // [kg/mol], consequence of the ideal gas law
-            constexpr Scalar MW = 18.0e-3; // [kg/mol]
-            // TODO (?): the molar mass of the components can possibly specified
-            // explicitly in the deck.
-            setMolarMasses(regionIdx, MO, MG, MW);
-
-            const auto& pvdgTable = pvdgTables.getTable<PvdgTable>(regionIdx);
-
-            // say 99.97% of all time: "premature optimization is the root of all
-            // evil". Eclipse does this "optimization" for apparently no good reason!
-            std::vector<Scalar> invB(pvdgTable.numRows());
-            const auto& Bg = pvdgTable.getFormationFactorColumn();
-            for (unsigned i = 0; i < Bg.size(); ++ i) {
-                invB[i] = 1.0/Bg[i];
-            }
-
-            size_t numSamples = invB.size();
-            inverseGasB_[regionIdx].setXYArrays(numSamples, pvdgTable.getPressureColumn(), invB);
-            gasMu_[regionIdx].setXYArrays(numSamples, pvdgTable.getPressureColumn(), pvdgTable.getViscosityColumn());
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)

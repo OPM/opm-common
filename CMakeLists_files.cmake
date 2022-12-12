@@ -244,6 +244,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
+    src/opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
   )
 
 
