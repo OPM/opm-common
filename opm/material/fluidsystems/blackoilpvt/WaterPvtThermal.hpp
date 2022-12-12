@@ -441,7 +441,6 @@ public:
                this->watdentCT2() == data.watdentCT2() &&
                this->watdentCT2() == data.watdentCT2() &&
                this->watJTRefPres() == data.watJTRefPres() &&
-               this->watJT() == data.watJT() &&
                this->watJTC() == data.watJTC() &&
                this->pvtwRefPress() == data.pvtwRefPress() &&
                this->pvtwRefB() == data.pvtwRefB() &&
