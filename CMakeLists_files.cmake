@@ -235,6 +235,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidmatrixinteractions/EclEpsConfig.cpp
     src/opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
     src/opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
+    src/opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
     src/opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
   )
 
