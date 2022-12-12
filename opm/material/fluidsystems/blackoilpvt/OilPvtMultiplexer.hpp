@@ -33,12 +33,13 @@
 #include "OilPvtThermal.hpp"
 #include "BrineCo2Pvt.hpp"
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+class EclipseState;
+class Schedule;
 #endif
 
-namespace Opm {
 #define OPM_OIL_PVT_MULTIPLEXER_CALL(codeToCall)                                  \
     switch (approach_) {                                                          \
     case OilPvtApproach::ConstantCompressibilityOil: {                            \
@@ -146,26 +147,7 @@ public:
      *
      * This method assumes that the deck features valid DENSITY and PVTO/PVDO/PVCDO keywords.
      */
-    void initFromState(const EclipseState& eclState, const Schedule& schedule)
-    {
-        if (!eclState.runspec().phases().active(Phase::OIL))
-            return;
-
-        // The co2Storage option both works with oil + gas
-        // and water/brine + gas
-        if (eclState.runspec().co2Storage())
-            setApproach(OilPvtApproach::BrineCo2);
-        else if (enableThermal && eclState.getSimulationConfig().isThermal())
-            setApproach(OilPvtApproach::ThermalOil);
-        else if (!eclState.getTableManager().getPvcdoTable().empty())
-            setApproach(OilPvtApproach::ConstantCompressibilityOil);
-        else if (eclState.getTableManager().hasTables("PVDO"))
-            setApproach(OilPvtApproach::DeadOil);
-        else if (!eclState.getTableManager().getPvtoTables().empty())
-            setApproach(OilPvtApproach::LiveOil);
-
-        OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
-    }
+    void initFromState(const EclipseState& eclState, const Schedule& schedule);
 #endif // HAVE_ECL_INPUT
 
 
@@ -417,8 +399,6 @@ private:
     OilPvtApproach approach_;
     void* realOilPvt_;
 };
-
-#undef OPM_OIL_PVT_MULTIPLEXER_CALL
 
 } // namespace Opm
 
