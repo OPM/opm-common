@@ -34,6 +34,7 @@
 #error "The test for EclMaterialLawManager requires eclipse input support in opm-common"
 #endif
 
+#include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
