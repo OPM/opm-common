@@ -801,8 +801,8 @@ private:
                 const auto& letSgofTab = tableManager.getSgofletTable()[satRegionIdx];
                 const std::vector<Scalar> dum; // dummy arg to comform with existing interface
 
-                effParams.setApproach(SatCurveMultiplexerApproach::LETApproach);
-                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LETApproach>();
+                effParams.setApproach(SatCurveMultiplexerApproach::LET);
+                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
 
                 // S=(So-Sogcr)/(1-Sogcr-Sgcr-Swco),  krog = Krt*S^L/[S^L+E*(1.0-S)^T]
                 const Scalar s_min_w = letSgofTab.s2_critical;
@@ -870,8 +870,8 @@ private:
             SoSamples[sampleIdx] = (1.0 - Swco) - sgofTable.get("SG", sampleIdx);
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoSamples, normalizeKrValues_(tolcrit, sgofTable.getColumn("KROG")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgofTable.getColumn("KRG")));
@@ -890,8 +890,8 @@ private:
             SoSamples[sampleIdx] = slgofTable.get("SL", sampleIdx) - Swco;
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoSamples, normalizeKrValues_(tolcrit, slgofTable.getColumn("KROG")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, slgofTable.getColumn("KRG")));
@@ -912,8 +912,8 @@ private:
             SoSamples[sampleIdx] = (1.0 - Swco) - sgfnTable.get("SG", sampleIdx);
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoColumn, normalizeKrValues_(tolcrit, sof3Table.getColumn("KROG")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
@@ -934,8 +934,8 @@ private:
             SoSamples[sampleIdx] = (1.0 - Swco) - sgfnTable.get("SG", sampleIdx);
         }
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
         realParams.setKrwSamples(SoColumn, normalizeKrValues_(tolcrit, sof2Table.getColumn("KRO")));
         realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
@@ -967,8 +967,8 @@ private:
                 const auto& swofTable = tableManager.getSwofTables().getTable<SwofTable>(satRegionIdx);
                 const std::vector<double> SwColumn = swofTable.getColumn("SW").vectorCopy();
 
-                effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+                effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
                 realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swofTable.getColumn("KRW")));
                 realParams.setKrnSamples(SwColumn, normalizeKrValues_(tolcrit, swofTable.getColumn("KROW")));
@@ -979,8 +979,8 @@ private:
                 const auto& letTab = tableManager.getSwofletTable()[satRegionIdx];
                 const std::vector<Scalar> dum; // dummy arg to conform with existing interface
 
-                effParams.setApproach(SatCurveMultiplexerApproach::LETApproach);
-                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LETApproach>();
+                effParams.setApproach(SatCurveMultiplexerApproach::LET);
+                auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
 
                 // S=(Sw-Swcr)/(1-Sowcr-Swcr),  krw = Krt*S^L/[S^L+E*(1.0-S)^T]
                 const Scalar s_min_w = letTab.s1_critical;
@@ -1022,8 +1022,8 @@ private:
             const auto& swfnTable = tableManager.getSwfnTables().getTable<SwfnTable>(satRegionIdx);
             const std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
-            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
             realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
             realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
@@ -1084,8 +1084,8 @@ private:
             const SgfnTable& sgfnTable = tableManager.getSgfnTables().getTable<SgfnTable>( satRegionIdx );
             const SwfnTable& swfnTable = tableManager.getSwfnTables().getTable<SwfnTable>( satRegionIdx );
 
-            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinearApproach);
-            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>();
+            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
             std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 

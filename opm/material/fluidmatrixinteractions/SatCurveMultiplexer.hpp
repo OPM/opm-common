@@ -91,15 +91,15 @@ public:
     static void capillaryPressures(Container& values, const Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
+        case SatCurveMultiplexerApproach::LET:
             LETTwoPhaseLaw::capillaryPressures(values,
-                                               params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+                                               params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                                fluidState);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
             PLTwoPhaseLaw::capillaryPressures(values,
-                                              params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+                                              params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                               fluidState);
             break;
         }
@@ -113,15 +113,15 @@ public:
     static void saturations(Container& values, const Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
+        case SatCurveMultiplexerApproach::LET:
             LETTwoPhaseLaw::saturations(values,
-                                        params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+                                        params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                         fluidState);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
             PLTwoPhaseLaw::saturations(values,
-                                       params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+                                       params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                        fluidState);
             break;
         }
@@ -141,15 +141,15 @@ public:
     static void relativePermeabilities(Container& values, const Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
+        case SatCurveMultiplexerApproach::LET:
             LETTwoPhaseLaw::relativePermeabilities(values,
-                                                   params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+                                                   params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                                    fluidState);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
             PLTwoPhaseLaw::relativePermeabilities(values,
-                                                  params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+                                                  params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                   fluidState);
             break;
         }
@@ -162,13 +162,13 @@ public:
     static Evaluation pcnw(const Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::pcnw(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::pcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                         fluidState);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::pcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::pcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                        fluidState);
             break;
         }
@@ -180,13 +180,13 @@ public:
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                                    Sw);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                   Sw);
             break;
         }
@@ -208,13 +208,13 @@ public:
     static Evaluation Sw(const Params& params, const FluidState& fluidstate)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::Sw(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::Sw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                       fluidstate);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::Sw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::Sw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                      fluidstate);
             break;
         }
@@ -237,13 +237,13 @@ public:
     static Evaluation Sn(const Params& params, const FluidState& fluidstate)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::Sn(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::Sn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                       fluidstate);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::Sn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::Sn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                      fluidstate);
             break;
         }
@@ -255,13 +255,13 @@ public:
     static Evaluation twoPhaseSatSn(const Params& params, const Evaluation& pc)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::twoPhaseSatSn(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::twoPhaseSatSn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                                  pc);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::twoPhaseSatSn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::twoPhaseSatSn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                 pc);
             break;
         }
@@ -277,13 +277,13 @@ public:
     static Evaluation krw(const Params& params, const FluidState& fluidstate)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::krw(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::krw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                        fluidstate);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::krw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::krw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                       fluidstate);
             break;
         }
@@ -295,13 +295,13 @@ public:
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                                   Sw);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                  Sw);
             break;
         }
@@ -323,13 +323,13 @@ public:
     static Evaluation krn(const Params& params, const FluidState& fluidstate)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::krn(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::krn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                        fluidstate);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::krn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::krn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                       fluidstate);
             break;
         }
@@ -341,13 +341,13 @@ public:
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                                   Sw);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                  Sw);
             break;
         }
@@ -359,13 +359,13 @@ public:
     static Evaluation twoPhaseSatKrnInv(const Params& params, const Evaluation& krn)
     {
         switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
-            return LETTwoPhaseLaw::twoPhaseSatKrnInv(params.template getRealParams<SatCurveMultiplexerApproach::LETApproach>(),
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::twoPhaseSatKrnInv(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
                                                      krn);
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
-            return PLTwoPhaseLaw::twoPhaseSatKrnInv(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinearApproach>(),
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::twoPhaseSatKrnInv(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                     krn);
             break;
         }

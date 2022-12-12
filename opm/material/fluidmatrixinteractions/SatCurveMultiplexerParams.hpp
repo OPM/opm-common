@@ -39,11 +39,11 @@
 #include <cassert>
 #include <memory>
 
-namespace Opm
+namespace Opm {
 
-{enum class SatCurveMultiplexerApproach {
-    PiecewiseLinearApproach,
-    LETApproach
+enum class SatCurveMultiplexerApproach {
+    PiecewiseLinear,
+    LET
 };
 
 /*!
@@ -108,11 +108,11 @@ public:
         approach_ = newApproach;
 
         switch (approach()) {
-        case SatCurveMultiplexerApproach::LETApproach:
+        case SatCurveMultiplexerApproach::LET:
             realParams_ = ParamPointerType(new LETParams, Deleter< LETParams > () );
             break;
 
-        case SatCurveMultiplexerApproach::PiecewiseLinearApproach:
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
             realParams_ = ParamPointerType(new PLParams, Deleter< PLParams > () );
             break;
         }
@@ -123,7 +123,7 @@ public:
 
     // get the parameter object for the LET curve
     template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::LETApproach, LETParams>::type&
+    typename std::enable_if<approachV == SatCurveMultiplexerApproach::LET, LETParams>::type&
     getRealParams()
     {
         assert(approach() == approachV);
@@ -131,7 +131,7 @@ public:
     }
 
     template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::LETApproach, const LETParams>::type&
+    typename std::enable_if<approachV == SatCurveMultiplexerApproach::LET, const LETParams>::type&
     getRealParams() const
     {
         assert(approach() == approachV);
@@ -140,7 +140,7 @@ public:
 
     // get the parameter object for the PL curve
     template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::PiecewiseLinearApproach, PLParams>::type&
+    typename std::enable_if<approachV == SatCurveMultiplexerApproach::PiecewiseLinear, PLParams>::type&
     getRealParams()
     {
         assert(approach() == approachV);
@@ -148,7 +148,7 @@ public:
     }
 
     template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::PiecewiseLinearApproach, const PLParams>::type&
+    typename std::enable_if<approachV == SatCurveMultiplexerApproach::PiecewiseLinear, const PLParams>::type&
     getRealParams() const
     {
         assert(approach() == approachV);
