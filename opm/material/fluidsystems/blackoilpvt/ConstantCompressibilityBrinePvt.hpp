@@ -51,21 +51,6 @@ class ConstantCompressibilityBrinePvt
 public:
     using TabulatedFunction = Tabulated1DFunction<Scalar>;
 
-    ConstantCompressibilityBrinePvt() = default;
-    ConstantCompressibilityBrinePvt(const std::vector<Scalar>& waterReferenceDensity,
-                                    const std::vector<Scalar>& referencePressure,
-                                    const std::vector<TabulatedFunction> formationVolumeTables,
-                                    const std::vector<TabulatedFunction> compressibilityTables,
-                                    const std::vector<TabulatedFunction> viscosityTables,
-                                    const std::vector<TabulatedFunction> viscosibilityTables)
-        : waterReferenceDensity_(waterReferenceDensity)
-        , referencePressure_(referencePressure)
-        , formationVolumeTables_(formationVolumeTables)
-        , compressibilityTables_(compressibilityTables)
-        , viscosityTables_(viscosityTables)
-        , viscosibilityTables_(viscosibilityTables)
-    { }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent water viscosity and density
@@ -243,16 +228,6 @@ public:
 
     const std::vector<TabulatedFunction>& viscosibilityTables() const
     { return viscosibilityTables_; }
-
-    bool operator==(const ConstantCompressibilityBrinePvt<Scalar>& data) const
-    {
-        return this->waterReferenceDensity_ == data.waterReferenceDensity_ &&
-               this->referencePressure() == data.referencePressure() &&
-               this->formationVolumeTables() == data.formationVolumeTables() &&
-               this->compressibilityTables() == data.compressibilityTables() &&
-               this->viscosityTables() == data.viscosityTables() &&
-               this->viscosibilityTables() == data.viscosibilityTables();
-    }
 
 private:
     std::vector<Scalar> waterReferenceDensity_;
