@@ -24,8 +24,12 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -36,7 +40,11 @@ initFromState(const EclipseState& eclState, const Schedule&)
     const auto& pvtgwTables = eclState.getTableManager().getPvtgwTables();
     const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-    assert(pvtgwTables.size() == densityTable.size());
+    if (pvtgwTables.size() != densityTable.size()) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Table sizes mismatch. PVTGW: {}, DensityTable: {}\n",
+                              pvtgwTables.size(), densityTable.size()));
+    }
 
     size_t numRegions = pvtgwTables.size();
     setNumRegions(numRegions);
@@ -57,7 +65,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
          for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& rwgsaltTable = rwgsaltTables[regionIdx];
             const auto& saturatedTable = rwgsaltTable.getSaturatedTable();
-            assert(saturatedTable.numRows() > 1);
+            if (saturatedTable.numRows() < 2) {
+                OPM_THROW(std::runtime_error, "Saturated RWGSALT table needs at least two rows.");
+            }
 
             auto& waterVaporizationFac = saturatedWaterVaporizationSaltFactorTable_[regionIdx];
             for (unsigned outerIdx = 0; outerIdx < saturatedTable.numRows(); ++outerIdx) {
@@ -80,7 +90,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
         const auto& pvtgwTable = pvtgwTables[regionIdx];
 
         const auto& saturatedTable = pvtgwTable.getSaturatedTable();
-        assert(saturatedTable.numRows() > 1);
+        if (saturatedTable.numRows() < 2) {
+            OPM_THROW(std::runtime_error, "Saturated PVTGW table needs at least two rows.");
+        }
 
         auto& gasMu = gasMu_[regionIdx];
         auto& invGasB = inverseGasB_[regionIdx];
@@ -150,7 +162,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
             }
 
             if (masterTableIdx >= saturatedTable.numRows())
-                throw std::runtime_error("PVTGW tables are invalid: The last table must exhibit at least one "
+                OPM_THROW(std::runtime_error,
+                          "PVTGW tables are invalid: "
+                          "The last table must exhibit at least one "
                           "entry for undersaturated gas!");
 
 
