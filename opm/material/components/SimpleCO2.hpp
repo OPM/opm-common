@@ -33,8 +33,6 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
 
-#include <opm/material/densead/Math.hpp>
-
 #include <cmath>
 
 namespace Opm {
