@@ -29,8 +29,6 @@
 
 #include <opm/common/Exceptions.hpp>
 
-#include <dune/common/exceptions.hh>
-
 #include <stdexcept>
 
 // the opm-material specific exception classes
