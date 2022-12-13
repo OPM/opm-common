@@ -27,6 +27,8 @@
 #ifndef OPM_OIL_PVT_MULTIPLEXER_HPP
 #define OPM_OIL_PVT_MULTIPLEXER_HPP
 
+#include <opm/common/utility/Visitor.hpp>
+
 #include "ConstantCompressibilityOilPvt.hpp"
 #include "DeadOilPvt.hpp"
 #include "LiveOilPvt.hpp"
@@ -38,37 +40,9 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #endif
 
+#include <variant>
+
 namespace Opm {
-#define OPM_OIL_PVT_MULTIPLEXER_CALL(codeToCall)                                  \
-    switch (approach_) {                                                          \
-    case OilPvtApproach::ConstantCompressibilityOil: {                            \
-        auto& pvtImpl = getRealPvt<OilPvtApproach::ConstantCompressibilityOil>(); \
-        codeToCall;                                                               \
-        break;                                                                    \
-    }                                                                             \
-    case OilPvtApproach::DeadOil: {                                               \
-        auto& pvtImpl = getRealPvt<OilPvtApproach::DeadOil>();                    \
-        codeToCall;                                                               \
-        break;                                                                    \
-    }                                                                             \
-    case OilPvtApproach::LiveOil: {                                               \
-        auto& pvtImpl = getRealPvt<OilPvtApproach::LiveOil>();                    \
-        codeToCall;                                                               \
-        break;                                                                    \
-    }                                                                             \
-    case OilPvtApproach::ThermalOil: {                                            \
-        auto& pvtImpl = getRealPvt<OilPvtApproach::ThermalOil>();                 \
-        codeToCall;                                                               \
-        break;                                                                    \
-    }                                                                             \
-    case OilPvtApproach::BrineCo2: {                                              \
-        auto& pvtImpl = getRealPvt<OilPvtApproach::BrineCo2>();                   \
-        codeToCall;                                                               \
-        break;                                                                    \
-    }                                                                             \
-    case OilPvtApproach::NoOil:                                                   \
-        throw std::logic_error("Not implemented: Oil PVT of this deck!");         \
-    }                                                                             \
 
 enum class OilPvtApproach {
     NoOil,
@@ -95,51 +69,6 @@ template <class Scalar, bool enableThermal = true>
 class OilPvtMultiplexer
 {
 public:
-    OilPvtMultiplexer()
-    {
-        approach_ = OilPvtApproach::NoOil;
-        realOilPvt_ = nullptr;
-    }
-
-    OilPvtMultiplexer(OilPvtApproach approach, void* realOilPvt)
-        : approach_(approach)
-        , realOilPvt_(realOilPvt)
-    { }
-
-    OilPvtMultiplexer(const OilPvtMultiplexer<Scalar,enableThermal>& data)
-    {
-        *this = data;
-    }
-
-    ~OilPvtMultiplexer()
-    {
-        switch (approach_) {
-        case OilPvtApproach::LiveOil: {
-            delete &getRealPvt<OilPvtApproach::LiveOil>();
-            break;
-        }
-        case OilPvtApproach::DeadOil: {
-            delete &getRealPvt<OilPvtApproach::DeadOil>();
-            break;
-        }
-        case OilPvtApproach::ConstantCompressibilityOil: {
-            delete &getRealPvt<OilPvtApproach::ConstantCompressibilityOil>();
-            break;
-        }
-        case OilPvtApproach::ThermalOil: {
-            delete &getRealPvt<OilPvtApproach::ThermalOil>();
-            break;
-        }
-        case OilPvtApproach::BrineCo2: {
-            delete &getRealPvt<OilPvtApproach::BrineCo2>();
-            break;
-        }
-
-        case OilPvtApproach::NoOil:
-            break;
-        }
-    }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for water using an ECL state.
@@ -163,25 +92,47 @@ public:
         else if (!eclState.getTableManager().getPvtoTables().empty())
             setApproach(OilPvtApproach::LiveOil);
 
-        OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
+        std::visit(VisitorOverloadSet{[&](auto& pvt)
+                                     {
+                                         pvt.initFromState(eclState, schedule);
+                                     }, monoHandler_}, oilPvt_);
     }
 #endif // HAVE_ECL_INPUT
 
 
     void initEnd()
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd()); }
+    {
+        std::visit(VisitorOverloadSet{[](auto& pvt)
+                                        {
+                                            pvt.initEnd();
+                                        }, monoHandler_}, oilPvt_);
+    }
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
     unsigned numRegions() const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); return 1; }
+    {
+        unsigned result;
+        std::visit(VisitorOverloadSet{[&result](const auto& pvt)
+                                      {
+                                          result = pvt.numRegions();
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.oilReferenceDensity(regionIdx)); return 700.; }
+    Scalar oilReferenceDensity(unsigned regionIdx) const
+    {
+        Scalar result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                         {
+                                             result = pvt.oilReferenceDensity(regionIdx);
+                                         }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] oil given a set of parameters.
@@ -191,7 +142,17 @@ public:
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rs)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.internalEnergy(regionIdx,
+                                                                      temperature,
+                                                                      pressure,
+                                                                      Rs);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -201,7 +162,17 @@ public:
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, Rs)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.viscosity(regionIdx,
+                                                                 temperature,
+                                                                 pressure,
+                                                                 Rs);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -210,7 +181,16 @@ public:
     Evaluation saturatedViscosity(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedViscosity(regionIdx, temperature, pressure)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.saturatedViscosity(regionIdx,
+                                                                          temperature,
+                                                                          pressure);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -220,7 +200,17 @@ public:
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.inverseFormationVolumeFactor(regionIdx,
+                                                                                    temperature,
+                                                                                    pressure,
+                                                                                    Rs);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -229,7 +219,16 @@ public:
     Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.saturatedInverseFormationVolumeFactor(regionIdx,
+                                                                                             temperature,
+                                                                                             pressure);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of saturated oil.
@@ -238,7 +237,16 @@ public:
     Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
                                              const Evaluation& temperature,
                                              const Evaluation& pressure) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.saturatedGasDissolutionFactor(regionIdx,
+                                                                                     temperature,
+                                                                                     pressure);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of saturated oil.
@@ -249,7 +257,18 @@ public:
                                              const Evaluation& pressure,
                                              const Evaluation& oilSaturation,
                                              const Evaluation& maxOilSaturation) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure, oilSaturation, maxOilSaturation)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.saturatedGasDissolutionFactor(regionIdx,
+                                                                                     temperature,
+                                                                                     pressure,
+                                                                                     oilSaturation,
+                                                                                     maxOilSaturation);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the saturation pressure [Pa] of oil given the mass fraction of the
@@ -262,7 +281,16 @@ public:
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturationPressure(regionIdx, temperature, Rs)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.saturationPressure(regionIdx,
+                                                                          temperature,
+                                                                          Rs);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
+    }
 
     /*!
      * \copydoc BaseFluidSystem::diffusionCoefficient
@@ -272,30 +300,37 @@ public:
                                     const Evaluation& pressure,
                                     unsigned compIdx) const
     {
-      OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx)); return 0;
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.diffusionCoefficient(temperature,
+                                                                            pressure,
+                                                                            compIdx);
+                                      }, monoHandler_}, oilPvt_);
+        return result;
     }
 
     void setApproach(OilPvtApproach appr)
     {
         switch (appr) {
         case OilPvtApproach::LiveOil:
-            realOilPvt_ = new LiveOilPvt<Scalar>;
+            oilPvt_ = LiveOilPvt<Scalar>{};
             break;
 
         case OilPvtApproach::DeadOil:
-            realOilPvt_ = new DeadOilPvt<Scalar>;
+            oilPvt_ = DeadOilPvt<Scalar>{};
             break;
 
         case OilPvtApproach::ConstantCompressibilityOil:
-            realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>;
+            oilPvt_ = ConstantCompressibilityOilPvt<Scalar>{};
             break;
 
         case OilPvtApproach::ThermalOil:
-            realOilPvt_ = new OilPvtThermal<Scalar>;
+            oilPvt_ = OilPvtThermal<Scalar>{};
             break;
 
         case OilPvtApproach::BrineCo2:
-            realOilPvt_ = new BrineCo2Pvt<Scalar>;
+            oilPvt_ = BrineCo2Pvt<Scalar>{};
             break;
 
         case OilPvtApproach::NoOil:
@@ -313,137 +348,25 @@ public:
     OilPvtApproach approach() const
     { return approach_; }
 
-    // get the concrete parameter object for the oil phase
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::LiveOil, LiveOilPvt<Scalar> >::type& getRealPvt()
+    //! \brief Apply a visitor to the concrete pvt implementation.
+    template<class Function>
+    void visit(Function f)
     {
-        assert(approach() == approachV);
-        return *static_cast<LiveOilPvt<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::LiveOil, const LiveOilPvt<Scalar> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<LiveOilPvt<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::DeadOil, DeadOilPvt<Scalar> >::type& getRealPvt()
-    {
-        assert(approach() == approachV);
-        return *static_cast<DeadOilPvt<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::DeadOil, const DeadOilPvt<Scalar> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<DeadOilPvt<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::ConstantCompressibilityOil, ConstantCompressibilityOilPvt<Scalar> >::type& getRealPvt()
-    {
-        assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityOilPvt<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::ConstantCompressibilityOil, const ConstantCompressibilityOilPvt<Scalar> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityOilPvt<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::ThermalOil, OilPvtThermal<Scalar> >::type& getRealPvt()
-    {
-        assert(approach() == approachV);
-        return *static_cast<OilPvtThermal<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::ThermalOil, const OilPvtThermal<Scalar> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<const OilPvtThermal<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::BrineCo2, BrineCo2Pvt<Scalar> >::type& getRealPvt()
-    {
-        assert(approach() == approachV);
-        return *static_cast<BrineCo2Pvt<Scalar>* >(realOilPvt_);
-    }
-
-    template <OilPvtApproach approachV>
-    typename std::enable_if<approachV == OilPvtApproach::BrineCo2, const BrineCo2Pvt<Scalar> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<const BrineCo2Pvt<Scalar>* >(realOilPvt_);
-    }
-
-    const void* realOilPvt() const { return realOilPvt_; }
-
-    bool operator==(const OilPvtMultiplexer<Scalar,enableThermal>& data) const
-    {
-        if (this->approach() != data.approach())
-            return false;
-
-        switch (approach_) {
-        case OilPvtApproach::ConstantCompressibilityOil:
-            return *static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::DeadOil:
-            return *static_cast<const DeadOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::LiveOil:
-            return *static_cast<const LiveOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::ThermalOil:
-            return *static_cast<const OilPvtThermal<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::BrineCo2:
-            return *static_cast<const BrineCo2Pvt<Scalar>*>(realOilPvt_) ==
-                    *static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_);
-        default:
-            return true;
-        }
-    }
-
-    OilPvtMultiplexer<Scalar,enableThermal>& operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data)
-    {
-        approach_ = data.approach_;
-        switch (approach_) {
-        case OilPvtApproach::ConstantCompressibilityOil:
-            realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>(*static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::DeadOil:
-            realOilPvt_ = new DeadOilPvt<Scalar>(*static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::LiveOil:
-            realOilPvt_ = new LiveOilPvt<Scalar>(*static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::ThermalOil:
-            realOilPvt_ = new OilPvtThermal<Scalar>(*static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::BrineCo2:
-            realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
-            break;
-        default:
-            break;
-        }
-
-        return *this;
+        std::visit(VisitorOverloadSet{f, monoHandler_, [](auto&) {}}, oilPvt_);
     }
 
 private:
-    OilPvtApproach approach_;
-    void* realOilPvt_;
-};
+    OilPvtApproach approach_ = OilPvtApproach::NoOil;
+    std::variant<std::monostate,
+                 LiveOilPvt<Scalar>,
+                 DeadOilPvt<Scalar>,
+                 ConstantCompressibilityOilPvt<Scalar>,
+                 OilPvtThermal<Scalar>,
+                 BrineCo2Pvt<Scalar>> oilPvt_;
 
-#undef OPM_OIL_PVT_MULTIPLEXER_CALL
+    MonoThrowHandler<std::logic_error>
+    monoHandler_{"Not implemented: Oil PVT of this deck!"}; // mono state handler
+};
 
 } // namespace Opm
 
