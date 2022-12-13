@@ -27,6 +27,8 @@
 #ifndef OPM_BRINE_CO2_PVT_HPP
 #define OPM_BRINE_CO2_PVT_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/Constants.hpp>
 
 #include <opm/material/components/Brine.hpp>
@@ -37,7 +39,6 @@
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/material/components/co2tables.inc>
-
 
 #include <vector>
 
@@ -323,13 +324,13 @@ private:
             std::ostringstream oss;
             oss << "Liquid density for Brine and CO2 is only "
                    "defined above 273.15K (is "<<T<<"K)";
-            throw NumericalIssue(oss.str());
+            throw NumericalProblem(oss.str());
         }
         if(!extrapolate && pl >= 2.5e8) {
             std::ostringstream oss;
             oss << "Liquid density for Brine and CO2 is only "
                    "defined below 250MPa (is "<<pl<<"Pa)";
-            throw NumericalIssue(oss.str());
+            throw NumericalProblem(oss.str());
         }
 
         const LhsEval& rho_brine = Brine::liquidDensity(T, pl, extrapolate);

@@ -39,7 +39,6 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/HasMemberGeneratorMacros.hpp>
-#include <opm/material/common/Exceptions.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -47,9 +46,10 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #endif
 
-#include <memory>
-#include <vector>
 #include <array>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 namespace Opm {
 namespace BlackOil {

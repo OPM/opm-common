@@ -27,9 +27,10 @@
 #ifndef OPM_MISCIBLE_MULTIPHASE_COMPOSITION_HPP
 #define OPM_MISCIBLE_MULTIPHASE_COMPOSITION_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/MathToolbox.hpp>
 
-#include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
@@ -260,7 +261,7 @@ public:
         catch (const Dune::FMatrixError& e) {
             std::ostringstream oss;
             oss << "Numerical problem in MiscibleMultiPhaseComposition::solve(): " << e.what() << "; M="<<M;
-            throw NumericalIssue(oss.str());
+            throw NumericalProblem(oss.str());
         }
         catch (...) {
             throw;

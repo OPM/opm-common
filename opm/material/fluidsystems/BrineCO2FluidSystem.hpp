@@ -31,6 +31,8 @@
 #include "BaseFluidSystem.hpp"
 #include "NullParameterCache.hpp"
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/IdealGas.hpp>
 
 #include <opm/material/components/Brine.hpp>
@@ -487,13 +489,13 @@ private:
             std::ostringstream oss;
             oss << "Liquid density for Brine and CO2 is only "
                 "defined above 273.15K (is "<<T<<"K)";
-            throw NumericalIssue(oss.str());
+            throw NumericalProblem(oss.str());
         }
         if(pl >= 2.5e8) {
             std::ostringstream oss;
             oss << "Liquid density for Brine and CO2 is only "
                 "defined below 250MPa (is "<<pl<<"Pa)";
-            throw NumericalIssue(oss.str());
+            throw NumericalProblem(oss.str());
         }
 
         const LhsEval& rho_brine = Brine::liquidDensity(T, pl);

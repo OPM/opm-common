@@ -27,11 +27,11 @@
 #ifndef OPM_AIR_HPP
 #define OPM_AIR_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/IdealGas.hpp>
-
-#include <opm/material/common/Exceptions.hpp>
 
 namespace Opm {
 
@@ -160,7 +160,7 @@ public:
     static Evaluation simpleGasViscosity(const Evaluation& temperature, const Evaluation& /*pressure*/)
     {
         if(temperature < 273.15 || temperature > 660.) {
-            throw NumericalIssue("Air: Temperature "+std::to_string(scalarValue(temperature))+"K out of range");
+            throw NumericalProblem("Air: Temperature "+std::to_string(scalarValue(temperature))+"K out of range");
         }
         return 1.496e-6*pow(temperature, 1.5)/(temperature + 120);
     }

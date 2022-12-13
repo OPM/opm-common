@@ -27,6 +27,8 @@
 #ifndef OPM_NCP_FLASH_HPP
 #define OPM_NCP_FLASH_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -34,8 +36,6 @@
 #include <opm/material/densead/Math.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
-
-#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -220,7 +220,7 @@ public:
             deltaX = 0.0;
             try { J.solve(deltaX, b); }
             catch (const Dune::FMatrixError& e) {
-                throw NumericalIssue(e.what());
+                throw NumericalProblem(e.what());
             }
             Valgrind::CheckDefined(deltaX);
 
@@ -237,7 +237,7 @@ public:
         oss << "NcpFlash solver failed:"
             << " {c_alpha^kappa} = {" << globalMolarities << "}, "
             << " T = " << fluidState.temperature(/*phaseIdx=*/0);
-        throw NumericalIssue(oss.str());
+        throw NumericalProblem(oss.str());
     }
 
     /*!

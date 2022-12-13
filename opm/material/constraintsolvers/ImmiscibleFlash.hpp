@@ -27,12 +27,13 @@
 #ifndef OPM_IMMISCIBLE_FLASH_HPP
 #define OPM_IMMISCIBLE_FLASH_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
-#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -203,7 +204,7 @@ public:
 
             try { J.solve(deltaX, b); }
             catch (const Dune::FMatrixError& e) {
-                throw NumericalIssue(e.what());
+                throw NumericalProblem(e.what());
             }
             Valgrind::CheckDefined(deltaX);
 
@@ -220,7 +221,7 @@ public:
         oss << "ImmiscibleFlash solver failed:"
             << " {c_alpha^kappa} = {" << globalMolarities << "},"
             << " T = " << fluidState.temperature(/*phaseIdx=*/0);
-    throw NumericalIssue(oss.str());
+        throw NumericalProblem(oss.str());
     }
 
 

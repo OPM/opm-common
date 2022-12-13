@@ -28,8 +28,9 @@
 #ifndef OPM_INTERVAL_TABULATED_2D_FUNCTION_HPP
 #define OPM_INTERVAL_TABULATED_2D_FUNCTION_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/Valgrind.hpp>
-#include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <vector>
@@ -184,7 +185,7 @@ public:
      *
      * If this method is called for a value outside of the tabulated
      * range, and extrapolation is not allowed in the corresponding direction,
-     * a \c Opm::NumericalIssue exception is thrown.
+     * a \c Opm::NumericalProblem exception is thrown.
      */
     template <typename Evaluation>
     Evaluation eval(const Evaluation& x, const Evaluation& y) const
@@ -192,7 +193,7 @@ public:
         if ((!xExtrapolate_ && !appliesX(x)) || (!yExtrapolate_ && !appliesY(y))) {
             std::ostringstream oss;
             oss << "Attempt to get undefined table value (" << x << ", " << y << ")";
-            throw NumericalIssue(oss.str());
+            throw NumericalProblem(oss.str());
         };
 
         // bi-linear interpolation: first, calculate the x and y indices in the lookup
