@@ -378,6 +378,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_tabulation.cpp
       tests/test_threecomponents_ptflash.cpp
       tests/test_uniformtablelinear.cpp
+      tests/test_Visitor.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
@@ -662,6 +663,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
       opm/common/utility/Serializer.hpp
+      opm/common/utility/Visitor.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
