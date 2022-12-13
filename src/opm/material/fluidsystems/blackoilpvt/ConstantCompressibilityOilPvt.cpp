@@ -24,9 +24,11 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-#include <cassert>
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -37,7 +39,11 @@ initFromState(const EclipseState& eclState, const Schedule&)
     const auto& pvcdoTable = eclState.getTableManager().getPvcdoTable();
     const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-    assert(pvcdoTable.size() == densityTable.size());
+    if (pvcdoTable.size() != densityTable.size()) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Table sizes mismatch. PVCDO: {}, DensityTable: {}\n",
+                              pvcdoTable.size(), densityTable.size()));
+    }
 
     size_t numRegions = pvcdoTable.size();
     setNumRegions(numRegions);
