@@ -388,6 +388,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
       tests/test_uniformtablelinear.cpp
+      tests/test_Visitor.cpp
 )
 
 # tests that need to be linked to dune-common
@@ -697,6 +698,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
       opm/common/utility/Serializer.hpp
+      opm/common/utility/Visitor.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
