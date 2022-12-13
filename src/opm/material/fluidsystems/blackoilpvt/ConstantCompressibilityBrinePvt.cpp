@@ -24,8 +24,12 @@
 #include <config.h>
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -45,7 +49,11 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     const auto& pvtwsaltTables = tableManager.getPvtwSaltTables();
     if (!pvtwsaltTables.empty()) {
-        assert(numRegions == pvtwsaltTables.size());
+        if (pvtwsaltTables.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Table sizes mismatch. PVTWSALT: {}, NumRegions: {}\n",
+                                  pvtwsaltTables.size(), numRegions));
+        }
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             const auto& pvtwsaltTable = pvtwsaltTables[regionIdx];
             const auto& c = pvtwsaltTable.getSaltConcentrationColumn();
@@ -65,7 +73,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
         }
     }
     else {
-        throw std::runtime_error("PVTWSALT must be specified in BRINE runs\n");
+        OPM_THROW(std::runtime_error, "PVTWSALT must be specified in BRINE runs\n");
     }
 
 
