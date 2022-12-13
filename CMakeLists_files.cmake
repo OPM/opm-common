@@ -461,6 +461,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/material/test_fluidsystems.cpp
       tests/material/test_spline.cpp
       tests/material/test_tabulation.cpp
+      tests/test_Visitor.cpp
 )
 
 # tests that need to be linked to dune-common
@@ -777,13 +778,10 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/CSRGraphFromCoordinates_impl.hpp
       opm/common/utility/Demangle.hpp
       opm/common/utility/FileSystem.hpp
-      opm/common/utility/OpmInputError.hpp
-      opm/common/utility/Serializer.hpp
       opm/common/utility/MemPacker.hpp
       opm/common/utility/numeric/cmp.hpp
-      opm/common/utility/platform_dependent/disable_warnings.h
-      opm/common/utility/platform_dependent/reenable_warnings.h
       opm/common/utility/numeric/blas_lapack.h
+      opm/common/utility/numeric/calculateCellVol.hpp
       opm/common/utility/numeric/buildUniformMonotoneTable.hpp
       opm/common/utility/numeric/linearInterpolation.hpp
       opm/common/utility/numeric/MonotCubicInterpolator.hpp
@@ -791,6 +789,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/numeric/RootFinders.hpp
       opm/common/utility/numeric/SparseVector.hpp
       opm/common/utility/numeric/UniformTableLinear.hpp
+      opm/common/utility/OpmInputError.hpp
       opm/common/utility/parameters/ParameterGroup.hpp
       opm/common/utility/parameters/ParameterGroup_impl.hpp
       opm/common/utility/parameters/Parameter.hpp
@@ -798,10 +797,13 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/parameters/ParameterRequirement.hpp
       opm/common/utility/parameters/ParameterStrings.hpp
       opm/common/utility/parameters/ParameterTools.hpp
-      opm/common/utility/numeric/calculateCellVol.hpp
+      opm/common/utility/platform_dependent/disable_warnings.h
+      opm/common/utility/platform_dependent/reenable_warnings.h
       opm/common/utility/shmatch.hpp
+      opm/common/utility/Serializer.hpp
       opm/common/utility/String.hpp
       opm/common/utility/TimeService.hpp
+      opm/common/utility/Visitor.hpp
       opm/material/components/Lnapl.hpp
       opm/material/components/N2.hpp
       opm/material/components/H2.hpp
