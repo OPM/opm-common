@@ -48,8 +48,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     else if (!eclState.getTableManager().getPvtgwTables().empty())
         setApproach(GasPvtApproach::DryHumidGas);
 
-
-    OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
+    std::visit(VisitorOverloadSet{[&](auto& pvt)
+                                  {
+                                      pvt.initFromState(eclState, schedule);
+                                  }, monoHandler_}, gasPvt_);
 }
 
 template class GasPvtMultiplexer<double,false>;
