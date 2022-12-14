@@ -140,7 +140,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true).global_kw(true)},
-                                                                                      {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true)}};
+                                                                                      {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true).global_kw(true)}};
 
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {{"ACTNUM",  keyword_info<int>{}.init(1)},
                                                                                 {"FLUXNUM", keyword_info<int>{}},
@@ -167,7 +167,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true).global_kw(true)},
-                                                                                      {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true)}};
+                                                                                      {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true).global_kw(true)}};
 
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {};
 }
@@ -280,7 +280,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true).global_kw(true)},
-                                                                                      {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true)}};
+                                                                                      {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true).global_kw(true)}};
 
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {{"ROCKNUM",   keyword_info<int>{}}};
 
