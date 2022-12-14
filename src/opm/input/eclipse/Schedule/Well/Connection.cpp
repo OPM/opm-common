@@ -323,7 +323,8 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
             && this->m_sort_value == rhs.m_sort_value
-            && this->m_subject_to_welpi == rhs.m_subject_to_welpi;
+            && this->m_subject_to_welpi == rhs.m_subject_to_welpi
+            && this->m_filter_cake == rhs.m_filter_cake;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

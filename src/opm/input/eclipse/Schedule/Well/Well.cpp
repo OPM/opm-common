@@ -1329,7 +1329,6 @@ bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& /* loc
         }
     }
     return this->updateConnections(std::move(new_connections), false);
-    return false;
 }
 
 
@@ -1647,6 +1646,7 @@ bool Well::operator==(const Well& data) const {
         && (this->well_temperature == data.well_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
         && (this->well_inj_mult == data.well_inj_mult)
+        && (this->m_filter_concentration == data.m_filter_concentration)
         ;
 }
 
