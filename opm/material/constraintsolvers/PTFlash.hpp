@@ -39,8 +39,6 @@
 #include <opm/material/Constants.hpp>
 #include <opm/material/eos/PengRobinsonMixture.hpp>
 
-#include <opm/material/common/Exceptions.hpp>
-
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
@@ -49,6 +47,7 @@
 #include <limits>
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 #include <type_traits>
 
 namespace Opm {

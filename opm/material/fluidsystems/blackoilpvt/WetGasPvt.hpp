@@ -27,6 +27,9 @@
 #ifndef OPM_WET_GAS_PVT_HPP
 #define OPM_WET_GAS_PVT_HPP
 
+#include <opm/common/Exceptions.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
@@ -36,8 +39,6 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #endif
-
-#include <opm/common/OpmLog/OpmLog.hpp>
 
 namespace Opm {
 
@@ -644,7 +645,7 @@ public:
                << " pSat = " << pSat
                << ", Rv = " << Rv;
         OpmLog::debug("Wet gas saturation pressure", errlog.str());
-        throw NumericalIssue(errlog.str());
+        throw NumericalProblem(errlog.str());
     }
 
     template <class Evaluation>

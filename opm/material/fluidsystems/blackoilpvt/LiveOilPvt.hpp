@@ -27,6 +27,9 @@
 #ifndef OPM_LIVE_OIL_PVT_HPP
 #define OPM_LIVE_OIL_PVT_HPP
 
+#include <opm/common/Exceptions.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
@@ -37,8 +40,6 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #endif
-
-#include <opm/common/OpmLog/OpmLog.hpp>
 
 namespace Opm {
 /*!
@@ -594,7 +595,7 @@ public:
                << " pSat = " << pSat
                << ", Rs = " << Rs;
         OpmLog::debug("Live oil saturation pressure", errlog.str());
-        throw NumericalIssue(errlog.str());
+        throw NumericalProblem(errlog.str());
     }
 
     template <class Evaluation>

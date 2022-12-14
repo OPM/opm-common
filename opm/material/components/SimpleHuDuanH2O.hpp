@@ -30,13 +30,11 @@
 #include "Component.hpp"
 #include "iapws/Common.hpp"
 
+#include <opm/common/Exceptions.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/material/IdealGas.hpp>
-
-#include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <cmath>
 #include <sstream>
@@ -355,7 +353,7 @@ public:
                 OpmLog::warning(oss.str());
             }
             else
-                throw NumericalIssue(oss.str());
+                throw NumericalProblem(oss.str());
         }
 
         const Evaluation rho = liquidDensity(temperature, pressure, extrapolate);
@@ -386,7 +384,7 @@ private:
                 OpmLog::warning(oss.str());
             }
             else
-                throw NumericalIssue(oss.str());
+                throw NumericalProblem(oss.str());
         }
 
         Evaluation p = pressure / 1e6; // to MPa

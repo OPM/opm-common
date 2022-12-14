@@ -29,14 +29,14 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/material/densead/Math.hpp>
-#include <opm/material/common/Exceptions.hpp>
 
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
-#include <sstream>
 
 namespace Opm {
 /*!

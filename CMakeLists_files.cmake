@@ -841,7 +841,6 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/common/UniformTabulated2DFunction.hpp
       opm/material/common/FastSmallVector.hpp
       opm/material/common/ConditionalStorage.hpp
-      opm/material/common/Exceptions.hpp
       opm/material/common/Means.hpp
       opm/material/common/IntervalTabulated2DFunction.hpp
       opm/material/common/Tabulated1DFunction.hpp

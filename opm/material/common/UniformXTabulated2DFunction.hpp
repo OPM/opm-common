@@ -28,8 +28,9 @@
 #ifndef OPM_UNIFORM_X_TABULATED_2D_FUNCTION_HPP
 #define OPM_UNIFORM_X_TABULATED_2D_FUNCTION_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/Valgrind.hpp>
-#include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <iostream>
@@ -321,7 +322,7 @@ public:
         if (!extrapolate && !applies(x, y)) {
             std::ostringstream oss;
             oss << "Attempt to get undefined table value (" << x << ", " << y << ")";
-            throw NumericalIssue(oss.str());
+            throw NumericalProblem(oss.str());
         };
 #endif
 

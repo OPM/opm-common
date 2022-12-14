@@ -27,8 +27,9 @@
 #ifndef OPM_COMPOSITION_FROM_FUGACITIES_HPP
 #define OPM_COMPOSITION_FROM_FUGACITIES_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
@@ -131,7 +132,7 @@ public:
             x = 0.0;
             try { J.solve(x, b); }
             catch (const Dune::FMatrixError& e)
-            { throw NumericalIssue(e.what()); }
+            { throw NumericalProblem(e.what()); }
 
             //std::cout << "original delta: " << x << "\n";
 
@@ -171,7 +172,7 @@ public:
             << xInit
             << "}, {fug_t} = {" << targetFug << "}, p = " << fluidState.pressure(phaseIdx)
             << ", T = " << fluidState.temperature(phaseIdx);
-        throw NumericalIssue(oss.str());
+        throw NumericalProblem(oss.str());
     }
 
 

@@ -28,6 +28,8 @@
 #ifndef OPM_PENG_ROBINSON_HPP
 #define OPM_PENG_ROBINSON_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/fluidstates/TemperatureOverlayFluidState.hpp>
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
@@ -380,7 +382,7 @@ protected:
 
                     std::ostringstream oss;
                     oss << "Could not determine the critical point for a=" << a << ", b=" << b;
-                    throw NumericalIssue(oss.str());
+                    throw NumericalProblem(oss.str());
                 }
 
                 if (findExtrema_(minVm, maxVm, minP, maxP, a, b, T - delta)) {

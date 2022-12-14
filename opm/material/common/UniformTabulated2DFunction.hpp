@@ -28,10 +28,10 @@
 #ifndef OPM_UNIFORM_TABULATED_2D_FUNCTION_HPP
 #define OPM_UNIFORM_TABULATED_2D_FUNCTION_HPP
 
-#include <opm/material/common/Exceptions.hpp>
-#include <opm/material/common/MathToolbox.hpp>
-
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/Exceptions.hpp>
+
+#include <opm/material/common/MathToolbox.hpp>
 
 #include <vector>
 
@@ -204,7 +204,7 @@ public:
 
             if (!extrapolate)
             {
-                throw NumericalIssue(msg);
+                throw NumericalProblem(msg);
             }
             else
             {

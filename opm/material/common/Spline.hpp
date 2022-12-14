@@ -27,9 +27,10 @@
 #ifndef OPM_SPLINE_HPP
 #define OPM_SPLINE_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/TridiagonalMatrix.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
-#include <opm/material/common/Exceptions.hpp>
 
 #include <ostream>
 #include <vector>
@@ -797,7 +798,7 @@ public:
     Evaluation eval(const Evaluation& x, bool extrapolate = false) const
     {
         if (!extrapolate && !applies(x))
-            throw NumericalIssue("Tried to evaluate a spline outside of its range");
+            throw NumericalProblem("Tried to evaluate a spline outside of its range");
 
         // handle extrapolation
         if (extrapolate) {
@@ -833,7 +834,7 @@ public:
     Evaluation evalDerivative(const Evaluation& x, bool extrapolate = false) const
     {
         if (!extrapolate && !applies(x))
-            throw NumericalIssue("Tried to evaluate the derivative of a spline outside of its range");
+            throw NumericalProblem("Tried to evaluate the derivative of a spline outside of its range");
 
         // handle extrapolation
         if (extrapolate) {
@@ -862,7 +863,7 @@ public:
     Evaluation evalSecondDerivative(const Evaluation& x, bool extrapolate = false) const
     {
         if (!extrapolate && !applies(x))
-            throw NumericalIssue("Tried to evaluate the second derivative of a spline outside of its range");
+            throw NumericalProblem("Tried to evaluate the second derivative of a spline outside of its range");
         else if (extrapolate)
             return 0.0;
 
@@ -885,7 +886,7 @@ public:
     Evaluation evalThirdDerivative(const Evaluation& x, bool extrapolate = false) const
     {
         if (!extrapolate && !applies(x))
-            throw NumericalIssue("Tried to evaluate the third derivative of a spline outside of its range");
+            throw NumericalProblem("Tried to evaluate the third derivative of a spline outside of its range");
         else if (extrapolate)
             return 0.0;
 

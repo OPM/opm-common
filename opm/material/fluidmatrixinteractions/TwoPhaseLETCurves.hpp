@@ -29,8 +29,9 @@
 
 #include "TwoPhaseLETCurvesParams.hpp"
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/Exceptions.hpp>
 
 namespace Opm {
 /*!
@@ -299,7 +300,7 @@ public:
 
         }
 
-        throw NumericalIssue("Couldn't invert the TwoPhaseLETCurves non-wetting phase"
+        throw NumericalProblem("Couldn't invert the TwoPhaseLETCurves non-wetting phase"
                                " relperm within 20 newton iterations and 50 bisection iterations");
     }
 };

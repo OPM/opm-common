@@ -27,6 +27,9 @@
 #ifndef OPM_DRY_HUMID_GAS_PVT_HPP
 #define OPM_DRY_HUMID_GAS_PVT_HPP
 
+#include <opm/common/Exceptions.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
@@ -35,10 +38,7 @@
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-
 #endif
-
-#include <opm/common/OpmLog/OpmLog.hpp>
 
 namespace Opm {
 
@@ -596,7 +596,7 @@ public:
                << " pSat = " << pSat
                << ", Rw = " << Rw;
         OpmLog::debug("Wet gas saturation pressure", errlog.str());
-        throw NumericalIssue(errlog.str());
+        throw NumericalProblem(errlog.str());
     }
 
     template <class Evaluation>

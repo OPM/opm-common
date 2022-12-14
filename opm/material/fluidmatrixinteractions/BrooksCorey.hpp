@@ -29,8 +29,9 @@
 
 #include "BrooksCoreyParams.hpp"
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/Exceptions.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -293,7 +294,7 @@ public:
                 return Sw;
         }
 
-        throw NumericalIssue("Couldn't invert the Brooks-Corey non-wetting phase"
+        throw NumericalProblem("Couldn't invert the Brooks-Corey non-wetting phase"
                                " relperm within 20 iterations");
     }
 };
