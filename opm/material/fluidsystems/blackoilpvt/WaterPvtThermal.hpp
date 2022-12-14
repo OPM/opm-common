@@ -27,7 +27,12 @@
 #ifndef OPM_WATER_PVT_THERMAL_HPP
 #define OPM_WATER_PVT_THERMAL_HPP
 
+#include <opm/common/utility/Visitor.hpp>
+
 #include <opm/material/common/Tabulated1DFunction.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -35,9 +40,9 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #endif
 
+#include <variant>
+
 namespace Opm {
-template <class Scalar, bool enableThermal, bool enableBrine>
-class WaterPvtMultiplexer;
 
 /*!
  * \brief This class implements temperature dependence of the PVT properties of water
@@ -50,61 +55,35 @@ class WaterPvtThermal
 {
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
-    using IsothermalPvt = WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine>;
+    using IsothermalPvt = std::variant<std::monostate,
+                                       ConstantCompressibilityBrinePvt<Scalar>,
+                                       ConstantCompressibilityWaterPvt<Scalar>>;
 
-    WaterPvtThermal()
+    static IsothermalPvt initialize(WaterPvtApproach appr)
     {
-        enableThermalDensity_ = false;
-        enableThermalViscosity_ = false;
-        enableInternalEnergy_ = false;
-        isothermalPvt_ = nullptr;
+        switch (appr) {
+        case WaterPvtApproach::ConstantCompressibilityWater:
+            return ConstantCompressibilityWaterPvt<Scalar>{};
+
+        case WaterPvtApproach::ConstantCompressibilityBrine:
+            return ConstantCompressibilityBrinePvt<Scalar>{};
+
+        default:
+            return std::monostate{};
+        }
     }
 
-    WaterPvtThermal(IsothermalPvt* isothermalPvt,
-                    const std::vector<Scalar>& viscrefPress,
-                    const std::vector<Scalar>& watdentRefTemp,
-                    const std::vector<Scalar>& watdentCT1,
-                    const std::vector<Scalar>& watdentCT2,
-                    const std::vector<Scalar>& watJTRefPres,
-                    const std::vector<Scalar>& watJTC,
-                    const std::vector<Scalar>& pvtwRefPress,
-                    const std::vector<Scalar>& pvtwRefB,
-                    const std::vector<Scalar>& pvtwCompressibility,
-                    const std::vector<Scalar>& pvtwViscosity,
-                    const std::vector<Scalar>& pvtwViscosibility,
-                    const std::vector<TabulatedOneDFunction>& watvisctCurves,
-                    const std::vector<TabulatedOneDFunction>& internalEnergyCurves,
-                    bool enableThermalDensity,
-                    bool enableJouleThomson,
-                    bool enableThermalViscosity,
-                    bool enableInternalEnergy)
-        : isothermalPvt_(isothermalPvt)
-        , viscrefPress_(viscrefPress)
-        , watdentRefTemp_(watdentRefTemp)
-        , watdentCT1_(watdentCT1)
-        , watdentCT2_(watdentCT2)
-        , watJTRefPres_(watJTRefPres)
-        , watJTC_(watJTC)
-        , pvtwRefPress_(pvtwRefPress)
-        , pvtwRefB_(pvtwRefB)
-        , pvtwCompressibility_(pvtwCompressibility)
-        , pvtwViscosity_(pvtwViscosity)
-        , pvtwViscosibility_(pvtwViscosibility)
-        , watvisctCurves_(watvisctCurves)
-        , internalEnergyCurves_(internalEnergyCurves)
-        , enableThermalDensity_(enableThermalDensity)
-        , enableJouleThomson_(enableJouleThomson)
-        , enableThermalViscosity_(enableThermalViscosity)
-        , enableInternalEnergy_(enableInternalEnergy)
-    { }
-
-    WaterPvtThermal(const WaterPvtThermal& data)
-    { *this = data; }
-
-    ~WaterPvtThermal()
-    { delete isothermalPvt_; }
-
 #if HAVE_ECL_INPUT
+    static WaterPvtApproach chooseApproach(const EclipseState& eclState)
+    {
+        if (enableBrine && !eclState.getTableManager().getPvtwSaltTables().empty())
+            return WaterPvtApproach::ConstantCompressibilityBrine;
+        else if (!eclState.getTableManager().getPvtwTable().empty())
+            return WaterPvtApproach::ConstantCompressibilityWater;
+
+        return WaterPvtApproach::NoWater;
+    }
+
     /*!
      * \brief Implement the temperature part of the water PVT properties.
      */
@@ -112,9 +91,11 @@ public:
     {
         //////
         // initialize the isothermal part
-        //////
-        isothermalPvt_ = new IsothermalPvt;
-        isothermalPvt_->initFromState(eclState, schedule);
+        isothermalPvt_ = initialize(chooseApproach(eclState));
+        std::visit(VisitorOverloadSet{[&](auto& pvt)
+                                      {
+                                          pvt.initFromState(eclState, schedule);
+                                       },  monoHandler_}, isothermalPvt_);
 
         //////
         // initialize the thermal part
@@ -126,7 +107,11 @@ public:
         enableThermalViscosity_ = tables.hasTables("WATVISCT");
         enableInternalEnergy_ = tables.hasTables("SPECHEAT");
 
-        unsigned numRegions = isothermalPvt_->numRegions();
+        unsigned numRegions;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          numRegions = pvt.numRegions();
+                                      }, monoHandler_}, isothermalPvt_);
         setNumRegions(numRegions);
 
         if (enableThermalDensity_) {
@@ -340,7 +325,14 @@ public:
                          const Evaluation& pressure,
                          const Evaluation& saltconcentration) const
     {
-        const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature, pressure, saltconcentration);
+        Evaluation isothermalMu;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          isothermalMu = pvt.viscosity(regionIdx,
+                                                                       temperature,
+                                                                        pressure,
+                                                                        saltconcentration);
+                                      }, monoHandler_}, isothermalPvt_);
         if (!enableThermalViscosity())
             return isothermalMu;
 
@@ -361,8 +353,18 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& saltconcentration) const
     {
-        if (!enableThermalDensity())
-            return isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
+        if (!enableThermalDensity()) {
+            Evaluation result;
+            std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                          {
+                                              result = pvt.inverseFormationVolumeFactor(regionIdx,
+                                                                                        temperature,
+                                                                                        pressure,
+                                                                                        saltconcentration);
+                                          }, monoHandler_}, isothermalPvt_);
+
+            return result;
+        }
 
         Scalar BwRef = pvtwRefB_[regionIdx];
         Scalar TRef = watdentRefTemp_[regionIdx];
@@ -377,11 +379,15 @@ public:
         return 1.0/(((1 - X)*(1 + cT1*Y + cT2*Y*Y))*BwRef);
     }
 
-    const IsothermalPvt* isoThermalPvt() const
-    { return isothermalPvt_; }
-
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
-    { return isothermalPvt_->waterReferenceDensity(regionIdx); }
+    Scalar waterReferenceDensity(unsigned regionIdx) const
+    {
+        Scalar result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.waterReferenceDensity(regionIdx);
+                                      }, monoHandler_}, isothermalPvt_);
+        return result;
+    }
 
     const std::vector<Scalar>& viscrefPress() const
     { return viscrefPress_; }
@@ -420,71 +426,13 @@ public:
     { return enableInternalEnergy_; }
 
     const std::vector<Scalar>& watJTRefPres() const
-    { return  watJTRefPres_; }
+    { return watJTRefPres_; }
 
      const std::vector<Scalar>&  watJTC() const
     { return watJTC_; }
 
-
-    bool operator==(const WaterPvtThermal<Scalar, enableBrine>& data) const
-    {
-        if (isothermalPvt_ && !data.isothermalPvt_)
-            return false;
-        if (!isothermalPvt_ && data.isothermalPvt_)
-            return false;
-
-        return (!this->isoThermalPvt() ||
-               (*this->isoThermalPvt() == *data.isoThermalPvt())) &&
-               this->viscrefPress() == data.viscrefPress() &&
-               this->watdentRefTemp() == data.watdentRefTemp() &&
-               this->watdentCT1() == data.watdentCT1() &&
-               this->watdentCT2() == data.watdentCT2() &&
-               this->watdentCT2() == data.watdentCT2() &&
-               this->watJTRefPres() == data.watJTRefPres() &&
-               this->watJT() == data.watJT() &&
-               this->watJTC() == data.watJTC() &&
-               this->pvtwRefPress() == data.pvtwRefPress() &&
-               this->pvtwRefB() == data.pvtwRefB() &&
-               this->pvtwCompressibility() == data.pvtwCompressibility() &&
-               this->pvtwViscosity() == data.pvtwViscosity() &&
-               this->pvtwViscosibility() == data.pvtwViscosibility() &&
-               this->watvisctCurves() == data.watvisctCurves() &&
-               this->internalEnergyCurves() == data.internalEnergyCurves() &&
-               this->enableThermalDensity() == data.enableThermalDensity() &&
-               this->enableJouleThomson() == data.enableJouleThomson() &&
-               this->enableThermalViscosity() == data.enableThermalViscosity() &&
-               this->enableInternalEnergy() == data.enableInternalEnergy();
-    }
-
-    WaterPvtThermal<Scalar, enableBrine>& operator=(const WaterPvtThermal<Scalar, enableBrine>& data)
-    {
-        if (data.isothermalPvt_)
-            isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);
-        else
-            isothermalPvt_ = nullptr;
-        viscrefPress_ = data.viscrefPress_;
-        watdentRefTemp_ = data.watdentRefTemp_;
-        watdentCT1_ = data.watdentCT1_;
-        watdentCT2_ = data.watdentCT2_;
-        watJTRefPres_ =  data.watJTRefPres_;
-        watJTC_ =  data.watJTC_;
-        pvtwRefPress_ = data.pvtwRefPress_;
-        pvtwRefB_ = data.pvtwRefB_;
-        pvtwCompressibility_ = data.pvtwCompressibility_;
-        pvtwViscosity_ = data.pvtwViscosity_;
-        pvtwViscosibility_ = data.pvtwViscosibility_;
-        watvisctCurves_ = data.watvisctCurves_;
-        internalEnergyCurves_ = data.internalEnergyCurves_;
-        enableThermalDensity_ = data.enableThermalDensity_;
-        enableJouleThomson_ = data.enableJouleThomson_;
-        enableThermalViscosity_ = data.enableThermalViscosity_;
-        enableInternalEnergy_ = data.enableInternalEnergy_;
-
-        return *this;
-    }
-
 private:
-    IsothermalPvt* isothermalPvt_;
+    IsothermalPvt isothermalPvt_;
 
     // The PVT properties needed for temperature dependence. We need to store one
     // value per PVT region.
@@ -508,10 +456,13 @@ private:
     // piecewise linear curve representing the internal energy of water
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;
 
-    bool enableThermalDensity_;
-    bool enableJouleThomson_;
-    bool enableThermalViscosity_;
-    bool enableInternalEnergy_;
+    bool enableThermalDensity_ = false;
+    bool enableJouleThomson_ = false;
+    bool enableThermalViscosity_ = false;
+    bool enableInternalEnergy_ = false;
+
+    MonoThrowHandler<std::logic_error>
+    monoHandler_{"Not implemented: Water PVT of this deck!"}; // mono state handler
 };
 
 } // namespace Opm
