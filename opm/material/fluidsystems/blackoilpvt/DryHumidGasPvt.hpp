@@ -523,7 +523,7 @@ private:
     std::vector<TabulatedTwoDFunction> saturatedWaterVaporizationSaltFactorTable_;
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
-    bool enableRwgSalt_;
+    bool enableRwgSalt_ = false;
     Scalar vapPar1_;
 };
 
