@@ -595,7 +595,7 @@ private:
     std::vector<TabulatedOneDFunction> saturatedOilVaporizationFactorTable_;
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
-    bool enableRwgSalt_;
+    bool enableRwgSalt_ = false;
     Scalar vapPar1_;
 };
 
