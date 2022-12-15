@@ -88,6 +88,12 @@ namespace {
             std::unordered_set<std::string>
         {
             "THRESHPR",
+            "FLOGASN+",
+            "FLOOILN+",
+            "FLOWATN+",
+            "FLRGASN+",
+            "FLROILN+",
+            "FLRWATN+",
         };
 
         return extra_solution.count(vector) > 0;
