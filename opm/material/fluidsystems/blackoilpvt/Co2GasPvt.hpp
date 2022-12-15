@@ -60,10 +60,6 @@ public:
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
     explicit Co2GasPvt() = default;
-    Co2GasPvt(const std::vector<Scalar>& gasReferenceDensity)
-        : gasReferenceDensity_(gasReferenceDensity)
-    {
-    }
 
     Co2GasPvt(size_t numRegions,
               Scalar T_ref = 288.71, //(273.15 + 15.56)
@@ -227,13 +223,8 @@ public:
         return BinaryCoeffBrineCO2::gasDiffCoeff(temperature, pressure, extrapolate);
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
-
-    bool operator==(const Co2GasPvt<Scalar>& data) const
-    {
-        return gasReferenceDensity_ == data.gasReferenceDensity_;
-    }
 
 private:
     std::vector<Scalar> gasReferenceDensity_;
