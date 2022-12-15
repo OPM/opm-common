@@ -31,20 +31,18 @@
 
 namespace Opm {
 
+template <class ScalarT, class FluidSystem, class ParamsT> class EclThconrLaw;
+
 /*!
  * \brief The default implementation of a parameter object for the
  *        thermal conduction law based on the THCONR keyword from ECL.
  */
-template <class ScalarT>
+template <class ScalarT, class FluidSystem>
 class EclThconrLawParams : public EnsureFinalized
 {
 public:
     using Scalar = ScalarT;
-
-    EclThconrLawParams(const EclThconrLawParams&) = default;
-
-    EclThconrLawParams()
-    { }
+    using Law = EclThconrLaw<ScalarT,FluidSystem,EclThconrLawParams<ScalarT,FluidSystem>>;
 
     /*!
      * \brief Set the total thermal conductivity [J/m^2 / (K/m)] of at Sg = 0
@@ -71,8 +69,8 @@ public:
     { EnsureFinalized::check(); return dTotalThermalConductivity_dSg_; }
 
 private:
-    Scalar referenceTotalThermalConductivity_;
-    Scalar dTotalThermalConductivity_dSg_;
+    Scalar referenceTotalThermalConductivity_{};
+    Scalar dTotalThermalConductivity_dSg_{};
 };
 
 } // namespace Opm

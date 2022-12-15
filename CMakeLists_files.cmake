@@ -879,6 +879,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/FluidThermalConductionLawParams.hpp
       opm/material/thermal/EclHeatcrLawParams.hpp
       opm/material/thermal/NullThermalConductionLaw.hpp
+      opm/material/thermal/NullThermalConductionLawParams.hpp
       opm/material/thermal/EclSolidEnergyLawMultiplexer.hpp
       opm/material/thermal/EclThermalConductionLawMultiplexerParams.hpp
       opm/material/thermal/EclThermalConductionLawMultiplexer.hpp

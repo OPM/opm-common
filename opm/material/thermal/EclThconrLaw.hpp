@@ -40,7 +40,7 @@ namespace Opm
  */
 template <class ScalarT,
           class FluidSystem,
-          class ParamsT = EclThconrLawParams<ScalarT>>
+          class ParamsT = EclThconrLawParams<ScalarT,FluidSystem>>
 class EclThconrLaw
 {
 public:

@@ -63,6 +63,8 @@ public:
 
     using ThermalConductionLaw = EclThermalConductionLawMultiplexer<Scalar, FluidSystem>;
     using ThermalConductionLawParams = typename ThermalConductionLaw::Params;
+    using ThconrLawParams = typename ThermalConductionLawParams::ThconrLawParams;
+    using ThcLawParams = typename ThermalConductionLawParams::ThcLawParams;
 
     EclThermalLawManager()
     {
@@ -154,7 +156,6 @@ private:
             auto& elemParam = solidEnergyLawParams_[elemIdx];
             elemParam.setSolidEnergyApproach(EclSolidEnergyApproach::Heatcr);
             auto& heatcrElemParams = elemParam.template getRealParams<EclSolidEnergyApproach::Heatcr>();
-
             heatcrElemParams.setReferenceRockHeatCapacity(heatcrData[elemIdx]);
             heatcrElemParams.setDRockHeatCapacity_dT(heatcrtData[elemIdx]);
             heatcrElemParams.finalize();
@@ -232,14 +233,14 @@ private:
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             auto& elemParams = thermalConductionLawParams_[elemIdx];
             elemParams.setThermalConductionApproach(EclThermalConductionApproach::Thconr);
-            auto& thconrElemParams = elemParams.template getRealParams<EclThermalConductionApproach::Thconr>();
-
-            double thconr = thconrData.empty()   ? 0.0 : thconrData[elemIdx];
-            double thconsf = thconsfData.empty() ? 0.0 : thconsfData[elemIdx];
-            thconrElemParams.setReferenceTotalThermalConductivity(thconr);
-            thconrElemParams.setDTotalThermalConductivity_dSg(thconsf);
-
-            thconrElemParams.finalize();
+            elemParams.visit1([&](ThconrLawParams& thconrElemParams)
+                              {
+                                  double thconr = thconrData.empty()   ? 0.0 : thconrData[elemIdx];
+                                  double thconsf = thconsfData.empty() ? 0.0 : thconsfData[elemIdx];
+                                  thconrElemParams.setReferenceTotalThermalConductivity(thconr);
+                                  thconrElemParams.setDTotalThermalConductivity_dSg(thconsf);
+                                  thconrElemParams.finalize();
+                              });
             elemParams.finalize();
         }
     }
@@ -276,19 +277,19 @@ private:
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             auto& elemParams = thermalConductionLawParams_[elemIdx];
             elemParams.setThermalConductionApproach(EclThermalConductionApproach::Thc);
-            auto& thcElemParams = elemParams.template getRealParams<EclThermalConductionApproach::Thc>();
-
-            thcElemParams.setPorosity(poroData[elemIdx]);
-            double thcrock = thcrockData.empty()    ? 0.0 : thcrockData[elemIdx];
-            double thcoil = thcoilData.empty()      ? 0.0 : thcoilData[elemIdx];
-            double thcgas = thcgasData.empty()      ? 0.0 : thcgasData[elemIdx];
-            double thcwater = thcwaterData.empty()  ? 0.0 : thcwaterData[elemIdx];
-            thcElemParams.setThcrock(thcrock);
-            thcElemParams.setThcoil(thcoil);
-            thcElemParams.setThcgas(thcgas);
-            thcElemParams.setThcwater(thcwater);
-
-            thcElemParams.finalize();
+            elemParams.visit1([&](ThcLawParams& thcElemParams)
+                              {
+                                  thcElemParams.setPorosity(poroData[elemIdx]);
+                                  double thcrock = thcrockData.empty()    ? 0.0 : thcrockData[elemIdx];
+                                  double thcoil = thcoilData.empty()      ? 0.0 : thcoilData[elemIdx];
+                                  double thcgas = thcgasData.empty()      ? 0.0 : thcgasData[elemIdx];
+                                  double thcwater = thcwaterData.empty()  ? 0.0 : thcwaterData[elemIdx];
+                                  thcElemParams.setThcrock(thcrock);
+                                  thcElemParams.setThcoil(thcoil);
+                                  thcElemParams.setThcgas(thcgas);
+                                  thcElemParams.setThcwater(thcwater);
+                                  thcElemParams.finalize();
+                              });
             elemParams.finalize();
         }
     }

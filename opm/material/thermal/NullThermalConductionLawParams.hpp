@@ -22,40 +22,23 @@
 */
 /*!
  * \file
- * \copydoc Opm::NullThermalConductionLaw
+ * \copydoc Opm::EclThconrLawParams
  */
-#ifndef OPM_NULL_THERMAL_CONDUCTION_LAW_HPP
-#define OPM_NULL_THERMAL_CONDUCTION_LAW_HPP
-
-#include <opm/material/thermal/NullThermalConductionLawParams.hpp>
+#ifndef OPM_NULL_THERMAL_CONDUCTION_LAW_PARAMS_HPP
+#define OPM_NULL_THERMAL_CONDUCTION_LAW_PARAMS_HPP
 
 namespace Opm {
 
+template<class Scalar> class NullThermalConductionLaw;
+
 /*!
- * \ingroup material
- *
- * \brief Implements a dummy law for thermal conduction to which isothermal models
- *        can fall back to.
- *
- * This law just returns 0 unconditionally.
+ * \brief Dummy parameter class for the null thermal conduction law.
  */
 template <class ScalarT>
-class NullThermalConductionLaw
+class NullThermalConductionLawParams
 {
 public:
-    using Params = NullThermalConductionLawParams<ScalarT>;
-    using Scalar = ScalarT;
-
-    /*!
-     * \brief Given a fluid state, return the effective thermal conductivity [W/m^2 / (K/m)] of the porous
-     *        medium.
-     *
-     * If this method is called an exception is thrown at run time.
-     */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation thermalConductivity(const Params&,
-                                          const FluidState&)
-    { return 0.0; }
+    using Law = NullThermalConductionLaw<ScalarT>;
 };
 
 } // namespace Opm

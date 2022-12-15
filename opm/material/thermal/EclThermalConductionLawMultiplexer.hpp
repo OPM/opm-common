@@ -27,14 +27,20 @@
 #ifndef OPM_ECL_THERMAL_CONDUCTION_LAW_MULTIPLEXER_HPP
 #define OPM_ECL_THERMAL_CONDUCTION_LAW_MULTIPLEXER_HPP
 
-#include "EclThermalConductionLawMultiplexerParams.hpp"
+#include <opm/common/utility/Visitor.hpp>
 
-#include "EclThconrLaw.hpp"
-#include "EclThcLaw.hpp"
-#include "NullThermalConductionLaw.hpp"
+#include <opm/material/thermal/EclThermalConductionLawMultiplexerParams.hpp>
+
+#include <opm/material/thermal/EclThconrLaw.hpp>
+#include <opm/material/thermal/EclThcLaw.hpp>
+#include <opm/material/thermal/NullThermalConductionLaw.hpp>
 
 #include <stdexcept>
-#include <string>
+
+namespace {
+template<class T>
+using remove_cvr_t = std::remove_cv_t<std::remove_reference_t<T>>;
+}
 
 namespace Opm
 {
@@ -45,7 +51,7 @@ namespace Opm
  */
 template <class ScalarT,
           class FluidSystem,
-          class ParamsT = EclThermalConductionLawMultiplexerParams<ScalarT>>
+          class ParamsT = EclThermalConductionLawMultiplexerParams<ScalarT,FluidSystem>>
 class EclThermalConductionLawMultiplexer
 {
     enum { numPhases = FluidSystem::numPhases };
@@ -65,22 +71,17 @@ public:
     static Evaluation thermalConductivity(const Params& params,
                                        const FluidState& fluidState)
     {
-        switch (params.thermalConductionApproach()) {
-        case EclThermalConductionApproach::Thconr:
-            // relevant ECL keywords: THCONR and THCONSF
-            return ThconrLaw::thermalConductivity(params.template getRealParams<EclThermalConductionApproach::Thconr>(), fluidState);
-
-        case EclThermalConductionApproach::Thc:
-            // relevant ECL keywords: THCROCK, THCOIL, THCGAS and THCWATER
-            return ThcLaw::thermalConductivity(params.template getRealParams<EclThermalConductionApproach::Thc>(), fluidState);
-
-        case EclThermalConductionApproach::Null:
-            // relevant ECL keywords: none or none recognized
-            return NullLaw::thermalConductivity(0, fluidState);
-
-        default:
-            throw std::logic_error("Invalid thermal conductivity approach: "+std::to_string(int(params.thermalConductionApproach())));
-        }
+        Evaluation result;
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                                            result = Law::thermalConductivity(prm, fluidState);
+                                        },
+                                        [](const std::monostate&)
+                                        {
+                                            throw std::runtime_error("Undefined thermal conduction approach.");
+                                        }});
+        return result;
     }
 };
 
