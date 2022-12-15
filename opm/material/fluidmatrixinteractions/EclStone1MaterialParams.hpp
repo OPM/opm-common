@@ -52,13 +52,6 @@ public:
     using OilWaterParams = typename OilWaterLawT::Params;
 
     /*!
-     * \brief The default constructor.
-     */
-    EclStone1MaterialParams()
-    {
-    }
-
-    /*!
      * \brief Finish the initialization of the parameter object.
      */
     void finalize()
@@ -147,9 +140,9 @@ private:
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;
 
-    Scalar Swl_;
-    Scalar eta_;
-    Scalar krocw_;
+    Scalar Swl_{};
+    Scalar eta_{};
+    Scalar krocw_{};
 };
 
 } // namespace Opm

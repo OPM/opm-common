@@ -53,13 +53,6 @@ public:
     using OilWaterParams = OilWaterParamsT;
 
     /*!
-     * \brief The default constructor.
-     */
-    EclDefaultMaterialParams()
-    {
-    }
-
-    /*!
      * \brief The parameter object for the gas-oil twophase law.
      */
     const GasOilParams& gasOilParams() const
@@ -131,7 +124,7 @@ private:
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;
 
-    Scalar Swl_;
+    Scalar Swl_{};
 };
 } // namespace Opm
 

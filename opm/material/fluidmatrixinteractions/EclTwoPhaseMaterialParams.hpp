@@ -58,13 +58,6 @@ public:
     using OilWaterParams = OilWaterParamsT;
     using GasWaterParams = GasWaterParamsT;
 
-    /*!
-     * \brief The default constructor.
-     */
-    EclTwoPhaseMaterialParams()
-    {
-    }
-
     void setApproach(EclTwoPhaseApproach newApproach)
     { approach_ = newApproach; }
 
