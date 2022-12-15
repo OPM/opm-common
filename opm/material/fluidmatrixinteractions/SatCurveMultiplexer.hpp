@@ -27,9 +27,15 @@
 #ifndef OPM_SAT_CURVE_MULTIPLEXER_HPP
 #define OPM_SAT_CURVE_MULTIPLEXER_HPP
 
-#include "SatCurveMultiplexerParams.hpp"
+#include <opm/material/fluidmatrixinteractions/SatCurveMultiplexerParams.hpp>
 
 #include <stdexcept>
+#include <type_traits>
+
+namespace {
+template<class T>
+using remove_cvr_t = std::remove_cv_t<std::remove_reference_t<T>>;
+}
 
 namespace Opm {
 /*!
@@ -49,6 +55,9 @@ public:
 
     using LETTwoPhaseLaw = TwoPhaseLETCurves<Traits>;
     using PLTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<Traits>;
+
+    using LETParams = typename Params::LETParams;
+    using PLParams = typename Params::PLParams;
 
     //! The number of fluid phases to which this material law applies.
     static constexpr int numPhases = Traits::numPhases;
@@ -90,19 +99,11 @@ public:
     template <class Container, class FluidState>
     static void capillaryPressures(Container& values, const Params& params, const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            LETTwoPhaseLaw::capillaryPressures(values,
-                                               params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                               fluidState);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            PLTwoPhaseLaw::capillaryPressures(values,
-                                              params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                              fluidState);
-            break;
-        }
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         Law::capillaryPressures(values, prm, fluidState);
+                     });
     }
 
     /*!
@@ -112,19 +113,11 @@ public:
     template <class Container, class FluidState>
     static void saturations(Container& values, const Params& params, const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            LETTwoPhaseLaw::saturations(values,
-                                        params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                        fluidState);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            PLTwoPhaseLaw::saturations(values,
-                                       params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                       fluidState);
-            break;
-        }
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         Law::saturations(values, prm, fluidState);
+                     });
     }
 
     /*!
@@ -140,19 +133,11 @@ public:
     template <class Container, class FluidState>
     static void relativePermeabilities(Container& values, const Params& params, const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            LETTwoPhaseLaw::relativePermeabilities(values,
-                                                   params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                                   fluidState);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            PLTwoPhaseLaw::relativePermeabilities(values,
-                                                  params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                                  fluidState);
-            break;
-        }
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         Law::relativePermeabilities(values, prm, fluidState);
+                     });
     }
 
     /*!
@@ -161,37 +146,25 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation pcnw(const Params& params, const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::pcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                        fluidState);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::pcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                       fluidState);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::pcnw(prm, fluidState);
+                     });
+        return result;
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                                   Sw);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                                  Sw);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::twoPhaseSatPcnw(prm, Sw);
+                     });
+        return result;
     }
 
     template <class Evaluation>
@@ -207,19 +180,13 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation Sw(const Params& params, const FluidState& fluidstate)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::Sw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                      fluidstate);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::Sw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                     fluidstate);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::Sw(prm, fluidstate);
+                     });
+        return result;
     }
 
     template <class Evaluation>
@@ -236,37 +203,25 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation Sn(const Params& params, const FluidState& fluidstate)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::Sn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                      fluidstate);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::Sn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                     fluidstate);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::Sn(prm, fluidstate);
+                     });
+        return result;
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatSn(const Params& params, const Evaluation& pc)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::twoPhaseSatSn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                                 pc);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::twoPhaseSatSn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                                pc);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::twoPhaseSatSn(prm, pc);
+                     });
+        return result;
     }
 
     /*!
@@ -276,37 +231,25 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& params, const FluidState& fluidstate)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::krw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                       fluidstate);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::krw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                      fluidstate);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::krw(prm, fluidstate);
+                     });
+        return result;
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                                  Sw);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                                 Sw);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::twoPhaseSatKrw(prm, Sw);
+                     });
+        return result;
     }
 
     template <class Evaluation>
@@ -322,55 +265,37 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& params, const FluidState& fluidstate)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::krn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                       fluidstate);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::krn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                      fluidstate);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::krn(prm, fluidstate);
+                     });
+        return result;
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                                  Sw);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                                 Sw);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::twoPhaseSatKrn(prm, Sw);
+                     });
+        return result;
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatKrnInv(const Params& params, const Evaluation& krn)
     {
-        switch (params.approach()) {
-        case SatCurveMultiplexerApproach::LET:
-            return LETTwoPhaseLaw::twoPhaseSatKrnInv(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
-                                                     krn);
-            break;
-
-        case SatCurveMultiplexerApproach::PiecewiseLinear:
-            return PLTwoPhaseLaw::twoPhaseSatKrnInv(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
-                                                    krn);
-            break;
-        }
-
-        return 0.0;
+        Evaluation result;
+        params.visit([&](const auto& prm)
+                     {
+                         using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                         result = Law::twoPhaseSatKrnInv(prm, krn);
+                     });
+        return result;
     }
 };
 

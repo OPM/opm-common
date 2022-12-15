@@ -27,17 +27,16 @@
 #ifndef OPM_SAT_CURVE_MULTIPLEXER_PARAMS_HPP
 #define OPM_SAT_CURVE_MULTIPLEXER_PARAMS_HPP
 
+#include <opm/common/utility/Visitor.hpp>
 
-#include "TwoPhaseLETCurves.hpp"
-#include "TwoPhaseLETCurvesParams.hpp"
-#include "PiecewiseLinearTwoPhaseMaterial.hpp"
-#include "PiecewiseLinearTwoPhaseMaterialParams.hpp"
+#include <opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp>
+#include <opm/material/fluidmatrixinteractions/TwoPhaseLETCurvesParams.hpp>
+#include <opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterialParams.hpp>
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <type_traits>
-#include <cassert>
-#include <memory>
+#include <variant>
 
 namespace Opm {
 
@@ -57,63 +56,32 @@ enum class SatCurveMultiplexerApproach {
 template <class TraitsT>
 class SatCurveMultiplexerParams : public EnsureFinalized
 {
+private:
+    using LETTwoPhaseLaw = TwoPhaseLETCurves<TraitsT>;
+    using PLTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<TraitsT>;
+
 public:
     using Traits = TraitsT;
     using Scalar = typename TraitsT::Scalar;
     enum { numPhases = 2 };
 
-private:
-    using LETTwoPhaseLaw = TwoPhaseLETCurves<Traits>;
-    using PLTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<Traits>;
-
     using LETParams = typename LETTwoPhaseLaw::Params;
     using PLParams = typename PLTwoPhaseLaw::Params;
-
-    template <class ParamT>
-    struct Deleter
-    {
-        inline void operator () ( void* ptr )
-        {
-            delete static_cast< ParamT* > (ptr);
-        }
-    };
-
-    using ParamPointerType = std::shared_ptr<void>;
-
-public:
 
     /*!
      * \brief The multiplexer constructor.
      */
-    SatCurveMultiplexerParams() : realParams_()
-    {
-    }
-
-    SatCurveMultiplexerParams(const SatCurveMultiplexerParams& other)
-        : realParams_()
-    {
-        setApproach( other.approach() );
-    }
-
-    SatCurveMultiplexerParams& operator= ( const SatCurveMultiplexerParams& other )
-    {
-        realParams_.reset();
-        setApproach( other.approach() );
-        return *this;
-    }
-
     void setApproach(SatCurveMultiplexerApproach newApproach)
     {
-        assert(realParams_ == 0);
         approach_ = newApproach;
 
         switch (approach()) {
         case SatCurveMultiplexerApproach::LET:
-            realParams_ = ParamPointerType(new LETParams, Deleter< LETParams > () );
+            realParams_ = LETParams{};
             break;
 
         case SatCurveMultiplexerApproach::PiecewiseLinear:
-            realParams_ = ParamPointerType(new PLParams, Deleter< PLParams > () );
+            realParams_ = PLParams{};
             break;
         }
     }
@@ -121,55 +89,26 @@ public:
     SatCurveMultiplexerApproach approach() const
     { return approach_; }
 
-    // get the parameter object for the LET curve
-    template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::LET, LETParams>::type&
-    getRealParams()
+    //! \brief Mutable visit for a single type.
+    //! \details Used during configuration stage
+    template<class Function>
+    void visit1(Function f)
     {
-        assert(approach() == approachV);
-        return this->template castTo<LETParams>();
+        std::visit(VisitorOverloadSet{f, [](auto&) {}}, realParams_);
     }
 
-    template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::LET, const LETParams>::type&
-    getRealParams() const
+    //! \brief Immutable visit for all types using a visitor set.
+    template<class VisitorSet>
+    void visit(VisitorSet f) const
     {
-        assert(approach() == approachV);
-        return this->template castTo<LETParams>();
-    }
-
-    // get the parameter object for the PL curve
-    template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::PiecewiseLinear, PLParams>::type&
-    getRealParams()
-    {
-        assert(approach() == approachV);
-        return this->template castTo<PLParams>();
-    }
-
-    template <SatCurveMultiplexerApproach approachV>
-    typename std::enable_if<approachV == SatCurveMultiplexerApproach::PiecewiseLinear, const PLParams>::type&
-    getRealParams() const
-    {
-        assert(approach() == approachV);
-        return this->template castTo<PLParams>();
+        std::visit(f, realParams_);
     }
 
 private:
-    template <class ParamT>
-    ParamT& castTo()
-    {
-        return *(static_cast<ParamT *> (realParams_.operator->()));
-    }
-
-    template <class ParamT>
-    const ParamT& castTo() const
-    {
-        return *(static_cast<const ParamT *> (realParams_.operator->()));
-    }
+    std::variant<PLParams,
+                 LETParams> realParams_;
 
     SatCurveMultiplexerApproach approach_;
-    ParamPointerType realParams_;
 };
 
 } // namespace Opm

@@ -34,6 +34,9 @@
 #include <opm/material/common/EnsureFinalized.hpp>
 
 namespace Opm {
+
+template<class TraitsT, class ParamsT> class PiecewiseLinearTwoPhaseMaterial;
+
 /*!
  * \ingroup FluidMatrixInteractions
  *
@@ -46,6 +49,7 @@ class PiecewiseLinearTwoPhaseMaterialParams : public EnsureFinalized
     using Scalar = typename TraitsT::Scalar;
 
 public:
+    using Law = PiecewiseLinearTwoPhaseMaterial<TraitsT, PiecewiseLinearTwoPhaseMaterialParams<TraitsT>>;
     using ValueVector = std::vector<Scalar>;
 
     using Traits = TraitsT;
