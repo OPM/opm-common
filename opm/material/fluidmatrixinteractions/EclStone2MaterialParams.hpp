@@ -33,6 +33,11 @@
 
 namespace Opm {
 
+template <class TraitsT,
+          class GasOilMaterialLawT,
+          class OilWaterMaterialLawT,
+          class ParamsT> class EclStone2Material;
+
 /*!
  * \brief Default implementation for the parameters required by the
  *        three-phase capillary pressure/relperm Stone 2 model used by
@@ -51,6 +56,8 @@ public:
 
     using GasOilParams = typename GasOilLawT::Params;
     using OilWaterParams = typename OilWaterLawT::Params;
+    using Material = EclStone2Material<Traits,GasOilLawT,OilWaterLawT,
+                                       EclStone2MaterialParams<Traits,GasOilLawT,OilWaterLawT>>;
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.

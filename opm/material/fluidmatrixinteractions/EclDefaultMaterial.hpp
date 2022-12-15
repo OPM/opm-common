@@ -55,8 +55,8 @@ template <class TraitsT,
           class GasOilMaterialLawT,
           class OilWaterMaterialLawT,
           class ParamsT = EclDefaultMaterialParams<TraitsT,
-                                                   typename GasOilMaterialLawT::Params,
-                                                   typename OilWaterMaterialLawT::Params> >
+                                                   GasOilMaterialLawT,
+                                                   OilWaterMaterialLawT>>
 class EclDefaultMaterial : public TraitsT
 {
 public:

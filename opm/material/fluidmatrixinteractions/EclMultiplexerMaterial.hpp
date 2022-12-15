@@ -27,14 +27,21 @@
 #ifndef OPM_ECL_MULTIPLEXER_MATERIAL_HPP
 #define OPM_ECL_MULTIPLEXER_MATERIAL_HPP
 
-#include "EclMultiplexerMaterialParams.hpp"
-#include "EclDefaultMaterial.hpp"
-#include "EclStone1Material.hpp"
-#include "EclStone2Material.hpp"
-#include "EclTwoPhaseMaterial.hpp"
+#include <opm/common/utility/Visitor.hpp>
 
-#include <algorithm>
+#include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterialParams.hpp>
+#include <opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/EclStone1Material.hpp>
+#include <opm/material/fluidmatrixinteractions/EclStone2Material.hpp>
+#include <opm/material/fluidmatrixinteractions/EclTwoPhaseMaterial.hpp>
+
 #include <stdexcept>
+#include <type_traits>
+
+namespace {
+template<class T>
+using remove_cvr_t = std::remove_cv_t<std::remove_reference_t<T>>;
+}
 
 namespace Opm {
 
@@ -134,35 +141,15 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                               fluidState);
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                               fluidState);
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::capillaryPressures(values,
-                                                params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                                fluidState);
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::capillaryPressures(values,
-                                                 params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                                 fluidState);
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            values[0] = 0.0;
-            break;
-        }
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            Material::capillaryPressures(values, prm, fluidState);
+                                        },
+                                        [&](const std::monostate&)
+                                        {
+                                            values[0] = 0.0;
+                                        }});
     }
 
     /*
@@ -175,31 +162,14 @@ public:
                                          Scalar& krnSwMdc,
                                          const Params& params)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            Material::oilWaterHysteresisParams(pcSwMdc, krnSwMdc, prm);
+                                        },
+                                        [&](const std::monostate&)
+                                        {
+                                        }});
     }
 
     /*
@@ -212,31 +182,14 @@ public:
                                             const Scalar& krnSwMdc,
                                             Params& params)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        params.visit(VisitorOverloadSet{[&](auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            Material::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc, prm);
+                                        },
+                                        [&](std::monostate&)
+                                        {
+                                        }});
     }
 
     /*
@@ -249,31 +202,14 @@ public:
                                        Scalar& krnSwMdc,
                                        const Params& params)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            Material::gasOilHysteresisParams(pcSwMdc, krnSwMdc, prm);
+                                        },
+                                        [&](const std::monostate&)
+                                        {
+                                        }});
     }
 
     /*
@@ -286,31 +222,14 @@ public:
                                           const Scalar& krnSwMdc,
                                           Params& params)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        params.visit(VisitorOverloadSet{[&](auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            Material::setGasOilHysteresisParams(pcSwMdc, krnSwMdc, prm);
+                                        },
+                                        [&](std::monostate&)
+                                        {
+                                        }});
     }
 
     /*!
@@ -406,39 +325,15 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                                   fluidState);
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                                   fluidState);
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::relativePermeabilities(values,
-                                                    params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                                    fluidState);
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::relativePermeabilities(values,
-                                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                                     fluidState);
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            values[0] = 1.0;
-            break;
-
-        default:
-            throw std::logic_error("Not implemented: relativePermeabilities() option for unknown EclMultiplexerApproach (="
-                                   + std::to_string(static_cast<int>(params.approach())) + ")");
-        }
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            Material::relativePermeabilities(values, prm, fluidState);
+                                        },
+                                        [&](const std::monostate&)
+                                        {
+                                            values[0] = 1.0;
+                                        }});
     }
 
     /*!
@@ -448,27 +343,23 @@ public:
     static Evaluation relpermOilInOilGasSystem(const Params& params,
                                                const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            return Stone1Material::template relpermOilInOilGasSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                 fluidState);
-
-        case EclMultiplexerApproach::Stone2:
-            return Stone2Material::template relpermOilInOilGasSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                 fluidState);
-
-        case EclMultiplexerApproach::Default:
-            return DefaultMaterial::template relpermOilInOilGasSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::Default>(),
-                 fluidState);
-
-        default:
-            throw std::logic_error {
-                "relpermOilInOilGasSystem() is specific to three phases"
-            };
-        }
+        Evaluation result;
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            result = Material::template relpermOilInOilGasSystem<Evaluation>(prm, fluidState);
+                                        },
+                                        [](const typename TwoPhaseMaterial::Params&)
+                                        {
+                                            throw std::logic_error {
+                                                "relpermOilInOilGasSystem() is specific to three phases"};
+                                        },
+                                        [](const std::monostate&)
+                                        {
+                                            throw std::logic_error {
+                                                "relpermOilInOilGasSystem() is specific to three phases"};
+                                        }});
+        return result;
     }
 
     /*!
@@ -478,27 +369,23 @@ public:
     static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            return Stone1Material::template relpermOilInOilWaterSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                 fluidState);
-
-        case EclMultiplexerApproach::Stone2:
-            return Stone2Material::template relpermOilInOilWaterSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                 fluidState);
-
-        case EclMultiplexerApproach::Default:
-            return DefaultMaterial::template relpermOilInOilWaterSystem<Evaluation>
-                (params.template getRealParams<EclMultiplexerApproach::Default>(),
-                 fluidState);
-
-        default:
-            throw std::logic_error {
-                "relpermOilInOilWaterSystem() is specific to three phases"
-            };
-        }
+        Evaluation result;
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            result = Material::template relpermOilInOilWaterSystem<Evaluation>(prm, fluidState);
+                                        },
+                                        [](const typename TwoPhaseMaterial::Params&)
+                                        {
+                                            throw std::logic_error {
+                                                "relpermOilInOilWaterSystem() is specific to three phases"};
+                                        },
+                                        [](const std::monostate&)
+                                        {
+                                            throw std::logic_error {
+                                                "relpermOilInOilWaterSystem() is specific to three phases"};
+                                        }});
+        return result;
     }
 
     /*!
@@ -536,35 +423,20 @@ public:
      * \brief Update the hysteresis parameters after a time step.
      *
      * This assumes that the nested two-phase material laws are parameters for
-     * EclHysteresisLaw. If they are not, calling this methid will cause a compiler
+     * EclHysteresisLaw. If they are not, calling this method will cause a compiler
      * error. (But not calling it will still work.)
      */
     template <class FluidState>
     static void updateHysteresis(Params& params, const FluidState& fluidState)
     {
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                             fluidState);
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                             fluidState);
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                              fluidState);
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                               fluidState);
-            break;
-        case EclMultiplexerApproach::OnePhase:
-            break;
-        }
+        params.visit(VisitorOverloadSet{[&](auto& prm)
+                                        {
+                                            using Material = typename remove_cvr_t<decltype(prm)>::Material;
+                                            Material::updateHysteresis(prm, fluidState);
+                                        },
+                                        [&](std::monostate&)
+                                        {
+                                        }});
     }
 };
 

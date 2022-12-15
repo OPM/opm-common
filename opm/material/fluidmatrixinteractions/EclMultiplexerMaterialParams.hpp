@@ -27,16 +27,14 @@
 #ifndef OPM_ECL_MULTIPLEXER_MATERIAL_PARAMS_HPP
 #define OPM_ECL_MULTIPLEXER_MATERIAL_PARAMS_HPP
 
-#include "EclStone1Material.hpp"
-#include "EclStone2Material.hpp"
-#include "EclDefaultMaterial.hpp"
-#include "EclTwoPhaseMaterial.hpp"
-
-#include <cassert>
-#include <memory>
-#include <type_traits>
-
 #include <opm/material/common/EnsureFinalized.hpp>
+
+#include <opm/material/fluidmatrixinteractions/EclStone1Material.hpp>
+#include <opm/material/fluidmatrixinteractions/EclStone2Material.hpp>
+#include <opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/EclTwoPhaseMaterial.hpp>
+
+#include <variant>
 
 namespace Opm {
 
@@ -71,60 +69,28 @@ class EclMultiplexerMaterialParams : public Traits, public EnsureFinalized
     using DefaultParams = typename DefaultMaterial::Params;
     using TwoPhaseParams = typename TwoPhaseMaterial::Params;
 
-    template <class ParamT>
-    struct Deleter
-    {
-        inline void operator () ( void* ptr )
-        {
-            delete static_cast< ParamT* > (ptr);
-        }
-    };
-
-    using ParamPointerType = std::shared_ptr<void>;
-
 public:
     using EnsureFinalized :: finalize;
 
-    /*!
-     * \brief The multiplexer constructor.
-     */
-    EclMultiplexerMaterialParams() : realParams_()
-    {
-    }
-
-    EclMultiplexerMaterialParams(const EclMultiplexerMaterialParams& other)
-        : realParams_()
-    {
-        setApproach( other.approach() );
-    }
-
-    EclMultiplexerMaterialParams& operator= ( const EclMultiplexerMaterialParams& other )
-    {
-        realParams_.reset();
-        setApproach( other.approach() );
-        return *this;
-    }
-
     void setApproach(EclMultiplexerApproach newApproach)
     {
-        assert(realParams_ == 0);
         approach_ = newApproach;
 
         switch (approach()) {
         case EclMultiplexerApproach::Stone1:
-            realParams_ = ParamPointerType(new Stone1Params, Deleter< Stone1Params > () );
+            realParams_ = Stone1Params{};
             break;
 
         case EclMultiplexerApproach::Stone2:
-            realParams_ = ParamPointerType(new Stone2Params, Deleter< Stone2Params > () );
+            realParams_ = Stone2Params{};
             break;
 
         case EclMultiplexerApproach::Default:
-            realParams_ = ParamPointerType(new DefaultParams, Deleter< DefaultParams > () );
+            realParams_ = DefaultParams{};
             break;
 
         case EclMultiplexerApproach::TwoPhase:
-            realParams_ = ParamPointerType(new TwoPhaseParams, Deleter< TwoPhaseParams > () );
+            realParams_ = TwoPhaseParams{};
             break;
 
         case EclMultiplexerApproach::OnePhase:
@@ -136,90 +102,29 @@ public:
     EclMultiplexerApproach approach() const
     { return approach_; }
 
-    // get the parameter object for the Stone1 case
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::Stone1, Stone1Params>::type&
-    getRealParams()
+    //! \brief Mutable visit for all types using a visitor set.
+    template<class VisitorSet>
+    void visit(VisitorSet f)
     {
-        assert(approach() == approachV);
-        return this->template castTo<Stone1Params>();
+        std::visit(f, realParams_);
     }
 
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::Stone1, const Stone1Params>::type&
-    getRealParams() const
+    //! \brief Immutable visit for all types using a visitor set.
+    template<class Function>
+    void visit(Function f) const
     {
-        assert(approach() == approachV);
-        return this->template castTo<Stone1Params>();
-    }
-
-    // get the parameter object for the Stone2 case
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::Stone2, Stone2Params>::type&
-    getRealParams()
-    {
-        assert(approach() == approachV);
-        return this->template castTo<Stone2Params>();
-    }
-
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::Stone2, const Stone2Params>::type&
-    getRealParams() const
-    {
-        assert(approach() == approachV);
-        return this->template castTo<Stone2Params>();
-    }
-
-    // get the parameter object for the default case
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::Default, DefaultParams>::type&
-    getRealParams()
-    {
-        assert(approach() == approachV);
-        return this->template castTo<DefaultParams>();
-    }
-
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::Default, const DefaultParams>::type&
-    getRealParams() const
-    {
-        assert(approach() == approachV);
-        return this->template castTo<DefaultParams>();
-    }
-
-    // get the parameter object for the twophase case
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::TwoPhase, TwoPhaseParams>::type&
-    getRealParams()
-    {
-        assert(approach() == approachV);
-        return this->template castTo<TwoPhaseParams>();
-    }
-
-    template <EclMultiplexerApproach approachV>
-    typename std::enable_if<approachV == EclMultiplexerApproach::TwoPhase, const TwoPhaseParams>::type&
-    getRealParams() const
-    {
-        assert(approach() == approachV);
-        return this->template castTo<TwoPhaseParams>();
+        std::visit(f, realParams_);
     }
 
 private:
-    template <class ParamT>
-    ParamT& castTo()
-    {
-        return *(static_cast<ParamT *> (realParams_.operator->()));
-    }
-
-    template <class ParamT>
-    const ParamT& castTo() const
-    {
-        return *(static_cast<const ParamT *> (realParams_.operator->()));
-    }
-
     EclMultiplexerApproach approach_ = EclMultiplexerApproach::OnePhase;
-    ParamPointerType realParams_;
+    std::variant<std::monostate, // One phase
+                 DefaultParams,
+                 Stone1Params,
+                 Stone2Params,
+                 TwoPhaseParams> realParams_;
 };
+
 } // namespace Opm
 
 #endif

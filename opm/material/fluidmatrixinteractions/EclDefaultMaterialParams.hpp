@@ -33,6 +33,11 @@
 
 namespace Opm {
 
+template<class Traits,
+         class GasOilLawT,
+         class OilWaterLawT,
+         class Params> class EclDefaultMaterial;
+
 /*!
  * \brief Default implementation for the parameters required by the
  *        default three-phase capillary pressure model used by
@@ -51,6 +56,8 @@ public:
 
     using GasOilParams = typename GasOilLawT::Params;
     using OilWaterParams = typename OilWaterLawT::Params;
+    using Material = EclDefaultMaterial<Traits,GasOilLawT,OilWaterLawT,
+                                        EclDefaultMaterialParams<Traits,GasOilLawT,OilWaterLawT>>;
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.
