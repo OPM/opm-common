@@ -45,21 +45,6 @@ template <class Scalar>
 class ConstantCompressibilityOilPvt
 {
 public:
-    ConstantCompressibilityOilPvt() = default;
-    ConstantCompressibilityOilPvt(const std::vector<Scalar>& oilReferenceDensity,
-                                  const std::vector<Scalar>& oilReferencePressure,
-                                  const std::vector<Scalar>& oilReferenceFormationVolumeFactor,
-                                  const std::vector<Scalar>& oilCompressibility,
-                                  const std::vector<Scalar>& oilViscosity,
-                                  const std::vector<Scalar>& oilViscosibility)
-        : oilReferenceDensity_(oilReferenceDensity)
-        , oilReferencePressure_(oilReferencePressure)
-        , oilReferenceFormationVolumeFactor_(oilReferenceFormationVolumeFactor)
-        , oilCompressibility_(oilCompressibility)
-        , oilViscosity_(oilViscosity)
-        , oilViscosibility_(oilViscosibility)
-    { }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent oil viscosity and density
@@ -250,7 +235,7 @@ public:
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
     const std::vector<Scalar>& oilReferenceFormationVolumeFactor() const
@@ -264,16 +249,6 @@ public:
 
     const std::vector<Scalar>& oilViscosibility() const
     { return oilViscosibility_; }
-
-    bool operator==(const ConstantCompressibilityOilPvt<Scalar>& data) const
-    {
-        return this->oilReferenceDensity_ == data.oilReferenceDensity_ &&
-               this->oilReferencePressure_ == data.oilReferencePressure_ &&
-               this->oilReferenceFormationVolumeFactor() == data.oilReferenceFormationVolumeFactor() &&
-               this->oilCompressibility() == data.oilCompressibility() &&
-               this->oilViscosity() == data.oilViscosity() &&
-               this->oilViscosibility() == data.oilViscosibility();
-    }
 
 private:
     std::vector<Scalar> oilReferenceDensity_;
