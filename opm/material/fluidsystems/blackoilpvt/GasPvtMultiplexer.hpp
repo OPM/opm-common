@@ -29,12 +29,7 @@
 
 #include <opm/common/utility/Visitor.hpp>
 
-#include "DryGasPvt.hpp"
-#include "DryHumidGasPvt.hpp"
-#include "WetHumidGasPvt.hpp"
-#include "WetGasPvt.hpp"
-#include "GasPvtThermal.hpp"
-#include "Co2GasPvt.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/GasPvtThermal.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
@@ -69,18 +64,13 @@ public:
     {
         if (!eclState.runspec().phases().active(Phase::GAS))
             return;
-        if (eclState.runspec().co2Storage())
-            setApproach(GasPvtApproach::Co2Gas);
-        else if (enableThermal && eclState.getSimulationConfig().isThermal())
+
+        if (!eclState.runspec().co2Storage() &&
+            enableThermal && eclState.getSimulationConfig().isThermal()) {
             setApproach(GasPvtApproach::ThermalGas);
-        else if (!eclState.getTableManager().getPvtgwTables().empty() && !eclState.getTableManager().getPvtgTables().empty())
-            setApproach(GasPvtApproach::WetHumidGas);
-        else if (!eclState.getTableManager().getPvtgTables().empty())
-            setApproach(GasPvtApproach::WetGas);
-        else if (eclState.getTableManager().hasTables("PVDG"))
-            setApproach(GasPvtApproach::DryGas);
-        else if (!eclState.getTableManager().getPvtgwTables().empty())
-            setApproach(GasPvtApproach::DryHumidGas);
+        } else {
+            setApproach(GasPvtThermal<Scalar>::chooseApproach(eclState));
+        }
 
         std::visit(VisitorOverloadSet{[&](auto& pvt)
                                       {
@@ -91,33 +81,14 @@ public:
 
     void setApproach(GasPvtApproach gasPvtAppr)
     {
-        switch (gasPvtAppr) {
-        case GasPvtApproach::DryGas:
-            gasPvt_ = DryGasPvt<Scalar>{};
-            break;
-
-        case GasPvtApproach::DryHumidGas:
-            gasPvt_ = DryHumidGasPvt<Scalar>{};
-            break;
-        
-        case GasPvtApproach::WetHumidGas:
-            gasPvt_ = WetHumidGasPvt<Scalar>{};
-            break;
-
-        case GasPvtApproach::WetGas:
-            gasPvt_ = WetGasPvt<Scalar>{};
-            break;
-
-        case GasPvtApproach::ThermalGas:
+        if (gasPvtAppr == GasPvtApproach::ThermalGas)
             gasPvt_ = GasPvtThermal<Scalar>{};
-            break;
-
-        case GasPvtApproach::Co2Gas:
-            gasPvt_ = Co2GasPvt<Scalar>{};
-            break;
-
-        case GasPvtApproach::NoGas:
-            throw std::logic_error("Not implemented: Gas PVT of this deck!");
+        else {
+            auto pvt = GasPvtThermal<Scalar>::initialize(gasPvtAppr);
+            std::visit([&](auto& param)
+                       {
+                           gasPvt_ = param;
+                       }, pvt);
         }
 
         gasPvtApproach_ = gasPvtAppr;
