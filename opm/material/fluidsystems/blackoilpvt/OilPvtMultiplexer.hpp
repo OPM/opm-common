@@ -34,6 +34,7 @@
 #include "LiveOilPvt.hpp"
 #include "OilPvtThermal.hpp"
 #include "BrineCo2Pvt.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -43,15 +44,6 @@
 #include <variant>
 
 namespace Opm {
-
-enum class OilPvtApproach {
-    NoOil,
-    LiveOil,
-    DeadOil,
-    ConstantCompressibilityOil,
-    ThermalOil,
-    BrineCo2
-};
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil
