@@ -830,7 +830,6 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/common/Valgrind.hpp
       opm/material/common/EnsureFinalized.hpp
       opm/material/common/quad.hpp
-      opm/material/common/OpmFinal.hpp
       opm/material/common/Spline.hpp
       opm/material/common/PolynomialUtils.hpp
       opm/material/common/UniformXTabulated2DFunction.hpp
