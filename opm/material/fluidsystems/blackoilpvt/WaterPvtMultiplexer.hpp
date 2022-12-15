@@ -29,9 +29,7 @@
 
 #include <opm/common/utility/Visitor.hpp>
 
-#include "ConstantCompressibilityWaterPvt.hpp"
-#include "ConstantCompressibilityBrinePvt.hpp"
-#include "WaterPvtThermal.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
@@ -62,12 +60,11 @@ public:
         if (!eclState.runspec().phases().active(Phase::WATER))
             return;
 
-        if (enableThermal && eclState.getSimulationConfig().isThermal())
+        if (enableThermal && eclState.getSimulationConfig().isThermal()) {
             setApproach(WaterPvtApproach::ThermalWater);
-        else if (!eclState.getTableManager().getPvtwTable().empty())
-            setApproach(WaterPvtApproach::ConstantCompressibilityWater);
-        else if (enableBrine && !eclState.getTableManager().getPvtwSaltTables().empty())
-            setApproach(WaterPvtApproach::ConstantCompressibilityBrine);
+        } else {
+            setApproach(WaterPvtThermal<Scalar,enableBrine>::chooseApproach(eclState));
+        }
 
         std::visit(VisitorOverloadSet{[&](auto& pvt)
                                       {
@@ -172,21 +169,14 @@ public:
 
     void setApproach(WaterPvtApproach appr)
     {
-        switch (appr) {
-        case WaterPvtApproach::ConstantCompressibilityWater:
-            waterPvt_ = ConstantCompressibilityWaterPvt<Scalar>{};
-            break;
-
-        case WaterPvtApproach::ConstantCompressibilityBrine:
-            waterPvt_ = ConstantCompressibilityBrinePvt<Scalar>{};
-            break;
-
-        case WaterPvtApproach::ThermalWater:
-            waterPvt_ = WaterPvtThermal<Scalar, enableBrine>{};
-            break;
-
-        case WaterPvtApproach::NoWater:
-            throw std::logic_error("Not implemented: Water PVT of this deck!");
+        if (appr == WaterPvtApproach::ThermalWater) {
+            waterPvt_ = WaterPvtThermal<Scalar,enableBrine>{};
+        } else  {
+            auto pvt = WaterPvtThermal<Scalar,enableBrine>::initialize(appr);
+            std::visit([&](const auto& param)
+                       {
+                           waterPvt_ = param;
+                       }, pvt);
         }
 
         approach_ = appr;
