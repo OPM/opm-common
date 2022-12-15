@@ -50,18 +50,6 @@ class SolventPvt
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    explicit SolventPvt() = default;
-    SolventPvt(const std::vector<Scalar>& solventReferenceDensity,
-               const std::vector<TabulatedOneDFunction>& inverseSolventB,
-               const std::vector<TabulatedOneDFunction>& solventMu,
-               const std::vector<TabulatedOneDFunction>& inverseSolventBMu)
-        : solventReferenceDensity_(solventReferenceDensity)
-        , inverseSolventB_(inverseSolventB)
-        , solventMu_(solventMu)
-        , inverseSolventBMu_(inverseSolventBMu)
-    {
-    }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for "solvent gas" using an ECL deck.
@@ -189,14 +177,6 @@ public:
 
     const std::vector<TabulatedOneDFunction>& inverseSolventBMu() const
     { return inverseSolventBMu_; }
-
-    bool operator==(const SolventPvt<Scalar>& data) const
-    {
-        return solventReferenceDensity_ == data.solventReferenceDensity_ &&
-               inverseSolventB_ == data.inverseSolventB_ &&
-               solventMu_ == data.solventMu_ &&
-               inverseSolventBMu_ == data.inverseSolventBMu_;
-    }
 
 private:
     std::vector<Scalar> solventReferenceDensity_;
