@@ -46,7 +46,7 @@ enum class EclTwoPhaseApproach {
  * Essentially, this class just stores the two parameter objects for
  * the twophase capillary pressure laws.
  */
-template<class Traits, class GasOilParamsT, class OilWaterParamsT, class GasWaterParamsT>
+template<class Traits, class GasOilLawT, class OilWaterLawT, class GasWaterLawT>
 class EclTwoPhaseMaterialParams : public EnsureFinalized
 {
     using Scalar = typename Traits::Scalar;
@@ -54,9 +54,9 @@ class EclTwoPhaseMaterialParams : public EnsureFinalized
 public:
     using EnsureFinalized :: finalize;
 
-    using GasOilParams = GasOilParamsT;
-    using OilWaterParams = OilWaterParamsT;
-    using GasWaterParams = GasWaterParamsT;
+    using GasOilParams = typename GasOilLawT::Params;
+    using OilWaterParams = typename OilWaterLawT::Params;
+    using GasWaterParams = typename GasWaterLawT::Params;
 
     void setApproach(EclTwoPhaseApproach newApproach)
     { approach_ = newApproach; }
