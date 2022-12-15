@@ -29,11 +29,7 @@
 
 #include <opm/common/utility/Visitor.hpp>
 
-#include "ConstantCompressibilityOilPvt.hpp"
-#include "DeadOilPvt.hpp"
-#include "LiveOilPvt.hpp"
-#include "OilPvtThermal.hpp"
-#include "BrineCo2Pvt.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/OilPvtThermal.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
@@ -71,18 +67,15 @@ public:
     {
         if (!eclState.runspec().phases().active(Phase::OIL))
             return;
+
         // TODO move the BrineCo2 approach to the waterPvtMultiplexer
         // when a proper gas-water simulator is supported
-        if (eclState.runspec().co2Storage())
-            setApproach(OilPvtApproach::BrineCo2);
-        else if (enableThermal && eclState.getSimulationConfig().isThermal())
+        if (!eclState.runspec().co2Storage() &&
+            enableThermal && eclState.getSimulationConfig().isThermal()) {
             setApproach(OilPvtApproach::ThermalOil);
-        else if (!eclState.getTableManager().getPvcdoTable().empty())
-            setApproach(OilPvtApproach::ConstantCompressibilityOil);
-        else if (eclState.getTableManager().hasTables("PVDO"))
-            setApproach(OilPvtApproach::DeadOil);
-        else if (!eclState.getTableManager().getPvtoTables().empty())
-            setApproach(OilPvtApproach::LiveOil);
+        } else {
+            setApproach(OilPvtThermal<Scalar>::chooseApproach(eclState));
+        }
 
         std::visit(VisitorOverloadSet{[&](auto& pvt)
                                      {
@@ -304,29 +297,14 @@ public:
 
     void setApproach(OilPvtApproach appr)
     {
-        switch (appr) {
-        case OilPvtApproach::LiveOil:
-            oilPvt_ = LiveOilPvt<Scalar>{};
-            break;
-
-        case OilPvtApproach::DeadOil:
-            oilPvt_ = DeadOilPvt<Scalar>{};
-            break;
-
-        case OilPvtApproach::ConstantCompressibilityOil:
-            oilPvt_ = ConstantCompressibilityOilPvt<Scalar>{};
-            break;
-
-        case OilPvtApproach::ThermalOil:
+        if (appr == OilPvtApproach::ThermalOil) {
             oilPvt_ = OilPvtThermal<Scalar>{};
-            break;
-
-        case OilPvtApproach::BrineCo2:
-            oilPvt_ = BrineCo2Pvt<Scalar>{};
-            break;
-
-        case OilPvtApproach::NoOil:
-            throw std::logic_error("Not implemented: Oil PVT of this deck!");
+        } else {
+            auto pvt = OilPvtThermal<Scalar>::initialize(appr);
+            std::visit([&](const auto& param)
+                       {
+                           oilPvt_ = param;
+                       }, pvt);
         }
 
         approach_ = appr;

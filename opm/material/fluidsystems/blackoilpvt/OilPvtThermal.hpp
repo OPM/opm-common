@@ -572,7 +572,7 @@ public:
     { return enableInternalEnergy_; }
 
     const std::vector<Scalar>& oilJTRefPres() const
-    { return  oilJTRefPres_; }
+    { return oilJTRefPres_; }
 
      const std::vector<Scalar>&  oilJTC() const
     { return oilJTC_; }
