@@ -41,6 +41,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/numeric/calculateCellVol.cpp
       src/opm/common/utility/shmatch.cpp
       src/opm/common/utility/TimeService.cpp
+      src/opm/material/components/CO2.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
 )
 if(ENABLE_ECL_INPUT)
@@ -844,7 +845,6 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/common/Means.hpp
       opm/material/common/IntervalTabulated2DFunction.hpp
       opm/material/common/Tabulated1DFunction.hpp
-      opm/material/components/co2tables.inc
       opm/material/densead/Evaluation9.hpp
       opm/material/densead/Evaluation8.hpp
       opm/material/densead/Evaluation7.hpp

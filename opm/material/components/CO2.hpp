@@ -32,6 +32,7 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/UniformTabulated2DFunction.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -48,12 +49,16 @@ namespace Opm {
  * is not a top priority, the much simpler component \c Opm::SimpleCO2 can be
  * used instead
  */
-template <class Scalar, class CO2Tables>
-class CO2 : public Component<Scalar, CO2<Scalar, CO2Tables> >
+template <class Scalar>
+class CO2 : public Component<Scalar, CO2<Scalar>>
 {
     static constexpr Scalar R = Constants<Scalar>::R;
+    static const UniformTabulated2DFunction<double>& tabulatedEnthalpy;
+    static const UniformTabulated2DFunction<double>& tabulatedDensity;
 
 public:
+    static const Scalar brineSalinity;
+
     /*!
      * \brief A human readable name for the CO2.
      */
@@ -93,26 +98,26 @@ public:
     /*!
      * \brief Returns the pressure [Pa] at CO2's triple point.
      */
-    static Scalar minTabulatedPressure()
-    { return CO2Tables::tabulatedEnthalpy.minPress(); /* [N/m^2] */ }
+//    static Scalar minTabulatedPressure()
+//    { return tabulatedEnthalpy.minPress(); /* [N/m^2] */ }
 
     /*!
      * \brief Returns the pressure [Pa] at CO2's triple point.
      */
-    static Scalar maxTabulatedPressure()
-    { return CO2Tables::tabulatedEnthalpy.maxPress(); /* [N/m^2] */ }
+//    static Scalar maxTabulatedPressure()
+//    { return tabulatedEnthalpy.maxPress(); /* [N/m^2] */ }
 
     /*!
      * \brief Returns the pressure [Pa] at CO2's triple point.
      */
-    static Scalar minTabulatedTemperature()
-    { return CO2Tables::tabulatedEnthalpy.minTemp(); /* [N/m^2] */ }
+//    static Scalar minTabulatedTemperature()
+//    { return tabulatedEnthalpy.minTemp(); /* [N/m^2] */ }
 
     /*!
      * \brief Returns the pressure [Pa] at CO2's triple point.
      */
-    static Scalar maxTabulatedTemperature()
-    { return CO2Tables::tabulatedEnthalpy.maxTemp(); /* [N/m^2] */ }
+//    static Scalar maxTabulatedTemperature()
+//    { return tabulatedEnthalpy.maxTemp(); /* [N/m^2] */ }
 
     /*!
      * \brief The vapor pressure in [N/m^2] of pure CO2
@@ -165,7 +170,7 @@ public:
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
-        return CO2Tables::tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
+        return tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -190,7 +195,7 @@ public:
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
-        return CO2Tables::tabulatedDensity.eval(temperature, pressure, extrapolate);
+        return tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 
     /*!

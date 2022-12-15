@@ -38,7 +38,6 @@
 #include <opm/material/components/TabulatedComponent.hpp>
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
-#include <opm/material/components/co2tables.inc>
 
 #include <vector>
 
@@ -69,7 +68,7 @@ class BrineCo2Pvt
 public:
     using H2O = SimpleHuDuanH2O<Scalar>;
     using Brine = ::Opm::Brine<Scalar, H2O>;
-    using CO2 = ::Opm::CO2<Scalar, CO2Tables>;
+    using CO2 = ::Opm::CO2<Scalar>;
 
     //! The binary coefficients for brine and CO2 used by this fluid system
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;

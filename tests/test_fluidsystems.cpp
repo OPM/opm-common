@@ -245,7 +245,7 @@ void testAllFluidSystems()
     }
 
     // Brine -- CO2
-    {   typedef Opm::BrineCO2FluidSystem<Scalar, CO2Tables> FluidSystem;
+    {   typedef Opm::BrineCO2FluidSystem<Scalar> FluidSystem;
         checkFluidSystem<Scalar, FluidSystem, FluidStateEval, LhsEval>(); }
 
     // H2O -- N2
