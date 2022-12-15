@@ -46,21 +46,6 @@ template <class Scalar>
 class ConstantCompressibilityWaterPvt
 {
 public:
-    ConstantCompressibilityWaterPvt() = default;
-    ConstantCompressibilityWaterPvt(const std::vector<Scalar>& waterReferenceDensity,
-                                    const std::vector<Scalar>& waterReferencePressure,
-                                    const std::vector<Scalar>& waterReferenceFormationVolumeFactor,
-                                    const std::vector<Scalar>& waterCompressibility,
-                                    const std::vector<Scalar>& waterViscosity,
-                                    const std::vector<Scalar>& waterViscosibility)
-        : waterReferenceDensity_(waterReferenceDensity)
-        , waterReferencePressure_(waterReferencePressure)
-        , waterReferenceFormationVolumeFactor_(waterReferenceFormationVolumeFactor)
-        , waterCompressibility_(waterCompressibility)
-        , waterViscosity_(waterViscosity)
-        , waterViscosibility_(waterViscosibility)
-    { }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent water viscosity and density
@@ -255,7 +240,7 @@ public:
                                              const Evaluation& /*saltconcentration*/) const
     { return 0.0; /* this is dead water! */ }
 
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }
 
     const std::vector<Scalar>& waterReferencePressure() const
@@ -272,16 +257,6 @@ public:
 
     const std::vector<Scalar>& waterViscosibility() const
     { return waterViscosibility_; }
-
-    bool operator==(const ConstantCompressibilityWaterPvt<Scalar>& data) const
-    {
-        return this->waterReferenceDensity_ == data.waterReferenceDensity_ &&
-               this->waterReferencePressure() == data.waterReferencePressure() &&
-               this->waterReferenceFormationVolumeFactor() == data.waterReferenceFormationVolumeFactor() &&
-               this->waterCompressibility() == data.waterCompressibility() &&
-               this->waterViscosity() == data.waterViscosity() &&
-               this->waterViscosibility() == data.waterViscosibility();
-    }
 
 private:
     std::vector<Scalar> waterReferenceDensity_;
