@@ -55,35 +55,6 @@ public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    WetGasPvt()
-    {
-        vapPar1_ = 0.0;
-    }
-
-    WetGasPvt(const std::vector<Scalar>& gasReferenceDensity,
-              const std::vector<Scalar>& oilReferenceDensity,
-              const std::vector<TabulatedTwoDFunction>& inverseGasB,
-              const std::vector<TabulatedOneDFunction>& inverseSaturatedGasB,
-              const std::vector<TabulatedTwoDFunction>& gasMu,
-              const std::vector<TabulatedTwoDFunction>& inverseGasBMu,
-              const std::vector<TabulatedOneDFunction>& inverseSaturatedGasBMu,
-              const std::vector<TabulatedOneDFunction>& saturatedOilVaporizationFactorTable,
-              const std::vector<TabulatedOneDFunction>& saturationPressure,
-              Scalar vapPar1)
-        : gasReferenceDensity_(gasReferenceDensity)
-        , oilReferenceDensity_(oilReferenceDensity)
-        , inverseGasB_(inverseGasB)
-        , inverseSaturatedGasB_(inverseSaturatedGasB)
-        , gasMu_(gasMu)
-        , inverseGasBMu_(inverseGasBMu)
-        , inverseSaturatedGasBMu_(inverseSaturatedGasBMu)
-        , saturatedOilVaporizationFactorTable_(saturatedOilVaporizationFactorTable)
-        , saturationPressure_(saturationPressure)
-        , vapPar1_(vapPar1)
-    {
-    }
-
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for wet gas using an ECL deck.
@@ -499,10 +470,10 @@ public:
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
     const std::vector<TabulatedTwoDFunction>& inverseGasB() const {
@@ -535,20 +506,6 @@ public:
 
     Scalar vapPar1() const {
         return vapPar1_;
-    }
-
-    bool operator==(const WetGasPvt<Scalar>& data) const
-    {
-        return this->gasReferenceDensity_ == data.gasReferenceDensity_ &&
-               this->oilReferenceDensity_ == data.oilReferenceDensity_ &&
-               this->inverseGasB() == data.inverseGasB() &&
-               this->inverseSaturatedGasB() == data.inverseSaturatedGasB() &&
-               this->gasMu() == data.gasMu() &&
-               this->inverseGasBMu() == data.inverseGasBMu() &&
-               this->inverseSaturatedGasBMu() == data.inverseSaturatedGasBMu() &&
-               this->saturatedOilVaporizationFactorTable() == data.saturatedOilVaporizationFactorTable() &&
-               this->saturationPressure() == data.saturationPressure() &&
-               this->vapPar1() == data.vapPar1();
     }
 
 private:
@@ -589,7 +546,7 @@ private:
     std::vector<TabulatedOneDFunction> saturatedOilVaporizationFactorTable_;
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
-    Scalar vapPar1_;
+    Scalar vapPar1_ = 0.0;
 };
 
 } // namespace Opm
