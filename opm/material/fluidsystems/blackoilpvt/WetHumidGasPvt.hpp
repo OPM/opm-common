@@ -55,47 +55,6 @@ public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    WetHumidGasPvt()
-    {
-        vapPar1_ = 0.0;
-    }
-
-    WetHumidGasPvt(const std::vector<Scalar>& gasReferenceDensity,
-              const std::vector<Scalar>& oilReferenceDensity,
-              const std::vector<Scalar>& waterReferenceDensity,
-              const std::vector<TabulatedTwoDFunction>& inverseGasBRvwSat,
-              const std::vector<TabulatedTwoDFunction>& inverseGasBRvSat,
-              const std::vector<TabulatedOneDFunction>& inverseSaturatedGasB,
-              const std::vector<TabulatedTwoDFunction>& gasMuRvwSat,
-              const std::vector<TabulatedTwoDFunction>& gasMuRvSat,
-              const std::vector<TabulatedTwoDFunction>& inverseGasBMuRvwSat,
-              const std::vector<TabulatedTwoDFunction>& inverseGasBMuRvSat,
-              const std::vector<TabulatedOneDFunction>& inverseSaturatedGasBMu,
-              const std::vector<TabulatedOneDFunction>& saturatedWaterVaporizationFactorTable,
-              const std::vector<TabulatedTwoDFunction>& saturatedWaterVaporizationSaltFactorTable,
-              const std::vector<TabulatedOneDFunction>& saturatedOilVaporizationFactorTable,
-              const std::vector<TabulatedOneDFunction>& saturationPressure,
-              Scalar vapPar1)
-        : gasReferenceDensity_(gasReferenceDensity)
-        , oilReferenceDensity_(oilReferenceDensity)
-        , waterReferenceDensity_(waterReferenceDensity)
-        , inverseGasBRvwSat_(inverseGasBRvwSat) // inverse of Bg evaluated at saturated water-gas ratio (Rvw) values; pvtg
-        , inverseGasBRvSat_(inverseGasBRvSat) // inverse of Bg evaluated at saturated oil-gas ratio (Rv) values; pvtgw
-        , inverseSaturatedGasB_(inverseSaturatedGasB) // evaluated at saturated water-gas ratio (Rvw) and oil-gas ratio (Rv) values; pvtgw
-        , gasMuRvwSat_(gasMuRvwSat) // Mug evaluated at saturated water-gas ratio (Rvw) values; pvtg
-        , gasMuRvSat_(gasMuRvSat) // Mug evaluated at saturated oil-gas ratio (Rv) values; pvtgw
-        , inverseGasBMuRvwSat_(inverseGasBMuRvwSat) // Bg^-1*Mug evaluated at saturated water-gas ratio (Rvw) values; pvtg
-        , inverseGasBMuRvSat_(inverseGasBMuRvSat) // Bg^-1*Mug evaluated at saturated oil-gas ratio (Rv) values; pvtgw
-        , inverseSaturatedGasBMu_(inverseSaturatedGasBMu) //pvtgw
-        , saturatedWaterVaporizationFactorTable_(saturatedWaterVaporizationFactorTable) //pvtgw
-        , saturatedWaterVaporizationSaltFactorTable_(saturatedWaterVaporizationSaltFactorTable) //rwgsalt
-        , saturatedOilVaporizationFactorTable_(saturatedOilVaporizationFactorTable) //pvtg
-        , saturationPressure_(saturationPressure)
-        , vapPar1_(vapPar1)
-    {
-    }
-
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for wet gas using an ECL deck.
@@ -488,13 +447,13 @@ public:
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-     const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }
 
     const std::vector<TabulatedTwoDFunction>& inverseGasB() const {
@@ -535,21 +494,6 @@ public:
 
     Scalar vapPar1() const {
         return vapPar1_;
-    }
-
-    bool operator==(const WetHumidGasPvt<Scalar>& data) const
-    {
-        return this->gasReferenceDensity_ == data.gasReferenceDensity_ &&
-               this->oilReferenceDensity_ == data.oilReferenceDensity_ &&
-               this->waterReferenceDensity_ == data.waterReferenceDensity_ &&
-               this->inverseGasB() == data.inverseGasB() &&
-               this->inverseSaturatedGasB() == data.inverseSaturatedGasB() &&
-               this->gasMu() == data.gasMu() &&
-               this->inverseGasBMu() == data.inverseGasBMu() &&
-               this->inverseSaturatedGasBMu() == data.inverseSaturatedGasBMu() &&
-               this->saturatedWaterVaporizationFactorTable() == data.saturatedWaterVaporizationFactorTable() &&
-               this->saturationPressure() == data.saturationPressure() &&
-               this->vapPar1() == data.vapPar1();
     }
 
 private:
@@ -596,7 +540,7 @@ private:
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
     bool enableRwgSalt_ = false;
-    Scalar vapPar1_;
+    Scalar vapPar1_ = 0.0;
 };
 
 } // namespace Opm
