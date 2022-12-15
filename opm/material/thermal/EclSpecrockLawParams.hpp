@@ -34,6 +34,8 @@
 
 namespace Opm {
 
+template <class ScalarT, class ParamsT> class EclSpecrockLaw;
+
 /*!
  * \brief The default implementation of a parameter object for the
  *        ECL thermal law based on SPECROCK.
@@ -45,11 +47,7 @@ class EclSpecrockLawParams : public EnsureFinalized
 
 public:
     using Scalar = ScalarT;
-
-    EclSpecrockLawParams(const EclSpecrockLawParams&) = default;
-
-    EclSpecrockLawParams()
-    { }
+    using Law = EclSpecrockLaw<Scalar,EclSpecrockLawParams<Scalar>>;
 
     /*!
      * \brief Specify the volumetric internal energy of rock via heat capacities.

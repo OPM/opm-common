@@ -20,38 +20,22 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
-/*!
- * \file
- * \copydoc Opm::NullSolidEnergyLaw
- */
-#ifndef OPM_NULL_SOLID_ENERGY_LAW_HPP
-#define OPM_NULL_SOLID_ENERGY_LAW_HPP
 
-#include <opm/material/thermal/NullSolidEnergyLawParams.hpp>
+#ifndef OPM_NULL_SOLID_ENERGY_LAW_PARAMS_HPP
+#define OPM_NULL_SOLID_ENERGY_LAW_PARAMS_HPP
 
-namespace Opm
-{
+namespace Opm {
+
+template <class ScalarT> class NullSolidEnergyLaw;
+
 /*!
- * \ingroup material
- *
- * \brief Implements a solid energy storage law which just returns 0.
+ * \brief Dummy parameter class for the null solid energy law.
  */
 template <class ScalarT>
-class NullSolidEnergyLaw
+class NullSolidEnergyLawParams
 {
-public:
-    using Params = NullSolidEnergyLawParams<ScalarT>;
-    using Scalar = ScalarT;
-
-    /*!
-     * \brief Given a fluid state, compute the volumetric internal energy of the solid
-     *        matrix [W/m^3].
-     *
-     * This solid energy law simply returns 0.
-     */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation solidInternalEnergy(const Params&, const FluidState&)
-    { return 0.0; }
+ public:
+    using Law = NullSolidEnergyLaw<ScalarT>;
 };
 
 } // namespace Opm

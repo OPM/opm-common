@@ -41,7 +41,7 @@ namespace Opm
  */
 template <class ScalarT,
           class FluidSystem,
-          class ParamsT = EclHeatcrLawParams<ScalarT> >
+          class ParamsT = EclHeatcrLawParams<ScalarT,FluidSystem>>
 class EclHeatcrLaw
 {
 public:

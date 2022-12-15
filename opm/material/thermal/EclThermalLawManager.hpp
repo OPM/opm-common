@@ -66,7 +66,7 @@ public:
 
     EclThermalLawManager()
     {
-        solidEnergyApproach_ = EclSolidEnergyApproach::Undefined;
+        solidEnergyApproach_ = EclSolidEnergyApproach::Null;
         thermalConductivityApproach_ = EclThermalConductionApproach::Undefined;
     }
 
@@ -153,11 +153,12 @@ private:
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             auto& elemParam = solidEnergyLawParams_[elemIdx];
             elemParam.setSolidEnergyApproach(EclSolidEnergyApproach::Heatcr);
-            auto& heatcrElemParams = elemParam.template getRealParams<EclSolidEnergyApproach::Heatcr>();
-
-            heatcrElemParams.setReferenceRockHeatCapacity(heatcrData[elemIdx]);
-            heatcrElemParams.setDRockHeatCapacity_dT(heatcrtData[elemIdx]);
-            heatcrElemParams.finalize();
+            elemParam.visit1([&](HeatcrLawParams& heatcrElemParams)
+                             {
+                                 heatcrElemParams.setReferenceRockHeatCapacity(heatcrData[elemIdx]);
+                                 heatcrElemParams.setDRockHeatCapacity_dT(heatcrtData[elemIdx]);
+                                 heatcrElemParams.finalize();
+                             });
             elemParam.finalize();
         }
     }
@@ -187,15 +188,14 @@ private:
             const auto& specrockTable = tableManager.getSpecrockTables()[satnumIdx];
 
             auto& multiplexerParams = solidEnergyLawParams_[satnumIdx];
-
             multiplexerParams.setSolidEnergyApproach(EclSolidEnergyApproach::Specrock);
-
-            auto& specrockParams = multiplexerParams.template getRealParams<EclSolidEnergyApproach::Specrock>();
-            const auto& temperatureColumn = specrockTable.getColumn("TEMPERATURE");
-            const auto& cvRockColumn = specrockTable.getColumn("CV_ROCK");
-            specrockParams.setHeatCapacities(temperatureColumn, cvRockColumn);
-            specrockParams.finalize();
-
+            multiplexerParams.visit1([&](SpecrockLawParams& specrockParams)
+                                     {
+                                        const auto& temperatureColumn = specrockTable.getColumn("TEMPERATURE");
+                                        const auto& cvRockColumn = specrockTable.getColumn("CV_ROCK");
+                                        specrockParams.setHeatCapacities(temperatureColumn, cvRockColumn);
+                                        specrockParams.finalize();
+                                     });
             multiplexerParams.finalize();
         }
     }

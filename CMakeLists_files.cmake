@@ -887,6 +887,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/SomertonThermalConductionLaw.hpp
       opm/material/thermal/EclSpecrockLaw.hpp
       opm/material/thermal/NullSolidEnergyLaw.hpp
+      opm/material/thermal/NullSolidEnergyLawParams.hpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
