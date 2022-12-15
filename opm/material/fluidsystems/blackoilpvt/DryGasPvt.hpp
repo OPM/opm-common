@@ -52,18 +52,6 @@ class DryGasPvt
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    explicit DryGasPvt() = default;
-    DryGasPvt(const std::vector<Scalar>& gasReferenceDensity,
-              const std::vector<TabulatedOneDFunction>& inverseGasB,
-              const std::vector<TabulatedOneDFunction>& gasMu,
-              const std::vector<TabulatedOneDFunction>& inverseGasBMu)
-        : gasReferenceDensity_(gasReferenceDensity)
-        , inverseGasB_(inverseGasB)
-        , gasMu_(gasMu)
-        , inverseGasBMu_(inverseGasBMu)
-    {
-    }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for dry gas using an ECL deck.
@@ -275,7 +263,7 @@ public:
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
     const std::vector<TabulatedOneDFunction>& inverseGasB() const
@@ -286,14 +274,6 @@ public:
 
     const std::vector<TabulatedOneDFunction> inverseGasBMu() const
     { return inverseGasBMu_; }
-
-    bool operator==(const DryGasPvt<Scalar>& data) const
-    {
-        return gasReferenceDensity_ == data.gasReferenceDensity_ &&
-               inverseGasB_ == data.inverseGasB_ &&
-               gasMu_ == data.gasMu_ &&
-               inverseGasBMu_ == data.inverseGasBMu_;
-    }
 
 private:
     std::vector<Scalar> gasReferenceDensity_;
