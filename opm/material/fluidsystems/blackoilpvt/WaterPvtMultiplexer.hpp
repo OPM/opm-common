@@ -30,6 +30,7 @@
 #include "ConstantCompressibilityWaterPvt.hpp"
 #include "ConstantCompressibilityBrinePvt.hpp"
 #include "WaterPvtThermal.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -58,13 +59,6 @@
     }
 
 namespace Opm {
-
-enum class WaterPvtApproach {
-    NoWater,
-    ConstantCompressibilityBrine,
-    ConstantCompressibilityWater,
-    ThermalWater
-};
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the water
