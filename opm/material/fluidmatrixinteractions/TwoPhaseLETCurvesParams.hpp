@@ -40,12 +40,15 @@ namespace Opm {
  *
  *\see TwoPhaseLETCurves
  */
+
+template<class TraitsT, class ParamsT> class TwoPhaseLETCurves;
 template <class TraitsT>
 class TwoPhaseLETCurvesParams : public EnsureFinalized
 {
     using Scalar = typename TraitsT::Scalar;
 
 public:
+    using Law = TwoPhaseLETCurves<TraitsT, TwoPhaseLETCurvesParams<TraitsT>>;
     using Traits = TraitsT;
 
     static constexpr int wIdx = 0; //wetting phase index for two phase let
