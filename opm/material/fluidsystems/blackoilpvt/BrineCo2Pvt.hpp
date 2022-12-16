@@ -76,16 +76,6 @@ public:
 
     explicit BrineCo2Pvt() = default;
 
-    BrineCo2Pvt(const std::vector<Scalar>& brineReferenceDensity,
-                const std::vector<Scalar>& co2ReferenceDensity,
-                const std::vector<Scalar>& salinity)
-        : brineReferenceDensity_(brineReferenceDensity),
-          co2ReferenceDensity_(co2ReferenceDensity),
-          salinity_(salinity)
-    {
-        Brine::salinity = salinity[0];
-    }
-
     BrineCo2Pvt(const std::vector<Scalar>& salinity,
                 Scalar T_ref = 288.71, //(273.15 + 15.56)
                 Scalar P_ref = 101325)
@@ -266,12 +256,6 @@ public:
 
     const Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
-
-    bool operator==(const BrineCo2Pvt<Scalar>& data) const
-    {
-        return co2ReferenceDensity_ == data.co2ReferenceDensity_ &&
-                brineReferenceDensity_ == data.brineReferenceDensity_;
-    }
 
     template <class Evaluation>
     Evaluation diffusionCoefficient(const Evaluation& temperature,
@@ -513,7 +497,6 @@ private:
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/
     }
-
 };
 
 } // namespace Opm
