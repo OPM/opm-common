@@ -66,15 +66,15 @@ public:
                                        const FluidState& fluidState)
     {
         switch (params.thermalConductionApproach()) {
-        case Params::thconrApproach:
+        case EclThermalConductionApproach::Thconr:
             // relevant ECL keywords: THCONR and THCONSF
-            return ThconrLaw::thermalConductivity(params.template getRealParams<Params::thconrApproach>(), fluidState);
+            return ThconrLaw::thermalConductivity(params.template getRealParams<EclThermalConductionApproach::Thconr>(), fluidState);
 
-        case Params::thcApproach:
+        case EclThermalConductionApproach::Thc:
             // relevant ECL keywords: THCROCK, THCOIL, THCGAS and THCWATER
-            return ThcLaw::thermalConductivity(params.template getRealParams<Params::thcApproach>(), fluidState);
+            return ThcLaw::thermalConductivity(params.template getRealParams<EclThermalConductionApproach::Thc>(), fluidState);
 
-        case Params::nullApproach:
+        case EclThermalConductionApproach::Null:
             // relevant ECL keywords: none or none recognized
             return NullLaw::thermalConductivity(0, fluidState);
 

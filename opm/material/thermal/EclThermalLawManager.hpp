@@ -99,8 +99,7 @@ private:
     void initNullCond_();
 
 private:
-    using ConductionApproach = typename ThermalConductionLawParams::ThermalConductionApproach;
-    ConductionApproach thermalConductivityApproach_ = ThermalConductionLawParams::undefinedApproach;
+    EclThermalConductionApproach thermalConductivityApproach_ = EclThermalConductionApproach::Undefined;
     EclSolidEnergyApproach solidEnergyApproach_ = EclSolidEnergyApproach::Undefined;
 
     std::vector<unsigned> elemToSatnumIdx_;

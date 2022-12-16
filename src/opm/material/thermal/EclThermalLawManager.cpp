@@ -99,12 +99,12 @@ EclThermalLawManager<Scalar,FluidSystem>::
 thermalConductionLawParams(unsigned elemIdx) const
 {
     switch (thermalConductivityApproach_) {
-    case ThermalConductionLawParams::thconrApproach:
-    case ThermalConductionLawParams::thcApproach:
+    case EclThermalConductionApproach::Thconr:
+    case EclThermalConductionApproach::Thc:
         assert(elemIdx <  thermalConductionLawParams_.size());
         return thermalConductionLawParams_[elemIdx];
 
-    case ThermalConductionLawParams::nullApproach:
+    case EclThermalConductionApproach::Null:
         return thermalConductionLawParams_[0];
 
     default:
@@ -189,7 +189,7 @@ template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
 initThconr_(const EclipseState& eclState, size_t numElems)
 {
-    thermalConductivityApproach_ = ThermalConductionLawParams::thconrApproach;
+    thermalConductivityApproach_ = EclThermalConductionApproach::Thconr;
 
     const auto& fp = eclState.fieldProps();
     std::vector<double> thconrData;
@@ -203,8 +203,8 @@ initThconr_(const EclipseState& eclState, size_t numElems)
     thermalConductionLawParams_.resize(numElems);
     for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
         auto& elemParams = thermalConductionLawParams_[elemIdx];
-        elemParams.setThermalConductionApproach(ThermalConductionLawParams::thconrApproach);
-        auto& thconrElemParams = elemParams.template getRealParams<ThermalConductionLawParams::thconrApproach>();
+        elemParams.setThermalConductionApproach(EclThermalConductionApproach::Thconr);
+        auto& thconrElemParams = elemParams.template getRealParams<EclThermalConductionApproach::Thconr>();
 
         double thconr = thconrData.empty()   ? 0.0 : thconrData[elemIdx];
         double thconsf = thconsfData.empty() ? 0.0 : thconsfData[elemIdx];
@@ -220,7 +220,7 @@ template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
 initThc_(const EclipseState& eclState, size_t numElems)
 {
-    thermalConductivityApproach_ = ThermalConductionLawParams::thcApproach;
+    thermalConductivityApproach_ = EclThermalConductionApproach::Thc;
 
     const auto& fp = eclState.fieldProps();
     std::vector<double> thcrockData;
@@ -245,8 +245,8 @@ initThc_(const EclipseState& eclState, size_t numElems)
     thermalConductionLawParams_.resize(numElems);
     for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
         auto& elemParams = thermalConductionLawParams_[elemIdx];
-        elemParams.setThermalConductionApproach(ThermalConductionLawParams::thcApproach);
-        auto& thcElemParams = elemParams.template getRealParams<ThermalConductionLawParams::thcApproach>();
+        elemParams.setThermalConductionApproach(EclThermalConductionApproach::Thc);
+        auto& thcElemParams = elemParams.template getRealParams<EclThermalConductionApproach::Thc>();
 
         thcElemParams.setPorosity(poroData[elemIdx]);
         double thcrock = thcrockData.empty()    ? 0.0 : thcrockData[elemIdx];
@@ -267,7 +267,7 @@ template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
 initNullCond_()
 {
-    thermalConductivityApproach_ = ThermalConductionLawParams::nullApproach;
+    thermalConductivityApproach_ = EclThermalConductionApproach::Null;
 
     thermalConductionLawParams_.resize(1);
     thermalConductionLawParams_[0].finalize();
