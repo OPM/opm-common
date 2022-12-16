@@ -55,7 +55,9 @@ namespace Opm {
 template <class TraitsT,
           class GasOilMaterialLawT,
           class OilWaterMaterialLawT,
-          class ParamsT = EclStone1MaterialParams<TraitsT, GasOilMaterialLawT, OilWaterMaterialLawT> >
+          class ParamsT = EclStone1MaterialParams<TraitsT,
+                                                  GasOilMaterialLawT,
+                                                  OilWaterMaterialLawT>>
 class EclStone1Material : public TraitsT
 {
 public:

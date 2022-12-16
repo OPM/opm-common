@@ -33,6 +33,11 @@
 
 namespace Opm {
 
+template<class Traits,
+         class GasOilLawT,
+         class OilWaterLawT,
+         class Params> class EclDefaultMaterial;
+
 /*!
  * \brief Default implementation for the parameters required by the
  *        default three-phase capillary pressure model used by
@@ -41,7 +46,7 @@ namespace Opm {
  * Essentially, this class just stores the two parameter objects for
  * the twophase capillary pressure laws.
  */
-template<class Traits, class GasOilParamsT, class OilWaterParamsT>
+template<class Traits, class GasOilLawT, class OilWaterLawT>
 class EclDefaultMaterialParams : public EnsureFinalized
 {
     using Scalar = typename Traits::Scalar;
@@ -49,15 +54,10 @@ class EclDefaultMaterialParams : public EnsureFinalized
 public:
     using EnsureFinalized :: finalize;
 
-    using GasOilParams = GasOilParamsT;
-    using OilWaterParams = OilWaterParamsT;
-
-    /*!
-     * \brief The default constructor.
-     */
-    EclDefaultMaterialParams()
-    {
-    }
+    using GasOilParams = typename GasOilLawT::Params;
+    using OilWaterParams = typename OilWaterLawT::Params;
+    using Material = EclDefaultMaterial<Traits,GasOilLawT,OilWaterLawT,
+                                        EclDefaultMaterialParams<Traits,GasOilLawT,OilWaterLawT>>;
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.
@@ -131,7 +131,7 @@ private:
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;
 
-    Scalar Swl_;
+    Scalar Swl_{};
 };
 } // namespace Opm
 

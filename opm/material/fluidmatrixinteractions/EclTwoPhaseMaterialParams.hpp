@@ -33,6 +33,12 @@
 
 namespace Opm {
 
+template <class TraitsT,
+          class GasOilMaterialLawT,
+          class OilWaterMaterialLawT,
+          class GasWaterMaterialLawT,
+          class ParamsT> class EclTwoPhaseMaterial;
+
 enum class EclTwoPhaseApproach {
     GasOil,
     OilWater,
@@ -46,7 +52,7 @@ enum class EclTwoPhaseApproach {
  * Essentially, this class just stores the two parameter objects for
  * the twophase capillary pressure laws.
  */
-template<class Traits, class GasOilParamsT, class OilWaterParamsT, class GasWaterParamsT>
+template<class Traits, class GasOilLawT, class OilWaterLawT, class GasWaterLawT>
 class EclTwoPhaseMaterialParams : public EnsureFinalized
 {
     using Scalar = typename Traits::Scalar;
@@ -54,16 +60,12 @@ class EclTwoPhaseMaterialParams : public EnsureFinalized
 public:
     using EnsureFinalized :: finalize;
 
-    using GasOilParams = GasOilParamsT;
-    using OilWaterParams = OilWaterParamsT;
-    using GasWaterParams = GasWaterParamsT;
-
-    /*!
-     * \brief The default constructor.
-     */
-    EclTwoPhaseMaterialParams()
-    {
-    }
+    using GasOilParams = typename GasOilLawT::Params;
+    using OilWaterParams = typename OilWaterLawT::Params;
+    using GasWaterParams = typename GasWaterLawT::Params;
+    using Material = EclTwoPhaseMaterial<Traits,GasOilLawT,OilWaterLawT,GasWaterLawT,
+                                         EclTwoPhaseMaterialParams<Traits,GasOilLawT,
+                                                                   OilWaterLawT,GasWaterLawT>>;
 
     void setApproach(EclTwoPhaseApproach newApproach)
     { approach_ = newApproach; }
@@ -126,7 +128,7 @@ public:
     { gasWaterParams_ = val; }
     
 private:
-    EclTwoPhaseApproach approach_;
+    EclTwoPhaseApproach approach_ = EclTwoPhaseApproach::GasOil;
 
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;

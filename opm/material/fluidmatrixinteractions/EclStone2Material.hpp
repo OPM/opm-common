@@ -55,8 +55,8 @@ template <class TraitsT,
           class GasOilMaterialLawT,
           class OilWaterMaterialLawT,
           class ParamsT = EclStone2MaterialParams<TraitsT,
-                                                   typename GasOilMaterialLawT::Params,
-                                                   typename OilWaterMaterialLawT::Params> >
+                                                  GasOilMaterialLawT,
+                                                  OilWaterMaterialLawT>>
 class EclStone2Material : public TraitsT
 {
 public:

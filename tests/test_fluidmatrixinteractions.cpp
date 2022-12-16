@@ -229,7 +229,7 @@ void testThreePhaseApi()
 
         // make sure the two-phase specific methods are present
         const FluidState fs;
-        const typename MaterialLaw::Params params;
+        const typename MaterialLaw::Params params{};
 
         [[maybe_unused]] Scalar v;
         v = MaterialLaw::template pcnw<FluidState, Scalar>(params, fs);

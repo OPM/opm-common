@@ -50,9 +50,9 @@ template <class TraitsT,
           class OilWaterMaterialLawT,
           class GasWaterMaterialLawT,
           class ParamsT = EclTwoPhaseMaterialParams<TraitsT,
-                                                    typename GasOilMaterialLawT::Params,
-                                                    typename OilWaterMaterialLawT::Params,
-                                                    typename GasWaterMaterialLawT::Params> >
+                                                    GasOilMaterialLawT,
+                                                    OilWaterMaterialLawT,
+                                                    GasWaterMaterialLawT>>
 class EclTwoPhaseMaterial : public TraitsT
 {
 public:

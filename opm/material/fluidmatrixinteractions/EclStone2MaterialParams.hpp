@@ -33,6 +33,11 @@
 
 namespace Opm {
 
+template <class TraitsT,
+          class GasOilMaterialLawT,
+          class OilWaterMaterialLawT,
+          class ParamsT> class EclStone2Material;
+
 /*!
  * \brief Default implementation for the parameters required by the
  *        three-phase capillary pressure/relperm Stone 2 model used by
@@ -41,7 +46,7 @@ namespace Opm {
  * Essentially, this class just stores the two parameter objects for
  * the twophase capillary pressure laws.
  */
-template<class Traits, class GasOilParamsT, class OilWaterParamsT>
+template<class Traits, class GasOilLawT, class OilWaterLawT>
 class EclStone2MaterialParams : public EnsureFinalized
 {
     using Scalar = typename Traits::Scalar;
@@ -49,15 +54,10 @@ class EclStone2MaterialParams : public EnsureFinalized
 public:
     using EnsureFinalized :: finalize;
 
-    using GasOilParams = GasOilParamsT;
-    using OilWaterParams = OilWaterParamsT;
-
-    /*!
-     * \brief The default constructor.
-     */
-    EclStone2MaterialParams()
-    {
-    }
+    using GasOilParams = typename GasOilLawT::Params;
+    using OilWaterParams = typename OilWaterLawT::Params;
+    using Material = EclStone2Material<Traits,GasOilLawT,OilWaterLawT,
+                                       EclStone2MaterialParams<Traits,GasOilLawT,OilWaterLawT>>;
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.
@@ -119,7 +119,7 @@ private:
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;
 
-    Scalar Swl_;
+    Scalar Swl_{};
 };
 } // namespace Opm
 
