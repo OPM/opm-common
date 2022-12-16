@@ -101,8 +101,7 @@ private:
 private:
     using ConductionApproach = typename ThermalConductionLawParams::ThermalConductionApproach;
     ConductionApproach thermalConductivityApproach_ = ThermalConductionLawParams::undefinedApproach;
-    using SolidEnergyApproach = typename SolidEnergyLawParams::SolidEnergyApproach;
-    SolidEnergyApproach solidEnergyApproach_ = SolidEnergyLawParams::undefinedApproach;
+    EclSolidEnergyApproach solidEnergyApproach_ = EclSolidEnergyApproach::Undefined;
 
     std::vector<unsigned> elemToSatnumIdx_;
 

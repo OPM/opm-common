@@ -71,11 +71,11 @@ EclThermalLawManager<Scalar,FluidSystem>::
 solidEnergyLawParams(unsigned elemIdx) const
 {
     switch (solidEnergyApproach_) {
-    case SolidEnergyLawParams::heatcrApproach:
+    case EclSolidEnergyApproach::Heatcr:
         assert(elemIdx <  solidEnergyLawParams_.size());
         return solidEnergyLawParams_[elemIdx];
 
-    case SolidEnergyLawParams::specrockApproach:
+    case EclSolidEnergyApproach::Specrock:
     {
         assert(elemIdx <  elemToSatnumIdx_.size());
         unsigned satnumIdx = elemToSatnumIdx_[elemIdx];
@@ -83,7 +83,7 @@ solidEnergyLawParams(unsigned elemIdx) const
         return solidEnergyLawParams_[satnumIdx];
     }
 
-    case SolidEnergyLawParams::nullApproach:
+    case EclSolidEnergyApproach::Null:
         return solidEnergyLawParams_[0];
 
     default:
@@ -118,7 +118,7 @@ template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
 initHeatcr_(const EclipseState& eclState, size_t numElems)
 {
-    solidEnergyApproach_ = SolidEnergyLawParams::heatcrApproach;
+    solidEnergyApproach_ = EclSolidEnergyApproach::Heatcr;
     // actually the value of the reference temperature does not matter for energy
     // conservation. We set it anyway to faciliate comparisons with ECL
     HeatcrLawParams::setReferenceTemperature(FluidSystem::surfaceTemperature);
@@ -129,8 +129,8 @@ initHeatcr_(const EclipseState& eclState, size_t numElems)
     solidEnergyLawParams_.resize(numElems);
     for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
         auto& elemParam = solidEnergyLawParams_[elemIdx];
-        elemParam.setSolidEnergyApproach(SolidEnergyLawParams::heatcrApproach);
-        auto& heatcrElemParams = elemParam.template getRealParams<SolidEnergyLawParams::heatcrApproach>();
+        elemParam.setSolidEnergyApproach(EclSolidEnergyApproach::Heatcr);
+        auto& heatcrElemParams = elemParam.template getRealParams<EclSolidEnergyApproach::Heatcr>();
 
         heatcrElemParams.setReferenceRockHeatCapacity(heatcrData[elemIdx]);
         heatcrElemParams.setDRockHeatCapacity_dT(heatcrtData[elemIdx]);
@@ -143,7 +143,7 @@ template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
 initSpecrock_(const EclipseState& eclState, size_t numElems)
 {
-    solidEnergyApproach_ = SolidEnergyLawParams::specrockApproach;
+    solidEnergyApproach_ = EclSolidEnergyApproach::Specrock;
 
     // initialize the element index -> SATNUM index mapping
     const auto& fp = eclState.fieldProps();
@@ -163,9 +163,9 @@ initSpecrock_(const EclipseState& eclState, size_t numElems)
 
         auto& multiplexerParams = solidEnergyLawParams_[satnumIdx];
 
-        multiplexerParams.setSolidEnergyApproach(SolidEnergyLawParams::specrockApproach);
+        multiplexerParams.setSolidEnergyApproach(EclSolidEnergyApproach::Specrock);
 
-        auto& specrockParams = multiplexerParams.template getRealParams<SolidEnergyLawParams::specrockApproach>();
+        auto& specrockParams = multiplexerParams.template getRealParams<EclSolidEnergyApproach::Specrock>();
         const auto& temperatureColumn = specrockTable.getColumn("TEMPERATURE");
         const auto& cvRockColumn = specrockTable.getColumn("CV_ROCK");
         specrockParams.setHeatCapacities(temperatureColumn, cvRockColumn);
@@ -179,7 +179,7 @@ template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
 initNullRockEnergy_()
 {
-    solidEnergyApproach_ = SolidEnergyLawParams::nullApproach;
+    solidEnergyApproach_ = EclSolidEnergyApproach::Null;
 
     solidEnergyLawParams_.resize(1);
     solidEnergyLawParams_[0].finalize();
