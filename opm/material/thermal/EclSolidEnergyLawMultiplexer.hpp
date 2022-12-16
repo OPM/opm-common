@@ -65,15 +65,15 @@ public:
     static Evaluation solidInternalEnergy(const Params& params, const FluidState& fluidState)
     {
         switch (params.solidEnergyApproach()) {
-        case Params::heatcrApproach:
+        case EclSolidEnergyApproach::Heatcr:
             // relevant ECL keywords: HEATCR, HEATCRT and STCOND
-            return HeatcrLaw::solidInternalEnergy(params.template getRealParams<Params::heatcrApproach>(), fluidState);
+            return HeatcrLaw::solidInternalEnergy(params.template getRealParams<EclSolidEnergyApproach::Heatcr>(), fluidState);
 
-        case Params::specrockApproach:
+        case EclSolidEnergyApproach::Specrock:
             // relevant ECL keyword: SPECROCK
-            return SpecrockLaw::solidInternalEnergy(params.template getRealParams<Params::specrockApproach>(), fluidState);
+            return SpecrockLaw::solidInternalEnergy(params.template getRealParams<EclSolidEnergyApproach::Specrock>(), fluidState);
 
-        case Params::nullApproach:
+        case EclSolidEnergyApproach::Null:
             // (no relevant ECL keyword)
             return NullLaw::solidInternalEnergy(0, fluidState);
 
