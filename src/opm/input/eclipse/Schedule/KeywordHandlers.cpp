@@ -229,6 +229,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
         if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid, handlerContext.parseContext, handlerContext.errors))
             this->snapshots.back().wells.update( std::move(well) );
+
+        handlerContext.compsegs_handled(wname);
     }
 
     void Schedule::handleDRSDT(HandlerContext& handlerContext) {
@@ -1390,6 +1392,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             auto well = this->snapshots.back().wells.get(wname);
             if (well.handleWELSEGS(handlerContext.keyword))
                 this->snapshots.back().wells.update( std::move(well) );
+            handlerContext.welsegs_handled(wname);
         } else {
             const auto& location = handlerContext.keyword.location();
             if (this->action_wgnames.has_well(wname)) {
