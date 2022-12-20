@@ -27,44 +27,19 @@
 #ifndef OPM_WATER_PVT_MULTIPLEXER_HPP
 #define OPM_WATER_PVT_MULTIPLEXER_HPP
 
-#include "ConstantCompressibilityWaterPvt.hpp"
-#include "ConstantCompressibilityBrinePvt.hpp"
-#include "WaterPvtThermal.hpp"
+#include <opm/common/utility/Visitor.hpp>
+
+#include <opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #endif
 
-#define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall)                      \
-    switch (approach_) {                                                \
-    case WaterPvtApproach::ConstantCompressibilityWater: {           \
-        auto& pvtImpl = getRealPvt<WaterPvtApproach::ConstantCompressibilityWater>();  \
-        codeToCall;                                                     \
-        break;                                                          \
-    }                                                                   \
-    case WaterPvtApproach::ConstantCompressibilityBrine: {           \
-        auto& pvtImpl = getRealPvt<WaterPvtApproach::ConstantCompressibilityBrine>();  \
-        codeToCall;                                                     \
-        break;                                                          \
-    }                                                                   \
-    case WaterPvtApproach::ThermalWater: {                           \
-        auto& pvtImpl = getRealPvt<WaterPvtApproach::ThermalWater>();   \
-        codeToCall;                                                     \
-        break;                                                          \
-    }                                                                   \
-    case WaterPvtApproach::NoWater:                                     \
-        throw std::logic_error("Not implemented: Water PVT of this deck!"); \
-    }
+#include <variant>
 
 namespace Opm {
-
-enum class WaterPvtApproach {
-    NoWater,
-    ConstantCompressibilityBrine,
-    ConstantCompressibilityWater,
-    ThermalWater
-};
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the water
@@ -74,42 +49,6 @@ template <class Scalar, bool enableThermal = true, bool enableBrine = true>
 class WaterPvtMultiplexer
 {
 public:
-    WaterPvtMultiplexer()
-    {
-        approach_ = WaterPvtApproach::NoWater;
-        realWaterPvt_ = nullptr;
-    }
-
-    WaterPvtMultiplexer(WaterPvtApproach approach, void* realWaterPvt)
-        : approach_(approach)
-        , realWaterPvt_(realWaterPvt)
-    { }
-
-    WaterPvtMultiplexer(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data)
-    {
-        *this = data;
-    }
-
-    ~WaterPvtMultiplexer()
-    {
-        switch (approach_) {
-        case WaterPvtApproach::ConstantCompressibilityWater: {
-            delete &getRealPvt<WaterPvtApproach::ConstantCompressibilityWater>();
-            break;
-        }
-        case WaterPvtApproach::ConstantCompressibilityBrine: {
-            delete &getRealPvt<WaterPvtApproach::ConstantCompressibilityBrine>();
-            break;
-        }
-        case WaterPvtApproach::ThermalWater: {
-            delete &getRealPvt<WaterPvtApproach::ThermalWater>();
-            break;
-        }
-        case WaterPvtApproach::NoWater:
-            break;
-        }
-    }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for water using an ECL deck.
@@ -121,31 +60,52 @@ public:
         if (!eclState.runspec().phases().active(Phase::WATER))
             return;
 
-        if (enableThermal && eclState.getSimulationConfig().isThermal())
+        if (enableThermal && eclState.getSimulationConfig().isThermal()) {
             setApproach(WaterPvtApproach::ThermalWater);
-        else if (!eclState.getTableManager().getPvtwTable().empty())
-            setApproach(WaterPvtApproach::ConstantCompressibilityWater);
-        else if (enableBrine && !eclState.getTableManager().getPvtwSaltTables().empty())
-            setApproach(WaterPvtApproach::ConstantCompressibilityBrine);
+        } else {
+            setApproach(WaterPvtThermal<Scalar,enableBrine>::chooseApproach(eclState));
+        }
 
-        OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
+        std::visit(VisitorOverloadSet{[&](auto& pvt)
+                                      {
+                                          pvt.initFromState(eclState, schedule);
+                                      }, monoHandler_}, waterPvt_);
     }
 #endif // HAVE_ECL_INPUT
 
     void initEnd()
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd()); }
+    {
+        std::visit(VisitorOverloadSet{[](auto& pvt)
+                                        {
+                                            pvt.initEnd();
+                                        }, monoHandler_}, waterPvt_);
+    }
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
     unsigned numRegions() const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); return 1; }
+    {
+        unsigned result;
+        std::visit(VisitorOverloadSet{[&result](const auto& pvt)
+                                      {
+                                          result = pvt.numRegions();
+                                      }, monoHandler_}, waterPvt_);
+        return result;
+    }
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    const Scalar waterReferenceDensity(unsigned regionIdx)
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.waterReferenceDensity(regionIdx)); return 1000.; }
+    Scalar waterReferenceDensity(unsigned regionIdx) const
+    {
+        Scalar result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                         {
+                                             result = pvt.waterReferenceDensity(regionIdx);
+                                         }, monoHandler_}, waterPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
@@ -155,7 +115,17 @@ public:
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& saltconcentration) const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, saltconcentration)); return 0; }
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.internalEnergy(regionIdx,
+                                                                      temperature,
+                                                                      pressure,
+                                                                      saltconcentration);
+                                      }, monoHandler_}, waterPvt_);
+        return result;
+    }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -166,8 +136,15 @@ public:
                          const Evaluation& pressure,
                          const Evaluation& saltconcentration) const
     {
-        OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, saltconcentration));
-        return 0;
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.viscosity(regionIdx,
+                                                                 temperature,
+                                                                 pressure,
+                                                                 saltconcentration);
+                                      }, monoHandler_}, waterPvt_);
+        return result;
     }
 
     /*!
@@ -178,27 +155,28 @@ public:
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& saltconcentration) const
-    {   OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration));
-        return 0;
+    {
+        Evaluation result;
+        std::visit(VisitorOverloadSet{[&](const auto& pvt)
+                                      {
+                                          result = pvt.viscosity(regionIdx,
+                                                                 temperature,
+                                                                 pressure,
+                                                                 saltconcentration);
+                                      }, monoHandler_}, waterPvt_);
+        return result;
     }
 
     void setApproach(WaterPvtApproach appr)
     {
-        switch (appr) {
-        case WaterPvtApproach::ConstantCompressibilityWater:
-            realWaterPvt_ = new ConstantCompressibilityWaterPvt<Scalar>;
-            break;
-
-        case WaterPvtApproach::ConstantCompressibilityBrine:
-            realWaterPvt_ = new ConstantCompressibilityBrinePvt<Scalar>;
-            break;
-
-        case WaterPvtApproach::ThermalWater:
-            realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>;
-            break;
-
-        case WaterPvtApproach::NoWater:
-            throw std::logic_error("Not implemented: Water PVT of this deck!");
+        if (appr == WaterPvtApproach::ThermalWater) {
+            waterPvt_ = WaterPvtThermal<Scalar,enableBrine>{};
+        } else  {
+            auto pvt = WaterPvtThermal<Scalar,enableBrine>::initialize(appr);
+            std::visit([&](const auto& param)
+                       {
+                           waterPvt_ = param;
+                       }, pvt);
         }
 
         approach_ = appr;
@@ -212,97 +190,23 @@ public:
     WaterPvtApproach approach() const
     { return approach_; }
 
-    // get the concrete parameter object for the water phase
-    template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityWater, ConstantCompressibilityWaterPvt<Scalar> >::type& getRealPvt()
+    //! \brief Apply a visitor to the concrete pvt implementation.
+    template<class Function>
+    void visit(Function f)
     {
-        assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityWaterPvt<Scalar>* >(realWaterPvt_);
-    }
-
-    template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityWater, const ConstantCompressibilityWaterPvt<Scalar> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityWaterPvt<Scalar>* >(realWaterPvt_);
-    }
-
-    template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityBrine, ConstantCompressibilityBrinePvt<Scalar> >::type& getRealPvt()
-    {
-        assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityBrinePvt<Scalar>* >(realWaterPvt_);
-    }
-
-    template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityBrine, const ConstantCompressibilityBrinePvt<Scalar> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityBrinePvt<Scalar>* >(realWaterPvt_);
-    }
-
-    template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ThermalWater, WaterPvtThermal<Scalar, enableBrine> >::type& getRealPvt()
-    {
-        assert(approach() == approachV);
-        return *static_cast<WaterPvtThermal<Scalar, enableBrine>* >(realWaterPvt_);
-    }
-
-    template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ThermalWater, const WaterPvtThermal<Scalar, enableBrine> >::type& getRealPvt() const
-    {
-        assert(approach() == approachV);
-        return *static_cast<WaterPvtThermal<Scalar, enableBrine>* >(realWaterPvt_);
-    }
-
-    const void* realWaterPvt() const { return realWaterPvt_; }
-
-    bool operator==(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data) const
-    {
-        if (this->approach() != data.approach())
-            return false;
-
-        switch (approach_) {
-        case WaterPvtApproach::ConstantCompressibilityWater:
-            return *static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(realWaterPvt_) ==
-                   *static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(data.realWaterPvt_);
-        case WaterPvtApproach::ConstantCompressibilityBrine:
-            return *static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(realWaterPvt_) ==
-                   *static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(data.realWaterPvt_);
-        case WaterPvtApproach::ThermalWater:
-            return *static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(realWaterPvt_) ==
-                   *static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(data.realWaterPvt_);
-        default:
-            return true;
-        }
-    }
-
-    WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data)
-    {
-        approach_ = data.approach_;
-        switch (approach_) {
-        case WaterPvtApproach::ConstantCompressibilityWater:
-            realWaterPvt_ = new ConstantCompressibilityWaterPvt<Scalar>(*static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(data.realWaterPvt_));
-            break;
-        case WaterPvtApproach::ConstantCompressibilityBrine:
-            realWaterPvt_ = new ConstantCompressibilityBrinePvt<Scalar>(*static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(data.realWaterPvt_));
-            break;
-        case WaterPvtApproach::ThermalWater:
-            realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>(*static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(data.realWaterPvt_));
-            break;
-        default:
-            break;
-        }
-
-        return *this;
+        std::visit(VisitorOverloadSet{f, monoHandler_, [](auto&) {}}, waterPvt_);
     }
 
 private:
-    WaterPvtApproach approach_;
-    void* realWaterPvt_;
-};
+    WaterPvtApproach approach_ = WaterPvtApproach::NoWater;
+    std::variant<std::monostate,
+                 ConstantCompressibilityBrinePvt<Scalar>,
+                 ConstantCompressibilityWaterPvt<Scalar>,
+                 WaterPvtThermal<Scalar,enableBrine>> waterPvt_;
 
-#undef OPM_WATER_PVT_MULTIPLEXER_CALL
+    MonoThrowHandler<std::logic_error>
+    monoHandler_{"Not implemented: Water PVT of this deck!"}; // mono state handler
+};
 
 } // namespace Opm
 

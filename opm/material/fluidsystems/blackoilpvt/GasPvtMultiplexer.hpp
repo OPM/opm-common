@@ -33,6 +33,7 @@
 #include "WetGasPvt.hpp"
 #include "GasPvtThermal.hpp"
 #include "Co2GasPvt.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/PvtEnums.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -74,16 +75,6 @@ namespace Opm {
     case GasPvtApproach::NoGas:                                           \
         throw std::logic_error("Not implemented: Gas PVT of this deck!"); \
     } \
-
-enum class GasPvtApproach {
-    NoGas,
-    DryGas,
-    DryHumidGas,
-    WetHumidGas,
-    WetGas,
-    ThermalGas,
-    Co2Gas
-};
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas
