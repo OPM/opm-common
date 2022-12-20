@@ -166,12 +166,12 @@ public:
 
         /// Retrive result set's segments for single MS well.
         ///
-        /// \param[in] well Named MS well.  Should usually be one of the
-        ///    items in the return value from \code wells() \endcode.
+        /// \param[in] well Well number.  Should be between zero and \code
+        ///    numWells() - 1 \endcode inclusive.
         ///
         /// \return range of \c well's segments matching the input request.
-        ///    Empty unless \p well is one of the return values from \code
-        ///    wells() \endcode.
+        ///    Empty unless \p well is between zero and \code numWells() - 1
+        ///    \endcode inclusive.
         WellSegmentRange segments(const std::size_t well) const;
 
         friend class SegmentMatcher;
