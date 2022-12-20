@@ -365,6 +365,7 @@ foreach(tgt
     test_eclblackoilfluidsystem
     test_eclblackoilpvt
     test_eclmateriallawmanager
+    test_EvaluationFormat
     test_fluidmatrixinteractions
     test_fluidsystems
     test_immiscibleflash
