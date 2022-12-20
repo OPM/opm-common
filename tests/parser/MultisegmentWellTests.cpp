@@ -1029,3 +1029,55 @@ COMPSEGS
         ++i;
     }
 }
+
+BOOST_AUTO_TEST_CASE(MissingCOMPSEGS)
+{
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+
+GRID
+
+DXV
+  20*100 /
+
+DYV
+  20*100 /
+
+DZV
+  20*10 /
+
+DEPTHZ
+  441*2000.0 /
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 5 'OPEN' /
+/
+
+WELSEGS
+-- Name      Dep 1          Tlen 1      Vol 1     Len&Dep     PresDrop
+   PROD01     2557.18408     0.00000     1*        INC         'HF-'    'HO' 12.3 45.6 /
+-- First Seg     Last Seg     Branch Num     Outlet Seg     Length       Depth Change     Diam        Rough
+-- Main Stem Segments
+   2             12           1              1              5.09434      4.95609          0.15200     0.0000100 2* 10.1 20.2 /
+/
+)");
+
+    const auto es    = ::Opm::EclipseState { deck };
+    BOOST_CHECK_THROW(::Opm::Schedule(deck, es, std::make_shared<const ::Opm::Python>()), ::Opm::OpmInputError);
+}
