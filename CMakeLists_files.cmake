@@ -131,6 +131,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/MSW/icd.cpp
     src/opm/input/eclipse/Schedule/MSW/Compsegs.cpp
     src/opm/input/eclipse/Schedule/MSW/Segment.cpp
+    src/opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
     src/opm/input/eclipse/Schedule/MSW/WellSegments.cpp
     src/opm/input/eclipse/Schedule/MSW/AICD.cpp
     src/opm/input/eclipse/Schedule/MSW/SICD.cpp
@@ -374,6 +375,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_param.cpp
       tests/test_pengrobinson.cpp
       tests/test_RootFinders.cpp
+      tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
       tests/test_spline.cpp
       tests/test_tabulation.cpp
@@ -1099,7 +1101,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/OilVaporizationProperties.hpp
        opm/input/eclipse/Schedule/MSW/icd.hpp
        opm/input/eclipse/Schedule/MSW/Segment.hpp
-       opm/input/eclipse/Schedule/MSW/Segment.hpp
+       opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp
        opm/input/eclipse/Schedule/MSW/WellSegments.hpp
        opm/input/eclipse/Schedule/MSW/AICD.hpp
        opm/input/eclipse/Schedule/MSW/SICD.hpp
