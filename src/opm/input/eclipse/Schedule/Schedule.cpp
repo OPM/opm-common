@@ -324,7 +324,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  bool actionx_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
-                                 std::unordered_map<std::string, double>* wpimult_global_factor)
+                                 std::unordered_map<std::string, double>* wpimult_global_factor,
+                                 WelSegsSet* welsegs_wells,
+                                 std::set<std::string>* compsegs_wells)
     {
 
         static const std::unordered_set<std::string> require_grid = {
@@ -333,8 +335,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, parseContext, errors, sim_update, target_wellpi,
-                                       wpimult_global_factor};
+        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode,
+                                        parseContext, errors, sim_update, target_wellpi,
+                                        wpimult_global_factor, welsegs_wells, compsegs_wells};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -472,7 +475,39 @@ private:
         return ScheduleLogger::Stream::Info;
     }
 }
+} // end namespace Opm
 
+namespace
+{
+/// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
+/// \param welsegs All wells with a WELSEGS entry together with the location.
+/// \param compegs All wells with a COMPSEGS entry
+void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, std::set<std::string>&  compsegs)
+{
+    std::vector<std::pair<std::string,::Opm::KeywordLocation>> difference;
+    difference.reserve(welsegs.size());
+    std::set_difference(welsegs.begin(), welsegs.end(),
+                        compsegs.begin(), compsegs.end(),
+                        std::back_inserter(difference),
+                        ::Opm::Schedule::PairComp());
+    if (difference.size()) {
+        std::string wells = "well";
+        if (difference.size()>1) {
+            wells.append("s");
+        }
+        wells.append(":");
+
+        for(const auto& [name, location] : difference) {
+            wells.append(fmt::format("\n   {} in {} at line {}", name, location.filename, location.lineno));
+        }
+        auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", wells);
+        throw Opm::OpmInputError(msg, std::get<1>(difference[0]));
+    }
+}
+}// end anonymous namespace
+
+namespace Opm
+{
 void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_end,
                                       const ParseContext& parseContext,
                                       ErrorGuard& errors,
@@ -529,6 +564,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                location.lineno));
         }
 
+        std::set<std::string> compsegs_wells;
+        WelSegsSet welsegs_wells;
+
         for (auto report_step = load_start; report_step < load_end; report_step++) {
             std::size_t keyword_index = 0;
             auto& block = this->m_sched_deck[report_step];
@@ -558,13 +596,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             this->create_next(block);
 
             std::unordered_map<std::string, double> wpimult_global_factor;
+
             while (true) {
                 if (keyword_index == block.size())
                     break;
 
                 const auto& keyword = block[keyword_index];
                 const auto& location = keyword.location();
-                logger.location(keyword.location());
+                logger.location(location);
 
                 if (keyword.is<ParserKeywords::ACTIONX>()) {
                     Action::ActionX action(keyword,
@@ -605,10 +644,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     false,
                                     nullptr,
                                     target_wellpi,
-                                    &wpimult_global_factor);
+                                    &wpimult_global_factor,
+                                    &welsegs_wells,
+                                    &compsegs_wells);
                 keyword_index++;
             }
 
+            check_compsegs_consistency(welsegs_wells, compsegs_wells);
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 

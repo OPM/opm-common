@@ -772,7 +772,7 @@ WELSPECS
 /
 
 COMPDAT
- 'PROD01' 20 20 1 20 'OPEN' /
+ 'PROD01' 20 20 1 5 'OPEN' /
 /
 
 WELSEGS
@@ -785,6 +785,16 @@ WELSEGS
 8         8      3      7    3337.6 2534.5  0.2  0.00015 2* 123.456 789.012 /
 /
 
+COMPSEGS
+-- Name
+  'PROD01' /
+-- I    J     K   Branch
+  20    20     1     1   2512.5   2525.0 /
+  20    20     2     1   2525.0   2550.0 /
+  20    20     3     1   2550.0   2575.0 /
+  20    20     4     1   2637.5   2837.5 /
+  20    20     5     1   2837.5   3037.5 /
+/
 )");
 
     const auto es    = ::Opm::EclipseState { deck };
@@ -833,7 +843,7 @@ WELSPECS
 /
 
 COMPDAT
- 'PROD01' 20 20 1 20 'OPEN' /
+ 'PROD01' 20 20 1 5 'OPEN' /
 /
 
 WELSEGS
@@ -844,6 +854,16 @@ WELSEGS
 8         8      3      7    3337.6 2534.5  0.2  0.00015 2* 123.456 789.012 /
 /
 
+COMPSEGS
+-- Name
+  'PROD01' /
+-- I    J     K   Branch
+  20    20     1     1   2512.5   2525.0 /
+  20    20     2     1   2525.0   2550.0 /
+  20    20     3     1   2550.0   2575.0 /
+  20    20     4     1   2637.5   2837.5 /
+  20    20     5     1   2837.5   3037.5 /
+/
 )");
 
     const auto es    = ::Opm::EclipseState { deck };
@@ -892,7 +912,7 @@ WELSPECS
 /
 
 COMPDAT
- 'PROD01' 20 20 1 20 'OPEN' /
+ 'PROD01' 20 20 1 5 'OPEN' /
 /
 
 WELSEGS
@@ -911,6 +931,17 @@ WELSEGS
    10            10           1              9              10.24570     9.96767          0.15200     0.0000100 2* 10.1 20.2 /
    11            11           1              10             10.24571     9.96767          0.15200     0.0000100 2* 10.1 20.2 /
    12            12           1              11             5.97902      5.81677          0.15200     0.0000100 2* 10.1 20.2 /
+/
+
+COMPSEGS
+-- Name
+  'PROD01' /
+-- I    J     K   Branch
+  20    20     1     1   2512.5   2525.0 /
+  20    20     2     1   2525.0   2550.0 /
+  20    20     3     1   2550.0   2575.0 /
+  20    20     4     1   2637.5   2837.5 /
+  20    20     5     1   2837.5   3037.5 /
 /
 )");
 
@@ -963,7 +994,7 @@ WELSPECS
 /
 
 COMPDAT
- 'PROD01' 20 20 1 20 'OPEN' /
+ 'PROD01' 20 20 1 5 'OPEN' /
 /
 
 WELSEGS
@@ -972,6 +1003,17 @@ WELSEGS
 -- First Seg     Last Seg     Branch Num     Outlet Seg     Length       Depth Change     Diam        Rough
 -- Main Stem Segments
    2             12           1              1              5.09434      4.95609          0.15200     0.0000100 2* 10.1 20.2 /
+/
+
+COMPSEGS
+-- Name
+  'PROD01' /
+-- I    J     K   Branch
+  20    20     1     1   2512.5   2525.0 /
+  20    20     2     1   2525.0   2550.0 /
+  20    20     3     1   2550.0   2575.0 /
+  20    20     4     1   2637.5   2837.5 /
+  20    20     5     1   2837.5   3037.5 /
 /
 )");
 
@@ -986,4 +1028,56 @@ WELSEGS
 
         ++i;
     }
+}
+
+BOOST_AUTO_TEST_CASE(MissingCOMPSEGS)
+{
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+
+GRID
+
+DXV
+  20*100 /
+
+DYV
+  20*100 /
+
+DZV
+  20*10 /
+
+DEPTHZ
+  441*2000.0 /
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 5 'OPEN' /
+/
+
+WELSEGS
+-- Name      Dep 1          Tlen 1      Vol 1     Len&Dep     PresDrop
+   PROD01     2557.18408     0.00000     1*        INC         'HF-'    'HO' 12.3 45.6 /
+-- First Seg     Last Seg     Branch Num     Outlet Seg     Length       Depth Change     Diam        Rough
+-- Main Stem Segments
+   2             12           1              1              5.09434      4.95609          0.15200     0.0000100 2* 10.1 20.2 /
+/
+)");
+
+    const auto es    = ::Opm::EclipseState { deck };
+    BOOST_CHECK_THROW(::Opm::Schedule(deck, es, std::make_shared<const ::Opm::Python>()), ::Opm::OpmInputError);
 }
