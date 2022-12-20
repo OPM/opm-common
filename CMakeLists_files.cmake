@@ -362,6 +362,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
       tests/test_densead.cpp
+      tests/test_EvaluationFormat.cpp
       tests/test_fluidmatrixinteractions.cpp
       tests/test_fluidsystems.cpp
       tests/test_immiscibleflash.cpp
@@ -857,6 +858,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/densead/Evaluation1.hpp
       opm/material/densead/Evaluation12.hpp
       opm/material/densead/Evaluation2.hpp
+      opm/material/densead/EvaluationFormat.hpp
       opm/material/densead/EvaluationSpecializations.hpp
       opm/material/densead/Evaluation10.hpp
       opm/material/densead/Evaluation6.hpp
