@@ -325,7 +325,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>* wpimult_global_factor,
-                                 std::set<std::string>* welsegs_wells,
+                                 WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
 
@@ -480,32 +480,28 @@ private:
 namespace
 {
 /// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
-/// \param welsegs All wells with a WELSEGS entry
+/// \param welsegs All wells with a WELSEGS entry together with the location.
 /// \param compegs All wells with a COMPSEGS entry
-/// \param block_location location where recent DATES/TSTEP started
-/// \param last_location Last location red in this block
-void check_compsegs_consistency(std::set<std::string>& welsegs, std::set<std::string>&  compsegs,
-                                const Opm::KeywordLocation& block_location,
-                                const Opm::KeywordLocation& last_location)
+void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, std::set<std::string>&  compsegs)
 {
-    std::vector<std::string> difference;
+    std::vector<std::pair<std::string,::Opm::KeywordLocation>> difference;
     difference.reserve(welsegs.size());
     std::set_difference(welsegs.begin(), welsegs.end(),
                         compsegs.begin(), compsegs.end(),
-                        std::back_inserter(difference));
+                        std::back_inserter(difference),
+                        ::Opm::Schedule::PairComp());
     if (difference.size()) {
         std::string wells = "well";
         if (difference.size()>1) {
             wells.append("s");
         }
+        wells.append(":");
 
-        for(const auto& missing_wells: difference) {
-            wells.append(" "+missing_wells);
+        for(const auto& [name, location] : difference) {
+            wells.append(fmt::format("\n   {} in {} at line {}", name, location.filename, location.lineno));
         }
-        auto msg = fmt::format("Missing COMPSEGS keyword for {} between {} line {} and {} line {}.", wells,
-                               block_location.filename, block_location.lineno,
-                               last_location.filename, last_location.lineno);
-        throw Opm::OpmInputError(msg, last_location);
+        auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", wells);
+        throw Opm::OpmInputError(msg, std::get<1>(difference[0]));
     }
 }
 }// end anonymous namespace
@@ -568,7 +564,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                location.lineno));
         }
 
-        std::set<std::string> welsegs_wells, compsegs_wells;
+        std::set<std::string> compsegs_wells;
+        WelSegsSet welsegs_wells;
 
         for (auto report_step = load_start; report_step < load_end; report_step++) {
             std::size_t keyword_index = 0;
@@ -600,8 +597,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
             std::unordered_map<std::string, double> wpimult_global_factor;
 
-            auto last_location = block.location();
-
             while (true) {
                 if (keyword_index == block.size())
                     break;
@@ -632,7 +627,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                             std::string msg_fmt = fmt::format("The keyword {} is not supported in the ACTIONX block", action_keyword.name());
                             parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
                         }
-                        last_location = action_keyword.location();
                     }
                     this->addACTIONX(action);
                     keyword_index++;
@@ -653,11 +647,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     &wpimult_global_factor,
                                     &welsegs_wells,
                                     &compsegs_wells);
-                last_location = location;
                 keyword_index++;
             }
 
-            check_compsegs_consistency(welsegs_wells, compsegs_wells, block.location(), last_location);
+            check_compsegs_consistency(welsegs_wells, compsegs_wells);
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 
