@@ -22,8 +22,6 @@
 
 #include <opm/material/densead/EvaluationFormat.hpp>
 
-using namespace Opm;
-
 BOOST_AUTO_TEST_CASE(TestEvaluation2)
 {
     Opm::DenseAd::Evaluation<double,2> ev2;
@@ -31,13 +29,13 @@ BOOST_AUTO_TEST_CASE(TestEvaluation2)
     ev2.setDerivative(0, 2.0);
     ev2.setDerivative(1, 3.0);
 
-    std::string s2 = fmt::format("{}", ev2);
-    std::string f2 = fmt::format("{:.2f}", ev2);
-    std::string e2 = fmt::format("{:.1e}", ev2);
+    const std::string s2 = fmt::format("{}", ev2);
+    const std::string f2 = fmt::format("{:.2f}", ev2);
+    const std::string e2 = fmt::format("{:.1e}", ev2);
 
-    BOOST_CHECK(s2 == "v: 1 / d: [2, 3]");
-    BOOST_CHECK(f2 == "v: 1.00 / d: [2.00, 3.00]");
-    BOOST_CHECK(e2 == "v: 1.0e+00 / d: [2.0e+00, 3.0e+00]");
+    BOOST_CHECK_EQUAL(s2, "v: 1 / d: [2, 3]");
+    BOOST_CHECK_EQUAL(f2, "v: 1.00 / d: [2.00, 3.00]");
+    BOOST_CHECK_EQUAL(e2, "v: 1.0e+00 / d: [2.0e+00, 3.0e+00]");
 }
 
 BOOST_AUTO_TEST_CASE(TestEvaluation3)
@@ -48,11 +46,11 @@ BOOST_AUTO_TEST_CASE(TestEvaluation3)
     ev3.setDerivative(1, 3.0);
     ev3.setDerivative(2, 4.0);
 
-    std::string s3 = fmt::format("{}", ev3);
-    std::string f3 = fmt::format("{:.2f}", ev3);
-    std::string e3 = fmt::format("{:.1e}", ev3);
+    const std::string s3 = fmt::format("{}", ev3);
+    const std::string f3 = fmt::format("{:.2f}", ev3);
+    const std::string e3 = fmt::format("{:.1e}", ev3);
 
-    BOOST_CHECK(s3 == "v: 1 / d: [2, 3, 4]");
-    BOOST_CHECK(f3 == "v: 1.00 / d: [2.00, 3.00, 4.00]");
-    BOOST_CHECK(e3 == "v: 1.0e+00 / d: [2.0e+00, 3.0e+00, 4.0e+00]");
+    BOOST_CHECK_EQUAL(s3, "v: 1 / d: [2, 3, 4]");
+    BOOST_CHECK_EQUAL(f3, "v: 1.00 / d: [2.00, 3.00, 4.00]");
+    BOOST_CHECK_EQUAL(e3, "v: 1.0e+00 / d: [2.0e+00, 3.0e+00, 4.0e+00]");
 }
