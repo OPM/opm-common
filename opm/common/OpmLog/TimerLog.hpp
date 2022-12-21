@@ -22,7 +22,7 @@
 #include <time.h>
 
 #include <memory>
-#include <sstream>
+#include <iosfwd>
 #include <string>
 
 #include <opm/common/OpmLog/StreamLog.hpp>
@@ -50,7 +50,6 @@ protected:
                                    const std::string& message) override;
 private:
     clock_t m_start;
-    std::ostringstream m_work;
 };
 
 typedef std::shared_ptr<TimerLog> TimerLogPtr;
