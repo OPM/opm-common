@@ -29,13 +29,13 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+class EclipseState;
+class Schedule;
 #endif
 
-namespace Opm {
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phase
  *        without dissolved gas.
@@ -46,55 +46,11 @@ class DeadOilPvt
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    DeadOilPvt() = default;
-    DeadOilPvt(const std::vector<Scalar>& oilReferenceDensity,
-               const std::vector<TabulatedOneDFunction>& inverseOilB,
-               const std::vector<TabulatedOneDFunction>& oilMu,
-               const std::vector<TabulatedOneDFunction>& inverseOilBMu)
-        : oilReferenceDensity_(oilReferenceDensity)
-        , inverseOilB_(inverseOilB)
-        , oilMu_(oilMu)
-        , inverseOilBMu_(inverseOilBMu)
-    { }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVDO ECL keyword.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& pvdoTables = eclState.getTableManager().getPvdoTables();
-        const auto& densityTable = eclState.getTableManager().getDensityTable();
-
-        assert(pvdoTables.size() == densityTable.size());
-
-        size_t numRegions = pvdoTables.size();
-        setNumRegions(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            Scalar rhoRefO = densityTable[regionIdx].oil;
-            Scalar rhoRefG = densityTable[regionIdx].gas;
-            Scalar rhoRefW = densityTable[regionIdx].water;
-
-            setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
-
-            const auto& pvdoTable = pvdoTables.getTable<PvdoTable>(regionIdx);
-
-            const auto& BColumn(pvdoTable.getFormationFactorColumn());
-            std::vector<Scalar> invBColumn(BColumn.size());
-            for (unsigned i = 0; i < invBColumn.size(); ++i)
-                invBColumn[i] = 1/BColumn[i];
-
-            inverseOilB_[regionIdx].setXYArrays(pvdoTable.numRows(),
-                                                pvdoTable.getPressureColumn(),
-                                                invBColumn);
-            oilMu_[regionIdx].setXYArrays(pvdoTable.numRows(),
-                                          pvdoTable.getPressureColumn(),
-                                          pvdoTable.getViscosityColumn());
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif // HAVE_ECL_INPUT
 
     void setNumRegions(size_t numRegions)
@@ -282,7 +238,7 @@ public:
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
     const std::vector<TabulatedOneDFunction>& inverseOilB() const
@@ -293,14 +249,6 @@ public:
 
     const std::vector<TabulatedOneDFunction>& inverseOilBMu() const
     { return inverseOilBMu_; }
-
-    bool operator==(const DeadOilPvt<Scalar>& data) const
-    {
-        return this->oilReferenceDensity_ == data.oilReferenceDensity_ &&
-               this->inverseOilB() == data.inverseOilB() &&
-               this->oilMu() == data.oilMu() &&
-               this->inverseOilBMu() == data.inverseOilBMu();
-    }
 
 private:
     std::vector<Scalar> oilReferenceDensity_;
