@@ -27,13 +27,17 @@
 #ifndef OPM_CONSTANT_COMPRESSIBILITY_WATER_PVT_HPP
 #define OPM_CONSTANT_COMPRESSIBILITY_WATER_PVT_HPP
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#endif
-
+#include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        without vaporized oil.
@@ -42,47 +46,12 @@ template <class Scalar>
 class ConstantCompressibilityWaterPvt
 {
 public:
-    ConstantCompressibilityWaterPvt() = default;
-    ConstantCompressibilityWaterPvt(const std::vector<Scalar>& waterReferenceDensity,
-                                    const std::vector<Scalar>& waterReferencePressure,
-                                    const std::vector<Scalar>& waterReferenceFormationVolumeFactor,
-                                    const std::vector<Scalar>& waterCompressibility,
-                                    const std::vector<Scalar>& waterViscosity,
-                                    const std::vector<Scalar>& waterViscosibility)
-        : waterReferenceDensity_(waterReferenceDensity)
-        , waterReferencePressure_(waterReferencePressure)
-        , waterReferenceFormationVolumeFactor_(waterReferenceFormationVolumeFactor)
-        , waterCompressibility_(waterCompressibility)
-        , waterViscosity_(waterViscosity)
-        , waterViscosibility_(waterViscosibility)
-    { }
 #if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent water viscosity and density
      *        using a table stemming from the Eclipse PVTW keyword.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& pvtwTable = eclState.getTableManager().getPvtwTable();
-        const auto& densityTable = eclState.getTableManager().getDensityTable();
-
-        assert(pvtwTable.size() == densityTable.size());
-
-        size_t numRegions = pvtwTable.size();
-        setNumRegions(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            waterReferenceDensity_[regionIdx] = densityTable[regionIdx].water;
-
-            waterReferencePressure_[regionIdx] = pvtwTable[regionIdx].reference_pressure;
-            waterReferenceFormationVolumeFactor_[regionIdx] = pvtwTable[regionIdx].volume_factor;
-            waterCompressibility_[regionIdx] = pvtwTable[regionIdx].compressibility;
-            waterViscosity_[regionIdx] = pvtwTable[regionIdx].viscosity;
-            waterViscosibility_[regionIdx] = pvtwTable[regionIdx].viscosibility;
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
@@ -271,7 +240,7 @@ public:
                                              const Evaluation& /*saltconcentration*/) const
     { return 0.0; /* this is dead water! */ }
 
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }
 
     const std::vector<Scalar>& waterReferencePressure() const
@@ -288,16 +257,6 @@ public:
 
     const std::vector<Scalar>& waterViscosibility() const
     { return waterViscosibility_; }
-
-    bool operator==(const ConstantCompressibilityWaterPvt<Scalar>& data) const
-    {
-        return this->waterReferenceDensity_ == data.waterReferenceDensity_ &&
-               this->waterReferencePressure() == data.waterReferencePressure() &&
-               this->waterReferenceFormationVolumeFactor() == data.waterReferenceFormationVolumeFactor() &&
-               this->waterCompressibility() == data.waterCompressibility() &&
-               this->waterViscosity() == data.waterViscosity() &&
-               this->waterViscosibility() == data.waterViscosibility();
-    }
 
 private:
     std::vector<Scalar> waterReferenceDensity_;
