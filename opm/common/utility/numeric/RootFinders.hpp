@@ -22,66 +22,42 @@
 #define OPM_ROOTFINDERS_HEADER
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
 
-#include <string>
-#include <algorithm>
-#include <limits>
 #include <cmath>
-#include <iostream>
+#include <limits>
+#include <string>
 
 namespace Opm
 {
 
     struct ThrowOnError
     {
-        static double handleBracketingFailure(const double x0, const double x1, const double f0, const double f1)
-        {
-            std::ostringstream sstr;
-            sstr << "Error in parameters, zero not bracketed: [a, b] = ["
-                 << x0 << ", " << x1 << "]    f(a) = " << f0 << "   f(b) = " << f1;
-            OpmLog::debug(sstr.str());
-            OPM_THROW_NOLOG(std::runtime_error, sstr.str());
-            return -1e100; // Never reached.
-        }
-        static double handleTooManyIterations(const double x0, const double x1, const int maxiter)
-        {
-            OPM_THROW(std::runtime_error, "Maximum number of iterations exceeded: " << maxiter << "\n"
-                  << "Current interval is [" << std::min(x0, x1) << ", "
-                  << std::max(x0, x1) << "] abs(x0-x1) " << std::abs(x0-x1));
-            return -1e100; // Never reached.
-        }
+        static double handleBracketingFailure(const double x0, const double x1,
+                                              const double f0, const double f1);
+
+        static double handleTooManyIterations(const double x0,
+                                              const double x1, const int maxiter);
     };
 
 
     struct WarnAndContinueOnError
     {
-        static double handleBracketingFailure(const double x0, const double x1, const double f0, const double f1)
-        {
-            OPM_REPORT;
-            std::cerr << "Error in parameters, zero not bracketed: [a, b] = ["
-                      << x0 << ", " << x1 << "]    f(a) = " << f0 << "   f(b) = " << f1
-                      << "";
-            return std::fabs(f0) < std::fabs(f1) ? x0 : x1;
-        }
-        static double handleTooManyIterations(const double x0, const double x1, const int maxiter)
-        {
-            OPM_REPORT;
-            std::cerr << "Maximum number of iterations exceeded: " << maxiter
-                      << ", current interval is [" << std::min(x0, x1) << ", "
-                      << std::max(x0, x1) << "]  abs(x0-x1) " << std::abs(x0-x1);
-            return 0.5*(x0 + x1);
-        }
+        static double handleBracketingFailure(const double x0, const double x1,
+                                              const double f0, const double f1);
+        static double handleTooManyIterations(const double x0,
+                                              const double x1, const int maxiter);
     };
 
 
     struct ContinueOnError
     {
-        static double handleBracketingFailure(const double x0, const double x1, const double f0, const double f1)
+        static double handleBracketingFailure(const double x0, const double x1,
+                                              const double f0, const double f1)
         {
             return std::fabs(f0) < std::fabs(f1) ? x0 : x1;
         }
-        static double handleTooManyIterations(const double x0, const double x1, const int /*maxiter*/)
+        static double handleTooManyIterations(const double x0,
+                                              const double x1, const int /*maxiter*/)
         {
             return 0.5*(x0 + x1);
         }
@@ -427,7 +403,9 @@ namespace Opm
             cur_dx = -2.0*cur_dx;
         }
         if (i == max_iters) {
-            OPM_THROW(std::runtime_error, "Could not bracket zero in " << max_iters << "iterations.");
+            OPM_THROW(std::runtime_error,
+                      "Could not bracket zero in " +
+                      std::to_string(max_iters) + " iterations.");
         }
         if (cur_dx < 0.0) {
             a = x0 + cur_dx;
@@ -438,13 +416,6 @@ namespace Opm
         }
     }
 
-
-
-
-
 } // namespace Opm
-
-
-
 
 #endif // OPM_ROOTFINDERS_HEADER
