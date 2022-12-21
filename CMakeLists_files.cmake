@@ -354,43 +354,44 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_2dtables.cpp
-      tests/test_blackoilfluidstate.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
-      tests/test_co2brine_ptflash.cpp
-      tests/test_components.cpp
       tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
+      tests/test_messagelimiter.cpp
+      tests/test_nonuniformtablelinear.cpp
+      tests/test_OpmInputError_format.cpp
+      tests/test_OpmLog.cpp
+      tests/test_param.cpp
+      tests/test_RootFinders.cpp
+      tests/test_SegmentMatcher.cpp
+      tests/test_sparsevector.cpp
+      tests/test_uniformtablelinear.cpp
+)
+
+# tests that need to be linked to dune-common
+list(APPEND DUNE_TEST_SOURCE_FILES
+      tests/test_2dtables.cpp
+      tests/test_blackoilfluidstate.cpp
+      tests/test_co2brine_ptflash.cpp
+      tests/test_components.cpp
       tests/test_densead.cpp
       tests/test_EvaluationFormat.cpp
       tests/test_fluidmatrixinteractions.cpp
       tests/test_fluidsystems.cpp
       tests/test_immiscibleflash.cpp
-      tests/test_messagelimiter.cpp
       tests/test_ncpflash.cpp
-      tests/test_nonuniformtablelinear.cpp
-      tests/test_OpmInputError_format.cpp
-      tests/test_OpmLog.cpp
-      tests/test_param.cpp
       tests/test_pengrobinson.cpp
-      tests/test_RootFinders.cpp
-      tests/test_SegmentMatcher.cpp
-      tests/test_sparsevector.cpp
       tests/test_spline.cpp
       tests/test_tabulation.cpp
       tests/test_threecomponents_ptflash.cpp
-      tests/test_uniformtablelinear.cpp
 )
+
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/rst_test.cpp
     tests/test_ActiveGridCells.cpp
     tests/test_CopyablePtr.cpp
-    tests/test_co2brinepvt.cpp
-    tests/test_eclblackoilfluidsystem.cpp
-    tests/test_eclblackoilpvt.cpp
-    tests/test_eclmateriallawmanager.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -473,6 +474,14 @@ if(ENABLE_ECL_INPUT)
     tests/parser/WLIST.cpp
     tests/parser/WriteRestartFileEventsTests.cpp
     tests/parser/WTEST.cpp)
+
+# tests that needs to be linked to dune-common
+list(APPEND DUNE_TEST_SOURCE_FILES
+    tests/test_co2brinepvt.cpp
+    tests/test_eclblackoilfluidsystem.cpp
+    tests/test_eclblackoilpvt.cpp
+    tests/test_eclmateriallawmanager.cpp
+)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
@@ -513,6 +522,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_restartwellinfo.cpp
       )
 endif()
+
+list(APPEND TEST_SOURCE_FILES ${DUNE_TEST_SOURCE_FILES})
 
 list (APPEND TEST_DATA_FILES
       tests/testdata.param

@@ -354,27 +354,8 @@ target_compile_options(dunecommon INTERFACE ${dflags})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
-foreach(tgt
-    co2brinepvt
-    test_2dtables
-    test_blackoilfluidstate
-    test_co2brine_ptflash
-    test_co2brinepvt
-    test_components
-    test_densead
-    test_eclblackoilfluidsystem
-    test_eclblackoilpvt
-    test_eclmateriallawmanager
-    test_EvaluationFormat
-    test_fluidmatrixinteractions
-    test_fluidsystems
-    test_immiscibleflash
-    test_ncpflash
-    test_pengrobinson
-    test_spline
-    test_tabulation
-    test_threecomponents_ptflash
-  )
+foreach(src examples/co2brinepvt.cpp ${DUNE_TEST_SOURCE_FILES})
+  get_filename_component(tgt ${src} NAME_WE)
   target_link_libraries(${tgt} dunecommon)
 endforeach()
 
