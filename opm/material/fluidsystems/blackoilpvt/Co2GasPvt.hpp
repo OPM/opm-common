@@ -35,15 +35,15 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/material/components/co2tables.inc>
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
-
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  * for CO2
@@ -60,10 +60,6 @@ public:
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
     explicit Co2GasPvt() = default;
-    Co2GasPvt(const std::vector<Scalar>& gasReferenceDensity)
-        : gasReferenceDensity_(gasReferenceDensity)
-    {
-    }
 
     Co2GasPvt(size_t numRegions,
               Scalar T_ref = 288.71, //(273.15 + 15.56)
@@ -78,27 +74,7 @@ public:
     /*!
      * \brief Initialize the parameters for co2 gas using an ECL deck.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        if( !eclState.getTableManager().getDensityTable().empty()) {
-            std::cerr << "WARNING: CO2STOR is enabled but DENSITY is in the deck. \n" <<
-                         "The surface density is computed based on CO2-BRINE PVT at standard conditions (STCOND) and DENSITY is ignored " << std::endl;
-        }
-
-        if( eclState.getTableManager().hasTables("PVDG") || !eclState.getTableManager().getPvtgTables().empty()) {
-            std::cerr << "WARNING: CO2STOR is enabled but PVDG or PVTG is in the deck. \n" <<
-                         "CO2 PVT properties are computed based on the Span-Wagner pvt model and PVDG/PVTG input is ignored. " << std::endl;
-        }
-
-        // We only supported single pvt region for the co2-brine module
-        size_t numRegions = 1;
-        setNumRegions(numRegions);
-        size_t regionIdx = 0;
-        Scalar T_ref = eclState.getTableManager().stCond().temperature;
-        Scalar P_ref = eclState.getTableManager().stCond().pressure;
-        gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
@@ -247,13 +223,8 @@ public:
         return BinaryCoeffBrineCO2::gasDiffCoeff(temperature, pressure, extrapolate);
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
-
-    bool operator==(const Co2GasPvt<Scalar>& data) const
-    {
-        return gasReferenceDensity_ == data.gasReferenceDensity_;
-    }
 
 private:
     std::vector<Scalar> gasReferenceDensity_;
