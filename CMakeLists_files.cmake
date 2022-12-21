@@ -39,6 +39,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/parameters/ParameterGroup.cpp
       src/opm/common/utility/parameters/ParameterTools.cpp
       src/opm/common/utility/numeric/calculateCellVol.cpp
+      src/opm/common/utility/numeric/RootFinders.cpp
       src/opm/common/utility/shmatch.cpp
       src/opm/common/utility/TimeService.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
