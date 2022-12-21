@@ -168,6 +168,7 @@ namespace RestartIO {
         bool activeInjMult() const;
         void setInjMult(const InjMult& inj_mult);
         void setFilterCake(const FilterCake& filter_cake);
+        const FilterCake& getFilterCake() const;
 
         void setState(State state);
         void setComplnum(int compnum);

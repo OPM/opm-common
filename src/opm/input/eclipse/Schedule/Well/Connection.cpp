@@ -479,4 +479,9 @@ void Connection::setFilterCake(const Connection::FilterCake& filter_cake) {
         this->m_filter_cake = filter_cake;
 }
 
+
+const Connection::FilterCake& Connection::getFilterCake() const {
+        return this->m_filter_cake;
+}
+
 }
