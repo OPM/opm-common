@@ -33,20 +33,6 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#ifdef OPM_PARSER_DECK_API_WARNING
-#ifndef OPM_PARSER_DECK_API
-#pragma message "\n\n" \
-"   ----------------------------------------------------------------------------------\n" \
-"   The current compilation unit includes the header Deck.hpp. Outside of opm-parser  \n" \
-"   you are encouraged to use the EclipseState API instead of the low level Deck API. \n" \
-"   If use of the Deck API is absolutely necessary you can silence this warning with  \n" \
-"   #define OPM_PARSER_DECK_API before including the Deck.hpp header.                 \n" \
-"   ----------------------------------------------------------------------------------\n" \
-""
-#endif
-#endif
-
-
 
 namespace Opm {
 
