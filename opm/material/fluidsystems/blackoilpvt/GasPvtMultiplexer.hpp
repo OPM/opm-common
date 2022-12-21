@@ -73,7 +73,7 @@ namespace Opm {
     }                                                                     \
     case GasPvtApproach::NoGas:                                           \
         throw std::logic_error("Not implemented: Gas PVT of this deck!"); \
-    } \
+    }
 
 enum class GasPvtApproach {
     NoGas,

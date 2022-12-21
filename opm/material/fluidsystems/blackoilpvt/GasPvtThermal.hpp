@@ -237,7 +237,7 @@ public:
      /*!
      * \brief Returns true iff Joule-Thomson effect for the gas phase is active.
      */
-    bool enableJouleThomsony() const
+    bool enableJouleThomson() const
     { return enableJouleThomson_; }
 
     /*!

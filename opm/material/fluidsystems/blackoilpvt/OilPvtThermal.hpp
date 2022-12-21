@@ -255,7 +255,7 @@ public:
     /*!
      * \brief Returns true iff Joule-Thomson effect for the oil phase is active.
      */
-    bool enableJouleThomsony() const
+    bool enableJouleThomson() const
     { return enableJouleThomson_; }
 
     /*!

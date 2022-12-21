@@ -68,7 +68,7 @@ namespace Opm {
     }                                                                             \
     case OilPvtApproach::NoOil:                                                   \
         throw std::logic_error("Not implemented: Oil PVT of this deck!");         \
-    }                                                                             \
+    }
 
 enum class OilPvtApproach {
     NoOil,
