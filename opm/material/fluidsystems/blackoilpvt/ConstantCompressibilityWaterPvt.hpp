@@ -162,6 +162,7 @@ public:
     Evaluation internalEnergy(unsigned,
                         const Evaluation&,
                         const Evaluation&,
+                        const Evaluation&,
                         const Evaluation&) const
     {
         throw std::runtime_error("Requested the enthalpy of water but the thermal option is not enabled");
@@ -172,13 +173,32 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
+    Evaluation saturatedViscosity(unsigned regionIdx,
+                                  const Evaluation& temperature,
+                                  const Evaluation& pressure,
+                                  const Evaluation& saltconcentration) const
+    {
+        Scalar BwMuwRef = waterViscosity_[regionIdx]*waterReferenceFormationVolumeFactor_[regionIdx];
+        const Evaluation& bw = saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
+
+        Scalar pRef = waterReferencePressure_[regionIdx];
+        const Evaluation& Y =
+            (waterCompressibility_[regionIdx] - waterViscosibility_[regionIdx])
+            * (pressure - pRef);
+        return BwMuwRef*bw/(1 + Y*(1 + Y/2));
+    }
+    /*!
+     * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
+     */
+    template <class Evaluation>
     Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
+                         const Evaluation& Rsw,
                          const Evaluation& saltconcentration) const
     {
         Scalar BwMuwRef = waterViscosity_[regionIdx]*waterReferenceFormationVolumeFactor_[regionIdx];
-        const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
+        const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
 
         Scalar pRef = waterReferencePressure_[regionIdx];
         const Evaluation& Y =
@@ -191,9 +211,23 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
+    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+                                                     const Evaluation& temperature,
+                                                     const Evaluation& pressure,
+                                                     const Evaluation& saltconcentration) const
+    {
+      Evaluation Rsw = 0.0;
+      return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+    }
+
+    /*!
+     * \brief Returns the formation volume factor [-] of the fluid phase.
+     */
+    template <class Evaluation>
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& /*temperature*/,
                                             const Evaluation& pressure,
+                                            const Evaluation& /*Rsw*/,
                                             const Evaluation& /*saltconcentration*/) const
     {
         // cf. ECLiPSE 2011 technical description, p. 116
@@ -205,6 +239,37 @@ public:
         // TODO (?): consider the salt concentration of the brine
         return (1.0 + X*(1.0 + X/2.0))/BwRef;
     }
+
+    /*!
+     * \brief Returns the saturation pressure of the water phase [Pa]
+     *        depending on its mass fraction of the gas component
+     *
+     * \param Rs The surface volume of gas component dissolved in what will yield one cubic meter of oil at the surface [-]
+     */
+    template <class Evaluation>
+    Evaluation saturationPressure(unsigned /*regionIdx*/,
+                                  const Evaluation& /*temperature*/,
+                                  const Evaluation& /*Rs*/,
+                                  const Evaluation& /*saltconcentration*/) const
+    { return 0.0; /* this is dead water, so there isn't any meaningful saturation pressure! */ }
+
+    template <class Evaluation>
+    Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
+                                    const Evaluation& /*pressure*/,
+                                    unsigned /*compIdx*/) const
+    {
+        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+    }
+    
+    /*!
+     * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of the water phase.
+     */
+    template <class Evaluation>
+    Evaluation saturatedGasDissolutionFactor(unsigned /*regionIdx*/,
+                                             const Evaluation& /*temperature*/,
+                                             const Evaluation& /*pressure*/,
+                                             const Evaluation& /*saltconcentration*/) const
+    { return 0.0; /* this is dead water! */ }
 
     const Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }

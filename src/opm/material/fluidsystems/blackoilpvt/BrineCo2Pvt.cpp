@@ -48,7 +48,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "pvt model and PVDO/PVTO input is ignored.");
     }
 
-    setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
+    setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
 
     // We only supported single pvt region for the co2-brine module
     size_t numRegions = 1;
