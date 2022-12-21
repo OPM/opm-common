@@ -25,7 +25,6 @@
 #include <string>
 #include <stdexcept>
 #include <iterator>
-#include <sstream>
 #include <set>
 #include <cctype>
 #include <algorithm>
@@ -61,10 +60,11 @@ findSimilarStrings(std::string str,
         return {};
     }
 
-    std::stringstream concated;
-    std::copy(alternatives.begin(), alternatives.end(),
-              std::ostream_iterator<std::string>(concated, ", "));
-    auto concatedStr = concated.str();
+    std::string concatedStr;
+    for (const auto& alt : alternatives) {
+      concatedStr += alt;
+      concatedStr += ", ";
+    }
     return concatedStr.substr(0, concatedStr.size()-2);
 }
 
