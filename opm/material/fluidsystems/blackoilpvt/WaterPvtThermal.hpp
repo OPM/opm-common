@@ -387,9 +387,7 @@ public:
         if (!isothermalPvt_ && data.isothermalPvt_)
             return false;
 
-        return (!this->isoThermalPvt() ||
-               (*this->isoThermalPvt() == *data.isoThermalPvt())) &&
-               this->viscrefPress() == data.viscrefPress() &&
+        return this->viscrefPress() == data.viscrefPress() &&
                this->watdentRefTemp() == data.watdentRefTemp() &&
                this->watdentCT1() == data.watdentCT1() &&
                this->watdentCT2() == data.watdentCT2() &&
