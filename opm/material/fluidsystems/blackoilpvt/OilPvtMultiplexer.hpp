@@ -387,32 +387,6 @@ public:
 
     const void* realOilPvt() const { return realOilPvt_; }
 
-    bool operator==(const OilPvtMultiplexer<Scalar,enableThermal>& data) const
-    {
-        if (this->approach() != data.approach())
-            return false;
-
-        switch (approach_) {
-        case OilPvtApproach::ConstantCompressibilityOil:
-            return *static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::DeadOil:
-            return *static_cast<const DeadOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::LiveOil:
-            return *static_cast<const LiveOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::ThermalOil:
-            return *static_cast<const OilPvtThermal<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::BrineCo2:
-            return *static_cast<const BrineCo2Pvt<Scalar>*>(realOilPvt_) ==
-                    *static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_);
-        default:
-            return true;
-        }
-    }
-
     OilPvtMultiplexer<Scalar,enableThermal>& operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data)
     {
         approach_ = data.approach_;
