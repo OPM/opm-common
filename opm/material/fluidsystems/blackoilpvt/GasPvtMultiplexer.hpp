@@ -434,35 +434,6 @@ public:
 
     const void* realGasPvt() const { return realGasPvt_; }
 
-    bool operator==(const GasPvtMultiplexer<Scalar,enableThermal>& data) const
-    {
-        if (this->gasPvtApproach() != data.gasPvtApproach())
-            return false;
-
-        switch (gasPvtApproach_) {
-        case GasPvtApproach::DryGas:
-            return *static_cast<const DryGasPvt<Scalar>*>(realGasPvt_) ==
-                   *static_cast<const DryGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::DryHumidGas:
-            return *static_cast<const DryHumidGasPvt<Scalar>*>(realGasPvt_) ==
-                   *static_cast<const DryHumidGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::WetHumidGas:
-            return *static_cast<const WetHumidGasPvt<Scalar>*>(realGasPvt_) ==
-                   *static_cast<const WetHumidGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::WetGas:
-            return *static_cast<const WetGasPvt<Scalar>*>(realGasPvt_) ==
-                   *static_cast<const WetGasPvt<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::ThermalGas:
-            return *static_cast<const GasPvtThermal<Scalar>*>(realGasPvt_) ==
-                   *static_cast<const GasPvtThermal<Scalar>*>(data.realGasPvt_);
-        case GasPvtApproach::Co2Gas:
-            return *static_cast<const Co2GasPvt<Scalar>*>(realGasPvt_) ==
-                    *static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_);
-        default:
-            return true;
-        }
-    }
-
     GasPvtMultiplexer<Scalar,enableThermal>& operator=(const GasPvtMultiplexer<Scalar,enableThermal>& data)
     {
         gasPvtApproach_ = data.gasPvtApproach_;
