@@ -24,6 +24,8 @@
 #include <config.h>
 #include <opm/material/thermal/EclThermalLawManager.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -85,8 +87,9 @@ solidEnergyLawParams(unsigned elemIdx) const
         return solidEnergyLawParams_[0];
 
     default:
-        throw std::runtime_error("Attempting to retrieve solid energy storage parameters "
-                                 "without a known approach being defined by the deck.");
+        OPM_THROW(std::runtime_error,
+                  "Attempting to retrieve solid energy storage parameters "
+                  "without a known approach being defined by the deck.");
     }
 }
 
@@ -105,8 +108,9 @@ thermalConductionLawParams(unsigned elemIdx) const
         return thermalConductionLawParams_[0];
 
     default:
-        throw std::runtime_error("Attempting to retrieve thermal conduction parameters without "
-                                 "a known approach being defined by the deck.");
+        OPM_THROW(std::runtime_error,
+                  "Attempting to retrieve thermal conduction parameters without "
+                  "a known approach being defined by the deck.");
     }
 }
 
