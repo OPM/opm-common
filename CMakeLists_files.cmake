@@ -379,6 +379,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
+      tests/test_EvaluationFormat.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp
@@ -397,7 +398,6 @@ list(APPEND DUNE_TEST_SOURCE_FILES
       tests/test_co2brine_ptflash.cpp
       tests/test_components.cpp
       tests/test_densead.cpp
-      tests/test_EvaluationFormat.cpp
       tests/test_fluidmatrixinteractions.cpp
       tests/test_fluidsystems.cpp
       tests/test_immiscibleflash.cpp

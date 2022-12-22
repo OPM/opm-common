@@ -909,22 +909,6 @@ DenseAd::Evaluation<Scalar, -1, staticSize> variable(int numDerivatives, const S
 } // namespace Opm
 
 {% if numDerivs == 0 %}\
-// this makes the Dune matrix/vector classes happy...
-#include <dune/common/ftraits.hh>
-
-namespace Dune {
-template <class ValueType, int numVars, unsigned staticSize>
-struct FieldTraits<Opm::DenseAd::Evaluation<ValueType, numVars, staticSize> >
-{
-public:
-    typedef Opm::DenseAd::Evaluation<ValueType, numVars, staticSize> field_type;
-    // setting real_type to field_type here potentially leads to slightly worse
-    // performance, but at least it makes things compile.
-    typedef field_type real_type;
-};
-
-} // namespace Dune
-
 #include "EvaluationSpecializations.hpp"
 
 #endif // OPM_DENSEAD_EVALUATION_HPP

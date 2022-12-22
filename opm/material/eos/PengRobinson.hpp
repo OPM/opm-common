@@ -37,6 +37,7 @@
 #include <opm/material/common/PolynomialUtils.hpp>
 
 #include <csignal>
+#include <sstream>
 
 namespace Opm {
 
