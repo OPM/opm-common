@@ -29,16 +29,15 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvdsTable.hpp>
-#endif
-
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the "second"
  *        gas phase in the of ECL simulations with solvents.
@@ -51,56 +50,13 @@ class SolventPvt
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    explicit SolventPvt() = default;
-    SolventPvt(const std::vector<Scalar>& solventReferenceDensity,
-               const std::vector<TabulatedOneDFunction>& inverseSolventB,
-               const std::vector<TabulatedOneDFunction>& solventMu,
-               const std::vector<TabulatedOneDFunction>& inverseSolventBMu)
-        : solventReferenceDensity_(solventReferenceDensity)
-        , inverseSolventB_(inverseSolventB)
-        , solventMu_(solventMu)
-        , inverseSolventBMu_(inverseSolventBMu)
-    {
-    }
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for "solvent gas" using an ECL deck.
      *
      * This method assumes that the deck features valid SDENSITY and PVDS keywords.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& pvdsTables = eclState.getTableManager().getPvdsTables();
-        const auto& sdensityTables = eclState.getTableManager().getSolventDensityTables();
-
-        assert(pvdsTables.size() == sdensityTables.size());
-
-        size_t numRegions = pvdsTables.size();
-        setNumRegions(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            Scalar rhoRefS = sdensityTables[regionIdx].getSolventDensityColumn().front();
-
-            setReferenceDensity(regionIdx, rhoRefS);
-
-            const auto& pvdsTable = pvdsTables.getTable<PvdsTable>(regionIdx);
-
-            // say 99.97% of all time: "premature optimization is the root of all
-            // evil". Eclipse does this "optimization" for apparently no good reason!
-            std::vector<Scalar> invB(pvdsTable.numRows());
-            const auto& Bg = pvdsTable.getFormationFactorColumn();
-            for (unsigned i = 0; i < Bg.size(); ++ i) {
-                invB[i] = 1.0/Bg[i];
-            }
-
-            size_t numSamples = invB.size();
-            inverseSolventB_[regionIdx].setXYArrays(numSamples, pvdsTable.getPressureColumn(), invB);
-            solventMu_[regionIdx].setXYArrays(numSamples, pvdsTable.getPressureColumn(), pvdsTable.getViscosityColumn());
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
@@ -221,14 +177,6 @@ public:
 
     const std::vector<TabulatedOneDFunction>& inverseSolventBMu() const
     { return inverseSolventBMu_; }
-
-    bool operator==(const SolventPvt<Scalar>& data) const
-    {
-        return solventReferenceDensity_ == data.solventReferenceDensity_ &&
-               inverseSolventB_ == data.inverseSolventB_ &&
-               solventMu_ == data.solventMu_ &&
-               inverseSolventBMu_ == data.inverseSolventBMu_;
-    }
 
 private:
     std::vector<Scalar> solventReferenceDensity_;
