@@ -396,6 +396,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
       tests/test_spline.cpp
+      tests/test_tabulation.cpp
       tests/test_uniformtablelinear.cpp
 )
 
@@ -405,7 +406,6 @@ list(APPEND DUNE_TEST_SOURCE_FILES
       tests/test_immiscibleflash.cpp
       tests/test_ncpflash.cpp
       tests/test_pengrobinson.cpp
-      tests/test_tabulation.cpp
       tests/test_threecomponents_ptflash.cpp
 )
 

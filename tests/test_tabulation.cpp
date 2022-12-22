@@ -34,8 +34,6 @@
 #include <opm/material/components/H2O.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 extern bool success;
 bool success;
 
@@ -119,10 +117,8 @@ inline void testAll()
         std::cout << "\nsuccess\n";
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     testAll<double>();
     testAll<float>();
 
