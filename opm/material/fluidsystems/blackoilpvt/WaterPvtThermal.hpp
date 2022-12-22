@@ -29,13 +29,13 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+class EclipseState;
+class Schedule;
 #endif
 
-namespace Opm {
 template <class Scalar, bool enableThermal, bool enableBrine>
 class WaterPvtMultiplexer;
 
@@ -108,120 +108,7 @@ public:
     /*!
      * \brief Implement the temperature part of the water PVT properties.
      */
-    void initFromState(const EclipseState& eclState, const Schedule& schedule)
-    {
-        //////
-        // initialize the isothermal part
-        //////
-        isothermalPvt_ = new IsothermalPvt;
-        isothermalPvt_->initFromState(eclState, schedule);
-
-        //////
-        // initialize the thermal part
-        //////
-        const auto& tables = eclState.getTableManager();
-
-        enableThermalDensity_ = tables.WatDenT().size() > 0;
-        enableJouleThomson_ = tables.WatJT().size() > 0;
-        enableThermalViscosity_ = tables.hasTables("WATVISCT");
-        enableInternalEnergy_ = tables.hasTables("SPECHEAT");
-
-        unsigned numRegions = isothermalPvt_->numRegions();
-        setNumRegions(numRegions);
-
-        if (enableThermalDensity_) {
-            const auto& watDenT = tables.WatDenT();
-
-            assert(watDenT.size() == numRegions);
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-                const auto& record = watDenT[regionIdx];
-
-                watdentRefTemp_[regionIdx] = record.T0;
-                watdentCT1_[regionIdx] = record.C1;
-                watdentCT2_[regionIdx] = record.C2;
-            }
-          
-            const auto& pvtwTables = tables.getPvtwTable();
-          
-            assert(pvtwTables.size() == numRegions);       
-
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-                pvtwRefPress_[regionIdx] = pvtwTables[regionIdx].reference_pressure;
-                pvtwRefB_[regionIdx] = pvtwTables[regionIdx].volume_factor;
-            }
-        }
-
-        // Joule Thomson 
-        if (enableJouleThomson_) {
-             const auto& watJT = tables.WatJT();
-
-            assert(watJT.size() == numRegions);
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-                const auto& record = watJT[regionIdx];
-
-                watJTRefPres_[regionIdx] =  record.P0;
-                watJTC_[regionIdx] = record.C1;
-            }
-        }
-
-        if (enableThermalViscosity_) {
-            if (tables.getViscrefTable().empty())
-                throw std::runtime_error("VISCREF is required when WATVISCT is present");
-
-            const auto& watvisctTables = tables.getWatvisctTables();
-            const auto& viscrefTables = tables.getViscrefTable();
-
-            const auto& pvtwTables = tables.getPvtwTable();
-
-            assert(pvtwTables.size() == numRegions);
-            assert(watvisctTables.size() == numRegions);
-            assert(viscrefTables.size() == numRegions);
-
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-                const auto& T = watvisctTables[regionIdx].getColumn("Temperature").vectorCopy();
-                const auto& mu = watvisctTables[regionIdx].getColumn("Viscosity").vectorCopy();
-                watvisctCurves_[regionIdx].setXYContainers(T, mu);
-
-                viscrefPress_[regionIdx] = viscrefTables[regionIdx].reference_pressure;
-            }
-
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-                pvtwViscosity_[regionIdx] = pvtwTables[regionIdx].viscosity;
-                pvtwViscosibility_[regionIdx] = pvtwTables[regionIdx].viscosibility;
-            }
-        }
-
-        if (enableInternalEnergy_) {
-            // the specific internal energy of liquid water. be aware that ecl only specifies the heat capacity
-            // (via the SPECHEAT keyword) and we need to integrate it ourselfs to get the
-            // internal energy
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-                const auto& specHeatTable = tables.getSpecheatTables()[regionIdx];
-                const auto& temperatureColumn = specHeatTable.getColumn("TEMPERATURE");
-                const auto& cvWaterColumn = specHeatTable.getColumn("CV_WATER");
-
-                std::vector<double> uSamples(temperatureColumn.size());
-
-                Scalar u = temperatureColumn[0]*cvWaterColumn[0];
-                for (size_t i = 0;; ++i) {
-                    uSamples[i] = u;
-
-                    if (i >= temperatureColumn.size() - 1)
-                        break;
-
-                    // integrate to the heat capacity from the current sampling point to the next
-                    // one. this leads to a quadratic polynomial.
-                    Scalar c_v0 = cvWaterColumn[i];
-                    Scalar c_v1 = cvWaterColumn[i + 1];
-                    Scalar T0 = temperatureColumn[i];
-                    Scalar T1 = temperatureColumn[i + 1];
-                    u += 0.5*(c_v0 + c_v1)*(T1 - T0);
-                }
-
-                internalEnergyCurves_[regionIdx].setXYContainers(temperatureColumn.vectorCopy(), uSamples);
-            }
-        }
-    }
+    void initFromState(const EclipseState& eclState, const Schedule& schedule);
 #endif // HAVE_ECL_INPUT
 
     /*!
@@ -500,9 +387,7 @@ public:
         if (!isothermalPvt_ && data.isothermalPvt_)
             return false;
 
-        return (!this->isoThermalPvt() ||
-               (*this->isoThermalPvt() == *data.isoThermalPvt())) &&
-               this->viscrefPress() == data.viscrefPress() &&
+        return this->viscrefPress() == data.viscrefPress() &&
                this->watdentRefTemp() == data.watdentRefTemp() &&
                this->watdentCT1() == data.watdentCT1() &&
                this->watdentCT2() == data.watdentCT2() &&
