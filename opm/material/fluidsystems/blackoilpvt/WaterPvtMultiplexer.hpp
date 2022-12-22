@@ -360,29 +360,6 @@ public:
 
     const void* realWaterPvt() const { return realWaterPvt_; }
 
-    bool operator==(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data) const
-    {
-        if (this->approach() != data.approach())
-            return false;
-
-        switch (approach_) {
-        case WaterPvtApproach::ConstantCompressibilityWater:
-            return *static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(realWaterPvt_) ==
-                   *static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(data.realWaterPvt_);
-        case WaterPvtApproach::ConstantCompressibilityBrine:
-            return *static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(realWaterPvt_) ==
-                   *static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(data.realWaterPvt_);
-        case WaterPvtApproach::ThermalWater:
-            return *static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(realWaterPvt_) ==
-                   *static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(data.realWaterPvt_);
-        case WaterPvtApproach::BrineCo2:
-            return *static_cast<const BrineCo2Pvt<Scalar>*>(realWaterPvt_) ==
-                    *static_cast<const BrineCo2Pvt<Scalar>*>(data.realWaterPvt_);
-        default:
-            return true;
-        }
-    }
-
     WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data)
     {
         approach_ = data.approach_;
