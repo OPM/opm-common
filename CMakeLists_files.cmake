@@ -416,6 +416,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_co2brinepvt.cpp
     tests/test_CopyablePtr.cpp
     tests/test_eclblackoilfluidsystem.cpp
+    tests/test_eclblackoilpvt.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -501,7 +502,6 @@ if(ENABLE_ECL_INPUT)
 
 # tests that needs to be linked to dune-common
 list(APPEND DUNE_TEST_SOURCE_FILES
-    tests/test_eclblackoilpvt.cpp
     tests/test_eclmateriallawmanager.cpp
 )
 endif()

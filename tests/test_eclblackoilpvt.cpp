@@ -53,8 +53,6 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
 // real world it does not make much sense to specify a fluid phase using more than a
 // single keyword, but for a unit test, this saves a lot of boiler-plate code.
@@ -296,10 +294,8 @@ inline void testAll()
 }
 
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     testAll<double>();
     testAll<float>();
 
