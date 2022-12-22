@@ -407,9 +407,7 @@ public:
         if (!isothermalPvt_ && data.isothermalPvt_)
             return false;
 
-        return (!this->isoThermalPvt() ||
-                (*this->isoThermalPvt() == *data.isoThermalPvt())) &&
-                this->gasvisctCurves() == data.gasvisctCurves() &&
+        return  this->gasvisctCurves() == data.gasvisctCurves() &&
                 this->gasdentRefTemp() == data.gasdentRefTemp() &&
                 this->gasdentCT1() == data.gasdentCT1() &&
                 this->gasdentCT2() == data.gasdentCT2() &&
