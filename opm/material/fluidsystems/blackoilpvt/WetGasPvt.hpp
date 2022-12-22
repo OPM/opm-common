@@ -34,14 +34,13 @@
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
-#endif
-
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+class SimpleTable;
+#endif
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phas
@@ -56,205 +55,19 @@ public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    WetGasPvt()
-    {
-        vapPar1_ = 0.0;
-    }
-
-    WetGasPvt(const std::vector<Scalar>& gasReferenceDensity,
-              const std::vector<Scalar>& oilReferenceDensity,
-              const std::vector<TabulatedTwoDFunction>& inverseGasB,
-              const std::vector<TabulatedOneDFunction>& inverseSaturatedGasB,
-              const std::vector<TabulatedTwoDFunction>& gasMu,
-              const std::vector<TabulatedTwoDFunction>& inverseGasBMu,
-              const std::vector<TabulatedOneDFunction>& inverseSaturatedGasBMu,
-              const std::vector<TabulatedOneDFunction>& saturatedOilVaporizationFactorTable,
-              const std::vector<TabulatedOneDFunction>& saturationPressure,
-              Scalar vapPar1)
-        : gasReferenceDensity_(gasReferenceDensity)
-        , oilReferenceDensity_(oilReferenceDensity)
-        , inverseGasB_(inverseGasB)
-        , inverseSaturatedGasB_(inverseSaturatedGasB)
-        , gasMu_(gasMu)
-        , inverseGasBMu_(inverseGasBMu)
-        , inverseSaturatedGasBMu_(inverseSaturatedGasBMu)
-        , saturatedOilVaporizationFactorTable_(saturatedOilVaporizationFactorTable)
-        , saturationPressure_(saturationPressure)
-        , vapPar1_(vapPar1)
-    {
-    }
-
-
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for wet gas using an ECL deck.
      *
      * This method assumes that the deck features valid DENSITY and PVTG keywords.
      */
-    void initFromState(const EclipseState& eclState, const Schedule& schedule)
-    {
-        const auto& pvtgTables = eclState.getTableManager().getPvtgTables();
-        const auto& densityTable = eclState.getTableManager().getDensityTable();
-
-        assert(pvtgTables.size() == densityTable.size());
-
-        size_t numRegions = pvtgTables.size();
-        setNumRegions(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            Scalar rhoRefO = densityTable[regionIdx].oil;
-            Scalar rhoRefG = densityTable[regionIdx].gas;
-            Scalar rhoRefW = densityTable[regionIdx].water;
-
-            setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
-        }
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            const auto& pvtgTable = pvtgTables[regionIdx];
-
-            const auto& saturatedTable = pvtgTable.getSaturatedTable();
-            assert(saturatedTable.numRows() > 1);
-
-            auto& gasMu = gasMu_[regionIdx];
-            auto& invGasB = inverseGasB_[regionIdx];
-            auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
-            auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
-            auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
-
-            oilVaporizationFac.setXYArrays(saturatedTable.numRows(),
-                                           saturatedTable.getColumn("PG"),
-                                           saturatedTable.getColumn("RV"));
-
-            std::vector<Scalar> invSatGasBArray;
-            std::vector<Scalar> invSatGasBMuArray;
-
-            // extract the table for the gas dissolution and the oil formation volume factors
-            for (unsigned outerIdx = 0; outerIdx < saturatedTable.numRows(); ++ outerIdx) {
-                Scalar pg = saturatedTable.get("PG" , outerIdx);
-                Scalar B = saturatedTable.get("BG" , outerIdx);
-                Scalar mu = saturatedTable.get("MUG" , outerIdx);
-
-                invGasB.appendXPos(pg);
-                gasMu.appendXPos(pg);
-
-                invSatGasBArray.push_back(1.0/B);
-                invSatGasBMuArray.push_back(1.0/(mu*B));
-
-                assert(invGasB.numX() == outerIdx + 1);
-                assert(gasMu.numX() == outerIdx + 1);
-
-                const auto& underSaturatedTable = pvtgTable.getUnderSaturatedTable(outerIdx);
-                size_t numRows = underSaturatedTable.numRows();
-                for (size_t innerIdx = 0; innerIdx < numRows; ++ innerIdx) {
-                    Scalar Rv = underSaturatedTable.get("RV" , innerIdx);
-                    Scalar Bg = underSaturatedTable.get("BG" , innerIdx);
-                    Scalar mug = underSaturatedTable.get("MUG" , innerIdx);
-
-                    invGasB.appendSamplePoint(outerIdx, Rv, 1.0/Bg);
-                    gasMu.appendSamplePoint(outerIdx, Rv, mug);
-                }
-            }
-
-            {
-                std::vector<double> tmpPressure =  saturatedTable.getColumn("PG").vectorCopy( );
-
-                invSatGasB.setXYContainers(tmpPressure, invSatGasBArray);
-                invSatGasBMu.setXYContainers(tmpPressure, invSatGasBMuArray);
-            }
-
-            // make sure to have at least two sample points per gas pressure value
-            for (unsigned xIdx = 0; xIdx < invGasB.numX(); ++xIdx) {
-               // a single sample point is definitely needed
-                assert(invGasB.numY(xIdx) > 0);
-
-                // everything is fine if the current table has two or more sampling points
-                // for a given mole fraction
-                if (invGasB.numY(xIdx) > 1)
-                    continue;
-
-                // find the master table which will be used as a template to extend the
-                // current line. We define master table as the first table which has values
-                // for undersaturated gas...
-                size_t masterTableIdx = xIdx + 1;
-                for (; masterTableIdx < saturatedTable.numRows(); ++masterTableIdx)
-                {
-                    if (pvtgTable.getUnderSaturatedTable(masterTableIdx).numRows() > 1)
-                        break;
-                }
-
-                if (masterTableIdx >= saturatedTable.numRows())
-                    throw std::runtime_error("PVTG tables are invalid: The last table must exhibit at least one "
-                              "entry for undersaturated gas!");
-
-
-                // extend the current table using the master table.
-                extendPvtgTable_(regionIdx,
-                                 xIdx,
-                                 pvtgTable.getUnderSaturatedTable(xIdx),
-                                 pvtgTable.getUnderSaturatedTable(masterTableIdx));
-            }
-        }
-
-        vapPar1_ = 0.0;
-        const auto& oilVap = schedule[0].oilvap();
-        if (oilVap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS) {
-            vapPar1_ = oilVap.vap1();
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule& schedule);
 
 private:
     void extendPvtgTable_(unsigned regionIdx,
                           unsigned xIdx,
                           const SimpleTable& curTable,
-                          const SimpleTable& masterTable)
-    {
-        std::vector<double> RvArray = curTable.getColumn("RV").vectorCopy();
-        std::vector<double> gasBArray = curTable.getColumn("BG").vectorCopy();
-        std::vector<double> gasMuArray = curTable.getColumn("MUG").vectorCopy();
-
-        auto& invGasB = inverseGasB_[regionIdx];
-        auto& gasMu = gasMu_[regionIdx];
-
-        for (size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++ newRowIdx) {
-            const auto& RVColumn = masterTable.getColumn("RV");
-            const auto& BGColumn = masterTable.getColumn("BG");
-            const auto& viscosityColumn = masterTable.getColumn("MUG");
-
-            // compute the gas pressure for the new entry
-            Scalar diffRv = RVColumn[newRowIdx] - RVColumn[newRowIdx - 1];
-            Scalar newRv = RvArray.back() + diffRv;
-
-            // calculate the compressibility of the master table
-            Scalar B1 = BGColumn[newRowIdx];
-            Scalar B2 = BGColumn[newRowIdx - 1];
-            Scalar x = (B1 - B2)/( (B1 + B2)/2.0 );
-
-            // calculate the gas formation volume factor which exhibits the same
-            // "compressibility" for the new value of Rv
-            Scalar newBg = gasBArray.back()*(1.0 + x/2.0)/(1.0 - x/2.0);
-
-            // calculate the "viscosibility" of the master table
-            Scalar mu1 = viscosityColumn[newRowIdx];
-            Scalar mu2 = viscosityColumn[newRowIdx - 1];
-            Scalar xMu = (mu1 - mu2)/( (mu1 + mu2)/2.0 );
-
-            // calculate the gas formation volume factor which exhibits the same
-            // compressibility for the new pressure
-            Scalar newMug = gasMuArray.back()*(1.0 + xMu/2)/(1.0 - xMu/2.0);
-
-            // append the new values to the arrays which we use to compute the additional
-            // values ...
-            RvArray.push_back(newRv);
-            gasBArray.push_back(newBg);
-            gasMuArray.push_back(newMug);
-
-            // ... and register them with the internal table objects
-            invGasB.appendSamplePoint(xIdx, newRv, 1.0/newBg);
-            gasMu.appendSamplePoint(xIdx, newRv, newMug);
-        }
-    }
+                          const SimpleTable& masterTable);
 
 public:
 #endif // HAVE_ECL_INPUT
@@ -657,10 +470,10 @@ public:
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
     const std::vector<TabulatedTwoDFunction>& inverseGasB() const {
@@ -693,20 +506,6 @@ public:
 
     Scalar vapPar1() const {
         return vapPar1_;
-    }
-
-    bool operator==(const WetGasPvt<Scalar>& data) const
-    {
-        return this->gasReferenceDensity_ == data.gasReferenceDensity_ &&
-               this->oilReferenceDensity_ == data.oilReferenceDensity_ &&
-               this->inverseGasB() == data.inverseGasB() &&
-               this->inverseSaturatedGasB() == data.inverseSaturatedGasB() &&
-               this->gasMu() == data.gasMu() &&
-               this->inverseGasBMu() == data.inverseGasBMu() &&
-               this->inverseSaturatedGasBMu() == data.inverseSaturatedGasBMu() &&
-               this->saturatedOilVaporizationFactorTable() == data.saturatedOilVaporizationFactorTable() &&
-               this->saturationPressure() == data.saturationPressure() &&
-               this->vapPar1() == data.vapPar1();
     }
 
 private:
@@ -747,7 +546,7 @@ private:
     std::vector<TabulatedOneDFunction> saturatedOilVaporizationFactorTable_;
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
-    Scalar vapPar1_;
+    Scalar vapPar1_ = 0.0;
 };
 
 } // namespace Opm
