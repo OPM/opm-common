@@ -484,4 +484,37 @@ const Connection::FilterCake& Connection::getFilterCake() const {
         return this->m_filter_cake;
 }
 
+
+double Connection::getFilterCakeRadius() const {
+    if (this->m_filter_cake.radius) {
+        return *this->m_filter_cake.radius;
+    } else {
+        return this->m_rw;
+    }
 }
+
+
+double Connection::getFilterCakeArea() const {
+    if (this->m_filter_cake.flow_area) {
+        return *(this->m_filter_cake.flow_area);
+    } else {
+        const double radius = this->getFilterCakeRadius();
+        const double length = this->m_connection_length;
+        constexpr double pi = 3.14159265;
+        return 2. * pi * radius * length;
+    }
+}
+
+Connection::FilterCake::FilterCake(const DeckRecord& record) {
+    this->geometry = Connection::filterCakeGeometryFromString(record.getItem("GEOMETRY").getTrimmedString(0));
+    this->perm = record.getItem("FILTER_CAKE_PERM").getSIDouble(0);
+    this->poro = record.getItem("FILTER_CAKE_PORO").getSIDouble(0);
+    if (!record.getItem("FILTER_CAKE_RADIUS").defaultApplied(0)) {
+        this->radius = record.getItem("FILTER_CAKE_RADIUS").getSIDouble(0);
+    }
+    if (!record.getItem("FILTER_CAKE_AREA").defaultApplied(0)) {
+        this->flow_area = record.getItem("FILTER_CAKE_AREA").getSIDouble(0);
+    }
+}
+
+} // end of namespace Opm

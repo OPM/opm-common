@@ -1313,14 +1313,7 @@ bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& /* loc
         return true;
     };
 
-    const Connection::FilterCakeGeometry geomerty = Connection::filterCakeGeometryFromString(record.getItem("GEOMETRY").getTrimmedString(0));
-    const double perm = record.getItem("FILTER_CAKE_PERM").getSIDouble(0);
-    const double poro = record.getItem("FILTER_CAKE_PORO").getSIDouble(0);
-    // TODO: The following two can be defaulted and needs to be calculated later
-    const double radius = record.getItem("FILTER_CAKE_RADIUS").getSIDouble(0);
-    const double flow_area = record.getItem("FILTER_CAKE_AREA").getSIDouble(0);
-    // TODO: we can make a function to generate FilterCake from the record.
-    const Connection::FilterCake filter_cake {geomerty, perm, poro, radius, flow_area};
+    const Connection::FilterCake filter_cake {record};
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
     for (auto c : *(this->connections)) {
         if (match(c)) {
@@ -1744,4 +1737,8 @@ bool Opm::Well::aciveWellInjMult() const {
 
 void Opm::Well::setFilterConc(const double conc) {
     this->m_filter_concentration = conc;
+}
+
+double Opm::Well::getFilterConc() const {
+    return this->m_filter_concentration;
 }

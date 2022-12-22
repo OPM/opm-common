@@ -93,8 +93,11 @@ namespace RestartIO {
             FilterCakeGeometry geometry {FilterCakeGeometry::NONE};
             double perm{0.};
             double poro{0.};
-            double radius{0.};
-            double flow_area{0.};
+            std::optional<double> radius;
+            std::optional<double> flow_area;
+
+            FilterCake() = default;
+            explicit FilterCake(const DeckRecord& record);
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
@@ -169,6 +172,9 @@ namespace RestartIO {
         void setInjMult(const InjMult& inj_mult);
         void setFilterCake(const FilterCake& filter_cake);
         const FilterCake& getFilterCake() const;
+        // TODO: make these two functions members of FilterCake class
+        double getFilterCakeRadius() const;
+        double getFilterCakeArea() const;
 
         void setState(State state);
         void setComplnum(int compnum);

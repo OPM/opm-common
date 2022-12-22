@@ -485,6 +485,7 @@ public:
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
     // TODO: makes it a handleWINJFCNC?
     void setFilterConc(const double conc);
+    double getFilterConc() const;
     bool applyGlobalWPIMULT(double scale_factor);
 
     void filterConnections(const ActiveGridCells& grid);

@@ -2020,7 +2020,8 @@ Well{0} entered with 'FIELD' parent group:
             // TODO: will check whether we should put all the filter cake related to a separate property
             for (const auto& well_name: well_names) {
                 auto well = this->snapshots.back().wells(well_name);
-                well.setFilterConc(record.getItem("VOL_CONCENTRATION").get<UDAValue>(0).getSI());
+                // the unit is ppm_vol
+                well.setFilterConc(record.getItem("VOL_CONCENTRATION").get<UDAValue>(0).get<double>()/1.e6);
                 this->snapshots.back().wells.update(std::move(well));
             }
         }
