@@ -61,6 +61,7 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #endif
 
 #include <dune/common/parallel/mpihelper.hh>
