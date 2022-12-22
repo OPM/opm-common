@@ -38,8 +38,6 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <stdexcept>
 
 // It is a two component system
@@ -323,9 +321,8 @@ bool result_okay_singlephase(const FluidState& fluid_state, const ComponentVecto
     return res_okay;
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
     bool test_passed_two = true;
     bool test_passed_single = true;
 
