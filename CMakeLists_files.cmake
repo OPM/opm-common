@@ -254,6 +254,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/OilPvtThermal.cpp
     src/opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
+    src/opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
     src/opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
