@@ -37,8 +37,6 @@
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <iostream>
 #include <array>
 #include <cmath>
@@ -682,10 +680,8 @@ private:
     int numDerivs_;
 };
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     std::cout << "Testing statically sized evaluations\n";
     std::cout << " -> Scalar == double, n = 15\n";
     StaticTestEnv<double, 15>().testAll();
