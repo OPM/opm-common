@@ -376,6 +376,7 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
+      tests/test_2dtables.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
@@ -394,7 +395,6 @@ list (APPEND TEST_SOURCE_FILES
 
 # tests that need to be linked to dune-common
 list(APPEND DUNE_TEST_SOURCE_FILES
-      tests/test_2dtables.cpp
       tests/test_blackoilfluidstate.cpp
       tests/test_co2brine_ptflash.cpp
       tests/test_components.cpp
