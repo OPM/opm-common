@@ -59,8 +59,6 @@
 
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 template <class Scalar, class Evaluation>
 void testSimpleH2O()
 {
@@ -127,11 +125,8 @@ inline void testAll()
 
 }
 
-
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     testAll<double>();
     testAll<float>();
 

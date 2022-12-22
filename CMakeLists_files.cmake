@@ -380,6 +380,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_blackoilfluidstate.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
+      tests/test_components.cpp
       tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
       tests/test_EvaluationFormat.cpp
@@ -397,7 +398,6 @@ list (APPEND TEST_SOURCE_FILES
 # tests that need to be linked to dune-common
 list(APPEND DUNE_TEST_SOURCE_FILES
       tests/test_co2brine_ptflash.cpp
-      tests/test_components.cpp
       tests/test_densead.cpp
       tests/test_fluidmatrixinteractions.cpp
       tests/test_fluidsystems.cpp
