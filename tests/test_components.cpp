@@ -59,11 +59,6 @@
 
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
-namespace Opm {
-namespace ComponentsTest {
-#include <opm/material/components/co2tables.inc>
-}}
-
 #include <dune/common/parallel/mpihelper.hh>
 
 template <class Scalar, class Evaluation>
@@ -103,7 +98,7 @@ void testAllComponents()
 
     checkComponent<Opm::Air<Scalar>, Evaluation>();
     checkComponent<Opm::Brine<Scalar, H2O>, Evaluation>();
-    checkComponent<Opm::CO2<Scalar, Opm::ComponentsTest::CO2Tables>, Evaluation>();
+    checkComponent<Opm::CO2<Scalar>, Evaluation>();
     checkComponent<Opm::C1<Scalar>, Evaluation>();
     checkComponent<Opm::C10<Scalar>, Evaluation>();
     checkComponent<Opm::DNAPL<Scalar>, Evaluation>();

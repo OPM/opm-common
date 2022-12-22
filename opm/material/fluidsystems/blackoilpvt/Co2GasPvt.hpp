@@ -33,7 +33,6 @@
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
-#include <opm/material/components/co2tables.inc>
 
 #include <vector>
 
@@ -51,7 +50,7 @@ class Schedule;
 template <class Scalar>
 class Co2GasPvt
 {
-    using CO2 = ::Opm::CO2<Scalar, CO2Tables>;
+    using CO2 = ::Opm::CO2<Scalar>;
     using H2O = SimpleHuDuanH2O<Scalar>;
     static constexpr bool extrapolate = true;
 
