@@ -393,9 +393,7 @@ public:
         if (!isothermalPvt_ && data.isothermalPvt_)
             return false;
 
-        return (!this->isoThermalPvt() ||
-                (*this->isoThermalPvt() == *data.isoThermalPvt())) &&
-                this->oilvisctCurves() == data.oilvisctCurves() &&
+        return  this->oilvisctCurves() == data.oilvisctCurves() &&
                 this->viscrefPress() == data.viscrefPress() &&
                 this->viscrefRs() == data.viscrefRs() &&
                 this->viscRef() == data.viscRef() &&
