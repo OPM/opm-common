@@ -16,10 +16,6 @@ if(NOT DEFINED USE_QUADMATH OR USE_QUADMATH)
     check_cxx_compiler_flag("-Werror -fext-numeric-literals" HAVE_EXTENDED_NUMERIC_LITERALS)
   endif()
 
-  if (HAVE_EXTENDED_NUMERIC_LITERALS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
-  endif()
-
   cmake_push_check_state(RESET)
   list(APPEND CMAKE_REQUIRED_LIBRARIES "quadmath")
   CHECK_CXX_SOURCE_COMPILES("
@@ -37,9 +33,12 @@ int main(void){
     if (NOT TARGET QuadMath::QuadMath)
       add_library(QuadMath::QuadMath INTERFACE IMPORTED)
       set_target_properties(QuadMath::QuadMath PROPERTIES
-	INTERFACE_LINK_LIBRARIES quadmath
-	INTERFACE_COMPILE_DEFINITIONS _GLIBCXX_USE_FLOAT128
-	INTERFACE_COMPILE_OPTIONS $<$<CXX_COMPILER_ID:GNU>:-fext-numeric-literals>)
+                            INTERFACE_LINK_LIBRARIES quadmath
+                            INTERFACE_COMPILE_DEFINITIONS _GLIBCXX_USE_FLOAT128)
+      if(HAVE_EXTENDED_NUMERIC_LITERALS)
+        set_target_properties(QuadMath::QuadMath PROPERTIES
+                              INTERFACE_COMPILE_OPTIONS $<$<CXX_COMPILER_ID:GNU>:-fext-numeric-literals>)
+      endif()
     endif()
   endif()
 endif()
