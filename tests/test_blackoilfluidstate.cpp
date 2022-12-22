@@ -34,8 +34,6 @@
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/checkFluidSystem.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 int main()
 {
     {
