@@ -31,8 +31,6 @@
 #ifndef OPM_DENSEAD_EVALUATION8_HPP
 #define OPM_DENSEAD_EVALUATION8_HPP
 
-#include "Evaluation.hpp"
-
 #ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>
 #endif

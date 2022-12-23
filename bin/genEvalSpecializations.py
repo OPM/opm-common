@@ -73,8 +73,6 @@ specializationTemplate = \
 #define OPM_DENSEAD_EVALUATION{{numDerivs}}_HPP
 {% endif %}\
 
-#include "Evaluation.hpp"
-
 #ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>
 #endif
