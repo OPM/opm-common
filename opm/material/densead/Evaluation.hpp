@@ -40,15 +40,13 @@
 #endif
 
 #include <array>
-#include <cmath>
 #include <cassert>
-#include <cstring>
 #include <iosfwd>
 #include <stdexcept>
-#include <algorithm>
 
 namespace Opm {
 namespace DenseAd {
+
 //! Indicates that the number of derivatives considered by an Evaluation object
 //! is run-time determined
 static constexpr int DynamicSize = -1;

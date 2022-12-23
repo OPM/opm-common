@@ -38,14 +38,11 @@
 #ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>
 #endif
-
 #include <opm/material/common/FastSmallVector.hpp>
-#include <cmath>
+
 #include <cassert>
-#include <cstring>
 #include <iosfwd>
 #include <stdexcept>
-#include <algorithm>
 
 namespace Opm {
 namespace DenseAd {

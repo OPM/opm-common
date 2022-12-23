@@ -79,27 +79,26 @@ specializationTemplate = \
 #ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>
 #endif
-
 {% if numDerivs < 0 %}\
 #include <opm/material/common/FastSmallVector.hpp>
+
 {% else %}\
+
 #include <array>
 {% endif %}\
-#include <cmath>
 #include <cassert>
-#include <cstring>
 #include <iosfwd>
 #include <stdexcept>
-#include <algorithm>
 
 namespace Opm {
 namespace DenseAd {
+
 {% if numDerivs == 0 %}\
 //! Indicates that the number of derivatives considered by an Evaluation object
 //! is run-time determined
 static constexpr int DynamicSize = -1;
-{% endif %}\
 
+{% endif %}\
 {% if numDerivs < 0 %}\
 /*!
  * \\brief Represents a function evaluation and its derivatives w.r.t. a

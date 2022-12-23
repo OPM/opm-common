@@ -39,12 +39,9 @@
 #endif
 
 #include <array>
-#include <cmath>
 #include <cassert>
-#include <cstring>
 #include <iosfwd>
 #include <stdexcept>
-#include <algorithm>
 
 namespace Opm {
 namespace DenseAd {
