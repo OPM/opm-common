@@ -32,7 +32,6 @@
 #define OPM_DENSEAD_EVALUATION7_HPP
 
 #include "Evaluation.hpp"
-#include "Math.hpp"
 
 #ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>

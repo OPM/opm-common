@@ -33,7 +33,6 @@
 #define OPM_DENSEAD_EVALUATION_DYNAMIC_HPP
 
 #include "Evaluation.hpp"
-#include "Math.hpp"
 
 #ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>
