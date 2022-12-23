@@ -39,6 +39,7 @@
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 
+#include <sstream>
 #include <vector>
 
 namespace Opm {
