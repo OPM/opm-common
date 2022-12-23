@@ -35,7 +35,6 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
 #include <cmath>
-#include <iostream>
 
 namespace Opm {
 
