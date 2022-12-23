@@ -41,7 +41,8 @@
 #include <cmath>
 #include <cassert>
 #include <cstring>
-#include <iostream>
+#include <iosfwd>
+#include <stdexcept>
 #include <algorithm>
 
 namespace Opm {
@@ -216,18 +217,6 @@ public:
     static Evaluation createConstant(const Evaluation&, const RhsValueType& value)
     {
         return Evaluation(value);
-    }
-
-    // print the value and the derivatives of the function evaluation
-    void print(std::ostream& os = std::cout) const
-    {
-        // print value
-        os << "v: " << value() << " / d:";
-
-        // print derivatives
-        for (int varIdx = 0; varIdx < size(); ++varIdx) {
-            os << " " << derivative(varIdx);
-        }
     }
 
     // copy all derivatives from other
@@ -604,10 +593,31 @@ Evaluation<ValueType, numVars, staticSize> operator*(const RhsValueType& a, cons
     return result;
 }
 
+template<class T>
+struct is_evaluation
+{
+    static constexpr bool value = false;
+};
+
+template <class ValueType, int numVars, unsigned staticSize>
+struct is_evaluation<Evaluation<ValueType,numVars,staticSize>>
+{
+    static constexpr bool value = true;
+};
+
+template <class ValueType, int numVars, unsigned staticSize>
+void printEvaluation(std::ostream& os,
+                     const Evaluation<ValueType, numVars, staticSize>& eval,
+                     bool withDer = false);
+
 template <class ValueType, int numVars, unsigned staticSize>
 std::ostream& operator<<(std::ostream& os, const Evaluation<ValueType, numVars, staticSize>& eval)
 {
-    os << eval.value();
+    if constexpr (is_evaluation<ValueType>::value)
+        printEvaluation(os, eval.value(), false);
+    else
+        printEvaluation(os, eval, false);
+
     return os;
 }
 

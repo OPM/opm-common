@@ -44,6 +44,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/shmatch.cpp
       src/opm/common/utility/TimeService.cpp
       src/opm/material/components/CO2.cpp
+      src/opm/material/densead/Evaluation.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
 )
 if(ENABLE_ECL_INPUT)
