@@ -33,11 +33,12 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
-#include <vector>
-#include <limits>
-#include <sstream>
-#include <cassert>
 #include <algorithm>
+#include <cassert>
+#include <limits>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace Opm {
 
@@ -86,9 +87,9 @@ public:
 
         for (unsigned xIdx = 0; xIdx < numX(); ++xIdx) {
             if (samples_[xIdx].size() != numY()) {
-                std::ostringstream oss;
-                oss << "The " << xIdx << "-th row of the sampling points has different size than numY() ";
-                throw std::runtime_error(oss.str());
+                throw std::runtime_error("The " + std::to_string(xIdx) +
+                                         "-th row of the sampling points has "
+                                         "different size than numY() ");
             }
         }
     }
@@ -191,9 +192,15 @@ public:
     Evaluation eval(const Evaluation& x, const Evaluation& y) const
     {
         if ((!xExtrapolate_ && !appliesX(x)) || (!yExtrapolate_ && !appliesY(y))) {
-            std::ostringstream oss;
-            oss << "Attempt to get undefined table value (" << x << ", " << y << ")";
-            throw NumericalProblem(oss.str());
+            if constexpr (std::is_floating_point_v<Evaluation>) {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x) + ", " +
+                                       std::to_string(y) + ")");
+            } else {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x.value()) + ", " +
+                                       std::to_string(y.value()) + ")");
+            }
         };
 
         // bi-linear interpolation: first, calculate the x and y indices in the lookup
