@@ -65,8 +65,6 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #endif
 
-#include <dune/common/parallel/mpihelper.hh>
-
 // check that the blackoil fluid system implements all non-standard functions
 template <class Evaluation, class FluidSystem>
 void ensureBlackoilApi()
@@ -309,10 +307,8 @@ inline void testAll()
     testAllFluidSystems<Scalar, /*FluidStateEval=*/Evaluation, /*LhsEval=*/Scalar>();
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     testAll<double>();
     testAll<float>();
 

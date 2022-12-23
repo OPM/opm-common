@@ -33,8 +33,6 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/common/IntervalTabulated2DFunction.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <memory>
 #include <cmath>
 #include <iostream>
@@ -471,11 +469,8 @@ inline int testAll(const typename TestType::Scalar tolerance = 1e-6)
     return 0;
 }
 
-
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     if (testAll<Test<double> >(1e-12))
         return 1;
     if (testAll<Test<float> >(1e-6))

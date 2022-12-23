@@ -27,7 +27,7 @@
 #ifndef OPM_CHECK_COMPONENT_HPP
 #define OPM_CHECK_COMPONENT_HPP
 
-#include <dune/common/classname.hh>
+#include <opm/common/utility/Demangle.hpp>
 
 #include <iostream>
 #include <string>
@@ -41,7 +41,7 @@
 template <class Component, class Evaluation>
 void checkComponent()
 {
-    std::cout << "Testing component '" << Dune::className<Component>() << "'\n";
+    std::cout << "Testing component '" << Opm::demangle(typeid(Component).name()) << "'\n";
 
     // make sure the necessary typedefs exist
     typedef typename Component::Scalar Scalar;

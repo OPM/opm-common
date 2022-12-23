@@ -45,7 +45,6 @@
 #include <opm/material/fluidmatrixinteractions/EffToAbsLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
 
 template <class Scalar, class FluidState>
 void checkSame(const FluidState& fsRef, const FluidState& fsFlash)
@@ -310,10 +309,8 @@ inline void testAll()
     checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fsRef, matParams2);
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     testAll<double>();
     testAll<float>();
 

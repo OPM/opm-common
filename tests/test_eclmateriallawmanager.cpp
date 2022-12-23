@@ -43,8 +43,6 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 // values of strings taken from the SPE1 test case1 of opm-data
 static const char* fam1DeckString =
     "RUNSPEC\n"
@@ -760,10 +758,8 @@ inline void testAll()
     }
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     testAll<double>();
     testAll<float>();
 

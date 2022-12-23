@@ -45,8 +45,6 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <type_traits>
 #include <cmath>
 
@@ -753,10 +751,8 @@ inline void testAll()
     [[maybe_unused]] const auto& wPvt = FluidSystem::waterPvt();
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     typedef Opm::DenseAd::Evaluation<double, 2> TestEval;
 
     testAll<double>();

@@ -68,8 +68,6 @@
 #include <opm/material/components/SimpleH2O.hpp>
 #include <opm/material/components/N2.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 // this function makes sure that a capillary pressure law adheres to
 // the generic programming interface for such laws. This API _must_ be
 // implemented by all capillary pressure laws. If there are no _very_
@@ -433,10 +431,8 @@ inline void testAll()
     }
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     testAll<double>();
     testAll<float>();
 

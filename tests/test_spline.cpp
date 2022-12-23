@@ -40,8 +40,6 @@ gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
 
 #include <opm/material/common/Spline.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <array>
 
 template <class Spline>
@@ -280,10 +278,8 @@ void plot()
     std::cout << "\n";
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
-
     try {
         testAll();
         plot();

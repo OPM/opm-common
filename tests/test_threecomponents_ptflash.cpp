@@ -37,8 +37,6 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <stdexcept>
 
 // It is a three component system
@@ -225,9 +223,8 @@ bool result_okay(const FluidState& fluid_state)
     return res_okay;
 }
 
-int main(int argc, char **argv)
+int main()
 {
-    Dune::MPIHelper::instance(argc, argv);
     bool test_passed = true;
 
     std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
