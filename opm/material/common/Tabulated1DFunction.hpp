@@ -32,11 +32,12 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
+#include <iosfwd>
 #include <stdexcept>
 #include <vector>
 
 namespace Opm {
+
 /*!
  * \brief Implements a linearly interpolated scalar function that depends on one
  *        variable.
@@ -413,36 +414,7 @@ public:
      "function.csv" using 1:3 w l ti "Derivative"
      ----------- snap -----------
     */
-    void printCSV(Scalar xi0, Scalar xi1, unsigned k, std::ostream& os = std::cout) const
-    {
-        Scalar x0 = std::min(xi0, xi1);
-        Scalar x1 = std::max(xi0, xi1);
-        const int n = numSamples() - 1;
-        for (unsigned i = 0; i <= k; ++i) {
-            double x = i*(x1 - x0)/k + x0;
-            double y;
-            double dy_dx;
-            if (!applies(x)) {
-                if (x < xValues_[0]) {
-                    dy_dx = evalDerivative(xValues_[0]);
-                    y = (x - xValues_[0])*dy_dx + yValues_[0];
-                }
-                else if (x > xValues_[n]) {
-                    dy_dx = evalDerivative(xValues_[n]);
-                    y = (x - xValues_[n])*dy_dx + yValues_[n];
-                }
-                else {
-                    throw std::runtime_error("The sampling points given to a function must be sorted by their x value!");
-                }
-            }
-            else {
-                y = eval(x);
-                dy_dx = evalDerivative(x);
-            }
-
-            os << x << " " << y << " " << dy_dx << "\n";
-        }
-    }
+    void printCSV(Scalar xi0, Scalar xi1, unsigned k, std::ostream& os) const;
 
     bool operator==(const Tabulated1DFunction<Scalar>& data) const {
         return xValues_ == data.xValues_ &&
@@ -631,6 +603,7 @@ private:
     std::vector<Scalar> xValues_;
     std::vector<Scalar> yValues_;
 };
+
 } // namespace Opm
 
 #endif
