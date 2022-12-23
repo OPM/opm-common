@@ -33,9 +33,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
-#include <tuple>
 #include <vector>
 
 namespace Opm {
@@ -456,9 +454,9 @@ private:
     size_t findSegmentIndex_(const Evaluation& x, bool extrapolate = false) const
     {
         if (!isfinite(x)) {
-            std::ostringstream sstream;
-            sstream << "We can not search for extrapolation/interpolation segment in an 1D table for non-finite value " << getValue(x) << " .";
-            throw std::runtime_error(sstream.str());
+            throw std::runtime_error("We can not search for extrapolation/interpolation "
+                                     "segment in an 1D table for non-finite value " +
+                                     std::to_string(getValue(x)) + " .");
         }
 
         if (!extrapolate && !applies(x))
@@ -466,10 +464,11 @@ private:
 
         // we need at least two sampling points!
         if (numSamples() < 2) {
-            std::ostringstream sstream;
-            sstream << "We need at least two sampling points to do interpolation/extrapolation,"
-                       "and the table only contains {} sampling points" << numSamples();
-            throw std::logic_error(sstream.str());
+            throw std::logic_error("We need at least two sampling points to "
+                                   "do interpolation/extrapolation, "
+                                   "and the table only contains " +
+                                   std::to_string(numSamples()) +
+                                   " sampling points");
         }
 
         if (x <= xValues_[1])
@@ -489,25 +488,32 @@ private:
             }
 
             if (xValues_[lowerIdx] > x || x > xValues_[lowerIdx + 1]) {
-                std::ostringstream sstream;
-                sstream << "Problematic interpolation/extrapolation segment is found for the input value " << Opm::getValue(x)
-                        << "\nthe lower index of the found segment is " << lowerIdx << ", the size of the table is " << numSamples()
-                        << ",\nand the end values of the found segment are " << xValues_[lowerIdx] << " and " << xValues_[lowerIdx + 1]
-                        << ", respectively.";
-                std::ostringstream sstream2;
-                sstream2 << " Outputting the problematic table for more information(with *** marking the found segment):";
+                std::string msg = "Problematic interpolation/extrapolation "
+                                  "segment is found for the input value " +
+                                  std::to_string(Opm::getValue(x)) +
+                                  "\nthe lower index of the found segment is " +
+                                  std::to_string(lowerIdx) +
+                                  ", the size of the table is " +
+                                  std::to_string(numSamples()) +
+                                  ",\nand the end values of the found segment are " +
+                                  std::to_string(xValues_[lowerIdx]) +
+                                  " and " +
+                                  std::to_string(xValues_[lowerIdx + 1]) +
+                                  ", respectively.\n";
+                msg += "Outputting the problematic table for more information "
+                       "(with *** marking the found segment):";
                 for (size_t i = 0; i < numSamples(); ++i) {
                     if (i % 10 == 0)
-                        sstream2 << "\n";
+                        msg += "\n";
                     if (i == lowerIdx)
-                        sstream2 << " ***";
-                    sstream2 << " " << xValues_[i];
+                        msg += " ***";
+                    msg += " " + std::to_string(xValues_[i]);
                     if (i == lowerIdx + 1)
-                        sstream2 << " ***";
+                        msg += " ***";
                 }
-                sstream2<< "\n";
-                OpmLog::debug(sstream.str() + "\n" + sstream2.str());
-                throw std::runtime_error(sstream.str());
+                msg += "\n";
+                OpmLog::debug(msg);
+                throw std::runtime_error(msg);
             }
             return lowerIdx;
         }

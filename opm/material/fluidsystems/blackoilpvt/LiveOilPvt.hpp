@@ -34,6 +34,8 @@
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <sstream>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
