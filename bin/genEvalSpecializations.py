@@ -76,7 +76,9 @@ specializationTemplate = \
 #include "Evaluation.hpp"
 #include "Math.hpp"
 
+#ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>
+#endif
 
 {% if numDerivs < 0 %}\
 #include <opm/material/common/FastSmallVector.hpp>
