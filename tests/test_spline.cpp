@@ -41,6 +41,7 @@ gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
 #include <opm/material/common/Spline.hpp>
 
 #include <array>
+#include <iostream>
 
 template <class Spline>
 void testCommon(const Spline& sp,
