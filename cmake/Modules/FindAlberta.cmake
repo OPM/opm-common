@@ -45,3 +45,17 @@ else()
   set(ALBERTA_FOUND OFF)
   set(Alberta_FOUND OFF)
 endif()
+
+# PkgConfig targets are required if OPM modules are used as DUNE modules
+# (e.g. in Debian's Packaging automatic tests)
+find_package(PkgConfig)
+if(PkgConfig_FOUND)
+  set(_opm_alberta_bkup_path  ${CMAKE_PREFIX_PATH})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${ALBERTA_ROOT})
+
+  foreach(dim RANGE 1 ${ALBERTA_MAX_WORLD_DIM})
+    pkg_check_modules(Alberta${dim}d IMPORTED_TARGET GLOBAL "alberta-grid_${dim}d")
+  endforeach()
+
+  set(CMAKE_PREFIX_PATH ${_opm_alberta_bkup_path})
+endif()
