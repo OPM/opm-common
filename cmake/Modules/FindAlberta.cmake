@@ -1,3 +1,4 @@
+set(ALBERTA_MAX_WORLD_DIM "3" CACHE STRING "Maximal world dimension to check for Alberta library.")
 find_library(ALBERTA_LTDL_LIB
   NAMES ltdl
   PATH_SUFFIXES lib lib32 lib64
@@ -22,7 +23,7 @@ find_library(ALBERTA_UTIL_LIB
   NAMES alberta_util alberta_utilities
   PATH_SUFFIXES lib lib32 lib64)
 
-foreach(dim RANGE 1 9)
+foreach(dim RANGE 1 ${ALBERTA_MAX_WORLD_DIM})
   find_library(ALBERTA_${dim}D_LIB alberta_${dim}d
     PATHS ${ALBERTA_ROOT}
     PATH_SUFFIXES lib lib32 lib64
