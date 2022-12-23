@@ -35,7 +35,7 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
+#include <iosfwd>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -446,32 +446,7 @@ public:
      * It will produce the data in CSV format on stdout, so that it can be visualized
      * using e.g. gnuplot.
      */
-    void print(std::ostream& os = std::cout) const
-    {
-        Scalar x0 = xMin();
-        Scalar x1 = xMax();
-        int m = numX();
-
-        Scalar y0 = 1e30;
-        Scalar y1 = -1e30;
-        size_t n = 0;
-        for (int i = 0; i < m; ++ i) {
-            y0 = std::min(y0, yMin(i));
-            y1 = std::max(y1, yMax(i));
-            n = std::max(n, numY(i));
-        }
-
-        m *= 3;
-        n *= 3;
-        for (int i = 0; i <= m; ++i) {
-            Scalar x = x0 + (x1 - x0)*i/m;
-            for (size_t j = 0; j <= n; ++j) {
-                Scalar y = y0 + (y1 - y0)*j/n;
-                os << x << " " << y << " " << eval(x, y) << "\n";
-            }
-            os << "\n";
-        }
-    }
+    void print(std::ostream& os) const;
 
     bool operator==(const UniformXTabulated2DFunction<Scalar>& data) const {
         return this->xPos() == data.xPos() &&
