@@ -33,13 +33,12 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
-#include <iostream>
-#include <vector>
-#include <limits>
-#include <tuple>
-#include <sstream>
 #include <cassert>
 #include <cmath>
+#include <iostream>
+#include <tuple>
+#include <type_traits>
+#include <vector>
 
 namespace Opm {
 /*!
@@ -320,9 +319,15 @@ public:
     {
 #ifndef NDEBUG
         if (!extrapolate && !applies(x, y)) {
-            std::ostringstream oss;
-            oss << "Attempt to get undefined table value (" << x << ", " << y << ")";
-            throw NumericalProblem(oss.str());
+            if constexpr (std::is_floating_point_v<Evaluation>) {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x) + ", " +
+                                       std::to_string(y) + ")");
+            } else {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x.value()) + ", " +
+                                       std::to_string(y.value()) + ")");
+            }
         };
 #endif
 
