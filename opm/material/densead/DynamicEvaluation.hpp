@@ -32,17 +32,14 @@
 #ifndef OPM_DENSEAD_EVALUATION_DYNAMIC_HPP
 #define OPM_DENSEAD_EVALUATION_DYNAMIC_HPP
 
-#include "Evaluation.hpp"
-#include "Math.hpp"
-
+#ifndef NDEBUG
 #include <opm/material/common/Valgrind.hpp>
-
+#endif
 #include <opm/material/common/FastSmallVector.hpp>
-#include <cmath>
+
 #include <cassert>
-#include <cstring>
-#include <iostream>
-#include <algorithm>
+#include <iosfwd>
+#include <stdexcept>
 
 namespace Opm {
 namespace DenseAd {
@@ -223,18 +220,6 @@ public:
     static Evaluation createConstant(const Evaluation& x, const RhsValueType& value)
     {
         return Evaluation(x.size(), value);
-    }
-
-    // print the value and the derivatives of the function evaluation
-    void print(std::ostream& os = std::cout) const
-    {
-        // print value
-        os << "v: " << value() << " / d:";
-
-        // print derivatives
-        for (int varIdx = 0; varIdx < size(); ++varIdx) {
-            os << " " << derivative(varIdx);
-        }
     }
 
     // copy all derivatives from other
