@@ -38,7 +38,6 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
-#include <iostream>
 #include <cassert>
 
 namespace Opm {
