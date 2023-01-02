@@ -154,7 +154,7 @@ namespace Opm {
                     if (verify_syntax) {
                         std::cerr << "ERROR: Input '" << files[i] << "' is not a valid name for a parameter file.\n";
                         std::cerr << "       Valid filename extensions are 'param'.\n";
-                        OPM_THROW(std::runtime_error, "ParameterGroup cannot handle argument: " << files[i]);
+                        OPM_THROW(std::runtime_error, "ParameterGroup cannot handle argument: " + files[i]);
                     } else {
                         unhandled_arguments_.push_back(files[i]);
                     }
