@@ -35,8 +35,6 @@
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#include <sstream>
-
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -384,12 +382,12 @@ public:
                 return pSat;
         }
 
-        std::stringstream errlog;
-        errlog << "Finding saturation pressure did not converge:"
-               << " pSat = " << pSat
-               << ", Rw = " << Rw;
-        OpmLog::debug("Wet gas saturation pressure", errlog.str());
-        throw NumericalProblem(errlog.str());
+        const std::string msg =
+            "Finding saturation pressure did not converge: "
+            " pSat = " + std::to_string(getValue(pSat)) +
+            ", Rw = " + std::to_string(getValue(Rw));
+        OpmLog::debug("Wet gas saturation pressure", msg);
+        throw NumericalProblem(msg);
     }
 
     template <class Evaluation>
