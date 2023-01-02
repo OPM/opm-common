@@ -147,7 +147,8 @@ namespace Opm
         int rowSize(int row) const
         {
 #ifndef NDEBUG
-            OPM_ERROR_IF(row < 0 || row >= size(), "Row index " << row << " is out of range");
+            OPM_ERROR_IF(row < 0 || row >= size(),
+                         "Row index " + std::to_string(row) + " is out of range");
 #endif
             return row_start_[row + 1] - row_start_[row];
         }
