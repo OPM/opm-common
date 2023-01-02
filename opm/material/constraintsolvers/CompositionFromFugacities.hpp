@@ -166,13 +166,18 @@ public:
             }
         }
 
-        std::ostringstream oss;
-        oss << "Calculating the " << FluidSystem::phaseName(phaseIdx)
-            << "Phase composition failed. Initial {x} = {"
-            << xInit
-            << "}, {fug_t} = {" << targetFug << "}, p = " << fluidState.pressure(phaseIdx)
-            << ", T = " << fluidState.temperature(phaseIdx);
-        throw NumericalProblem(oss.str());
+        std::string msg =
+            std::string("Calculating the ")
+            + FluidSystem::phaseName(phaseIdx)
+            + "Phase composition failed. Initial {x} = {";
+        for (const auto& v : xInit)
+            msg += " " + std::to_string(getValue(v));
+        msg += " }, {fug_t} = {";
+        for (const auto& v : targetFug)
+            msg += " " + std::to_string(getValue(v));
+        msg += " }, p = " + std::to_string(getValue(fluidState.pressure(phaseIdx)))
+             + ", T = " + std::to_string(getValue(fluidState.temperature(phaseIdx)));
+        throw NumericalProblem(msg);
     }
 
 
