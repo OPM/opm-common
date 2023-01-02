@@ -31,7 +31,7 @@
 #include <cmath>
 #include <limits>
 #include <cassert>
-#include <iostream>
+#include <stdexcept>
 
 #include <opm/material/common/MathToolbox.hpp>
 

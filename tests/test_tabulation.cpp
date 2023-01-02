@@ -34,6 +34,8 @@
 #include <opm/material/components/H2O.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
 
+#include <iostream>
+
 extern bool success;
 bool success;
 
