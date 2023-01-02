@@ -95,6 +95,9 @@ namespace RestartIO {
             double poro{0.};
             std::optional<double> radius;
             std::optional<double> flow_area;
+            // skin factor multiplier
+            // it is controlled by keyword WINJCLN
+            double sf_multiplier {1.};
 
             FilterCake() = default;
             explicit FilterCake(const DeckRecord& record);
@@ -107,6 +110,7 @@ namespace RestartIO {
                 serializer(poro);
                 serializer(radius);
                 serializer(flow_area);
+                serializer(sf_multiplier);
             }
 
             bool operator==( const FilterCake& other ) const {
@@ -114,11 +118,16 @@ namespace RestartIO {
                 &&     perm == other.perm
                 &&     poro == other.poro
                 &&     radius == other.radius
-                &&     flow_area == other.flow_area;
+                &&     flow_area == other.flow_area
+                &&     sf_multiplier == other.sf_multiplier;
             }
 
             bool active() const {
                 return this->geometry != FilterCakeGeometry::NONE;
+            }
+
+            void applyCleanMultiplier(const double factor) {
+                this->sf_multiplier *= factor;
             }
         };
         // TODO: the end of the filter cake model

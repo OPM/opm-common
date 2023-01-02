@@ -1983,6 +1983,19 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
+    void Schedule::handleWINJCLN(HandlerContext& handlerContext) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            // TODO: will check whether we should put all the filter cake related to a separate property
+            for (const auto& well_name: well_names) {
+                auto well = this->snapshots.back().wells(well_name);
+                well.handleWINJCLN(record, handlerContext.keyword.location());
+                this->snapshots.back().wells.update(std::move(well));
+            }
+        }
+    }
+
     void Schedule::handleWPMITAB(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2580,6 +2593,7 @@ Well{0} entered with 'FIELD' parent group:
             { "WPIMULT" , &Schedule::handleWPIMULT   },
             { "WINJDAM" , &Schedule::handleWINJDAM   },
             { "WINJFCNC", &Schedule::handleWINJFCNC  },
+            { "WINJCLN",  &Schedule::handleWINJCLN   },
             { "WPMITAB" , &Schedule::handleWPMITAB   },
             { "WPOLYMER", &Schedule::handleWPOLYMER  },
             { "WRFT"    , &Schedule::handleWRFT      },

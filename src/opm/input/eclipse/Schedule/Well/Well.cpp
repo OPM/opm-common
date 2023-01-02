@@ -1318,12 +1318,36 @@ bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& /* loc
     for (auto c : *(this->connections)) {
         if (match(c)) {
             c.setFilterCake(filter_cake);
-            new_connections->add(c);
         }
+        new_connections->add(c);
     }
     return this->updateConnections(std::move(new_connections), false);
 }
 
+bool Well::handleWINJCLN(const DeckRecord& record, const KeywordLocation& /* location */)
+{
+    auto match = [=] ( const Connection& c) -> bool {
+        if (!match_eq(c.getI()  , record, "I", -1)) return false;
+        if (!match_eq(c.getJ()  , record, "J", -1)) return false;
+        if (!match_eq(c.getK()  , record, "K", -1)) return false;
+
+        return true;
+    };
+
+    const double fraction_removal = record.getItem("FRAC_REMOVE").getSIDouble(0);
+    // TODO: it should be between 0.0 and 1.0
+    const double fraction_remain = std::min(1.0, std::max(fraction_removal, 0.));
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    for (auto c : *(this->connections)) {
+        if (match(c)) {
+            auto filter_cake = c.getFilterCake();
+            filter_cake.applyCleanMultiplier(fraction_remain);
+            c.setFilterCake(filter_cake);
+        }
+        new_connections->add(c);
+    }
+    return this->updateConnections(std::move(new_connections), false);
+}
 
 bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& location) {
     // for this keyword, the default for I, J, K will be negative

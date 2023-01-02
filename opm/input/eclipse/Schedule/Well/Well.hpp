@@ -482,6 +482,7 @@ public:
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
     bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
+    bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
     // TODO: makes it a handleWINJFCNC?
     void setFilterConc(const double conc);
