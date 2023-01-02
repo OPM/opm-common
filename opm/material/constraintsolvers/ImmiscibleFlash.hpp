@@ -40,7 +40,7 @@
 #include <dune/common/version.hh>
 
 #include <limits>
-#include <iostream>
+#include <sstream>
 
 namespace Opm {
 
@@ -226,35 +226,6 @@ public:
 
 
 protected:
-    template <class FluidState>
-    static void printFluidState_(const FluidState& fs)
-    {
-        std::cout << "saturations: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fs.saturation(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "pressures: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fs.pressure(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "densities: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fs.density(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "global component molarities: ";
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            Scalar sum = 0;
-            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                sum += fs.saturation(phaseIdx)*fs.molarity(phaseIdx, compIdx);
-            }
-            std::cout << sum << " ";
-        }
-        std::cout << "\n";
-    }
-
     template <class MaterialLaw, class InputFluidState, class FlashFluidState>
     static void assignFlashFluidState_(const InputFluidState& inputFluidState,
                                        FlashFluidState& flashFluidState,
