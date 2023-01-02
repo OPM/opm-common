@@ -24,6 +24,7 @@
 #define OPM_EXCEPTIONS_HPP
 
 #include <stdexcept>
+#include <string>
 
 // the OPM-specific exception classes
 namespace Opm {
