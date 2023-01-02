@@ -42,7 +42,7 @@
 #include <dune/common/version.hh>
 
 #include <limits>
-#include <iostream>
+#include <sstream>
 
 namespace Opm {
 
@@ -262,53 +262,6 @@ public:
 
 
 protected:
-    template <class FluidState>
-    static void printFluidState_(const FluidState& fluidState)
-    {
-        typedef typename FluidState::Scalar FsScalar;
-
-        std::cout << "saturations: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fluidState.saturation(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "pressures: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fluidState.pressure(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "densities: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fluidState.density(phaseIdx) << " ";
-        std::cout << "\n";
-
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            std::cout << "composition " << FluidSystem::phaseName(phaseIdx) << "Phase: ";
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                std::cout << fluidState.moleFraction(phaseIdx, compIdx) << " ";
-            }
-            std::cout << "\n";
-        }
-
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            std::cout << "fugacities " << FluidSystem::phaseName(phaseIdx) << "Phase: ";
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                std::cout << fluidState.fugacity(phaseIdx, compIdx) << " ";
-            }
-            std::cout << "\n";
-        }
-
-        std::cout << "global component molarities: ";
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            FsScalar sum = 0;
-            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                sum += fluidState.saturation(phaseIdx)*fluidState.molarity(phaseIdx, compIdx);
-            }
-            std::cout << sum << " ";
-        }
-        std::cout << "\n";
-    }
-
     template <class MaterialLaw, class InputFluidState, class FlashFluidState>
     static void assignFlashFluidState_(const InputFluidState& inputFluidState,
                                        FlashFluidState& flashFluidState,
