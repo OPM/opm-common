@@ -42,7 +42,6 @@
 #include <dune/common/version.hh>
 
 #include <limits>
-#include <sstream>
 
 namespace Opm {
 
@@ -233,11 +232,13 @@ public:
             }
         }
 
-        std::ostringstream oss;
-        oss << "NcpFlash solver failed:"
-            << " {c_alpha^kappa} = {" << globalMolarities << "}, "
-            << " T = " << fluidState.temperature(/*phaseIdx=*/0);
-        throw NumericalProblem(oss.str());
+        std::string msg = "NcpFlash solver failed: "
+                          "{c_alpha^kappa} = {";
+        for (const auto& v : globalMolarities)
+            msg += " " + std::to_string(getValue(v));
+        msg += " }, T = ";
+        msg += std::to_string(getValue(fluidState.temperature(/*phaseIdx=*/0)));
+        throw NumericalProblem(msg);
     }
 
     /*!
