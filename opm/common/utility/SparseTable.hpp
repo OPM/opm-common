@@ -38,7 +38,7 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
-#include <opm/grid/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/grid/utility/IteratorRange.hpp>
 
 #include <ostream>
