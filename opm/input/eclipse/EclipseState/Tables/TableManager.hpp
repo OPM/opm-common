@@ -93,6 +93,7 @@ namespace Opm {
         const TableContainer& getSgfnTables() const;
         const TableContainer& getSsfnTables() const;
         const TableContainer& getRsvdTables() const;
+        const TableContainer& getRswvdTables() const;
         const TableContainer& getRvvdTables() const;
         const TableContainer& getRvwvdTables() const;
         const TableContainer& getPbvdTables() const;
