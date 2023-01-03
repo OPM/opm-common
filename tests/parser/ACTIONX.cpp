@@ -18,8 +18,8 @@
  */
 
 #include <stdexcept>
-#include <iostream>
 #include <algorithm>
+
 #define BOOST_TEST_MODULE ACTIONX
 
 #include <boost/test/unit_test.hpp>

@@ -27,9 +27,6 @@
 #include <fstream>
 #include <cstring>
 
-//temporary
-#include <iostream>
-
 int Opm::EclIO::flipEndianInt(int num)
 {
     unsigned int tmp = __builtin_bswap32(num);

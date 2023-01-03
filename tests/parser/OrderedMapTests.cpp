@@ -18,7 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
 
 #define BOOST_TEST_MODULE ScheduleTests
 #include <boost/test/unit_test.hpp>

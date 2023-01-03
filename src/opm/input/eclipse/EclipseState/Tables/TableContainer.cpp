@@ -17,11 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
-#include <iostream>
-
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
+
+#include <string>
 
 namespace Opm {
 

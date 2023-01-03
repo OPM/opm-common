@@ -18,7 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
 #include <memory>
 
 #define BOOST_TEST_MODULE FaceDirTests

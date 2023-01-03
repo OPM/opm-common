@@ -19,7 +19,6 @@
 #include <stdexcept>
 #include <math.h>
 #include <filesystem>
-#include <iostream>
 
 #define BOOST_TEST_MODULE jsonParserTests
 #include <boost/test/unit_test.hpp>

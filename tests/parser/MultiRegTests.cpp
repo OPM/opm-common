@@ -18,7 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
 #include <cstdio>
 
 #define BOOST_TEST_MODULE MultiRegTests

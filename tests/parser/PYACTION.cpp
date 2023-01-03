@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "config.h"
-#include <iostream>
 #include <memory>
 
 #define BOOST_TEST_MODULE PY_ACTION_TESTER

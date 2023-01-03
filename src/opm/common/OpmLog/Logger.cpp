@@ -21,7 +21,6 @@
 #include <opm/common/OpmLog/Logger.hpp>
 
 #include <stdexcept>
-#include <iostream>
 
 #include <opm/common/OpmLog/LogBackend.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>

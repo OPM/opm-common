@@ -19,7 +19,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <iostream>
 #include <fstream>
 #include <memory>
 #include <stdexcept>

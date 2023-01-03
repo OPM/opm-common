@@ -24,7 +24,6 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <cstddef>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <vector>

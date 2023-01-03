@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <fmt/format.h>
-#include <iostream>
 
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>

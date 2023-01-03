@@ -33,9 +33,6 @@
 #include <numeric>
 #include <cmath>
 
-#include <iostream>
-
-
 namespace Opm { namespace EclIO {
 
 void EclFile::load(bool preload) {

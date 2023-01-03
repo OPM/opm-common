@@ -18,7 +18,6 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdexcept>
-#include <iostream>
 
 #define BOOST_TEST_MODULE EclipseStateTests
 
