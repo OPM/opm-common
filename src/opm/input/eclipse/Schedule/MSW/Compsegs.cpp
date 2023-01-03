@@ -18,8 +18,6 @@
 */
 
 #include <cmath>
-#include <iostream>
-#include <sstream>
 
 #include <fmt/format.h>
 
@@ -166,10 +164,11 @@ namespace {
             }
 
             if (segment_number == 0) {
-                std::ostringstream sstr;
-                sstr << "The connection specified in COMPSEGS with index of " << compseg.m_i + 1 << " "
-                     << compseg.m_j + 1 << " " << compseg.m_k + 1 << " failed in finding a related segment";
-                throw std::runtime_error(sstr.str());
+                const std::string msg =
+                    fmt::format("The connection specified in COMPSEGS with index of "
+                                "{} {} {} failed in finding a related segment",
+                                compseg.m_i + 1, compseg.m_j + 1, compseg.m_k + 1);
+                throw std::runtime_error(msg);
             }
 
             compseg.segment_number = segment_number;
