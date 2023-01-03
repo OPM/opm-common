@@ -23,8 +23,8 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <algorithm>
 #include <cstddef>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <vector>

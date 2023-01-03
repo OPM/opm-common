@@ -18,8 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
-#include <cstdio>
 
 #define BOOST_TEST_MODULE CopyRegTests
 #include <boost/test/unit_test.hpp>

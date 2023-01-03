@@ -19,7 +19,7 @@
 
 #include <cstddef>
 #include <stdexcept>
-#include <iostream>
+#include <ostream>
 
 #define BOOST_TEST_MODULE CompletionTests
 #include <boost/test/unit_test.hpp>

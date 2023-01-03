@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <cstring>
 #include <ctime>
-#include <iostream>
+#include <ostream>
 #include <iomanip>
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>

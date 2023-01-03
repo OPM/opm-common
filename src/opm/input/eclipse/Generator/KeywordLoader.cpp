@@ -17,10 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdexcept>
-#include <iostream>
 #include <filesystem>
-#include <fstream>
+#include <iostream>
+#include <stdexcept>
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/input/eclipse/Generator/KeywordLoader.hpp>

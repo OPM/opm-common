@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <iostream>
 
 #include <fmt/format.h>
 

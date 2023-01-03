@@ -396,16 +396,18 @@ private:
         Valgrind::CheckDefined(xlCO2);
 
         if(!extrapolate && T < 273.15) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and CO2 is only "
-                   "defined above 273.15K (is "<<T<<"K)";
-            throw NumericalProblem(oss.str());
+            const std::string msg =
+                "Liquid density for Brine and CO2 is only "
+                "defined above 273.15K (is " +
+                std::to_string(getValue(T)) + "K)";
+            throw NumericalProblem(msg);
         }
         if(!extrapolate && pl >= 2.5e8) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and CO2 is only "
-                   "defined below 250MPa (is "<<pl<<"Pa)";
-            throw NumericalProblem(oss.str());
+            const std::string msg  =
+                "Liquid density for Brine and CO2 is only "
+                "defined below 250MPa (is " +
+                std::to_string(getValue(pl)) + "Pa)";
+            throw NumericalProblem(msg);
         }
 
         const LhsEval& rho_brine = Brine::liquidDensity(T, pl, extrapolate);

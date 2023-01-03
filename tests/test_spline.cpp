@@ -41,6 +41,7 @@ gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
 #include <opm/material/common/Spline.hpp>
 
 #include <array>
+#include <iostream>
 
 template <class Spline>
 void testCommon(const Spline& sp,
@@ -262,19 +263,19 @@ void plot()
     testMonotonic(spMonotonic, x_, y_);
     spFull.printCSV(x_[0] - 1.00001,
                     x_[n] + 1.00001,
-                    1000);
+                    1000, std::cout);
     std::cout << "\n";
     spNatural.printCSV(x_[0] - 1.00001,
                        x_[n] + 1.00001,
-                       1000);
+                       1000, std::cout);
     std::cout << "\n";
     spPeriodic.printCSV(x_[0] - 1.00001,
                         x_[n] + 1.00001,
-                       1000);
+                        1000, std::cout);
     std::cout << "\n";
     spMonotonic.printCSV(x_[0] - 1.00001,
                          x_[n] + 1.00001,
-                         1000);
+                         1000, std::cout);
     std::cout << "\n";
 }
 

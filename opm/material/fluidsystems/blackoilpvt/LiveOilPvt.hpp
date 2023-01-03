@@ -404,12 +404,12 @@ public:
                 return pSat;
         }
 
-        std::stringstream errlog;
-        errlog << "Finding saturation pressure did not converge:"
-               << " pSat = " << pSat
-               << ", Rs = " << Rs;
-        OpmLog::debug("Live oil saturation pressure", errlog.str());
-        throw NumericalProblem(errlog.str());
+        const std::string msg =
+            "Finding saturation pressure did not converge: "
+            " pSat = " + std::to_string(getValue(pSat)) +
+            ", Rs = " + std::to_string(getValue(Rs));
+        OpmLog::debug("Live oil saturation pressure", msg);
+        throw NumericalProblem(msg);
     }
 
     template <class Evaluation>

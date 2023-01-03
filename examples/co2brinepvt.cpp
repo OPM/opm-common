@@ -30,7 +30,7 @@
 #include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
 
-
+#include <iostream>
 
 template <class Co2Pvt>
 double densityGas(const Co2Pvt& co2Pvt, const double p, const double T, const double Rv)

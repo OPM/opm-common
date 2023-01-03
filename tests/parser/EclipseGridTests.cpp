@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cstdio>
 #include <ctime>
-#include <iostream>
 #include <math.h>
 #include <memory>
 #include <optional>

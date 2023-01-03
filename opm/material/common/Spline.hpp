@@ -32,9 +32,8 @@
 #include <opm/material/common/TridiagonalMatrix.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
 
-#include <ostream>
+#include <iosfwd>
 #include <vector>
-#include <tuple>
 
 namespace Opm
 {
@@ -747,41 +746,7 @@ public:
      "spline.csv" using 1:4 w p ti "Monotonic"
      ----------- snap -----------
     */
-    void printCSV(Scalar xi0, Scalar xi1, size_t k, std::ostream& os = std::cout) const
-    {
-        Scalar x0 = std::min(xi0, xi1);
-        Scalar x1 = std::max(xi0, xi1);
-        const size_t n = numSamples() - 1;
-        for (size_t i = 0; i <= k; ++i) {
-            double x = i*(x1 - x0)/k + x0;
-            double x_p1 = x + (x1 - x0)/k;
-            double y;
-            double dy_dx;
-            double mono = 1;
-            if (!applies(x)) {
-                if (x < x_(0)) {
-                    dy_dx = evalDerivative(x_(0));
-                    y = (x - x_(0))*dy_dx + y_(0);
-                    mono = (dy_dx>0)?1:-1;
-                }
-                else if (x > x_(n)) {
-                    dy_dx = evalDerivative(x_(n));
-                    y = (x - x_(n))*dy_dx + y_(n);
-                    mono = (dy_dx>0)?1:-1;
-                }
-                else {
-                    throw std::runtime_error("The sampling points given to a spline must be sorted by their x value!");
-                }
-            }
-            else {
-                y = eval(x);
-                dy_dx = evalDerivative(x);
-                mono = monotonic(x, x_p1, /*extrapolate=*/true);
-            }
-
-            os << x << " " << y << " " << dy_dx << " " << mono << "\n";
-        }
-    }
+    void printCSV(Scalar xi0, Scalar xi1, size_t k, std::ostream& os) const;
 
     /*!
      * \brief Evaluate the spline at a given position.

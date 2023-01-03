@@ -454,12 +454,12 @@ public:
                 return pSat;
         }
 
-        std::stringstream errlog;
-        errlog << "Finding saturation pressure did not converge:"
-               << " pSat = " << pSat
-               << ", Rv = " << Rv;
-        OpmLog::debug("Wet gas saturation pressure", errlog.str());
-        throw NumericalProblem(errlog.str());
+        const std::string msg =
+            "Finding saturation pressure did not converge: "
+            "pSat = " + std::to_string(getValue(pSat)) +
+            ", Rv = " + std::to_string(getValue(Rv));
+        OpmLog::debug("Wet gas saturation pressure", msg);
+        throw NumericalProblem(msg);
     }
 
     template <class Evaluation>
