@@ -23,10 +23,10 @@
 #include <opm/common/utility/String.hpp>
 
 #include <algorithm>
-#include <string>
-#include <iostream>
-#include <stdexcept>
 #include <cmath>
+#include <ostream>
+#include <string>
+#include <stdexcept>
 
 namespace Opm {
 

@@ -16,9 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
-#include <string>
-#include <vector>
+
+#include <config.h>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -27,10 +27,12 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include "injection.hpp"
 #include "../eval_uda.hpp"
+
+#include <ostream>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
