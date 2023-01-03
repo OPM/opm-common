@@ -42,6 +42,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/numeric/calculateCellVol.cpp
       src/opm/common/utility/numeric/RootFinders.cpp
       src/opm/common/utility/shmatch.cpp
+      src/opm/common/utility/String.cpp
       src/opm/common/utility/TimeService.cpp
       src/opm/material/common/Spline.cpp
       src/opm/material/common/Tabulated1DFunction.cpp
