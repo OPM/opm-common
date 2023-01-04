@@ -31,20 +31,20 @@
 
 namespace Opm {
 
+template <class ScalarT,
+          class FluidSystem,
+          class ParamsT> class EclHeatcrLaw;
+
 /*!
  * \brief The default implementation of a parameter object for the
  *        ECL thermal law.
  */
-template <class ScalarT>
+template <class ScalarT, class FluidSystem>
 class EclHeatcrLawParams : public EnsureFinalized
 {
 public:
     using Scalar = ScalarT;
-
-    EclHeatcrLawParams(const EclHeatcrLawParams&) = default;
-
-    EclHeatcrLawParams()
-    { }
+    using Law = EclHeatcrLaw<ScalarT,FluidSystem,EclHeatcrLawParams<ScalarT,FluidSystem>>;
 
     /*!
      * \brief Set the reference temperature for the thermal law.
@@ -88,12 +88,12 @@ public:
 private:
     static Scalar referenceTemperature_;
 
-    Scalar referenceRockHeatCapacity_;
-    Scalar dRockHeatCapacity_dT_;
+    Scalar referenceRockHeatCapacity_{};
+    Scalar dRockHeatCapacity_dT_{};
 };
 
-template <class ScalarT>
-ScalarT EclHeatcrLawParams<ScalarT>::referenceTemperature_ = 273.15 + 15.56; // [K]
+template<class Scalar, class FluidSystem>
+Scalar EclHeatcrLawParams<Scalar,FluidSystem>::referenceTemperature_ = 273.15 + 15.56; // [K]
 
 } // namespace Opm
 

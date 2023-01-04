@@ -27,14 +27,20 @@
 #ifndef OPM_ECL_SOLID_ENERGY_LAW_MULTIPLEXER_HPP
 #define OPM_ECL_SOLID_ENERGY_LAW_MULTIPLEXER_HPP
 
-#include "EclSolidEnergyLawMultiplexerParams.hpp"
+#include <opm/common/utility/Visitor.hpp>
 
-#include "EclHeatcrLaw.hpp"
-#include "EclSpecrockLaw.hpp"
-#include "NullSolidEnergyLaw.hpp"
+#include <opm/material/thermal/EclSolidEnergyLawMultiplexerParams.hpp>
+#include <opm/material/thermal/EclHeatcrLaw.hpp>
+#include <opm/material/thermal/EclSpecrockLaw.hpp>
+#include <opm/material/thermal/NullSolidEnergyLaw.hpp>
 
 #include <string>
 #include <stdexcept>
+
+namespace {
+template<class T>
+using remove_cvr_t = std::remove_cv_t<std::remove_reference_t<T>>;
+}
 
 namespace Opm
 {
@@ -45,7 +51,7 @@ namespace Opm
  */
 template <class ScalarT,
           class FluidSystem,
-          class ParamsT = EclSolidEnergyLawMultiplexerParams<ScalarT>>
+          class ParamsT = EclSolidEnergyLawMultiplexerParams<ScalarT,FluidSystem>>
 class EclSolidEnergyLawMultiplexer
 {
     enum { numPhases = FluidSystem::numPhases };
@@ -64,22 +70,17 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation solidInternalEnergy(const Params& params, const FluidState& fluidState)
     {
-        switch (params.solidEnergyApproach()) {
-        case Params::heatcrApproach:
-            // relevant ECL keywords: HEATCR, HEATCRT and STCOND
-            return HeatcrLaw::solidInternalEnergy(params.template getRealParams<Params::heatcrApproach>(), fluidState);
-
-        case Params::specrockApproach:
-            // relevant ECL keyword: SPECROCK
-            return SpecrockLaw::solidInternalEnergy(params.template getRealParams<Params::specrockApproach>(), fluidState);
-
-        case Params::nullApproach:
-            // (no relevant ECL keyword)
-            return NullLaw::solidInternalEnergy(0, fluidState);
-
-        default:
-            throw std::logic_error("Invalid solid energy approach: "+std::to_string(int(params.solidEnergyApproach())));
-        }
+        Evaluation result;
+        params.visit(VisitorOverloadSet{[&](const auto& prm)
+                                        {
+                                            using Law = typename remove_cvr_t<decltype(prm)>::Law;
+                                            result = Law::solidInternalEnergy(prm, fluidState);
+                                        },
+                                        [](const std::monostate&)
+                                        {
+                                            throw std::runtime_error("Undefined solid energy approach.");
+                                         }});
+        return result;
     }
 };
 

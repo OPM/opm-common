@@ -27,131 +27,78 @@
 #ifndef OPM_ECL_SOLID_ENERGY_LAW_MULTIPLEXER_PARAMS_HPP
 #define OPM_ECL_SOLID_ENERGY_LAW_MULTIPLEXER_PARAMS_HPP
 
-#include "EclHeatcrLawParams.hpp"
-#include "EclSpecrockLawParams.hpp"
+#include <opm/common/utility/Visitor.hpp>
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <cassert>
-#include <stdexcept>
-#include <type_traits>
+#include <opm/material/thermal/EclHeatcrLawParams.hpp>
+#include <opm/material/thermal/EclSpecrockLawParams.hpp>
+#include <opm/material/thermal/NullSolidEnergyLawParams.hpp>
 
 namespace Opm {
+
+enum class EclSolidEnergyApproach {
+    Undefined,
+    Heatcr,   // keywords: HEATCR, HEATCRT, STCOND
+    Specrock, // keyword: SPECROCK
+    Null      // (no keywords)
+};
 
 /*!
  * \brief The default implementation of a parameter object for the
  *        ECL thermal law.
  */
-template <class ScalarT>
+template <class ScalarT, class FluidSystem>
 class EclSolidEnergyLawMultiplexerParams : public EnsureFinalized
 {
-    using ParamPointerType = void*;
-
 public:
     using Scalar = ScalarT;
 
-    enum SolidEnergyApproach {
-        undefinedApproach,
-        heatcrApproach, // keywords: HEATCR, HEATCRT, STCOND
-        specrockApproach, // keyword: SPECROCK
-        nullApproach, // (no keywords)
-    };
-
-    using HeatcrLawParams = EclHeatcrLawParams<ScalarT>;
+    using HeatcrLawParams = EclHeatcrLawParams<ScalarT,FluidSystem>;
     using SpecrockLawParams = EclSpecrockLawParams<ScalarT>;
+    using NullParams = NullSolidEnergyLawParams<ScalarT>;
 
-    EclSolidEnergyLawMultiplexerParams(const EclSolidEnergyLawMultiplexerParams&) = default;
-
-    EclSolidEnergyLawMultiplexerParams()
-    { solidEnergyApproach_ = undefinedApproach; }
-
-    ~EclSolidEnergyLawMultiplexerParams()
-    { destroy_(); }
-
-    void setSolidEnergyApproach(SolidEnergyApproach newApproach)
+    void setSolidEnergyApproach(EclSolidEnergyApproach newApproach)
     {
-        destroy_();
-
         solidEnergyApproach_ = newApproach;
         switch (solidEnergyApproach()) {
-        case undefinedApproach:
-            throw std::logic_error("Cannot set the approach for solid energy storage to 'undefined'!");
-
-        case heatcrApproach:
-            realParams_ = new HeatcrLawParams;
+        case EclSolidEnergyApproach::Heatcr:
+            realParams_ = HeatcrLawParams{};
             break;
 
-        case specrockApproach:
-            realParams_ = new SpecrockLawParams;
+        case EclSolidEnergyApproach::Specrock:
+            realParams_ = SpecrockLawParams{};
             break;
 
-        case nullApproach:
-            realParams_ = nullptr;
+        case EclSolidEnergyApproach::Null:
+            realParams_ = NullParams{};
             break;
+        case EclSolidEnergyApproach::Undefined:
+            throw std::runtime_error("Undefined solid energy approach.");
         }
     }
 
-    SolidEnergyApproach solidEnergyApproach() const
+    EclSolidEnergyApproach solidEnergyApproach() const
     { return solidEnergyApproach_; }
 
-    // get the parameter object for the HEATCR case
-    template <SolidEnergyApproach approachV>
-    typename std::enable_if<approachV == heatcrApproach, HeatcrLawParams>::type&
-    getRealParams()
+    template<class Function>
+    void visit1(Function f)
     {
-        assert(solidEnergyApproach() == approachV);
-        return *static_cast<HeatcrLawParams*>(realParams_);
+        std::visit(VisitorOverloadSet{f, [](auto&){}}, realParams_);
     }
 
-    template <SolidEnergyApproach approachV>
-    typename std::enable_if<approachV == heatcrApproach, const HeatcrLawParams>::type&
-    getRealParams() const
+    template<class VisitorSet>
+    void visit(VisitorSet f) const
     {
-        assert(solidEnergyApproach() == approachV);
-        return *static_cast<const HeatcrLawParams*>(realParams_);
-    }
-
-    // get the parameter object for the SPECROCK case
-    template <SolidEnergyApproach approachV>
-    typename std::enable_if<approachV == specrockApproach, SpecrockLawParams>::type&
-    getRealParams()
-    {
-        assert(solidEnergyApproach() == approachV);
-        return *static_cast<SpecrockLawParams*>(realParams_);
-    }
-
-    template <SolidEnergyApproach approachV>
-    typename std::enable_if<approachV == specrockApproach, const SpecrockLawParams>::type&
-    getRealParams() const
-    {
-        assert(solidEnergyApproach() == approachV);
-        return *static_cast<const SpecrockLawParams*>(realParams_);
+        std::visit(f, realParams_);
     }
 
 private:
-    void destroy_()
-    {
-        switch (solidEnergyApproach()) {
-        case undefinedApproach:
-            break;
-
-        case heatcrApproach:
-            delete static_cast<HeatcrLawParams*>(realParams_);
-            break;
-
-        case specrockApproach:
-            delete static_cast<SpecrockLawParams*>(realParams_);
-            break;
-
-        case nullApproach:
-            break;
-        }
-
-        solidEnergyApproach_ = undefinedApproach;
-    }
-
-    SolidEnergyApproach solidEnergyApproach_;
-    ParamPointerType realParams_;
+    EclSolidEnergyApproach solidEnergyApproach_ = EclSolidEnergyApproach::Undefined;
+    std::variant<std::monostate,
+                 HeatcrLawParams,
+                 SpecrockLawParams,
+                 NullParams> realParams_;
 };
 
 } // namespace Opm

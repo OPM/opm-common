@@ -404,6 +404,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_spline.cpp
       tests/test_tabulation.cpp
       tests/test_uniformtablelinear.cpp
+      tests/test_Visitor.cpp
 )
 
 # tests that need to be linked to dune-common
@@ -702,6 +703,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
       opm/common/utility/Serializer.hpp
+      opm/common/utility/Visitor.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
@@ -925,6 +927,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/SomertonThermalConductionLaw.hpp
       opm/material/thermal/EclSpecrockLaw.hpp
       opm/material/thermal/NullSolidEnergyLaw.hpp
+      opm/material/thermal/NullSolidEnergyLawParams.hpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
