@@ -382,17 +382,12 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_2dtables.cpp
-      tests/test_blackoilfluidstate.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
-      tests/test_components.cpp
       tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
       tests/test_EvaluationFormat.cpp
       tests/test_densead.cpp
-      tests/test_fluidmatrixinteractions.cpp
-      tests/test_fluidsystems.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp
@@ -401,29 +396,30 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_RootFinders.cpp
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
-      tests/test_spline.cpp
-      tests/test_tabulation.cpp
       tests/test_uniformtablelinear.cpp
+      tests/material/test_2dtables.cpp
+      tests/material/test_blackoilfluidstate.cpp
+      tests/material/test_components.cpp
+      tests/material/test_fluidmatrixinteractions.cpp
+      tests/material/test_fluidsystems.cpp
+      tests/material/test_spline.cpp
+      tests/material/test_tabulation.cpp
 )
 
 # tests that need to be linked to dune-common
 list(APPEND DUNE_TEST_SOURCE_FILES
-      tests/test_co2brine_ptflash.cpp
-      tests/test_immiscibleflash.cpp
-      tests/test_ncpflash.cpp
-      tests/test_pengrobinson.cpp
-      tests/test_threecomponents_ptflash.cpp
+      tests/material/test_co2brine_ptflash.cpp
+      tests/material/test_immiscibleflash.cpp
+      tests/material/test_ncpflash.cpp
+      tests/material/test_pengrobinson.cpp
+      tests/material/test_threecomponents_ptflash.cpp
 )
 
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/rst_test.cpp
     tests/test_ActiveGridCells.cpp
-    tests/test_co2brinepvt.cpp
     tests/test_CopyablePtr.cpp
-    tests/test_eclblackoilfluidsystem.cpp
-    tests/test_eclblackoilpvt.cpp
-    tests/test_eclmateriallawmanager.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -435,6 +431,10 @@ if(ENABLE_ECL_INPUT)
     tests/test_EInit.cpp
     tests/test_ExtESmry.cpp
     tests/test_Serialization.cpp
+    tests/material/test_co2brinepvt.cpp
+    tests/material/test_eclblackoilfluidsystem.cpp
+    tests/material/test_eclblackoilpvt.cpp
+    tests/material/test_eclmateriallawmanager.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
