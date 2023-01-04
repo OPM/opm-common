@@ -72,11 +72,16 @@ namespace Opm {
 	    template <typename T>
 	    inline std::string
 	    ParameterGroup::to_string(const T& val)
-	    {
-		std::ostringstream os;
-		os << val;
-		return os.str();
-	    }
+            {
+                return std::to_string(val);
+            }
+
+            template <>
+            inline std::string
+            ParameterGroup::to_string<std::string>(const std::string& val)
+            {
+                return val;
+            }
 
 	    template <>
 	    inline std::string
