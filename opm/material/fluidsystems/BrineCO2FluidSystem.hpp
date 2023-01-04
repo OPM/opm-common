@@ -47,6 +47,13 @@
 
 namespace Opm {
 
+// Silence compiler warnings about use of variables
+// that are instantiated in a different compilation unit.
+template<>
+const float CO2<float>::brineSalinity;
+template<>
+const double CO2<double>::brineSalinity;
+
 /*!
  * \brief A two-phase fluid system with water and CO2.
  *
