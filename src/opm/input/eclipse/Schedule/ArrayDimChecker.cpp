@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
-#include <sstream>
 
 #include <fmt/format.h>
 
