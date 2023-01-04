@@ -31,6 +31,8 @@
 
 namespace Opm {
 
+template <class ScalarT, class ParamsT> class EclThcLaw;
+
 /*!
  * \brief The default implementation of a parameter object for the
  *        thermal conduction law based on the THC* keywords from ECL.
@@ -40,11 +42,7 @@ class EclThcLawParams : public EnsureFinalized
 {
 public:
     using Scalar = ScalarT;
-
-    EclThcLawParams(const EclThcLawParams&) = default;
-
-    EclThcLawParams()
-    { }
+    using Law = EclThcLaw<ScalarT,EclThcLawParams<ScalarT>>;
 
     /*!
      * \brief Set the porosity
@@ -107,11 +105,11 @@ public:
     { EnsureFinalized::check(); return thcwater_; }
 
 private:
-    Scalar porosity_;
-    Scalar thcrock_;
-    Scalar thcoil_;
-    Scalar thcgas_;
-    Scalar thcwater_;
+    Scalar porosity_{};
+    Scalar thcrock_{};
+    Scalar thcoil_{};
+    Scalar thcgas_{};
+    Scalar thcwater_{};
 };
 
 } // namespace Opm

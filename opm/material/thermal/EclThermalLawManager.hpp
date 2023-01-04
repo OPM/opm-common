@@ -63,11 +63,13 @@ public:
 
     using ThermalConductionLaw = EclThermalConductionLawMultiplexer<Scalar, FluidSystem>;
     using ThermalConductionLawParams = typename ThermalConductionLaw::Params;
+    using ThconrLawParams = typename ThermalConductionLawParams::ThconrLawParams;
+    using ThcLawParams = typename ThermalConductionLawParams::ThcLawParams;
 
     EclThermalLawManager()
     {
-        solidEnergyApproach_ = SolidEnergyLawParams::undefinedApproach;
-        thermalConductivityApproach_ = ThermalConductionLawParams::undefinedApproach;
+        solidEnergyApproach_ = EclSolidEnergyApproach::Undefined;
+        thermalConductivityApproach_ = EclThermalConductionApproach::Undefined;
     }
 
     void initParamsForElements(const EclipseState& eclState, size_t numElems)
@@ -96,11 +98,11 @@ public:
     const SolidEnergyLawParams& solidEnergyLawParams(unsigned elemIdx) const
     {
         switch (solidEnergyApproach_) {
-        case SolidEnergyLawParams::heatcrApproach:
+        case EclSolidEnergyApproach::Heatcr:
             assert(elemIdx <  solidEnergyLawParams_.size());
             return solidEnergyLawParams_[elemIdx];
 
-        case SolidEnergyLawParams::specrockApproach:
+        case EclSolidEnergyApproach::Specrock:
         {
             assert(elemIdx <  elemToSatnumIdx_.size());
             unsigned satnumIdx = elemToSatnumIdx_[elemIdx];
@@ -108,7 +110,7 @@ public:
             return solidEnergyLawParams_[satnumIdx];
         }
 
-        case SolidEnergyLawParams::nullApproach:
+        case EclSolidEnergyApproach::Null:
             return solidEnergyLawParams_[0];
 
         default:
@@ -120,12 +122,12 @@ public:
     const ThermalConductionLawParams& thermalConductionLawParams(unsigned elemIdx) const
     {
         switch (thermalConductivityApproach_) {
-        case ThermalConductionLawParams::thconrApproach:
-        case ThermalConductionLawParams::thcApproach:
+        case EclThermalConductionApproach::Thconr:
+        case EclThermalConductionApproach::Thc:
             assert(elemIdx <  thermalConductionLawParams_.size());
             return thermalConductionLawParams_[elemIdx];
 
-        case ThermalConductionLawParams::nullApproach:
+        case EclThermalConductionApproach::Null:
             return thermalConductionLawParams_[0];
 
         default:
@@ -141,7 +143,7 @@ private:
     void initHeatcr_(const EclipseState& eclState,
                      size_t numElems)
     {
-        solidEnergyApproach_ = SolidEnergyLawParams::heatcrApproach;
+        solidEnergyApproach_ = EclSolidEnergyApproach::Heatcr;
         // actually the value of the reference temperature does not matter for energy
         // conservation. We set it anyway to faciliate comparisons with ECL
         HeatcrLawParams::setReferenceTemperature(FluidSystem::surfaceTemperature);
@@ -152,9 +154,8 @@ private:
         solidEnergyLawParams_.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             auto& elemParam = solidEnergyLawParams_[elemIdx];
-            elemParam.setSolidEnergyApproach(SolidEnergyLawParams::heatcrApproach);
-            auto& heatcrElemParams = elemParam.template getRealParams<SolidEnergyLawParams::heatcrApproach>();
-
+            elemParam.setSolidEnergyApproach(EclSolidEnergyApproach::Heatcr);
+            auto& heatcrElemParams = elemParam.template getRealParams<EclSolidEnergyApproach::Heatcr>();
             heatcrElemParams.setReferenceRockHeatCapacity(heatcrData[elemIdx]);
             heatcrElemParams.setDRockHeatCapacity_dT(heatcrtData[elemIdx]);
             heatcrElemParams.finalize();
@@ -168,7 +169,7 @@ private:
     void initSpecrock_(const EclipseState& eclState,
                        size_t numElems)
     {
-        solidEnergyApproach_ = SolidEnergyLawParams::specrockApproach;
+        solidEnergyApproach_ = EclSolidEnergyApproach::Specrock;
 
         // initialize the element index -> SATNUM index mapping
         const auto& fp = eclState.fieldProps();
@@ -188,9 +189,9 @@ private:
 
             auto& multiplexerParams = solidEnergyLawParams_[satnumIdx];
 
-            multiplexerParams.setSolidEnergyApproach(SolidEnergyLawParams::specrockApproach);
+            multiplexerParams.setSolidEnergyApproach(EclSolidEnergyApproach::Specrock);
 
-            auto& specrockParams = multiplexerParams.template getRealParams<SolidEnergyLawParams::specrockApproach>();
+            auto& specrockParams = multiplexerParams.template getRealParams<EclSolidEnergyApproach::Specrock>();
             const auto& temperatureColumn = specrockTable.getColumn("TEMPERATURE");
             const auto& cvRockColumn = specrockTable.getColumn("CV_ROCK");
             specrockParams.setHeatCapacities(temperatureColumn, cvRockColumn);
@@ -205,7 +206,7 @@ private:
      */
     void initNullRockEnergy_()
     {
-        solidEnergyApproach_ = SolidEnergyLawParams::nullApproach;
+        solidEnergyApproach_ = EclSolidEnergyApproach::Null;
 
         solidEnergyLawParams_.resize(1);
         solidEnergyLawParams_[0].finalize();
@@ -217,7 +218,7 @@ private:
     void initThconr_(const EclipseState& eclState,
                      size_t numElems)
     {
-        thermalConductivityApproach_ = ThermalConductionLawParams::thconrApproach;
+        thermalConductivityApproach_ = EclThermalConductionApproach::Thconr;
 
         const auto& fp = eclState.fieldProps();
         std::vector<double> thconrData;
@@ -231,15 +232,15 @@ private:
         thermalConductionLawParams_.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             auto& elemParams = thermalConductionLawParams_[elemIdx];
-            elemParams.setThermalConductionApproach(ThermalConductionLawParams::thconrApproach);
-            auto& thconrElemParams = elemParams.template getRealParams<ThermalConductionLawParams::thconrApproach>();
-
-            double thconr = thconrData.empty()   ? 0.0 : thconrData[elemIdx];
-            double thconsf = thconsfData.empty() ? 0.0 : thconsfData[elemIdx];
-            thconrElemParams.setReferenceTotalThermalConductivity(thconr);
-            thconrElemParams.setDTotalThermalConductivity_dSg(thconsf);
-
-            thconrElemParams.finalize();
+            elemParams.setThermalConductionApproach(EclThermalConductionApproach::Thconr);
+            elemParams.visit1([&](ThconrLawParams& thconrElemParams)
+                              {
+                                  double thconr = thconrData.empty()   ? 0.0 : thconrData[elemIdx];
+                                  double thconsf = thconsfData.empty() ? 0.0 : thconsfData[elemIdx];
+                                  thconrElemParams.setReferenceTotalThermalConductivity(thconr);
+                                  thconrElemParams.setDTotalThermalConductivity_dSg(thconsf);
+                                  thconrElemParams.finalize();
+                              });
             elemParams.finalize();
         }
     }
@@ -250,7 +251,7 @@ private:
     void initThc_(const EclipseState& eclState,
                   size_t numElems)
     {
-        thermalConductivityApproach_ = ThermalConductionLawParams::thcApproach;
+        thermalConductivityApproach_ = EclThermalConductionApproach::Thc;
 
         const auto& fp = eclState.fieldProps();
         std::vector<double> thcrockData;
@@ -275,20 +276,20 @@ private:
         thermalConductionLawParams_.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             auto& elemParams = thermalConductionLawParams_[elemIdx];
-            elemParams.setThermalConductionApproach(ThermalConductionLawParams::thcApproach);
-            auto& thcElemParams = elemParams.template getRealParams<ThermalConductionLawParams::thcApproach>();
-
-            thcElemParams.setPorosity(poroData[elemIdx]);
-            double thcrock = thcrockData.empty()    ? 0.0 : thcrockData[elemIdx];
-            double thcoil = thcoilData.empty()      ? 0.0 : thcoilData[elemIdx];
-            double thcgas = thcgasData.empty()      ? 0.0 : thcgasData[elemIdx];
-            double thcwater = thcwaterData.empty()  ? 0.0 : thcwaterData[elemIdx];
-            thcElemParams.setThcrock(thcrock);
-            thcElemParams.setThcoil(thcoil);
-            thcElemParams.setThcgas(thcgas);
-            thcElemParams.setThcwater(thcwater);
-
-            thcElemParams.finalize();
+            elemParams.setThermalConductionApproach(EclThermalConductionApproach::Thc);
+            elemParams.visit1([&](ThcLawParams& thcElemParams)
+                              {
+                                  thcElemParams.setPorosity(poroData[elemIdx]);
+                                  double thcrock = thcrockData.empty()    ? 0.0 : thcrockData[elemIdx];
+                                  double thcoil = thcoilData.empty()      ? 0.0 : thcoilData[elemIdx];
+                                  double thcgas = thcgasData.empty()      ? 0.0 : thcgasData[elemIdx];
+                                  double thcwater = thcwaterData.empty()  ? 0.0 : thcwaterData[elemIdx];
+                                  thcElemParams.setThcrock(thcrock);
+                                  thcElemParams.setThcoil(thcoil);
+                                  thcElemParams.setThcgas(thcgas);
+                                  thcElemParams.setThcwater(thcwater);
+                                  thcElemParams.finalize();
+                              });
             elemParams.finalize();
         }
     }
@@ -298,15 +299,15 @@ private:
      */
     void initNullCond_()
     {
-        thermalConductivityApproach_ = ThermalConductionLawParams::nullApproach;
+        thermalConductivityApproach_ = EclThermalConductionApproach::Null;
 
         thermalConductionLawParams_.resize(1);
         thermalConductionLawParams_[0].finalize();
     }
 
 private:
-    typename ThermalConductionLawParams::ThermalConductionApproach thermalConductivityApproach_;
-    typename SolidEnergyLawParams::SolidEnergyApproach solidEnergyApproach_;
+    EclThermalConductionApproach thermalConductivityApproach_;
+    EclSolidEnergyApproach solidEnergyApproach_;
 
     std::vector<unsigned> elemToSatnumIdx_;
 
