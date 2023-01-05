@@ -26,14 +26,17 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#endif
 
 #include <fmt/format.h>
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void DeadOilPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -73,6 +76,44 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void DeadOilPvt<Scalar>::setNumRegions(size_t numRegions)
+{
+    oilReferenceDensity_.resize(numRegions);
+    inverseOilB_.resize(numRegions);
+    inverseOilBMu_.resize(numRegions);
+    oilMu_.resize(numRegions);
+}
+
+template<class Scalar>
+void DeadOilPvt<Scalar>::initEnd()
+{
+    // calculate the final 2D functions which are used for interpolation.
+    size_t numRegions = oilMu_.size();
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        // calculate the table which stores the inverse of the product of the oil
+        // formation volume factor and the oil viscosity
+        const auto& oilMu = oilMu_[regionIdx];
+        const auto& invOilB = inverseOilB_[regionIdx];
+        assert(oilMu.numSamples() == invOilB.numSamples());
+
+        std::vector<Scalar> invBMuColumn;
+        std::vector<Scalar> pressureColumn;
+        invBMuColumn.resize(oilMu.numSamples());
+        pressureColumn.resize(oilMu.numSamples());
+
+        for (unsigned pIdx = 0; pIdx < oilMu.numSamples(); ++pIdx) {
+            pressureColumn[pIdx] = invOilB.xAt(pIdx);
+            invBMuColumn[pIdx] = invOilB.valueAt(pIdx) / oilMu.valueAt(pIdx);
+        }
+
+        inverseOilBMu_[regionIdx].setXYArrays(pressureColumn.size(),
+                                              pressureColumn,
+                                              invBMuColumn);
+    }
 }
 
 template class DeadOilPvt<double>;
