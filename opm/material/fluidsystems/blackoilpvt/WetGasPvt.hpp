@@ -72,18 +72,7 @@ private:
 public:
 #endif // HAVE_ECL_INPUT
 
-    void setNumRegions(size_t numRegions)
-    {
-        oilReferenceDensity_.resize(numRegions);
-        gasReferenceDensity_.resize(numRegions);
-        inverseGasB_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-        inverseGasBMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-        inverseSaturatedGasB_.resize(numRegions);
-        inverseSaturatedGasBMu_.resize(numRegions);
-        gasMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-        saturatedOilVaporizationFactorTable_.resize(numRegions);
-        saturationPressure_.resize(numRegions);
-    }
+    void setNumRegions(size_t numRegions);
 
     /*!
      * \brief Initialize the reference densities of all fluids for a given PVT region
@@ -91,11 +80,7 @@ public:
     void setReferenceDensities(unsigned regionIdx,
                                Scalar rhoRefOil,
                                Scalar rhoRefGas,
-                               Scalar /*rhoRefWater*/)
-    {
-        oilReferenceDensity_[regionIdx] = rhoRefOil;
-        gasReferenceDensity_[regionIdx] = rhoRefGas;
-    }
+                               Scalar /*rhoRefWater*/);
 
     /*!
      * \brief Initialize the function for the oil vaporization factor \f$R_v\f$
@@ -114,53 +99,8 @@ public:
      * only depends on pressure) while the dependence on the oil mass fraction is
      * guesstimated...
      */
-    void setSaturatedGasFormationVolumeFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
-    {
-        auto& invGasB = inverseGasB_[regionIdx];
-
-        const auto& RvTable = saturatedOilVaporizationFactorTable_[regionIdx];
-
-        constexpr const Scalar T = 273.15 + 15.56; // [K]
-
-        constexpr const Scalar RvMin = 0.0;
-        Scalar RvMax = RvTable.eval(saturatedOilVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
-
-        Scalar poMin = samplePoints.front().first;
-        Scalar poMax = samplePoints.back().first;
-
-        constexpr const size_t nRv = 20;
-        size_t nP = samplePoints.size()*2;
-
-        Scalar rhooRef = oilReferenceDensity_[regionIdx];
-
-        TabulatedOneDFunction gasFormationVolumeFactor;
-        gasFormationVolumeFactor.setContainerOfTuples(samplePoints);
-
-        updateSaturationPressure_(regionIdx);
-
-        // calculate a table of estimated densities depending on pressure and gas mass
-        // fraction. note that this assumes oil of constant compressibility. (having said
-        // that, if only the saturated gas densities are available, there's not much
-        // choice.)
-        for (size_t RvIdx = 0; RvIdx < nRv; ++RvIdx) {
-            Scalar Rv = RvMin + (RvMax - RvMin)*RvIdx/nRv;
-
-            invGasB.appendXPos(Rv);
-
-            for (size_t pIdx = 0; pIdx < nP; ++pIdx) {
-                Scalar pg = poMin + (poMax - poMin)*pIdx/nP;
-
-                Scalar poSat = saturationPressure(regionIdx, T, Rv);
-                Scalar BgSat = gasFormationVolumeFactor.eval(poSat, /*extrapolate=*/true);
-                Scalar drhoo_dp = (1.1200 - 1.1189)/((5000 - 4000)*6894.76);
-                Scalar rhoo = rhooRef/BgSat*(1 + drhoo_dp*(pg - poSat));
-
-                Scalar Bg = rhooRef/rhoo;
-
-                invGasB.appendSamplePoint(RvIdx, pg, 1.0/Bg);
-            }
-        }
-    }
+    void setSaturatedGasFormationVolumeFactor(unsigned regionIdx,
+                                              const SamplingPoints& samplePoints);
 
     /*!
      * \brief Initialize the function for the gas formation volume factor
@@ -192,85 +132,13 @@ public:
      * requires the viscosity of oil-saturated gas (which only depends on pressure) while
      * there is assumed to be no dependence on the gas mass fraction...
      */
-    void setSaturatedGasViscosity(unsigned regionIdx, const SamplingPoints& samplePoints  )
-    {
-        auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
-
-        constexpr const Scalar RvMin = 0.0;
-        Scalar RvMax = oilVaporizationFac.eval(saturatedOilVaporizationFactorTable_[regionIdx].xMax(), /*extrapolate=*/true);
-
-        Scalar poMin = samplePoints.front().first;
-        Scalar poMax = samplePoints.back().first;
-
-        constexpr const size_t nRv = 20;
-        size_t nP = samplePoints.size()*2;
-
-        TabulatedOneDFunction mugTable;
-        mugTable.setContainerOfTuples(samplePoints);
-
-        // calculate a table of estimated densities depending on pressure and gas mass
-        // fraction
-        for (size_t RvIdx = 0; RvIdx < nRv; ++RvIdx) {
-            Scalar Rv = RvMin + (RvMax - RvMin)*RvIdx/nRv;
-
-            gasMu_[regionIdx].appendXPos(Rv);
-
-            for (size_t pIdx = 0; pIdx < nP; ++pIdx) {
-                Scalar pg = poMin + (poMax - poMin)*pIdx/nP;
-                Scalar mug = mugTable.eval(pg, /*extrapolate=*/true);
-
-                gasMu_[regionIdx].appendSamplePoint(RvIdx, pg, mug);
-            }
-        }
-    }
+    void setSaturatedGasViscosity(unsigned regionIdx,
+                                  const SamplingPoints& samplePoints);
 
     /*!
      * \brief Finish initializing the gas phase PVT properties.
      */
-    void initEnd()
-    {
-        // calculate the final 2D functions which are used for interpolation.
-        size_t numRegions = gasMu_.size();
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            // calculate the table which stores the inverse of the product of the gas
-            // formation volume factor and the gas viscosity
-            const auto& gasMu = gasMu_[regionIdx];
-            const auto& invGasB = inverseGasB_[regionIdx];
-            assert(gasMu.numX() == invGasB.numX());
-
-            auto& invGasBMu = inverseGasBMu_[regionIdx];
-            auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
-            auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
-
-            std::vector<Scalar> satPressuresArray;
-            std::vector<Scalar> invSatGasBArray;
-            std::vector<Scalar> invSatGasBMuArray;
-            for (size_t pIdx = 0; pIdx < gasMu.numX(); ++pIdx) {
-                invGasBMu.appendXPos(gasMu.xAt(pIdx));
-
-                assert(gasMu.numY(pIdx) == invGasB.numY(pIdx));
-
-                size_t numRv = gasMu.numY(pIdx);
-                for (size_t rvIdx = 0; rvIdx < numRv; ++rvIdx)
-                    invGasBMu.appendSamplePoint(pIdx,
-                                                gasMu.yAt(pIdx, rvIdx),
-                                                invGasB.valueAt(pIdx, rvIdx)
-                                                / gasMu.valueAt(pIdx, rvIdx));
-
-                // the sampling points in UniformXTabulated2DFunction are always sorted
-                // in ascending order. Thus, the value for saturated gas is the last one
-                // (i.e., the one with the largest Rv value)
-                satPressuresArray.push_back(gasMu.xAt(pIdx));
-                invSatGasBArray.push_back(invGasB.valueAt(pIdx, numRv - 1));
-                invSatGasBMuArray.push_back(invGasBMu.valueAt(pIdx, numRv - 1));
-            }
-
-            invSatGasB.setXYContainers(satPressuresArray, invSatGasBArray);
-            invSatGasBMu.setXYContainers(satPressuresArray, invSatGasBMuArray);
-
-            updateSaturationPressure_(regionIdx);
-        }
-    }
+    void initEnd();
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
@@ -509,32 +377,7 @@ public:
     }
 
 private:
-    void updateSaturationPressure_(unsigned regionIdx)
-    {
-        const auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
-
-        // create the taublated function representing saturation pressure depending of
-        // Rv
-        size_t n = oilVaporizationFac.numSamples();
-        Scalar delta = (oilVaporizationFac.xMax() - oilVaporizationFac.xMin())/Scalar(n + 1);
-
-        SamplingPoints pSatSamplePoints;
-        Scalar Rv = 0;
-        for (size_t i = 0; i <= n; ++ i) {
-            Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
-            Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
-
-            pSatSamplePoints.emplace_back(Rv, pSat);
-        }
-
-        //Prune duplicate Rv values (can occur, and will cause problems in further interpolation)
-        auto x_coord_comparator = [](const auto& a, const auto& b) { return a.first == b.first; };
-        auto last = std::unique(pSatSamplePoints.begin(), pSatSamplePoints.end(), x_coord_comparator);
-        if (std::distance(pSatSamplePoints.begin(), last) > 1) // only remove them if there are more than two points
-            pSatSamplePoints.erase(last, pSatSamplePoints.end());
-
-        saturationPressure_[regionIdx].setContainerOfTuples(pSatSamplePoints);
-    }
+    void updateSaturationPressure_(unsigned regionIdx);
 
     std::vector<Scalar> gasReferenceDensity_;
     std::vector<Scalar> oilReferenceDensity_;
