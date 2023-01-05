@@ -346,28 +346,25 @@ void LiveOilPvt<Scalar>::initEnd()
 template<class Scalar>
 void LiveOilPvt<Scalar>::updateSaturationPressure_(unsigned regionIdx)
 {
-    using Pair = std::pair<Scalar, Scalar>;
     const auto& gasDissolutionFac = saturatedGasDissolutionFactorTable_[regionIdx];
 
     // create the function representing saturation pressure depending of the mass
     // fraction in gas
     size_t n = gasDissolutionFac.numSamples();
-    Scalar delta = (gasDissolutionFac.xMax() - gasDissolutionFac.xMin())/Scalar(n + 1);
+    const Scalar delta = (gasDissolutionFac.xMax() -
+                          gasDissolutionFac.xMin()) / Scalar(n + 1);
 
     SamplingPoints pSatSamplePoints;
-    Scalar Rs = 0;
-    for (size_t i=0; i <= n; ++ i) {
-        Scalar pSat = gasDissolutionFac.xMin() + Scalar(i)*delta;
-        Rs = saturatedGasDissolutionFactor(regionIdx,
-                                           /*temperature=*/Scalar(1e30),
-                                           pSat);
-
-        Pair val(Rs, pSat);
-        pSatSamplePoints.push_back(val);
+    for (size_t i = 0; i <= n; ++ i) {
+        const Scalar pSat = gasDissolutionFac.xMin() + i*delta;
+        const Scalar Rs = saturatedGasDissolutionFactor(regionIdx,
+                                                        Scalar(1e30),
+                                                        pSat);
+        pSatSamplePoints.emplace_back(Rs, pSat);
     }
 
     //Prune duplicate Rs values (can occur, and will cause problems in further interpolation)
-    auto x_coord_comparator = [](const Pair& a, const Pair& b) { return a.first == b.first; };
+    auto x_coord_comparator = [](const auto& a, const auto& b) { return a.first == b.first; };
     auto last = std::unique(pSatSamplePoints.begin(), pSatSamplePoints.end(), x_coord_comparator);
     if (std::distance(pSatSamplePoints.begin(), last) > 1) // only remove them if there are more than two points
         pSatSamplePoints.erase(last, pSatSamplePoints.end());
