@@ -29,7 +29,6 @@
 #include <opm/io/eclipse/rst/udq.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -42,6 +41,7 @@
 namespace Opm {
     class EclipseGrid;
     class Parser;
+    class Runspec;
 } // namespace Opm
 
 namespace Opm { namespace EclIO {
