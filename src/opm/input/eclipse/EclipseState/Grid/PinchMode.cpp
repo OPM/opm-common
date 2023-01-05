@@ -20,53 +20,59 @@
 #include <opm/input/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <opm/common/utility/String.hpp>
 
+#include <ostream>
 #include <stdexcept>
 
 namespace Opm {
 
-    namespace PinchMode {
+std::string PinchMode2String(const PinchMode enumValue)
+{
+    std::string stringValue;
+    switch (enumValue) {
+    case PinchMode::ALL:
+        stringValue = "ALL";
+        break;
 
-        const std::string PinchMode2String(const ModeEnum enumValue) {
-            std::string stringValue;
-            switch (enumValue) {
-            case ModeEnum::ALL:
-                stringValue = "ALL";
-                break;
+    case PinchMode::TOPBOT:
+        stringValue = "TOPBOT";
+        break;
 
-            case ModeEnum::TOPBOT:
-                stringValue = "TOPBOT";
-                break;
+    case PinchMode::TOP:
+        stringValue = "TOP";
+        break;
 
-            case ModeEnum::TOP:
-                stringValue = "TOP";
-                break;
-
-            case ModeEnum::GAP:
-                stringValue = "GAP";
-                break;
-            case ModeEnum::NOGAP:
-                stringValue = "NOGAP";
-                break;
-            }
-
-            return stringValue;
-        }
-
-        ModeEnum PinchModeFromString(const std::string& stringValue) {
-            std::string s = trim_copy(stringValue);
-
-            ModeEnum mode;
-            if      (s == "ALL")    { mode = ModeEnum::ALL;    }
-            else if (s == "TOPBOT") { mode = ModeEnum::TOPBOT; }
-            else if (s == "TOP")    { mode = ModeEnum::TOP;    }
-            else if (s == "GAP")    { mode = ModeEnum::GAP;    }
-            else if (s == "NOGAP")  { mode = ModeEnum::NOGAP;    }
-            else {
-                std::string msg = "Unsupported pinchout mode " + s;
-                throw std::invalid_argument(msg);
-            }
-
-            return mode;
-        }
+    case PinchMode::GAP:
+        stringValue = "GAP";
+        break;
+    case PinchMode::NOGAP:
+        stringValue = "NOGAP";
+        break;
     }
+
+    return stringValue;
+}
+
+PinchMode PinchModeFromString(const std::string& stringValue)
+{
+    std::string s = trim_copy(stringValue);
+
+    PinchMode mode;
+    if      (s == "ALL")    { mode = PinchMode::ALL;    }
+    else if (s == "TOPBOT") { mode = PinchMode::TOPBOT; }
+    else if (s == "TOP")    { mode = PinchMode::TOP;    }
+    else if (s == "GAP")    { mode = PinchMode::GAP;    }
+    else if (s == "NOGAP")  { mode = PinchMode::NOGAP;    }
+    else {
+        std::string msg = "Unsupported pinchout mode " + s;
+        throw std::invalid_argument(msg);
+    }
+
+    return mode;
+}
+
+std::ostream& operator<<(std::ostream& os, const PinchMode pm)
+{
+    return (os << PinchMode2String(pm));
+}
+
 }
