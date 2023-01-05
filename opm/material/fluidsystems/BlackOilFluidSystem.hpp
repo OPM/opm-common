@@ -41,6 +41,7 @@
 #include <opm/material/common/HasMemberGeneratorMacros.hpp>
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -238,29 +239,7 @@ public:
      * compressibility must be set. Before the fluid system can be used, initEnd() must
      * be called to finalize the initialization.
      */
-    static void initBegin(size_t numPvtRegions)
-    {
-        isInitialized_ = false;
-
-        enableDissolvedGas_ = true;
-        enableDissolvedGasInWater_ = false;
-        enableVaporizedOil_ = false;
-        enableVaporizedWater_ = false;
-        enableDiffusion_ = false;
-
-        oilPvt_ = nullptr;
-        gasPvt_ = nullptr;
-        waterPvt_ = nullptr;
-
-        surfaceTemperature = 273.15 + 15.56; // [K]
-        surfacePressure = 1.01325e5; // [Pa]
-        setReservoirTemperature(surfaceTemperature);
-
-        numActivePhases_ = numPhases;
-        std::fill_n(&phaseIsActive_[0], numPhases, true);
-
-        resizeArrays_(numPvtRegions);
-    }
+    static void initBegin(std::size_t numPvtRegions);
 
     /*!
      * \brief Specify whether the fluid system should consider that the gas component can
@@ -334,53 +313,12 @@ public:
     static void setReferenceDensities(Scalar rhoOil,
                                       Scalar rhoWater,
                                       Scalar rhoGas,
-                                      unsigned regionIdx)
-    {
-        referenceDensity_[regionIdx][oilPhaseIdx] = rhoOil;
-        referenceDensity_[regionIdx][waterPhaseIdx] = rhoWater;
-        referenceDensity_[regionIdx][gasPhaseIdx] = rhoGas;
-    }
-
+                                      unsigned regionIdx);
 
     /*!
      * \brief Finish initializing the black oil fluid system.
      */
-    static void initEnd()
-    {
-        // calculate the final 2D functions which are used for interpolation.
-        size_t numRegions = molarMass_.size();
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            // calculate molar masses
-
-            // water is simple: 18 g/mol
-            molarMass_[regionIdx][waterCompIdx] = 18e-3;
-
-            if (phaseIsActive(gasPhaseIdx)) {
-                // for gas, we take the density at standard conditions and assume it to be ideal
-                Scalar p = surfacePressure;
-                Scalar T = surfaceTemperature;
-                Scalar rho_g = referenceDensity_[/*regionIdx=*/0][gasPhaseIdx];
-                molarMass_[regionIdx][gasCompIdx] = Constants<Scalar>::R*T*rho_g / p;
-            }
-            else
-                // hydrogen gas. we just set this do avoid NaNs later
-                molarMass_[regionIdx][gasCompIdx] = 2e-3;
-
-            // finally, for oil phase, we take the molar mass from the spe9 paper
-            molarMass_[regionIdx][oilCompIdx] = 175e-3; // kg/mol
-        }
-
-
-        int activePhaseIdx = 0;
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if(phaseIsActive(phaseIdx)){
-                canonicalToActivePhaseIdx_[phaseIdx] = activePhaseIdx;
-                activeToCanonicalPhaseIdx_[activePhaseIdx] = phaseIdx;
-                activePhaseIdx++;
-            }
-        }
-        isInitialized_ = true;
-    }
+    static void initEnd();
 
     static bool isInitialized()
     { return isInitialized_; }
@@ -406,20 +344,7 @@ public:
     static Scalar surfaceTemperature;
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName(unsigned phaseIdx)
-    {
-        switch (phaseIdx) {
-        case waterPhaseIdx:
-            return "water";
-        case oilPhaseIdx:
-            return "oil";
-        case gasPhaseIdx:
-            return "gas";
-
-        default:
-            throw std::logic_error("Phase index " + std::to_string(phaseIdx) + " is unknown");
-        }
-    }
+    static const char* phaseName(unsigned phaseIdx);
 
     //! \copydoc BaseFluidSystem::isLiquid
     static bool isLiquid(unsigned phaseIdx)
@@ -459,54 +384,13 @@ public:
     }
 
     //! \brief returns the index of "primary" component of a phase (solvent)
-    static constexpr unsigned solventComponentIndex(unsigned phaseIdx)
-    {
-        switch (phaseIdx) {
-        case waterPhaseIdx:
-            return waterCompIdx;
-        case oilPhaseIdx:
-            return oilCompIdx;
-        case gasPhaseIdx:
-            return gasCompIdx;
-
-        default:
-            throw std::logic_error("Phase index " + std::to_string(phaseIdx) + " is unknown");
-        }
-    }
+    static unsigned solventComponentIndex(unsigned phaseIdx);
 
     //! \brief returns the index of "secondary" component of a phase (solute)
-    static constexpr unsigned soluteComponentIndex(unsigned phaseIdx)
-    {
-        switch (phaseIdx) {
-        case waterPhaseIdx:
-            if (enableDissolvedGasInWater()) 
-                return gasCompIdx;
-            throw std::logic_error("The water phase does not have any solutes in the black oil model!");
-        case oilPhaseIdx:
-            return gasCompIdx;
-        case gasPhaseIdx:
-            return oilCompIdx;
-
-        default:
-            throw std::logic_error("Phase index " + std::to_string(phaseIdx) + " is unknown");
-        }
-    }
+    static unsigned soluteComponentIndex(unsigned phaseIdx);
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName(unsigned compIdx)
-    {
-        switch (compIdx) {
-        case waterCompIdx:
-            return "Water";
-        case oilCompIdx:
-            return "Oil";
-        case gasCompIdx:
-            return "Gas";
-
-        default:
-            throw std::logic_error("Component index " + std::to_string(compIdx) + " is unknown");
-        }
-    }
+    static const char* componentName(unsigned compIdx);
 
     //! \copydoc BaseFluidSystem::molarMass
     static Scalar molarMass(unsigned compIdx, unsigned regionIdx = 0)
@@ -537,7 +421,7 @@ public:
      *
      * By default, this is 1.
      */
-    static size_t numRegions()
+    static std::size_t numRegions()
     { return molarMass_.size(); }
 
     /*!
@@ -1528,16 +1412,9 @@ public:
     static void setReservoirTemperature(Scalar value)
     { reservoirTemperature_ = value; }
 
-    static short activeToCanonicalPhaseIdx(unsigned activePhaseIdx) {
-        assert(activePhaseIdx<numActivePhases());
-        return activeToCanonicalPhaseIdx_[activePhaseIdx];
-    }
+    static short activeToCanonicalPhaseIdx(unsigned activePhaseIdx);
 
-    static short canonicalToActivePhaseIdx(unsigned phaseIdx) {
-        assert(phaseIdx<numPhases);
-        assert(phaseIsActive(phaseIdx));
-        return canonicalToActivePhaseIdx_[phaseIdx];
-    }
+    static short canonicalToActivePhaseIdx(unsigned phaseIdx);
 
     //! \copydoc BaseFluidSystem::diffusionCoefficient
     static Scalar diffusionCoefficient(unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0)
@@ -1577,11 +1454,7 @@ public:
     }
 
 private:
-    static void resizeArrays_(size_t numRegions)
-    {
-        molarMass_.resize(numRegions);
-        referenceDensity_.resize(numRegions);
-    }
+    static void resizeArrays_(std::size_t numRegions);
 
     static Scalar reservoirTemperature_;
 

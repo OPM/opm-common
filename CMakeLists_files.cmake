@@ -52,6 +52,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/material/components/CO2.cpp
       src/opm/material/densead/Evaluation.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
+      src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
       src/opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
       src/opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
       src/opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
@@ -255,7 +256,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
     src/opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
-    src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
     src/opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
