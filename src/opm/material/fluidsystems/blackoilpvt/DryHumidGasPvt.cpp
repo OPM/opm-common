@@ -348,26 +348,25 @@ template<class Scalar>
 void DryHumidGasPvt<Scalar>::
 updateSaturationPressure_(unsigned regionIdx)
 {
-    using Pair = std::pair<Scalar, Scalar>;
     const auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
     // create the taublated function representing saturation pressure depending of
     // Rw
     size_t n = waterVaporizationFac.numSamples();
-    Scalar delta = (waterVaporizationFac.xMax() - waterVaporizationFac.xMin())/Scalar(n + 1);
+    const Scalar delta = (waterVaporizationFac.xMax() -
+                          waterVaporizationFac.xMin()) / Scalar(n + 1);
 
     SamplingPoints pSatSamplePoints;
-    Scalar Rw = 0;
     for (size_t i = 0; i <= n; ++ i) {
-        Scalar pSat = waterVaporizationFac.xMin() + Scalar(i)*delta;
-        Rw = saturatedWaterVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
-
-        Pair val(Rw, pSat);
-        pSatSamplePoints.push_back(val);
+        const Scalar pSat = waterVaporizationFac.xMin() + i*delta;
+        const Scalar Rw = saturatedWaterVaporizationFactor(regionIdx,
+                                                           Scalar(1e30),
+                                                           pSat);
+        pSatSamplePoints.emplace_back(Rw, pSat);
     }
 
     //Prune duplicate Rv values (can occur, and will cause problems in further interpolation)
-    auto x_coord_comparator = [](const Pair& a, const Pair& b) { return a.first == b.first; };
+    auto x_coord_comparator = [](const auto& a, const auto& b) { return a.first == b.first; };
     auto last = std::unique(pSatSamplePoints.begin(), pSatSamplePoints.end(), x_coord_comparator);
     if (std::distance(pSatSamplePoints.begin(), last) > 1) // only remove them if there are more than two points
         pSatSamplePoints.erase(last, pSatSamplePoints.end());
