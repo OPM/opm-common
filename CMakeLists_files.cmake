@@ -55,6 +55,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
       src/opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
       src/opm/material/fluidsystems/blackoilpvt/LiveOilPvt.cpp
+      src/opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -261,7 +262,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidsystems/blackoilpvt/GasPvtThermal.cpp
     src/opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/OilPvtThermal.cpp
-    src/opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
     src/opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
