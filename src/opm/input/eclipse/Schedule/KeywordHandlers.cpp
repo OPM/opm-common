@@ -53,7 +53,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>

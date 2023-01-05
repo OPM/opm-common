@@ -22,7 +22,7 @@
 #include <opm/output/eclipse/LogiHEAD.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 
 #include <vector>
 
