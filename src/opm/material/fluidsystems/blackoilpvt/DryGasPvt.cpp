@@ -26,14 +26,17 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
+#endif
 
 #include <fmt/format.h>
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void DryGasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -83,6 +86,54 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void DryGasPvt<Scalar>::setNumRegions(size_t numRegions)
+{
+    gasReferenceDensity_.resize(numRegions);
+    inverseGasB_.resize(numRegions);
+    inverseGasBMu_.resize(numRegions);
+    gasMu_.resize(numRegions);
+}
+
+template<class Scalar>
+void DryGasPvt<Scalar>::
+setGasFormationVolumeFactor(unsigned regionIdx,
+                            const SamplingPoints& samplePoints)
+{
+    SamplingPoints tmp(samplePoints);
+    auto it = tmp.begin();
+    const auto& endIt = tmp.end();
+    for (; it != endIt; ++ it)
+        std::get<1>(*it) = 1.0/std::get<1>(*it);
+
+    inverseGasB_[regionIdx].setContainerOfTuples(tmp);
+    assert(inverseGasB_[regionIdx].monotonic());
+}
+
+template<class Scalar>
+void DryGasPvt<Scalar>::initEnd()
+{
+    // calculate the final 2D functions which are used for interpolation.
+    size_t numRegions = gasMu_.size();
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        // calculate the table which stores the inverse of the product of the gas
+        // formation volume factor and the gas viscosity
+        const auto& gasMu = gasMu_[regionIdx];
+        const auto& invGasB = inverseGasB_[regionIdx];
+        assert(gasMu.numSamples() == invGasB.numSamples());
+
+        std::vector<Scalar> pressureValues(gasMu.numSamples());
+        std::vector<Scalar> invGasBMuValues(gasMu.numSamples());
+        for (unsigned pIdx = 0; pIdx < gasMu.numSamples(); ++pIdx) {
+            pressureValues[pIdx] = invGasB.xAt(pIdx);
+            invGasBMuValues[pIdx] = invGasB.valueAt(pIdx) * (1.0/gasMu.valueAt(pIdx));
+        }
+
+        inverseGasBMu_[regionIdx].setXYContainers(pressureValues, invGasBMuValues);
+    }
 }
 
 template class DryGasPvt<double>;

@@ -26,14 +26,17 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdsTable.hpp>
+#endif
 
 #include <fmt/format.h>
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void SolventPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -71,6 +74,54 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void SolventPvt<Scalar>::setNumRegions(size_t numRegions)
+{
+    solventReferenceDensity_.resize(numRegions);
+    inverseSolventB_.resize(numRegions);
+    inverseSolventBMu_.resize(numRegions);
+    solventMu_.resize(numRegions);
+}
+
+template<class Scalar>
+void SolventPvt<Scalar>::
+setSolventFormationVolumeFactor(unsigned regionIdx,
+                                const SamplingPoints& samplePoints)
+{
+    SamplingPoints tmp(samplePoints);
+    auto it = tmp.begin();
+    const auto& endIt = tmp.end();
+    for (; it != endIt; ++ it)
+        std::get<1>(*it) = 1.0/std::get<1>(*it);
+
+    inverseSolventB_[regionIdx].setContainerOfTuples(tmp);
+    assert(inverseSolventB_[regionIdx].monotonic());
+}
+
+template<class Scalar>
+void SolventPvt<Scalar>::initEnd()
+{
+    // calculate the final 2D functions which are used for interpolation.
+    size_t numRegions = solventMu_.size();
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        // calculate the table which stores the inverse of the product of the solvent
+        // formation volume factor and its viscosity
+        const auto& solventMu = solventMu_[regionIdx];
+        const auto& invSolventB = inverseSolventB_[regionIdx];
+        assert(solventMu.numSamples() == invSolventB.numSamples());
+
+        std::vector<Scalar> pressureValues(solventMu.numSamples());
+        std::vector<Scalar> invSolventBMuValues(solventMu.numSamples());
+        for (unsigned pIdx = 0; pIdx < solventMu.numSamples(); ++pIdx) {
+            pressureValues[pIdx] = invSolventB.xAt(pIdx);
+            invSolventBMuValues[pIdx] = invSolventB.valueAt(pIdx) * (1.0/solventMu.valueAt(pIdx));
+        }
+
+        inverseSolventBMu_[regionIdx].setXYContainers(pressureValues, invSolventBMuValues);
+    }
 }
 
 template class SolventPvt<double>;

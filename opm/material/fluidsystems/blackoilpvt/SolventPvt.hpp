@@ -59,13 +59,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        solventReferenceDensity_.resize(numRegions);
-        inverseSolventB_.resize(numRegions);
-        inverseSolventBMu_.resize(numRegions);
-        solventMu_.resize(numRegions);
-    }
+    void setNumRegions(size_t numRegions);
 
     /*!
      * \brief Initialize the reference density of the solvent gas for a given PVT region
@@ -86,42 +80,13 @@ public:
      *
      * \param samplePoints A container of \f$(p_g, B_s)\f$ values
      */
-    void setSolventFormationVolumeFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
-    {
-        SamplingPoints tmp(samplePoints);
-        auto it = tmp.begin();
-        const auto& endIt = tmp.end();
-        for (; it != endIt; ++ it)
-            std::get<1>(*it) = 1.0/std::get<1>(*it);
-
-        inverseSolventB_[regionIdx].setContainerOfTuples(tmp);
-        assert(inverseSolventB_[regionIdx].monotonic());
-    }
+    void setSolventFormationVolumeFactor(unsigned regionIdx,
+                                         const SamplingPoints& samplePoints);
 
     /*!
      * \brief Finish initializing the oil phase PVT properties.
      */
-    void initEnd()
-    {
-        // calculate the final 2D functions which are used for interpolation.
-        size_t numRegions = solventMu_.size();
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            // calculate the table which stores the inverse of the product of the solvent
-            // formation volume factor and its viscosity
-            const auto& solventMu = solventMu_[regionIdx];
-            const auto& invSolventB = inverseSolventB_[regionIdx];
-            assert(solventMu.numSamples() == invSolventB.numSamples());
-
-            std::vector<Scalar> pressureValues(solventMu.numSamples());
-            std::vector<Scalar> invSolventBMuValues(solventMu.numSamples());
-            for (unsigned pIdx = 0; pIdx < solventMu.numSamples(); ++pIdx) {
-                pressureValues[pIdx] = invSolventB.xAt(pIdx);
-                invSolventBMuValues[pIdx] = invSolventB.valueAt(pIdx) * (1.0/solventMu.valueAt(pIdx));
-            }
-
-            inverseSolventBMu_[regionIdx].setXYContainers(pressureValues, invSolventBMuValues);
-        }
-    }
+    void initEnd();
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
