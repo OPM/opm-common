@@ -92,17 +92,18 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/input/eclipse/EclipseState/EclipseState.cpp
     src/opm/input/eclipse/EclipseState/EndpointScaling.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/Box.cpp
     src/opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
+    src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
+    src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/FaceDir.cpp
     src/opm/input/eclipse/EclipseState/Grid/FaultCollection.cpp
     src/opm/input/eclipse/EclipseState/Grid/Fault.cpp
     src/opm/input/eclipse/EclipseState/Grid/FaultFace.cpp
     src/opm/input/eclipse/EclipseState/Grid/GridDims.cpp
     src/opm/input/eclipse/EclipseState/Grid/MapAxes.cpp
+    src/opm/input/eclipse/EclipseState/Grid/MinpvMode.cpp
     src/opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
     src/opm/input/eclipse/EclipseState/Grid/NNC.cpp
     src/opm/input/eclipse/EclipseState/Grid/Operate.cpp

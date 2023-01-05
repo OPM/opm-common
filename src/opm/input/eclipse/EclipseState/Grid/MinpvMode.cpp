@@ -17,20 +17,22 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_MINPVMODE_HPP
-#define OPM_MINPVMODE_HPP
+#include <config.h>
+#include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
 
-#include <iosfwd>
+#include <cassert>
+#include <ostream>
 
 namespace Opm {
 
-enum class MinpvMode {
-    Inactive  = 1,
-    EclSTD = 2,
-};
-
-std::ostream& operator<<(std::ostream&, const MinpvMode&);
-
+std::ostream& operator<<(std::ostream& os, const MinpvMode& mm)
+{
+    if (mm == MinpvMode::EclSTD)
+        return (os << "EclStd");
+    else if (mm == MinpvMode::Inactive)
+        return (os << "Inactive");
+    else
+        assert(0);
 }
 
-#endif
+}

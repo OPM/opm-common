@@ -115,7 +115,7 @@ namespace Opm {
         PinchMode::ModeEnum getMultzOption( ) const;
         PinchMode::ModeEnum getPinchGapMode( ) const;
 
-        MinpvMode::ModeEnum getMinpvMode() const;
+        MinpvMode getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;
 
         /*
@@ -222,7 +222,7 @@ namespace Opm {
 
     private:
         std::vector<double> m_minpvVector;
-        MinpvMode::ModeEnum m_minpvMode;
+        MinpvMode m_minpvMode;
         std::optional<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
