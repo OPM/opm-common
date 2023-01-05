@@ -26,15 +26,18 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#endif
 
 #include <fmt/format.h>
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void LiveOilPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -209,6 +212,167 @@ extendPvtoTable_(unsigned regionIdx,
         invOilB.appendSamplePoint(xIdx, newPo, 1.0 / newBo);
         oilMu.appendSamplePoint(xIdx, newPo, newMuo);
     }
+}
+#endif
+
+template<class Scalar>
+void LiveOilPvt<Scalar>::setNumRegions(size_t numRegions)
+{
+    oilReferenceDensity_.resize(numRegions);
+    gasReferenceDensity_.resize(numRegions);
+    inverseOilBTable_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::LeftExtreme});
+    inverseOilBMuTable_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::LeftExtreme});
+    inverseSaturatedOilBTable_.resize(numRegions);
+    inverseSaturatedOilBMuTable_.resize(numRegions);
+    oilMuTable_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::LeftExtreme});
+    saturatedOilMuTable_.resize(numRegions);
+    saturatedGasDissolutionFactorTable_.resize(numRegions);
+    saturationPressure_.resize(numRegions);
+}
+
+template<class Scalar>
+void LiveOilPvt<Scalar>::
+setReferenceDensities(unsigned regionIdx,
+                      Scalar rhoRefOil,
+                      Scalar rhoRefGas,
+                      Scalar)
+{
+    oilReferenceDensity_[regionIdx] = rhoRefOil;
+    gasReferenceDensity_[regionIdx] = rhoRefGas;
+}
+
+template<class Scalar>
+void LiveOilPvt<Scalar>::
+setSaturatedOilFormationVolumeFactor(unsigned regionIdx,
+                                     const SamplingPoints& samplePoints)
+{
+    constexpr const Scalar T = 273.15 + 15.56; // [K]
+    auto& invOilB = inverseOilBTable_[regionIdx];
+
+    updateSaturationPressure_(regionIdx);
+
+    // calculate a table of estimated densities of undersatured gas
+    for (size_t pIdx = 0; pIdx < samplePoints.size(); ++pIdx) {
+        Scalar p1 = std::get<0>(samplePoints[pIdx]);
+        Scalar p2 = p1 * 2.0;
+
+        Scalar Bo1 = std::get<1>(samplePoints[pIdx]);
+        Scalar drhoo_dp = (1.1200 - 1.1189)/((5000 - 4000)*6894.76);
+        Scalar Bo2 = Bo1/(1.0 + (p2 - p1)*drhoo_dp);
+
+        Scalar Rs = saturatedGasDissolutionFactor(regionIdx, T, p1);
+
+        invOilB.appendXPos(Rs);
+        invOilB.appendSamplePoint(pIdx, p1, 1.0/Bo1);
+        invOilB.appendSamplePoint(pIdx, p2, 1.0/Bo2);
+    }
+}
+
+template<class Scalar>
+void LiveOilPvt<Scalar>::
+setSaturatedOilViscosity(unsigned regionIdx,
+                         const SamplingPoints& samplePoints)
+{
+    constexpr const Scalar T = 273.15 + 15.56; // [K]
+
+    // update the table for the saturated oil
+    saturatedOilMuTable_[regionIdx].setContainerOfTuples(samplePoints);
+
+    // calculate a table of estimated viscosities depending on pressure and gas mass
+    // fraction for untersaturated oil to make the other code happy
+    for (size_t pIdx = 0; pIdx < samplePoints.size(); ++pIdx) {
+        Scalar p1 = std::get<0>(samplePoints[pIdx]);
+        Scalar p2 = p1 * 2.0;
+
+        // no pressure dependence of the viscosity
+        Scalar mu1 = std::get<1>(samplePoints[pIdx]);
+        Scalar mu2 = mu1;
+
+        Scalar Rs = saturatedGasDissolutionFactor(regionIdx, T, p1);
+
+        oilMuTable_[regionIdx].appendXPos(Rs);
+        oilMuTable_[regionIdx].appendSamplePoint(pIdx, p1, mu1);
+        oilMuTable_[regionIdx].appendSamplePoint(pIdx, p2, mu2);
+    }
+}
+
+template<class Scalar>
+void LiveOilPvt<Scalar>::initEnd()
+{
+    // calculate the final 2D functions which are used for interpolation.
+    size_t numRegions = oilMuTable_.size();
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        // calculate the table which stores the inverse of the product of the oil
+        // formation volume factor and the oil viscosity
+        const auto& oilMu = oilMuTable_[regionIdx];
+        const auto& satOilMu = saturatedOilMuTable_[regionIdx];
+        const auto& invOilB = inverseOilBTable_[regionIdx];
+        assert(oilMu.numX() == invOilB.numX());
+
+        auto& invOilBMu = inverseOilBMuTable_[regionIdx];
+        auto& invSatOilB = inverseSaturatedOilBTable_[regionIdx];
+        auto& invSatOilBMu = inverseSaturatedOilBMuTable_[regionIdx];
+
+        std::vector<Scalar> satPressuresArray;
+        std::vector<Scalar> invSatOilBArray;
+        std::vector<Scalar> invSatOilBMuArray;
+        for (unsigned rsIdx = 0; rsIdx < oilMu.numX(); ++rsIdx) {
+            invOilBMu.appendXPos(oilMu.xAt(rsIdx));
+
+            assert(oilMu.numY(rsIdx) == invOilB.numY(rsIdx));
+
+            size_t numPressures = oilMu.numY(rsIdx);
+            for (unsigned pIdx = 0; pIdx < numPressures; ++pIdx)
+                invOilBMu.appendSamplePoint(rsIdx,
+                                            oilMu.yAt(rsIdx, pIdx),
+                                            invOilB.valueAt(rsIdx, pIdx)
+                                            / oilMu.valueAt(rsIdx, pIdx));
+
+            // the sampling points in UniformXTabulated2DFunction are always sorted
+            // in ascending order. Thus, the value for saturated oil is the first one
+            // (i.e., the one for the lowest pressure value)
+            satPressuresArray.push_back(oilMu.yAt(rsIdx, 0));
+            invSatOilBArray.push_back(invOilB.valueAt(rsIdx, 0));
+            invSatOilBMuArray.push_back(invSatOilBArray.back()/satOilMu.valueAt(rsIdx));
+        }
+
+        invSatOilB.setXYContainers(satPressuresArray, invSatOilBArray);
+        invSatOilBMu.setXYContainers(satPressuresArray, invSatOilBMuArray);
+
+        updateSaturationPressure_(regionIdx);
+    }
+}
+
+template<class Scalar>
+void LiveOilPvt<Scalar>::updateSaturationPressure_(unsigned regionIdx)
+{
+    using Pair = std::pair<Scalar, Scalar>;
+    const auto& gasDissolutionFac = saturatedGasDissolutionFactorTable_[regionIdx];
+
+    // create the function representing saturation pressure depending of the mass
+    // fraction in gas
+    size_t n = gasDissolutionFac.numSamples();
+    Scalar delta = (gasDissolutionFac.xMax() - gasDissolutionFac.xMin())/Scalar(n + 1);
+
+    SamplingPoints pSatSamplePoints;
+    Scalar Rs = 0;
+    for (size_t i=0; i <= n; ++ i) {
+        Scalar pSat = gasDissolutionFac.xMin() + Scalar(i)*delta;
+        Rs = saturatedGasDissolutionFactor(regionIdx,
+                                           /*temperature=*/Scalar(1e30),
+                                           pSat);
+
+        Pair val(Rs, pSat);
+        pSatSamplePoints.push_back(val);
+    }
+
+    //Prune duplicate Rs values (can occur, and will cause problems in further interpolation)
+    auto x_coord_comparator = [](const Pair& a, const Pair& b) { return a.first == b.first; };
+    auto last = std::unique(pSatSamplePoints.begin(), pSatSamplePoints.end(), x_coord_comparator);
+    if (std::distance(pSatSamplePoints.begin(), last) > 1) // only remove them if there are more than two points
+        pSatSamplePoints.erase(last, pSatSamplePoints.end());
+
+    saturationPressure_[regionIdx].setContainerOfTuples(pSatSamplePoints);
 }
 
 template class LiveOilPvt<double>;
