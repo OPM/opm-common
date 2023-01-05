@@ -23,7 +23,7 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
@@ -1331,7 +1331,7 @@ std::size_t Well::firstTimeStep() const {
     return this->init_step;
 }
 
-bool Well::hasBeenDefined(size_t timeStep) const {
+bool Well::hasBeenDefined(std::size_t timeStep) const {
     if (timeStep < this->init_step)
         return false;
     else

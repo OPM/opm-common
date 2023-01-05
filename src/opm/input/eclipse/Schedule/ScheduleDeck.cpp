@@ -28,7 +28,6 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 

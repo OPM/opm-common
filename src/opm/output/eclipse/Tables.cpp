@@ -22,7 +22,7 @@
 #include <opm/output/eclipse/Tables.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO, SWOFLET, SGOFLET
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>

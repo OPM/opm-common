@@ -115,6 +115,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/input/eclipse/EclipseState/Runspec.cpp
+    src/opm/input/eclipse/EclipseState/Phase.cpp
     src/opm/input/eclipse/EclipseState/TracerConfig.cpp
     src/opm/input/eclipse/EclipseState/MICPpara.cpp
     src/opm/input/eclipse/Schedule/Action/ActionAST.cpp
@@ -1149,6 +1150,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/MSW/Valve.hpp
        opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp
        opm/input/eclipse/EclipseState/checkDeck.hpp
+       opm/input/eclipse/EclipseState/Phase.hpp
        opm/input/eclipse/EclipseState/Runspec.hpp
        opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp
        opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp

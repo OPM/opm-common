@@ -18,7 +18,7 @@
 */
 
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
 #include "../eval_uda.hpp"
 
 namespace Opm {

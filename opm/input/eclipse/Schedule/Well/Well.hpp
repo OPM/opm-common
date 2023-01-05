@@ -30,10 +30,8 @@
 #include <utility>
 #include <vector>
 
-#include <stddef.h>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
@@ -513,7 +511,7 @@ public:
     GuideRateTarget getRawGuideRatePhase() const;
     double getGuideRateScalingFactor() const;
 
-    bool hasBeenDefined(size_t timeStep) const;
+    bool hasBeenDefined(std::size_t timeStep) const;
     std::size_t firstTimeStep() const;
     const WellType& wellType() const;
     bool predictionMode() const;
@@ -523,7 +521,7 @@ public:
     InjectorCMode injection_cmode() const;
     ProducerCMode production_cmode() const;
     InjectorType injectorType() const;
-    size_t seqIndex() const;
+    std::size_t seqIndex() const;
     bool getAutomaticShutIn() const;
     bool getAllowCrossFlow() const;
     const std::string& name() const;
