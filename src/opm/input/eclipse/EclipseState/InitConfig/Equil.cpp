@@ -120,7 +120,7 @@ namespace Opm {
             const auto target_accuracy = record.getItem<EQUIL::OIP_INIT>().get<int>(0);
             const auto humid_gas_init = record.getItem<EQUIL::BLACK_OIL_INIT_HG>().get<int>(0) <= 0;
             // Currently set the same as live_oil_init?
-            const auto live_water_init = false; //record.getItem<EQUIL::BLACK_OIL_INIT>().get<int>(0) <= 0;
+            const auto live_water_init = record.getItem<EQUIL::BLACK_OIL_INIT>().get<int>(0) <= 0;
 
             this->m_records.emplace_back(datum_depth_arg, datum_depth_pc_arg,
                                          woc_depth      , woc_pc,
