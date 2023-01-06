@@ -91,9 +91,12 @@ int main(int argc, char **argv) {
 
     auto lap0 = std::chrono::system_clock::now();
 
+    int num_esmry = argc-argOffset;
+    std::vector<bool> status(num_esmry, false);
+
     #pragma omp parallel for
-    for (int f = argOffset; f < argc; f ++){
-        std::filesystem::path inputFileName = argv[f];
+    for (int f = 0; f < num_esmry; f ++){
+        std::filesystem::path inputFileName = argv[f + argOffset];
 
         std::filesystem::path esmryFileName = inputFileName.parent_path() / inputFileName.stem();
         esmryFileName = esmryFileName += ".ESMRY";
@@ -101,15 +104,23 @@ int main(int argc, char **argv) {
         if (Opm::EclIO::fileExists(esmryFileName) && (force))
             remove (esmryFileName);
 
-        Opm::EclIO::ESmry smryFile(argv[f]);
-        if (!smryFile.make_esmry_file()){
-            std::cout << "\n! Warning, smspec already have one lod file, existing kept use option -f to replace this" << std::endl;
+        try {
+            Opm::EclIO::ESmry smry{ argv[f + argOffset] };
+            status[f] = smry.make_esmry_file();
+            if (! status[f]) {
+                std::cerr << "\n! Warning, smspec already have one esmry file, existing kept use option -f to replace this\n";
+            }
+
+        } catch (...) {
+            std::cerr << "\n! Warning, could not open summary file " << argv[f + argOffset] << '\n';
         }
     }
 
+    const auto n_converted = std::count(status.begin(), status.end(), true);
+
     auto lap1 = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds1 = lap1-lap0;
-    std::cout << "\nruntime for creating " << (argc-argOffset) << " ESMRY files: " << elapsed_seconds1.count() << " seconds\n" << std::endl;
+    std::cout << "\nruntime for creating " << n_converted << " ESMRY files: " << elapsed_seconds1.count() << " seconds\n" << std::endl;
 
     return 0;
 }
