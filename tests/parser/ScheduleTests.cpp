@@ -541,6 +541,30 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     BOOST_CHECK_THROW( schedule[0].groups.get("GROUP") , std::exception);
 }
 
+BOOST_AUTO_TEST_CASE(WCONPROD_Default_Item_3) {
+    const auto input = std::string { R"(
+SCHEDULE
+WELSPECS
+-- Group 'P' exists from the first report step
+  'P1' 'P' 1 1  2502.5  'OIL' /
+  'P2' 'P' 1 1  2502.5  'OIL' /
+/
+WCONPROD
+  'P1' 'OPEN' ''  123.4  4*  50.0 /
+  'P2' 'OPEN' 1*  123.4  4*  50.0 /
+/
+)"
+    };
+
+    const auto sched = make_schedule(input);
+    BOOST_CHECK_MESSAGE(sched.getWell("P1", 0)
+                        .production_cmode() == Opm::Well::ProducerCMode::NONE,
+                        R"(Well "P1" should not be under any production control)");
+    BOOST_CHECK_MESSAGE(sched.getWell("P2", 0)
+                        .production_cmode() == Opm::Well::ProducerCMode::NONE,
+                        R"(Well "P1" should not be under any production control)");
+}
+
 BOOST_AUTO_TEST_CASE(HasGroup_At_Time) {
     const auto input = std::string { R"(
 SCHEDULE

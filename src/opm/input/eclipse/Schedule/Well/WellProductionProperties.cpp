@@ -193,12 +193,18 @@ void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdT
         {
             const auto& cmodeItem = record.getItem("CMODE");
             if (cmodeItem.hasValue(0)) {
-                auto cmode = Well::ProducerCModeFromString( cmodeItem.getTrimmedString(0) );
+                auto value = cmodeItem.getTrimmedString(0);
+                if ( value.empty() )
+                {
+                    value = "NONE";
+                }
 
-                if (this->hasProductionControl( cmode ))
+                auto cmode = Well::ProducerCModeFromString( value );
+
+                if (this->hasProductionControl( cmode ) || cmode == Well::ProducerCMode::NONE)
                     this->controlMode = cmode;
                 else
-                    throw std::invalid_argument("Trying to set CMODE to: " + cmodeItem.getTrimmedString(0) + " - no value has been specified for this control");
+                    throw std::invalid_argument("Trying to set CMODE to: " + value + " - no value has been specified for this control");
             }
         }
     }
