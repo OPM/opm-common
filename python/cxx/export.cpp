@@ -25,6 +25,6 @@ void python::common::export_all(py::module& module) {
 }
 
 
-PYBIND11_MODULE(libopmcommon_python, module) {
+PYBIND11_MODULE(opmcommon_python, module) {
     python::common::export_all(module);
 }

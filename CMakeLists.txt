@@ -176,7 +176,7 @@ endmacro()
 # that all downstream modules link libpython transitively. Due to the required
 # integration with Python+cmake machinery provided by pybind11 this is done by
 # manually adding to the opm-common_LIBRARIES variable here, and not in the
-# OpmnLibMain function. Here only the library dependency is implemented, the
+# OpmLibMain function. Here only the library dependency is implemented, the
 # bulk of the python configuration is further down in the file.
 if (OPM_ENABLE_PYTHON)
   # We need to be compatible with older CMake versions
@@ -254,8 +254,10 @@ if (OPM_ENABLE_PYTHON)
   endif()
   find_package(pybind11 2.2 CONFIG)
   if (NOT pybind11_FOUND)
-    # Use full path for reuse with pypi
-    set(pybind11_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/python/pybind11/include ${PYTHON_INCLUDE_DIRS})
+      add_subdirectory(python/pybind11)
+      if (NOT pybind11_INCLUDE_DIRS)
+        set(pybind11_INCLUDE_DIRS ${PYBIND11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+      endif()
   endif()
 endif()
 
@@ -371,120 +373,53 @@ install(FILES cmake/OPM-CMake.md
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
-  include(PyInstallPrefix)
   make_directory(${PROJECT_BINARY_DIR}/python)
-  get_target_property(_opmcommon_include_dirs opmcommon INCLUDE_DIRECTORIES)
-  list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
-  string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
-
-  get_target_property(_opmcommon_lib_dirs opmcommon LINK_DIRECTORIES)
-  if (CMAKE_PREFIX_PATH)
-    list(APPEND _opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR})
-  else()
-    list(APPEND _opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
-  endif()
-  string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
-
-  if (USE_RUNPATH)
-    set (_python_rpath_list)
-    if (CMAKE_PREFIX_PATH)
-      foreach(path ${CMAKE_PREFIX_PATH})
-        list(APPEND _python_rpath_list "${path}/${CMAKE_INSTALL_LIBDIR}")
-      endforeach()
-    endif()
-
-    if (BUILD_SHARED_LIBS)
-      if (OPM_INSTALL_PYTHON)
-        list(APPEND _python_rpath_list "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-        list(APPEND _python_rpath_list "${PROJECT_BINARY_DIR}/lib")
-      else()
-        list(APPEND _python_rpath_list "${PROJECT_BINARY_DIR}/lib")
-      endif()
-    endif()
-
-    if (_python_rpath_list)
-      string(REPLACE ";" ":" _rpath "${_python_rpath_list}")
-      set( _rpath_arg "--rpath=${_rpath}")
-    else()
-      set(_rpath_arg "")
-    endif()
-  else()
-    set( _rpath_arg "")
-  endif()
 
   set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
-  set(SETUP_PY_FLAGS "'-std=c++17'")
-
-  # Generate versioned setup.py
-  if (pybind11_INCLUDE_DIRS)
-    append_quoted(SETUP_PY_INCLUDE_DIRS pybind11_INCLUDE_DIRS)
-  endif()
-
-  if (TARGET fmt::fmt)
-     get_target_property(SETUP_PY_FMT_LIBS fmt::fmt LOCATION)
-     get_target_property(FMT_FLAGS fmt::fmt INTERFACE_COMPILE_DEFINITIONS)
-     append_quoted(SETUP_PY_FLAGS FMT_FLAGS "-D")
-     append_quoted(opm-common_PYTHON_LINKAGE SETUP_PY_FMT_LIBS)
-  else()
-    list(APPEND SETUP_PY_FLAGS "'-DFMT_HEADER_ONLY'")
-  endif()
-
-  if(cjson_FOUND)
-    append_quoted(opm-common_PYTHON_LINKAGE cjson_LIBRARIES)
-    append_quoted(SETUP_PY_INCLUDE_DIRS cjson_INCLUDE_DIRS)
-  endif()
-
-  if(OpenMP_FOUND)
-    append_quoted(opm-common_PYTHON_LINKAGE OpenMP_CXX_LIBRARIES)
-    append_quoted(SETUP_PY_FLAGS OpenMP_CXX_FLAGS)
-    append_quoted(SETUP_PY_INCLUDE_DIRS OpenMP_CXX_INCLUDE_DIRS)
-  endif()
-
-  # Items need to be comma separated for setup.py generation
-  string(REPLACE ";" "," SETUP_PY_LINKAGE "${opm-common_PYTHON_LINKAGE}")
-  string(REPLACE ";" "," SETUP_PY_FLAGS "${SETUP_PY_FLAGS}")
-  string(REPLACE ";" "," SETUP_PY_INCLUDE_DIRS "${SETUP_PY_INCLUDE_DIRS}")
-
-  configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
-  file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
-  execute_process(COMMAND ${Python3_EXECUTABLE} target_name.py
-                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
-                  OUTPUT_VARIABLE python_lib_target)
 
   add_custom_target(copy_python ALL
     COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
 
-  add_custom_command(OUTPUT python/opm/${python_lib_target}
-                     DEPENDS ${PYTHON_CXX_DEPENDS}
-                     DEPENDS copy_python
-                     COMMAND ${Python3_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/setup.py
-                                                      build
-                                                      build_ext
-                                                      --build-lib=${PROJECT_BINARY_DIR}/python
-                                                      --library-dirs=${_setup_lib_dirs}
-                                                      ${_rpath_arg}
-                                                      --include-dirs=${_setup_include_dirs}
-                     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
-                     COMMENT "Building python bindings at python/opm/${python_lib_target}")
-  add_custom_target(opmcommon_python ALL DEPENDS python/opm/${python_lib_target})
-  add_dependencies(opmcommon_python opmcommon)
+  file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
 
-  # The install target is based on manually copying the python file tree to the
-  # installation area with a small installation script 'install.py'. Would have
-  # preferred to use standard setup.py install, but the setup.py based solution
-  # refuses to install to a location which the current python executable can not
-  # load from, and the use of eggs in the setup.py based installation makes
-  # debugging quite difficult.
-  #
+  pybind11_add_module(opmcommon_python
+                      ${PYTHON_CXX_SOURCE_FILES}
+                      ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+  target_link_libraries(opmcommon_python PRIVATE
+                        opmcommon)
+  if(TARGET pybind11::pybind11)
+    target_link_libraries(opmcommon_python PRIVATE
+                          pybind11::pybind11)
+  else()
+    target_include_directories(opmcommon_python SYSTEM PRIVATE ${pybind11_INCLUDE_DIRS})
+  endif()
+  set_target_properties(opmcommon_python PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY python/opm)
+  add_dependencies(opmcommon_python copy_python)
+
+  # Generate versioned setup.py
+  configure_file(${PROJECT_SOURCE_DIR}/python/setup.py.in
+                 ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
+  file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/python/setup.py
+                INPUT ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
+
   # Since the installation of Python code is nonstandard it is protected by an
   # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
   # setup.py install manually - optionally with the generated script
   # setup-install.sh - and completely bypass cmake in the installation phase.
   if (OPM_INSTALL_PYTHON)
-    install( CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
-    ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
-    ##  opm-common
-    install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
+      include(PyInstallPrefix)
+      install(TARGETS opmcommon_python DESTINATION ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}/opm)
+      install(
+        CODE "execute_process(
+          COMMAND ${PYTHON_EXECUTABLE}
+                  python/install.py
+                  ${PROJECT_BINARY_DIR}/python/opm
+                  ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+
+      ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
+      ##  opm-common
+      install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
@@ -503,11 +438,6 @@ if (OPM_ENABLE_PYTHON)
   # building, testing and installation of the Python extensions.
   configure_file(python/setup-build.sh.in tmp/setup-build.sh)
   file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
-        DESTINATION ${PROJECT_BINARY_DIR}
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
-
-  configure_file(python/setup-package.sh.in tmp/setup-package.sh)
-  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-package.sh
         DESTINATION ${PROJECT_BINARY_DIR}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
 
