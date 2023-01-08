@@ -3,6 +3,12 @@
   "sections": [
     "REGIONS"
   ],
+  "deck_names": [
+    "IMBNUM",
+    "IMBNUMX",
+    "IMBNUMY",
+    "IMBNUMZ"
+  ],
   "data": {
     "value_type": "INT"
   }

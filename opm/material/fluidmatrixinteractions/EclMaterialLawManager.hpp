@@ -38,6 +38,9 @@
 #include <opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+#include <opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #include <cassert>
 #include <memory>
@@ -56,8 +59,6 @@ class Runspec;
 class SgfnTable;
 class SgofTable;
 class SlgofTable;
-class Sof2Table;
-class Sof3Table;
 
 /*!
  * \ingroup fluidmatrixinteractions
@@ -109,6 +110,7 @@ public:
     // the three-phase material law used by the simulation
     using MaterialLaw = EclMultiplexerMaterial<Traits, GasOilTwoPhaseLaw, OilWaterTwoPhaseLaw, GasWaterTwoPhaseLaw>;
     using MaterialLawParams = typename MaterialLaw::Params;
+    using DirectionalMaterialLawParamsPtr = std::unique_ptr<DirectionalMaterialLawParams<MaterialLawParams>>;
 
     EclMaterialLawManager();
     ~EclMaterialLawManager();
@@ -127,6 +129,113 @@ private:
     using OilWaterParamVector = std::vector<std::shared_ptr<OilWaterTwoPhaseHystParams>>;
     using GasWaterParamVector = std::vector<std::shared_ptr<GasWaterTwoPhaseHystParams>>;
     using MaterialLawParamsVector = std::vector<std::shared_ptr<MaterialLawParams>>;
+
+    // helper classes
+
+    // This class' implementation is defined in "EclMaterialLawManagerInitParams.cpp"
+    class InitParams {
+    public:
+        InitParams(EclMaterialLawManager<TraitsT>& parent, const EclipseState& eclState, size_t numCompressedElems);
+        void run();
+    private:
+        class HystParams;
+        void copySatnumArrays_();
+        void copyIntArray_(std::vector<int>& dest, const std::string keyword);
+        unsigned imbRegion_(std::vector<int>& array, unsigned elemIdx);
+        void initArrays_(
+            std::vector<std::vector<int>*>& satnumArray,
+            std::vector<std::vector<int>*>& imbnumArray,
+            std::vector<std::vector<MaterialLawParams>*>& mlpArray);
+        void initMaterialLawParamVectors_();
+        void initOilWaterScaledEpsInfo_();
+        void initSatnumRegionArray_();
+        void initThreePhaseParams_(
+            HystParams &hystParams,
+            MaterialLawParams& materialParams,
+            unsigned satRegionIdx,
+            unsigned elemIdx);
+        void readEffectiveParameters_();
+        void readUnscaledEpsPointsVectors_();
+        template <class Container>
+          void readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type);
+        unsigned satRegion_(std::vector<int>& array, unsigned elemIdx);
+        unsigned satOrImbRegion_(std::vector<int>& array, std::vector<int>& default_vec, unsigned elemIdx);
+
+        // This class' implementation is defined in "EclMaterialLawManagerHystParams.cpp"
+        class HystParams {
+        public:
+            HystParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            void finalize();
+            std::shared_ptr<GasOilTwoPhaseHystParams> getGasOilParams();
+            std::shared_ptr<OilWaterTwoPhaseHystParams> getOilWaterParams();
+            std::shared_ptr<GasWaterTwoPhaseHystParams> getGasWaterParams();
+            void setConfig();
+            void setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx);
+            void setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx);
+            void setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx);
+            void setImbibitionParamsOilGas(unsigned elemIdx, unsigned satRegionIdx);
+            void setImbibitionParamsOilWater(unsigned elemIdx, unsigned satRegionIdx);
+            void setImbibitionParamsGasWater(unsigned elemIdx, unsigned satRegionIdx);
+        private:
+            bool hasGasWater_();
+            bool hasGasOil_();
+            bool hasOilWater_();
+
+            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>> readScaledEpsPoints_(
+              const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type);
+            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
+              readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type);
+            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
+              readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type);
+            EclMaterialLawManager<TraitsT>::InitParams& init_params_;
+            EclMaterialLawManager<TraitsT>& parent_;
+            const EclipseState& eclState_;
+            std::shared_ptr<GasOilTwoPhaseHystParams> gasOilParams_;
+            std::shared_ptr<OilWaterTwoPhaseHystParams> oilWaterParams_;
+            std::shared_ptr<GasWaterTwoPhaseHystParams> gasWaterParams_;
+        };
+
+        // This class' implementation is defined in "EclMaterialLawManagerReadEffectiveParams.cpp"
+        class ReadEffectiveParams {
+        public:
+            ReadEffectiveParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            void read();
+        private:
+            std::vector<double> normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const;
+            void readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx);
+            template <class TableType>
+            void readGasOilFamily2_(
+                GasOilEffectiveTwoPhaseParams& effParams,
+                const Scalar Swco,
+                const double tolcrit,
+                const TableType& sofTable,
+                const SgfnTable& sgfnTable,
+                const std::string& columnName);
+            void readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
+                                const Scalar Swco,
+                                const double tolcrit,
+                                const SgofTable& sgofTable);
+
+            void readGasOilSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
+                                const Scalar Swco,
+                                const double tolcrit,
+                                const SlgofTable& slgofTable);
+            void readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionIdx);
+            void readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionIdx);
+
+            EclMaterialLawManager<TraitsT>::InitParams& init_params_;
+            EclMaterialLawManager<TraitsT>& parent_;
+            const EclipseState& eclState_;
+        }; // end of "class ReadEffectiveParams"
+
+        EclMaterialLawManager<TraitsT>& parent_;
+        const EclipseState& eclState_;
+        size_t numCompressedElems_;
+
+        std::unique_ptr<EclEpsGridProperties> epsImbGridProperties_; //imbibition
+        std::unique_ptr<EclEpsGridProperties> epsGridProperties_;    // drainage
+
+    };  // end of "class InitParams"
 
 public:
     void initFromState(const EclipseState& eclState);
@@ -163,6 +272,16 @@ public:
         return materialLawParams_[elemIdx];
     }
 
+    const MaterialLawParams& materialLawParams(unsigned elemIdx, FaceDir::DirEnum facedir) const
+    {
+        return materialLawParamsFunc_(elemIdx, facedir);
+    }
+
+    MaterialLawParams& materialLawParams(unsigned elemIdx, FaceDir::DirEnum facedir)
+    {
+        return const_cast<MaterialLawParams&>(materialLawParamsFunc_(elemIdx, facedir));
+    }
+
     /*!
      * \brief Returns a material parameter object for a given element and saturation region.
      *
@@ -183,6 +302,13 @@ public:
         return !krnumXArray_.empty() || !krnumYArray_.empty() || !krnumZArray_.empty();
     }
 
+    bool hasDirectionalImbnum() const {
+        if (imbnumXArray_.size() > 0 || imbnumYArray_.size() > 0 || imbnumZArray_.size() > 0) {
+            return true;
+        }
+        return false;
+    }
+
     int imbnumRegionIdx(unsigned elemIdx) const
     { return imbnumRegionArray_[elemIdx]; }
 
@@ -192,7 +318,15 @@ public:
         if (!enableHysteresis())
             return;
 
-        MaterialLaw::updateHysteresis(materialLawParams_[elemIdx], fluidState);
+        MaterialLaw::updateHysteresis(materialLawParams(elemIdx), fluidState);
+        if (hasDirectionalRelperms() || hasDirectionalImbnum()) {
+            using Dir = FaceDir::DirEnum;
+            constexpr int ndim = 3;
+            Dir facedirs[ndim] = {Dir::XPlus, Dir::YPlus, Dir::ZPlus};
+            for (int i = 0; i<ndim; i++) {
+                MaterialLaw::updateHysteresis(materialLawParams(elemIdx, facedirs[i]), fluidState);
+            }
+        }
     }
 
     void oilWaterHysteresisParams(Scalar& pcSwMdc,
@@ -217,82 +351,13 @@ public:
     { return oilWaterScaledEpsInfoDrainage_[elemIdx]; }
 
 private:
+    const MaterialLawParams& materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const;
+
     void readGlobalEpsOptions_(const EclipseState& eclState);
 
     void readGlobalHysteresisOptions_(const EclipseState& state);
 
     void readGlobalThreePhaseOptions_(const Runspec& runspec);
-
-    template <class Container>
-    void readGasOilEffectiveParameters_(Container& dest,
-                                        const EclipseState& eclState,
-                                        unsigned satRegionIdx);
-
-    void readGasOilEffectiveParametersSgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                                            const Scalar Swco,
-                                            const double tolcrit,
-                                            const SgofTable& sgofTable);
-
-    void readGasOilEffectiveParametersSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                                             const Scalar Swco,
-                                             const double tolcrit,
-                                             const SlgofTable& slgofTable);
-
-    void readGasOilEffectiveParametersFamily2_(GasOilEffectiveTwoPhaseParams& effParams,
-                                               const Scalar Swco,
-                                               const double tolcrit,
-                                               const Sof3Table& sof3Table,
-                                               const SgfnTable& sgfnTable);
-
-    void readGasOilEffectiveParametersFamily2_(GasOilEffectiveTwoPhaseParams& effParams,
-                                               const Scalar Swco,
-                                               const double tolcrit,
-                                               const Sof2Table& sof2Table,
-                                               const SgfnTable& sgfnTable);
-
-    template <class Container>
-    void readOilWaterEffectiveParameters_(Container& dest,
-                                          const EclipseState& eclState,
-                                          unsigned satRegionIdx);
-
-    template <class Container>
-    void readGasWaterEffectiveParameters_(Container& dest,
-                                        const EclipseState& eclState,
-                                        unsigned satRegionIdx);
-
-    template <class Container>
-    void readGasOilUnscaledPoints_(Container& dest,
-                                   std::shared_ptr<EclEpsConfig> config,
-                                   const EclipseState& /* eclState */,
-                                   unsigned satRegionIdx);
-
-    template <class Container>
-    void readOilWaterUnscaledPoints_(Container& dest,
-                                     std::shared_ptr<EclEpsConfig> config,
-                                     const EclipseState& /* eclState */,
-                                     unsigned satRegionIdx);
-
-    template <class Container>
-    void readGasWaterUnscaledPoints_(Container& dest,
-                                     std::shared_ptr<EclEpsConfig> config,
-                                     const EclipseState& /* eclState */,
-                                     unsigned satRegionIdx);
-
-    std::tuple<EclEpsScalingPointsInfo<Scalar>,
-               EclEpsScalingPoints<Scalar>>
-    readScaledPoints_(const EclEpsConfig& config,
-                      const EclipseState& eclState,
-                      const EclEpsGridProperties& epsGridProperties,
-                      unsigned elemIdx,
-                      EclTwoPhaseSystemType type);
-
-    void initThreePhaseParams_(const EclipseState& /* eclState */,
-                               MaterialLawParams& materialParams,
-                               unsigned satRegionIdx,
-                               const EclEpsScalingPointsInfo<Scalar>& epsInfo,
-                               std::shared_ptr<OilWaterTwoPhaseHystParams> oilWaterParams,
-                               std::shared_ptr<GasOilTwoPhaseHystParams> gasOilParams,
-                               std::shared_ptr<GasWaterTwoPhaseHystParams> gasWaterParams);
 
     bool enableEndPointScaling_;
     std::shared_ptr<EclHysteresisConfig> hysteresisConfig_;
@@ -316,21 +381,25 @@ private:
     enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
 
     std::vector<MaterialLawParams> materialLawParams_;
+    DirectionalMaterialLawParamsPtr dirMaterialLawParams_;
 
     std::vector<int> satnumRegionArray_;
     std::vector<int> krnumXArray_;
     std::vector<int> krnumYArray_;
     std::vector<int> krnumZArray_;
+    std::vector<int> imbnumXArray_;
+    std::vector<int> imbnumYArray_;
+    std::vector<int> imbnumZArray_;
     std::vector<int> imbnumRegionArray_;
-    std::vector<Scalar> stoneEtas;
+    std::vector<Scalar> stoneEtas_;
 
     bool hasGas;
     bool hasOil;
     bool hasWater;
 
-    std::shared_ptr<EclEpsConfig> gasOilConfig;
-    std::shared_ptr<EclEpsConfig> oilWaterConfig;
-    std::shared_ptr<EclEpsConfig> gasWaterConfig;
+    std::shared_ptr<EclEpsConfig> gasOilConfig_;
+    std::shared_ptr<EclEpsConfig> oilWaterConfig_;
+    std::shared_ptr<EclEpsConfig> gasWaterConfig_;
 };
 } // namespace Opm
 

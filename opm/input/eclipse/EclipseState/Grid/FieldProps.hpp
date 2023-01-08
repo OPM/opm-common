@@ -247,6 +247,9 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
                                                                                 {"KRNUMX",   keyword_info<int>{}},
                                                                                 {"KRNUMY",   keyword_info<int>{}},
                                                                                 {"KRNUMZ",   keyword_info<int>{}},
+                                                                                {"IMBNUMX",   keyword_info<int>{}},
+                                                                                {"IMBNUMY",   keyword_info<int>{}},
+                                                                                {"IMBNUMZ",   keyword_info<int>{}},
                                                                                 };
 }
 
