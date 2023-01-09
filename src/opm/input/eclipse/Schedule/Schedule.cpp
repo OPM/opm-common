@@ -157,6 +157,30 @@ namespace Opm {
     {
     }
 
+    ScheduleStatic ScheduleStatic::serializationTestObject()
+    {
+        auto python = std::make_shared<Python>(Python::Enable::OFF);
+        ScheduleStatic st(python);
+        st.m_deck_message_limits = MessageLimits::serializationTestObject();
+        st.m_runspec = Runspec::serializationTestObject();
+        st.m_unit_system = UnitSystem::newFIELD();
+        st.m_input_path = "Some/funny/path";
+        st.rst_config = RSTConfig::serializationTestObject();
+        st.rst_info = ScheduleRestartInfo::serializationTestObject();
+        return st;
+    }
+
+    bool ScheduleStatic::operator==(const ScheduleStatic& other) const
+    {
+        return this->m_input_path == other.m_input_path &&
+               this->m_deck_message_limits == other.m_deck_message_limits &&
+               this->m_unit_system == other.m_unit_system &&
+               this->rst_config == other.rst_config &&
+               this->rst_info == other.rst_info &&
+               this->gaslift_opt_active == other.gaslift_opt_active &&
+               this->m_runspec == other.m_runspec;
+    }
+
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& ecl_grid,
                         const FieldPropsManager& fp,
