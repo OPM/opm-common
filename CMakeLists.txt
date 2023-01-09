@@ -452,7 +452,18 @@ if (OPM_ENABLE_PYTHON)
                   OUTPUT_VARIABLE python_lib_target)
 
   add_custom_target(copy_python ALL
-    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
+      COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py
+        ${PROJECT_SOURCE_DIR}/python/opm ${PROJECT_BINARY_DIR}/python 0
+      COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py
+        ${PROJECT_SOURCE_DIR}/python/cxx ${PROJECT_BINARY_DIR}/python 0
+      COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py
+        ${PROJECT_SOURCE_DIR}/python/tests ${PROJECT_BINARY_DIR}/python 0
+      COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py
+        ${PROJECT_SOURCE_DIR}/python/examples ${PROJECT_BINARY_DIR}/python 0
+      # install.py is used by opm-simulators if not building against an installed opm-common
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python
+  )
 
   add_custom_command(OUTPUT python/opm/${python_lib_target}
                      DEPENDS ${PYTHON_CXX_DEPENDS}
@@ -481,7 +492,7 @@ if (OPM_ENABLE_PYTHON)
   # setup.py install manually - optionally with the generated script
   # setup-install.sh - and completely bypass cmake in the installation phase.
   if (OPM_INSTALL_PYTHON)
-    install( CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+    install( CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
     ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
     ##  opm-common
     install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
