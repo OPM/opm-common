@@ -30,7 +30,6 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
@@ -69,6 +68,7 @@ namespace {
 namespace Opm {
 
     class GuideRateConfig;
+    class RPTConfig;
     class WellTestConfig;
 
     /*

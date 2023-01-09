@@ -19,12 +19,14 @@
 #include <fmt/format.h>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <stdexcept>
 

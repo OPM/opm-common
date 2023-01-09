@@ -36,7 +36,6 @@
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
@@ -55,15 +54,16 @@ namespace Opm
     class DeckKeyword;
     class DeckRecord;
     class EclipseState;
+    class ErrorGuard;
     class FieldPropsManager;
     class GuideRateConfig;
     class GuideRateModel;
     class GTNode;
     class ParseContext;
     class Python;
+    class RPTConfig;
     class SCHEDULESection;
     class SummaryState;
-    class ErrorGuard;
     class UDQConfig;
     class WellMatcher;
 
