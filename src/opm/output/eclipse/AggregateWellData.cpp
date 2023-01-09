@@ -901,9 +901,9 @@ namespace {
         }
 
         template <class SWProp, class SWellArray>
-        void assignGasLiftOptimisation(const Opm::GasLiftOpt::Well& w_glo,
-                                       SWProp&&                     swprop,
-                                       SWellArray&                  sWell)
+        void assignGasLiftOptimisation(const Opm::GasLiftWell& w_glo,
+                                       SWProp&&                swprop,
+                                       SWellArray&             sWell)
         {
             using Ix = VI::SWell::index;
             using M = ::Opm::UnitSystem::measure;

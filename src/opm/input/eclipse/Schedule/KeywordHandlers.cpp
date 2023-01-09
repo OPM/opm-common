@@ -603,7 +603,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 : -1;
 
             for (const auto& gname : group_names) {
-                auto group = GasLiftOpt::Group(gname);
+                auto group = GasLiftGroup(gname);
                 group.max_lift_gas(max_lift_gas_value);
                 group.max_total_gas(max_total_gas_value);
 
@@ -1685,7 +1685,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
 
             for (const auto& wname : well_names) {
-                auto well = GasLiftOpt::Well(wname, use_glo);
+                auto well = GasLiftWell(wname, use_glo);
 
                 if (max_rate_item.hasValue(0))
                     well.max_rate( max_rate_item.getSIDouble(0) );

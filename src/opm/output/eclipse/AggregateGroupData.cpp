@@ -993,9 +993,9 @@ float getGLORate(const SGProp& sgprop, const std::optional<double>& rate)
 }
 
 template <typename SGProp, class SGrpArray>
-void assignGasLiftOptimisation(const Opm::GasLiftOpt::Group& group,
-                               const SGProp&                 sgprop,
-                               SGrpArray&                    sGrp)
+void assignGasLiftOptimisation(const Opm::GasLiftGroup& group,
+                               const SGProp&            sgprop,
+                               SGrpArray&               sGrp)
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
 
