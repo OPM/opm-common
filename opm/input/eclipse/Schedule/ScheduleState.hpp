@@ -49,7 +49,6 @@
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
@@ -66,7 +65,11 @@ namespace {
 }
 
 }
+
 namespace Opm {
+
+    class GuideRateConfig;
+    class WellTestConfig;
 
     /*
       The purpose of the ScheduleState class is to hold the entire Schedule
@@ -74,10 +77,6 @@ namespace Opm {
       time. The ScheduleState class itself has no dynamic behavior, the dynamics
       is handled by the Schedule instance owning the ScheduleState instance.
     */
-
-    class WellTestConfig;
-
-
 
     class ScheduleState {
     public:

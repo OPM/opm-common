@@ -34,7 +34,6 @@
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
@@ -57,6 +56,8 @@ namespace Opm
     class DeckRecord;
     class EclipseState;
     class FieldPropsManager;
+    class GuideRateConfig;
+    class GuideRateModel;
     class GTNode;
     class ParseContext;
     class Python;
