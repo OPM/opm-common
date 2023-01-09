@@ -40,7 +40,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
@@ -66,6 +65,7 @@ namespace Opm
     class SummaryState;
     class UDQConfig;
     class WellMatcher;
+    class WellTestConfig;
 
     namespace RestartIO { struct RstState; }
 
