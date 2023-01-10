@@ -42,6 +42,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>

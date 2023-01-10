@@ -58,6 +58,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
