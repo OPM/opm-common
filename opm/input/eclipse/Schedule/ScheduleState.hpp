@@ -39,7 +39,6 @@
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
-#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 
 
@@ -70,6 +69,7 @@ namespace Opm {
         class Balance;
         class ExtNetwork;
     }
+    class RFTConfig;
     class RPTConfig;
     class UDQActive;
     class UDQConfig;

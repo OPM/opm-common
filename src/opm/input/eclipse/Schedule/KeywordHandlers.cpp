@@ -67,6 +67,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>

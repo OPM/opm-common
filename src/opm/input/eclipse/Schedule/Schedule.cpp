@@ -50,6 +50,7 @@
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
