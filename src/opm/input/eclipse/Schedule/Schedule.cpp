@@ -2273,4 +2273,10 @@ std::ostream& operator<<(std::ostream& os, const Schedule& sched)
     return os;
 }
 
+void Schedule::HandlerContext::affected_well(const std::string& well_name)
+{
+    if (this->sim_update)
+        this->sim_update->affected_wells.insert(well_name);
+}
+
 }

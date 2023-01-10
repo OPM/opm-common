@@ -539,10 +539,7 @@ namespace Opm
             , grid(grid_)
             {}
 
-            void affected_well(const std::string& well_name) {
-                if (this->sim_update)
-                    this->sim_update->affected_wells.insert(well_name);
-            }
+            void affected_well(const std::string& well_name);
 
             /// \brief Mark that the well occured in a  WELSEGS keyword
             void welsegs_handled(const std::string& well_name)
