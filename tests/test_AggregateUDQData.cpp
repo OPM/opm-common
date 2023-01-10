@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -865,8 +866,9 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             const std::vector<std::string>& wells = {"PROD1", "PROD2", "WINJ1", "WINJ2"};
             Opm::UDQState rst_udq_state(udq_params.undefinedValue());
             Opm::UDQFunctionTable udqft(udq_params);
-            Opm::UDQContext input_context(udqft, Opm::WellMatcher(wells), st, udq_state);
-            Opm::UDQContext rst_context(udqft, Opm::WellMatcher(wells), st, rst_udq_state);
+            auto wm = Opm::WellMatcher(wells);
+            Opm::UDQContext input_context(udqft, wm, st, udq_state);
+            Opm::UDQContext rst_context(udqft, wm, st, rst_udq_state);
 
             rst_udq_state.load_rst(rst_state);
             for (const auto& input_def : input_config.definitions()) {
