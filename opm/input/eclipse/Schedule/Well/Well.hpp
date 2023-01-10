@@ -35,7 +35,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
@@ -64,6 +63,7 @@ class UDQConfig;
 class Valve;
 class TracerConfig;
 class WellConnections;
+class WellBrineProperties;
 class WellFoamProperties;
 class WellSegments;
 

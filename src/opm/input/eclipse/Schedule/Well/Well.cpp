@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 
