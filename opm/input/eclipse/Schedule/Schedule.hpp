@@ -45,6 +45,11 @@
 
 namespace Opm
 {
+    namespace Action {
+        class ActionX;
+        class PyAction;
+        class State;
+    };
     class ActiveGridCells;
     class Deck;
     class DeckKeyword;

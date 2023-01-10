@@ -19,6 +19,7 @@
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
