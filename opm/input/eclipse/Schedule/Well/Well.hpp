@@ -37,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
-#include <opm/input/eclipse/Schedule/Well/ProductionControls.hpp>
 #include <opm/input/eclipse/Schedule/Well/InjectionControls.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>

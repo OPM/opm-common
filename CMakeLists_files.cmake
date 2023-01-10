@@ -1095,7 +1095,6 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/VFPInjTable.hpp
        opm/input/eclipse/Schedule/VFPProdTable.hpp
        opm/input/eclipse/Schedule/Well/Connection.hpp
-       opm/input/eclipse/Schedule/Well/ProductionControls.hpp
        opm/input/eclipse/Schedule/Well/InjectionControls.hpp
        opm/input/eclipse/Schedule/Well/PAvg.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp
