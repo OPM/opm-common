@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <fmt/format.h>

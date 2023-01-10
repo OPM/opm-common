@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
