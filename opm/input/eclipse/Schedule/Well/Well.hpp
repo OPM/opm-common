@@ -40,8 +40,6 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <opm/common/utility/ActiveGridCells.hpp>
-
 namespace Opm {
 
 class ActiveGridCells;
