@@ -16,10 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fmt/format.h>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
@@ -27,6 +27,8 @@
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+
+#include <fmt/format.h>
 
 #include <stdexcept>
 

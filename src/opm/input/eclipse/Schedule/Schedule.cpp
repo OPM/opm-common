@@ -40,6 +40,7 @@
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -1768,8 +1769,8 @@ namespace {
             const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
             this->addGroupToGroup(parent_group.name, rst_group.name);
 
-            if (GasLiftOpt::Group::active(rst_group))
-                glo.add_group(GasLiftOpt::Group(rst_group));
+            if (GasLiftGroup::active(rst_group))
+                glo.add_group(GasLiftGroup(rst_group));
         }
 
         for (const auto& rst_well : rst_state.wells) {
@@ -1802,8 +1803,8 @@ namespace {
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
 
-            if (GasLiftOpt::Well::active(rst_well))
-                glo.add_well(GasLiftOpt::Well(rst_well));
+            if (GasLiftWell::active(rst_well))
+                glo.add_well(GasLiftWell(rst_well));
         }
         this->snapshots.back().glo.update( std::move(glo) );
         this->snapshots.back().update_tuning(rst_state.tuning);

@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
@@ -993,9 +994,9 @@ float getGLORate(const SGProp& sgprop, const std::optional<double>& rate)
 }
 
 template <typename SGProp, class SGrpArray>
-void assignGasLiftOptimisation(const Opm::GasLiftOpt::Group& group,
-                               const SGProp&                 sgprop,
-                               SGrpArray&                    sGrp)
+void assignGasLiftOptimisation(const Opm::GasLiftGroup& group,
+                               const SGProp&            sgprop,
+                               SGrpArray&               sGrp)
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
 

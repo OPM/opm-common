@@ -32,7 +32,6 @@
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
@@ -55,9 +54,10 @@ namespace Opm
     class EclipseState;
     class ErrorGuard;
     class FieldPropsManager;
+    class GasLiftOpt;
+    class GTNode;
     class GuideRateConfig;
     class GuideRateModel;
-    class GTNode;
     class ParseContext;
     class Python;
     class RPTConfig;

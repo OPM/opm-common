@@ -67,6 +67,7 @@ namespace {
 
 namespace Opm {
 
+    class GasLiftOpt;
     class GuideRateConfig;
     class RPTConfig;
     class WellTestConfig;
