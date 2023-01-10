@@ -36,7 +36,6 @@
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
@@ -48,7 +47,6 @@
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 
@@ -68,7 +66,9 @@ namespace {
 namespace Opm {
 
     class GasLiftOpt;
+    class GroupOrder;
     class GuideRateConfig;
+    class NameOrder;
     class RPTConfig;
     class WellTestConfig;
 
