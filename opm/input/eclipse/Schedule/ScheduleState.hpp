@@ -36,7 +36,6 @@
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
@@ -71,6 +70,7 @@ namespace Opm {
     class NameOrder;
     class RPTConfig;
     class WellTestConfig;
+    class WListManager;
 
     /*
       The purpose of the ScheduleState class is to hold the entire Schedule

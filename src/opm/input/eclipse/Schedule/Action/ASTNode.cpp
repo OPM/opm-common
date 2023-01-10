@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 #include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/common/utility/shmatch.hpp>
 
 #include <stdexcept>
