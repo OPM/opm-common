@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
