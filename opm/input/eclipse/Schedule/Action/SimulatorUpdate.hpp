@@ -20,8 +20,8 @@
 #ifndef SIMULATOR_UPDATE_HPP
 #define SIMULATOR_UPDATE_HPP
 
+#include <string>
 #include <unordered_set>
-
 
 namespace Opm {
 

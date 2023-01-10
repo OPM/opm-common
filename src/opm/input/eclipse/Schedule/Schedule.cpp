@@ -36,6 +36,7 @@
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
@@ -2272,6 +2273,12 @@ std::ostream& operator<<(std::ostream& os, const Schedule& sched)
 {
     sched.dump_deck(os);
     return os;
+}
+
+void Schedule::HandlerContext::affected_well(const std::string& well_name)
+{
+    if (this->sim_update)
+        this->sim_update->affected_wells.insert(well_name);
 }
 
 }
