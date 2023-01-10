@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RswvdTable.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
@@ -770,13 +771,22 @@ BOOST_AUTO_TEST_CASE( RSWVD ) {
     BOOST_CHECK_EQUAL( 6U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
-    const auto& rec3 = kw1.getRecord(2);
-
     const auto& item1       = rec1.getItem("DATA");
     BOOST_CHECK( fabs(item1.getSIDouble(0) - 2382) < 0.001);
+    const auto& table1 = RswvdTable( item1, 1);
 
+    // only two records
+    const auto& rec2 = kw1.getRecord(1);
+    const auto& item2       = rec2.getItem("DATA");
+    const auto& table2 = RswvdTable( item2, 2);
+    BOOST_CHECK( table2.getDepthColumn().size() == 2 );
+
+    // second item is defaulted
+    const auto& rec3 = kw1.getRecord(2);
     const auto& item3       = rec3.getItem("DATA");
-    BOOST_CHECK( fabs(item3.getSIDouble(7) - 106.77) < 0.001);
+    const auto& table3 = RswvdTable( item3, 3);
+    BOOST_CHECK( table3.getDepthColumn().size() == 2 );
+    BOOST_CHECK_EQUAL( table3.getRswvdColumn()[0], table3.getRswvdColumn()[1]);
 }
 
 BOOST_AUTO_TEST_CASE( PVTG ) {
