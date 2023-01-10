@@ -37,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
@@ -64,6 +63,7 @@ namespace {
 namespace Opm {
 
     class GasLiftOpt;
+    class GConSale;
     class GConSump;
     class GroupOrder;
     class GuideRateConfig;
