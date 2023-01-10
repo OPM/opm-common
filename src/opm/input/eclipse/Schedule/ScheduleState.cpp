@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>

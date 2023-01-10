@@ -37,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
-#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
@@ -68,6 +67,7 @@ namespace Opm {
     class GuideRateConfig;
     class NameOrder;
     namespace Network {
+        class Balance;
         class ExtNetwork;
     }
     class RPTConfig;
