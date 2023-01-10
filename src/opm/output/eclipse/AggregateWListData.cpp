@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 
 #include <cstddef>
 #include <cstring>
