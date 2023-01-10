@@ -25,9 +25,11 @@
 #include <map>
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 
 namespace Opm {
+
+class WListManager;
+
 namespace Action {
 
 /*
