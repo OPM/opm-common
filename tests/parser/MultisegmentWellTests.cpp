@@ -29,6 +29,7 @@
 
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include "src/opm/input/eclipse/Schedule/MSW/Compsegs.hpp"
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
