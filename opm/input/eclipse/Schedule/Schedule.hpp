@@ -44,7 +44,6 @@
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -55,6 +54,7 @@ namespace Opm
     class DeckKeyword;
     class DeckRecord;
     class EclipseState;
+    class ErrorGuard;
     class FieldPropsManager;
     class GuideRateConfig;
     class GuideRateModel;
@@ -62,8 +62,8 @@ namespace Opm
     class ParseContext;
     class Python;
     class SCHEDULESection;
+    class SimulatorUpdate;
     class SummaryState;
-    class ErrorGuard;
     class UDQConfig;
     class WellMatcher;
 
