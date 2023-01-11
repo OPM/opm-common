@@ -33,6 +33,7 @@
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/AggregateActionxData.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>

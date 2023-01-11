@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/EclipseIO.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/data/Cells.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>

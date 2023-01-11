@@ -33,7 +33,6 @@
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/eclipse/RestartValue.hpp>
 
 namespace Opm { namespace out {
     class Summary;
@@ -42,6 +41,8 @@ namespace Opm { namespace out {
 namespace Opm {
 
 class EclipseState;
+class RestartKey;
+class RestartValue;
 class Schedule;
 class SummaryConfig;
 class SummaryState;
