@@ -46,6 +46,7 @@
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>

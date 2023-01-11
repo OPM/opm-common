@@ -23,7 +23,7 @@
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+
 #include <cstddef>
 #include <string>
 #include <vector>
