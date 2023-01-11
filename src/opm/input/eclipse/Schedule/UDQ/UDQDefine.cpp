@@ -76,8 +76,77 @@ std::vector<std::string> quote_split(const std::string& item)
     return items;
 }
 
+std::string
+next_token(const std::string&              item,
+           std::size_t&                    offset,
+           const std::vector<std::string>& splitters)
+{
+    if (std::isdigit(item[offset])) {
+        auto substring = item.substr(offset);
+        char* end_ptr;
+        std::ignore = std::strtod(substring.c_str(), &end_ptr);
+
+        std::size_t token_size = end_ptr - substring.c_str();
+        if (token_size > 0) {
+            auto token = item.substr(offset, token_size);
+            offset += token.size();
+            return token;
+        }
+    }
+
+    std::string token = item.substr(offset);
+    std::size_t min_pos = std::string::npos;
+    for (const auto& splitter : splitters) {
+        auto pos = item.find(splitter, offset);
+        if (pos < min_pos) {
+            min_pos = pos;
+            if (pos == offset) {
+                token = splitter;
+            }
+            else {
+                token = item.substr(offset, pos - offset);
+            }
+        }
+    }
+
+    offset += token.size();
+
+    return Opm::trim_copy(token);
+}
+
+std::vector<std::string>
+normalize_string_tokens(const std::vector<std::string>& deck_data)
+{
+    auto string_tokens = std::vector<std::string>{};
+
+    const auto splitters = std::vector<std::string> {
+        " ", "TU*[]", "(", ")", "[", "]", ",",
+        "+", "-", "/", "*",
+        "==", "!=", "^", ">=", "<=", ">", "<",
+    };
+
+    for (const auto& deck_item : deck_data) {
+        for (const auto& item : quote_split(deck_item)) {
+            if (Opm::RawConsts::is_quote{}(item[0])) {
+                string_tokens.push_back(item);
+                continue;
+            }
+
+            std::size_t offset = 0;
+            while (offset < item.size()) {
+                auto token = next_token(item, offset, splitters);
+                if (!token.empty()) {
+                    string_tokens.push_back(std::move(token));
+                }
+            }
+        }
+    }
+
+    return string_tokens;
+}
+
 std::vector<Opm::UDQToken>
-make_tokens(const std::vector<std::string>& string_tokens)
+make_udq_tokens(const std::vector<std::string>& string_tokens)
 {
     if (string_tokens.empty()) {
         return {};
@@ -126,44 +195,6 @@ make_tokens(const std::vector<std::string>& string_tokens)
     }
 
     return tokens;
-}
-
-std::string
-next_token(const std::string&              item,
-           std::size_t&                    offset,
-           const std::vector<std::string>& splitters)
-{
-    if (std::isdigit(item[offset])) {
-        auto substring = item.substr(offset);
-        char* end_ptr;
-        std::ignore = std::strtod(substring.c_str(), &end_ptr);
-
-        std::size_t token_size = end_ptr - substring.c_str();
-        if (token_size > 0) {
-            auto token = item.substr(offset, token_size);
-            offset += token.size();
-            return token;
-        }
-    }
-
-    std::string token = item.substr(offset);
-    std::size_t min_pos = std::string::npos;
-    for (const auto& splitter : splitters) {
-        auto pos = item.find(splitter, offset);
-        if (pos < min_pos) {
-            min_pos = pos;
-            if (pos == offset) {
-                token = splitter;
-            }
-            else {
-                token = item.substr(offset, pos - offset);
-            }
-        }
-    }
-
-    offset += token.size();
-
-    return Opm::trim_copy(token);
 }
 
 // This function unconditionally returns true and is therefore not a real
@@ -219,37 +250,12 @@ UDQDefine::UDQDefine(const UDQParams&                udq_params,
                      const ParseContext&             parseContext,
                      ErrorGuard&                     errors)
     : m_keyword      (keyword)
+    , m_tokens       (make_udq_tokens(normalize_string_tokens(deck_data)))
     , m_var_type     (UDQ::varType(keyword))
     , m_location     (location)
     , m_report_step  (report_step)
     , m_update_status(UDQUpdate::ON)
 {
-    const auto splitters = std::vector<std::string> {
-        " ", "TU*[]", "(", ")", "[", "]", ",",
-        "+", "-", "/", "*",
-        "==", "!=", "^", ">=", "<=", ">", "<",
-    };
-
-    auto string_tokens = std::vector<std::string>{};
-    for (const std::string& deck_item : deck_data) {
-        for (const std::string& item : quote_split(deck_item)) {
-            if (RawConsts::is_quote()(item[0])) {
-                string_tokens.push_back(item);
-                continue;
-            }
-
-            std::size_t offset = 0;
-            while (offset < item.size()) {
-                auto token = next_token(item, offset, splitters);
-                if (!token.empty()) {
-                    string_tokens.push_back(std::move(token));
-                }
-            }
-        }
-    }
-
-    this->m_tokens = make_tokens(string_tokens);
-
     this->ast = std::make_shared<UDQASTNode>
         (UDQParser::parse(udq_params,
                           this->m_var_type,
