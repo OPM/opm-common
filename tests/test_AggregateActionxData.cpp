@@ -23,6 +23,7 @@
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
 
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>

@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/common/utility/TimeService.hpp>

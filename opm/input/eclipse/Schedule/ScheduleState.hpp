@@ -39,7 +39,6 @@
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
-#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
@@ -60,6 +59,9 @@ namespace {
 
 namespace Opm {
 
+    namespace Action {
+        class Actions;
+    };
     class GasLiftOpt;
     class GConSale;
     class GConSump;

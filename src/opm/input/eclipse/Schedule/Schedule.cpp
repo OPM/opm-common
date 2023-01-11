@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
