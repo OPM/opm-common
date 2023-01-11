@@ -27,7 +27,6 @@
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 namespace Opm {
 
