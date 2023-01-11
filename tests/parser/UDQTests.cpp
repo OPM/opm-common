@@ -181,16 +181,12 @@ BOOST_AUTO_TEST_CASE(TEST)
     BOOST_CHECK_EQUAL( res4["P1"].get(), 1.00 );
     BOOST_CHECK_EQUAL( res4["P2"].get(), 1.00 );
 
-    /*
-      This expression has a well set as target type, and involves group with
-      wildcard that is not supported by flow.
-    */
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2",0, location, {"GOPR", "G*", "*", "2.0"}), OpmInputError);
+    // This expression has a well set as target type, and involves group
+    // with wildcard that is not supported by flow.
+    BOOST_CHECK_THROW( UDQDefine(udqp, "GUPR2",0, location, {"GOPR", "G*", "*", "2.0"}), OpmInputError);
 
-    /*
-      UDQVarType == BLOCK is not yet supported.
-    */
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2",0, location, {"BPR", "1","1", "1", "*", "2.0"}), OpmInputError);
+    // UDQVarType == BLOCK is not yet supported.
+    BOOST_CHECK_THROW( UDQDefine(udqp, "BUPR2",0, location, {"BPR", "1","1", "1", "*", "2.0"}), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MIX_SCALAR) {

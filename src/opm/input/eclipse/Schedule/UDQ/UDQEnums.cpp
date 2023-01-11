@@ -21,14 +21,42 @@
 
 #include <opm/common/utility/String.hpp>
 
+#include <charconv>
 #include <map>
+#include <optional>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <system_error>
 #include <unordered_map>
 #include <vector>
 
 namespace {
+
+    std::string_view dequote(std::string_view s)
+    {
+        const auto b = s.find('\'');
+        if (b == std::string_view::npos) {
+            return s;
+        }
+
+        const auto e = s.find('\'', b + 1);
+        if (e == std::string_view::npos) {
+            throw std::invalid_argument {
+                "Invalid quoted string |" + std::string{s} + '|'
+            };
+        }
+
+        return { s.begin() + b + 1, e - b - 1 };
+    }
+
+    bool is_asterisk(std::string_view s)
+    {
+        const auto ast = std::regex { R"(\s*\*\s*)" };
+        return std::regex_match(s.begin(), s.end(), ast);
+    }
 
     bool is_no_mix(const Opm::UDQVarType t)
     {
@@ -49,6 +77,48 @@ namespace {
             || (t == Opm::UDQVarType::SCALAR)
             || (t == Opm::UDQVarType::FIELD_VAR)
             ;
+    }
+
+    bool is_wgname_set(const std::vector<std::string>& selector)
+    {
+        return selector.empty()
+            || (selector.front().find("*") != std::string::npos);
+    }
+
+    bool is_single_segment_number(std::string_view segNum0)
+    {
+        auto segNum = dequote(segNum0);
+
+        if (segNum.empty()) {
+            // Not specified
+            return false;
+        }
+
+        auto result = 0;
+        auto [ptr, ec] { std::from_chars(segNum.data(), segNum.data() + segNum.size(), result) };
+
+        if ((ec == std::errc{}) && (ptr == segNum.data() + segNum.size())) {
+            // Segment number is "123", or "'-1'", or something similar.
+            return result > 0;
+        }
+        else if ((ec == std::errc::invalid_argument) && is_asterisk(segNum)) {
+            // Segment number is '*'.  Treat as all segments.
+            return false;
+        }
+        else {
+            // Segment number is some unrecognized number string other than '*'.
+            throw std::invalid_argument {
+                "Invalid segment number string |" + std::string{segNum0} + '|'
+            };
+        }
+    }
+
+    bool is_segment_set(const std::vector<std::string>& selector)
+    {
+        return (selector.size() < std::vector<std::string>::size_type{2})
+            || ! is_single_segment_number(selector[1])
+            || selector.front().empty()
+            || (selector.front().find("*") != std::string::npos);
     }
 
     const auto cmp_func = std::set<Opm::UDQTokenType> {
@@ -190,13 +260,28 @@ UDQVarType targetType(const std::string&              keyword,
                       const std::vector<std::string>& selector)
 {
     const auto tt = targetType(keyword);
-    if ((tt == UDQVarType::WELL_VAR) || (tt == UDQVarType::GROUP_VAR)) {
-        if (selector.empty() || (selector.front().find("*") != std::string::npos)) {
-            return tt;
-        }
+
+    if ((tt == UDQVarType::NONE) || (tt == UDQVarType::FIELD_VAR)) {
+        // Field variables and "none" (e.g., TIME) are treated as scalar.
+        return UDQVarType::SCALAR;
     }
 
-    return UDQVarType::SCALAR;
+    if (((tt == UDQVarType::WELL_VAR) || (tt == UDQVarType::GROUP_VAR))
+        && !is_wgname_set(selector))
+    {
+        // Well/group variables that apply to a single well/group are
+        // treated as scalar.
+        return UDQVarType::SCALAR;
+    }
+
+    if ((tt == UDQVarType::SEGMENT_VAR) && !is_segment_set(selector)) {
+        // Segment variables that apply to a single segment in a single MS
+        // well are treated as scalar.
+        return UDQVarType::SCALAR;
+    }
+
+    // All other targets keep the type inferred from the keyword.
+    return tt;
 }
 
 UDQVarType varType(const std::string& keyword)

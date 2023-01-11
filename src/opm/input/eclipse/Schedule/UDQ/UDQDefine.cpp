@@ -166,8 +166,10 @@ make_udq_tokens(const std::vector<std::string>& string_tokens)
                     break;
                 }
 
-                auto next_type = Opm::UDQ::tokenType(string_tokens[token_index]);
-                if (next_type == Opm::UDQTokenType::ecl_expr) {
+                if (auto next_token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
+                    (next_token_type == Opm::UDQTokenType::ecl_expr) ||
+                    (next_token_type == Opm::UDQTokenType::number))
+                {
                     const auto& select_token = string_tokens[token_index];
                     if (Opm::RawConsts::is_quote()(select_token[0])) {
                         selector.push_back(select_token.substr(1, select_token.size() - 2));
