@@ -27,22 +27,23 @@ copyright holders.
 #ifndef OPM_BRINE_H2_PVT_HPP
 #define OPM_BRINE_H2_PVT_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/binarycoefficients/Brine_H2.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/Brine.hpp>
 #include <opm/material/components/H2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
-#include <opm/material/components/h2tables.inc>
 
 #include <vector>
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+class EclipseState;
+class Schedule;
 #endif
 
-namespace Opm {
 /*!
 * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase for a H2-Brine system
 */
@@ -51,62 +52,36 @@ class BrineH2Pvt
 {
     static const bool extrapolate = true;
 public:
-    typedef SimpleHuDuanH2O<Scalar> H2O;
-    typedef ::Opm::Brine<Scalar, H2O> Brine;
-    typedef ::Opm::H2<Scalar, H2Tables> H2;
+    using H2O = SimpleHuDuanH2O<Scalar>;
+    using Brine = ::Opm::Brine<Scalar, H2O>;
+    using H2 = ::Opm::H2<Scalar>;
 
     // The binary coefficients for brine and H2 used by this fluid system
-    typedef BinaryCoeff::Brine_H2<Scalar, H2O, H2> BinaryCoeffBrineH2;
+    using BinaryCoeffBrineH2 = BinaryCoeff::Brine_H2<Scalar, H2O, H2>;
 
     explicit BrineH2Pvt() = default;
-    BrineH2Pvt( const std::vector<Scalar>& brineReferenceDensity,
-                const std::vector<Scalar>& h2ReferenceDensity,
-                const std::vector<Scalar>& salinity)
-        : brineReferenceDensity_(brineReferenceDensity),
-          h2ReferenceDensity_(h2ReferenceDensity),
-          salinity_(salinity)
+
+    BrineH2Pvt(const std::vector<Scalar>& salinity,
+                Scalar T_ref = 288.71, //(273.15 + 15.56)
+                Scalar P_ref = 101325)
+        : salinity_(salinity)
     {
+        int num_regions =  salinity_.size();
+        h2ReferenceDensity_.resize(num_regions);
+        brineReferenceDensity_.resize(num_regions);
+        Brine::salinity = salinity[0];
+        for (int i = 0; i < num_regions; ++i) {
+            h2ReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, true);
+            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, true);
+        }
     }
+
 #if HAVE_ECL_INPUT
     /*!
-    * \brief Initialize the parameters for Brine-H2 system using an ECL deck.
-    *
-    */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        // Error message for DENSITY keyword
-        if (!eclState.getTableManager().getDensityTable().empty()) {
-            std::cerr << "WARNING: H2STORE is enabled but DENSITY is in the deck. \n" <<
-                         "The surface density is computed based on H2-BRINE PVT at standard conditions (STCOND)" <<
-                         " and DENSITY is ignored " << std::endl;
-        }
-        // Error message for entering PVDO/PVTO in deck
-        if (eclState.getTableManager().hasTables("PVDO") || !eclState.getTableManager().getPvtoTables().empty()) {
-            std::cerr << "WARNING: H2STORE is enabled but PVDO or PVTO is in the deck. \n" <<
-                         "BRINE PVT properties are computed based on the Li et al. (2018) and PVDO/PVTO input" <<
-                         " is ignored. " << std::endl;
-        }
-        // Check if DISGAS has been activated (enables H2 dissolved in brine)
-        setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
-
-        // We only supported single pvt region for the H2-brine module
-        size_t numRegions = 1;
-        setNumRegions(numRegions);
-        size_t regionIdx = 0;
-
-        // Currently we only support constant salinity
-        const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-        const Scalar MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
-        Brine::salinity = 1 / ( 1 + 1 / (molality*MmNaCl)); // convert to mass fraction
-        salinity_[regionIdx] = molality;  // molality used in functions
-
-        // set the surface conditions using the STCOND keyword
-        Scalar T_ref = eclState.getTableManager().stCond().temperature;
-        Scalar P_ref = eclState.getTableManager().stCond().pressure;
-
-        brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, extrapolate);
-        h2ReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
-    }
+     * \brief Initialize the parameters for Brine-H2 system using an ECL deck.
+     *
+     */
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
@@ -259,12 +234,6 @@ public:
     const Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
-    bool operator==(const BrineH2Pvt<Scalar>& data) const
-    {
-        return h2ReferenceDensity_ == data.h2ReferenceDensity_ &&
-                brineReferenceDensity_ == data.brineReferenceDensity_;
-    }
-
     /*!
     * \brief Diffusion coefficient of H2 in water
     */
@@ -345,16 +314,18 @@ private:
 
         // check if pressure and temperature is valid
         if(!extrapolate && T < 273.15) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and H2 is only "
-                   "defined above 273.15K (is "<<T<<"K)";
-            throw NumericalIssue(oss.str());
+            const std::string msg = 
+                "Liquid density for Brine and H2 is only "
+                "defined above 273.15K (is " + 
+                std::to_string(getValue(T)) + "K)";
+            throw NumericalProblem(msg);
         }
         if(!extrapolate && pl >= 2.5e8) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and H2 is only "
-                   "defined below 250MPa (is "<<pl<<"Pa)";
-            throw NumericalIssue(oss.str());
+            const std::string msg  =
+                "Liquid density for Brine and CO2 is only "
+                "defined below 250MPa (is " +
+                std::to_string(getValue(pl)) + "Pa)";
+            throw NumericalProblem(msg);
         }
 
         // calculate individual contribution to density

@@ -33,7 +33,7 @@
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
-
+#include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/densead/Math.hpp>
 
 #include <cmath>
@@ -53,10 +53,12 @@ namespace Opm {
  * 
  * \tparam Scalar The type used for scalar values
  */
-template <class Scalar, class H2Tables>
-class H2 : public Component<Scalar, H2<Scalar, H2Tables> >
+template <class Scalar>
+class H2 : public Component<Scalar, H2<Scalar> >
 {
     using IdealGas = Opm::IdealGas<Scalar>;
+
+    static const UniformTabulated2DFunction<double>& tabulatedDensity;
 
 public:
     /*!
@@ -160,7 +162,7 @@ public:
     template <class Evaluation>
     static Evaluation gasDensity(Evaluation temperature, Evaluation pressure, bool extrapolate = false)
     {
-        return H2Tables::tabulatedDensity.eval(temperature, pressure, extrapolate);
+        return tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 
     /*!

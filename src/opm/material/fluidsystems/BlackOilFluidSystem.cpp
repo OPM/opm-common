@@ -131,6 +131,20 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         }
     }
 
+    // use molarMass of CO2 and Brine as default
+    // when we are using the the CO2STORE option
+    if (eclState.runspec().co2Storage()) {
+        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+            if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
+                molarMass_[regionIdx][oilCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass();
+            if (!phaseIsActive(gasPhaseIdx)) {
+                OPM_THROW(std::runtime_error,
+                          "H2STORE requires gas phase\n");
+            }
+            molarMass_[regionIdx][gasCompIdx] = BrineH2Pvt<Scalar>::H2::molarMass();
+        }
+    }
+
     setEnableDiffusion(eclState.getSimulationConfig().isDiffusive());
     if (enableDiffusion()) {
         const auto& diffCoeffTables = eclState.getTableManager().getDiffusionCoefficientTable();

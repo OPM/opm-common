@@ -31,17 +31,15 @@
 #include <opm/material/components/H2.hpp>
 #include <opm/material/binarycoefficients/Brine_H2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
-#include <opm/material/components/h2tables.inc>
-
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
 
 #include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
 
 /*!
 * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase for H2
@@ -49,47 +47,31 @@ namespace Opm {
 template <class Scalar>
 class H2GasPvt
 {
-    typedef SimpleHuDuanH2O<Scalar> H2O;
-    typedef ::Opm::H2<Scalar, H2Tables> H2;
+    using H2O = SimpleHuDuanH2O<Scalar>;
+    using H2 = ::Opm::H2<Scalar>;
     static const bool extrapolate = true;
 
 public:
     // The binary coefficients for brine and H2 used by this fluid system
-    typedef BinaryCoeff::Brine_H2<Scalar, H2O, H2> BinaryCoeffBrineH2;
+    using BinaryCoeffBrineH2 = BinaryCoeff::Brine_H2<Scalar, H2O, H2>;
 
     explicit H2GasPvt() = default;
-    H2GasPvt(const std::vector<Scalar>& gasReferenceDensity)
-        : gasReferenceDensity_(gasReferenceDensity)
+
+    H2GasPvt(size_t numRegions,
+              Scalar T_ref = 288.71, //(273.15 + 15.56)
+              Scalar P_ref = 101325)
     {
+        setNumRegions(numRegions);
+        for (size_t i = 0; i < numRegions; ++i) {
+            gasReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, extrapolate);
+        }
     }
 
 #if HAVE_ECL_INPUT
     /*!
     * \brief Initialize the parameters for H2 gas using an ECL deck.
     */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        if( !eclState.getTableManager().getDensityTable().empty()) {
-            std::cerr << "WARNING: H2STORE is enabled but DENSITY is in the deck. \n" <<
-                         "The surface density is computed based on H2-BRINE PVT at standard conditions (STCOND)" <<
-                         " and DENSITY is ignored " << std::endl;
-        }
-
-        if( eclState.getTableManager().hasTables("PVDG") || !eclState.getTableManager().getPvtgTables().empty()) {
-            std::cerr << "WARNING: H2STORE is enabled but PVDG or PVTG is in the deck. \n" <<
-                         "H2 pvt properties are calculated based on ideal gas relations, and PVDG/PVTG input" <<
-                         " is ignored. " << std::endl;
-        }
-
-        // We only supported single pvt region for the H2-brine module
-        size_t numRegions = 1;
-        setNumRegions(numRegions);
-        size_t regionIdx = 0;
-        Scalar T_ref = eclState.getTableManager().stCond().temperature;
-        Scalar P_ref = eclState.getTableManager().stCond().pressure;
-        gasReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
@@ -114,7 +96,6 @@ public:
     */
     void initEnd()
     {
-
     }
 
     /*!
@@ -198,6 +179,16 @@ public:
                                               const Evaluation& /*temperature*/,
                                               const Evaluation& /*pressure*/) const
     { return 0.0; /* this is non-humid gas! */ }
+
+    /*!
+    * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
+    */
+    template <class Evaluation = Scalar>
+    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
+                                              const Evaluation& /*temperature*/,
+                                              const Evaluation& /*pressure*/, 
+                                              const Evaluation& /*saltConcentration*/) const
+    { return 0.0; }
 
     /*!
     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.

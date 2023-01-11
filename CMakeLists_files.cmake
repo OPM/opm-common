@@ -51,6 +51,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/material/common/TridiagonalMatrix.cpp
       src/opm/material/common/UniformXTabulated2DFunction.cpp
       src/opm/material/components/CO2.cpp
+      src/opm/material/components/H2.cpp
       src/opm/material/densead/Evaluation.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
       src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
@@ -290,6 +291,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
     src/opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
+    src/opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
+    src/opm/material/fluidsystems/blackoilpvt/H2GasPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.cpp
@@ -814,6 +817,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/binarycoefficients/H2O_CO2.hpp
       opm/material/binarycoefficients/Air_Xylene.hpp
       opm/material/binarycoefficients/Brine_CO2.hpp
+      opm/material/binarycoefficients/Brine_H2.hpp
       opm/material/binarycoefficients/HenryIapws.hpp
       opm/material/Constants.hpp
       opm/material/fluidsystems/NullParameterCache.hpp
@@ -837,6 +841,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp
       opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp
       opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp
+      opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.hpp
       opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.hpp
       opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.hpp
       opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.hpp
@@ -849,6 +854,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.hpp
       opm/material/fluidsystems/blackoilpvt/GasPvtThermal.hpp
       opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/H2GasPvt.hpp
       opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.hpp
       opm/material/fluidsystems/H2OAirFluidSystem.hpp
       opm/material/fluidsystems/H2ON2FluidSystem.hpp

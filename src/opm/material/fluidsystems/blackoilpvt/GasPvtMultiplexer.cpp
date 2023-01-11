@@ -36,6 +36,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     if (eclState.runspec().co2Storage())
         setApproach(GasPvtApproach::Co2Gas);
+    else if (eclState.runspec().h2Storage())
+        setApproach(GasPvtApproach::H2Gas);
     else if (enableThermal && eclState.getSimulationConfig().isThermal())
         setApproach(GasPvtApproach::ThermalGas);
     else if (!eclState.getTableManager().getPvtgwTables().empty() &&

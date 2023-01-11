@@ -40,6 +40,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // and water/brine + gas
     if (eclState.runspec().co2Storage())
         setApproach(OilPvtApproach::BrineCo2);
+    else if (eclState.runspec().h2Storage())
+        setApproach(OilPvtApproach::BrineH2);
     else if (enableThermal && eclState.getSimulationConfig().isThermal())
         setApproach(OilPvtApproach::ThermalOil);
     else if (!eclState.getTableManager().getPvcdoTable().empty())
