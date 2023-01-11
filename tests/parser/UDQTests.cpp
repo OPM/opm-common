@@ -43,6 +43,7 @@ Copyright 2018 Statoil ASA.
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 

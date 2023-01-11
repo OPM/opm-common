@@ -1,3 +1,4 @@
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>

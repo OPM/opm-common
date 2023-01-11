@@ -37,7 +37,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
 using namespace Opm;
 

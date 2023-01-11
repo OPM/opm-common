@@ -27,11 +27,9 @@
 #include <string>
 #include <vector>
 
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-
 namespace Opm {
 
-
+enum class InputErrorAction;
 class KeywordLocation;
 
 

@@ -21,6 +21,7 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 #include <cassert>
