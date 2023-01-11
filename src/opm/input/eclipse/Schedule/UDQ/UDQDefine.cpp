@@ -87,7 +87,7 @@ make_tokens(const std::vector<std::string>& string_tokens)
     std::size_t token_index = 0;
     while (true) {
         const auto& string_token = string_tokens[token_index];
-        auto token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
+        const auto token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
         token_index += 1;
 
         if (token_type == Opm::UDQTokenType::ecl_expr) {
@@ -203,7 +203,6 @@ UDQDefine::UDQDefine(const UDQParams&                udq_params_arg,
     : UDQDefine(udq_params_arg, keyword, report_step, location, deck_data, parseContext, errors)
 {}
 
-
 UDQDefine::UDQDefine(const UDQParams&                udq_params_arg,
                      const std::string&              keyword,
                      const std::size_t               report_step,
@@ -295,7 +294,8 @@ UDQSet UDQDefine::eval(const UDQContext& context) const
 
         if (!dynamic_type_check(this->var_type(), res->var_type())) {
             throw std::invalid_argument {
-                "Invalid runtime type conversion detected when evaluating UDQ"
+                "Invalid runtime type conversion "
+                "detected when evaluating UDQ " + this->m_keyword
             };
         }
     }
@@ -316,45 +316,10 @@ UDQSet UDQDefine::eval(const UDQContext& context) const
     }
 
     if (res->var_type() == UDQVarType::SCALAR) {
-        // If the right hand side evaluates to a scalar that scalar value
-        // should be set for all wells in the wellset:
-        //
-        //   UDQ
-        //     DEFINE WUINJ1  SUM(WOPR) * 1.25 /
-        //     DEFINE WUINJ2  WOPR OP1  * 5.0 /
-        //   /
-        //
-        // Both the expressions "SUM(WOPR)" and "WOPR OP1" evaluate to a
-        // scalar, this should then be copied all wells, so that
-        // WUINJ1:$WELL should evaulate to the same numerical value for all
-        // wells. We implement the same behavior for group sets - but there
-        // is lots of uncertainty regarding the semantics of group sets.
-
-        const auto& scalar_value = (*res)[0].value();
-        if (this->var_type() == UDQVarType::WELL_VAR) {
-            const std::vector<std::string> wells = context.wells();
-            UDQSet well_res = UDQSet::wells(this->m_keyword, wells);
-
-            for (const auto& well : wells) {
-                well_res.assign(well, scalar_value);
-            }
-
-            return well_res;
-        }
-
-        if (this->var_type() == UDQVarType::GROUP_VAR) {
-            const std::vector<std::string> groups = context.groups();
-            UDQSet group_res = UDQSet::groups(this->m_keyword, groups);
-
-            for (const auto& group : groups) {
-                group_res.assign(group, scalar_value);
-            }
-
-            return group_res;
-        }
+        return this->scatter_scalar_value(*std::move(res), context);
     }
 
-    return *res;
+    return *std::move(res);
 }
 
 const KeywordLocation& UDQDefine::location() const
@@ -436,6 +401,55 @@ bool UDQDefine::operator==(const UDQDefine& data) const
         && (this->status() == data.status())
         && (this->input_string() == data.input_string())
         ;
+}
+
+UDQSet UDQDefine::scatter_scalar_value(UDQSet&& res, const UDQContext& context) const
+{
+    // If the right hand side evaluates to a scalar that scalar value should
+    // be set for all elements of the UDQ set.  For example, in
+    //
+    //   UDQ
+    //     DEFINE WUINJ1  SUM(WOPR) * 1.25 /
+    //     DEFINE WUINJ2  WOPR OP1  * 5.0 /
+    //   /
+    //
+    // both the expressions "SUM(WOPR)" and "WOPR OP1" produce scalar
+    // values.  This scalar value must then be copied/assigned to all wells
+    // in order for WUINJ1:$WELL to produce the same numerical value for
+    // every well.
+    //
+    // We mirror this behavior for group sets, but there is lots of
+    // uncertainty regarding the semantics of group sets.
+
+    if (this->var_type() == UDQVarType::WELL_VAR) {
+        return this->scatter_scalar_well_value(context, res[0].value());
+    }
+
+    if (this->var_type() == UDQVarType::GROUP_VAR) {
+        return this->scatter_scalar_group_value(context, res[0].value());
+    }
+
+    return std::move(res);
+}
+
+UDQSet UDQDefine::scatter_scalar_well_value(const UDQContext&            context,
+                                            const std::optional<double>& value) const
+{
+    if (! value.has_value()) {
+        return UDQSet::wells(this->m_keyword, context.wells());
+    }
+
+    return UDQSet::wells(this->m_keyword, context.wells(), *value);
+}
+
+UDQSet UDQDefine::scatter_scalar_group_value(const UDQContext&            context,
+                                             const std::optional<double>& value) const
+{
+    if (! value.has_value()) {
+        return UDQSet::groups(this->m_keyword, context.groups());
+    }
+
+    return UDQSet::groups(this->m_keyword, context.groups(), *value);
 }
 
 } // namespace Opm
