@@ -722,7 +722,7 @@ GCONPROD
 
         auto [name, number] = *gpm_prod->region();
         BOOST_CHECK_EQUAL(number, 2);
-        BOOST_CHECK_EQUAL(name, "FIPNUM");
+        BOOST_CHECK_EQUAL(name, "NUM");
 
         const auto& gpm_c1 = c1_group.gpmaint();
         BOOST_CHECK(!gpm_c1->region());
