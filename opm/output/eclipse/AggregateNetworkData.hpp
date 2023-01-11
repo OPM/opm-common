@@ -23,7 +23,6 @@
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <cstddef>
 #include <string>
@@ -34,7 +33,6 @@ namespace Opm {
     class EclipseState;
     class Schedule;
     class SummaryState;
-    //class Group;
     class UnitSystem;
 } // Opm
 
