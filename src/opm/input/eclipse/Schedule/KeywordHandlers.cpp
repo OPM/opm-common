@@ -29,6 +29,7 @@
 
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>

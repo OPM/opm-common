@@ -19,8 +19,7 @@
 
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
-#include <opm/io/eclipse/EclUtil.hpp>
-
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/shmatch.hpp>
 
@@ -44,6 +43,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+
+#include <opm/io/eclipse/EclUtil.hpp>
 
 #include <algorithm>
 #include <array>

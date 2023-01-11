@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>

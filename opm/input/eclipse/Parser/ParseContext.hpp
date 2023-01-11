@@ -27,8 +27,6 @@
 #include <string>
 #include <vector>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
 namespace Opm {
