@@ -37,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
