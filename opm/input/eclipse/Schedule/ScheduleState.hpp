@@ -60,7 +60,7 @@ namespace Opm {
 
     namespace Action {
         class Actions;
-    };
+    }
     class GasLiftOpt;
     class GConSale;
     class GConSump;
