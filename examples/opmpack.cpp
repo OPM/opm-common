@@ -36,7 +36,7 @@
 namespace fs = std::filesystem;
 
 Opm::Deck pack_deck( const char * deck_file, std::ostream& os) {
-    Opm::ParseContext parseContext(Opm::InputError::WARN);
+    Opm::ParseContext parseContext(Opm::InputErrorAction::WARN);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
 

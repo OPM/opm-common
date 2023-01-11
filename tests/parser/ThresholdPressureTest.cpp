@@ -338,14 +338,14 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
 
     BOOST_CHECK_THROW(Setup sx(inputStr), std::runtime_error);
     ParseContext pc;
-    pc.update(ParseContext::UNSUPPORTED_INITIAL_THPRES, InputError::IGNORE);
+    pc.update(ParseContext::UNSUPPORTED_INITIAL_THPRES, InputErrorAction::IGNORE);
     BOOST_CHECK_NO_THROW(Setup sx(inputStrMissingPressure, pc));
 
     Setup s(inputStrMissingPressure, pc);
     BOOST_CHECK( s.threshPres.hasRegionBarrier(2, 3));
     BOOST_CHECK(!s.threshPres.hasThresholdPressure(2, 3));
 
-    pc.update(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::THROW_EXCEPTION);
+    pc.update(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_THROW(s.threshPres.getThresholdPressure(2, 3), std::invalid_argument);
 }
 

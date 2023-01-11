@@ -241,6 +241,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/VFPInjTable.cpp
     src/opm/input/eclipse/Schedule/VFPProdTable.cpp
     src/opm/input/eclipse/Parser/ErrorGuard.cpp
+    src/opm/input/eclipse/Parser/InputErrorAction.cpp
     src/opm/input/eclipse/Parser/ParseContext.cpp
     src/opm/input/eclipse/Parser/Parser.cpp
     src/opm/input/eclipse/Parser/ParserEnums.cpp

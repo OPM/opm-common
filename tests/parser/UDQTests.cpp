@@ -1331,7 +1331,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     ErrorGuard errors;
     std::vector<std::string> tokens = {"WBHP", "+"};
     KeywordLocation location;
-    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::IGNORE);
+    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputErrorAction::IGNORE);
     {
         UDQDefine def1(udqp, "WUBHP",0, location, tokens, parseContext, errors);
         SummaryState st(TimeService::now());
@@ -1345,7 +1345,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
         BOOST_CHECK_EQUAL(res["P1"].get(), udqp.undefinedValue());
     }
 
-    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
+    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP",0, location, tokens, parseContext, errors), OpmInputError);
 }
 
@@ -1356,7 +1356,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
     std::vector<std::string> tokens1 = {"WBHP", "+", "1"};
     std::vector<std::string> tokens2 = {"SUM", "(", "WBHP", ")"};
     KeywordLocation location;
-    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::IGNORE);
+    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputErrorAction::IGNORE);
     {
         UDQDefine def1(udqp, "FUBHP",0, location, tokens1, parseContext, errors);
         UDQDefine def2(udqp, "WUBHP",0, location, tokens2, parseContext, errors);
@@ -1378,7 +1378,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
             BOOST_CHECK_EQUAL(res2[index].get(), 3);
     }
 
-    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
+    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputErrorAction::THROW_EXCEPTION);
 
     // This fails because the well expression (WBHP + 1) is assigned to the field variable FUBHP
     BOOST_CHECK_THROW( UDQDefine(udqp, "FUBHP",0, location, tokens1, parseContext, errors), OpmInputError);

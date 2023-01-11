@@ -635,7 +635,7 @@ namespace Opm
         void prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword);
         void store_wgnames(const DeckKeyword& keyword);
         std::vector<std::string> wellNames(const std::string& pattern, const HandlerContext& context);
-        std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputError::Action error_action, ErrorGuard& errors, const KeywordLocation& location) const;
+        std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputErrorAction error_action, ErrorGuard& errors, const KeywordLocation& location) const;
         void invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const;
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;

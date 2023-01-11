@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
     ParseContext parseContext;
     ErrorGuard errors;
 
-    parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
+    parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::THROW_EXCEPTION);
     const auto deck = parser.parseFile( prefix() + "parser/PATHSInInclude.data", parseContext, errors );
     BOOST_CHECK(deck.hasKeyword("OIL"));
     BOOST_CHECK_THROW( parser.parseFile( prefix() + "parser/PATHSInIncludeInvalid.data", parseContext, errors ), OpmInputError );
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE( PATHS_with_backslashes ) {
     ParseContext parseContext;
     ErrorGuard errors;
 
-    parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
+    parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::THROW_EXCEPTION);
     const auto deck = parser.parseFile( prefix() + "parser/PATHSWithBackslashes.data", parseContext, errors );
     BOOST_CHECK(deck.hasKeyword("OIL"));
 }
@@ -2338,10 +2338,10 @@ GUIDERATE
 /
 )";
 
-   parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputError::THROW_EXCEPTION);
+   parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputErrorAction::THROW_EXCEPTION);
    BOOST_CHECK_THROW(parser.parseString(deck_string, parseContext, errors), OpmInputError);
 
-   parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputError::IGNORE);
+   parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputErrorAction::IGNORE);
    auto deck = parser.parseString(deck_string, parseContext, errors);
    BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
 }
@@ -2384,9 +2384,9 @@ BOOST_AUTO_TEST_CASE(parseSections) {
 
     Opm::ParseContext parseContext;
 
-    parseContext.update(Opm::ParseContext::PARSE_EXTRA_DATA , Opm::InputError::IGNORE );
-    parseContext.update(Opm::ParseContext::PARSE_EXTRA_RECORDS , Opm::InputError::IGNORE );
-    parseContext.update(Opm::ParseContext::PARSE_RANDOM_SLASH , Opm::InputError::IGNORE );
+    parseContext.update(Opm::ParseContext::PARSE_EXTRA_DATA , Opm::InputErrorAction::IGNORE );
+    parseContext.update(Opm::ParseContext::PARSE_EXTRA_RECORDS , Opm::InputErrorAction::IGNORE );
+    parseContext.update(Opm::ParseContext::PARSE_RANDOM_SLASH , Opm::InputErrorAction::IGNORE );
 
     const auto deck_all = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext);
 

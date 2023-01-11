@@ -10,7 +10,7 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 
-void exit1(Opm::InputError::Action action) {
+void exit1(Opm::InputErrorAction action) {
     const char * deckString =
         "RUNSPEC\n"
         "DIMENS\n"
@@ -34,7 +34,7 @@ void exit1(Opm::InputError::Action action) {
   this test is implemented without the BOOST testing framework.
 */
 
-void test_exit(Opm::InputError::Action action) {
+void test_exit(Opm::InputErrorAction action) {
     pid_t pid = fork();
     if (pid == 0)
         exit1(action);
@@ -54,6 +54,6 @@ void test_exit(Opm::InputError::Action action) {
 }
 
 int main() {
-    test_exit(Opm::InputError::Action::EXIT1);
-    test_exit(Opm::InputError::Action::DELAYED_EXIT1);
+    test_exit(Opm::InputErrorAction::EXIT1);
+    test_exit(Opm::InputErrorAction::DELAYED_EXIT1);
 }

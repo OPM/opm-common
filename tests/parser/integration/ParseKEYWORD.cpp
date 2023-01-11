@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE( EQUIL_MISSING_DIMS ) {
     Parser parser;
     ErrorGuard errors;
     ParseContext parseContext;
-    parseContext.update(ParseContext::PARSE_MISSING_DIMS_KEYWORD, InputError::IGNORE);
+    parseContext.update(ParseContext::PARSE_MISSING_DIMS_KEYWORD, InputErrorAction::IGNORE);
     const std::string equil = "EQUIL\n"
         "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /";
     auto deck = parser.parseString(equil, parseContext, errors);

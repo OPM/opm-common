@@ -420,7 +420,7 @@ UDQParser::parse(const UDQParams&             udq_params,
                                           UDQ::typeName(tree.var_type));
 
         parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg_fmt, location, errors);
-        if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE) {
+        if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputErrorAction::IGNORE) {
             dump_tokens(target_var, tokens);
         }
 
@@ -434,7 +434,7 @@ UDQParser::parse(const UDQParams&             udq_params,
                                           "expression type.", target_var);
 
         parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg_fmt, location, errors);
-        if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE) {
+        if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputErrorAction::IGNORE) {
             dump_tokens(target_var, tokens);
         }
 

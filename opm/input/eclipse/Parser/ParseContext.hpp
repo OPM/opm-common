@@ -88,28 +88,28 @@ class KeywordLocation;
     class ParseContext {
     public:
         ParseContext();
-        explicit ParseContext(InputError::Action default_action);
-        explicit ParseContext(const std::vector<std::pair<std::string , InputError::Action>>& initial);
+        explicit ParseContext(InputErrorAction default_action);
+        explicit ParseContext(const std::vector<std::pair<std::string , InputErrorAction>>& initial);
 
         void handleError( const std::string& errorKey, const std::string& msg, const std::optional<KeywordLocation>& location, ErrorGuard& errors)  const;
         void handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const;
         bool hasKey(const std::string& key) const;
-        ParseContext  withKey(const std::string& key, InputError::Action action = InputError::WARN) const;
-        ParseContext& withKey(const std::string& key, InputError::Action action = InputError::WARN);
-        void updateKey(const std::string& key , InputError::Action action);
-        void update(InputError::Action action);
-        void update(const std::string& keyString , InputError::Action action);
+        ParseContext  withKey(const std::string& key, InputErrorAction action = InputErrorAction::WARN) const;
+        ParseContext& withKey(const std::string& key, InputErrorAction action = InputErrorAction::WARN);
+        void updateKey(const std::string& key , InputErrorAction action);
+        void update(InputErrorAction action);
+        void update(const std::string& keyString , InputErrorAction action);
         void ignoreKeyword(const std::string& keyword);
-        InputError::Action get(const std::string& key) const;
-        std::map<std::string,InputError::Action>::const_iterator begin() const;
-        std::map<std::string,InputError::Action>::const_iterator end() const;
+        InputErrorAction get(const std::string& key) const;
+        std::map<std::string,InputErrorAction>::const_iterator begin() const;
+        std::map<std::string,InputErrorAction>::const_iterator end() const;
         /*
           When the key is added it is inserted in 'strict mode',
           i.e. with the value 'InputError::THROW_EXCEPTION. If you
           want a different value you must subsequently call the update
           method.
         */
-      void addKey(const std::string& key, InputError::Action default_action);
+      void addKey(const std::string& key, InputErrorAction default_action);
         /*
           The PARSE_EXTRA_RECORDS field regulates how the parser
           responds to keywords whose size has been defined in the
@@ -361,10 +361,10 @@ class KeywordLocation;
     private:
         void initDefault();
         void initEnv();
-        void envUpdate( const std::string& envVariable , InputError::Action action );
-        void patternUpdate( const std::string& pattern , InputError::Action action);
+        void envUpdate( const std::string& envVariable , InputErrorAction action );
+        void patternUpdate( const std::string& pattern , InputErrorAction action);
 
-        std::map<std::string , InputError::Action> m_errorContexts;
+        std::map<std::string , InputErrorAction> m_errorContexts;
         std::set<std::string> ignore_keywords;
     };
 }

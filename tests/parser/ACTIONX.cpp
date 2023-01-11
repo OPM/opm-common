@@ -187,7 +187,7 @@ TSTEP
     }
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
-    ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
+    ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputErrorAction::THROW_EXCEPTION}} );
     BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
 }
 

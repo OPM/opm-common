@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
 
 BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 
-    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputErrorAction::IGNORE } } };
     Parser parser;
     ErrorGuard errors;
 
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
 
     Parser parser;
-    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputErrorAction::IGNORE } } };
     ErrorGuard errors;
 
     const std::string keyword_before_RUNSPEC =

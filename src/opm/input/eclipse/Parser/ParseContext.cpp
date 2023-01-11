@@ -33,7 +33,7 @@ namespace Opm {
 
     /*
       A set of predefined error modes are added, with the default
-      setting 'InputError::IGNORE, then afterwards the environment
+      setting 'InputErrorAction::IGNORE, then afterwards the environment
       variables 'OPM_ERRORS_EXCEPTION', 'OPM_ERRORS_WARN' and
       'OPM_ERRORS_IGNORE' are consulted
     */
@@ -49,7 +49,7 @@ namespace Opm {
       after the hawrdwired settings.
     */
 
-    ParseContext::ParseContext(const std::vector<std::pair<std::string , InputError::Action>>& initial) {
+    ParseContext::ParseContext(const std::vector<std::pair<std::string , InputErrorAction>>& initial) {
         initDefault();
 
         for (const auto& pair : initial)
@@ -64,74 +64,74 @@ namespace Opm {
       environment variables will be used.
     */
 
-    ParseContext::ParseContext(InputError::Action default_action) {
+    ParseContext::ParseContext(InputErrorAction default_action) {
         initDefault();
         update(default_action);
         initEnv();
     }
 
     void ParseContext::initDefault() {
-        addKey(PARSE_EXTRA_RECORDS, InputError::THROW_EXCEPTION);
-        addKey(PARSE_UNKNOWN_KEYWORD, InputError::THROW_EXCEPTION);
-        addKey(PARSE_RANDOM_TEXT, InputError::THROW_EXCEPTION);
-        addKey(PARSE_RANDOM_SLASH, InputError::THROW_EXCEPTION);
-        addKey(PARSE_MISSING_DIMS_KEYWORD, InputError::THROW_EXCEPTION);
-        addKey(PARSE_EXTRA_DATA, InputError::THROW_EXCEPTION);
-        addKey(PARSE_MISSING_INCLUDE, InputError::EXIT1);
-        addKey(PARSE_LONG_KEYWORD, InputError::WARN);
-        addKey(PARSE_WGNAME_SPACE, InputError::THROW_EXCEPTION);
-        addKey(PARSE_INVALID_KEYWORD_COMBINATION, InputError::THROW_EXCEPTION);
+        addKey(PARSE_EXTRA_RECORDS, InputErrorAction::THROW_EXCEPTION);
+        addKey(PARSE_UNKNOWN_KEYWORD, InputErrorAction::THROW_EXCEPTION);
+        addKey(PARSE_RANDOM_TEXT, InputErrorAction::THROW_EXCEPTION);
+        addKey(PARSE_RANDOM_SLASH, InputErrorAction::THROW_EXCEPTION);
+        addKey(PARSE_MISSING_DIMS_KEYWORD, InputErrorAction::THROW_EXCEPTION);
+        addKey(PARSE_EXTRA_DATA, InputErrorAction::THROW_EXCEPTION);
+        addKey(PARSE_MISSING_INCLUDE, InputErrorAction::EXIT1);
+        addKey(PARSE_LONG_KEYWORD, InputErrorAction::WARN);
+        addKey(PARSE_WGNAME_SPACE, InputErrorAction::THROW_EXCEPTION);
+        addKey(PARSE_INVALID_KEYWORD_COMBINATION, InputErrorAction::THROW_EXCEPTION);
 
-        addKey(UNIT_SYSTEM_MISMATCH, InputError::THROW_EXCEPTION);
+        addKey(UNIT_SYSTEM_MISMATCH, InputErrorAction::THROW_EXCEPTION);
 
-        this->addKey(RUNSPEC_NUMWELLS_TOO_LARGE, InputError::THROW_EXCEPTION);
-        this->addKey(RUNSPEC_CONNS_PER_WELL_TOO_LARGE, InputError::THROW_EXCEPTION);
-        this->addKey(RUNSPEC_NUMGROUPS_TOO_LARGE, InputError::THROW_EXCEPTION);
-        this->addKey(RUNSPEC_GROUPSIZE_TOO_LARGE, InputError::THROW_EXCEPTION);
+        this->addKey(RUNSPEC_NUMWELLS_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(RUNSPEC_CONNS_PER_WELL_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(RUNSPEC_NUMGROUPS_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(RUNSPEC_GROUPSIZE_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
 
-        addKey(UNSUPPORTED_INITIAL_THPRES, InputError::THROW_EXCEPTION);
-        addKey(UNSUPPORTED_TERMINATE_IF_BHP, InputError::THROW_EXCEPTION);
+        addKey(UNSUPPORTED_INITIAL_THPRES, InputErrorAction::THROW_EXCEPTION);
+        addKey(UNSUPPORTED_TERMINATE_IF_BHP, InputErrorAction::THROW_EXCEPTION);
 
-        addKey(INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::THROW_EXCEPTION);
+        addKey(INTERNAL_ERROR_UNINITIALIZED_THPRES, InputErrorAction::THROW_EXCEPTION);
 
-        addKey(SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
-        addKey(SUMMARY_UNKNOWN_GROUP, InputError::THROW_EXCEPTION);
-        addKey(SUMMARY_UNKNOWN_NODE, InputError::WARN);
-        addKey(SUMMARY_UNKNOWN_AQUIFER, InputError::THROW_EXCEPTION);
-        addKey(SUMMARY_UNHANDLED_KEYWORD, InputError::WARN);
-        addKey(SUMMARY_UNDEFINED_UDQ, InputError::WARN);
-        addKey(SUMMARY_UDQ_MISSING_UNIT, InputError::WARN);
-        this->addKey(SUMMARY_INVALID_FIPNUM, InputError::WARN);
-        this->addKey(SUMMARY_EMPTY_REGION, InputError::WARN);
-        this->addKey(SUMMARY_REGION_TOO_LARGE, InputError::WARN);
+        addKey(SUMMARY_UNKNOWN_WELL, InputErrorAction::THROW_EXCEPTION);
+        addKey(SUMMARY_UNKNOWN_GROUP, InputErrorAction::THROW_EXCEPTION);
+        addKey(SUMMARY_UNKNOWN_NODE, InputErrorAction::WARN);
+        addKey(SUMMARY_UNKNOWN_AQUIFER, InputErrorAction::THROW_EXCEPTION);
+        addKey(SUMMARY_UNHANDLED_KEYWORD, InputErrorAction::WARN);
+        addKey(SUMMARY_UNDEFINED_UDQ, InputErrorAction::WARN);
+        addKey(SUMMARY_UDQ_MISSING_UNIT, InputErrorAction::WARN);
+        this->addKey(SUMMARY_INVALID_FIPNUM, InputErrorAction::WARN);
+        this->addKey(SUMMARY_EMPTY_REGION, InputErrorAction::WARN);
+        this->addKey(SUMMARY_REGION_TOO_LARGE, InputErrorAction::WARN);
 
-        addKey(ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION);
+        addKey(ACTIONX_ILLEGAL_KEYWORD, InputErrorAction::THROW_EXCEPTION);
 
-        addKey(RPT_MIXED_STYLE, InputError::WARN);
-        addKey(RPT_UNKNOWN_MNEMONIC, InputError::WARN);
+        addKey(RPT_MIXED_STYLE, InputErrorAction::WARN);
+        addKey(RPT_UNKNOWN_MNEMONIC, InputErrorAction::WARN);
 
-        addKey(SIMULATOR_KEYWORD_NOT_SUPPORTED, InputError::WARN);
-        addKey(SIMULATOR_KEYWORD_NOT_SUPPORTED_CRITICAL, InputError::THROW_EXCEPTION);
-        addKey(SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED, InputError::WARN);
-        addKey(SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED_CRITICAL, InputError::THROW_EXCEPTION);
+        addKey(SIMULATOR_KEYWORD_NOT_SUPPORTED, InputErrorAction::WARN);
+        addKey(SIMULATOR_KEYWORD_NOT_SUPPORTED_CRITICAL, InputErrorAction::THROW_EXCEPTION);
+        addKey(SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED, InputErrorAction::WARN);
+        addKey(SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED_CRITICAL, InputErrorAction::THROW_EXCEPTION);
 
-        this->addKey(UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
-        this->addKey(UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
-        this->addKey(SCHEDULE_GROUP_ERROR, InputError::THROW_EXCEPTION);
-        this->addKey(SCHEDULE_IGNORED_GUIDE_RATE, InputError::WARN);
-        this->addKey(SCHEDULE_COMPSEGS_INVALID, InputError::THROW_EXCEPTION);
-        this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputError::THROW_EXCEPTION);
-        addKey(SCHEDULE_INVALID_NAME, InputError::THROW_EXCEPTION);
+        this->addKey(UDQ_PARSE_ERROR, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(UDQ_TYPE_ERROR, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_GROUP_ERROR, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_IGNORED_GUIDE_RATE, InputErrorAction::WARN);
+        this->addKey(SCHEDULE_COMPSEGS_INVALID, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputErrorAction::THROW_EXCEPTION);
+        addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
     }
 
     void ParseContext::initEnv() {
-        envUpdate( "OPM_ERRORS_EXCEPTION" , InputError::THROW_EXCEPTION );
-        envUpdate( "OPM_ERRORS_WARN" , InputError::WARN );
-        envUpdate( "OPM_ERRORS_IGNORE" , InputError::IGNORE );
-        envUpdate( "OPM_ERRORS_EXIT1", InputError::EXIT1);
-        envUpdate( "OPM_ERRORS_EXIT", InputError::EXIT1);
-        envUpdate( "OPM_ERRORS_DELAYED_EXIT1", InputError::DELAYED_EXIT1);
-        envUpdate( "OPM_ERRORS_DELAYED_EXIT", InputError::DELAYED_EXIT1);
+        envUpdate( "OPM_ERRORS_EXCEPTION" , InputErrorAction::THROW_EXCEPTION );
+        envUpdate( "OPM_ERRORS_WARN" , InputErrorAction::WARN );
+        envUpdate( "OPM_ERRORS_IGNORE" , InputErrorAction::IGNORE );
+        envUpdate( "OPM_ERRORS_EXIT1", InputErrorAction::EXIT1);
+        envUpdate( "OPM_ERRORS_EXIT", InputErrorAction::EXIT1);
+        envUpdate( "OPM_ERRORS_DELAYED_EXIT1", InputErrorAction::DELAYED_EXIT1);
+        envUpdate( "OPM_ERRORS_DELAYED_EXIT", InputErrorAction::DELAYED_EXIT1);
     }
 
 
@@ -146,21 +146,21 @@ namespace Opm {
             const std::optional<KeywordLocation>& location,
             ErrorGuard& errors) const {
 
-        InputError::Action action = get( errorKey );
+        InputErrorAction action = get( errorKey );
         std::string msg = location ? OpmInputError::format(msg_fmt, *location) : msg_fmt;
 
-        if (action == InputError::IGNORE) {
+        if (action == InputErrorAction::IGNORE) {
             errors.addWarning(errorKey, msg);
             return;
         }
 
-        if (action == InputError::WARN) {
+        if (action == InputErrorAction::WARN) {
             OpmLog::warning(msg);
             errors.addWarning(errorKey, msg);
             return;
         }
 
-        if (action == InputError::THROW_EXCEPTION) {
+        if (action == InputErrorAction::THROW_EXCEPTION) {
             OpmLog::error(msg);
             // If we decide to throw immediately - we clear the error stack to
             // make sure the error object does not terminate the application
@@ -170,14 +170,14 @@ namespace Opm {
             throw OpmInputError(msg, location.value_or(KeywordLocation{}));
         }
 
-        if (action == InputError::EXIT1) {
+        if (action == InputErrorAction::EXIT1) {
             OpmLog::error(msg);
             std::cerr << "A fatal error has occurred and the application will stop." << std::endl;
             std::cerr << msg << std::endl;
             std::exit(1);
         }
 
-        if (action == InputError::DELAYED_EXIT1) {
+        if (action == InputErrorAction::DELAYED_EXIT1) {
             OpmLog::error(msg);
             errors.addError(errorKey, msg);
             return;
@@ -191,22 +191,22 @@ namespace Opm {
         }
     }
 
-    std::map<std::string,InputError::Action>::const_iterator ParseContext::begin() const {
+    std::map<std::string,InputErrorAction>::const_iterator ParseContext::begin() const {
         return m_errorContexts.begin();
     }
 
 
-    std::map<std::string,InputError::Action>::const_iterator ParseContext::end() const {
+    std::map<std::string,InputErrorAction>::const_iterator ParseContext::end() const {
         return m_errorContexts.end();
     }
 
-    ParseContext ParseContext::withKey(const std::string& key, InputError::Action action) const {
+    ParseContext ParseContext::withKey(const std::string& key, InputErrorAction action) const {
         ParseContext pc(*this);
         pc.addKey(key, action);
         return pc;
     }
 
-    ParseContext& ParseContext::withKey(const std::string& key, InputError::Action action) {
+    ParseContext& ParseContext::withKey(const std::string& key, InputErrorAction action) {
         this->addKey(key, action);
         return *this;
     }
@@ -219,16 +219,16 @@ namespace Opm {
     }
 
 
-    void ParseContext::addKey(const std::string& key, InputError::Action default_action) {
+    void ParseContext::addKey(const std::string& key, InputErrorAction default_action) {
         if (key.find_first_of("|:*") != std::string::npos)
             throw std::invalid_argument("The ParseContext keys can not contain '|', '*' or ':'");
 
         if (!hasKey(key))
-            m_errorContexts.insert( std::pair<std::string , InputError::Action>( key , default_action));
+            m_errorContexts.insert( std::pair<std::string , InputErrorAction>( key , default_action));
     }
 
 
-    InputError::Action ParseContext::get(const std::string& key) const {
+    InputErrorAction ParseContext::get(const std::string& key) const {
         if (hasKey( key ))
             return m_errorContexts.find( key )->second;
         else
@@ -245,11 +245,11 @@ namespace Opm {
       static string constanst for the different error modes should be
       used as arguments:
 
-        parseContext.updateKey( ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE )
+        parseContext.updateKey( ParseContext::PARSE_RANDOM_SLASH , InputErrorAction::IGNORE )
 
     */
 
-    void ParseContext::updateKey(const std::string& key , InputError::Action action) {
+    void ParseContext::updateKey(const std::string& key , InputErrorAction action) {
         if (hasKey(key))
             m_errorContexts[key] = action;
         else
@@ -257,14 +257,14 @@ namespace Opm {
     }
 
 
-    void ParseContext::envUpdate( const std::string& envVariable , InputError::Action action ) {
+    void ParseContext::envUpdate( const std::string& envVariable , InputErrorAction action ) {
         const char * userSetting = getenv(envVariable.c_str());
         if (userSetting )
             update( userSetting , action);
     }
 
 
-    void ParseContext::update(InputError::Action action) {
+    void ParseContext::update(InputErrorAction action) {
         for (const auto& pair : m_errorContexts) {
             const std::string& key = pair.first;
             updateKey( key , action );
@@ -272,7 +272,7 @@ namespace Opm {
     }
 
 
-    void ParseContext::patternUpdate( const std::string& pattern , InputError::Action action) {
+    void ParseContext::patternUpdate( const std::string& pattern , InputErrorAction action) {
         for (const auto& pair : m_errorContexts) {
             const std::string& key = pair.first;
             if (shmatch( pattern , key))
@@ -301,7 +301,7 @@ namespace Opm {
            c) Otherwise - silently ignore.
     */
 
-    void ParseContext::update(const std::string& keyString , InputError::Action action) {
+    void ParseContext::update(const std::string& keyString , InputErrorAction action) {
         std::vector<std::string> keys = split_string(keyString, ":|");
         for (const auto& input_key : keys) {
             std::vector<std::string> matching_keys;
