@@ -32,7 +32,6 @@
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
@@ -63,8 +62,10 @@ class SICD;
 class SummaryState;
 class UDQActive;
 class UDQConfig;
+class Valve;
 class TracerConfig;
 class WellConnections;
+class WellSegments;
 
 namespace RestartIO {
 struct RstWell;
