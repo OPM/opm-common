@@ -270,11 +270,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
   )
 
-
-# This list is only used to register a CMake dependency between the the python
-# extension and the corresponding C++ wrapper files. The cpp files actually
-# listed here are repeated in the actual definition of the extension in the
-# setup.py file.
   list( APPEND PYTHON_CXX_SOURCE_FILES
           python/cxx/connection.cpp
           python/cxx/converters.cpp

@@ -9,26 +9,26 @@
 #
 #   from opm.io.parser import Parser
 from __future__ import absolute_import
-from .libopmcommon_python import action
+from .opmcommon_python import action
 
-from .libopmcommon_python import Parser, ParseContext, Builtin, eclSectionType
-from .libopmcommon_python import DeckKeyword
-from .libopmcommon_python import DeckItem
-from .libopmcommon_python import UDAValue
-from .libopmcommon_python import Dimension
-from .libopmcommon_python import UnitSystem
+from .opmcommon_python import Parser, ParseContext, Builtin, eclSectionType
+from .opmcommon_python import DeckKeyword
+from .opmcommon_python import DeckItem
+from .opmcommon_python import UDAValue
+from .opmcommon_python import Dimension
+from .opmcommon_python import UnitSystem
 
-from .libopmcommon_python import EclipseState
-from .libopmcommon_python import FieldProperties
-from .libopmcommon_python import Schedule
-from .libopmcommon_python import OpmLog
-from .libopmcommon_python import SummaryConfig
-from .libopmcommon_python import EclFile, eclArrType
-from .libopmcommon_python import ERst
-from .libopmcommon_python import ESmry
-from .libopmcommon_python import EGrid
-from .libopmcommon_python import ERft
-from .libopmcommon_python import EclOutput
-from .libopmcommon_python import EModel
-from .libopmcommon_python import calc_cell_vol
-from .libopmcommon_python import SummaryState
+from .opmcommon_python import EclipseState
+from .opmcommon_python import FieldProperties
+from .opmcommon_python import Schedule
+from .opmcommon_python import OpmLog
+from .opmcommon_python import SummaryConfig
+from .opmcommon_python import EclFile, eclArrType
+from .opmcommon_python import ERst
+from .opmcommon_python import ESmry
+from .opmcommon_python import EGrid
+from .opmcommon_python import ERft
+from .opmcommon_python import EclOutput
+from .opmcommon_python import EModel
+from .opmcommon_python import calc_cell_vol
+from .opmcommon_python import SummaryState
