@@ -19,10 +19,12 @@ namespace Opm {
             bool wetGasInitConstantRv() const;
             int initializationTargetAccuracy() const;
             bool humidGasInitConstantRvw() const;
+            bool liveWaterInitConstantRsw() const;
+
 
             EquilRecord();
 
-            EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy, bool humid_gas_init);
+            EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy, bool humid_gas_init, bool live_water_init);
 
             bool operator==(const EquilRecord& data) const;
 
@@ -39,6 +41,7 @@ namespace Opm {
                 serializer(wet_gas_init_proc);
                 serializer(init_target_accuracy);
                 serializer(humid_gas_init_proc);
+                serializer(live_water_init_proc);
             }
 
         private:
@@ -53,6 +56,8 @@ namespace Opm {
             bool wet_gas_init_proc;
             int init_target_accuracy;
             bool humid_gas_init_proc;
+            bool live_water_init_proc;
+
     };
 
     class Equil {

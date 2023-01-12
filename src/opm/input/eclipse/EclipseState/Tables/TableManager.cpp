@@ -78,6 +78,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RswvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
@@ -444,6 +445,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "RSVD", m_eqldims.getNumEquilRegions());
         addTables( "RVVD", m_eqldims.getNumEquilRegions());
         addTables( "RVWVD", m_eqldims.getNumEquilRegions());
+        addTables( "RSWVD", m_eqldims.getNumEquilRegions());
         addTables( "PBVD", m_eqldims.getNumEquilRegions());
         addTables( "PDVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTVD", m_eqldims.getNumEquilRegions());
@@ -511,6 +513,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<RvwvdTable>(deck, "RVWVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<RswvdTable>(deck, "RSWVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltpvdTable>(deck, "SALTPVD" , m_eqldims.getNumEquilRegions());
@@ -927,6 +930,9 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
     const TableContainer& TableManager::getRvwvdTables() const {
         return getTables("RVWVD");
+    }
+    const TableContainer& TableManager::getRswvdTables() const {
+        return getTables("RSWVD");
     }
     const TableContainer& TableManager::getPbvdTables() const {
         return getTables("PBVD");

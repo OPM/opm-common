@@ -64,6 +64,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RswvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvwvdTable.hpp>
@@ -1074,6 +1075,19 @@ const TableColumn& RvwvdTable::getRvwvdColumn() const {
     return SimpleTable::getColumn(1);
 }
 
+RswvdTable::RswvdTable( const DeckItem& item, const int tableID ) {
+    m_schema.addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "RSWVD"    ,  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    SimpleTable::init(item, tableID);
+}
+
+const TableColumn& RswvdTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& RswvdTable::getRswvdColumn() const {
+    return SimpleTable::getColumn(1);
+}
 PbvdTable::PbvdTable( const DeckItem& item, const int tableID ) {
     m_schema.addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
     m_schema.addColumn( ColumnSchema( "PBUB" , Table::RANDOM , Table::DEFAULT_NONE ));
