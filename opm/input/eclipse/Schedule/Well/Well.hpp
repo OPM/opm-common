@@ -32,7 +32,6 @@
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
@@ -65,6 +64,7 @@ class SummaryState;
 class UDQActive;
 class UDQConfig;
 class TracerConfig;
+class WellConnections;
 
 namespace RestartIO {
 struct RstWell;
@@ -536,6 +536,7 @@ public:
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
 
+    bool hasConnections() const;
     const std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;

@@ -28,6 +28,7 @@
 
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
 
@@ -1053,6 +1054,10 @@ double Well::convertDeckPI(double deckPI) const {
 
 void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {
     this->connections->applyWellPIScaling(scalingFactor, scalingApplicable);
+}
+
+bool Well::hasConnections() const {
+    return !this->connections->empty();
 }
 
 const WellConnections& Well::getConnections() const {
