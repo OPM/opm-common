@@ -536,6 +536,7 @@ public:
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
 
+    bool hasConnections() const;
     const std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;

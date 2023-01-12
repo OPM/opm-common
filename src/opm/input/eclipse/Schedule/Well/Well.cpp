@@ -1056,6 +1056,10 @@ void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<boo
     this->connections->applyWellPIScaling(scalingFactor, scalingApplicable);
 }
 
+bool Well::hasConnections() const {
+    return !this->connections->empty();
+}
+
 const WellConnections& Well::getConnections() const {
     return *this->connections;
 }
