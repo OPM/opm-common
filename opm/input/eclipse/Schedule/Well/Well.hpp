@@ -35,7 +35,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
@@ -63,6 +62,7 @@ class TracerConfig;
 class WellConnections;
 class WellBrineProperties;
 class WellFoamProperties;
+class WellMICPProperties;
 class WellPolymerProperties;
 class WellSegments;
 class WellTracerProperties;
