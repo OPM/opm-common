@@ -214,7 +214,21 @@ bool UDQState::operator==(const UDQState& other) const {
            this->defines == other.defines;
 }
 
+UDQState UDQState::serializationTestObject()
+{
+    UDQState st;
+    st.undef_value = 78;
+    st.scalar_values = {{"FU1", 100}, {"FU2", 200}};
+    st.assignments = {{"GU1", 99}, {"GU2", 199}};
+    st.defines = {{"DU1", 299}, {"DU2", 399}};
 
+    st.well_values.emplace("W1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
+    st.well_values.emplace("W2", std::unordered_map<std::string, double>{{"U1", 700}, {"32", 600}});
+
+    st.group_values.emplace("G1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
+    st.group_values.emplace("G2", std::unordered_map<std::string, double>{{"U1", 700}, {"32", 600}});
+    return st;
+}
 
 bool UDQState::assign(std::size_t report_step, const std::string& udq_key) const {
     auto assign_iter = this->assignments.find(udq_key);
@@ -238,6 +252,4 @@ bool UDQState::define(const std::string& udq_key, std::pair<UDQUpdate, std::size
     return define_iter->second < update_status.second;
 }
 
-}
-
-
+} // namespace Opm
