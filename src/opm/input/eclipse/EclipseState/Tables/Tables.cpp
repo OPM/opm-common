@@ -1153,7 +1153,7 @@ const TableColumn& SaltsolTable::getSaltdenColumn() const {
 
 PermfactTable::PermfactTable( const DeckItem& item, const int tableID ) {
     m_schema.addColumn( ColumnSchema( "POROSITYCHANGE" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema.addColumn( ColumnSchema( "PERMEABILIYMULTIPLIER" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "PERMEABILITYMULTIPLIER" , Table::RANDOM , Table::DEFAULT_NONE ));
 
     SimpleTable::init(item, tableID);
 }
