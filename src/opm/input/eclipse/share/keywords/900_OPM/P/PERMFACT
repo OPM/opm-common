@@ -4,8 +4,8 @@
     "PROPS"
   ],
   "size": {
-    "keyword": "EQLDIMS",
-    "item": "NTEQUL"
+    "keyword": "TABDIMS",
+    "item": "NTPVT"
   },
   "items": [
    {
