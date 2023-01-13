@@ -56,6 +56,7 @@
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
