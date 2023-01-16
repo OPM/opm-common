@@ -35,7 +35,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
-#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -64,6 +63,7 @@ struct WellMICPProperties;
 struct WellPolymerProperties;
 class WellSegments;
 class WellTracerProperties;
+class WVFPEXP;
 
 namespace RestartIO {
 struct RstWell;
