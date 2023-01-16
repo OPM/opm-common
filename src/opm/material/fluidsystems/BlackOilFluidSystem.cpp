@@ -131,9 +131,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         }
     }
 
-    // use molarMass of CO2 and Brine as default
-    // when we are using the the CO2STORE option
-    if (eclState.runspec().co2Storage()) {
+    // Use molar mass of H2 and Brine as default in H2STORE keyword
+    if (eclState.runspec().h2Storage()) {
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass();
