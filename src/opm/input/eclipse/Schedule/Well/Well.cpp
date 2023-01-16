@@ -38,6 +38,8 @@
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
+#include <opm/input/eclipse/Units/Units.hpp>
+
 #include <opm/common/utility/shmatch.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
