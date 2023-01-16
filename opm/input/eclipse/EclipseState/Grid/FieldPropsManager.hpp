@@ -31,7 +31,6 @@ class Deck;
 class DeckKeyword;
 namespace Fieldprops {
 class TranCalculator;
-using TranMap = std::unordered_map<std::string, TranCalculator>;
 template<typename T> struct FieldData;
 }
 class FieldProps;
@@ -234,7 +233,7 @@ public:
 
     void apply_numerical_aquifers(const NumericalAquifers& aquifers);
 
-    const Fieldprops::TranMap& getTran() const;
+    const std::unordered_map<std::string,Fieldprops::TranCalculator>& getTran() const;
 
 private:
     /*
