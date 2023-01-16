@@ -22,7 +22,6 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <opm/input/eclipse/EclipseState/Grid/TranCalculator.hpp>
 #include <vector>
 
 namespace Opm {
@@ -31,6 +30,8 @@ class EclipseGrid;
 class Deck;
 class DeckKeyword;
 namespace Fieldprops {
+class TranCalculator;
+using TranMap = std::unordered_map<std::string, TranCalculator>;
 template<typename T> struct FieldData;
 }
 class FieldProps;
