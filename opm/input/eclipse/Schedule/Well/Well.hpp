@@ -59,11 +59,11 @@ class UDQConfig;
 class Valve;
 class TracerConfig;
 class WellConnections;
-class WellBrineProperties;
+struct WellBrineProperties;
 class WellEconProductionLimits;
-class WellFoamProperties;
-class WellMICPProperties;
-class WellPolymerProperties;
+struct WellFoamProperties;
+struct WellMICPProperties;
+struct WellPolymerProperties;
 class WellSegments;
 class WellTracerProperties;
 
