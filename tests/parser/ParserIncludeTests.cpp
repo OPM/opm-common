@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
 #include <iostream>
 
@@ -44,10 +45,10 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     Opm::ParseContext parseContext;
     Opm::ErrorGuard errors;
 
-    parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION );
+    parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::THROW_EXCEPTION );
     BOOST_CHECK_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors) , Opm::OpmInputError);
 
-    parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::IGNORE );
+    parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::IGNORE );
     BOOST_CHECK_NO_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors));
 }
 
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     // have to change the current behavior one not-so-fine day...
     Opm::ParseContext parseContext;
     Opm::ErrorGuard errors;
-    parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION );
+    parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::THROW_EXCEPTION );
 
     BOOST_CHECK_THROW(parser.parseFile(inputFile1Path.string(), parseContext, errors), Opm::OpmInputError);
     BOOST_CHECK_THROW(parser.parseFile(inputFile2Path.string(), parseContext, errors), Opm::OpmInputError);

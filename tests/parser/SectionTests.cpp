@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
@@ -217,7 +218,7 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
 
 BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 
-    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputErrorAction::IGNORE } } };
     Parser parser;
     ErrorGuard errors;
 
@@ -257,7 +258,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
 
     Parser parser;
-    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputErrorAction::IGNORE } } };
     ErrorGuard errors;
 
     const std::string keyword_before_RUNSPEC =

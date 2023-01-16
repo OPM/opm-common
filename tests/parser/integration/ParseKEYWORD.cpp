@@ -34,10 +34,11 @@
 #include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 using namespace Opm;
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE( EQUIL_MISSING_DIMS ) {
     Parser parser;
     ErrorGuard errors;
     ParseContext parseContext;
-    parseContext.update(ParseContext::PARSE_MISSING_DIMS_KEYWORD, InputError::IGNORE);
+    parseContext.update(ParseContext::PARSE_MISSING_DIMS_KEYWORD, InputErrorAction::IGNORE);
     const std::string equil = "EQUIL\n"
         "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /";
     auto deck = parser.parseString(equil, parseContext, errors);

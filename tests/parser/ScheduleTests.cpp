@@ -64,9 +64,10 @@
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -1467,10 +1468,10 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         ParseContext parseContext;
         ErrorGuard errors;
 
-        parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::THROW_EXCEPTION);
+        parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputErrorAction::THROW_EXCEPTION);
         BOOST_CHECK_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors, python), Opm::OpmInputError);
 
-        parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::IGNORE);
+        parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputErrorAction::IGNORE);
         BOOST_CHECK_NO_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors, python));
 }
 

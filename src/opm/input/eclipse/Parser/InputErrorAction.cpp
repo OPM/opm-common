@@ -17,30 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_INPUT_ERROR_ACTION_HPP
-#define OPM_INPUT_ERROR_ACTION_HPP
+#include <config.h>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
-#include <iosfwd>
+#include <ostream>
 
 namespace Opm {
 
-enum class InputErrorAction {
-/*
-  The THROW_EXCEPTION and EXIT1 error handlers are overlapping, the
-  intention os that the EXIT1 handler should be used in situations which
-  are clearly user errors where an exception/traceback is of no use to
-  the developers. The prototype of an error mode which should be handled
-  with EXIT1 is PARSE_MISSING_INCLUDE.
-*/
-    THROW_EXCEPTION = 0,
-    WARN = 1,
-    IGNORE = 2,
-    EXIT1 = 3,
-    DELAYED_EXIT1 = 4
-};
+std::ostream& operator<<(std::ostream& os, const InputErrorAction action)
+{
+    switch (action) {
+    case InputErrorAction::THROW_EXCEPTION: os << "throw exception"; break;
+    case InputErrorAction::WARN: os << "warn"; break;
+    case InputErrorAction::IGNORE: os << "ignore"; break;
+    case InputErrorAction::EXIT1: os << "exit1"; break;
+    case InputErrorAction::DELAYED_EXIT1: os << "delayed exit1"; break;
+    }
 
-std::ostream& operator<<(std::ostream& os, const InputErrorAction action);
-
+    return os;
 }
 
-#endif
+}
