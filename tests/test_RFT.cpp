@@ -30,6 +30,7 @@
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/eclipse/WriteRFT.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>

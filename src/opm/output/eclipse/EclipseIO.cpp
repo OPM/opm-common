@@ -41,6 +41,7 @@
 
 #include <opm/output/eclipse/AggregateAquiferData.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/WriteInit.hpp>
 #include <opm/output/eclipse/WriteRFT.hpp>

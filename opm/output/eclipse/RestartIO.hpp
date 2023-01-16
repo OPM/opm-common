@@ -24,8 +24,6 @@
 #ifndef RESTART_IO_HPP
 #define RESTART_IO_HPP
 
-#include <opm/output/eclipse/RestartValue.hpp>
-
 #include <opm/output/eclipse/AggregateAquiferData.hpp>
 
 #include <optional>
@@ -37,6 +35,8 @@ namespace Opm {
 
     class EclipseGrid;
     class EclipseState;
+    class RestartKey;
+    class RestartValue;
     class Schedule;
     class UDQState;
     class SummaryState;
