@@ -66,7 +66,7 @@ namespace Opm
     class Python;
     class RPTConfig;
     class SCHEDULESection;
-    class SimulatorUpdate;
+    struct SimulatorUpdate;
     class SummaryState;
     class UDQConfig;
     class WellMatcher;
