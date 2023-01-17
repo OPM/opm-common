@@ -27,7 +27,6 @@
 #include <string>
 #include <vector>
 
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/output/data/Cells.hpp>
@@ -40,6 +39,7 @@ namespace Opm { namespace out {
 
 namespace Opm {
 
+class EclipseGrid;
 class EclipseState;
 class RestartKey;
 class RestartValue;
