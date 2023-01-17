@@ -1607,7 +1607,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
                 auto phase = Well::GuideRateTarget::UNDEFINED;
                 if (!record.getItem("PHASE").defaultApplied(0)) {
                     std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
-                    phase = Well::GuideRateTargetFromString(guideRatePhase);
+                    phase = WellGuideRateTargetFromString(guideRatePhase);
                 }
 
                 auto well = this->snapshots.back().wells.get(well_name);

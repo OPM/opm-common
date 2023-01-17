@@ -116,6 +116,9 @@ std::ostream& operator<<(std::ostream& os, const WellProducerCMode& cm);
 
 WellWELTARGCMode WellWELTARGCModeFromString(const std::string& stringValue);
 
+std::string WellGuideRateTarget2String(WellGuideRateTarget enumValue);
+WellGuideRateTarget WellGuideRateTargetFromString(const std::string& stringValue);
+
 }
 
 #endif

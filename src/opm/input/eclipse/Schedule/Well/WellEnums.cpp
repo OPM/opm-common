@@ -204,4 +204,58 @@ WellWELTARGCMode WellWELTARGCModeFromString(const std::string& string_value)
     throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
 }
 
+std::string WellGuideRateTarget2String(WellGuideRateTarget enumValue)
+{
+    switch (enumValue) {
+    case WellGuideRateTarget::OIL:
+        return "OIL";
+    case WellGuideRateTarget::WAT:
+        return "WAT";
+    case WellGuideRateTarget::GAS:
+        return "GAS";
+    case WellGuideRateTarget::LIQ:
+        return "LIQ";
+    case WellGuideRateTarget::COMB:
+        return "COMB";
+    case WellGuideRateTarget::WGA:
+        return "WGA";
+    case WellGuideRateTarget::CVAL:
+        return "CVAL";
+    case WellGuideRateTarget::RAT:
+        return "RAT";
+    case WellGuideRateTarget::RES:
+        return "RES";
+    case WellGuideRateTarget::UNDEFINED:
+        return "UNDEFINED";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+WellGuideRateTarget WellGuideRateTargetFromString(const std::string& stringValue)
+{
+    if (stringValue == "OIL")
+        return WellGuideRateTarget::OIL;
+    else if (stringValue == "WAT")
+        return WellGuideRateTarget::WAT;
+    else if (stringValue == "GAS")
+        return WellGuideRateTarget::GAS;
+    else if (stringValue == "LIQ")
+        return WellGuideRateTarget::LIQ;
+    else if (stringValue == "COMB")
+        return WellGuideRateTarget::COMB;
+    else if (stringValue == "WGA")
+        return WellGuideRateTarget::WGA;
+    else if (stringValue == "CVAL")
+        return WellGuideRateTarget::CVAL;
+    else if (stringValue == "RAT")
+        return WellGuideRateTarget::RAT;
+    else if (stringValue == "RES")
+        return WellGuideRateTarget::RES;
+    else if (stringValue == "UNDEFINED")
+        return WellGuideRateTarget::UNDEFINED;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
 }

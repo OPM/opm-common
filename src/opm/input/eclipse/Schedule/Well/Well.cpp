@@ -1557,59 +1557,6 @@ void Well::setWellTemperature(const double temp) {
     this->well_temperature = temp;
 }
 
-const std::string Well::GuideRateTarget2String( GuideRateTarget enumValue ) {
-    switch( enumValue ) {
-    case GuideRateTarget::OIL:
-        return "OIL";
-    case GuideRateTarget::WAT:
-        return "WAT";
-    case GuideRateTarget::GAS:
-        return "GAS";
-    case GuideRateTarget::LIQ:
-        return "LIQ";
-    case GuideRateTarget::COMB:
-        return "COMB";
-    case GuideRateTarget::WGA:
-        return "WGA";
-    case GuideRateTarget::CVAL:
-        return "CVAL";
-    case GuideRateTarget::RAT:
-        return "RAT";
-    case GuideRateTarget::RES:
-        return "RES";
-    case GuideRateTarget::UNDEFINED:
-        return "UNDEFINED";
-    default:
-        throw std::invalid_argument("unhandled enum value");
-    }
-}
-
-Well::GuideRateTarget Well::GuideRateTargetFromString( const std::string& stringValue ) {
-    if (stringValue == "OIL")
-        return GuideRateTarget::OIL;
-    else if (stringValue == "WAT")
-        return GuideRateTarget::WAT;
-    else if (stringValue == "GAS")
-        return GuideRateTarget::GAS;
-    else if (stringValue == "LIQ")
-        return GuideRateTarget::LIQ;
-    else if (stringValue == "COMB")
-        return GuideRateTarget::COMB;
-    else if (stringValue == "WGA")
-        return GuideRateTarget::WGA;
-    else if (stringValue == "CVAL")
-        return GuideRateTarget::CVAL;
-    else if (stringValue == "RAT")
-        return GuideRateTarget::RAT;
-    else if (stringValue == "RES")
-        return GuideRateTarget::RES;
-    else if (stringValue == "UNDEFINED")
-        return GuideRateTarget::UNDEFINED;
-    else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue );
-}
-
-
 bool Well::cmp_structure(const Well& other) const {
     if ((this->segments && !other.segments) ||
         (!this->segments && other.segments))

@@ -90,8 +90,6 @@ public:
     using WELTARGCMode = WellWELTARGCMode;
 
     using GuideRateTarget = WellGuideRateTarget;
-    static const std::string GuideRateTarget2String(GuideRateTarget enumValue);
-    static GuideRateTarget GuideRateTargetFromString(const std::string& stringValue);
 
     using GasInflowEquation = WellGasInflowEquation;
     static const std::string GasInflowEquation2String(GasInflowEquation enumValue);
