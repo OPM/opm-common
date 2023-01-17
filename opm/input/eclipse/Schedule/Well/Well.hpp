@@ -35,6 +35,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -68,110 +69,40 @@ namespace RestartIO {
 struct RstWell;
 }
 
-
 class Well {
 public:
-
-    enum class Status {
-        OPEN = 1,
-        STOP = 2,
-        SHUT = 3,
-        AUTO = 4
-    };
+    using Status = WellStatus;
     static std::string Status2String(Status enumValue);
     static Status StatusFromString(const std::string& stringValue);
-
-
 
     /*
       The elements in this enum are used as bitmasks to keep track
       of which controls are present, i.e. the 2^n structure must
       be intact.
     */
-    enum class InjectorCMode : int{
-        RATE =  1 ,
-        RESV =  2 ,
-        BHP  =  4 ,
-        THP  =  8 ,
-        GRUP = 16 ,
-        CMODE_UNDEFINED = 512
-    };
-    static const std::string InjectorCMode2String( InjectorCMode enumValue );
-    static InjectorCMode InjectorCModeFromString( const std::string& stringValue );
-
+    using InjectorCMode = WellInjectorCMode;
+    static const std::string InjectorCMode2String(InjectorCMode enumValue);
+    static InjectorCMode InjectorCModeFromString(const std::string& stringValue);
 
     /*
-      The items BHP, THP and GRUP only apply in prediction mode:
-      WCONPROD. The elements in this enum are used as bitmasks to
-      keep track of which controls are present, i.e. the 2^n
-      structure must be intact.The NONE item is only used in WHISTCTL
-      to cancel its effect.
-
       The properties are initialized with the CMODE_UNDEFINED
       value, but the undefined value is never assigned apart from
       that; and it is not part of the string conversion routines.
     */
-    enum class ProducerCMode : int {
-        NONE =     0,
-        ORAT =     1,
-        WRAT =     2,
-        GRAT =     4,
-        LRAT =     8,
-        CRAT =    16,
-        RESV =    32,
-        BHP  =    64,
-        THP  =   128,
-        GRUP =   256,
-        CMODE_UNDEFINED = 1024
-    };
-    static const std::string ProducerCMode2String( ProducerCMode enumValue );
-    static ProducerCMode ProducerCModeFromString( const std::string& stringValue );
+    using ProducerCMode = WellProducerCMode;
+    static const std::string ProducerCMode2String(ProducerCMode enumValue);
+    static ProducerCMode ProducerCModeFromString(const std::string& stringValue);
 
-
-
-    enum class WELTARGCMode {
-        ORAT =  1,
-        WRAT =  2,
-        GRAT =  3,
-        LRAT =  4,
-        CRAT =  5,   // Not supported
-        RESV =  6,
-        BHP  =  7,
-        THP  =  8,
-        VFP  =  9,
-        LIFT = 10,   // Not supported
-        GUID = 11
-    };
-
+    using WELTARGCMode = WellWELTARGCMode;
     static WELTARGCMode WELTARGCModeFromString(const std::string& stringValue);
 
+    using GuideRateTarget = WellGuideRateTarget;
+    static const std::string GuideRateTarget2String(GuideRateTarget enumValue);
+    static GuideRateTarget GuideRateTargetFromString(const std::string& stringValue);
 
-    enum class GuideRateTarget {
-        OIL = 0,
-        WAT = 1,
-        GAS = 2,
-        LIQ = 3,
-        COMB = 4,
-        WGA = 5,
-        CVAL = 6,
-        RAT = 7,
-        RES = 8,
-        UNDEFINED = 9
-    };
-    static const std::string GuideRateTarget2String( GuideRateTarget enumValue );
-    static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
-
-
-    enum class GasInflowEquation {
-        STD = 0,
-        R_G = 1,
-        P_P = 2,
-        GPP = 3
-    };
+    using GasInflowEquation = WellGasInflowEquation;
     static const std::string GasInflowEquation2String(GasInflowEquation enumValue);
     static GasInflowEquation GasInflowEquationFromString(const std::string& stringValue);
-
-
 
     struct WellGuideRate {
         bool available;
