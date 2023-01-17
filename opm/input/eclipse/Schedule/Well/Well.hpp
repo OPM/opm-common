@@ -86,8 +86,6 @@ public:
       that; and it is not part of the string conversion routines.
     */
     using ProducerCMode = WellProducerCMode;
-    static const std::string ProducerCMode2String(ProducerCMode enumValue);
-    static ProducerCMode ProducerCModeFromString(const std::string& stringValue);
 
     using WELTARGCMode = WellWELTARGCMode;
     static WELTARGCMode WELTARGCModeFromString(const std::string& stringValue);
@@ -660,8 +658,6 @@ private:
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
 std::ostream& operator<<( std::ostream&, const Well::WellProductionProperties& );
-
-std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm);
 
 }
 #endif

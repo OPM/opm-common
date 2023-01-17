@@ -1594,66 +1594,6 @@ Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value)
     throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
 }
 
-
-std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm) {
-    if (cm == Well::ProducerCMode::CMODE_UNDEFINED)
-        os << "UNDEFINED";
-    else
-        os << Well::ProducerCMode2String(cm);
-    return os;
-}
-
-const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
-    switch( enumValue ) {
-    case ProducerCMode::ORAT:
-        return "ORAT";
-    case ProducerCMode::WRAT:
-        return "WRAT";
-    case ProducerCMode::GRAT:
-        return "GRAT";
-    case ProducerCMode::LRAT:
-        return "LRAT";
-    case ProducerCMode::CRAT:
-        return "CRAT";
-    case ProducerCMode::RESV:
-        return "RESV";
-    case ProducerCMode::BHP:
-        return "BHP";
-    case ProducerCMode::THP:
-        return "THP";
-    case ProducerCMode::GRUP:
-        return "GRUP";
-    default:
-        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in ProducerCMode2String");
-    }
-}
-
-Well::ProducerCMode Well::ProducerCModeFromString( const std::string& stringValue ) {
-    if (stringValue == "ORAT")
-        return ProducerCMode::ORAT;
-    else if (stringValue == "WRAT")
-        return ProducerCMode::WRAT;
-    else if (stringValue == "GRAT")
-        return ProducerCMode::GRAT;
-    else if (stringValue == "LRAT")
-        return ProducerCMode::LRAT;
-    else if (stringValue == "CRAT")
-        return ProducerCMode::CRAT;
-    else if (stringValue == "RESV")
-        return ProducerCMode::RESV;
-    else if (stringValue == "BHP")
-        return ProducerCMode::BHP;
-    else if (stringValue == "THP")
-        return ProducerCMode::THP;
-    else if (stringValue == "GRUP")
-        return ProducerCMode::GRUP;
-    else if (stringValue == "NONE")
-        return ProducerCMode::NONE;
-    else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue );
-}
-
-
 const std::string Well::GuideRateTarget2String( GuideRateTarget enumValue ) {
     switch( enumValue ) {
     case GuideRateTarget::OIL:

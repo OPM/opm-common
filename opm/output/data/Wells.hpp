@@ -523,7 +523,7 @@ namespace Opm {
             if (this->prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED)
                 json_data.add_item("prod", "CMODE_UNDEFINED");
             else
-                json_data.add_item("prod", ::Opm::Well::ProducerCMode2String(this->prod));
+                json_data.add_item("prod", ::Opm::WellProducerCMode2String(this->prod));
         }
 
         template <class MessageBufferType>

@@ -1624,7 +1624,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
     void Schedule::handleWHISTCTL(HandlerContext& handlerContext) {
         const auto& record = handlerContext.keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const auto controlMode = Well::ProducerCModeFromString( cmodeString );
+        const auto controlMode = WellProducerCModeFromString(cmodeString);
 
         if (controlMode != Well::ProducerCMode::NONE) {
             if (!Well::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {

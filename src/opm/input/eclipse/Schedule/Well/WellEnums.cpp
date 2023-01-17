@@ -76,8 +76,8 @@ std::string WellInjectorCMode2String(WellInjectorCMode enumValue)
         return "GRUP";
     default:
         throw std::invalid_argument("Unhandled enum value: " +
-                                    std::to_string(static_cast<int>(enumValue))
-                                    + " in WellInjectorCMode2String");
+                                    std::to_string(static_cast<int>(enumValue)) +
+                                    " in WellInjectorCMode2String");
     }
 }
 
@@ -100,6 +100,69 @@ WellInjectorCMode WellInjectorCModeFromString(const std::string &stringValue)
 std::ostream& operator<<(std::ostream& os, const WellInjectorCMode& cm)
 {
     os << WellInjectorCMode2String(cm);
+    return os;
+}
+
+std::string WellProducerCMode2String(WellProducerCMode enumValue)
+{
+    switch (enumValue) {
+    case WellProducerCMode::ORAT:
+        return "ORAT";
+    case WellProducerCMode::WRAT:
+        return "WRAT";
+    case WellProducerCMode::GRAT:
+        return "GRAT";
+    case WellProducerCMode::LRAT:
+        return "LRAT";
+    case WellProducerCMode::CRAT:
+        return "CRAT";
+    case WellProducerCMode::RESV:
+        return "RESV";
+    case WellProducerCMode::BHP:
+        return "BHP";
+    case WellProducerCMode::THP:
+        return "THP";
+    case WellProducerCMode::GRUP:
+        return "GRUP";
+    default:
+        throw std::invalid_argument("Unhandled enum value: " +
+                                    std::to_string(static_cast<int>(enumValue)) +
+                                    " in ProducerCMode2String");
+    }
+}
+
+WellProducerCMode WellProducerCModeFromString(const std::string& stringValue)
+{
+    if (stringValue == "ORAT")
+        return WellProducerCMode::ORAT;
+    else if (stringValue == "WRAT")
+        return WellProducerCMode::WRAT;
+    else if (stringValue == "GRAT")
+        return WellProducerCMode::GRAT;
+    else if (stringValue == "LRAT")
+        return WellProducerCMode::LRAT;
+    else if (stringValue == "CRAT")
+        return WellProducerCMode::CRAT;
+    else if (stringValue == "RESV")
+        return WellProducerCMode::RESV;
+    else if (stringValue == "BHP")
+        return WellProducerCMode::BHP;
+    else if (stringValue == "THP")
+        return WellProducerCMode::THP;
+    else if (stringValue == "GRUP")
+        return WellProducerCMode::GRUP;
+    else if (stringValue == "NONE")
+        return WellProducerCMode::NONE;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue);
+}
+
+std::ostream& operator<<(std::ostream& os, const WellProducerCMode& cm)
+{
+    if (cm == WellProducerCMode::CMODE_UNDEFINED)
+        os << "UNDEFINED";
+    else
+        os << WellProducerCMode2String(cm);
     return os;
 }
 

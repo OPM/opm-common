@@ -133,7 +133,7 @@ namespace Opm {
         if (effectiveHistoryProductionControl(this->whistctl_cmode) )
             cmode = this->whistctl_cmode;
         else
-            cmode = ProducerCModeFromString( cmodeItem.getTrimmedString( 0 ) );
+            cmode = WellProducerCModeFromString(cmodeItem.getTrimmedString(0));
 
         // clearing the existing targets/limits
         clearControls();
@@ -159,7 +159,7 @@ namespace Opm {
 
 
 
-void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const std::string& /* well */, const DeckRecord& record)
+    void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const std::string& /* well */, const DeckRecord& record)
     {
         this->predictionMode = true;
         this->init_vfp(alq_type, unit_system_arg, record);
@@ -193,7 +193,7 @@ void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdT
         {
             const auto& cmodeItem = record.getItem("CMODE");
             if (cmodeItem.hasValue(0)) {
-                auto cmode = Well::ProducerCModeFromString( cmodeItem.getTrimmedString(0) );
+                auto cmode = WellProducerCModeFromString(cmodeItem.getTrimmedString(0));
 
                 if (this->hasProductionControl( cmode ))
                     this->controlMode = cmode;
@@ -345,7 +345,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
             << "THPH: "         << wp.THPH              << ", "
             << "VFP table: "    << wp.VFPTableNumber    << ", "
             << "ALQ: "          << wp.ALQValue          << ", "
-            << "WHISTCTL: "     << Well::ProducerCMode2String(wp.whistctl_cmode)    << ", "
+            << "WHISTCTL: "     << WellProducerCMode2String(wp.whistctl_cmode)    << ", "
             << "prediction: "   << wp.predictionMode    << " }";
     }
 

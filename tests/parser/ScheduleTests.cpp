@@ -3002,53 +3002,53 @@ BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(ProducerCOntrolMopdeEnum2String) {
-    BOOST_CHECK_EQUAL( "ORAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::ORAT));
-    BOOST_CHECK_EQUAL( "WRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::WRAT));
-    BOOST_CHECK_EQUAL( "GRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::GRAT));
-    BOOST_CHECK_EQUAL( "LRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::LRAT));
-    BOOST_CHECK_EQUAL( "CRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::CRAT));
-    BOOST_CHECK_EQUAL( "RESV"  ,  Well::ProducerCMode2String(Well::ProducerCMode::RESV));
-    BOOST_CHECK_EQUAL( "BHP"   ,  Well::ProducerCMode2String(Well::ProducerCMode::BHP));
-    BOOST_CHECK_EQUAL( "THP"   ,  Well::ProducerCMode2String(Well::ProducerCMode::THP));
-    BOOST_CHECK_EQUAL( "GRUP"  ,  Well::ProducerCMode2String(Well::ProducerCMode::GRUP));
+    BOOST_CHECK_EQUAL( "ORAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::ORAT));
+    BOOST_CHECK_EQUAL( "WRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::WRAT));
+    BOOST_CHECK_EQUAL( "GRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::GRAT));
+    BOOST_CHECK_EQUAL( "LRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::LRAT));
+    BOOST_CHECK_EQUAL( "CRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::CRAT));
+    BOOST_CHECK_EQUAL( "RESV"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::RESV));
+    BOOST_CHECK_EQUAL( "BHP"   ,  Opm::WellProducerCMode2String(Well::ProducerCMode::BHP));
+    BOOST_CHECK_EQUAL( "THP"   ,  Opm::WellProducerCMode2String(Well::ProducerCMode::THP));
+    BOOST_CHECK_EQUAL( "GRUP"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::GRUP));
 }
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumFromString) {
-    BOOST_CHECK_THROW( Well::ProducerCModeFromString("XRAT") , std::invalid_argument );
-    BOOST_CHECK( Well::ProducerCMode::ORAT   == Well::ProducerCModeFromString("ORAT"));
-    BOOST_CHECK( Well::ProducerCMode::WRAT   == Well::ProducerCModeFromString("WRAT"));
-    BOOST_CHECK( Well::ProducerCMode::GRAT   == Well::ProducerCModeFromString("GRAT"));
-    BOOST_CHECK( Well::ProducerCMode::LRAT   == Well::ProducerCModeFromString("LRAT"));
-    BOOST_CHECK( Well::ProducerCMode::CRAT   == Well::ProducerCModeFromString("CRAT"));
-    BOOST_CHECK( Well::ProducerCMode::RESV   == Well::ProducerCModeFromString("RESV"));
-    BOOST_CHECK( Well::ProducerCMode::BHP    == Well::ProducerCModeFromString("BHP" ));
-    BOOST_CHECK( Well::ProducerCMode::THP    == Well::ProducerCModeFromString("THP" ));
-    BOOST_CHECK( Well::ProducerCMode::GRUP   == Well::ProducerCModeFromString("GRUP"));
+    BOOST_CHECK_THROW( Opm::WellProducerCModeFromString("XRAT") , std::invalid_argument );
+    BOOST_CHECK( Well::ProducerCMode::ORAT   == Opm::WellProducerCModeFromString("ORAT"));
+    BOOST_CHECK( Well::ProducerCMode::WRAT   == Opm::WellProducerCModeFromString("WRAT"));
+    BOOST_CHECK( Well::ProducerCMode::GRAT   == Opm::WellProducerCModeFromString("GRAT"));
+    BOOST_CHECK( Well::ProducerCMode::LRAT   == Opm::WellProducerCModeFromString("LRAT"));
+    BOOST_CHECK( Well::ProducerCMode::CRAT   == Opm::WellProducerCModeFromString("CRAT"));
+    BOOST_CHECK( Well::ProducerCMode::RESV   == Opm::WellProducerCModeFromString("RESV"));
+    BOOST_CHECK( Well::ProducerCMode::BHP    == Opm::WellProducerCModeFromString("BHP" ));
+    BOOST_CHECK( Well::ProducerCMode::THP    == Opm::WellProducerCModeFromString("THP" ));
+    BOOST_CHECK( Well::ProducerCMode::GRUP   == Opm::WellProducerCModeFromString("GRUP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumLoop) {
-    BOOST_CHECK( Well::ProducerCMode::ORAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::ORAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::WRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::WRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::GRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::GRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::LRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::LRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::CRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::CRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::RESV == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::RESV ) ));
-    BOOST_CHECK( Well::ProducerCMode::BHP  == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::BHP  ) ));
-    BOOST_CHECK( Well::ProducerCMode::THP  == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::THP  ) ));
-    BOOST_CHECK( Well::ProducerCMode::GRUP == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::GRUP ) ));
+    BOOST_CHECK( Well::ProducerCMode::ORAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::ORAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::WRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::WRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::GRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::GRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::LRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::LRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::CRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::CRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::RESV == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::RESV ) ));
+    BOOST_CHECK( Well::ProducerCMode::BHP  == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::BHP  ) ));
+    BOOST_CHECK( Well::ProducerCMode::THP  == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::THP  ) ));
+    BOOST_CHECK( Well::ProducerCMode::GRUP == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::GRUP ) ));
 
-    BOOST_CHECK_EQUAL( "ORAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "ORAT"  ) ));
-    BOOST_CHECK_EQUAL( "WRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "WRAT"  ) ));
-    BOOST_CHECK_EQUAL( "GRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "GRAT"  ) ));
-    BOOST_CHECK_EQUAL( "LRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "LRAT"  ) ));
-    BOOST_CHECK_EQUAL( "CRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "CRAT"  ) ));
-    BOOST_CHECK_EQUAL( "RESV"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "RESV"  ) ));
-    BOOST_CHECK_EQUAL( "BHP"       , Well::ProducerCMode2String(Well::ProducerCModeFromString( "BHP"   ) ));
-    BOOST_CHECK_EQUAL( "THP"       , Well::ProducerCMode2String(Well::ProducerCModeFromString( "THP"   ) ));
-    BOOST_CHECK_EQUAL( "GRUP"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "GRUP"  ) ));
+    BOOST_CHECK_EQUAL( "ORAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "ORAT"  ) ));
+    BOOST_CHECK_EQUAL( "WRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "WRAT"  ) ));
+    BOOST_CHECK_EQUAL( "GRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "GRAT"  ) ));
+    BOOST_CHECK_EQUAL( "LRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "LRAT"  ) ));
+    BOOST_CHECK_EQUAL( "CRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "CRAT"  ) ));
+    BOOST_CHECK_EQUAL( "RESV"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "RESV"  ) ));
+    BOOST_CHECK_EQUAL( "BHP"       , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "BHP"   ) ));
+    BOOST_CHECK_EQUAL( "THP"       , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "THP"   ) ));
+    BOOST_CHECK_EQUAL( "GRUP"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "GRUP"  ) ));
 }
 
 /*******************************************************************/

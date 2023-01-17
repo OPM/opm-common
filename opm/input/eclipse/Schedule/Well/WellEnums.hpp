@@ -110,6 +110,10 @@ std::string WellInjectorCMode2String(WellInjectorCMode enumValue);
 WellInjectorCMode WellInjectorCModeFromString(const std::string& stringValue);
 std::ostream& operator<<(std::ostream& os, const WellInjectorCMode& cm);
 
+std::string WellProducerCMode2String(WellProducerCMode enumValue);
+WellProducerCMode WellProducerCModeFromString(const std::string& stringValue);
+std::ostream& operator<<(std::ostream& os, const WellProducerCMode& cm);
+
 }
 
 #endif
