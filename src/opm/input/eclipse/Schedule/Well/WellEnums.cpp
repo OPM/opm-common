@@ -258,4 +258,37 @@ WellGuideRateTarget WellGuideRateTargetFromString(const std::string& stringValue
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+std::string WellGasInflowEquation2String(WellGasInflowEquation enumValue)
+{
+    switch (enumValue) {
+    case WellGasInflowEquation::STD:
+        return "STD";
+    case WellGasInflowEquation::R_G:
+        return "R-G";
+    case WellGasInflowEquation::P_P:
+        return "P-P";
+    case WellGasInflowEquation::GPP:
+        return "GPP";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+WellGasInflowEquation WellGasInflowEquationFromString(const std::string& stringValue)
+{
+    if (stringValue == "STD" || stringValue == "NO")
+        return WellGasInflowEquation::STD;
+
+    if (stringValue == "R-G" || stringValue == "YES")
+        return WellGasInflowEquation::R_G;
+
+    if (stringValue == "P-P")
+        return WellGasInflowEquation::P_P;
+
+    if (stringValue == "GPP")
+        return WellGasInflowEquation::GPP;
+
+    throw std::invalid_argument("Gas inflow equation type: " + stringValue + " not recognized");
+}
+
 }

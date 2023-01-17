@@ -92,8 +92,6 @@ public:
     using GuideRateTarget = WellGuideRateTarget;
 
     using GasInflowEquation = WellGasInflowEquation;
-    static const std::string GasInflowEquation2String(GasInflowEquation enumValue);
-    static GasInflowEquation GasInflowEquationFromString(const std::string& stringValue);
 
     struct WellGuideRate {
         bool available;

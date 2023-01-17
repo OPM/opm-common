@@ -1357,38 +1357,6 @@ Well::GasInflowEquation Well::gas_inflow_equation() const {
     return this->gas_inflow;
 }
 
-const std::string Well::GasInflowEquation2String(GasInflowEquation enumValue) {
-    switch(enumValue) {
-    case GasInflowEquation::STD:
-        return "STD";
-    case GasInflowEquation::R_G:
-        return "R-G";
-    case GasInflowEquation::P_P:
-        return "P-P";
-    case GasInflowEquation::GPP:
-        return "GPP";
-    default:
-        throw std::invalid_argument("Unhandled enum value");
-    }
-}
-
-Well::GasInflowEquation Well::GasInflowEquationFromString(const std::string& stringValue) {
-    if (stringValue == "STD" || stringValue == "NO")
-        return GasInflowEquation::STD;
-
-    if (stringValue == "R-G" || stringValue == "YES")
-        return GasInflowEquation::R_G;
-
-    if (stringValue == "P-P")
-        return GasInflowEquation::P_P;
-
-    if (stringValue == "GPP")
-        return GasInflowEquation::GPP;
-
-    throw std::invalid_argument("Gas inflow equation type: " + stringValue + " not recognized");
-}
-
-
 bool Well::canOpen() const {
     if (this->allow_cross_flow)
         return true;

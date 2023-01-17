@@ -350,7 +350,7 @@ namespace {
         }
 
         std::string gas_inflow(const context&, std::size_t, std::size_t) const {
-            return Opm::Well::GasInflowEquation2String( well.gas_inflow_equation() );
+            return Opm::WellGasInflowEquation2String(well.gas_inflow_equation());
         }
     };
 

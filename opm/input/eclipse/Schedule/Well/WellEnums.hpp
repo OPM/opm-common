@@ -119,6 +119,9 @@ WellWELTARGCMode WellWELTARGCModeFromString(const std::string& stringValue);
 std::string WellGuideRateTarget2String(WellGuideRateTarget enumValue);
 WellGuideRateTarget WellGuideRateTargetFromString(const std::string& stringValue);
 
+std::string WellGasInflowEquation2String(WellGasInflowEquation enumValue);
+WellGasInflowEquation WellGasInflowEquationFromString(const std::string& stringValue);
+
 }
 
 #endif
