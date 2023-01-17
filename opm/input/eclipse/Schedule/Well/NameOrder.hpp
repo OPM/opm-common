@@ -19,35 +19,34 @@
 #ifndef WELL_ORDER_HPP
 #define WELL_ORDER_HPP
 
+#include <cstddef>
 #include <initializer_list>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <optional>
 
 namespace Opm {
 
-/*
-  The purpose of this small class is to ensure that well and group name always
-  come in the order they are defined in the deck.
-*/
+// The purpose of this small class is to ensure that well and group name
+// always come in the order they are defined in the deck.
 
-
-using Map = std::unordered_map<std::string, std::size_t>;
-
-class NameOrder {
+class NameOrder
+{
 public:
     NameOrder() = default;
     explicit NameOrder(std::initializer_list<std::string> names);
     explicit NameOrder(const std::vector<std::string>& names);
+
     void add(const std::string& name);
     std::vector<std::string> sort(std::vector<std::string> names) const;
     const std::vector<std::string>& names() const;
     bool has(const std::string& wname) const;
     std::size_t size() const;
 
-    template<class Serializer>
-    void serializeOp(Serializer& serializer) {
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
         serializer(m_index_map);
         serializer(m_name_list);
     }
@@ -60,25 +59,28 @@ public:
     std::vector<std::string>::const_iterator end() const;
 
 private:
-    Map m_index_map;
+    std::unordered_map<std::string, std::size_t> m_index_map;
     std::vector<std::string> m_name_list;
 };
 
-
-class GroupOrder {
+class GroupOrder
+{
 public:
     GroupOrder() = default;
     explicit GroupOrder(std::size_t max_groups);
+
     void add(const std::string& name);
     const std::vector<std::string>& names() const;
     bool has(const std::string& wname) const;
     std::vector<std::optional<std::string>> restart_groups() const;
 
-    template<class Serializer>
-    void serializeOp(Serializer& serializer) {
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
         serializer(m_name_list);
         serializer(m_max_groups);
     }
+
     static GroupOrder serializationTestObject();
 
     bool operator==(const GroupOrder& other) const;
@@ -88,11 +90,8 @@ public:
 private:
     std::vector<std::string> m_name_list;
     std::size_t m_max_groups;
-
 };
 
+} // namespace Opm
 
-
-
-}
-#endif
+#endif  // WELL_ORDER_HPP
