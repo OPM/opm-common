@@ -1557,43 +1557,6 @@ void Well::setWellTemperature(const double temp) {
     this->well_temperature = temp;
 }
 
-Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value) {
-    if (string_value == "ORAT")
-        return WELTARGCMode::ORAT;
-
-    if (string_value == "WRAT")
-        return WELTARGCMode::WRAT;
-
-    if (string_value == "GRAT")
-        return WELTARGCMode::GRAT;
-
-    if (string_value == "LRAT")
-        return WELTARGCMode::LRAT;
-
-    if (string_value == "CRAT")
-        return WELTARGCMode::CRAT;
-
-    if (string_value == "RESV")
-        return WELTARGCMode::RESV;
-
-    if (string_value == "BHP")
-        return WELTARGCMode::BHP;
-
-    if (string_value == "THP")
-        return WELTARGCMode::THP;
-
-    if (string_value == "VFP")
-        return WELTARGCMode::VFP;
-
-    if (string_value == "LIFT")
-        return WELTARGCMode::LIFT;
-
-    if (string_value == "GUID")
-        return WELTARGCMode::GUID;
-
-    throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
-}
-
 const std::string Well::GuideRateTarget2String( GuideRateTarget enumValue ) {
     switch( enumValue ) {
     case GuideRateTarget::OIL:

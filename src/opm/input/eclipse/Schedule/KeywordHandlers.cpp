@@ -1533,7 +1533,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             if (well_names.empty())
                 this->invalidNamePattern( wellNamePattern, handlerContext);
 
-            const auto cmode = Well::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
+            const auto cmode = WellWELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             const auto new_arg = record.getItem("NEW_VALUE").get<UDAValue>(0);
 
             for (const auto& well_name : well_names) {
@@ -2205,7 +2205,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
                 throw OpmInputError(reason, handlerContext.keyword.location());
             }
 
-            const auto cmode = Well::WELTARGCModeFromString(control);
+            const auto cmode = WellWELTARGCModeFromString(control);
             if (cmode == Well::WELTARGCMode::GUID)
                 throw std::logic_error("Multiplying guide rate is not implemented");
 

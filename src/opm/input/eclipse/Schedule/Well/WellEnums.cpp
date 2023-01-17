@@ -166,4 +166,42 @@ std::ostream& operator<<(std::ostream& os, const WellProducerCMode& cm)
     return os;
 }
 
+WellWELTARGCMode WellWELTARGCModeFromString(const std::string& string_value)
+{
+    if (string_value == "ORAT")
+        return WellWELTARGCMode::ORAT;
+
+    if (string_value == "WRAT")
+        return WellWELTARGCMode::WRAT;
+
+    if (string_value == "GRAT")
+        return WellWELTARGCMode::GRAT;
+
+    if (string_value == "LRAT")
+        return WellWELTARGCMode::LRAT;
+
+    if (string_value == "CRAT")
+        return WellWELTARGCMode::CRAT;
+
+    if (string_value == "RESV")
+        return WellWELTARGCMode::RESV;
+
+    if (string_value == "BHP")
+        return WellWELTARGCMode::BHP;
+
+    if (string_value == "THP")
+        return WellWELTARGCMode::THP;
+
+    if (string_value == "VFP")
+        return WellWELTARGCMode::VFP;
+
+    if (string_value == "LIFT")
+        return WellWELTARGCMode::LIFT;
+
+    if (string_value == "GUID")
+        return WellWELTARGCMode::GUID;
+
+    throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
+}
+
 }

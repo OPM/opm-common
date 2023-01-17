@@ -114,6 +114,8 @@ std::string WellProducerCMode2String(WellProducerCMode enumValue);
 WellProducerCMode WellProducerCModeFromString(const std::string& stringValue);
 std::ostream& operator<<(std::ostream& os, const WellProducerCMode& cm);
 
+WellWELTARGCMode WellWELTARGCModeFromString(const std::string& stringValue);
+
 }
 
 #endif

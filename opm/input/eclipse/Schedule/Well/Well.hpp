@@ -88,7 +88,6 @@ public:
     using ProducerCMode = WellProducerCMode;
 
     using WELTARGCMode = WellWELTARGCMode;
-    static WELTARGCMode WELTARGCModeFromString(const std::string& stringValue);
 
     using GuideRateTarget = WellGuideRateTarget;
     static const std::string GuideRateTarget2String(GuideRateTarget enumValue);
