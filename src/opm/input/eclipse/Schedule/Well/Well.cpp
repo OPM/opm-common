@@ -404,7 +404,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
                 throw std::invalid_argument {
                     fmt::format("Unsupported control mode '{}' for "
                                 "history controlled injection well '{}'",
-                                Well::InjectorCMode2String(active_control), this->name())
+                                WellInjectorCMode2String(active_control), this->name())
                 };
             }
         }
@@ -1555,44 +1555,6 @@ double Well::temperature() const {
 }
 void Well::setWellTemperature(const double temp) {
     this->well_temperature = temp;
-}
-
-const std::string Well::InjectorCMode2String( InjectorCMode enumValue ) {
-    switch( enumValue ) {
-    case InjectorCMode::RESV:
-        return "RESV";
-    case InjectorCMode::RATE:
-        return "RATE";
-    case InjectorCMode::BHP:
-        return "BHP";
-    case InjectorCMode::THP:
-        return "THP";
-    case InjectorCMode::GRUP:
-        return "GRUP";
-    default:
-        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in InjectorCMode2String");
-    }
-}
-
-
-Well::InjectorCMode Well::InjectorCModeFromString(const std::string &stringValue) {
-    if (stringValue == "RATE")
-        return InjectorCMode::RATE;
-    else if (stringValue == "RESV")
-        return InjectorCMode::RESV;
-    else if (stringValue == "BHP")
-        return InjectorCMode::BHP;
-    else if (stringValue == "THP")
-        return InjectorCMode::THP;
-    else if (stringValue == "GRUP")
-        return InjectorCMode::GRUP;
-    else
-        throw std::invalid_argument("Unknown control mode string: " + stringValue);
-}
-
-std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm) {
-    os << Well::InjectorCMode2String(cm);
-    return os;
 }
 
 Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value) {

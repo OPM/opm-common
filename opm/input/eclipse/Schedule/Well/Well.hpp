@@ -79,8 +79,6 @@ public:
       be intact.
     */
     using InjectorCMode = WellInjectorCMode;
-    static const std::string InjectorCMode2String(InjectorCMode enumValue);
-    static InjectorCMode InjectorCModeFromString(const std::string& stringValue);
 
     /*
       The properties are initialized with the CMODE_UNDEFINED
@@ -664,7 +662,6 @@ std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
 std::ostream& operator<<( std::ostream&, const Well::WellProductionProperties& );
 
 std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm);
-std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm);
 
 }
 #endif

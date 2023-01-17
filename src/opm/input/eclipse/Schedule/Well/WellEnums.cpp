@@ -27,7 +27,7 @@ namespace Opm {
 
 std::string WellStatus2String(WellStatus enumValue)
 {
-    switch(enumValue) {
+    switch (enumValue) {
     case WellStatus::OPEN:
         return "OPEN";
     case WellStatus::SHUT:
@@ -58,6 +58,48 @@ WellStatus WellStatusFromString(const std::string& stringValue)
 std::ostream& operator<<(std::ostream& os, const WellStatus& st)
 {
     os << WellStatus2String(st);
+    return os;
+}
+
+std::string WellInjectorCMode2String(WellInjectorCMode enumValue)
+{
+    switch (enumValue) {
+    case WellInjectorCMode::RESV:
+        return "RESV";
+    case WellInjectorCMode::RATE:
+        return "RATE";
+    case WellInjectorCMode::BHP:
+        return "BHP";
+    case WellInjectorCMode::THP:
+        return "THP";
+    case WellInjectorCMode::GRUP:
+        return "GRUP";
+    default:
+        throw std::invalid_argument("Unhandled enum value: " +
+                                    std::to_string(static_cast<int>(enumValue))
+                                    + " in WellInjectorCMode2String");
+    }
+}
+
+WellInjectorCMode WellInjectorCModeFromString(const std::string &stringValue)
+{
+    if (stringValue == "RATE")
+        return WellInjectorCMode::RATE;
+    else if (stringValue == "RESV")
+        return WellInjectorCMode::RESV;
+    else if (stringValue == "BHP")
+        return WellInjectorCMode::BHP;
+    else if (stringValue == "THP")
+        return WellInjectorCMode::THP;
+    else if (stringValue == "GRUP")
+        return WellInjectorCMode::GRUP;
+    else
+        throw std::invalid_argument("Unknown control mode string: " + stringValue);
+}
+
+std::ostream& operator<<(std::ostream& os, const WellInjectorCMode& cm)
+{
+    os << WellInjectorCMode2String(cm);
     return os;
 }
 

@@ -518,7 +518,7 @@ namespace Opm {
             if (this->inj == ::Opm::Well::InjectorCMode::CMODE_UNDEFINED)
                 json_data.add_item("inj", "CMODE_UNDEFINED");
             else
-                json_data.add_item("inj", ::Opm::Well::InjectorCMode2String(this->inj));
+                json_data.add_item("inj", ::Opm::WellInjectorCMode2String(this->inj));
 
             if (this->prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED)
                 json_data.add_item("prod", "CMODE_UNDEFINED");
