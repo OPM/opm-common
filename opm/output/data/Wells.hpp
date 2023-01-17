@@ -987,7 +987,7 @@ namespace Opm {
         buffer.write(this->control);
 
         {
-            const auto status = ::Opm::Well::Status2String(this->dynamicStatus);
+            const auto status = ::Opm::WellStatus2String(this->dynamicStatus);
             buffer.write(status);
         }
 
@@ -1093,7 +1093,7 @@ namespace Opm {
         {
             auto status = std::string{};
             buffer.read(status);
-            this->dynamicStatus = ::Opm::Well::StatusFromString(status);
+            this->dynamicStatus = ::Opm::WellStatusFromString(status);
         }
 
         // Connection information
@@ -1139,7 +1139,7 @@ namespace Opm {
         json_data.add_item("bhp", this->bhp);
         json_data.add_item("thp", this->thp);
         json_data.add_item("temperature", this->temperature);
-        json_data.add_item("status", ::Opm::Well::Status2String(this->dynamicStatus));
+        json_data.add_item("status", ::Opm::WellStatus2String(this->dynamicStatus));
 
         auto json_control = json_data.add_object("control");
         this->current_control.init_json(json_control);

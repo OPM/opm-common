@@ -1557,43 +1557,6 @@ void Well::setWellTemperature(const double temp) {
     this->well_temperature = temp;
 }
 
-std::ostream& operator<<(std::ostream& os, const Well::Status& st) {
-    os << Well::Status2String(st);
-    return os;
-}
-
-std::string Well::Status2String(Well::Status enumValue) {
-    switch( enumValue ) {
-    case Status::OPEN:
-        return "OPEN";
-    case Status::SHUT:
-        return "SHUT";
-    case Status::AUTO:
-        return "AUTO";
-    case Status::STOP:
-        return "STOP";
-    default:
-        throw std::invalid_argument("unhandled enum value");
-    }
-}
-
-
-Well::Status Well::StatusFromString(const std::string& stringValue) {
-    if (stringValue == "OPEN")
-        return Status::OPEN;
-    else if (stringValue == "SHUT")
-        return Status::SHUT;
-    else if (stringValue == "STOP")
-        return Status::STOP;
-    else if (stringValue == "AUTO")
-        return Status::AUTO;
-    else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue );
-}
-
-
-
-
 const std::string Well::InjectorCMode2String( InjectorCMode enumValue ) {
     switch( enumValue ) {
     case InjectorCMode::RESV:

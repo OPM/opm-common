@@ -2968,33 +2968,33 @@ BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnum2String) {
-    BOOST_CHECK_EQUAL( "OPEN",  Well::Status2String(Well::Status::OPEN));
-    BOOST_CHECK_EQUAL( "SHUT",  Well::Status2String(Well::Status::SHUT));
-    BOOST_CHECK_EQUAL( "AUTO",  Well::Status2String(Well::Status::AUTO));
-    BOOST_CHECK_EQUAL( "STOP",  Well::Status2String(Well::Status::STOP));
+    BOOST_CHECK_EQUAL( "OPEN",  Opm::WellStatus2String(Well::Status::OPEN));
+    BOOST_CHECK_EQUAL( "SHUT",  Opm::WellStatus2String(Well::Status::SHUT));
+    BOOST_CHECK_EQUAL( "AUTO",  Opm::WellStatus2String(Well::Status::AUTO));
+    BOOST_CHECK_EQUAL( "STOP",  Opm::WellStatus2String(Well::Status::STOP));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumFromString) {
-    BOOST_CHECK_THROW( Well::StatusFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK( Well::Status::OPEN == Well::StatusFromString("OPEN"));
-    BOOST_CHECK( Well::Status::AUTO == Well::StatusFromString("AUTO"));
-    BOOST_CHECK( Well::Status::SHUT == Well::StatusFromString("SHUT"));
-    BOOST_CHECK( Well::Status::STOP == Well::StatusFromString("STOP"));
+    BOOST_CHECK_THROW( Opm::WellStatusFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well::Status::OPEN == Opm::WellStatusFromString("OPEN"));
+    BOOST_CHECK( Well::Status::AUTO == Opm::WellStatusFromString("AUTO"));
+    BOOST_CHECK( Well::Status::SHUT == Opm::WellStatusFromString("SHUT"));
+    BOOST_CHECK( Well::Status::STOP == Opm::WellStatusFromString("STOP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
-    BOOST_CHECK( Well::Status::OPEN == Well::StatusFromString( Well::Status2String( Well::Status::OPEN ) ));
-    BOOST_CHECK( Well::Status::AUTO == Well::StatusFromString( Well::Status2String( Well::Status::AUTO ) ));
-    BOOST_CHECK( Well::Status::SHUT == Well::StatusFromString( Well::Status2String( Well::Status::SHUT ) ));
-    BOOST_CHECK( Well::Status::STOP == Well::StatusFromString( Well::Status2String( Well::Status::STOP ) ));
+    BOOST_CHECK( Well::Status::OPEN == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::OPEN ) ));
+    BOOST_CHECK( Well::Status::AUTO == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::AUTO ) ));
+    BOOST_CHECK( Well::Status::SHUT == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::SHUT ) ));
+    BOOST_CHECK( Well::Status::STOP == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::STOP ) ));
 
-    BOOST_CHECK_EQUAL( "STOP", Well::Status2String(Well::StatusFromString(  "STOP" ) ));
-    BOOST_CHECK_EQUAL( "OPEN", Well::Status2String(Well::StatusFromString(  "OPEN" ) ));
-    BOOST_CHECK_EQUAL( "SHUT", Well::Status2String(Well::StatusFromString(  "SHUT" ) ));
-    BOOST_CHECK_EQUAL( "AUTO", Well::Status2String(Well::StatusFromString(  "AUTO" ) ));
+    BOOST_CHECK_EQUAL( "STOP", Opm::WellStatus2String(Opm::WellStatusFromString(  "STOP" ) ));
+    BOOST_CHECK_EQUAL( "OPEN", Opm::WellStatus2String(Opm::WellStatusFromString(  "OPEN" ) ));
+    BOOST_CHECK_EQUAL( "SHUT", Opm::WellStatus2String(Opm::WellStatusFromString(  "SHUT" ) ));
+    BOOST_CHECK_EQUAL( "AUTO", Opm::WellStatus2String(Opm::WellStatusFromString(  "AUTO" ) ));
 }
 
 

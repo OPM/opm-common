@@ -72,8 +72,6 @@ struct RstWell;
 class Well {
 public:
     using Status = WellStatus;
-    static std::string Status2String(Status enumValue);
-    static Status StatusFromString(const std::string& stringValue);
 
     /*
       The elements in this enum are used as bitmasks to keep track
@@ -665,8 +663,6 @@ private:
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
 std::ostream& operator<<( std::ostream&, const Well::WellProductionProperties& );
 
-
-std::ostream& operator<<(std::ostream& os, const Well::Status& st);
 std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm);
 std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm);
 

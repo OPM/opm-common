@@ -322,7 +322,7 @@ namespace {
         }
 
         std::string shut_status(const context&, std::size_t, std::size_t) const {
-            return Opm::Well::Status2String(well.getStatus());
+            return Opm::WellStatus2String(well.getStatus());
         }
 
         std::string region_number(const context&, std::size_t, std::size_t) const {

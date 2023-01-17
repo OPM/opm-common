@@ -955,7 +955,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus( well_name , handlerContext.currentStep , status, handlerContext.keyword.location() );
@@ -1029,7 +1029,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 bool update_well = this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1091,7 +1091,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1158,7 +1158,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
-            const Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1255,7 +1255,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
              * well status is updated
              */
             if (conn_defaulted(record)) {
-                const auto new_well_status = Well::StatusFromString(status_str);
+                const auto new_well_status = WellStatusFromString(status_str);
 
                 for (const auto& wname : well_names) {
                     if ((new_well_status == open) && !this->getWell(wname, currentStep).canOpen()) {

@@ -20,6 +20,9 @@
 #ifndef WELL_ENUMS_HPP
 #define WELL_ENUMS_HPP
 
+#include <iosfwd>
+#include <string>
+
 namespace Opm {
 
 enum class WellStatus {
@@ -98,6 +101,10 @@ enum class WellGasInflowEquation {
     P_P = 2,
     GPP = 3
 };
+
+std::string WellStatus2String(WellStatus enumValue);
+WellStatus WellStatusFromString(const std::string& stringValue);
+std::ostream& operator<<(std::ostream& os, const WellStatus& st);
 
 }
 
