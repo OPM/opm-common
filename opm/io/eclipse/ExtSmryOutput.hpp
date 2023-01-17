@@ -19,32 +19,32 @@
 #ifndef OPM_IO_ExtSmryOutput_HPP
 #define OPM_IO_ExtSmryOutput_HPP
 
+#include <array>
+#include <chrono>
 #include <string>
-
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-
+#include <vector>
 
 namespace Opm {
 
 class EclipseState;
+class GridDims;
 
-}
-
-namespace Opm { namespace EclIO {
-
+namespace EclIO {
 
 class ExtSmryOutput
 {
-
 public:
-    ExtSmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
-                 const EclipseState& es, const time_t start_time);
+    ExtSmryOutput(const std::vector<std::string>& valueKeys,
+                  const std::vector<std::string>& valueUnits,
+                  const EclipseState& es,
+                  const time_t start_time);
 
-    void write(const std::vector<float>& ts_data, int report_step, bool is_final_summary);
+    void write(const std::vector<float>& ts_data,
+               int report_step,
+               bool is_final_summary);
 
 private:
-
-    const int m_min_write_interval = 15;  // at least 15 seconds betwen each write
+    static constexpr int m_min_write_interval = 15;  // at least 15 seconds between each write
     std::chrono::time_point<std::chrono::system_clock> m_last_write;
 
     std::string m_outputFileName;
@@ -61,8 +61,10 @@ private:
     std::vector<int> m_tstep;
     std::vector<std::vector<float>> m_smrydata;
 
-    std::array<int, 3> ijk_from_global_index(const GridDims& dims, int globInd) const;
-    std::vector<std::string> make_modified_keys(const std::vector<std::string>& valueKeys, const GridDims& dims);
+    std::array<int, 3> ijk_from_global_index(const GridDims& dims,
+                                             int globInd) const;
+    std::vector<std::string> make_modified_keys(const std::vector<std::string>& valueKeys,
+                                                const GridDims& dims);
     bool rename_tmpfile(const std::string& tmp_fname);
 };
 
