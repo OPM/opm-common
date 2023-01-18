@@ -18,7 +18,10 @@
 */
 
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 namespace Opm {
 namespace Action {
