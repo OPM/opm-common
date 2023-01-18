@@ -1099,6 +1099,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/Well.hpp
        opm/input/eclipse/Schedule/Well/WellEnums.hpp
        opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp
+       opm/input/eclipse/Schedule/Well/WellProductionControls.hpp
        opm/input/eclipse/Schedule/Well/WList.hpp
        opm/input/eclipse/Schedule/Well/NameOrder.hpp
        opm/input/eclipse/Schedule/Well/WellMatcher.hpp

@@ -33,11 +33,12 @@
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp>
-#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellProductionControls.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
@@ -212,52 +213,7 @@ public:
         }
     };
 
-    struct ProductionControls {
-    public:
-        ProductionControls(int controls_arg) :
-            controls(controls_arg)
-        {
-        }
-
-        ProducerCMode cmode = ProducerCMode::NONE;
-        double oil_rate{0};
-        double water_rate{0};
-        double gas_rate{0};
-        double liquid_rate{0};
-        double resv_rate{0};
-        double bhp_history{0};
-        double thp_history{0};
-        double bhp_limit{0};
-        double thp_limit{0};
-        double alq_value{0};
-        int    vfp_table_number{0};
-        bool   prediction_mode{0};
-
-        bool hasControl(ProducerCMode cmode_arg) const {
-            return (this->controls & static_cast<int>(cmode_arg)) != 0;
-        }
-
-        bool operator==(const ProductionControls& other) const {
-            return this->cmode == other.cmode &&
-                   this->oil_rate == other.oil_rate &&
-                   this->water_rate == other.water_rate &&
-                   this->gas_rate == other.gas_rate &&
-                   this->liquid_rate == other.liquid_rate &&
-                   this->resv_rate == other.resv_rate &&
-                   this->bhp_history == other.bhp_history &&
-                   this->thp_history == other.thp_history &&
-                   this->bhp_limit == other.bhp_limit &&
-                   this->thp_limit == other.thp_limit &&
-                   this->alq_value == other.alq_value &&
-                   this->vfp_table_number == other.vfp_table_number &&
-                   this->prediction_mode == other.prediction_mode;
-        }
-
-
-    private:
-        int controls;
-    };
-
+    using ProductionControls = WellProductionControls;
 
     class WellProductionProperties {
     public:
