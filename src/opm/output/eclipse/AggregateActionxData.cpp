@@ -23,6 +23,7 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/common/utility/String.hpp>
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>

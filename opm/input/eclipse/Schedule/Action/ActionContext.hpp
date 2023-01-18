@@ -21,13 +21,13 @@
 #ifndef ActionContext_HPP
 #define ActionContext_HPP
 
-#include <string>
 #include <map>
-
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
+class SummaryState;
 class WListManager;
 
 namespace Action {
