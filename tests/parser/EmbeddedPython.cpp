@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 using namespace Opm;
 

@@ -37,6 +37,8 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstring>

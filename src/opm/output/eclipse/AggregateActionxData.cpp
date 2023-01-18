@@ -39,6 +39,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/output/eclipse/VectorItems/action.hpp>
 
 #include <algorithm>

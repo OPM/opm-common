@@ -2930,37 +2930,37 @@ BOOST_AUTO_TEST_CASE(TestInjectorEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InjectorCOntrolMopdeEnum2String) {
-    BOOST_CHECK_EQUAL( "RATE"  , Well::InjectorCMode2String(Well::InjectorCMode::RATE));
-    BOOST_CHECK_EQUAL( "RESV"  , Well::InjectorCMode2String(Well::InjectorCMode::RESV));
-    BOOST_CHECK_EQUAL( "BHP"   , Well::InjectorCMode2String(Well::InjectorCMode::BHP));
-    BOOST_CHECK_EQUAL( "THP"   , Well::InjectorCMode2String(Well::InjectorCMode::THP));
-    BOOST_CHECK_EQUAL( "GRUP"  , Well::InjectorCMode2String(Well::InjectorCMode::GRUP));
+    BOOST_CHECK_EQUAL( "RATE"  , Opm::WellInjectorCMode2String(Well::InjectorCMode::RATE));
+    BOOST_CHECK_EQUAL( "RESV"  , Opm::WellInjectorCMode2String(Well::InjectorCMode::RESV));
+    BOOST_CHECK_EQUAL( "BHP"   , Opm::WellInjectorCMode2String(Well::InjectorCMode::BHP));
+    BOOST_CHECK_EQUAL( "THP"   , Opm::WellInjectorCMode2String(Well::InjectorCMode::THP));
+    BOOST_CHECK_EQUAL( "GRUP"  , Opm::WellInjectorCMode2String(Well::InjectorCMode::GRUP));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectorControlModeEnumFromString) {
-    BOOST_CHECK_THROW( Well::InjectorCModeFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK( Well::InjectorCMode::RATE == Well::InjectorCModeFromString("RATE"));
-    BOOST_CHECK( Well::InjectorCMode::BHP  == Well::InjectorCModeFromString("BHP"));
-    BOOST_CHECK( Well::InjectorCMode::RESV == Well::InjectorCModeFromString("RESV"));
-    BOOST_CHECK( Well::InjectorCMode::THP  == Well::InjectorCModeFromString("THP"));
-    BOOST_CHECK( Well::InjectorCMode::GRUP == Well::InjectorCModeFromString("GRUP"));
+    BOOST_CHECK_THROW( Opm::WellInjectorCModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well::InjectorCMode::RATE == Opm::WellInjectorCModeFromString("RATE"));
+    BOOST_CHECK( Well::InjectorCMode::BHP  == Opm::WellInjectorCModeFromString("BHP"));
+    BOOST_CHECK( Well::InjectorCMode::RESV == Opm::WellInjectorCModeFromString("RESV"));
+    BOOST_CHECK( Well::InjectorCMode::THP  == Opm::WellInjectorCModeFromString("THP"));
+    BOOST_CHECK( Well::InjectorCMode::GRUP == Opm::WellInjectorCModeFromString("GRUP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
-    BOOST_CHECK( Well::InjectorCMode::RATE == Well::InjectorCModeFromString( Well::InjectorCMode2String( Well::InjectorCMode::RATE ) ));
-    BOOST_CHECK( Well::InjectorCMode::BHP  == Well::InjectorCModeFromString( Well::InjectorCMode2String( Well::InjectorCMode::BHP ) ));
-    BOOST_CHECK( Well::InjectorCMode::RESV == Well::InjectorCModeFromString( Well::InjectorCMode2String( Well::InjectorCMode::RESV ) ));
-    BOOST_CHECK( Well::InjectorCMode::THP  == Well::InjectorCModeFromString( Well::InjectorCMode2String( Well::InjectorCMode::THP ) ));
-    BOOST_CHECK( Well::InjectorCMode::GRUP == Well::InjectorCModeFromString( Well::InjectorCMode2String( Well::InjectorCMode::GRUP ) ));
+    BOOST_CHECK( Well::InjectorCMode::RATE == Opm::WellInjectorCModeFromString( Opm::WellInjectorCMode2String( Well::InjectorCMode::RATE ) ));
+    BOOST_CHECK( Well::InjectorCMode::BHP  == Opm::WellInjectorCModeFromString( Opm::WellInjectorCMode2String( Well::InjectorCMode::BHP ) ));
+    BOOST_CHECK( Well::InjectorCMode::RESV == Opm::WellInjectorCModeFromString( Opm::WellInjectorCMode2String( Well::InjectorCMode::RESV ) ));
+    BOOST_CHECK( Well::InjectorCMode::THP  == Opm::WellInjectorCModeFromString( Opm::WellInjectorCMode2String( Well::InjectorCMode::THP ) ));
+    BOOST_CHECK( Well::InjectorCMode::GRUP == Opm::WellInjectorCModeFromString( Opm::WellInjectorCMode2String( Well::InjectorCMode::GRUP ) ));
 
-    BOOST_CHECK_EQUAL( "THP"  , Well::InjectorCMode2String(Well::InjectorCModeFromString(  "THP" ) ));
-    BOOST_CHECK_EQUAL( "RATE" , Well::InjectorCMode2String(Well::InjectorCModeFromString(  "RATE" ) ));
-    BOOST_CHECK_EQUAL( "RESV" , Well::InjectorCMode2String(Well::InjectorCModeFromString(  "RESV" ) ));
-    BOOST_CHECK_EQUAL( "BHP"  , Well::InjectorCMode2String(Well::InjectorCModeFromString(  "BHP" ) ));
-    BOOST_CHECK_EQUAL( "GRUP" , Well::InjectorCMode2String(Well::InjectorCModeFromString(  "GRUP" ) ));
+    BOOST_CHECK_EQUAL( "THP"  , Opm::WellInjectorCMode2String(Opm::WellInjectorCModeFromString(  "THP" ) ));
+    BOOST_CHECK_EQUAL( "RATE" , Opm::WellInjectorCMode2String(Opm::WellInjectorCModeFromString(  "RATE" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , Opm::WellInjectorCMode2String(Opm::WellInjectorCModeFromString(  "RESV" ) ));
+    BOOST_CHECK_EQUAL( "BHP"  , Opm::WellInjectorCMode2String(Opm::WellInjectorCModeFromString(  "BHP" ) ));
+    BOOST_CHECK_EQUAL( "GRUP" , Opm::WellInjectorCMode2String(Opm::WellInjectorCModeFromString(  "GRUP" ) ));
 }
 
 
@@ -2968,33 +2968,33 @@ BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnum2String) {
-    BOOST_CHECK_EQUAL( "OPEN",  Well::Status2String(Well::Status::OPEN));
-    BOOST_CHECK_EQUAL( "SHUT",  Well::Status2String(Well::Status::SHUT));
-    BOOST_CHECK_EQUAL( "AUTO",  Well::Status2String(Well::Status::AUTO));
-    BOOST_CHECK_EQUAL( "STOP",  Well::Status2String(Well::Status::STOP));
+    BOOST_CHECK_EQUAL( "OPEN",  Opm::WellStatus2String(Well::Status::OPEN));
+    BOOST_CHECK_EQUAL( "SHUT",  Opm::WellStatus2String(Well::Status::SHUT));
+    BOOST_CHECK_EQUAL( "AUTO",  Opm::WellStatus2String(Well::Status::AUTO));
+    BOOST_CHECK_EQUAL( "STOP",  Opm::WellStatus2String(Well::Status::STOP));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumFromString) {
-    BOOST_CHECK_THROW( Well::StatusFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK( Well::Status::OPEN == Well::StatusFromString("OPEN"));
-    BOOST_CHECK( Well::Status::AUTO == Well::StatusFromString("AUTO"));
-    BOOST_CHECK( Well::Status::SHUT == Well::StatusFromString("SHUT"));
-    BOOST_CHECK( Well::Status::STOP == Well::StatusFromString("STOP"));
+    BOOST_CHECK_THROW( Opm::WellStatusFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well::Status::OPEN == Opm::WellStatusFromString("OPEN"));
+    BOOST_CHECK( Well::Status::AUTO == Opm::WellStatusFromString("AUTO"));
+    BOOST_CHECK( Well::Status::SHUT == Opm::WellStatusFromString("SHUT"));
+    BOOST_CHECK( Well::Status::STOP == Opm::WellStatusFromString("STOP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
-    BOOST_CHECK( Well::Status::OPEN == Well::StatusFromString( Well::Status2String( Well::Status::OPEN ) ));
-    BOOST_CHECK( Well::Status::AUTO == Well::StatusFromString( Well::Status2String( Well::Status::AUTO ) ));
-    BOOST_CHECK( Well::Status::SHUT == Well::StatusFromString( Well::Status2String( Well::Status::SHUT ) ));
-    BOOST_CHECK( Well::Status::STOP == Well::StatusFromString( Well::Status2String( Well::Status::STOP ) ));
+    BOOST_CHECK( Well::Status::OPEN == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::OPEN ) ));
+    BOOST_CHECK( Well::Status::AUTO == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::AUTO ) ));
+    BOOST_CHECK( Well::Status::SHUT == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::SHUT ) ));
+    BOOST_CHECK( Well::Status::STOP == Opm::WellStatusFromString( Opm::WellStatus2String( Well::Status::STOP ) ));
 
-    BOOST_CHECK_EQUAL( "STOP", Well::Status2String(Well::StatusFromString(  "STOP" ) ));
-    BOOST_CHECK_EQUAL( "OPEN", Well::Status2String(Well::StatusFromString(  "OPEN" ) ));
-    BOOST_CHECK_EQUAL( "SHUT", Well::Status2String(Well::StatusFromString(  "SHUT" ) ));
-    BOOST_CHECK_EQUAL( "AUTO", Well::Status2String(Well::StatusFromString(  "AUTO" ) ));
+    BOOST_CHECK_EQUAL( "STOP", Opm::WellStatus2String(Opm::WellStatusFromString(  "STOP" ) ));
+    BOOST_CHECK_EQUAL( "OPEN", Opm::WellStatus2String(Opm::WellStatusFromString(  "OPEN" ) ));
+    BOOST_CHECK_EQUAL( "SHUT", Opm::WellStatus2String(Opm::WellStatusFromString(  "SHUT" ) ));
+    BOOST_CHECK_EQUAL( "AUTO", Opm::WellStatus2String(Opm::WellStatusFromString(  "AUTO" ) ));
 }
 
 
@@ -3002,110 +3002,110 @@ BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(ProducerCOntrolMopdeEnum2String) {
-    BOOST_CHECK_EQUAL( "ORAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::ORAT));
-    BOOST_CHECK_EQUAL( "WRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::WRAT));
-    BOOST_CHECK_EQUAL( "GRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::GRAT));
-    BOOST_CHECK_EQUAL( "LRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::LRAT));
-    BOOST_CHECK_EQUAL( "CRAT"  ,  Well::ProducerCMode2String(Well::ProducerCMode::CRAT));
-    BOOST_CHECK_EQUAL( "RESV"  ,  Well::ProducerCMode2String(Well::ProducerCMode::RESV));
-    BOOST_CHECK_EQUAL( "BHP"   ,  Well::ProducerCMode2String(Well::ProducerCMode::BHP));
-    BOOST_CHECK_EQUAL( "THP"   ,  Well::ProducerCMode2String(Well::ProducerCMode::THP));
-    BOOST_CHECK_EQUAL( "GRUP"  ,  Well::ProducerCMode2String(Well::ProducerCMode::GRUP));
+    BOOST_CHECK_EQUAL( "ORAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::ORAT));
+    BOOST_CHECK_EQUAL( "WRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::WRAT));
+    BOOST_CHECK_EQUAL( "GRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::GRAT));
+    BOOST_CHECK_EQUAL( "LRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::LRAT));
+    BOOST_CHECK_EQUAL( "CRAT"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::CRAT));
+    BOOST_CHECK_EQUAL( "RESV"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::RESV));
+    BOOST_CHECK_EQUAL( "BHP"   ,  Opm::WellProducerCMode2String(Well::ProducerCMode::BHP));
+    BOOST_CHECK_EQUAL( "THP"   ,  Opm::WellProducerCMode2String(Well::ProducerCMode::THP));
+    BOOST_CHECK_EQUAL( "GRUP"  ,  Opm::WellProducerCMode2String(Well::ProducerCMode::GRUP));
 }
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumFromString) {
-    BOOST_CHECK_THROW( Well::ProducerCModeFromString("XRAT") , std::invalid_argument );
-    BOOST_CHECK( Well::ProducerCMode::ORAT   == Well::ProducerCModeFromString("ORAT"));
-    BOOST_CHECK( Well::ProducerCMode::WRAT   == Well::ProducerCModeFromString("WRAT"));
-    BOOST_CHECK( Well::ProducerCMode::GRAT   == Well::ProducerCModeFromString("GRAT"));
-    BOOST_CHECK( Well::ProducerCMode::LRAT   == Well::ProducerCModeFromString("LRAT"));
-    BOOST_CHECK( Well::ProducerCMode::CRAT   == Well::ProducerCModeFromString("CRAT"));
-    BOOST_CHECK( Well::ProducerCMode::RESV   == Well::ProducerCModeFromString("RESV"));
-    BOOST_CHECK( Well::ProducerCMode::BHP    == Well::ProducerCModeFromString("BHP" ));
-    BOOST_CHECK( Well::ProducerCMode::THP    == Well::ProducerCModeFromString("THP" ));
-    BOOST_CHECK( Well::ProducerCMode::GRUP   == Well::ProducerCModeFromString("GRUP"));
+    BOOST_CHECK_THROW( Opm::WellProducerCModeFromString("XRAT") , std::invalid_argument );
+    BOOST_CHECK( Well::ProducerCMode::ORAT   == Opm::WellProducerCModeFromString("ORAT"));
+    BOOST_CHECK( Well::ProducerCMode::WRAT   == Opm::WellProducerCModeFromString("WRAT"));
+    BOOST_CHECK( Well::ProducerCMode::GRAT   == Opm::WellProducerCModeFromString("GRAT"));
+    BOOST_CHECK( Well::ProducerCMode::LRAT   == Opm::WellProducerCModeFromString("LRAT"));
+    BOOST_CHECK( Well::ProducerCMode::CRAT   == Opm::WellProducerCModeFromString("CRAT"));
+    BOOST_CHECK( Well::ProducerCMode::RESV   == Opm::WellProducerCModeFromString("RESV"));
+    BOOST_CHECK( Well::ProducerCMode::BHP    == Opm::WellProducerCModeFromString("BHP" ));
+    BOOST_CHECK( Well::ProducerCMode::THP    == Opm::WellProducerCModeFromString("THP" ));
+    BOOST_CHECK( Well::ProducerCMode::GRUP   == Opm::WellProducerCModeFromString("GRUP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumLoop) {
-    BOOST_CHECK( Well::ProducerCMode::ORAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::ORAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::WRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::WRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::GRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::GRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::LRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::LRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::CRAT == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::CRAT ) ));
-    BOOST_CHECK( Well::ProducerCMode::RESV == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::RESV ) ));
-    BOOST_CHECK( Well::ProducerCMode::BHP  == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::BHP  ) ));
-    BOOST_CHECK( Well::ProducerCMode::THP  == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::THP  ) ));
-    BOOST_CHECK( Well::ProducerCMode::GRUP == Well::ProducerCModeFromString( Well::ProducerCMode2String( Well::ProducerCMode::GRUP ) ));
+    BOOST_CHECK( Well::ProducerCMode::ORAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::ORAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::WRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::WRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::GRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::GRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::LRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::LRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::CRAT == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::CRAT ) ));
+    BOOST_CHECK( Well::ProducerCMode::RESV == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::RESV ) ));
+    BOOST_CHECK( Well::ProducerCMode::BHP  == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::BHP  ) ));
+    BOOST_CHECK( Well::ProducerCMode::THP  == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::THP  ) ));
+    BOOST_CHECK( Well::ProducerCMode::GRUP == Opm::WellProducerCModeFromString( Opm::WellProducerCMode2String( Well::ProducerCMode::GRUP ) ));
 
-    BOOST_CHECK_EQUAL( "ORAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "ORAT"  ) ));
-    BOOST_CHECK_EQUAL( "WRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "WRAT"  ) ));
-    BOOST_CHECK_EQUAL( "GRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "GRAT"  ) ));
-    BOOST_CHECK_EQUAL( "LRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "LRAT"  ) ));
-    BOOST_CHECK_EQUAL( "CRAT"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "CRAT"  ) ));
-    BOOST_CHECK_EQUAL( "RESV"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "RESV"  ) ));
-    BOOST_CHECK_EQUAL( "BHP"       , Well::ProducerCMode2String(Well::ProducerCModeFromString( "BHP"   ) ));
-    BOOST_CHECK_EQUAL( "THP"       , Well::ProducerCMode2String(Well::ProducerCModeFromString( "THP"   ) ));
-    BOOST_CHECK_EQUAL( "GRUP"      , Well::ProducerCMode2String(Well::ProducerCModeFromString( "GRUP"  ) ));
+    BOOST_CHECK_EQUAL( "ORAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "ORAT"  ) ));
+    BOOST_CHECK_EQUAL( "WRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "WRAT"  ) ));
+    BOOST_CHECK_EQUAL( "GRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "GRAT"  ) ));
+    BOOST_CHECK_EQUAL( "LRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "LRAT"  ) ));
+    BOOST_CHECK_EQUAL( "CRAT"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "CRAT"  ) ));
+    BOOST_CHECK_EQUAL( "RESV"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "RESV"  ) ));
+    BOOST_CHECK_EQUAL( "BHP"       , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "BHP"   ) ));
+    BOOST_CHECK_EQUAL( "THP"       , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "THP"   ) ));
+    BOOST_CHECK_EQUAL( "GRUP"      , Opm::WellProducerCMode2String(Opm::WellProducerCModeFromString( "GRUP"  ) ));
 }
 
 /*******************************************************************/
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL"  ,        Well::GuideRateTarget2String(Well::GuideRateTarget::OIL));
-    BOOST_CHECK_EQUAL( "WAT"  ,        Well::GuideRateTarget2String(Well::GuideRateTarget::WAT));
-    BOOST_CHECK_EQUAL( "GAS"  ,        Well::GuideRateTarget2String(Well::GuideRateTarget::GAS));
-    BOOST_CHECK_EQUAL( "LIQ"  ,        Well::GuideRateTarget2String(Well::GuideRateTarget::LIQ));
-    BOOST_CHECK_EQUAL( "COMB" ,        Well::GuideRateTarget2String(Well::GuideRateTarget::COMB));
-    BOOST_CHECK_EQUAL( "WGA"  ,        Well::GuideRateTarget2String(Well::GuideRateTarget::WGA));
-    BOOST_CHECK_EQUAL( "CVAL" ,        Well::GuideRateTarget2String(Well::GuideRateTarget::CVAL));
-    BOOST_CHECK_EQUAL( "RAT"  ,        Well::GuideRateTarget2String(Well::GuideRateTarget::RAT));
-    BOOST_CHECK_EQUAL( "RES"  ,        Well::GuideRateTarget2String(Well::GuideRateTarget::RES));
-    BOOST_CHECK_EQUAL( "UNDEFINED"  ,  Well::GuideRateTarget2String(Well::GuideRateTarget::UNDEFINED));
+    BOOST_CHECK_EQUAL( "OIL"  ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::OIL));
+    BOOST_CHECK_EQUAL( "WAT"  ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::WAT));
+    BOOST_CHECK_EQUAL( "GAS"  ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::GAS));
+    BOOST_CHECK_EQUAL( "LIQ"  ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::LIQ));
+    BOOST_CHECK_EQUAL( "COMB" ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::COMB));
+    BOOST_CHECK_EQUAL( "WGA"  ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::WGA));
+    BOOST_CHECK_EQUAL( "CVAL" ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::CVAL));
+    BOOST_CHECK_EQUAL( "RAT"  ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::RAT));
+    BOOST_CHECK_EQUAL( "RES"  ,        Opm::WellGuideRateTarget2String(Well::GuideRateTarget::RES));
+    BOOST_CHECK_EQUAL( "UNDEFINED"  ,  Opm::WellGuideRateTarget2String(Well::GuideRateTarget::UNDEFINED));
 }
 
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnumFromString) {
-    BOOST_CHECK_THROW( Well::GuideRateTargetFromString("XRAT") , std::invalid_argument );
-    BOOST_CHECK( Well::GuideRateTarget::OIL       == Well::GuideRateTargetFromString("OIL"));
-    BOOST_CHECK( Well::GuideRateTarget::WAT       == Well::GuideRateTargetFromString("WAT"));
-    BOOST_CHECK( Well::GuideRateTarget::GAS       == Well::GuideRateTargetFromString("GAS"));
-    BOOST_CHECK( Well::GuideRateTarget::LIQ       == Well::GuideRateTargetFromString("LIQ"));
-    BOOST_CHECK( Well::GuideRateTarget::COMB      == Well::GuideRateTargetFromString("COMB"));
-    BOOST_CHECK( Well::GuideRateTarget::WGA       == Well::GuideRateTargetFromString("WGA"));
-    BOOST_CHECK( Well::GuideRateTarget::CVAL      == Well::GuideRateTargetFromString("CVAL"));
-    BOOST_CHECK( Well::GuideRateTarget::RAT       == Well::GuideRateTargetFromString("RAT"));
-    BOOST_CHECK( Well::GuideRateTarget::RES       == Well::GuideRateTargetFromString("RES"));
-    BOOST_CHECK( Well::GuideRateTarget::UNDEFINED == Well::GuideRateTargetFromString("UNDEFINED"));
+    BOOST_CHECK_THROW( Opm::WellGuideRateTargetFromString("XRAT") , std::invalid_argument );
+    BOOST_CHECK( Well::GuideRateTarget::OIL       == Opm::WellGuideRateTargetFromString("OIL"));
+    BOOST_CHECK( Well::GuideRateTarget::WAT       == Opm::WellGuideRateTargetFromString("WAT"));
+    BOOST_CHECK( Well::GuideRateTarget::GAS       == Opm::WellGuideRateTargetFromString("GAS"));
+    BOOST_CHECK( Well::GuideRateTarget::LIQ       == Opm::WellGuideRateTargetFromString("LIQ"));
+    BOOST_CHECK( Well::GuideRateTarget::COMB      == Opm::WellGuideRateTargetFromString("COMB"));
+    BOOST_CHECK( Well::GuideRateTarget::WGA       == Opm::WellGuideRateTargetFromString("WGA"));
+    BOOST_CHECK( Well::GuideRateTarget::CVAL      == Opm::WellGuideRateTargetFromString("CVAL"));
+    BOOST_CHECK( Well::GuideRateTarget::RAT       == Opm::WellGuideRateTargetFromString("RAT"));
+    BOOST_CHECK( Well::GuideRateTarget::RES       == Opm::WellGuideRateTargetFromString("RES"));
+    BOOST_CHECK( Well::GuideRateTarget::UNDEFINED == Opm::WellGuideRateTargetFromString("UNDEFINED"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2Loop) {
-    BOOST_CHECK( Well::GuideRateTarget::OIL        == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::OIL ) ));
-    BOOST_CHECK( Well::GuideRateTarget::WAT        == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::WAT ) ));
-    BOOST_CHECK( Well::GuideRateTarget::GAS        == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::GAS ) ));
-    BOOST_CHECK( Well::GuideRateTarget::LIQ        == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::LIQ ) ));
-    BOOST_CHECK( Well::GuideRateTarget::COMB       == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::COMB ) ));
-    BOOST_CHECK( Well::GuideRateTarget::WGA        == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::WGA ) ));
-    BOOST_CHECK( Well::GuideRateTarget::CVAL       == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::CVAL ) ));
-    BOOST_CHECK( Well::GuideRateTarget::RAT        == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::RAT ) ));
-    BOOST_CHECK( Well::GuideRateTarget::RES        == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::RES ) ));
-    BOOST_CHECK( Well::GuideRateTarget::UNDEFINED  == Well::GuideRateTargetFromString( Well::GuideRateTarget2String( Well::GuideRateTarget::UNDEFINED ) ));
+    BOOST_CHECK( Well::GuideRateTarget::OIL        == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::OIL ) ));
+    BOOST_CHECK( Well::GuideRateTarget::WAT        == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::WAT ) ));
+    BOOST_CHECK( Well::GuideRateTarget::GAS        == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::GAS ) ));
+    BOOST_CHECK( Well::GuideRateTarget::LIQ        == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::LIQ ) ));
+    BOOST_CHECK( Well::GuideRateTarget::COMB       == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::COMB ) ));
+    BOOST_CHECK( Well::GuideRateTarget::WGA        == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::WGA ) ));
+    BOOST_CHECK( Well::GuideRateTarget::CVAL       == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::CVAL ) ));
+    BOOST_CHECK( Well::GuideRateTarget::RAT        == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::RAT ) ));
+    BOOST_CHECK( Well::GuideRateTarget::RES        == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::RES ) ));
+    BOOST_CHECK( Well::GuideRateTarget::UNDEFINED  == Opm::WellGuideRateTargetFromString( Opm::WellGuideRateTarget2String( Well::GuideRateTarget::UNDEFINED ) ));
 
-    BOOST_CHECK_EQUAL( "OIL"        , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "OIL"  ) ));
-    BOOST_CHECK_EQUAL( "WAT"        , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "WAT"  ) ));
-    BOOST_CHECK_EQUAL( "GAS"        , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "GAS"  ) ));
-    BOOST_CHECK_EQUAL( "LIQ"        , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "LIQ"  ) ));
-    BOOST_CHECK_EQUAL( "COMB"       , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "COMB"  ) ));
-    BOOST_CHECK_EQUAL( "WGA"        , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "WGA"  ) ));
-    BOOST_CHECK_EQUAL( "CVAL"       , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "CVAL"  ) ));
-    BOOST_CHECK_EQUAL( "RAT"        , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "RAT"  ) ));
-    BOOST_CHECK_EQUAL( "RES"        , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "RES"  ) ));
-    BOOST_CHECK_EQUAL( "UNDEFINED"  , Well::GuideRateTarget2String(Well::GuideRateTargetFromString( "UNDEFINED"  ) ));
+    BOOST_CHECK_EQUAL( "OIL"        , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "OIL"  ) ));
+    BOOST_CHECK_EQUAL( "WAT"        , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "WAT"  ) ));
+    BOOST_CHECK_EQUAL( "GAS"        , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "GAS"  ) ));
+    BOOST_CHECK_EQUAL( "LIQ"        , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "LIQ"  ) ));
+    BOOST_CHECK_EQUAL( "COMB"       , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "COMB"  ) ));
+    BOOST_CHECK_EQUAL( "WGA"        , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "WGA"  ) ));
+    BOOST_CHECK_EQUAL( "CVAL"       , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "CVAL"  ) ));
+    BOOST_CHECK_EQUAL( "RAT"        , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "RAT"  ) ));
+    BOOST_CHECK_EQUAL( "RES"        , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "RES"  ) ));
+    BOOST_CHECK_EQUAL( "UNDEFINED"  , Opm::WellGuideRateTarget2String(Opm::WellGuideRateTargetFromString( "UNDEFINED"  ) ));
 
 }
 

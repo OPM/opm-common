@@ -16,22 +16,27 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <algorithm>
-#include <cstddef>
-#include <iterator>
 
-#include <fmt/format.h>
+#include <config.h>
+#include <opm/input/eclipse/Schedule/ArrayDimChecker.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/ArrayDimChecker.hpp>
 
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
+#include <fmt/format.h>
+
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
 
 namespace {
     namespace WellDims {

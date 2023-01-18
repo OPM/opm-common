@@ -354,7 +354,7 @@ namespace {
             default:
                 throw std::invalid_argument {
                     fmt::format("Unsupported guiderate phase '{}' for restart",
-                                Opm::Well::GuideRateTarget2String(grTarget))
+                                Opm::WellGuideRateTarget2String(grTarget))
                 };
             }
         }

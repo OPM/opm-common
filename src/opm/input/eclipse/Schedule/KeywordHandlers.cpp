@@ -69,6 +69,7 @@
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
@@ -955,7 +956,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus( well_name , handlerContext.currentStep , status, handlerContext.keyword.location() );
@@ -1029,7 +1030,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 bool update_well = this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1091,7 +1092,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1158,7 +1159,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
-            const Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1255,7 +1256,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
              * well status is updated
              */
             if (conn_defaulted(record)) {
-                const auto new_well_status = Well::StatusFromString(status_str);
+                const auto new_well_status = WellStatusFromString(status_str);
 
                 for (const auto& wname : well_names) {
                     if ((new_well_status == open) && !this->getWell(wname, currentStep).canOpen()) {
@@ -1533,7 +1534,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             if (well_names.empty())
                 this->invalidNamePattern( wellNamePattern, handlerContext);
 
-            const auto cmode = Well::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
+            const auto cmode = WellWELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             const auto new_arg = record.getItem("NEW_VALUE").get<UDAValue>(0);
 
             for (const auto& well_name : well_names) {
@@ -1607,7 +1608,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
                 auto phase = Well::GuideRateTarget::UNDEFINED;
                 if (!record.getItem("PHASE").defaultApplied(0)) {
                     std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
-                    phase = Well::GuideRateTargetFromString(guideRatePhase);
+                    phase = WellGuideRateTargetFromString(guideRatePhase);
                 }
 
                 auto well = this->snapshots.back().wells.get(well_name);
@@ -1624,7 +1625,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
     void Schedule::handleWHISTCTL(HandlerContext& handlerContext) {
         const auto& record = handlerContext.keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const auto controlMode = Well::ProducerCModeFromString( cmodeString );
+        const auto controlMode = WellProducerCModeFromString(cmodeString);
 
         if (controlMode != Well::ProducerCMode::NONE) {
             if (!Well::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
@@ -2205,7 +2206,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
                 throw OpmInputError(reason, handlerContext.keyword.location());
             }
 
-            const auto cmode = Well::WELTARGCModeFromString(control);
+            const auto cmode = WellWELTARGCModeFromString(control);
             if (cmode == Well::WELTARGCMode::GUID)
                 throw std::logic_error("Multiplying guide rate is not implemented");
 

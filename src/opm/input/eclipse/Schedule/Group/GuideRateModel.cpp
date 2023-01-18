@@ -23,6 +23,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
 namespace Opm {
 
@@ -312,20 +313,20 @@ bool GuideRateModel::updateLINCOM(const UDAValue& , const UDAValue& , const UDAV
 }
 
 
-GuideRateModel::Target GuideRateModel::convert_target(Well::GuideRateTarget well_target) {
-    if (well_target == Well::GuideRateTarget::OIL)
+GuideRateModel::Target GuideRateModel::convert_target(WellGuideRateTarget well_target) {
+    if (well_target == WellGuideRateTarget::OIL)
         return Target::OIL;
 
-    if (well_target == Well::GuideRateTarget::GAS)
+    if (well_target == WellGuideRateTarget::GAS)
         return Target::GAS;
 
-    if (well_target == Well::GuideRateTarget::LIQ)
+    if (well_target == WellGuideRateTarget::LIQ)
         return Target::LIQ;
 
-    if (well_target == Well::GuideRateTarget::WAT)
+    if (well_target == WellGuideRateTarget::WAT)
         return Target::WAT;
 
-    if (well_target == Well::GuideRateTarget::RES)
+    if (well_target == WellGuideRateTarget::RES)
         return Target::RES;
 
     throw std::logic_error("Can not convert this .... ");

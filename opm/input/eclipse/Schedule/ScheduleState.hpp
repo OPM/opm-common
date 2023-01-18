@@ -35,7 +35,7 @@
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
@@ -73,6 +73,7 @@ namespace Opm {
     class RPTConfig;
     class UDQActive;
     class UDQConfig;
+    class Well;
     class WellTestConfig;
     class WListManager;
 
@@ -331,8 +332,8 @@ namespace Opm {
         MessageLimits& message_limits();
         const MessageLimits& message_limits() const;
 
-        Well::ProducerCMode whistctl() const;
-        void update_whistctl(Well::ProducerCMode whistctl);
+        WellProducerCMode whistctl() const;
+        void update_whistctl(WellProducerCMode whistctl);
 
         bool rst_file(const RSTConfig& rst_config, const time_point& previous_restart_output_time) const;
         void update_date(const time_point& prev_time);
@@ -521,7 +522,7 @@ namespace Opm {
         WellGroupEvents m_wellgroup_events;
         std::vector<DeckKeyword> m_geo_keywords;
         MessageLimits m_message_limits;
-        Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
+        WellProducerCMode m_whistctl_mode = WellProducerCMode::CMODE_UNDEFINED;
         std::optional<double> m_sumthin;
         bool m_rptonly{false};
     };

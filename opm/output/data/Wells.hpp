@@ -21,7 +21,7 @@
 #define OPM_OUTPUT_WELLS_HPP
 
 #include <opm/output/data/GuideRateValue.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
 #include <opm/json/JsonObject.hpp>
 
@@ -498,12 +498,12 @@ namespace Opm {
     struct CurrentControl {
         bool isProducer{true};
 
-        ::Opm::Well::ProducerCMode prod {
-            ::Opm::Well::ProducerCMode::CMODE_UNDEFINED
+        ::Opm::WellProducerCMode prod {
+            ::Opm::WellProducerCMode::CMODE_UNDEFINED
         };
 
-        ::Opm::Well::InjectorCMode inj {
-            ::Opm::Well::InjectorCMode::CMODE_UNDEFINED
+        ::Opm::WellInjectorCMode inj {
+            ::Opm::WellInjectorCMode::CMODE_UNDEFINED
         };
 
         bool operator==(const CurrentControl& rhs) const
@@ -515,15 +515,15 @@ namespace Opm {
 
         void init_json(Json::JsonObject& json_data) const
         {
-            if (this->inj == ::Opm::Well::InjectorCMode::CMODE_UNDEFINED)
+            if (this->inj == ::Opm::WellInjectorCMode::CMODE_UNDEFINED)
                 json_data.add_item("inj", "CMODE_UNDEFINED");
             else
-                json_data.add_item("inj", ::Opm::Well::InjectorCMode2String(this->inj));
+                json_data.add_item("inj", ::Opm::WellInjectorCMode2String(this->inj));
 
-            if (this->prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED)
+            if (this->prod == ::Opm::WellProducerCMode::CMODE_UNDEFINED)
                 json_data.add_item("prod", "CMODE_UNDEFINED");
             else
-                json_data.add_item("prod", ::Opm::Well::ProducerCMode2String(this->prod));
+                json_data.add_item("prod", ::Opm::WellProducerCMode2String(this->prod));
         }
 
         template <class MessageBufferType>
@@ -543,8 +543,8 @@ namespace Opm {
         static CurrentControl serializationTestObject()
         {
           return CurrentControl{false,
-                                ::Opm::Well::ProducerCMode::BHP,
-                                ::Opm::Well::InjectorCMode::GRUP
+                                ::Opm::WellProducerCMode::BHP,
+                                ::Opm::WellInjectorCMode::GRUP
                  };
         }
     };
@@ -556,7 +556,7 @@ namespace Opm {
         double temperature{0.0};
         int control{0};
 
-        ::Opm::Well::Status dynamicStatus { Opm::Well::Status::OPEN };
+        ::Opm::WellStatus dynamicStatus { Opm::WellStatus::OPEN };
 
         std::vector< Connection > connections{};
         std::unordered_map<std::size_t, Segment> segments{};
@@ -631,7 +631,7 @@ namespace Opm {
                         2.0,
                         3.0,
                         4,
-                        ::Opm::Well::Status::SHUT,
+                        ::Opm::WellStatus::SHUT,
                         {Connection::serializationTestObject()},
                         {{0, Segment::serializationTestObject()}},
                         CurrentControl::serializationTestObject(),
@@ -987,7 +987,7 @@ namespace Opm {
         buffer.write(this->control);
 
         {
-            const auto status = ::Opm::Well::Status2String(this->dynamicStatus);
+            const auto status = ::Opm::WellStatus2String(this->dynamicStatus);
             buffer.write(status);
         }
 
@@ -1093,7 +1093,7 @@ namespace Opm {
         {
             auto status = std::string{};
             buffer.read(status);
-            this->dynamicStatus = ::Opm::Well::StatusFromString(status);
+            this->dynamicStatus = ::Opm::WellStatusFromString(status);
         }
 
         // Connection information
@@ -1139,7 +1139,7 @@ namespace Opm {
         json_data.add_item("bhp", this->bhp);
         json_data.add_item("thp", this->thp);
         json_data.add_item("temperature", this->temperature);
-        json_data.add_item("status", ::Opm::Well::Status2String(this->dynamicStatus));
+        json_data.add_item("status", ::Opm::WellStatus2String(this->dynamicStatus));
 
         auto json_control = json_data.add_object("control");
         this->current_control.init_json(json_control);
