@@ -20,11 +20,12 @@
 #ifndef UDQFUNCTIONTABLE_HPP
 #define UDQFUNCTIONTABLE_HPP
 
-#include <unordered_map>
-#include <memory>
-
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace Opm {
 
@@ -32,10 +33,12 @@ class UDQFunctionTable {
 public:
     using FunctionMap = std::unordered_map<std::string,
                                            std::shared_ptr<UDQFunction>>;
-    explicit UDQFunctionTable(const UDQParams& params);
+
     UDQFunctionTable();
+    explicit UDQFunctionTable(const UDQParams& params);
     UDQFunctionTable(const UDQParams& param,
                      const FunctionMap& map);
+
     bool has_function(const std::string& name) const;
     const UDQFunction& get(const std::string& name) const;
 
@@ -45,9 +48,12 @@ public:
     bool operator==(const UDQFunctionTable& data) const;
 
 private:
-    void insert_function(std::shared_ptr<UDQFunction> func);
     UDQParams params;
     FunctionMap function_table;
+
+    void insert_function(std::shared_ptr<UDQFunction> func);
 };
-}
-#endif
+
+} // namespace Opm
+
+#endif // UDQFUNCTIONTABLE_HPP
