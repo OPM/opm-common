@@ -37,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
@@ -68,8 +67,13 @@ namespace Opm
     class SCHEDULESection;
     struct SimulatorUpdate;
     class SummaryState;
+    class TracerConfig;
     class UDQConfig;
+    class Well;
+    enum class WellGasInflowEquation;
     class WellMatcher;
+    enum class WellProducerCMode;
+    enum class WellStatus;
     class WellTestConfig;
 
     namespace RestartIO { struct RstState; }
@@ -266,7 +270,7 @@ namespace Opm
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
-        Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
+        WellProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
         void evalAction(const SummaryState& summary_state, std::size_t timeStep);
@@ -590,7 +594,7 @@ namespace Opm
                      bool allowCrossFlow,
                      bool automaticShutIn,
                      int pvt_table,
-                     Well::GasInflowEquation gas_inflow,
+                     WellGasInflowEquation gas_inflow,
                      std::size_t timeStep,
                      Connection::Order wellConnectionOrder);
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
@@ -598,7 +602,7 @@ namespace Opm
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
-        bool updateWellStatus( const std::string& well, std::size_t reportStep, Well::Status status, std::optional<KeywordLocation> = {});
+        bool updateWellStatus( const std::string& well, std::size_t reportStep, WellStatus status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::size_t load_start,
                                     std::size_t load_end,
