@@ -36,6 +36,7 @@
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -127,34 +128,7 @@ public:
         }
     };
 
-
-    struct InjectionControls {
-    public:
-        InjectionControls(int controls_arg) :
-            controls(controls_arg)
-        {}
-
-        double bhp_limit;
-        double thp_limit;
-
-
-        InjectorType injector_type;
-        InjectorCMode cmode = InjectorCMode::CMODE_UNDEFINED;
-        double surface_rate;
-        double reservoir_rate;
-        int    vfp_table_number;
-        bool   prediction_mode;
-        double rs_rv_inj;
-
-        bool hasControl(InjectorCMode cmode_arg) const {
-            return (this->controls & static_cast<int>(cmode_arg)) != 0;
-        }
-
-    private:
-        int controls;
-    };
-
-
+    using InjectionControls = WellInjectionControls;
 
     struct WellInjectionProperties {
         std::string name;
