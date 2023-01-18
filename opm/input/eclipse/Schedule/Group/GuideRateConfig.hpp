@@ -31,6 +31,7 @@
 
 namespace Opm {
 
+class Well;
 
 class GuideRateConfig {
 public:
