@@ -24,6 +24,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
@@ -483,6 +484,7 @@ namespace Opm {
         select_var_type |= var_type_bit(UDQVarType::WELL_VAR);
         select_var_type |= var_type_bit(UDQVarType::GROUP_VAR);
         select_var_type |= var_type_bit(UDQVarType::FIELD_VAR);
+        select_var_type |= var_type_bit(UDQVarType::SEGMENT_VAR);
 
         for (const auto& [keyword, index] : this->input_index) {
             if (index.action != UDQAction::DEFINE) {
@@ -508,24 +510,30 @@ namespace Opm {
         }
     }
 
-    void UDQConfig::eval(const std::size_t  report_step,
-                         const Schedule&    sched,
-                         const WellMatcher& wm,
-                         SummaryState&      st,
-                         UDQState&          udq_state) const
+    void UDQConfig::eval(const std::size_t     report_step,
+                         const Schedule&       sched,
+                         const WellMatcher&    wm,
+                         SegmentMatcherFactory segment_matcher_factory,
+                         SummaryState&         st,
+                         UDQState&             udq_state) const
     {
-        UDQContext context(this->function_table(), wm, st, udq_state);
+        UDQContext context {
+            this->function_table(), wm, std::move(segment_matcher_factory), st, udq_state
+        };
         this->eval_assign(report_step, sched, udq_state, context);
         this->eval_define(report_step, udq_state, context);
     }
 
-    void UDQConfig::eval_assign(const std::size_t  report_step,
-                                const Schedule&    sched,
-                                const WellMatcher& wm,
-                                SummaryState&      st,
-                                UDQState&          udq_state) const
+    void UDQConfig::eval_assign(const std::size_t     report_step,
+                                const Schedule&       sched,
+                                const WellMatcher&    wm,
+                                SegmentMatcherFactory segment_matcher_factory,
+                                SummaryState&         st,
+                                UDQState&             udq_state) const
     {
-        UDQContext context(this->function_table(), wm, st, udq_state);
+        UDQContext context {
+            this->function_table(), wm, std::move(segment_matcher_factory), st, udq_state
+        };
         this->eval_assign(report_step, sched, udq_state, context);
     }
 

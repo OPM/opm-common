@@ -270,6 +270,20 @@ UDQSet UDQSet::groups(const std::string&              name,
     return us;
 }
 
+UDQSet UDQSet::segments(const std::string&                      name,
+                        const std::vector<EnumeratedWellItems>& segments)
+{
+    return { name, UDQVarType::SEGMENT_VAR, segments };
+}
+
+UDQSet UDQSet::segments(const std::string&                      name,
+                        const std::vector<EnumeratedWellItems>& segments,
+                        const double                            scalar_value)
+{
+    auto us = UDQSet::segments(name, segments);
+    us.assign(scalar_value);
+    return us;
+}
 
 bool UDQSet::has(const std::string& name) const
 {

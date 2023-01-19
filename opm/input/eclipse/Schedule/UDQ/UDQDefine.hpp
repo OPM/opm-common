@@ -116,6 +116,7 @@ private:
     UDQSet scatter_scalar_value(UDQSet&& res, const UDQContext& context) const;
     UDQSet scatter_scalar_well_value(const UDQContext& context, const std::optional<double>& value) const;
     UDQSet scatter_scalar_group_value(const UDQContext& context, const std::optional<double>& value) const;
+    UDQSet scatter_scalar_segment_value(const UDQContext& context, const std::optional<double>& value) const;
 };
 
 } // Namespace Opm

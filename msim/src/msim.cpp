@@ -128,7 +128,12 @@ void msim::run_step(WellTestState& wtest_state, UDQState& udq_state, data::Solut
                           /* inplace = */ {});
 
         this->schedule.getUDQConfig(report_step - 1)
-            .eval(report_step, this->schedule, schedule.wellMatcher(report_step), this->st, udq_state);
+            .eval(report_step,
+                  this->schedule,
+                  this->schedule.wellMatcher(report_step),
+                  this->schedule.segmentMatcherFactory(report_step),
+                  this->st,
+                  udq_state);
 
         this->output(wtest_state,
                      udq_state,

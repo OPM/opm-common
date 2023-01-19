@@ -65,6 +65,7 @@ namespace Opm
     class Python;
     class RPTConfig;
     class SCHEDULESection;
+    class SegmentMatcher;
     struct SimulatorUpdate;
     class SummaryState;
     class TracerConfig;
@@ -237,6 +238,7 @@ namespace Opm
         bool hasWell(const std::string& wellName, std::size_t timeStep) const;
 
         WellMatcher wellMatcher(std::size_t report_step) const;
+        std::function<std::unique_ptr<SegmentMatcher>()> segmentMatcherFactory(std::size_t report_step) const;
         std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells = {}) const;
         std::vector<std::string> wellNames(const std::string& pattern) const;
         std::vector<std::string> wellNames(std::size_t timeStep) const;

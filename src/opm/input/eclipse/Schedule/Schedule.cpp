@@ -44,6 +44,7 @@
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -1243,6 +1244,20 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return WellMatcher(sched_state->well_order.get(), sched_state->wlist_manager.get());
     }
 
+    std::function<std::unique_ptr<SegmentMatcher>()>
+    Schedule::segmentMatcherFactory(const std::size_t report_step) const
+    {
+        return {
+            [report_step, this]() -> std::unique_ptr<SegmentMatcher>
+            {
+                const auto ix = (report_step < this->snapshots.size())
+                    ? report_step
+                    : this->snapshots.size() - 1;
+
+                return std::make_unique<SegmentMatcher>(this->snapshots[ix]);
+            }
+        };
+    }
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern) const {
         return this->wellNames(pattern, this->size() - 1);
