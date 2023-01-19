@@ -30,6 +30,18 @@ namespace Opm {
 
     }
 
+    bool RestartKey::operator==(const RestartKey& key2) const
+    {
+        return key == key2.key &&
+               dim == key2.dim &&
+               required == key2.required;
+    }
+
+    RestartKey RestartKey::serializationTestObject()
+    {
+        return RestartKey{"test_key", UnitSystem::measure::effective_Kh, true};
+    }
+
     RestartValue::RestartValue(data::Solution sol,
                                data::Wells wells_arg,
                                data::GroupAndNetworkValues grp_nwrk_arg,
@@ -102,6 +114,30 @@ namespace Opm {
 
             units.to_si(restart_key.dim, data);
         }
+    }
+
+    bool RestartValue::operator==(const RestartValue& val2) const
+    {
+        return (this->solution == val2.solution)
+            && (this->wells == val2.wells)
+            && (this->grp_nwrk == val2.grp_nwrk)
+            && (this->aquifer == val2.aquifer)
+            && (this->extra == val2.extra);
+    }
+
+    RestartValue RestartValue::serializationTestObject()
+    {
+        auto res = RestartValue {
+                       data::Solution::serializationTestObject(),
+                       data::Wells::serializationTestObject(),
+                       data::GroupAndNetworkValues::serializationTestObject(),
+                       {{1, data::AquiferData::serializationTestObjectF()},
+                        {2, data::AquiferData::serializationTestObjectC()},
+                        {3, data::AquiferData::serializationTestObjectN()}}
+                   };
+        res.extra = {{RestartKey::serializationTestObject(), {1.0, 2.0}}};
+
+        return res;
     }
 
 }
