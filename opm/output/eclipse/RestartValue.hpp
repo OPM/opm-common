@@ -54,12 +54,7 @@ namespace Opm {
               required(_required)
         {}
 
-        bool operator==(const RestartKey& key2) const
-        {
-            return key == key2.key &&
-                   dim == key2.dim &&
-                   required == key2.required;
-        }
+        bool operator==(const RestartKey& key2) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -69,10 +64,7 @@ namespace Opm {
             serializer(required);
         }
 
-        static RestartKey serializationTestObject()
-        {
-            return RestartKey{"test_key", UnitSystem::measure::effective_Kh, true};
-        }
+        static RestartKey serializationTestObject();
     };
 
     /*
@@ -104,14 +96,7 @@ namespace Opm {
         void convertFromSI(const UnitSystem& units);
         void convertToSI(const UnitSystem& units);
 
-        bool operator==(const RestartValue& val2) const
-        {
-            return (this->solution == val2.solution)
-                && (this->wells == val2.wells)
-                && (this->grp_nwrk == val2.grp_nwrk)
-                && (this->aquifer == val2.aquifer)
-                && (this->extra == val2.extra);
-        }
+        bool operator==(const RestartValue& val2) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -123,20 +108,7 @@ namespace Opm {
           serializer(extra);
         }
 
-        static RestartValue serializationTestObject()
-        {
-            auto res = RestartValue {
-                           data::Solution::serializationTestObject(),
-                           data::Wells::serializationTestObject(),
-                           data::GroupAndNetworkValues::serializationTestObject(),
-                           {{1, data::AquiferData::serializationTestObjectF()},
-                            {2, data::AquiferData::serializationTestObjectC()},
-                            {3, data::AquiferData::serializationTestObjectN()}}
-                       };
-            res.extra = {{RestartKey::serializationTestObject(), {1.0, 2.0}}};
-
-            return res;
-        }
+        static RestartValue serializationTestObject();
     };
 
 }
