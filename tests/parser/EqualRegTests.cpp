@@ -18,8 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
-#include <cstdio>
 
 #define BOOST_TEST_MODULE EqualRegTests
 #include <boost/test/unit_test.hpp>

@@ -31,14 +31,18 @@
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -350,7 +354,7 @@ namespace {
             default:
                 throw std::invalid_argument {
                     fmt::format("Unsupported guiderate phase '{}' for restart",
-                                Opm::Well::GuideRateTarget2String(grTarget))
+                                Opm::WellGuideRateTarget2String(grTarget))
                 };
             }
         }
@@ -901,9 +905,9 @@ namespace {
         }
 
         template <class SWProp, class SWellArray>
-        void assignGasLiftOptimisation(const Opm::GasLiftOpt::Well& w_glo,
-                                       SWProp&&                     swprop,
-                                       SWellArray&                  sWell)
+        void assignGasLiftOptimisation(const Opm::GasLiftWell& w_glo,
+                                       SWProp&&                swprop,
+                                       SWellArray&             sWell)
         {
             using Ix = VI::SWell::index;
             using M = ::Opm::UnitSystem::measure;

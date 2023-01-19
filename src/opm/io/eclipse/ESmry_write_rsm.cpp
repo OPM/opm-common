@@ -29,6 +29,7 @@
 #include <list>
 #include <ostream>
 #include <regex>
+#include <sstream>
 #include <string>
 
 #include <fmt/format.h>

@@ -37,7 +37,6 @@
 #define OPM_PARAMETER_HEADER
 
 #include <string>
-#include <sstream>
 
 #include <opm/common/utility/parameters/ParameterMapItem.hpp>
 #include <opm/common/utility/parameters/ParameterStrings.hpp>
@@ -89,30 +88,8 @@ namespace Opm {
 	struct ParameterMapItemTrait<int> {
 	    static int convert(const ParameterMapItem& item,
                                std::string& conversion_error,
-                               const bool)
-            {
-		conversion_error = correct_parameter_tag(item);
-		if (conversion_error != "") {
-		    return 0;
-		}
-		const Parameter& parameter = dynamic_cast<const Parameter&>(item);
-		conversion_error = correct_type(parameter, ID_param_type__int);
-		if (conversion_error != "") {
-		    return 0;
-		}
-		std::stringstream stream;
-		stream << parameter.getValue();
-		int value;
-		stream >> value;
-		if (stream.fail()) {
-		    conversion_error = "Conversion to '" +
-                                       ID_param_type__int +
-                                       "' failed. Data was '" +
-                                       parameter.getValue() + "'.\n";
-		    return 0;
-		}
-		return value;
-	    }
+                               const bool);
+
 	    static std::string type() {return ID_param_type__int;}
 	};
 
@@ -125,30 +102,8 @@ namespace Opm {
 	struct ParameterMapItemTrait<double> {
 	    static double convert(const ParameterMapItem& item,
                                   std::string& conversion_error,
-                                  const bool)
-            {
-		conversion_error = correct_parameter_tag(item);
-		if (conversion_error != "") {
-		    return 0.0;
-		}
-		const Parameter& parameter = dynamic_cast<const Parameter&>(item);
-		conversion_error = correct_type(parameter, ID_param_type__float);
-		if (conversion_error != "") {
-		    return 0.0;
-		}
-		std::stringstream stream;
-		stream << parameter.getValue();
-		double value;
-		stream >> value;
-		if (stream.fail()) {
-		    conversion_error = "Conversion to '" +
-                                       ID_param_type__float +
-                                       "' failed. Data was '" +
-                                       parameter.getValue() + "'.\n";
-		    return 0.0;
-		}
-		return value;
-	    }
+                                  const bool);
+
 	    static std::string type() {return ID_param_type__float;}
 	};
 
@@ -161,29 +116,8 @@ namespace Opm {
 	struct ParameterMapItemTrait<bool> {
 	    static bool convert(const ParameterMapItem& item,
                                 std::string& conversion_error,
-                                const bool)
-            {
-		conversion_error = correct_parameter_tag(item);
-		if (conversion_error != "") {
-		    return false;
-		}
-		const Parameter& parameter = dynamic_cast<const Parameter&>(item);
-		conversion_error = correct_type(parameter, ID_param_type__bool);
-		if (conversion_error != "") {
-		    return false;
-		}
-		if (parameter.getValue() == ID_true) {
-		    return true;
-		} else if (parameter.getValue() == ID_false) {
-		    return false;
-		} else {
-		    conversion_error = "Conversion failed. Data was '" +
-                                       parameter.getValue() +
-                                       "', but should be one of '" +
-                                       ID_true + "' or '" + ID_false + "'.\n";
-		    return false;
-		}
-	    }
+                                const bool);
+
 	    static std::string type() {return ID_param_type__bool;}
 	};
 
@@ -196,19 +130,8 @@ namespace Opm {
 	struct ParameterMapItemTrait<std::string> {
 	    static std::string convert(const ParameterMapItem& item,
                                        std::string& conversion_error,
-                                       const bool)
-            {
-		conversion_error = correct_parameter_tag(item);
-		if (conversion_error != "") {
-		    return "";
-		}
-		const Parameter& parameter = dynamic_cast<const Parameter&>(item);
-		conversion_error = correct_type(parameter, ID_param_type__string);
-		if (conversion_error != "") {
-		    return "";
-		}
-		return parameter.getValue();
-	    }
+                                       const bool);
+
 	    static std::string type() {return ID_param_type__string;}
 	};
 } // namespace Opm

@@ -40,7 +40,6 @@
 #include <dune/common/version.hh>
 
 #include <limits>
-#include <iostream>
 
 namespace Opm {
 
@@ -217,44 +216,17 @@ public:
             }
         }
 
-        std::ostringstream oss;
-        oss << "ImmiscibleFlash solver failed:"
-            << " {c_alpha^kappa} = {" << globalMolarities << "},"
-            << " T = " << fluidState.temperature(/*phaseIdx=*/0);
-        throw NumericalProblem(oss.str());
+        std::string msg = "ImmiscibleFlash solver failed: "
+                          "{c_alpha^kappa} = {";
+        for (const auto& v : globalMolarities)
+            msg += " " + std::to_string(v);
+        msg += " }, T = ";
+        msg += std::to_string(fluidState.temperature(/*phaseIdx=*/0));
+        throw NumericalProblem(msg);
     }
 
 
 protected:
-    template <class FluidState>
-    static void printFluidState_(const FluidState& fs)
-    {
-        std::cout << "saturations: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fs.saturation(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "pressures: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fs.pressure(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "densities: ";
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            std::cout << fs.density(phaseIdx) << " ";
-        std::cout << "\n";
-
-        std::cout << "global component molarities: ";
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            Scalar sum = 0;
-            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                sum += fs.saturation(phaseIdx)*fs.molarity(phaseIdx, compIdx);
-            }
-            std::cout << sum << " ";
-        }
-        std::cout << "\n";
-    }
-
     template <class MaterialLaw, class InputFluidState, class FlashFluidState>
     static void assignFlashFluidState_(const InputFluidState& inputFluidState,
                                        FlashFluidState& flashFluidState,

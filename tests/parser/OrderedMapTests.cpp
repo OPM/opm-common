@@ -18,7 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
 
 #define BOOST_TEST_MODULE ScheduleTests
 #include <boost/test/unit_test.hpp>
@@ -35,6 +34,18 @@ BOOST_AUTO_TEST_CASE( check_empty) {
     BOOST_CHECK_THROW( map.at("KEY"), std::invalid_argument);
     BOOST_CHECK_THROW( map.at(0), std::invalid_argument);
     BOOST_CHECK_EQUAL( map.count("NO_SUCH_KEY"), 0U);
+}
+
+BOOST_AUTO_TEST_CASE( check_similar) {
+    Opm::OrderedMap<std::string> map;
+    map.insert(std::make_pair("CKEY1" , "Value1"));
+    map.insert(std::make_pair("CKEY2" , "Value2"));
+    BOOST_CHECK_EXCEPTION(map.get("CKEY"), std::invalid_argument,
+                          [](const std::invalid_argument& e)
+                          {
+                              return std::string("Key CKEY not found. "
+                                                 "Similar entries are CKEY1, CKEY2.") == e.what();
+                          });
 }
 
 BOOST_AUTO_TEST_CASE( operator_square ) {

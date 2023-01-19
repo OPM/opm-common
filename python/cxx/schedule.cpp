@@ -9,6 +9,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <fmt/format.h>
 #include <pybind11/stl.h>

@@ -114,6 +114,7 @@ template <class ScalarT,
           bool enableEvaporation = false,
           bool enableBrine = false,
           bool enableSaltPrecipitation = false,
+          bool enableDissolutionInWater = false,
           unsigned numStoragePhases = FluidSystem::numPhases>
 class BlackOilFluidState
 {
@@ -162,6 +163,10 @@ public:
             Valgrind::CheckDefined(*Rvw_);
         }
 
+        if constexpr (enableDissolutionInWater) {
+            Valgrind::CheckDefined(*Rsw_);
+        }
+
         if constexpr (enableBrine) {
             Valgrind::CheckDefined(*saltConcentration_);
         }
@@ -194,6 +199,9 @@ public:
         }
         if constexpr (enableEvaporation) {
             setRvw(BlackOil::getRvw_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
+        }
+        if constexpr (enableDissolutionInWater) {
+            setRsw(BlackOil::getRsw_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
         if constexpr (enableBrine){
             setSaltConcentration(BlackOil::getSaltConcentration_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
@@ -312,6 +320,14 @@ public:
     { *Rvw_ = newRvw; }
 
     /*!
+     * \brief Set the gas dissolution factor [m^3/m^3] of the water phase..
+     *
+     * This quantity is very specific to the black-oil model.
+     */
+    void setRsw(const Scalar& newRsw)
+    { *Rsw_ = newRsw; }
+
+    /*!
      * \brief Set the salt concentration.
      */
     void setSaltConcentration(const Scalar& newSaltConcentration)
@@ -372,7 +388,7 @@ public:
     { return invB_[canonicalToStoragePhaseIndex_(phaseIdx)]; }
 
     /*!
-     * \brief Return the gas dissulition factor of oil [m^3/m^3].
+     * \brief Return the gas dissolution factor of oil [m^3/m^3].
      *
      * I.e., the amount of gas which is present in the oil phase in terms of cubic meters
      * of gas at surface conditions per cubic meter of liquid oil at surface
@@ -416,6 +432,23 @@ public:
     {
         if constexpr (enableEvaporation) {
             return *Rvw_;
+        } else {
+            static Scalar null = 0.0;
+            return null;
+        }
+    }
+
+    /*!
+     * \brief Return the gas dissolution factor of water [m^3/m^3].
+     *
+     * I.e., the amount of gas which is present in the water phase in terms of cubic meters
+     * of gas at surface conditions per cubic meter of water at surface
+     * conditions. This method is specific to the black-oil model.
+     */
+    const Scalar& Rsw() const
+    {
+        if constexpr (enableDissolutionInWater) {
+            return *Rsw_;
         } else {
             static Scalar null = 0.0;
             return null;
@@ -657,6 +690,7 @@ private:
     ConditionalStorage<enableDissolution,Scalar> Rs_;
     ConditionalStorage<enableDissolution, Scalar> Rv_;
     ConditionalStorage<enableEvaporation,Scalar> Rvw_;
+    ConditionalStorage<enableDissolutionInWater,Scalar> Rsw_;
     ConditionalStorage<enableBrine, Scalar> saltConcentration_;
     ConditionalStorage<enableSaltPrecipitation, Scalar> saltSaturation_;
     unsigned short pvtRegionIdx_;

@@ -17,9 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 namespace Opm {
 

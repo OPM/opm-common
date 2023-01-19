@@ -20,11 +20,12 @@
 #ifndef INJECTION_HPP
 #define INJECTION_HPP
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
-
 namespace Opm {
+
+enum class InjectorType;
+enum class Phase;
+class UnitSystem;
+
 namespace injection {
 
 double rateToSI(double rawRate, InjectorType wellType, const Opm::UnitSystem &unitSystem);

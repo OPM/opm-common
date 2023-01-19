@@ -21,13 +21,10 @@
 #define OPM_KEYWORDS_HPP
 
 #include <optional>
+#include <string>
 
-namespace Opm
-{
-
-namespace Fieldprops
-{
-
+namespace Opm {
+namespace Fieldprops {
 namespace keywords {
 
 template <typename T>
@@ -72,7 +69,9 @@ struct keyword_info {
         return *this;
     }
 };
+
 } // end namespace Keywords
 } // end namespace Fieldprops
 } //end namespace Opm
+
 #endif //OPM_KEYWORDS_HPP

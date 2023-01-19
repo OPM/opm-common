@@ -27,6 +27,8 @@
 #ifndef OPM_CHECK_FLUIDSYSTEM_HPP
 #define OPM_CHECK_FLUIDSYSTEM_HPP
 
+#include <opm/common/utility/Demangle.hpp>
+
 // include all fluid systems in opm-material
 #include <opm/material/fluidsystems/SinglePhaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
@@ -45,10 +47,9 @@
 #include <opm/material/fluidstates/NonEquilibriumFluidState.hpp>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
-#include <dune/common/classname.hh>
-
 #include <iostream>
 #include <string>
+#include <typeinfo>
 
 /*!
  * \brief This is a fluid state which makes sure that only the quantities
@@ -267,7 +268,7 @@ void checkFluidState(const BaseFluidState& fs)
 template <class Scalar, class FluidSystem, class RhsEval, class LhsEval>
 void checkFluidSystem()
 {
-    std::cout << "Testing fluid system '" << Dune::className<FluidSystem>() << "'\n";
+    std::cout << "Testing fluid system '" << Opm::demangle(typeid(FluidSystem).name()) << "'\n";
 
     // make sure the fluid system provides the number of phases and
     // the number of components

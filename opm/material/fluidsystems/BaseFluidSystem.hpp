@@ -27,11 +27,13 @@
 #ifndef OPM_BASE_FLUID_SYSTEM_HPP
 #define OPM_BASE_FLUID_SYSTEM_HPP
 
+#include <opm/common/utility/Demangle.hpp>
+
 #include <stdexcept>
 
 #include "NullParameterCache.hpp"
 
-#include <dune/common/classname.hh>
+#include <typeinfo>
 
 namespace Opm {
 
@@ -73,7 +75,7 @@ public:
      */
     static char* phaseName(unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a phaseName() method!");
+        throw std::runtime_error(not_implemented("phaseName"));
     }
 
     /*!
@@ -83,7 +85,7 @@ public:
      */
     static bool isLiquid(unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a isLiquid() method!");
+        throw std::runtime_error(not_implemented("isLiquid"));
     }
 
     /*!
@@ -102,7 +104,7 @@ public:
      */
     static bool isIdealMixture(unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a isIdealMixture() method!");
+        throw std::runtime_error(not_implemented("isIdealMixture"));
     }
 
     /*!
@@ -116,7 +118,7 @@ public:
      */
     static bool isCompressible(unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a isCompressible() method!");
+        throw std::runtime_error(not_implemented("isCompressible"));
     }
 
     /*!
@@ -127,7 +129,7 @@ public:
      */
     static bool isIdealGas(unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a isIdealGas() method!");
+        throw std::runtime_error(not_implemented("isIdealGas"));
     }
 
     /*!
@@ -137,7 +139,7 @@ public:
      */
     static const char* componentName(unsigned /*compIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a componentName() method!");
+        throw std::runtime_error(not_implemented("componentName"));
     }
 
     /*!
@@ -147,7 +149,7 @@ public:
      */
     static Scalar molarMass(unsigned /*compIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a molarMass() method!");
+        throw std::runtime_error(not_implemented("molarMass"));
     }
 
     /*!
@@ -157,7 +159,7 @@ public:
      */
     static Scalar acentricFactor(unsigned /*compIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a acentricFactor() method!");
+        throw std::runtime_error(not_implemented("acentricFactor"));
     }
 
     /*!
@@ -177,7 +179,7 @@ public:
                            const ParamCache& /*paramCache*/,
                            unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"' does not provide a density() method!");
+        throw std::runtime_error(not_implemented("density"));
     }
 
     /*!
@@ -200,7 +202,7 @@ public:
                                        unsigned /*phaseIdx*/,
                                        unsigned /*compIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"'  does not provide a fugacityCoefficient() method!");
+        throw std::runtime_error(not_implemented("fugacityCoefficient"));
     }
 
     /*!
@@ -214,7 +216,7 @@ public:
                              ParamCache& /*paramCache*/,
                              unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"'  does not provide a viscosity() method!");
+        throw std::runtime_error(not_implemented("viscosity"));
     }
 
     /*!
@@ -240,7 +242,7 @@ public:
                                         unsigned /*phaseIdx*/,
                                         unsigned /*compIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"'  does not provide a diffusionCoefficient() method!");
+        throw std::runtime_error(not_implemented("diffusionCoefficient"));
     }
 
     /*!
@@ -255,7 +257,7 @@ public:
                             ParamCache& /*paramCache*/,
                             unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"'  does not provide an enthalpy() method!");
+        throw std::runtime_error(not_implemented("enthalpy"));
     }
 
     /*!
@@ -269,7 +271,7 @@ public:
                                        ParamCache& /*paramCache*/,
                                        unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"'  does not provide a thermalConductivity() method!");
+        throw std::runtime_error(not_implemented("thermalConductivity"));
     }
 
     /*!
@@ -283,7 +285,7 @@ public:
                                 ParamCache& /*paramCache*/,
                                 unsigned /*phaseIdx*/)
     {
-        throw std::runtime_error("Not implemented: The fluid system '"+Dune::className<Implementation>()+"'  does not provide a heatCapacity() method!");
+        throw std::runtime_error(not_implemented("heatCapacity"));
     }
 
 
@@ -291,6 +293,14 @@ public:
     static unsigned phaseIsActive(unsigned /*phaseIdx*/)
     {
         return true;
+    }
+
+private:
+    static std::string not_implemented(const char* method)
+    {
+        return "Not implemented: The fluid system '" +
+               demangle(typeid(Implementation).name()) +
+               "'  does not provide a " + method + "() method!";
     }
 };
 

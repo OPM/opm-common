@@ -35,6 +35,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <unordered_set>
@@ -266,10 +267,9 @@ namespace Opm {
     {
         std::vector<UDQDefine> ret;
 
-        for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::DEFINE) {
-                const std::string& key = index_pair.first;
-                ret.push_back( this->m_definitions.at(key) );
+        for (const auto& [key, index] : this->input_index) {
+            if (index.action == UDQAction::DEFINE) {
+                ret.push_back(this->m_definitions.at(key));
             }
         }
 
@@ -280,9 +280,8 @@ namespace Opm {
     {
         std::vector<UDQDefine> filtered_defines;
 
-        for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::DEFINE) {
-                const std::string& key = index_pair.first;
+        for (const auto& [key, index] : this->input_index) {
+            if (index.action == UDQAction::DEFINE) {
                 const auto& udq_define = this->m_definitions.at(key);
                 if (udq_define.var_type() == var_type) {
                     filtered_defines.push_back(udq_define);
@@ -297,19 +296,14 @@ namespace Opm {
     {
         std::vector<UDQInput> res;
 
-        for (const auto& index_pair : this->input_index) {
-            const UDQIndex& index = index_pair.second;
-            std::string u;
-            if (this->has_unit(index_pair.first)) {
-                u = this->unit(index_pair.first);
-            }
+        for (const auto& [key, index] : this->input_index) {
+            const auto u = this->has_unit(key)
+                ? this->unit(key) : std::string{};
 
             if (index.action == UDQAction::DEFINE) {
-                const std::string& key = index_pair.first;
                 res.push_back(UDQInput(index, this->m_definitions.at(key), u));
             }
-            else if (index_pair.second.action == UDQAction::ASSIGN) {
-                const std::string& key = index_pair.first;
+            else if (index.action == UDQAction::ASSIGN) {
                 res.push_back(UDQInput(index, this->m_assignments.at(key), u));
             }
         }
@@ -333,9 +327,8 @@ namespace Opm {
     {
         std::vector<UDQAssign> ret;
 
-        for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::ASSIGN) {
-                const std::string& key = index_pair.first;
+        for (const auto& [key, input] : this->input_index) {
+            if (input.action == UDQAction::ASSIGN) {
                 ret.push_back(this->m_assignments.at(key));
             }
         }
@@ -348,12 +341,11 @@ namespace Opm {
         std::vector<UDQAssign> filtered_assigns;
 
         for (const auto& index_pair : this->input_index) {
-            const std::string& key = index_pair.first;
-            const auto& assign_iter = this->m_assignments.find(key);
-            if (assign_iter != this->m_assignments.end()) {
-                if (assign_iter->second.var_type() == var_type) {
-                    filtered_assigns.push_back(assign_iter->second);
-                }
+            auto assign_iter = this->m_assignments.find(index_pair.first);
+            if ((assign_iter != this->m_assignments.end()) &&
+                (assign_iter->second.var_type() == var_type))
+            {
+                filtered_assigns.push_back(assign_iter->second);
             }
         }
 
@@ -372,7 +364,7 @@ namespace Opm {
 
     bool UDQConfig::has_unit(const std::string& keyword) const
     {
-        return (this->units.count(keyword) > 0);
+        return this->units.find(keyword) != this->units.end();
     }
 
     bool UDQConfig::has_keyword(const std::string& keyword) const
@@ -406,7 +398,7 @@ namespace Opm {
     UDQInput UDQConfig::operator[](const std::size_t insert_index) const
     {
         auto index_iter = std::find_if(this->input_index.begin(), this->input_index.end(),
-            [insert_index](const std::pair<std::string, UDQIndex>& name_index)
+            [insert_index](const auto& name_index)
         {
             return name_index.second.insert_index == insert_index;
         });
@@ -416,10 +408,8 @@ namespace Opm {
         }
 
         const auto& [keyword, index] = *index_iter;
-        std::string u;
-        if (this->has_unit(keyword)) {
-            u = this->unit(keyword);
-        }
+        const auto u = this->has_unit(keyword)
+            ? this->unit(keyword) : std::string{};
 
         if (index.action == UDQAction::ASSIGN) {
             return UDQInput(index, this->m_assignments.at(keyword), u);
@@ -480,25 +470,37 @@ namespace Opm {
                                 UDQState&         udq_state,
                                 UDQContext&       context) const
     {
-        for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
-            if (udq_state.define(def.keyword(), def.status())) {
-                auto ws = def.eval(context);
-                context.update_define(report_step, def.keyword(), ws);
-            }
-        }
+        auto var_type_bit = [](const UDQVarType var_type)
+        {
+            return 1ul << static_cast<std::size_t>(var_type);
+        };
 
-        for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
-            if (udq_state.define(def.keyword(), def.status())) {
-                auto ws = def.eval(context);
-                context.update_define(report_step, def.keyword(), ws);
-            }
-        }
+        auto select_var_type = std::size_t{0};
+        select_var_type |= var_type_bit(UDQVarType::WELL_VAR);
+        select_var_type |= var_type_bit(UDQVarType::GROUP_VAR);
+        select_var_type |= var_type_bit(UDQVarType::FIELD_VAR);
 
-        for (const auto& def : this->definitions(UDQVarType::FIELD_VAR)) {
-            if (udq_state.define(def.keyword(), def.status())) {
-                auto field_udq = def.eval(context);
-                context.update_define(report_step, def.keyword(), field_udq);
+        for (const auto& [keyword, index] : this->input_index) {
+            if (index.action != UDQAction::DEFINE) {
+                continue;
             }
+
+            auto def_pos = this->m_definitions.find(keyword);
+            if (def_pos == this->m_definitions.end()) { // No such def
+                throw std::logic_error {
+                    fmt::format("Internal error: UDQ '{}' is not among "
+                                "those DEFINEd for numerical evaluation", keyword)
+                };
+            }
+
+            const auto& def = def_pos->second;
+            if (((select_var_type & var_type_bit(def.var_type())) == 0) || // Unwanted Var Type
+                ! udq_state.define(keyword, def.status())) // UDQ def not applicable now
+            {
+                continue;
+            }
+
+            context.update_define(report_step, keyword, def.eval(context));
         }
     }
 
@@ -524,8 +526,7 @@ namespace Opm {
     void UDQConfig::required_summary(std::unordered_set<std::string>& summary_keys) const
     {
         for (const auto& def_pair : this->m_definitions) {
-            const auto& udq_def = def_pair.second;
-            udq_def.required_summary(summary_keys);
+            def_pair.second.required_summary(summary_keys);
         }
     }
 

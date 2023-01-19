@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <cassert>
 #include <exception>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -29,7 +28,6 @@
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>

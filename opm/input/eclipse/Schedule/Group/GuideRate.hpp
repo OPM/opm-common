@@ -22,7 +22,6 @@
 
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <cstddef>
 #include <ctime>
@@ -35,6 +34,7 @@
 namespace Opm {
 
 class Schedule;
+enum class WellGuideRateTarget;
 
 } // namespace Opm
 
@@ -52,7 +52,7 @@ public:
             , wat_rat(wrat)
         {}
 
-        double eval(const Well::GuideRateTarget target) const;
+        double eval(const WellGuideRateTarget target) const;
         double eval(const Group::GuideRateProdTarget target) const;
         double eval(const GuideRateModel::Target target) const;
 
@@ -103,12 +103,12 @@ public:
     bool hasPotentials(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
 
-    double get(const std::string& well, const Well::GuideRateTarget target, const RateVector& rates) const;
+    double get(const std::string& well, const WellGuideRateTarget target, const RateVector& rates) const;
     double get(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
     double get(const std::string& name, const GuideRateModel::Target model_target, const RateVector& rates) const;
     double get(const std::string& group, const Phase& phase) const;
 
-    double getSI(const std::string& well, const Well::GuideRateTarget target, const RateVector& rates) const;
+    double getSI(const std::string& well, const WellGuideRateTarget target, const RateVector& rates) const;
     double getSI(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
     double getSI(const std::string& wgname, const GuideRateModel::Target target, const RateVector& rates) const;
     double getSI(const std::string& group, const Phase& phase) const;

@@ -27,8 +27,6 @@
 #ifndef OPM_THREE_PHASE_PARKER_VAN_GENUCHTEN_PARAMS_HPP
 #define OPM_THREE_PHASE_PARKER_VAN_GENUCHTEN_PARAMS_HPP
 
-#include <dune/common/fvector.hh>
-
 #include <opm/material/common/EnsureFinalized.hpp>
 #include <opm/material/common/Valgrind.hpp>
 

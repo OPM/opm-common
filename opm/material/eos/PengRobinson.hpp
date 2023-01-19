@@ -37,6 +37,7 @@
 #include <opm/material/common/PolynomialUtils.hpp>
 
 #include <csignal>
+#include <string>
 
 namespace Opm {
 
@@ -380,9 +381,11 @@ protected:
                         return;
                     }
 
-                    std::ostringstream oss;
-                    oss << "Could not determine the critical point for a=" << a << ", b=" << b;
-                    throw NumericalProblem(oss.str());
+                    const std::string msg =
+                        "Could not determine the critical point for a="
+                            + std::to_string(getValue(a))
+                        + ", b=" + std::to_string(getValue(b));
+                    throw NumericalProblem(msg);
                 }
 
                 if (findExtrema_(minVm, maxVm, minP, maxP, a, b, T - delta)) {

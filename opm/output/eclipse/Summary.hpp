@@ -24,7 +24,6 @@
 #include <opm/output/data/InterRegFlowMap.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
 
 #include <cstddef>
 #include <map>
@@ -37,6 +36,7 @@
 namespace Opm {
     class EclipseGrid;
     class EclipseState;
+    class PAvgCalculatorCollection;
     class Schedule;
     class SummaryConfig;
     class SummaryState;

@@ -18,7 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
 #include <memory>
 
 #define BOOST_TEST_MODULE EMBEDDED_PYTHON
@@ -30,10 +29,12 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 using namespace Opm;
 

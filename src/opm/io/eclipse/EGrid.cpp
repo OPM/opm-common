@@ -23,6 +23,7 @@
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -30,10 +31,7 @@
 #include <iomanip>
 #include <numeric>
 #include <string>
-#include <sstream>
 #include <stdexcept>
-
-#include <math.h>
 
 namespace Opm { namespace EclIO {
 

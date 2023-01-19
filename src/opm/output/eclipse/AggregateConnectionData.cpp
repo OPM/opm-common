@@ -27,6 +27,8 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -34,7 +36,6 @@
 #include <cmath>
 #include <cstddef>
 #include <exception>
-#include <iostream>
 #include <stdexcept>
 #include <utility>
 

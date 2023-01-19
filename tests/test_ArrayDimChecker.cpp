@@ -29,9 +29,10 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
 #include <iostream>
 #include <string>
@@ -389,7 +390,7 @@ RedirectCERR::~RedirectCERR()
 BOOST_AUTO_TEST_SUITE(WellDimensions)
 
 namespace {
-    void setWellDimsContext(const Opm::InputError::Action action,
+    void setWellDimsContext(const Opm::InputErrorAction action,
                             Opm::ParseContext&            ctxt)
     {
         ctxt.update(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE,       action);
@@ -422,7 +423,7 @@ BOOST_AUTO_TEST_CASE(ManyChildGroups)
 BOOST_AUTO_TEST_CASE(WellDims)
 {
     Opm::ParseContext parseContext;
-    setWellDimsContext(Opm::InputError::THROW_EXCEPTION, parseContext);
+    setWellDimsContext(Opm::InputErrorAction::THROW_EXCEPTION, parseContext);
 
     auto cse = CaseObjects{ simCaseWellDims(),  parseContext};
 
@@ -433,7 +434,7 @@ BOOST_AUTO_TEST_CASE(WellDims)
                                                            parseContext, cse.guard),
                        Opm::OpmInputError);
 
-    setWellDimsContext(Opm::InputError::DELAYED_EXIT1, parseContext);
+    setWellDimsContext(Opm::InputErrorAction::DELAYED_EXIT1, parseContext);
     Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
                                         parseContext, cse.guard);
 
@@ -458,7 +459,7 @@ BOOST_AUTO_TEST_CASE(WellDims)
 BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
 {
     Opm::ParseContext parseContext;
-    setWellDimsContext(Opm::InputError::THROW_EXCEPTION, parseContext);
+    setWellDimsContext(Opm::InputErrorAction::THROW_EXCEPTION, parseContext);
 
     auto cse = CaseObjects{ simCaseNodeGroupSizeFailure(),  parseContext};
 
@@ -470,7 +471,7 @@ BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
                                                            parseContext, cse.guard),
                        Opm::OpmInputError);
 
-    setWellDimsContext(Opm::InputError::DELAYED_EXIT1, parseContext);
+    setWellDimsContext(Opm::InputErrorAction::DELAYED_EXIT1, parseContext);
     Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
                                         parseContext, cse.guard);
 

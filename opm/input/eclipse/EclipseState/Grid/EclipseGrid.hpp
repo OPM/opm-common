@@ -108,14 +108,14 @@ namespace Opm {
           the theta keywords entered sum up to exactly 360 degrees!
         */
 
-        bool circle( ) const;
-        bool isPinchActive( ) const;
-        double getPinchThresholdThickness( ) const;
-        PinchMode::ModeEnum getPinchOption( ) const;
-        PinchMode::ModeEnum getMultzOption( ) const;
-        PinchMode::ModeEnum getPinchGapMode( ) const;
+        bool circle() const;
+        bool isPinchActive() const;
+        double getPinchThresholdThickness() const;
+        PinchMode getPinchOption() const;
+        PinchMode getMultzOption() const;
+        PinchMode getPinchGapMode() const;
 
-        MinpvMode::ModeEnum getMinpvMode() const;
+        MinpvMode getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;
 
         /*
@@ -222,11 +222,11 @@ namespace Opm {
 
     private:
         std::vector<double> m_minpvVector;
-        MinpvMode::ModeEnum m_minpvMode;
+        MinpvMode m_minpvMode;
         std::optional<double> m_pinch;
-        PinchMode::ModeEnum m_pinchoutMode;
-        PinchMode::ModeEnum m_multzMode;
-        PinchMode::ModeEnum m_pinchGapMode;
+        PinchMode m_pinchoutMode;
+        PinchMode m_multzMode;
+        PinchMode m_pinchGapMode;
 
         mutable std::optional<std::vector<double>> active_volume;
 

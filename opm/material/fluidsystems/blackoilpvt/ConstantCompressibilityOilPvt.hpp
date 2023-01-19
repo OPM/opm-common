@@ -27,12 +27,16 @@
 #ifndef OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 #define OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#endif
+#include <stdexcept>
+#include <vector>
 
 namespace Opm {
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phase
  *        without dissolved gas and constant compressibility/"viscosibility".
@@ -41,23 +45,7 @@ template <class Scalar>
 class ConstantCompressibilityOilPvt
 {
 public:
-    ConstantCompressibilityOilPvt() = default;
-    ConstantCompressibilityOilPvt(const std::vector<Scalar>& oilReferenceDensity,
-                                  const std::vector<Scalar>& oilReferencePressure,
-                                  const std::vector<Scalar>& oilReferenceFormationVolumeFactor,
-                                  const std::vector<Scalar>& oilCompressibility,
-                                  const std::vector<Scalar>& oilViscosity,
-                                  const std::vector<Scalar>& oilViscosibility)
-        : oilReferenceDensity_(oilReferenceDensity)
-        , oilReferencePressure_(oilReferencePressure)
-        , oilReferenceFormationVolumeFactor_(oilReferenceFormationVolumeFactor)
-        , oilCompressibility_(oilCompressibility)
-        , oilViscosity_(oilViscosity)
-        , oilViscosibility_(oilViscosibility)
-    { }
-
 #if HAVE_ECL_INPUT
-
     /*!
      * \brief Sets the pressure-dependent oil viscosity and density
      *        using the Eclipse PVCDO keyword.
@@ -65,32 +53,7 @@ public:
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVTO ECL keyword.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& pvcdoTable = eclState.getTableManager().getPvcdoTable();
-        const auto& densityTable = eclState.getTableManager().getDensityTable();
-
-        assert(pvcdoTable.size() == densityTable.size());
-
-        size_t numRegions = pvcdoTable.size();
-        setNumRegions(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            Scalar rhoRefO = densityTable[regionIdx].oil;
-            Scalar rhoRefG = densityTable[regionIdx].gas;
-            Scalar rhoRefW = densityTable[regionIdx].water;
-
-            setReferenceDensities(regionIdx, rhoRefO, rhoRefG, rhoRefW);
-
-            oilReferencePressure_[regionIdx] = pvcdoTable[regionIdx].reference_pressure;
-            oilReferenceFormationVolumeFactor_[regionIdx] = pvcdoTable[regionIdx].volume_factor;
-            oilCompressibility_[regionIdx] = pvcdoTable[regionIdx].compressibility;
-            oilViscosity_[regionIdx] = pvcdoTable[regionIdx].viscosity;
-            oilViscosibility_[regionIdx] = pvcdoTable[regionIdx].viscosibility;
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
@@ -272,7 +235,7 @@ public:
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
     const std::vector<Scalar>& oilReferenceFormationVolumeFactor() const
@@ -286,16 +249,6 @@ public:
 
     const std::vector<Scalar>& oilViscosibility() const
     { return oilViscosibility_; }
-
-    bool operator==(const ConstantCompressibilityOilPvt<Scalar>& data) const
-    {
-        return this->oilReferenceDensity_ == data.oilReferenceDensity_ &&
-               this->oilReferencePressure_ == data.oilReferencePressure_ &&
-               this->oilReferenceFormationVolumeFactor() == data.oilReferenceFormationVolumeFactor() &&
-               this->oilCompressibility() == data.oilCompressibility() &&
-               this->oilViscosity() == data.oilViscosity() &&
-               this->oilViscosibility() == data.oilViscosibility();
-    }
 
 private:
     std::vector<Scalar> oilReferenceDensity_;

@@ -19,62 +19,42 @@
 #ifndef OPM_RUNSPEC_HPP
 #define OPM_RUNSPEC_HPP
 
-#include <iosfwd>
-#include <string>
-#include <optional>
-
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 
+#include <optional>
+#include <string>
+
 namespace Opm {
+
 class Deck;
 
-
-enum class Phase {
-    OIL     = 0,
-    GAS     = 1,
-    WATER   = 2,
-    SOLVENT = 3,
-    POLYMER = 4,
-    ENERGY  = 5,
-    POLYMW  = 6,
-    FOAM  = 7,
-    BRINE = 8,
-    ZFRACTION  = 9
-
-    // If you add more entries to this enum, remember to update NUM_PHASES_IN_ENUM below.
-};
-
-constexpr int NUM_PHASES_IN_ENUM = static_cast<int>(Phase::ZFRACTION) + 1;  // Used to get correct size of the bitset in class Phases.
-
-Phase get_phase( const std::string& );
-std::ostream& operator<<( std::ostream&, const Phase& );
-
 class Phases {
-    public:
-        Phases() noexcept = default;
-        Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
-                bool polymw = false, bool foam = false, bool brine = false, bool zfraction = false ) noexcept;
+public:
+    Phases() noexcept = default;
+    Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
+            bool polymw = false, bool foam = false, bool brine = false, bool zfraction = false ) noexcept;
 
-        static Phases serializationTestObject();
+    static Phases serializationTestObject();
 
-        bool active( Phase ) const noexcept;
-        size_t size() const noexcept;
+    bool active( Phase ) const noexcept;
+    size_t size() const noexcept;
 
-        bool operator==(const Phases& data) const;
+    bool operator==(const Phases& data) const;
 
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(bits);
-        }
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(bits);
+    }
 
-    private:
-        std::bitset< NUM_PHASES_IN_ENUM > bits;
+private:
+    std::bitset< NUM_PHASES_IN_ENUM > bits;
 };
 
 

@@ -42,8 +42,6 @@
 #include <opm/material/binarycoefficients/H2O_Mesitylene.hpp>
 #include <opm/material/binarycoefficients/Air_Mesitylene.hpp>
 
-#include <iostream>
-
 namespace Opm {
 
 /*!

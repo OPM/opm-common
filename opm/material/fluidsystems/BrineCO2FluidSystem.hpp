@@ -45,9 +45,14 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/material/binarycoefficients/H2O_N2.hpp>
 
-#include <iostream>
-
 namespace Opm {
+
+// Silence compiler warnings about use of variables
+// that are instantiated in a different compilation unit.
+template<>
+const float CO2<float>::brineSalinity;
+template<>
+const double CO2<double>::brineSalinity;
 
 /*!
  * \brief A two-phase fluid system with water and CO2.
@@ -56,9 +61,9 @@ namespace Opm {
  * high thermodynamic accuracy and thus requires the tables of the
  * sampling to be supplied as template argument.
  */
-template <class Scalar, class CO2Tables>
+template <class Scalar>
 class BrineCO2FluidSystem
-    : public BaseFluidSystem<Scalar, BrineCO2FluidSystem<Scalar, CO2Tables> >
+    : public BaseFluidSystem<Scalar, BrineCO2FluidSystem<Scalar> >
 {
     typedef ::Opm::H2O<Scalar> H2O_IAPWS;
     typedef ::Opm::Brine<Scalar, H2O_IAPWS> Brine_IAPWS;
@@ -75,7 +80,7 @@ public:
     //! The type of the component for brine used by the fluid system
     typedef Brine_Tabulated Brine;
     //! The type of the component for pure CO2 used by the fluid system
-    typedef ::Opm::CO2<Scalar, CO2Tables> CO2;
+    typedef ::Opm::CO2<Scalar> CO2;
 
     //! The binary coefficients for brine and CO2 used by this fluid system
     typedef BinaryCoeff::Brine_CO2<Scalar, H2O, CO2> BinaryCoeffBrineCO2;
@@ -217,7 +222,7 @@ public:
         }
 
         // set the salinity of brine to the one used by the CO2 tables
-        Brine_IAPWS::salinity = CO2Tables::brineSalinity;
+        Brine_IAPWS::salinity = CO2::brineSalinity;
 
         if (Brine::isTabulated) {
             Brine_Tabulated::init(tempMin, tempMax, nTemp,
@@ -485,17 +490,28 @@ private:
         Valgrind::CheckDefined(xlH2O);
         Valgrind::CheckDefined(xlCO2);
 
+        auto tostring = [](const auto& val) -> std::string
+                        {
+                            if constexpr (DenseAd::is_evaluation<LhsEval>::value) {
+                                return std::to_string(getValue(val.value()));
+                            } else {
+                                return std::to_string(val);
+                            }
+                        };
+
         if(T < 273.15) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and CO2 is only "
-                "defined above 273.15K (is "<<T<<"K)";
-            throw NumericalProblem(oss.str());
+            const std::string msg =
+                "Liquid density for Brine and CO2 is only "
+                "defined above 273.15K (is +"
+                + tostring(T)+ "K)";
+            throw NumericalProblem(msg);
         }
         if(pl >= 2.5e8) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and CO2 is only "
-                "defined below 250MPa (is "<<pl<<"Pa)";
-            throw NumericalProblem(oss.str());
+            const std::string msg =
+                "Liquid density for Brine and CO2 is only "
+                "defined below 250MPa (is "
+                + tostring(pl) + "Pa)";
+            throw NumericalProblem(msg);
         }
 
         const LhsEval& rho_brine = Brine::liquidDensity(T, pl);

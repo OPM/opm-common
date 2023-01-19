@@ -29,28 +29,16 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
-#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
-#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 
 
@@ -65,7 +53,29 @@ namespace {
 }
 
 }
+
 namespace Opm {
+
+    namespace Action {
+        class Actions;
+    }
+    class GasLiftOpt;
+    class GConSale;
+    class GConSump;
+    class GroupOrder;
+    class GuideRateConfig;
+    class NameOrder;
+    namespace Network {
+        class Balance;
+        class ExtNetwork;
+    }
+    class RFTConfig;
+    class RPTConfig;
+    class UDQActive;
+    class UDQConfig;
+    class Well;
+    class WellTestConfig;
+    class WListManager;
 
     /*
       The purpose of the ScheduleState class is to hold the entire Schedule
@@ -73,10 +83,6 @@ namespace Opm {
       time. The ScheduleState class itself has no dynamic behavior, the dynamics
       is handled by the Schedule instance owning the ScheduleState instance.
     */
-
-    class WellTestConfig;
-
-
 
     class ScheduleState {
     public:
@@ -326,8 +332,8 @@ namespace Opm {
         MessageLimits& message_limits();
         const MessageLimits& message_limits() const;
 
-        Well::ProducerCMode whistctl() const;
-        void update_whistctl(Well::ProducerCMode whistctl);
+        WellProducerCMode whistctl() const;
+        void update_whistctl(WellProducerCMode whistctl);
 
         bool rst_file(const RSTConfig& rst_config, const time_point& previous_restart_output_time) const;
         void update_date(const time_point& prev_time);
@@ -516,7 +522,7 @@ namespace Opm {
         WellGroupEvents m_wellgroup_events;
         std::vector<DeckKeyword> m_geo_keywords;
         MessageLimits m_message_limits;
-        Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
+        WellProducerCMode m_whistctl_mode = WellProducerCMode::CMODE_UNDEFINED;
         std::optional<double> m_sumthin;
         bool m_rptonly{false};
     };

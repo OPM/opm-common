@@ -22,10 +22,8 @@
 
 #include <algorithm>
 #include <cstring>
-#include <iomanip>
 #include <iterator>
 #include <string>
-#include <sstream>
 
 namespace Opm { namespace EclIO {
 

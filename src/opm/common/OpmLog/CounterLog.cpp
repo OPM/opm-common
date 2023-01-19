@@ -16,15 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <stdexcept>
-#include <sstream>
-#include <cassert>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/CounterLog.hpp>
 
-
+#include <stdexcept>
 
 namespace Opm {
 

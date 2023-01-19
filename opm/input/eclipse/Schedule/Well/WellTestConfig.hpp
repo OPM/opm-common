@@ -51,19 +51,20 @@ constexpr int GCON     = 6;
 constexpr int THPLimit = 9;
 }
 
+enum class Reason {
+    PHYSICAL = 1,
+    ECONOMIC = 2,
+    GROUP = 4,
+    THP_DESIGN=8,
+    COMPLETION=16,
+};
+
 }
 
 class WellTestConfig {
 
 public:
-    enum class Reason {
-        PHYSICAL = 1,
-        ECONOMIC = 2,
-        GROUP = 4,
-        THP_DESIGN=8,
-        COMPLETION=16,
-    };
-
+    using Reason = WTest::Reason;
     struct WTESTWell {
         std::string name;
         int reasons;

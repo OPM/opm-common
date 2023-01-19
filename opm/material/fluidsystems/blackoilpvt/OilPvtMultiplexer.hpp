@@ -33,12 +33,13 @@
 #include "OilPvtThermal.hpp"
 #include "BrineCo2Pvt.hpp"
 
+namespace Opm {
+
 #if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+class EclipseState;
+class Schedule;
 #endif
 
-namespace Opm {
 #define OPM_OIL_PVT_MULTIPLEXER_CALL(codeToCall)                                  \
     switch (approach_) {                                                          \
     case OilPvtApproach::ConstantCompressibilityOil: {                            \
@@ -68,7 +69,7 @@ namespace Opm {
     }                                                                             \
     case OilPvtApproach::NoOil:                                                   \
         throw std::logic_error("Not implemented: Oil PVT of this deck!");         \
-    }                                                                             \
+    }
 
 enum class OilPvtApproach {
     NoOil,
@@ -146,25 +147,7 @@ public:
      *
      * This method assumes that the deck features valid DENSITY and PVTO/PVDO/PVCDO keywords.
      */
-    void initFromState(const EclipseState& eclState, const Schedule& schedule)
-    {
-        if (!eclState.runspec().phases().active(Phase::OIL))
-            return;
-        // TODO move the BrineCo2 approach to the waterPvtMultiplexer
-        // when a proper gas-water simulator is supported
-        if (eclState.runspec().co2Storage())
-            setApproach(OilPvtApproach::BrineCo2);
-        else if (enableThermal && eclState.getSimulationConfig().isThermal())
-            setApproach(OilPvtApproach::ThermalOil);
-        else if (!eclState.getTableManager().getPvcdoTable().empty())
-            setApproach(OilPvtApproach::ConstantCompressibilityOil);
-        else if (eclState.getTableManager().hasTables("PVDO"))
-            setApproach(OilPvtApproach::DeadOil);
-        else if (!eclState.getTableManager().getPvtoTables().empty())
-            setApproach(OilPvtApproach::LiveOil);
-
-        OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
-    }
+    void initFromState(const EclipseState& eclState, const Schedule& schedule);
 #endif // HAVE_ECL_INPUT
 
 
@@ -386,32 +369,6 @@ public:
 
     const void* realOilPvt() const { return realOilPvt_; }
 
-    bool operator==(const OilPvtMultiplexer<Scalar,enableThermal>& data) const
-    {
-        if (this->approach() != data.approach())
-            return false;
-
-        switch (approach_) {
-        case OilPvtApproach::ConstantCompressibilityOil:
-            return *static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::DeadOil:
-            return *static_cast<const DeadOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::LiveOil:
-            return *static_cast<const LiveOilPvt<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::ThermalOil:
-            return *static_cast<const OilPvtThermal<Scalar>*>(realOilPvt_) ==
-                   *static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_);
-        case OilPvtApproach::BrineCo2:
-            return *static_cast<const BrineCo2Pvt<Scalar>*>(realOilPvt_) ==
-                    *static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_);
-        default:
-            return true;
-        }
-    }
-
     OilPvtMultiplexer<Scalar,enableThermal>& operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data)
     {
         approach_ = data.approach_;
@@ -442,8 +399,6 @@ private:
     OilPvtApproach approach_;
     void* realOilPvt_;
 };
-
-#undef OPM_OIL_PVT_MULTIPLEXER_CALL
 
 } // namespace Opm
 

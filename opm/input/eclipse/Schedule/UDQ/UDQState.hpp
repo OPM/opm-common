@@ -55,53 +55,17 @@ public:
 
     bool operator==(const UDQState& other) const;
 
-    static UDQState serializationTestObject() {
-        UDQState st;
-        st.undef_value = 78;
-        st.scalar_values = {{"FU1", 100}, {"FU2", 200}};
-        st.assignments = {{"GU1", 99}, {"GU2", 199}};
-        st.defines = {{"DU1", 299}, {"DU2", 399}};
-
-        st.well_values.emplace("W1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
-        st.well_values.emplace("W2", std::unordered_map<std::string, double>{{"U1", 700}, {"32", 600}});
-
-        st.group_values.emplace("G1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
-        st.group_values.emplace("G2", std::unordered_map<std::string, double>{{"U1", 700}, {"32", 600}});
-        return st;
-    }
-
-
-    template<class Serializer>
-    void pack_unpack_wgmap(Serializer& serializer, std::unordered_map<std::string, std::unordered_map<std::string, double>>& wgmap) {
-        std::size_t map_size = wgmap.size();
-        serializer(map_size);
-        if (serializer.isSerializing()) {
-            for (auto& [udq_key, values] : wgmap) {
-                serializer(udq_key);
-                serializer(values);
-            }
-        } else {
-            for (std::size_t index=0; index < map_size; index++) {
-                std::string udq_key;
-                std::unordered_map<std::string, double> inner_map;
-                serializer(udq_key);
-                serializer(inner_map);
-
-                wgmap.emplace(udq_key, inner_map);
-            }
-        }
-    }
+    static UDQState serializationTestObject();
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(this->undef_value);
         serializer(this->scalar_values);
+        serializer(this->well_values);
+        serializer(this->group_values);
         serializer(this->assignments);
         serializer(this->defines);
-
-        pack_unpack_wgmap(serializer, this->well_values);
-        pack_unpack_wgmap(serializer, this->group_values);
     }
 
 

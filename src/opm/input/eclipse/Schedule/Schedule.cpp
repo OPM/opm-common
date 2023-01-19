@@ -34,17 +34,23 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -56,9 +62,10 @@
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -155,6 +162,30 @@ namespace Opm {
         rptonly(rptonly_summary_section(SUMMARYSection{ deck })),
         gaslift_opt_active(deck.hasKeyword<ParserKeywords::LIFTOPT>())
     {
+    }
+
+    ScheduleStatic ScheduleStatic::serializationTestObject()
+    {
+        auto python = std::make_shared<Python>(Python::Enable::OFF);
+        ScheduleStatic st(python);
+        st.m_deck_message_limits = MessageLimits::serializationTestObject();
+        st.m_runspec = Runspec::serializationTestObject();
+        st.m_unit_system = UnitSystem::newFIELD();
+        st.m_input_path = "Some/funny/path";
+        st.rst_config = RSTConfig::serializationTestObject();
+        st.rst_info = ScheduleRestartInfo::serializationTestObject();
+        return st;
+    }
+
+    bool ScheduleStatic::operator==(const ScheduleStatic& other) const
+    {
+        return this->m_input_path == other.m_input_path &&
+               this->m_deck_message_limits == other.m_deck_message_limits &&
+               this->m_unit_system == other.m_unit_system &&
+               this->rst_config == other.rst_config &&
+               this->rst_info == other.rst_info &&
+               this->gaslift_opt_active == other.gaslift_opt_active &&
+               this->m_runspec == other.m_runspec;
     }
 
     Schedule::Schedule( const Deck& deck,
@@ -324,7 +355,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  bool actionx_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
-                                 std::unordered_map<std::string, double>* wpimult_global_factor)
+                                 std::unordered_map<std::string, double>* wpimult_global_factor,
+                                 WelSegsSet* welsegs_wells,
+                                 std::set<std::string>* compsegs_wells)
     {
 
         static const std::unordered_set<std::string> require_grid = {
@@ -333,8 +366,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         };
 
 
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode, parseContext, errors, sim_update, target_wellpi,
-                                       wpimult_global_factor};
+        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode,
+                                        parseContext, errors, sim_update, target_wellpi,
+                                        wpimult_global_factor, welsegs_wells, compsegs_wells};
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -472,7 +506,39 @@ private:
         return ScheduleLogger::Stream::Info;
     }
 }
+} // end namespace Opm
 
+namespace
+{
+/// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
+/// \param welsegs All wells with a WELSEGS entry together with the location.
+/// \param compegs All wells with a COMPSEGS entry
+void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, std::set<std::string>&  compsegs)
+{
+    std::vector<std::pair<std::string,::Opm::KeywordLocation>> difference;
+    difference.reserve(welsegs.size());
+    std::set_difference(welsegs.begin(), welsegs.end(),
+                        compsegs.begin(), compsegs.end(),
+                        std::back_inserter(difference),
+                        ::Opm::Schedule::PairComp());
+    if (difference.size()) {
+        std::string wells = "well";
+        if (difference.size()>1) {
+            wells.append("s");
+        }
+        wells.append(":");
+
+        for(const auto& [name, location] : difference) {
+            wells.append(fmt::format("\n   {} in {} at line {}", name, location.filename, location.lineno));
+        }
+        auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", wells);
+        throw Opm::OpmInputError(msg, std::get<1>(difference[0]));
+    }
+}
+}// end anonymous namespace
+
+namespace Opm
+{
 void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_end,
                                       const ParseContext& parseContext,
                                       ErrorGuard& errors,
@@ -529,6 +595,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                location.lineno));
         }
 
+        std::set<std::string> compsegs_wells;
+        WelSegsSet welsegs_wells;
+
         for (auto report_step = load_start; report_step < load_end; report_step++) {
             std::size_t keyword_index = 0;
             auto& block = this->m_sched_deck[report_step];
@@ -558,13 +627,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             this->create_next(block);
 
             std::unordered_map<std::string, double> wpimult_global_factor;
+
             while (true) {
                 if (keyword_index == block.size())
                     break;
 
                 const auto& keyword = block[keyword_index];
                 const auto& location = keyword.location();
-                logger.location(keyword.location());
+                logger.location(location);
 
                 if (keyword.is<ParserKeywords::ACTIONX>()) {
                     Action::ActionX action(keyword,
@@ -605,10 +675,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     false,
                                     nullptr,
                                     target_wellpi,
-                                    &wpimult_global_factor);
+                                    &wpimult_global_factor,
+                                    &welsegs_wells,
+                                    &compsegs_wells);
                 keyword_index++;
             }
 
+            check_compsegs_consistency(welsegs_wells, compsegs_wells);
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 
@@ -881,7 +954,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
         auto pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
-        auto gas_inflow = Well::GasInflowEquationFromString( record.getItem<ParserKeywords::WELSPECS::INFLOW_EQ>().get<std::string>(0) );
+        auto gas_inflow = WellGasInflowEquationFromString(record.getItem<ParserKeywords::WELSPECS::INFLOW_EQ>().get<std::string>(0));
 
         this->addWell(wellName,
                       group,
@@ -1701,8 +1774,8 @@ namespace {
             const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
             this->addGroupToGroup(parent_group.name, rst_group.name);
 
-            if (GasLiftOpt::Group::active(rst_group))
-                glo.add_group(GasLiftOpt::Group(rst_group));
+            if (GasLiftGroup::active(rst_group))
+                glo.add_group(GasLiftGroup(rst_group));
         }
 
         for (const auto& rst_well : rst_state.wells) {
@@ -1735,8 +1808,8 @@ namespace {
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
 
-            if (GasLiftOpt::Well::active(rst_well))
-                glo.add_well(GasLiftOpt::Well(rst_well));
+            if (GasLiftWell::active(rst_well))
+                glo.add_well(GasLiftWell(rst_well));
         }
         this->snapshots.back().glo.update( std::move(glo) );
         this->snapshots.back().update_tuning(rst_state.tuning);
@@ -2204,6 +2277,12 @@ std::ostream& operator<<(std::ostream& os, const Schedule& sched)
 {
     sched.dump_deck(os);
     return os;
+}
+
+void Schedule::HandlerContext::affected_well(const std::string& well_name)
+{
+    if (this->sim_update)
+        this->sim_update->affected_wells.insert(well_name);
 }
 
 }

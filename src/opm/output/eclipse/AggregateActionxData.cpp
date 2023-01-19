@@ -23,6 +23,7 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/common/utility/String.hpp>
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -39,13 +40,13 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/output/eclipse/VectorItems/action.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <fmt/format.h>
-#include <iostream>
 #include <string>
 #include <ctime>
 

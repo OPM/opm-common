@@ -38,7 +38,6 @@
 #include <opm/material/components/TabulatedComponent.hpp>
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
-#include <opm/material/components/co2tables.inc>
 
 #include <vector>
 
@@ -69,22 +68,12 @@ class BrineCo2Pvt
 public:
     using H2O = SimpleHuDuanH2O<Scalar>;
     using Brine = ::Opm::Brine<Scalar, H2O>;
-    using CO2 = ::Opm::CO2<Scalar, CO2Tables>;
+    using CO2 = ::Opm::CO2<Scalar>;
 
     //! The binary coefficients for brine and CO2 used by this fluid system
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
     explicit BrineCo2Pvt() = default;
-
-    BrineCo2Pvt(const std::vector<Scalar>& brineReferenceDensity,
-                const std::vector<Scalar>& co2ReferenceDensity,
-                const std::vector<Scalar>& salinity)
-        : brineReferenceDensity_(brineReferenceDensity),
-          co2ReferenceDensity_(co2ReferenceDensity),
-          salinity_(salinity)
-    {
-        Brine::salinity = salinity[0];
-    }
 
     BrineCo2Pvt(const std::vector<Scalar>& salinity,
                 Scalar T_ref = 288.71, //(273.15 + 15.56)
@@ -158,6 +147,18 @@ public:
      */
     template <class Evaluation>
     Evaluation internalEnergy(unsigned regionIdx,
+                              const Evaluation& temperature,
+                              const Evaluation& pressure,
+                              const Evaluation& Rs,
+                              const Evaluation& /*saltConcentration*/) const
+    {
+        return internalEnergy(regionIdx, temperature, pressure, Rs);
+    }
+    /*!
+     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
+     */
+    template <class Evaluation>
+    Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& Rs) const
@@ -184,6 +185,32 @@ public:
         return saturatedViscosity(regionIdx, temperature, pressure);
     }
 
+        /*!
+     * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
+     */
+    template <class Evaluation>
+    Evaluation saturatedViscosity(unsigned regionIdx,
+                                 const Evaluation& temperature,
+                                 const Evaluation& pressure,
+                                 const Evaluation& /*saltConcentration*/) const
+    {
+        return saturatedViscosity(regionIdx, temperature, pressure);
+    }
+
+    /*!
+     * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
+     */
+    template <class Evaluation>
+    Evaluation viscosity(unsigned regionIdx,
+                         const Evaluation& temperature,
+                         const Evaluation& pressure,
+                         const Evaluation& /*Rsw*/,
+                         const Evaluation& /*saltConcentration*/) const
+    {
+        //TODO: The viscosity does not yet depend on the composition
+        return saturatedViscosity(regionIdx, temperature, pressure);
+    }
+
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of oil saturated gas at given pressure.
      */
@@ -195,6 +222,30 @@ public:
         return Brine::liquidViscosity(temperature, pressure);
     }
 
+
+    /*!
+     * \brief Returns the formation volume factor [-] of the fluid phase.
+     */
+    template <class Evaluation>
+    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+                                                     const Evaluation& temperature,
+                                                     const Evaluation& pressure,
+                                                     const Evaluation& /*saltconcentration*/) const
+    {
+        return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure);
+    }
+    /*!
+     * \brief Returns the formation volume factor [-] of the fluid phase.
+     */
+    template <class Evaluation>
+    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+                                            const Evaluation& temperature,
+                                            const Evaluation& pressure,
+                                            const Evaluation& Rs,
+                                            const Evaluation& /*saltConcentration*/) const
+    {
+        return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs);
+    }
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
@@ -234,6 +285,21 @@ public:
     }
 
     /*!
+     * \brief Returns the saturation pressure of the brine phase [Pa]
+     *        depending on its mass fraction of the gas component
+     *
+     * \param Rs
+     */
+    template <class Evaluation>
+    Evaluation saturationPressure(unsigned /*regionIdx*/,
+                                  const Evaluation& /*temperature*/,
+                                  const Evaluation& /*Rs*/,
+                                  const Evaluation& /*saltConcentration*/) const
+    {
+        throw std::runtime_error("Requested the saturation pressure for the brine-co2 pvt module. Not yet implemented.");
+    }
+
+    /*!
      * \brief Returns the gas dissoluiton factor \f$R_s\f$ [m^3/m^3] of the liquid phase.
      */
     template <class Evaluation>
@@ -244,6 +310,18 @@ public:
                                              const Evaluation& /*maxOilSaturation*/) const
     {
         //TODO support VAPPARS
+        return rsSat_(regionIdx, temperature, pressure);
+    }
+
+    /*!
+     * \brief Returns the gas dissoluiton factor \f$R_s\f$ [m^3/m^3] of the liquid phase.
+     */
+    template <class Evaluation>
+    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+                                             const Evaluation& temperature,
+                                             const Evaluation& pressure,
+                                             const Evaluation& /*saltConcentration*/) const
+    {
         return rsSat_(regionIdx, temperature, pressure);
     }
 
@@ -261,17 +339,14 @@ public:
     const Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
+    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    { return brineReferenceDensity_[regionIdx]; }
+
     const Scalar gasReferenceDensity(unsigned regionIdx) const
     { return co2ReferenceDensity_[regionIdx]; }
 
     const Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
-
-    bool operator==(const BrineCo2Pvt<Scalar>& data) const
-    {
-        return co2ReferenceDensity_ == data.co2ReferenceDensity_ &&
-                brineReferenceDensity_ == data.brineReferenceDensity_;
-    }
 
     template <class Evaluation>
     Evaluation diffusionCoefficient(const Evaluation& temperature,
@@ -321,16 +396,18 @@ private:
         Valgrind::CheckDefined(xlCO2);
 
         if(!extrapolate && T < 273.15) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and CO2 is only "
-                   "defined above 273.15K (is "<<T<<"K)";
-            throw NumericalProblem(oss.str());
+            const std::string msg =
+                "Liquid density for Brine and CO2 is only "
+                "defined above 273.15K (is " +
+                std::to_string(getValue(T)) + "K)";
+            throw NumericalProblem(msg);
         }
         if(!extrapolate && pl >= 2.5e8) {
-            std::ostringstream oss;
-            oss << "Liquid density for Brine and CO2 is only "
-                   "defined below 250MPa (is "<<pl<<"Pa)";
-            throw NumericalProblem(oss.str());
+            const std::string msg  =
+                "Liquid density for Brine and CO2 is only "
+                "defined below 250MPa (is " +
+                std::to_string(getValue(pl)) + "Pa)";
+            throw NumericalProblem(msg);
         }
 
         const LhsEval& rho_brine = Brine::liquidDensity(T, pl, extrapolate);
@@ -513,7 +590,6 @@ private:
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/
     }
-
 };
 
 } // namespace Opm

@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cstdio>
 #include <ctime>
-#include <iostream>
 #include <math.h>
 #include <memory>
 #include <optional>
@@ -837,8 +836,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     BOOST_CHECK_THROW(grid1.getPinchThresholdThickness(), std::bad_optional_access);
     BOOST_CHECK(grid2.isPinchActive());
     BOOST_CHECK_EQUAL(grid2.getPinchThresholdThickness(), 0.2);
-    BOOST_CHECK_EQUAL(grid2.getPinchGapMode(), Opm::PinchMode::ModeEnum::GAP);
-    BOOST_CHECK_EQUAL(grid3.getPinchGapMode(), Opm::PinchMode::ModeEnum::NOGAP);
+    BOOST_CHECK_EQUAL(grid2.getPinchGapMode(), Opm::PinchMode::GAP);
+    BOOST_CHECK_EQUAL(grid3.getPinchGapMode(), Opm::PinchMode::NOGAP);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
@@ -851,8 +850,8 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     Opm::EclipseGrid grid3(deck3);
 
     BOOST_CHECK(!grid1.equal( grid3 ));
-    BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::ModeEnum::Inactive);
-    BOOST_CHECK_EQUAL(grid3.getMinpvMode(), Opm::MinpvMode::ModeEnum::EclSTD);
+    BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::Inactive);
+    BOOST_CHECK_EQUAL(grid3.getMinpvMode(), Opm::MinpvMode::EclSTD);
     BOOST_CHECK_EQUAL(grid3.getMinpvVector()[0], 10.0);
 }
 

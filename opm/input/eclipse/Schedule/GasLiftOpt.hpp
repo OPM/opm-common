@@ -27,232 +27,198 @@
 
 namespace Opm {
 
+class GasLiftGroup {
+public:
+    GasLiftGroup() = default;
+
+    GasLiftGroup(const std::string& name) :
+        m_name(name)
+    {}
+
+    static bool active(const RestartIO::RstGroup& rst_group) {
+        if ((rst_group.glift_max_rate + rst_group.glift_max_supply) != 0)
+            return false;
+
+        return true;
+    }
+
+    explicit GasLiftGroup(const RestartIO::RstGroup& rst_group)
+        : m_name(rst_group.name)
+        , m_max_lift_gas(rst_group.glift_max_supply)
+        , m_max_total_gas(rst_group.glift_max_rate)
+    {}
+
+    const std::optional<double>& max_lift_gas() const {
+        return this->m_max_lift_gas;
+    }
+
+    void max_lift_gas(double value) {
+        if (value >= 0)
+            this->m_max_lift_gas = value;
+    }
+
+    const std::optional<double>& max_total_gas() const {
+        return this->m_max_total_gas;
+    }
+
+    void max_total_gas(double value) {
+        if (value >= 0)
+            this->m_max_total_gas = value;
+    }
+
+    const std::string& name() const {
+        return this->m_name;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_max_lift_gas);
+        serializer(m_max_total_gas);
+    }
+
+
+    static GasLiftGroup serializationTestObject();
+
+    bool operator==(const GasLiftGroup& other) const;
+
+private:
+    std::string m_name;
+    std::optional<double> m_max_lift_gas;
+    std::optional<double> m_max_total_gas;
+};
+
+class GasLiftWell {
+public:
+    GasLiftWell() = default;
+
+    explicit GasLiftWell(const RestartIO::RstWell& rst_well)
+        : m_name(rst_well.name)
+        , m_max_rate(rst_well.glift_max_rate)
+        , m_min_rate(rst_well.glift_min_rate)
+        , m_use_glo(rst_well.glift_active)
+        , m_weight(rst_well.glift_weight_factor)
+        , m_inc_weight(rst_well.glift_inc_weight_factor)
+        , m_alloc_extra_gas(rst_well.glift_alloc_extra_gas)
+    {}
+
+
+    GasLiftWell(const std::string& name, bool use_glo) :
+        m_name(name),
+        m_use_glo(use_glo)
+    {}
+
+    // Unfortunately it seems just using the rst_well.glift_active flag is
+    // not sufficient to determine whether the well should be included in
+    // gas lift optimization or not. The current implementation based on
+    // numerical values found in the restart file is pure guesswork.
+    static bool active(const RestartIO::RstWell& rst_well) {
+        if ((rst_well.glift_max_rate + rst_well.glift_min_rate + rst_well.glift_weight_factor == 0))
+            return false;
+
+        return true;
+    }
+
+    const std::string& name() const {
+        return this->m_name;
+    }
+
+    bool use_glo() const {
+        return this->m_use_glo;
+    }
+
+    void max_rate(double value) {
+        this->m_max_rate = value;
+    }
+
+
+    /*
+      The semantics of the max_rate is quite complicated:
+
+        1. If the std::optional<double> has a value that value should be
+           used as the maximum rate and all is fine.
+
+        2. If the std::optional<double> does not a have well we must check
+           the value of Well::use_glo():
+
+           False: The maximum gas lift should have been set with WCONPROD /
+              WELTARG - this code does not provide a value in that case.
+
+           True: If the well should be controlled with gas lift optimization
+              the value to use should be the largest ALQ value in the wells
+              VFP table.
+    */
+    const std::optional<double>& max_rate() const {
+        return this->m_max_rate;
+    }
+
+    void weight_factor(double value) {
+        if (this->m_use_glo)
+            this->m_weight = value;
+    }
+
+    double weight_factor() const {
+        return this->m_weight;
+    }
+
+    void inc_weight_factor(double value) {
+        if (this->m_use_glo)
+            this->m_inc_weight = value;
+    }
+
+    double inc_weight_factor() const {
+        return this->m_inc_weight;
+    }
+
+    void min_rate(double value) {
+        if (this->m_use_glo)
+            this->m_min_rate = value;
+    }
+
+    double min_rate() const {
+        return this->m_min_rate;
+    }
+
+    void alloc_extra_gas(bool value) {
+        if (this->m_use_glo)
+            this->m_alloc_extra_gas = value;
+    }
+
+    bool alloc_extra_gas() const {
+        return this->m_alloc_extra_gas;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_use_glo);
+        serializer(m_max_rate);
+        serializer(m_min_rate);
+        serializer(m_weight);
+        serializer(m_inc_weight);
+        serializer(m_alloc_extra_gas);
+    }
+
+    static GasLiftWell serializationTestObject();
+
+    bool operator==(const GasLiftWell& other) const;
+
+private:
+    std::string m_name;
+    std::optional<double> m_max_rate;
+    double m_min_rate = 0;
+    bool m_use_glo = false;
+    double m_weight = 1;
+    double m_inc_weight = 0;
+    bool m_alloc_extra_gas = false;
+};
+
 class GasLiftOpt {
 public:
-
-    class Group {
-    public:
-        Group() = default;
-
-        Group(const std::string& name) :
-            m_name(name)
-        {}
-
-        static bool active(const RestartIO::RstGroup& rst_group) {
-            if ((rst_group.glift_max_rate + rst_group.glift_max_supply) != 0)
-                return false;
-
-            return true;
-        }
-
-        explicit Group(const RestartIO::RstGroup& rst_group)
-            : m_name(rst_group.name)
-            , m_max_lift_gas(rst_group.glift_max_supply)
-            , m_max_total_gas(rst_group.glift_max_rate)
-        {}
-
-        const std::optional<double>& max_lift_gas() const {
-            return this->m_max_lift_gas;
-        }
-
-        void max_lift_gas(double value) {
-            if (value >= 0)
-                this->m_max_lift_gas = value;
-        }
-
-        const std::optional<double>& max_total_gas() const {
-            return this->m_max_total_gas;
-        }
-
-        void max_total_gas(double value) {
-            if (value >= 0)
-                this->m_max_total_gas = value;
-        }
-
-        const std::string& name() const {
-            return this->m_name;
-        }
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(m_name);
-            serializer(m_max_lift_gas);
-            serializer(m_max_total_gas);
-        }
-
-
-        static Group serializationTestObject() {
-            Group group;
-            group.m_name = "GR";
-            group.m_max_lift_gas  = 100;
-            group.m_max_total_gas = 200;
-            return group;
-        }
-
-
-        bool operator==(const Group& other) const {
-            return this->m_name == other.m_name &&
-                   this->m_max_lift_gas == other.m_max_lift_gas &&
-                   this->m_max_total_gas == other.m_max_total_gas;
-        }
-
-    private:
-        std::string m_name;
-        std::optional<double> m_max_lift_gas;
-        std::optional<double> m_max_total_gas;
-    };
-
-
-    class Well {
-    public:
-        Well() = default;
-
-        // Unfortunately it seems just using the rst_well.glift_active flag is
-        // not sufficient to determine whether the well should be included in
-        // gas lift optimization or not. The current implementation based on
-        // numerical values found in the restart file is pure guesswork.
-        static bool active(const RestartIO::RstWell& rst_well) {
-            if ((rst_well.glift_max_rate + rst_well.glift_min_rate + rst_well.glift_weight_factor == 0))
-                return false;
-
-            return true;
-        }
-
-
-        explicit Well(const RestartIO::RstWell& rst_well)
-            : m_name(rst_well.name)
-            , m_max_rate(rst_well.glift_max_rate)
-            , m_min_rate(rst_well.glift_min_rate)
-            , m_use_glo(rst_well.glift_active)
-            , m_weight(rst_well.glift_weight_factor)
-            , m_inc_weight(rst_well.glift_inc_weight_factor)
-            , m_alloc_extra_gas(rst_well.glift_alloc_extra_gas)
-        {}
-
-
-        Well(const std::string& name, bool use_glo) :
-            m_name(name),
-            m_use_glo(use_glo)
-        {}
-
-        const std::string& name() const {
-            return this->m_name;
-        }
-
-        bool use_glo() const {
-            return this->m_use_glo;
-        }
-
-        void max_rate(double value) {
-            this->m_max_rate = value;
-        }
-
-
-        /*
-          The semantics of the max_rate is quite complicated:
-
-            1. If the std::optional<double> has a value that value should be
-               used as the maximum rate and all is fine.
-
-            2. If the std::optional<double> does not a have well we must check
-               the value of Well::use_glo():
-
-               False: The maximum gas lift should have been set with WCONPROD /
-                  WELTARG - this code does not provide a value in that case.
-
-               True: If the well should be controlled with gas lift optimization
-                  the value to use should be the largest ALQ value in the wells
-                  VFP table.
-        */
-        const std::optional<double>& max_rate() const {
-            return this->m_max_rate;
-        }
-
-        void weight_factor(double value) {
-            if (this->m_use_glo)
-                this->m_weight = value;
-        }
-
-        double weight_factor() const {
-            return this->m_weight;
-        }
-
-        void inc_weight_factor(double value) {
-            if (this->m_use_glo)
-                this->m_inc_weight = value;
-        }
-
-        double inc_weight_factor() const {
-            return this->m_inc_weight;
-        }
-
-        void min_rate(double value) {
-            if (this->m_use_glo)
-                this->m_min_rate = value;
-        }
-
-        double min_rate() const {
-            return this->m_min_rate;
-        }
-
-        void alloc_extra_gas(bool value) {
-            if (this->m_use_glo)
-                this->m_alloc_extra_gas = value;
-        }
-
-        bool alloc_extra_gas() const {
-            return this->m_alloc_extra_gas;
-        }
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(m_name);
-            serializer(m_use_glo);
-            serializer(m_max_rate);
-            serializer(m_min_rate);
-            serializer(m_weight);
-            serializer(m_inc_weight);
-            serializer(m_alloc_extra_gas);
-        }
-
-        static Well serializationTestObject() {
-            Well well;
-            well.m_name = "WELL";
-            well.m_max_rate = 2000;
-            well.m_min_rate = 56;
-            well.m_use_glo = true;
-            well.m_weight = 1.25;
-            well.m_inc_weight = 0.25;
-            well.m_alloc_extra_gas = false;
-            return well;
-        }
-
-        bool operator==(const Well& other) const {
-            return this->m_name == other.m_name &&
-                   this->m_max_rate == other.m_max_rate &&
-                   this->m_min_rate == other.m_min_rate &&
-                   this->m_use_glo  == other.m_use_glo &&
-                   this->m_weight   == other.m_weight &&
-                   this->m_inc_weight == other.m_inc_weight &&
-                   this->m_alloc_extra_gas == other.m_alloc_extra_gas;
-        }
-
-    private:
-        std::string m_name;
-        std::optional<double> m_max_rate;
-        double m_min_rate = 0;
-        bool m_use_glo = false;
-        double m_weight = 1;
-        double m_inc_weight = 0;
-        bool m_alloc_extra_gas = false;
-    };
-
-    GasLiftOpt() = default;
-
-    const Group& group(const std::string& gname) const;
-    const Well& well(const std::string& wname) const;
+    const GasLiftGroup& group(const std::string& gname) const;
+    const GasLiftWell& well(const std::string& wname) const;
 
     double gaslift_increment() const;
     void gaslift_increment(double gaslift_increment);
@@ -262,8 +228,8 @@ public:
     void min_wait(double min_wait);
     void all_newton(double all_newton);
     bool all_newton() const;
-    void add_group(const Group& group);
-    void add_well(const Well& well);
+    void add_group(const GasLiftGroup& group);
+    void add_well(const GasLiftWell& well);
     bool active() const;
     bool has_well(const std::string& well) const;
     bool has_group(const std::string& group) const;
@@ -282,14 +248,15 @@ public:
         serializer(m_groups);
         serializer(m_wells);
     }
+
 private:
     double m_increment = 0;
     double m_min_eco_gradient;
     double m_min_wait;
     bool   m_all_newton = true;
 
-    std::map<std::string, GasLiftOpt::Group> m_groups;
-    std::map<std::string, GasLiftOpt::Well> m_wells;
+    std::map<std::string, GasLiftGroup> m_groups;
+    std::map<std::string, GasLiftWell> m_wells;
 };
 
 }

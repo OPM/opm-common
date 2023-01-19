@@ -456,8 +456,9 @@ void EclOutput::writeFormattedHeader(const std::string& arrName, int size, eclAr
 
 std::string EclOutput::make_real_string_ecl(float value) const
 {
-    char buffer [15];
-    std::sprintf (buffer, "%10.7E", value);
+    constexpr std::size_t buf_size = 15;
+    char buffer [buf_size];
+    std::snprintf (buffer, sizeof buffer, "%10.7E", value);
 
     if (value == 0.0) {
         return "0.00000000E+00";
@@ -482,7 +483,7 @@ std::string EclOutput::make_real_string_ecl(float value) const
             tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 7) +"E";
         }
 
-        std::sprintf (buffer, "%+03i", exp+1);
+        std::snprintf (buffer, sizeof buffer, "%+03i", exp+1);
         tmpstr = tmpstr+buffer;
 
         return tmpstr;
@@ -491,8 +492,9 @@ std::string EclOutput::make_real_string_ecl(float value) const
 
 std::string EclOutput::make_real_string_ix(float value) const
 {
-    char buffer [15];
-    std::sprintf (buffer, "%10.7E", value);
+    constexpr std::size_t buf_size = 15;
+    char buffer [buf_size];
+    std::snprintf (buffer, sizeof buffer, "%10.7E", value);
 
     if (value == 0.0) {
         return " 0.0000000E+00";
@@ -559,7 +561,7 @@ std::string EclOutput::make_doub_string_ecl(double value) const
 std::string EclOutput::make_doub_string_ix(double value) const
 {
     char buffer [21];
-    std::sprintf (buffer, "%19.13E", value);
+    std::snprintf (buffer, sizeof buffer, "%19.13E", value);
 
     if (value == 0.0) {
         return " 0.0000000000000E+00";

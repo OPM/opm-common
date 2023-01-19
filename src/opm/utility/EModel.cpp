@@ -21,14 +21,11 @@
 
 #include <fmt/format.h>
 
-#include <filesystem>
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
-#include <iomanip>
 #include <algorithm>
-
+#include <cstring>
+#include <filesystem>
+#include <iterator>
+#include <string>
 
 using EclEntry = std::tuple<std::string, Opm::EclIO::eclArrType, long int>;
 using ParamEntry = std::tuple<std::string, Opm::EclIO::eclArrType>;
@@ -191,8 +188,10 @@ void EModel::initSolutionData(int rstep){
 void EModel::get_cell_volumes_from_grid()
 {
     if (!grid.has_value()){
-        std::string message = "\nnot possible to calculate cell columes without an Egrid file. ";
-        message = message + "The grid file must have same root name as the init file selected for this object";
+        std::string message = "\nNot possible to calculate cell volumes "
+                              "without an Egrid file. "
+                              "The grid file must have same root name as "
+                              "the init file selected for this object";
         throw std::runtime_error(message);
     }
 
@@ -279,7 +278,8 @@ void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::stri
                 ActFilter[i] = false;
 
     } else {
-        std::string message = "Unknown opprator " + opperator + ", used to set filter";
+        const std::string message =
+            fmt::format("Unknown operator {} used to set filter", opperator);
         throw std::invalid_argument(message);
     }
 
@@ -295,7 +295,9 @@ void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::stri
                 ActFilter[i] = false;
 
     } else {
-        throw std::invalid_argument("Unknown opprator " + opperator + ", used to set filter");
+        const std::string message =
+            fmt::format("Unknown operator {} used to set filter", opperator);
+        throw std::invalid_argument(message);
     }
 
     activeFilter = true;
@@ -314,7 +316,10 @@ const std::vector<T>& EModel::get_filter_param(const std::string& param)
         else if (hasInitParameter(param))
             return initfile.get<int>(param);
 
-        throw std::invalid_argument("parameter " + param + ", used to set filter, could not be found");
+        const std::string message =
+            fmt::format("parameter {}, used to set filter, could not be found",
+                        param);
+        throw std::invalid_argument(message);
 
     } else if constexpr (std::is_same<T, float>::value){
         if (param == "PORV")
@@ -329,7 +334,10 @@ const std::vector<T>& EModel::get_filter_param(const std::string& param)
         else if (hasSolutionParameter(param))
             return getSolutionFloat(param);
 
-        throw std::invalid_argument("parameter " + param + ", used to set filter, could not be found");
+        const std::string message =
+            fmt::format("parameter {}, used to set filter, could not be found",
+                        param);
+        throw std::invalid_argument(message);
     }
 }
 
@@ -366,8 +374,10 @@ void EModel::addFilter<float>(const std::string& param1, const std::string& oppe
 
 void EModel::addHCvolFilter()
 {
-    if (FreeWaterlevel.size()==0)
-        throw std::runtime_error("free water level needs to be inputted via function setDepthfwl before using filter HC filter");
+    if (FreeWaterlevel.empty())
+        throw std::runtime_error("free water level needs to be input via "
+                                 "function setDepthfwl before using "
+                                 "filter HC filter");
 
     auto eqlnum = initfile.get<int>("EQLNUM");
     auto depth = initfile.get<float>("DEPTH");
@@ -435,7 +445,9 @@ const std::vector<float>& EModel::getInitFloat(const std::string& name)
 const std::vector<float>& EModel::getSolutionFloat(const std::string& name)
 {
     if (!hasSolutionParameter(name)) {
-        std::string message = "parameter " + name + " not found for step 0 in restart file ";
+        const std::string message =
+            fmt::format("parameter {} not found for step 0 in restart file ",
+                        name);
         throw std::invalid_argument(message);
     }
 
@@ -456,7 +468,11 @@ void EModel::setDepthfwl(const std::vector<float>& fwl)
     int maxEqlnum = *it;
 
     if (maxEqlnum > nEqlnum){
-        std::string message= "FWL not defined for all eql regions. # Contacts input: " + std::to_string(nEqlnum) + " needed (max value in EQLNUM): " + std::to_string(maxEqlnum);
+        const std::string message =
+            fmt::format("FWL not defined for all eql regions. "
+                        "# Contacts input: {} needed "
+                        "(max value in EQLNUM): {}",
+                        nEqlnum, maxEqlnum);
         throw std::invalid_argument(message);
     }
 }

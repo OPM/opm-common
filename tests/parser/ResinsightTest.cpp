@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
@@ -67,9 +68,9 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
     ParseContext parseContext;
     ErrorGuard errors;
 
-    parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    parseContext.update( ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputErrorAction::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputErrorAction::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_SLASH , InputErrorAction::IGNORE );
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
@@ -90,9 +91,9 @@ BOOST_AUTO_TEST_CASE( test_state ) {
     ErrorGuard errors;
 
 
-    parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    parseContext.update( ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputErrorAction::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputErrorAction::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_SLASH , InputErrorAction::IGNORE );
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();

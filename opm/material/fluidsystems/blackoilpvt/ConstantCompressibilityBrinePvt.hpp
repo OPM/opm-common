@@ -29,17 +29,18 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_ECL_INPUT
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
-#endif
-
 #include <vector>
 
 namespace Opm {
+
 template <class Scalar, bool enableThermal, bool enableBrine>
 class WaterPvtMultiplexer;
+
+#if HAVE_ECL_INPUT
+class EclipseState;
+class Schedule;
+#endif
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        without vaporized oil.
@@ -50,73 +51,12 @@ class ConstantCompressibilityBrinePvt
 public:
     using TabulatedFunction = Tabulated1DFunction<Scalar>;
 
-    ConstantCompressibilityBrinePvt() = default;
-    ConstantCompressibilityBrinePvt(const std::vector<Scalar>& waterReferenceDensity,
-                                    const std::vector<Scalar>& referencePressure,
-                                    const std::vector<TabulatedFunction> formationVolumeTables,
-                                    const std::vector<TabulatedFunction> compressibilityTables,
-                                    const std::vector<TabulatedFunction> viscosityTables,
-                                    const std::vector<TabulatedFunction> viscosibilityTables)
-        : waterReferenceDensity_(waterReferenceDensity)
-        , referencePressure_(referencePressure)
-        , formationVolumeTables_(formationVolumeTables)
-        , compressibilityTables_(compressibilityTables)
-        , viscosityTables_(viscosityTables)
-        , viscosibilityTables_(viscosibilityTables)
-    { }
 #if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent water viscosity and density
      *        using a table stemming from the Eclipse PVTWSALT keyword.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&)
-    {
-        const auto& tableManager = eclState.getTableManager();
-        size_t numRegions = tableManager.getTabdims().getNumPVTTables();
-        const auto& densityTable = tableManager.getDensityTable();
-
-        formationVolumeTables_.resize(numRegions);
-        compressibilityTables_.resize(numRegions);
-        viscosityTables_.resize(numRegions);
-        viscosibilityTables_.resize(numRegions);
-        referencePressure_.resize(numRegions);
-
-        const auto& pvtwsaltTables = tableManager.getPvtwSaltTables();
-        if(!pvtwsaltTables.empty()){
-            assert(numRegions == pvtwsaltTables.size());
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-                const auto& pvtwsaltTable = pvtwsaltTables[regionIdx];
-                const auto& c = pvtwsaltTable.getSaltConcentrationColumn();
-
-                const auto& B = pvtwsaltTable.getFormationVolumeFactorColumn();
-                formationVolumeTables_[regionIdx].setXYContainers(c, B);
-
-                const auto& compressibility = pvtwsaltTable.getCompressibilityColumn();
-                compressibilityTables_[regionIdx].setXYContainers(c, compressibility);
-
-                const auto& viscositytable = pvtwsaltTable.getViscosityColumn();
-                viscosityTables_[regionIdx].setXYContainers(c, viscositytable);
-
-                const auto& viscosibility = pvtwsaltTable.getViscosibilityColumn();
-                viscosibilityTables_[regionIdx].setXYContainers(c, viscosibility);
-                referencePressure_[regionIdx] = pvtwsaltTable.getReferencePressureValue();
-            }
-        }
-        else {
-            throw std::runtime_error("PVTWSALT must be specified in BRINE runs\n");
-        }
-
-
-        size_t numPvtwRegions = numRegions;
-        setNumRegions(numPvtwRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numPvtwRegions; ++ regionIdx) {
-
-            waterReferenceDensity_[regionIdx] = densityTable[regionIdx].water;
-        }
-
-        initEnd();
-    }
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(size_t numRegions)
@@ -157,6 +97,7 @@ public:
     Evaluation internalEnergy(unsigned,
                         const Evaluation&,
                         const Evaluation&,
+                        const Evaluation&,
                         const Evaluation&) const
     {
         throw std::runtime_error("Requested the enthalpy of water but the thermal option is not enabled");
@@ -169,6 +110,7 @@ public:
     Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
+                         const Evaluation& Rsw,
                          const Evaluation& saltconcentration) const
     {
         // cf. ECLiPSE 2013.2 technical description, p. 114
@@ -179,7 +121,29 @@ public:
         const Evaluation Y = (C-Cv)* (pressure - pRef);
         Evaluation MuwRef = viscosityTables_[regionIdx].eval(saltconcentration, /*extrapolate=*/true);
 
-        const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
+        const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+
+        return MuwRef*BwRef*bw/(1 + Y*(1 + Y/2));
+    }
+
+
+    /*!
+     * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
+     */
+    template <class Evaluation>
+    Evaluation saturatedViscosity(unsigned regionIdx,
+                                  const Evaluation& temperature,
+                                  const Evaluation& pressure,
+                                  const Evaluation& saltconcentration) const
+    {
+        Scalar pRef = referencePressure_[regionIdx];
+        const Evaluation C = compressibilityTables_[regionIdx].eval(saltconcentration, /*extrapolate=*/true);
+        const Evaluation Cv = viscosibilityTables_[regionIdx].eval(saltconcentration, /*extrapolate=*/true);
+        const Evaluation BwRef = formationVolumeTables_[regionIdx].eval(saltconcentration, /*extrapolate=*/true);
+        const Evaluation Y = (C-Cv)* (pressure - pRef);
+        Evaluation MuwRef = viscosityTables_[regionIdx].eval(saltconcentration, /*extrapolate=*/true);
+
+        const Evaluation& bw = saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
 
         return MuwRef*BwRef*bw/(1 + Y*(1 + Y/2));
     }
@@ -188,9 +152,22 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
+    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+                                                    const Evaluation& temperature,
+                                                    const Evaluation& pressure,
+                                                    const Evaluation& saltconcentration) const
+    {
+        Evaluation Rsw = 0.0;
+        return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+    }
+    /*!
+     * \brief Returns the formation volume factor [-] of the fluid phase.
+     */
+    template <class Evaluation>
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& /*temperature*/,
                                             const Evaluation& pressure,
+                                            const Evaluation& /*Rsw*/,
                                             const Evaluation& saltconcentration) const
     {
         Scalar pRef = referencePressure_[regionIdx];
@@ -201,6 +178,37 @@ public:
 
         return (1.0 + X*(1.0 + X/2.0))/BwRef;
 
+    }
+
+    /*!
+     * \brief Returns the saturation pressure of the water phase [Pa]
+     *        depending on its mass fraction of the gas component
+     *
+     * \param Rs The surface volume of gas component dissolved in what will yield one cubic meter of oil at the surface [-]
+     */
+    template <class Evaluation>
+    Evaluation saturationPressure(unsigned /*regionIdx*/,
+                                  const Evaluation& /*temperature*/,
+                                  const Evaluation& /*Rs*/,
+                                  const Evaluation& /*saltconcentration*/) const
+    { return 0.0; /* this is dead water, so there isn't any meaningful saturation pressure! */ }
+
+    /*!
+     * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of the water phase.
+     */
+    template <class Evaluation>
+    Evaluation saturatedGasDissolutionFactor(unsigned /*regionIdx*/,
+                                             const Evaluation& /*temperature*/,
+                                             const Evaluation& /*pressure*/,
+                                             const Evaluation& /*saltconcentration*/) const
+    { return 0.0; /* this is dead water! */ }
+
+    template <class Evaluation>
+    Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
+                                    const Evaluation& /*pressure*/,
+                                    unsigned /*compIdx*/) const
+    {
+        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
 
     const Scalar waterReferenceDensity(unsigned regionIdx) const
@@ -220,16 +228,6 @@ public:
 
     const std::vector<TabulatedFunction>& viscosibilityTables() const
     { return viscosibilityTables_; }
-
-    bool operator==(const ConstantCompressibilityBrinePvt<Scalar>& data) const
-    {
-        return this->waterReferenceDensity_ == data.waterReferenceDensity_ &&
-               this->referencePressure() == data.referencePressure() &&
-               this->formationVolumeTables() == data.formationVolumeTables() &&
-               this->compressibilityTables() == data.compressibilityTables() &&
-               this->viscosityTables() == data.viscosityTables() &&
-               this->viscosibilityTables() == data.viscosibilityTables();
-    }
 
 private:
     std::vector<Scalar> waterReferenceDensity_;

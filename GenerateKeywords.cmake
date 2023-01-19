@@ -25,6 +25,7 @@ set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/input/eclipse/Units/UnitSystem.cpp
                   src/opm/common/utility/OpmInputError.cpp
                   src/opm/common/utility/shmatch.cpp
+                  src/opm/common/utility/String.cpp
                   src/opm/common/OpmLog/OpmLog.cpp
                   src/opm/common/OpmLog/Logger.cpp
                   src/opm/common/OpmLog/StreamLog.cpp

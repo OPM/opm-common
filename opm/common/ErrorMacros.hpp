@@ -24,7 +24,6 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <string>
-#include <sstream>
 #include <exception>
 #include <stdexcept>
 #include <cassert>
@@ -48,23 +47,25 @@
 // exception class derived from either std::logic_error or
 // std::runtime_error.
 //
-// Usage: OPM_THROW(ExceptionClass, "Error message " << value);
-#define OPM_THROW(Exception, message)                                                        \
-    do {                                                                                     \
-        std::ostringstream opmErrorMacroOStringStream;                                       \
-        opmErrorMacroOStringStream << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
-        ::Opm::OpmLog::error(opmErrorMacroOStringStream.str());                              \
-        throw Exception(opmErrorMacroOStringStream.str());                                   \
+// Usage: OPM_THROW(ExceptionClass, "Error message");
+#define OPM_THROW(Exception, message)                          \
+    do {                                                       \
+        std::string oss_ = std::string{"["} + __FILE__ + ":" + \
+                           std::to_string(__LINE__) + "] " +   \
+                           message;                            \
+        ::Opm::OpmLog::error(oss_);                            \
+        throw Exception(oss_);                                 \
     } while (false)
 
 // Same as OPM_THROW, except for not making an OpmLog::error() call.
 //
-// Usage: OPM_THROW_NOLOG(ExceptionClass, "Error message " << value);
-#define OPM_THROW_NOLOG(Exception, message)                                                  \
-    do {                                                                                     \
-        std::ostringstream opmErrorMacroOStringStream;                                       \
-        opmErrorMacroOStringStream << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
-        throw Exception(opmErrorMacroOStringStream.str());                                   \
+// Usage: OPM_THROW_NOLOG(ExceptionClass, "Error message");
+#define OPM_THROW_NOLOG(Exception, message)                    \
+    do {                                                       \
+        std::string oss_ = std::string{"["} + __FILE__ + ":" + \
+                           std::to_string(__LINE__) + "] " +   \
+                           message;                            \
+        throw Exception(oss_);                                 \
     } while (false)
 
 // throw an exception if a condition is true

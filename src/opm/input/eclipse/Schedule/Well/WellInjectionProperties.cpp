@@ -16,9 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
-#include <string>
-#include <vector>
+
+#include <config.h>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -27,10 +27,12 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include "injection.hpp"
 #include "../eval_uda.hpp"
+
+#include <ostream>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -122,7 +124,7 @@ namespace Opm {
             this->dropInjectionControl(InjectorCMode::GRUP);
         {
             const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-            InjectorCMode controlModeArg = InjectorCModeFromString( cmodeString );
+            InjectorCMode controlModeArg = WellInjectorCModeFromString(cmodeString);
             if (this->hasInjectionControl( controlModeArg))
                 this->controlMode = controlModeArg;
             else {
@@ -194,7 +196,7 @@ namespace Opm {
             this->THPH = record.getItem("THP").getSIDouble(0);
 
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const InjectorCMode newControlMode = InjectorCModeFromString( cmodeString );
+        const InjectorCMode newControlMode = WellInjectorCModeFromString(cmodeString);
 
         if ( !(newControlMode == InjectorCMode::RATE || newControlMode == InjectorCMode::BHP) ) {
             const std::string msg = "Only RATE and BHP control are allowed for WCONINJH for well " + well_name;
@@ -285,7 +287,7 @@ namespace Opm {
             << "prediction mode: "  << wp.predictionMode << ", "
             << "injection ctrl: "   << wp.injectionControls << ", "
             << "injector type: "    << InjectorType2String(wp.injectorType) << ", "
-            << "control mode: "     << Well::InjectorCMode2String(wp.controlMode) << " , "
+            << "control mode: "     << WellInjectorCMode2String(wp.controlMode) << " , "
             << "rs/rv concentration: " << wp.rsRvInj << " }";
     }
 
