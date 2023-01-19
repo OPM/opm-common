@@ -1141,9 +1141,14 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     {
         const auto& kw = keyword.name();
 
-        if (kw.size() > std::string::size_type{5}) {
-            // Easy check first--handles SUMMARY and SUMTHIN &c.
+        if ((kw == "SUMMARY") || (kw == "SUMTHIN")) {
             return false;
+        }
+
+        if (kw[1] == 'U') {
+            // User-defined quantity at segment level.  Unbounded set, so
+            // assume this is well defined.
+            return true;
         }
 
         const auto kw_whitelist = std::vector<const char*> {

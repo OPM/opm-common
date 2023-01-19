@@ -29,8 +29,8 @@
 namespace Opm { namespace EclIO {
 
     struct lgr_info {
-        std::string name;
-        std::array<int, 3> ijk;
+        std::string name {};
+        std::array<int, 3> ijk {};
     };
 
 struct SummaryNode {
@@ -59,13 +59,13 @@ struct SummaryNode {
         Undefined,
     };
 
-    std::string keyword;
-    Category    category;
-    Type        type;
-    std::string wgname;
-    int         number;
-    std::optional<std::string> fip_region;
-    std::optional<lgr_info> lgr;
+    std::string                keyword {};
+    Category                   category { Category::Miscellaneous };
+    Type                       type { Type::Undefined };
+    std::string                wgname {};
+    int                        number {};
+    std::optional<std::string> fip_region {};
+    std::optional<lgr_info>    lgr {};
 
     constexpr static int default_number { std::numeric_limits<int>::min() };
 

@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -4283,70 +4284,73 @@ void Opm::out::Summary::SummaryImplementation::write(const MiniStep& ms)
 
 void
 Opm::out::Summary::SummaryImplementation::
-configureTimeVector(const EclipseState& es, const std::string& kw) {
+configureTimeVector(const EclipseState& es, const std::string& kw)
+{
     const auto dfltwgname = std::string(":+:+:+:+");
     const auto dfltnum    = 0;
 
     this->valueKeys_.push_back(kw);
 
     if (kw == "TIME") {
-        const std::string& unit_string = es.getUnits().name(UnitSystem::measure::time);
-        auto eval = std::make_unique<Evaluator::Time>(kw);
+        const auto* unit_string =
+            es.getUnits().name(UnitSystem::measure::time);
 
-        valueUnits_.push_back(unit_string);
-
+        this->valueUnits_.push_back(unit_string);
 
         this->outputParameters_
-            .makeParameter(kw, dfltwgname, dfltnum, unit_string, std::move(eval));
+            .makeParameter(kw, dfltwgname, dfltnum, unit_string,
+                           std::make_unique<Evaluator::Time>(kw));
     }
 
     else if (kw == "DAY") {
-        auto eval = std::make_unique<Evaluator::Day>(kw);
-        valueUnits_.push_back("");
+        this->valueUnits_.push_back("");
 
         this->outputParameters_
-            .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
+            .makeParameter(kw, dfltwgname, dfltnum, "",
+                           std::make_unique<Evaluator::Day>(kw));
     }
 
-    else if (kw == "MONTH" || kw == "MNTH") {
-        auto eval = std::make_unique<Evaluator::Month>(kw);
-        valueUnits_.push_back("");
+    else if ((kw == "MONTH") || (kw == "MNTH")) {
+        this->valueUnits_.push_back("");
 
         this->outputParameters_
-            .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
+            .makeParameter(kw, dfltwgname, dfltnum, "",
+                           std::make_unique<Evaluator::Month>(kw));
     }
 
     else if (kw == "YEAR") {
-        auto eval = std::make_unique<Evaluator::Year>(kw);
-        valueUnits_.push_back("");
+        this->valueUnits_.push_back("");
+
         this->outputParameters_
-            .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
+            .makeParameter(kw, dfltwgname, dfltnum, "",
+                           std::make_unique<Evaluator::Year>(kw));
     }
 
     else if (kw == "YEARS") {
-        auto eval = std::make_unique<Evaluator::Years>(kw);
-        valueUnits_.push_back("");
+        this->valueUnits_.push_back("");
 
         this->outputParameters_
-            .makeParameter(kw, dfltwgname, dfltnum, kw, std::move(eval));
+            .makeParameter(kw, dfltwgname, dfltnum, kw,
+                           std::make_unique<Evaluator::Years>(kw));
     }
 }
 
 void
 Opm::out::Summary::SummaryImplementation::
-configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
+configureTimeVectors(const EclipseState&  es,
+                     const SummaryConfig& sumcfg)
 {
-    this->configureTimeVector(es, "TIME");
-    this->configureTimeVector(es, "YEARS");
+    // TIME and YEARS are always available.
+    for (const auto* kw : { "TIME", "YEARS", }) {
+        this->configureTimeVector(es, kw);
+    }
 
-    if (sumcfg.hasKeyword("DAY"))
-        this->configureTimeVector(es, "DAY");
-
-    if (sumcfg.hasKeyword("MONTH"))
-        this->configureTimeVector(es, "MONTH");
-
-    if (sumcfg.hasKeyword("YEAR"))
-        this->configureTimeVector(es, "YEAR");
+    // DAY, MONTH, and YEAR only output if specifically requested.
+    for (const auto* kw : { "DAY", "MONTH", "YEAR", }) {
+        if (sumcfg.hasKeyword(kw)) {
+            this->configureTimeVector(es, kw);
+        }
+    }
 }
 
 void
@@ -4381,80 +4385,89 @@ configureSummaryInput(const SummaryConfig& sumcfg,
         reportUnsupportedKeywords(std::move(unsuppkw));
 }
 
-/*
-   These nodes are added to the summary evaluation list because they are
-   requested by the UDQ system. In the case of well and group variables the code
-   will all nodes for all wells / groups - irrespective of what has been
-   requested in the UDQ code.
-*/
+// These nodes are added to the summary evaluation list because they are
+// requested by the UDQ system.  In the case of well and group variables the
+// code will add nodes for every well/group in the model--irrespective of
+// what has been requested in the UDQ code.
 
 namespace {
+    std::vector<int>
+    unique_segment_numbers(const Opm::WellSegments& segments)
+    {
+        auto seg_num = std::vector<int>{};
+        seg_num.reserve(segments.size());
+
+        std::transform(segments.begin(), segments.end(),
+                       std::back_inserter(seg_num),
+            [](const Opm::Segment& segment)
+        {
+            return segment.segmentNumber();
+        });
+
+        std::sort(seg_num.begin(), seg_num.end());
+
+        auto u = std::unique(seg_num.begin(), seg_num.end());
+        if (u != seg_num.end()) {
+            seg_num.erase(u, seg_num.end());
+        }
+
+        return seg_num;
+    }
+
+    template <typename... Args>
+    Opm::EclIO::SummaryNode make_node(Args&&... args)
+    {
+        return { std::forward<Args>(args)... };
+    }
+
     std::vector<Opm::EclIO::SummaryNode>
-    make_default_nodes(const std::string& keyword,
+    make_default_nodes(const std::string&   keyword,
                        const Opm::Schedule& sched)
     {
-        if (Opm::TimeService::valid_month(keyword))
-            return {};
-
         auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
-        auto category = Opm::parseKeywordCategory(keyword);
-        auto type = Opm::parseKeywordType(keyword);
+
+        if (Opm::TimeService::valid_month(keyword)) {
+            return nodes;
+        }
+
+        const auto category = Opm::parseKeywordCategory(keyword);
+        const auto type = Opm::parseKeywordType(keyword);
 
         switch (category) {
         case Opm::EclIO::SummaryNode::Category::Field:
-        {
-            Opm::EclIO::SummaryNode node;
-            node.keyword = keyword;
-            node.category = category;
-            node.type = type;
-
-            nodes.push_back(node);
-        }
-        break;
-
         case Opm::EclIO::SummaryNode::Category::Miscellaneous:
-        {
-            Opm::EclIO::SummaryNode node;
-            node.keyword = keyword;
-            node.category = category;
-            node.type = type;
-
-            nodes.push_back(node);
-        }
+            nodes.push_back(make_node(keyword, category, type));
         break;
 
-        case Opm::EclIO::SummaryNode::Category::Well:
-        {
+        case Opm::EclIO::SummaryNode::Category::Well: {
             for (const auto& well : sched.wellNames()) {
-                Opm::EclIO::SummaryNode node;
-                node.keyword = keyword;
-                node.category = category;
-                node.type = type;
-                node.wgname = well;
-
-                nodes.push_back(node);
+                nodes.push_back(make_node(keyword, category, type, well));
             }
         }
-        break;
+            break;
 
-        case Opm::EclIO::SummaryNode::Category::Group:
-        {
+        case Opm::EclIO::SummaryNode::Category::Group: {
             for (const auto& group : sched.groupNames()) {
-                Opm::EclIO::SummaryNode node;
-                node.keyword = keyword;
-                node.category = category;
-                node.type = type;
-                node.wgname = group;
-
-                nodes.push_back(node);
+                nodes.push_back(make_node(keyword, category, type, group));
             }
         }
-        break;
+            break;
+
+        case Opm::EclIO::SummaryNode::Category::Segment: {
+            for (const auto& wname : sched.wellNames()) {
+                if (const auto& well = sched.getWellatEnd(wname); well.isMultiSegment()) {
+                    for (const auto& seg_num : unique_segment_numbers(well.getSegments())) {
+                        nodes.push_back(make_node(keyword, category, type, wname, seg_num));
+                    }
+                }
+            }
+        }
+            break;
 
         default:
             throw std::logic_error {
-                fmt::format("Keyword category '{}' (e.g., summary keyword {}) is not supported in ACTIONX",
-            category, keyword)
+                fmt::format("Keyword category '{}' (e.g., summary keyword {}) "
+                            "is not supported in ACTIONX", category, keyword)
             };
         }
 
@@ -4462,59 +4475,79 @@ namespace {
     }
 }
 
-void Opm::out::Summary::SummaryImplementation::configureUDQ(const EclipseState& es,
-                                                            const SummaryConfig& summary_config,
-                                                            const Schedule& sched)
+void
+Opm::out::Summary::SummaryImplementation::
+configureUDQ(const EclipseState& es,
+             const SummaryConfig& summary_config,
+             const Schedule& sched)
 {
-    const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH"};
-    auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
-    std::unordered_set<std::string> summary_keys;
-    for (const auto& [_, udq] : sched.unique<UDQConfig>()) {
-        (void)_;
-        udq.required_summary(summary_keys);
+    auto nodes = std::vector<Opm::EclIO::SummaryNode>{};
+
+    const auto time_vectors = std::unordered_set<std::string> {
+        "TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH",
+    };
+
+    auto summary_keys = std::unordered_set<std::string>{};
+    for (const auto& unique_udqs : sched.unique<UDQConfig>()) {
+        unique_udqs.second.required_summary(summary_keys);
     }
 
-    for (const auto& action : sched.back().actions.get())
+    for (const auto& action : sched.back().actions.get()) {
         action.required_summary(summary_keys);
+    }
 
     for (const auto& key : summary_keys) {
-        const auto& default_nodes = make_default_nodes(key, sched);
-        for (const auto& def_node : default_nodes)
+        for (const auto& def_node : make_default_nodes(key, sched)) {
             nodes.push_back(def_node);
+        }
     }
 
-    for (const auto& node: nodes) {
+    auto has_evaluator = [this](const auto& key)
+    {
+        return std::find(this->valueKeys_.begin(),
+                         this->valueKeys_.end(), key)
+            != this->valueKeys_.end();
+    };
+
+    for (const auto& node : nodes) {
         // Handler already configured/requested through the normal
         // SummaryConfig path.
-        if (summary_config.hasSummaryKey(node.unique_key()))
+        if (summary_config.hasSummaryKey(node.unique_key())) {
             continue;
+        }
 
         // Time related vectors are special cased in the valueKeys_ vector
         // and must be checked explicitly.
-        if (time_vectors.count(node.keyword) > 0) {
+        if ((time_vectors.find(node.keyword) != time_vectors.end()) &&
+            ! has_evaluator(node.keyword))
+        {
             this->configureTimeVector(es, node.keyword);
             continue;
         }
 
-        // Handler already registered in the summary evaluator, in some
-        // other way.
-        if (std::find(this->valueKeys_.begin(), this->valueKeys_.end(), node.unique_key()) != this->valueKeys_.end())
+        // Handler already registered in the summary evaluator in some other
+        // way.
+        if (has_evaluator(node.unique_key())) {
             continue;
+        }
 
         auto fun_pos = funs.find(node.keyword);
         if (fun_pos != funs.end()) {
-            this->extra_parameters.emplace(node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second));
+            this->extra_parameters
+                .emplace(node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second));
             continue;
         }
 
         auto unit = single_values_units.find(node.keyword);
         if (unit != single_values_units.end()) {
-            this->extra_parameters.emplace(node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+            this->extra_parameters
+                .emplace(node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
             continue;
         }
 
-        if (node.is_user_defined())
+        if (node.is_user_defined()) {
             continue;
+        }
 
         throw std::logic_error {
             fmt::format("Evaluation function for: {} not found ", node.keyword)
