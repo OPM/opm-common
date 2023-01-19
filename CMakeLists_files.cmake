@@ -441,6 +441,7 @@ if(ENABLE_ECL_INPUT)
     tests/material/test_eclblackoilfluidsystem.cpp
     tests/material/test_eclblackoilpvt.cpp
     tests/material/test_eclmateriallawmanager.cpp
+    tests/material/test_propertyevaluation.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
