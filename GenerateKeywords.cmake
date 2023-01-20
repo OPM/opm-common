@@ -55,9 +55,13 @@ set( genkw_argv keyword_list.argv
 
 foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
   list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/${name}.cpp
-                          ${PROJECT_BINARY_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp)
+                          ${PROJECT_BINARY_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp
+                          ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/ParserInit${name}.cpp
+                          ${PROJECT_BINARY_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/ParserInit${name}.hpp)
   list(APPEND _target_output ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp
-                             ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp)
+                             ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp
+                             ${PROJECT_BINARY_DIR}/ParserKeywords/ParserInit${name}.cpp
+                             ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/ParserInit${name}.hpp)
 endforeach()
 
 foreach(name TestKeywords.cpp ParserInit.cpp)
