@@ -161,7 +161,7 @@ void ExtNetwork::add_node(Node node)
     }
 
 
-    this->m_nodes.insert({ name, std::move(node) });
+    this->m_nodes.insert_or_assign(name, std::move(node) );
 }
 
 void ExtNetwork::add_indexed_node_name(std::string name)
