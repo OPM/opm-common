@@ -4,19 +4,15 @@
     "SOLUTION",
     "SCHEDULE"
   ],
-  "size": {
-    "keyword": "AQUDIMS",
-    "item": "NANAQU"
-  },
   "items": [
     {
       "name": "AQUIFER_ID",
       "value_type": "INT"
     },
     {
-      "name": "DAT_DEPTH",
+      "name": "FLUX",
       "value_type": "DOUBLE",
-      "dimension": "Length"
+      "dimension": "LiquidSurfaceVolume/Time*Length*Length"
     },
     {
       "name": "SC_0",
