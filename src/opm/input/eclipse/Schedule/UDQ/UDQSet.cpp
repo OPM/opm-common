@@ -146,6 +146,18 @@ bool UDQScalar::operator==(const UDQScalar& other) const
 // UDQSet Implementation Below Separator
 // ------------------------------------------------------------------------
 
+bool UDQSet::EnumeratedWellItems::operator==(const EnumeratedWellItems& that) const
+{
+    return (this->well == that.well)
+        && (this->numbers == that.numbers);
+}
+
+UDQSet::EnumeratedWellItems
+UDQSet::EnumeratedWellItems::serializationTestObject()
+{
+    return { "PROD01", std::vector<std::size_t>{ 17, 29 } };
+}
+
 const std::string& UDQSet::name() const
 {
     return this->m_name;
