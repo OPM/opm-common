@@ -126,14 +126,18 @@ void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
 setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx)
 {
+    // We need to compute the oil-water scaled info even if we are running a two-phase case without
+    // water (e.g. gas-oil). The reason is that the oil-water scaled info is used when computing
+    // the initial condition see e.g. equilibrationhelpers.cc and initstateequil.cc
+    // Therefore, the below 7 lines should not be put inside the if(hasOilWater_){} below.
+    auto [oilWaterScaledInfo, oilWaterScaledPoints]
+        = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::OilWater);
+    // TODO: This will reassign the same EclEpsScalingPointsInfo for each facedir
+    //  since we currently does not support facedir for the scaling points info
+    //  When such support is added, we need to extend the below vector which has info for each cell
+    //   to include three more vectors, one with info for each facedir of a cell
+    this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
     if (hasOilWater_()) {
-        auto [oilWaterScaledInfo, oilWaterScaledPoints] 
-            = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::OilWater);
-        // TODO: This will reassign the same EclEpsScalingPointsInfo for each facedir
-        //  since we currently does not support facedir for the scaling points info
-        //  When such support is added, we need to extend the below vector which has info for each cell
-        //   to include three more vectors, one with info for each facedir of a cell
-        this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
         OilWaterEpsTwoPhaseParams oilWaterDrainParams;
         oilWaterDrainParams.setConfig(this->parent_.oilWaterConfig_);
         oilWaterDrainParams.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[satRegionIdx]);

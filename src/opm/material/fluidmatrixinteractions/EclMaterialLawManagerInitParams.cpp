@@ -49,8 +49,8 @@ template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
 run() {
-    readEffectiveParameters_();
     readUnscaledEpsPointsVectors_();
+    readEffectiveParameters_();
     initSatnumRegionArray_();
     copySatnumArrays_();
     initOilWaterScaledEpsInfo_();
