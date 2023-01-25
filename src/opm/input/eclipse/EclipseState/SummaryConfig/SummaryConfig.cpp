@@ -1695,7 +1695,13 @@ SummaryConfig::SummaryConfig( const Deck& deck,
             ? collect_node_names(schedule)
             : std::vector<std::string> {};
 
-        const auto analyticAquifers = analyticAquiferIDs(aquiferConfig);
+        // incoporating the constant flux aqufers from SCHEDULE
+        // TODO: AQUCT and AQUFETP aquifers will also get from SCHEDULE later
+        const auto aquifersconstantfluxs = schedule.getAquiferFluxListEnd();
+        auto analyticAquifers = analyticAquiferIDs(aquiferConfig);
+        if (!aquifersconstantfluxs.empty()) {
+            analyticAquifers.insert(analyticAquifers.end(), aquifersconstantfluxs.begin(), aquifersconstantfluxs.end());
+        }
         const auto numericAquifers = numericAquiferIDs(aquiferConfig);
 
         for (const auto& kw : section) {

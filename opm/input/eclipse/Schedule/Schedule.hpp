@@ -261,6 +261,8 @@ namespace Opm
         const Well& getWell(std::size_t well_index, std::size_t timeStep) const;
         const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
+        // get the list of the constant flux aquifer through the whole schedule
+        std::vector<int> getAquiferFluxListEnd() const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
         void shut_well(const std::string& well_name, std::size_t report_step);
@@ -609,6 +611,9 @@ namespace Opm
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
                                     const ScheduleGrid& grid,
+                                    // TODO: depending on the usage of the function, passing Deck or SOLUTIONSection
+                                    // might be better
+                                    const std::unordered_map<int, AquiferFlux>& aqufluxs,
                                     const std::unordered_map<std::string, double> * target_wellpi,
                                     const std::string& prefix,
                                     const bool log_to_debug = false);
@@ -675,6 +680,7 @@ namespace Opm
 
         void handleAQUCT     (HandlerContext&);
         void handleAQUFETP   (HandlerContext&);
+        void handleAQUFLUX   (HandlerContext&);
         void handleBRANPROP  (HandlerContext&);
         void handleCOMPDAT   (HandlerContext&);
         void handleCOMPLUMP  (HandlerContext&);

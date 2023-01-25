@@ -81,6 +81,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Python/Python.cpp
     src/opm/input/eclipse/Schedule/Action/PyAction.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
+    src/opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/AquiferCT.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/Aquifetp.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/Aquancon.cpp
@@ -1071,6 +1072,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/EclipseConfig.hpp
        opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp
        opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp
+       opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp
        opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp
        opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp
        opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp

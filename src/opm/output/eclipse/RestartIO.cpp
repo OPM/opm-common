@@ -525,6 +525,9 @@ namespace {
                       wells, wellSol, action_state, wtest_state, sumState, inteHD, rstFile);
         }
 
+        // TODO: Currently, we put the AQUFLUX aquifers in the Schedule. As a result, we will not be able to
+        // TODO: to write anything related to AQUFLUX with the current way.
+        // Schedule needs to be checked for the Aquifer output purpose.
         if ((es.aquifer().hasAnalyticalAquifer() || es.aquifer().hasNumericalAquifer()) &&
             aquiferData.has_value())
         {

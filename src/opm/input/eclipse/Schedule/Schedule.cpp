@@ -209,18 +209,25 @@ namespace Opm {
         //const ScheduleGridWrapper gridWrapper { grid } ;
         ScheduleGrid grid(ecl_grid, fp, this->completed_cells);
 
+        // TODO: alternatively, we can pass in SOLUTIONSection to function iterateScheduleSection
+        const auto aquifer_constant_flux =
+                AquiferFlux::aqufluxFromKeywords(SOLUTIONSection(deck).getKeywordList("AQUFLUX"));
+
         if (rst) {
             if (!tracer_config)
                 throw std::logic_error("Bug: when loading from restart a valid TracerConfig object must be supplied");
 
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection(0, restart_step, parseContext, errors, grid,
+                                         aquifer_constant_flux, nullptr, "");
             this->load_rst(*rst, *tracer_config, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection(restart_step, this->m_sched_deck.size(), parseContext, errors, grid,
+                                         aquifer_constant_flux, nullptr, "");
         } else {
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection(0, this->m_sched_deck.size(), parseContext, errors, grid,
+                                         aquifer_constant_flux, nullptr, "");
         }
 
         //m_grid = std::make_shared<SparseScheduleGrid>(grid, gridWrapper.getHitKeys());
@@ -543,6 +550,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                       const ParseContext& parseContext,
                                       ErrorGuard& errors,
                                       const ScheduleGrid& grid,
+                                      const std::unordered_map<int, AquiferFlux>& aqufluxs,
                                       const std::unordered_map<std::string, double> * target_wellpi,
                                       const std::string& prefix,
                                       const bool log_to_debug) {
@@ -624,7 +632,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                        block.location().lineno));
                 }
             }
+            // TODO: we should pass in the AQUFLUX related (SOLUTION keywords that can be updated with SCHEDULE)
+            // if there is no RESTART, we just give it to the Report Step zero. 
             this->create_next(block);
+
+            if (report_step == 0) {
+                // the aqufluxes are from SOLUTION section, should only apply to snapshorts.begin();
+                for (auto& elem: aqufluxs) {
+                    this->snapshots.back().aqufluxs.update(elem.second);
+                }
+            }
 
             std::unordered_map<std::string, double> wpimult_global_factor;
 
@@ -1125,6 +1142,17 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->getWell(well_name, this->snapshots.size() - 1);
     }
 
+    std::vector<int> Schedule::getAquiferFluxListEnd() const{
+        // TODO: currently, we assume that after an aquifer is created, we will not be able to remove it anymore
+        // we can only update/modify it
+        const auto& aquifers = this->snapshots.back().aqufluxs;
+        std::vector<int> ids; ids.reserve(aquifers.size());
+        for (const auto& elem : aquifers) {
+            ids.push_back(elem.first);
+        }
+        return ids;
+    }
+
     const Well& Schedule::getWell(const std::string& wellName, std::size_t timeStep) const {
         return this->snapshots[timeStep].wells.get(wellName);
     }
@@ -1474,13 +1502,14 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->end_report(reportStep);
         if (reportStep < this->m_sched_deck.size() - 1) {
             iterateScheduleSection(
-                reportStep + 1,
-                this->m_sched_deck.size(),
-                parseContext,
-                errors,
-                grid,
-                &target_wellpi,
-                prefix);
+                    reportStep + 1,
+                    this->m_sched_deck.size(),
+                    parseContext,
+                    errors,
+                    grid,
+                    {},
+                    &target_wellpi,
+                    prefix);
         }
     }
 
@@ -1524,7 +1553,9 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         if (reportStep < this->m_sched_deck.size() - 1) {
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
-                                         parseContext, errors, grid, &target_wellpi,
+                                         parseContext, errors, grid,
+                                         {},
+                                         &target_wellpi,
                                          prefix, log_to_debug);
         }
         OpmLog::debug("\\----------------------------------------------------------------------");
