@@ -21,10 +21,16 @@
 
 #include "RigWellLogExtractor.h"
 #include <src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfBoundingBoxTree.h>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 class RigEclipseCaseData;
 class RigWellPath;
 class RigResultAccessor;
+namespace Opm {
+class EclipseGrid;
+class ScheduleGrid;
+}
 
 namespace cvf
 {
@@ -37,11 +43,9 @@ class BoundingBox;
 class MyRigEclipseWellLogExtractor : public RigWellLogExtractor
 {
 public:
-    MyRigEclipseWellLogExtractor( const RigWellPath*       wellpath );
+    MyRigEclipseWellLogExtractor( const RigWellPath* wellpath, const Opm::EclipseGrid& grid, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree);
 
-    // void                      curveData( const RigResultAccessor* resultAccessor, std::vector<double>* values );
-    // const RigEclipseCaseData* caseData() { return m_caseData.p(); }
-
+    cvf::ref<cvf::BoundingBoxTree> getCellSearchTree();
 private:
     void                calculateIntersection();
     std::vector<size_t> findCloseCellIndices( const cvf::BoundingBox& bb );
@@ -56,5 +60,10 @@ private:
                                              cvf::Vec3d&                      localXdirection,
                                              cvf::Vec3d&                      localYdirection,
                                              cvf::Vec3d&                      localZdirection ) const;
+    void buildCellSearchTree();
+    void findIntersectingCells( const cvf::BoundingBox& inputBB, std::vector<size_t>* cellIndices ) const;
+    void computeCachedData();
+
+    const Opm::EclipseGrid& m_grid;
     cvf::ref<cvf::BoundingBoxTree> m_cellSearchTree;
 };
