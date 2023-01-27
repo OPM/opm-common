@@ -20,20 +20,22 @@
 #ifndef UDQSTATE_HPP_
 #define UDQSTATE_HPP_
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace Opm { namespace RestartIO {
+    struct RstState;
+}} // namespace Opm::RestartIO
 
 namespace Opm {
 
-namespace RestartIO {
-    struct RstState;
-}
-
-class UDQState {
+class UDQState
+{
 public:
     UDQState() = default;
     UDQState(double undefined);
@@ -43,42 +45,55 @@ public:
 
     bool has_well_var(const std::string& well, const std::string& key) const;
     bool has_group_var(const std::string& group, const std::string& key) const;
+    bool has_segment_var(const std::string& well, const std::string& key, const std::size_t segment) const;
 
     double get(const std::string& key) const;
     double get_group_var(const std::string& well, const std::string& var) const;
     double get_well_var(const std::string& well, const std::string& var) const;
+    double get_segment_var(const std::string& well, const std::string& var, const std::size_t segment) const;
+
     void add_define(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
     void add_assign(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
     bool assign(std::size_t report_step, const std::string& udq_key) const;
-    bool define(const std::string& udq_key, std::pair<UDQUpdate, std::size_t> update_status) const;
+    bool define(const std::string& udq_key, const std::pair<UDQUpdate, std::size_t>& update_status) const;
     double undefined_value() const;
 
     bool operator==(const UDQState& other) const;
 
     static UDQState serializationTestObject();
 
-    template<class Serializer>
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(this->undef_value);
         serializer(this->scalar_values);
         serializer(this->well_values);
         serializer(this->group_values);
+        serializer(this->segment_values);
         serializer(this->assignments);
         serializer(this->defines);
     }
 
-
 private:
-    void add(const std::string& udq_key, const UDQSet& result);
-    double get_wg_var(const std::string& well, const std::string& key, UDQVarType var_type) const;
     double undef_value;
-    std::unordered_map<std::string, double> scalar_values;
-    std::unordered_map<std::string, std::unordered_map<std::string, double>> well_values;
-    std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values;
+    std::unordered_map<std::string, double> scalar_values{};
+
+    // [var][well] -> double
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> well_values{};
+
+    // [var][group] -> double
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values{};
+
+    // [var][well][segment] -> double
+    std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> segment_values{};
+
     std::unordered_map<std::string, std::size_t> assignments;
     std::unordered_map<std::string, std::size_t> defines;
-};
-}
 
-#endif
+    void add(const std::string& udq_key, const UDQSet& result);
+    double get_wg_var(const std::string& well, const std::string& key, UDQVarType var_type) const;
+};
+
+} // namespace Opm
+
+#endif  // UDQSTATE_HPP_
