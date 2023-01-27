@@ -442,6 +442,9 @@ if(ENABLE_ECL_INPUT)
     tests/material/test_eclblackoilpvt.cpp
     tests/material/test_eclmateriallawmanager.cpp
     tests/material/test_propertyevaluation.cpp
+    tests/material/test_eclpropertyevaluation.cpp
+    tests/material/test_eclpropertyevaluation_lowlevel.cpp
+    tests/material/test_eclpropertyevaluation_lowlevel_spe9.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
