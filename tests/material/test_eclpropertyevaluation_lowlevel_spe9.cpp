@@ -243,8 +243,8 @@ inline Opm::time_point::duration testAll(const char * deck_file)
                 }
                 //const auto& gaspvt = FluidSystem::gasPvt();//.getRealPvt();
                 //Evaluation b = gaspvt.saturatedInverseFormationVolumeFactor(pvtRegionIdx, T, p);
-                size_t segIdx = gaspvt.inverseSaturatedGasB()[pvtRegionIdx].findSegmentIndex_(p,/*extrapolate=*/true);
-                Evaluation b  =gaspvt.inverseSaturetedGasB()[pvtRegionIdx].eval(p, segIdx);
+                size_t segIdx = gaspvt.inverseGasB()[pvtRegionIdx].findSegmentIndex_(p,/*extrapolate=*/true);
+                Evaluation b  =gaspvt.inverseGasB()[pvtRegionIdx].eval(p, segIdx);
                 //Evaluation b = gaspvt.inverseGasB()[pvtRegionIdx].eval(p, /*extrapolate=*/true);
                 //Evaluation mu = gaspvt.saturatedViscosity(pvtRegionIdx, T, p);
                 //const auto& table = gaspvt.inverseGasBMu()[pvtRegionIdx];
