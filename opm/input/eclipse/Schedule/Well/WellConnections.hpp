@@ -21,6 +21,7 @@
 #define CONNECTIONSET_HPP_
 
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
 
 #include <cstddef>
 #include <optional>
@@ -88,7 +89,7 @@ namespace Opm {
                          const std::string&     wname,
                          const KeywordLocation& location);
 
-        void loadWELCOMPL(const DeckRecord& record, const ScheduleGrid& grid, const std::string& wname, const KeywordLocation& location);
+        void loadCOMPTRAJ(const DeckRecord& record, const ScheduleGrid& grid, const std::string& wname, const KeywordLocation& location, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree);
 
         void loadWELTRAJ(const DeckRecord& record, const ScheduleGrid& grid, const std::string& wname, const KeywordLocation& location);
 
@@ -156,13 +157,16 @@ namespace Opm {
             serializer(this->headI);
             serializer(this->headJ);
             serializer(this->m_connections);
+            serializer(this->coord);
+            serializer(this->md);
         }
-
     private:
         Connection::Order m_ordering { Connection::Order::TRACK };
         int headI{0};
         int headJ{0};
         std::vector<Connection> m_connections{};
+        std::vector<std::vector<double>> coord{3, std::vector<double>(0, 0.0) };
+        std::vector<double> md{};
 
         void addConnection(const int i, const int j, const int k,
                            const std::size_t global_index,
@@ -186,11 +190,6 @@ namespace Opm {
         void orderTRACK();
         void orderMSW();
         void orderDEPTH();
-
-        // Connection::Order m_ordering = Connection::Order::TRACK;
-        // int headI, headJ;
-        // std::vector< Connection > m_connections;
-        double x_coordinate;
 
     };
 
