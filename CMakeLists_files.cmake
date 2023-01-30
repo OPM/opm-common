@@ -34,6 +34,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/ActiveGridCells.cpp
       src/opm/common/utility/Demangle.cpp
       src/opm/common/utility/FileSystem.cpp
+      src/opm/common/utility/MemPacker.cpp
       src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
       src/opm/common/utility/OpmInputError.cpp
       src/opm/common/utility/parameters/Parameter.cpp
@@ -706,6 +707,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
       opm/common/utility/Serializer.hpp
+      opm/common/utility/MemPacker.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
