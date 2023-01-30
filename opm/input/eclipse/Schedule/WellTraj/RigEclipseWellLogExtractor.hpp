@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include "RigWellLogExtractor.h"
-#include <src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfBoundingBoxTree.h>
+#include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
+#include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
@@ -40,10 +40,10 @@ class BoundingBox;
 //==================================================================================================
 ///
 //==================================================================================================
-class MyRigEclipseWellLogExtractor : public RigWellLogExtractor
+class RigEclipseWellLogExtractor : public RigWellLogExtractor
 {
 public:
-    MyRigEclipseWellLogExtractor( const RigWellPath* wellpath, const Opm::EclipseGrid& grid, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree);
+    RigEclipseWellLogExtractor( const RigWellPath* wellpath, const Opm::EclipseGrid& grid, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree);
 
     cvf::ref<cvf::BoundingBoxTree> getCellSearchTree();
 private:

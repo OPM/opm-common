@@ -20,6 +20,7 @@
 #define SCHEDULE_GRID
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
 
@@ -32,6 +33,7 @@ public:
     explicit ScheduleGrid(CompletedCells& completed_cells);
 
     const CompletedCells::Cell& get_cell(std::size_t i, std::size_t j, std::size_t k) const;
+    const Opm::EclipseGrid* get_grid() const;
 
 private:
     const EclipseGrid* grid{nullptr};

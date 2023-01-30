@@ -689,6 +689,7 @@ namespace Opm
         void handleCOMPLUMP  (HandlerContext&);
         void handleCOMPORD   (HandlerContext&);
         void handleCOMPSEGS  (HandlerContext&);
+        void handleCOMPTRAJ  (HandlerContext&);
         void handleDRSDT     (HandlerContext&);
         void handleDRSDTCON  (HandlerContext&);
         void handleDRSDTR    (HandlerContext&);
@@ -731,7 +732,6 @@ namespace Opm
         void handleWCONPROD  (HandlerContext&);
         void handleWECON     (HandlerContext&);
         void handleWEFAC     (HandlerContext&);
-        void handleWELCOMPL  (HandlerContext&);
         void handleWELOPEN   (HandlerContext&);
         void handleWELPI     (HandlerContext&);
         void handleWELSEGS   (HandlerContext&);

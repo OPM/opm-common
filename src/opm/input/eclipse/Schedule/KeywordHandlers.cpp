@@ -85,6 +85,8 @@
 
 #include "Well/injection.hpp"
 
+#include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
+
 namespace Opm {
 
 namespace {
@@ -189,8 +191,29 @@ namespace {
                 auto well2 = this->snapshots.back().wells.get(name);
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
                 connections->loadWELTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location());
-                //what to do here?  need here something like updateTrajectory 
-                //maybe new method WellConnection::addTrajectory?
+                if (well2.updateConnections(connections, handlerContext.grid)) {
+                    this->snapshots.back().wells.update( well2 );
+                    wells.insert( name );
+                }
+                this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+            }
+        }
+        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+    }
+
+    void Schedule::handleCOMPTRAJ(HandlerContext& handlerContext)  {
+        // Keyword WELTRAJ must be read first
+        std::unordered_set<std::string> wells;
+        cvf::ref<cvf::BoundingBoxTree> cellSearchTree = nullptr; 
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            auto wellnames = this->wellNames(wellNamePattern, handlerContext );
+
+            for (const auto& name : wellnames) {
+                auto well2 = this->snapshots.back().wells.get(name);
+                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
+                // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ 
+                connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
                 if (well2.updateConnections(connections, handlerContext.grid)) {
                     this->snapshots.back().wells.update( well2 );
                     wells.insert( name );
@@ -198,7 +221,7 @@ namespace {
 
                 if (connections->empty() && well2.getConnections().empty()) {
                     const auto& location = handlerContext.keyword.location();
-                    auto msg = fmt::format("Problem with COMPDAT/{}\n"
+                    auto msg = fmt::format("Problem with COMPTRAJ/{}\n"
                                            "In {} line {}\n"
                                            "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
                     OpmLog::warning(msg);
@@ -210,53 +233,13 @@ namespace {
 
         // In the case the wells reference depth has been defaulted in the
         // WELSPECS keyword we need to force a calculation of the wells
-        // reference depth exactly when the COMPDAT keyword has been completely
+        // reference depth exactly when the WELCOML keyword has been completely
         // processed.
-        // for (const auto& wname : wells) {
-        //     auto& well = this->snapshots.back().wells.get( wname );
-        //     well.updateRefDepth();
-        //     this->snapshots.back().wells.update( std::move(well));
-        // }
-    }
-    void Schedule::handleWELCOMPL(HandlerContext& handlerContext)  {
-        //WELTRAJ should have been read first: ijk of trajectory is known
-        //update of connection
-
-        std::unordered_set<std::string> wells;
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext );
-
-            for (const auto& name : wellnames) {
-                auto well2 = this->snapshots.back().wells.get(name);
-                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
-                connections->loadWELCOMPL(record, handlerContext.grid, name, handlerContext.keyword.location());
-                // if (well2.updateConnections(connections, handlerContext.grid)) {
-                //     this->snapshots.back().wells.update( well2 );
-                //     wells.insert( name );
-                // }
-
-                // if (connections->empty() && well2.getConnections().empty()) {
-                //     const auto& location = handlerContext.keyword.location();
-                //     auto msg = fmt::format("Problem with COMPDAT/{}\n"
-                //                            "In {} line {}\n"
-                //                            "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
-                //     OpmLog::warning(msg);
-                // }
-                // this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
-            }
+        for (const auto& wname : wells) {
+            auto& well = this->snapshots.back().wells.get( wname );
+            well.updateRefDepth();
+            this->snapshots.back().wells.update( std::move(well));
         }
-        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
-
-        // In the case the wells reference depth has been defaulted in the
-        // WELSPECS keyword we need to force a calculation of the wells
-        // reference depth exactly when the COMPDAT keyword has been completely
-        // processed.
-        // for (const auto& wname : wells) {
-        //     auto& well = this->snapshots.back().wells.get( wname );
-        //     well.updateRefDepth();
-        //     this->snapshots.back().wells.update( std::move(well));
-        // }
     }
 
     void Schedule::handleCOMPLUMP(HandlerContext& handlerContext) {
@@ -2321,6 +2304,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             { "COMPLUMP", &Schedule::handleCOMPLUMP  },
             { "COMPORD" , &Schedule::handleCOMPORD   },
             { "COMPSEGS", &Schedule::handleCOMPSEGS  },
+            { "COMPTRAJ", &Schedule::handleCOMPTRAJ  },
             { "DRSDT"   , &Schedule::handleDRSDT     },
             { "DRSDTCON", &Schedule::handleDRSDTCON  },
             { "DRSDTR"  , &Schedule::handleDRSDTR    },
@@ -2378,7 +2362,6 @@ Well{0} entered with disallowed 'FIELD' parent group:
             { "WCONPROD", &Schedule::handleWCONPROD  },
             { "WECON"   , &Schedule::handleWECON     },
             { "WEFAC"   , &Schedule::handleWEFAC     },
-            { "WELCOMPL", &Schedule::handleWELCOMPL  },
             { "WELOPEN" , &Schedule::handleWELOPEN   },
             { "WELPI"   , &Schedule::handleWELPI     },
             { "WELSEGS" , &Schedule::handleWELSEGS   },
