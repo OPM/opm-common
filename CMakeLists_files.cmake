@@ -200,31 +200,26 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WList.cpp
     src/opm/input/eclipse/Schedule/Well/WListManager.cpp
     src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
-    src/opm/input/eclipse/Schedule/Well/WellTrajectory.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfAssert.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfAtomicCounter.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfCharArray.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfMath.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfObject.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfPlane.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfString.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfSystem.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfVector3.cpp
-
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfBoundingBox.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfBoundingBoxTree.cpp
-
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfRay.cpp
-
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/cvfGeometryTools.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/RigHexIntersectionTools.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/RigWellLogExtractor.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/RigWellPath.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/MyRigEclipseWellLogExtractor.cpp
-
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/CommonCode/cvfStructGrid.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/cafPdmCore/cafSignal.cpp
-    src/opm/input/eclipse/Schedule/WellTrajResInsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
+    external/resinsight/LibCore/cvfAssert.cpp
+    external/resinsight/LibCore/cvfAtomicCounter.cpp
+    external/resinsight/LibCore/cvfCharArray.cpp
+    external/resinsight/LibCore/cvfMath.cpp
+    external/resinsight/LibCore/cvfObject.cpp
+    external/resinsight/LibCore/cvfPlane.cpp
+    external/resinsight/LibCore/cvfString.cpp
+    external/resinsight/LibCore/cvfSystem.cpp
+    external/resinsight/LibCore/cvfVector3.cpp
+    external/resinsight/LibGeometry/cvfBoundingBox.cpp
+    external/resinsight/LibGeometry/cvfBoundingBoxTree.cpp
+    external/resinsight/LibGeometry/cvfRay.cpp
+    external/resinsight/ReservoirDataModel/cvfGeometryTools.cpp
+    external/resinsight/ReservoirDataModel/RigHexIntersectionTools.cpp
+    external/resinsight/ReservoirDataModel/RigWellLogExtractor.cpp
+    external/resinsight/ReservoirDataModel/RigWellPath.cpp
+    external/resinsight/CommonCode/cvfStructGrid.cpp
+    external/resinsight/cafPdmCore/cafSignal.cpp
+    external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
+    src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
@@ -537,7 +532,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/integration/NNCTests.cpp
     tests/parser/WellSolventTests.cpp
     tests/parser/WellTracerTests.cpp
-    tests/parser/WellTrajectoryTests.cpp
     tests/parser/WellTests.cpp
     tests/parser/WLIST.cpp
     tests/parser/WriteRestartFileEventsTests.cpp
@@ -1159,37 +1153,28 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WellTestState.hpp
        opm/input/eclipse/Schedule/Well/WellConnections.hpp
 
-       src/opm/input/eclipse/Schedule/Well/WellTrajectory.hpp
-
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfAssert.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfAtomicCounter.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfCharArray.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfMath.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfObject.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfObject.inl
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfPlane.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfString.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfSystem.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibCore/cvfVector3.h
-
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfBoundingBox.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfBoundingBoxTree.h
-
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/LibGeometry/cvfRay.h
-
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/cvfGeometryTools.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/RigHexIntersectionTools.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/RigWellLogExtractionTools.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/RigWellLogExtractor.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/RigWellPath.h
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/ReservoirDataModel/MyRigEclipseWellLogExtractor.h
-
-
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/CommonCode/cvfStructGrid.h
-
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/cafPdmCore/cafSignal.h
-
-       src/opm/input/eclipse/Schedule/WellTrajResInsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
+       external/resinsight/LibCore/cvfAssert.h
+       external/resinsight/LibCore/cvfAtomicCounter.h
+       external/resinsight/LibCore/cvfCharArray.h
+       external/resinsight/LibCore/cvfMath.h
+       external/resinsight/LibCore/cvfObject.h
+       external/resinsight/LibCore/cvfObject.inl
+       external/resinsight/LibCore/cvfPlane.h
+       external/resinsight/LibCore/cvfString.h
+       external/resinsight/LibCore/cvfSystem.h
+       external/resinsight/LibCore/cvfVector3.h
+       external/resinsight/LibGeometry/cvfBoundingBox.h
+       external/resinsight/LibGeometry/cvfBoundingBoxTree.h
+       external/resinsight/LibGeometry/cvfRay.h
+       external/resinsight/ReservoirDataModel/cvfGeometryTools.h
+       external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h
+       external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h
+       external/resinsight/ReservoirDataModel/RigWellLogExtractor.h
+       external/resinsight/ReservoirDataModel/RigWellPath.h
+       external/resinsight/CommonCode/cvfStructGrid.h
+       external/resinsight/cafPdmCore/cafSignal.h
+       external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
+       opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
 
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp

@@ -19,15 +19,14 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
-#include "MyRigEclipseWellLogExtractor.h"
-#include "RigWellLogExtractionTools.h"
-#include "RigWellPath.h"
-
-#include "../LibGeometry/cvfBoundingBox.h"
-#include "cvfGeometryTools.h"
-#include "RigWellLogExtractor.h"
-#include "RigCellGeometryTools.h"
-#include "../CommonCode/cvfStructGrid.h"
+#include <opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp>
+#include <external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h>
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
+#include <external/resinsight/ReservoirDataModel/cvfGeometryTools.h>
+#include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
+#include <external/resinsight/ReservoirDataModel/RigCellGeometryTools.h>
+#include <external/resinsight/CommonCode/cvfStructGrid.h>
+#include <external/resinsight/LibGeometry/cvfBoundingBox.h>
 
 #include <map>
 
@@ -35,7 +34,7 @@
 ///
 //==================================================================================================
 
- MyRigEclipseWellLogExtractor::MyRigEclipseWellLogExtractor(const RigWellPath* wellpath, const Opm::EclipseGrid& grid, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree)
+ RigEclipseWellLogExtractor::RigEclipseWellLogExtractor(const RigWellPath* wellpath, const Opm::EclipseGrid& grid, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree)
     : RigWellLogExtractor( wellpath, "" )
       ,m_grid(grid)
       ,m_cellSearchTree(cellSearchTree)
@@ -46,7 +45,7 @@
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-void MyRigEclipseWellLogExtractor::calculateIntersection()
+void RigEclipseWellLogExtractor::calculateIntersection()
 {
     std::map<RigMDCellIdxEnterLeaveKey, HexIntersectionInfo> uniqueIntersections;
 
@@ -115,7 +114,7 @@ void MyRigEclipseWellLogExtractor::calculateIntersection()
 }
 
 
-cvf::Vec3d MyRigEclipseWellLogExtractor::calculateLengthInCell( size_t            cellIndex,
+cvf::Vec3d RigEclipseWellLogExtractor::calculateLengthInCell( size_t            cellIndex,
                                                                 const cvf::Vec3d& startPoint,
                                                                 const cvf::Vec3d& endPoint ) const
 {
@@ -136,11 +135,11 @@ cvf::Vec3d MyRigEclipseWellLogExtractor::calculateLengthInCell( size_t          
     hexCorners[6] = hexCorners_opm[7];
     hexCorners[7] = hexCorners_opm[6];
 
-    return MyRigEclipseWellLogExtractor::calculateLengthInCell( hexCorners, startPoint, endPoint );
+    return RigEclipseWellLogExtractor::calculateLengthInCell( hexCorners, startPoint, endPoint );
 }
 
 
-cvf::Vec3d MyRigEclipseWellLogExtractor::calculateLengthInCell( const std::array<cvf::Vec3d, 8>& hexCorners,
+cvf::Vec3d RigEclipseWellLogExtractor::calculateLengthInCell( const std::array<cvf::Vec3d, 8>& hexCorners,
                                                                 const cvf::Vec3d&                startPoint,
                                                                 const cvf::Vec3d&                endPoint ) const
 {
@@ -150,7 +149,7 @@ cvf::Vec3d MyRigEclipseWellLogExtractor::calculateLengthInCell( const std::array
     cvf::Vec3d jAxisDirection;
     cvf::Vec3d kAxisDirection;
 
-    MyRigEclipseWellLogExtractor::findCellLocalXYZ( hexCorners, iAxisDirection, jAxisDirection, kAxisDirection );
+    RigEclipseWellLogExtractor::findCellLocalXYZ( hexCorners, iAxisDirection, jAxisDirection, kAxisDirection );
 
     cvf::Mat3d localCellCoordinateSystem( iAxisDirection.x(),
                                           jAxisDirection.x(),
@@ -170,7 +169,7 @@ cvf::Vec3d MyRigEclipseWellLogExtractor::calculateLengthInCell( const std::array
 //==================================================================================================
 ///
 //==================================================================================================
-void MyRigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d, 8>& hexCorners,
+void RigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d, 8>& hexCorners,
                                              cvf::Vec3d&                      localXdirection,
                                              cvf::Vec3d&                      localYdirection,
                                              cvf::Vec3d&                      localZdirection ) const
@@ -247,7 +246,7 @@ void MyRigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d
     localYdirection.normalize();
 }
 
-void MyRigEclipseWellLogExtractor::buildCellSearchTree()
+void RigEclipseWellLogExtractor::buildCellSearchTree()
 {
     if (m_cellSearchTree.isNull()) {
 
@@ -304,30 +303,21 @@ void MyRigEclipseWellLogExtractor::buildCellSearchTree()
     }
 }
 
-void MyRigEclipseWellLogExtractor::computeCachedData()
-{
-    // initAllSubGridsParentGridPointer();
-    // initAllSubCellsMainGridCellIndex();
-
-    m_cellSearchTree = nullptr;
-    buildCellSearchTree();
-}
-
-void MyRigEclipseWellLogExtractor::findIntersectingCells( const cvf::BoundingBox& inputBB, std::vector<size_t>* cellIndices ) const
+void RigEclipseWellLogExtractor::findIntersectingCells( const cvf::BoundingBox& inputBB, std::vector<size_t>* cellIndices ) const
 {
     CVF_ASSERT( m_cellSearchTree.notNull() );
 
     m_cellSearchTree->findIntersections( inputBB, cellIndices );
 }
 
-std::vector<size_t> MyRigEclipseWellLogExtractor::findCloseCellIndices( const cvf::BoundingBox& bb )
+std::vector<size_t> RigEclipseWellLogExtractor::findCloseCellIndices( const cvf::BoundingBox& bb )
 {
     std::vector<size_t> closeCells;
     this->findIntersectingCells( bb, &closeCells );
     return closeCells;
 }
 
- cvf::ref<cvf::BoundingBoxTree> MyRigEclipseWellLogExtractor::getCellSearchTree()
+ cvf::ref<cvf::BoundingBoxTree> RigEclipseWellLogExtractor::getCellSearchTree()
  {
     return m_cellSearchTree;
  }
