@@ -1175,7 +1175,6 @@ if(ENABLE_ECL_INPUT)
        external/resinsight/cafPdmCore/cafSignal.h
        external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
        opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
-
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp
        opm/input/eclipse/Schedule/RPTConfig.hpp
