@@ -952,6 +952,14 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/EclSpecrockLaw.hpp
       opm/material/thermal/NullSolidEnergyLaw.hpp
 )
+
+file(GLOB RI_HEADERS "/external/resinsight/LibCore/*.h"
+                     "/external/resinsight/LibGeometry/*.h"
+                     "/external/resinsight/ReservoirDataModel/*.h"
+                     "/external/resinsight/CommonCode/*.h"
+                     "/external/resinsight/cafPdmCore/*.h"
+                     "/external/resinsight/cafHexGridIntersectionTools/*.h")
+
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
        opm/io/eclipse/SummaryNode.hpp
@@ -1140,28 +1148,9 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WellTestState.hpp
        opm/input/eclipse/Schedule/Well/WellConnections.hpp
 
-       external/resinsight/LibCore/cvfAssert.h
-       external/resinsight/LibCore/cvfAtomicCounter.h
-       external/resinsight/LibCore/cvfBase.h
-       external/resinsight/LibCore/cvfCharArray.h
-       external/resinsight/LibCore/cvfMath.h
-       external/resinsight/LibCore/cvfObject.h
-       external/resinsight/LibCore/cvfObject.inl
-       external/resinsight/LibCore/cvfPlane.h
-       external/resinsight/LibCore/cvfString.h
-       external/resinsight/LibCore/cvfSystem.h
-       external/resinsight/LibCore/cvfVector3.h
-       external/resinsight/LibGeometry/cvfBoundingBox.h
-       external/resinsight/LibGeometry/cvfBoundingBoxTree.h
-       external/resinsight/LibGeometry/cvfRay.h
-       external/resinsight/ReservoirDataModel/cvfGeometryTools.h
-       external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h
-       external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h
-       external/resinsight/ReservoirDataModel/RigWellLogExtractor.h
-       external/resinsight/ReservoirDataModel/RigWellPath.h
-       external/resinsight/CommonCode/cvfStructGrid.h
-       external/resinsight/cafPdmCore/cafSignal.h
-       external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
+      
+       ${RI_HEADERS}
+
        opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp
