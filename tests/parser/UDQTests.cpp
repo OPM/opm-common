@@ -1690,7 +1690,8 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK_EQUAL( usage.iuad().size(), 0U );
 
     UDAValue uda1("WUX");
-    conf.add_assign(uda1.get<std::string>(), std::vector<std::string>{}, 100, 0);
+    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
+    conf.add_assign(uda1.get<std::string>(), segmentMatcherFactory, std::vector<std::string>{}, 100, 0);
 
     const auto& iuad = usage.iuad();
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
@@ -2883,4 +2884,24 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_RST) {
     BOOST_CHECK_EQUAL(res["W1"].get(), 100);
     BOOST_CHECK_EQUAL(res["W2"].get(), 100);
     BOOST_CHECK_EQUAL(res["W3"].defined(), false);
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_SEGMENT)
+{
+    auto segmentMatcherFactory = [sched_state = dynamicInputData()]()
+    {
+        return std::make_unique<SegmentMatcher>(sched_state);
+    };
+
+    auto cfg = UDQConfig{};
+    cfg.add_assign("SUSPECT" , segmentMatcherFactory, {"OP-01"},      17.29,     42);
+    cfg.add_assign("SUSPECT" , segmentMatcherFactory, {"OP-02", "3"},  9.876e-5, 42);
+    cfg.add_assign("SUSPECT" , segmentMatcherFactory, {"OP-06", "1"},  0.123,    42); // Not an MSW
+    cfg.add_assign("SUPER"   , segmentMatcherFactory, {},              2.71828,  42);
+    cfg.add_assign("SUCCINCT", segmentMatcherFactory, {"OP*", "2"},    3.1415,   42);
+
+    {
+        const auto all = cfg.assignments();
+        BOOST_CHECK_EQUAL(all.size(), std::size_t{3}); // Three different SU* variables
+    }
 }

@@ -65,6 +65,7 @@
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -1155,12 +1156,22 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
-    void Schedule::handleUDQ(HandlerContext& handlerContext) {
+    void Schedule::handleUDQ(HandlerContext& handlerContext)
+    {
         auto new_udq = this->snapshots.back().udq();
-        for (const auto& record : handlerContext.keyword)
-            new_udq.add_record(record, handlerContext.keyword.location(), handlerContext.currentStep);
 
-        this->snapshots.back().udq.update( std::move(new_udq) );
+        auto segment_matcher_factory = [this]()
+        {
+            return std::make_unique<SegmentMatcher>(this->snapshots.back());
+        };
+
+        for (const auto& record : handlerContext.keyword) {
+            new_udq.add_record(segment_matcher_factory, record,
+                               handlerContext.keyword.location(),
+                               handlerContext.currentStep);
+        }
+
+        this->snapshots.back().udq.update(std::move(new_udq));
     }
 
     void Schedule::handleVAPPARS(HandlerContext& handlerContext) {

@@ -72,7 +72,8 @@ namespace Opm {
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
 
-        void add_record(const DeckRecord&      record,
+        void add_record(SegmentMatcherFactory  segment_matcher_factory,
+                        const DeckRecord&      record,
                         const KeywordLocation& location,
                         std::size_t            report_step);
 
@@ -85,6 +86,7 @@ namespace Opm {
                         const std::vector<std::string>& data);
 
         void add_assign(const std::string&              quantity,
+                        SegmentMatcherFactory           segment_matcher_factory,
                         const std::vector<std::string>& selector,
                         double                          value,
                         std::size_t                     report_step);
@@ -154,18 +156,6 @@ namespace Opm {
         }
 
     private:
-        void add_node(const std::string& quantity, UDQAction action);
-        UDQAction action_type(const std::string& udq_key) const;
-
-        void eval_assign(std::size_t     report_step,
-                         const Schedule& sched,
-                         UDQState&       udq_state,
-                         UDQContext&     context) const;
-
-        void eval_define(std::size_t report_step,
-                         UDQState&   udq_state,
-                         UDQContext& context) const;
-
         UDQParams udq_params;
         UDQFunctionTable udqft;
 
@@ -183,6 +173,29 @@ namespace Opm {
         IOrderSet<std::string> define_order;
         OrderedMap<UDQIndex> input_index;
         std::map<UDQVarType, std::size_t> type_count;
+
+        void add_node(const std::string& quantity, UDQAction action);
+        UDQAction action_type(const std::string& udq_key) const;
+
+        void eval_assign(std::size_t     report_step,
+                         const Schedule& sched,
+                         UDQState&       udq_state,
+                         UDQContext&     context) const;
+
+        void eval_define(std::size_t report_step,
+                         UDQState&   udq_state,
+                         UDQContext& context) const;
+
+        void add_named_assign(const std::string&              quantity,
+                              const std::vector<std::string>& selector,
+                              double                          value,
+                              std::size_t                     report_step);
+
+        void add_enumerated_assign(const std::string&              quantity,
+                                   SegmentMatcherFactory           segment_matcher_factory,
+                                   const std::vector<std::string>& selector,
+                                   double                          value,
+                                   std::size_t                     report_step);
     };
 
 } // namespace Opm
