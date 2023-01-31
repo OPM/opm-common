@@ -1155,6 +1155,7 @@ if(ENABLE_ECL_INPUT)
 
        external/resinsight/LibCore/cvfAssert.h
        external/resinsight/LibCore/cvfAtomicCounter.h
+       external/resinsight/LibCore/cvfBase.h
        external/resinsight/LibCore/cvfCharArray.h
        external/resinsight/LibCore/cvfMath.h
        external/resinsight/LibCore/cvfObject.h
