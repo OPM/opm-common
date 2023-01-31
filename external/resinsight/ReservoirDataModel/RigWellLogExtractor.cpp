@@ -16,9 +16,8 @@
 //  for more details.
 //
 /////////////////////////////////////////////////////////////////////////////////
-
+#include <string>
 #include "RigWellLogExtractor.h"
-// #include "RiaLogging.h"
 #include "RigWellPath.h"
 #include "../LibCore/cvfTrace.h"
 
