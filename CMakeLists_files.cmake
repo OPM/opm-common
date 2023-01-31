@@ -953,15 +953,22 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/NullSolidEnergyLaw.hpp
 )
 
-file(GLOB RI_HEADERS "/external/resinsight/LibCore/*.h"
-                     "/external/resinsight/LibGeometry/*.h"
-                     "/external/resinsight/ReservoirDataModel/*.h"
-                     "/external/resinsight/CommonCode/*.h"
-                     "/external/resinsight/cafPdmCore/*.h"
-                     "/external/resinsight/cafHexGridIntersectionTools/*.h")
+file(GLOB RI_CORE_HEADERS "/external/resinsight/LibCore/*.h")
+file(GLOB RI_GEOMETRY_HEADERS "/external/resinsight/LibGeometry/*.h")
+file(GLOB RI_MODEL_HEADERS "/external/resinsight/ReservoirDataModel/*.h")
+file(GLOB RI_COMMON_HEADERS "/external/resinsight/CommonCode/*.h")
+file(GLOB RI_PDM_HEADERS "/external/resinsight/cafPdmCore/*.h")
+file(GLOB RI_HEX_HEADERS "/external/resinsight/cafHexGridIntersectionTools/*.h")
 
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
+       ${RI_CORE_HEADERS} 
+       ${RI_GEOMETRY_HEADERS}
+       ${RI_MODEL_HEADERS}
+       ${GRI_COMMON_HEADERS}
+       ${RI_PDM_HEADERS}
+       ${RI_HEX_HEADERS}
+
        opm/io/eclipse/SummaryNode.hpp
        opm/json/JsonObject.hpp
        opm/input/eclipse/Utility/Functional.hpp
@@ -1147,10 +1154,6 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WellTestConfig.hpp
        opm/input/eclipse/Schedule/Well/WellTestState.hpp
        opm/input/eclipse/Schedule/Well/WellConnections.hpp
-
-      
-       ${RI_HEADERS}
-
        opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp
