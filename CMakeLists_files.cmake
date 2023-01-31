@@ -178,7 +178,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestState.cpp
-
     external/resinsight/LibCore/cvfAssert.cpp
     external/resinsight/LibCore/cvfAtomicCounter.cpp
     external/resinsight/LibCore/cvfCharArray.cpp
@@ -199,7 +198,6 @@ if(ENABLE_ECL_INPUT)
     external/resinsight/cafPdmCore/cafSignal.cpp
     external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
     src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
-   
     src/opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
@@ -1152,7 +1150,6 @@ if(ENABLE_ECL_INPUT)
        external/resinsight/cafPdmCore/cafSignal.h
        external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
        opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
-
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp
        opm/input/eclipse/Schedule/RPTConfig.hpp
