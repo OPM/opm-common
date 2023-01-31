@@ -30,6 +30,10 @@
 #include <vector>
 
 namespace Opm {
+    class SegmentSet;
+} // namespace Opm
+
+namespace Opm {
 
 class UDQScalar
 {
@@ -196,6 +200,9 @@ public:
             serializer(this->numbers);
         }
     };
+
+    static std::vector<EnumeratedWellItems>
+    getSegmentItems(const SegmentSet& segmentSet);
 
     /// Construct empty, named UDQ set of specific variable type
     ///

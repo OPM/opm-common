@@ -218,22 +218,6 @@ bool dynamic_type_check(const Opm::UDQVarType lhs,
     return true;
 }
 
-std::vector<Opm::UDQSet::EnumeratedWellItems>
-make_segment_items(const Opm::SegmentSet& segSet)
-{
-    const auto numWells = segSet.numWells();
-
-    auto items = std::vector<Opm::UDQSet::EnumeratedWellItems>(numWells);
-    for (auto wellID = 0*numWells; wellID < numWells; ++wellID) {
-        auto segRange = segSet.segments(wellID);
-
-        items[wellID].well = segRange.well();
-        items[wellID].numbers.assign(segRange.begin(), segRange.end());
-    }
-
-    return items;
-}
-
 } // Anonymous namespace
 
 namespace Opm {
@@ -487,10 +471,10 @@ UDQSet UDQDefine::scatter_scalar_segment_value(const UDQContext&            cont
                                                const std::optional<double>& value) const
 {
     if (! value.has_value()) {
-        return UDQSet::segments(this->m_keyword, make_segment_items(context.segments()));
+        return UDQSet::segments(this->m_keyword, UDQSet::getSegmentItems(context.segments()));
     }
 
-    return UDQSet::segments(this->m_keyword, make_segment_items(context.segments()), *value);
+    return UDQSet::segments(this->m_keyword, UDQSet::getSegmentItems(context.segments()), *value);
 }
 
 } // namespace Opm

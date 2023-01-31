@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
+
 #include <opm/common/utility/shmatch.hpp>
 
 #include <algorithm>
@@ -768,6 +770,22 @@ bool UDQSet::operator==(const UDQSet& other) const
     return (this->m_name == other.m_name)
         && (this->m_var_type == other.m_var_type)
         && (this->values == other.values);
+}
+
+std::vector<UDQSet::EnumeratedWellItems>
+UDQSet::getSegmentItems(const SegmentSet& segSet)
+{
+    const auto numWells = segSet.numWells();
+
+    auto items = std::vector<Opm::UDQSet::EnumeratedWellItems>(numWells);
+    for (auto wellID = 0*numWells; wellID < numWells; ++wellID) {
+        auto segRange = segSet.segments(wellID);
+
+        items[wellID].well = segRange.well();
+        items[wellID].numbers.assign(segRange.begin(), segRange.end());
+    }
+
+    return items;
 }
 
 } // namespace Opm

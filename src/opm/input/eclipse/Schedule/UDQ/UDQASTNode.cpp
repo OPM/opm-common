@@ -68,22 +68,6 @@ Opm::UDQVarType init_type(const Opm::UDQTokenType token_type)
     return Opm::UDQVarType::NONE;
 }
 
-std::vector<Opm::UDQSet::EnumeratedWellItems>
-make_segment_items(const Opm::SegmentSet& segSet)
-{
-    const auto numWells = segSet.numWells();
-
-    auto items = std::vector<Opm::UDQSet::EnumeratedWellItems>(numWells);
-    for (auto wellID = 0*numWells; wellID < numWells; ++wellID) {
-        auto segRange = segSet.segments(wellID);
-
-        items[wellID].well = segRange.well();
-        items[wellID].numbers.assign(segRange.begin(), segRange.end());
-    }
-
-    return items;
-}
-
 } // Anonymous namespace
 
 namespace Opm {
@@ -415,7 +399,7 @@ UDQSet
 UDQASTNode::eval_segment_expression(const std::string& string_value,
                                     const UDQContext&  context) const
 {
-    const auto all_msw_segments = make_segment_items(context.segments());
+    const auto all_msw_segments = UDQSet::getSegmentItems(context.segments());
     if (this->selector.empty()) {
         auto res = UDQSet::segments(string_value, all_msw_segments);
 
@@ -513,7 +497,7 @@ UDQASTNode::eval_number(const UDQVarType  target_type,
         return UDQSet::groups(dummy_name, context.groups(), numeric_value);
 
     case UDQVarType::SEGMENT_VAR:
-        return UDQSet::segments(dummy_name, make_segment_items(context.segments()), numeric_value);
+        return UDQSet::segments(dummy_name, UDQSet::getSegmentItems(context.segments()), numeric_value);
 
     case UDQVarType::SCALAR:
         return UDQSet::scalar(dummy_name, numeric_value);
