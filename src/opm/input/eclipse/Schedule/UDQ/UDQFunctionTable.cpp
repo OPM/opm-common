@@ -16,22 +16,26 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <unordered_set>
-#include <cmath>
-#include <algorithm>
-#include <functional>
-#include <map>
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
 
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <unordered_set>
+
 namespace Opm {
 
-UDQFunctionTable::UDQFunctionTable() :
-    UDQFunctionTable(UDQParams())
+UDQFunctionTable::UDQFunctionTable()
+    : UDQFunctionTable(UDQParams())
 {}
 
-UDQFunctionTable::UDQFunctionTable(const UDQParams& params_arg) :
-    params(params_arg)
+UDQFunctionTable::UDQFunctionTable(const UDQParams& params_arg)
+    : params(params_arg)
 {
     // SCalar functions
     this->insert_function( std::make_shared<UDQScalarFunction>("SUM", UDQScalarFunction::SUM) );
@@ -93,45 +97,53 @@ UDQFunctionTable::UDQFunctionTable(const UDQParams& params_arg) :
 }
 
 UDQFunctionTable::UDQFunctionTable(const UDQParams& param,
-                                   const FunctionMap& map) :
-    params(param),
-    function_table(map)
+                                   const FunctionMap& map)
+    : params(param)
+    , function_table(map)
 {}
 
-void UDQFunctionTable::insert_function(std::shared_ptr<UDQFunction> func) {
+void UDQFunctionTable::insert_function(std::shared_ptr<UDQFunction> func)
+{
     auto name = func->name();
     this->function_table.emplace( std::move(name), std::move(func) );
 }
 
-
-
-bool UDQFunctionTable::has_function(const std::string& name) const {
+bool UDQFunctionTable::has_function(const std::string& name) const
+{
     return this->function_table.count(name) > 0;
 }
 
-
-const UDQFunction& UDQFunctionTable::get(const std::string& name) const {
-    if (!this->has_function(name))
-        throw std::invalid_argument("No such function registered: " + name);
+const UDQFunction& UDQFunctionTable::get(const std::string& name) const
+{
+    if (!this->has_function(name)) {
+        throw std::invalid_argument {
+            "No such function registered: " + name
+        };
+    }
 
     const auto& pair_ptr = this->function_table.find(name);
     return *pair_ptr->second;
 }
 
-const UDQParams& UDQFunctionTable::getParams() const {
+const UDQParams& UDQFunctionTable::getParams() const
+{
     return this->params;
 }
 
-const UDQFunctionTable::FunctionMap& UDQFunctionTable::functionMap() const {
+const UDQFunctionTable::FunctionMap& UDQFunctionTable::functionMap() const
+{
     return this->function_table;
 }
 
-bool UDQFunctionTable::operator==(const UDQFunctionTable& data) const {
-    if (!(this->getParams() == data.getParams()))
+bool UDQFunctionTable::operator==(const UDQFunctionTable& data) const
+{
+    if (!(this->getParams() == data.getParams())) {
         return false;
+    }
 
-    if (this->functionMap().size() != data.functionMap().size())
+    if (this->functionMap().size() != data.functionMap().size()) {
         return false;
+    }
 
     // Simply using the operator== method of std::unordered_map would
     // compare the pointers contained and not the objects pointed to.
@@ -146,18 +158,20 @@ bool UDQFunctionTable::operator==(const UDQFunctionTable& data) const {
     auto tIt = sorted_fmap.begin();
     auto dIt = data_sorted_fmap.begin();
     for (; tIt != sorted_fmap.end(); ++tIt, ++dIt) {
-        if (tIt->first != dIt->first)
+        if (tIt->first != dIt->first) {
             return false;
+        }
 
-        if ((tIt->second && !dIt->second) || (!tIt->second && dIt->second))
+        if ((tIt->second && !dIt->second) || (!tIt->second && dIt->second)) {
             return false;
+        }
 
-        if (tIt->second && !(*tIt->second == *dIt->second))
+        if (tIt->second && !(*tIt->second == *dIt->second)) {
             return false;
+        }
     }
 
     return true;
 }
-
 
 }

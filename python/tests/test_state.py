@@ -121,7 +121,7 @@ SATNUM
             self.state.tables().evaluate(tab, 0, 'NO', 1)
 
     def test_faults(self):
-        self.assertEquals([], self.state.faultNames())
+        self.assertEqual([], self.state.faultNames())
         parser = Parser()
         faultdeck = parser.parse_string(self.FAULTS_DECK)
         faultstate = EclipseState(faultdeck)

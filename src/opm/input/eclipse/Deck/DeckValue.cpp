@@ -18,7 +18,6 @@
 */
 
 #include <stdexcept>
-#include <iostream>
 
 #include <opm/input/eclipse/Deck/DeckValue.hpp>
 

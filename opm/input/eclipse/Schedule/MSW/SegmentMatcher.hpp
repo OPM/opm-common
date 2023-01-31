@@ -36,6 +36,156 @@ namespace Opm {
 
 namespace Opm {
 
+class SegmentMatcher;
+
+/// Result Set From SegmentMatcher's Matching Process
+class SegmentSet
+{
+public:
+    /// Demarcation of Start/End of Segment Range for Single MS Well
+    using WellSegmentRangeIterator = std::vector<int>::const_iterator;
+
+    /// Segment Range for Single MS Well.
+    class WellSegmentRange
+    {
+    public:
+        /// Start of Range
+        WellSegmentRangeIterator begin() const { return this->begin_; }
+
+        /// End of Range
+        WellSegmentRangeIterator end() const { return this->end_; }
+
+        /// Name of well to which this segment range is attached
+        std::string_view well() const { return this->well_; }
+
+        friend class SegmentSet;
+
+    private:
+        /// Start of Range
+        WellSegmentRangeIterator begin_{};
+
+        /// End of Range
+        WellSegmentRangeIterator end_{};
+
+        /// Name of well to which this segment range is attached
+        std::string_view well_{};
+
+        /// Default Constructor.
+        ///
+        /// Empty range.
+        ///
+        /// For use by SegmentSet only.
+        WellSegmentRange() = default;
+
+        /// Non-Empty Range
+        ///
+        /// For use by SegmentSet only.
+        ///
+        /// \param[in] begin Start of range.
+        /// \param[in] end End of range.
+        /// \param[in] well Name of well to which this segment range is
+        ///    attached
+        WellSegmentRange(WellSegmentRangeIterator begin,
+                         WellSegmentRangeIterator end,
+                         std::string_view         well)
+            : begin_{ begin }
+            , end_  { end }
+            , well_ { well }
+        {}
+    };
+
+    /// Default Constructor.
+    SegmentSet();
+
+    /// Predicate for whether or not segment set is empty.
+    ///
+    /// \return Whether or not segment set is empty.
+    bool empty() const
+    {
+        return this->segments_.empty();
+    }
+
+    /// Predicate for whether or not segment set applies to a single
+    /// segment in a single MS well.
+    ///
+    /// \return Whether or not segment set is a single segment in a single
+    ///   MS well.  Useful to distinguish whether or not this segment set
+    ///   generates a scalar UDQ or a UDQ set in the context of a segment
+    ///   level UDQ.
+    bool isScalar() const
+    {
+        return this->segments_.size() == std::vector<int>::size_type{1};
+    }
+
+    /// Retrieve list of (MS) well names covered by this result set.
+    ///
+    /// \return List MS well names covered by this result set.
+    std::vector<std::string_view> wells() const;
+
+    /// Retrieve number of (MS) wells covered by this result set.
+    ///
+    /// \return Number of MS wells covered by this result set.
+    std::size_t numWells() const
+    {
+        return this->wells_.size();
+    }
+
+    /// Retrive result set's segments for single MS well.
+    ///
+    /// \param[in] well Named MS well.  Should usually be one of the items
+    ///    in the return value from \code wells() \endcode.
+    ///
+    /// \return range of \c well's segments matching the input request.
+    ///    Empty unless \p well is one of the return values from \code
+    ///    wells() \endcode.
+    WellSegmentRange segments(std::string_view well) const;
+
+    /// Retrive result set's segments for single MS well.
+    ///
+    /// \param[in] well Well number.  Should be between zero and \code
+    ///    numWells() - 1 \endcode inclusive.
+    ///
+    /// \return range of \c well's segments matching the input request.
+    ///    Empty unless \p well is between zero and \code numWells() - 1
+    ///    \endcode inclusive.
+    WellSegmentRange segments(const std::size_t well) const;
+
+    friend class SegmentMatcher;
+
+private:
+    /// List of MS wells covered by this result set.
+    std::vector<std::string> wells_{};
+
+    /// Name-to-index lookup table.
+    ///
+    /// User, i.e., the SegmentMatcher, must call \code
+    /// establishNameLookupIndex() \endcode to prepare the lookup table.
+    std::vector<std::vector<std::string>::size_type> wellNameIndex_{};
+
+    /// CSR start pointers for MS wells' segments.
+    std::vector<std::vector<int>::size_type> segmentStart_{};
+
+    /// All segments covered by this result set.  Structured by \c
+    /// segmentStart_.
+    std::vector<int> segments_{};
+
+    /// Build well-name to well number lookup index.
+    ///
+    /// For use by SegmentMatcher only.
+    void establishNameLookupIndex();
+
+    /// Add non-empty range of segments for single MS well to result set.
+    ///
+    /// For use by SegmentMatcher only.
+    ///
+    /// \param[in] well Name of MS well.
+    ///
+    /// \param[in] segments List of segment numbers matching input
+    ///    request for \p well.
+    void addWellSegments(const std::string&      well,
+                         const std::vector<int>& segments);
+};
+
 /// Encapsulation of Matching Process for MSW Segment Sets
 ///
 /// Primary use case is determining the set of MSW segments used to define
@@ -62,154 +212,6 @@ namespace Opm {
 class SegmentMatcher
 {
 public:
-    /// Result Set From Matching Process
-    class SegmentSet
-    {
-    public:
-        /// Demarcation of Start/End of Segment Range for Single MS Well
-        using WellSegmentRangeIterator = std::vector<int>::const_iterator;
-
-        /// Segment Range for Single MS Well.
-        class WellSegmentRange
-        {
-        public:
-            /// Start of Range
-            WellSegmentRangeIterator begin() const { return this->begin_; }
-
-            /// End of Range
-            WellSegmentRangeIterator end() const { return this->end_; }
-
-            /// Name of well to which this segment range is attached
-            std::string_view well() const { return this->well_; }
-
-            friend class SegmentSet;
-
-        private:
-            /// Start of Range
-            WellSegmentRangeIterator begin_{};
-
-            /// End of Range
-            WellSegmentRangeIterator end_{};
-
-            /// Name of well to which this segment range is attached
-            std::string_view well_{};
-
-            /// Default Constructor.
-            ///
-            /// Empty range.
-            ///
-            /// For use by SegmentSet only.
-            WellSegmentRange() = default;
-
-            /// Non-Empty Range
-            ///
-            /// For use by SegmentSet only.
-            ///
-            /// \param[in] begin Start of range.
-            /// \param[in] end End of range.
-            /// \param[in] well Name of well to which this segment range is
-            ///    attached
-            WellSegmentRange(WellSegmentRangeIterator begin,
-                             WellSegmentRangeIterator end,
-                             std::string_view         well)
-                : begin_{ begin }
-                , end_  { end }
-                , well_ { well }
-            {}
-        };
-
-        /// Default Constructor.
-        SegmentSet();
-
-        /// Predicate for whether or not segment set is empty.
-        ///
-        /// \return Whether or not segment set is empty.
-        bool empty() const
-        {
-            return this->segments_.empty();
-        }
-
-        /// Predicate for whether or not segment set applies to a single
-        /// segment in a single MS well.
-        ///
-        /// \return Whether or not segment set is a single segment in a
-        ///   single MS well.  Useful to distinguish whether or not this
-        ///   segment set generates a scalar UDQ or a UDQ set in the context
-        ///   of a segment level UDQ.
-        bool isScalar() const
-        {
-            return this->segments_.size() == std::vector<int>::size_type{1};
-        }
-
-        /// Retrieve list of (MS) well names covered by this result set.
-        ///
-        /// \return List MS well names covered by this result set.
-        std::vector<std::string_view> wells() const;
-
-        /// Retrieve number of (MS) wells covered by this result set.
-        ///
-        /// \return Number of MS wells covered by this result set.
-        std::size_t numWells() const
-        {
-            return this->wells_.size();
-        }
-
-        /// Retrive result set's segments for single MS well.
-        ///
-        /// \param[in] well Named MS well.  Should usually be one of the
-        ///    items in the return value from \code wells() \endcode.
-        ///
-        /// \return range of \c well's segments matching the input request.
-        ///    Empty unless \p well is one of the return values from \code
-        ///    wells() \endcode.
-        WellSegmentRange segments(std::string_view well) const;
-
-        /// Retrive result set's segments for single MS well.
-        ///
-        /// \param[in] well Well number.  Should be between zero and \code
-        ///    numWells() - 1 \endcode inclusive.
-        ///
-        /// \return range of \c well's segments matching the input request.
-        ///    Empty unless \p well is between zero and \code numWells() - 1
-        ///    \endcode inclusive.
-        WellSegmentRange segments(const std::size_t well) const;
-
-        friend class SegmentMatcher;
-
-    private:
-        /// List of MS wells covered by this result set.
-        std::vector<std::string> wells_{};
-
-        /// Name-to-index lookup table.
-        ///
-        /// User, i.e., the SegmentMatcher, must call \code
-        /// establishNameLookupIndex() \endcode to prepare the lookup table.
-        std::vector<std::vector<std::string>::size_type> wellNameIndex_{};
-
-        /// CSR start pointers for MS wells' segments.
-        std::vector<std::vector<int>::size_type> segmentStart_{};
-
-        /// All segments covered by this result set.  Structured by \c
-        /// segmentStart_.
-        std::vector<int> segments_{};
-
-        /// Build well-name to well number lookup index.
-        ///
-        /// For use by SegmentMatcher only.
-        void establishNameLookupIndex();
-
-        /// Add non-empty range of segments for single MS well to result set.
-        ///
-        /// For use by SegmentMatcher only.
-        ///
-        /// \param[in] well Name of MS well.
-        ///
-        /// \param[in] segments List of segment numbers matching input
-        ///    request for \p well.
-        void addWellSegments(const std::string&      well,
-                             const std::vector<int>& segments);
-    };
-
     /// Description of Particular Segment Set
     ///
     /// User specified.

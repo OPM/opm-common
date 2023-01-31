@@ -20,16 +20,15 @@
 #ifndef UDQFUNCTION_HPP
 #define UDQFUNCTION_HPP
 
-#include <stdexcept>
-#include <vector>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+
 #include <functional>
 #include <random>
-
-#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <string>
+#include <vector>
 
 namespace Opm {
-
 
 class UDQFunction {
 public:
@@ -66,7 +65,6 @@ private:
     std::function<UDQSet(const UDQSet& arg)> func;
 };
 
-
 class UDQUnaryElementalFunction : public UDQFunction {
 public:
     UDQUnaryElementalFunction(const std::string&name, std::function<UDQSet(const UDQSet& arg)> f);
@@ -91,7 +89,6 @@ private:
     std::function<UDQSet(const UDQSet& arg)> func;
 };
 
-
 class UDQBinaryFunction : public UDQFunction {
 public:
     UDQBinaryFunction(const std::string& name, std::function<UDQSet(const UDQSet& lhs, const UDQSet& rhs)> f);
@@ -114,9 +111,11 @@ public:
     static UDQSet UMUL(const UDQSet& lhs, const UDQSet& rhs);
     static UDQSet UMAX(const UDQSet& lhs, const UDQSet& rhs);
     static UDQSet UMIN(const UDQSet& lhs, const UDQSet& rhs);
-private:
 
+private:
     std::function<UDQSet(const UDQSet& lhs, const UDQSet& rhs)> func;
 };
-}
-#endif
+
+} // namespace Opm
+
+#endif // UDQFUNCTION_HPP

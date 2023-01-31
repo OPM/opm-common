@@ -19,7 +19,6 @@
 
 #include <exception>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -30,6 +29,7 @@
 
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
@@ -54,15 +54,23 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -72,11 +80,13 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
@@ -665,7 +675,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 : -1;
 
             for (const auto& gname : group_names) {
-                auto group = GasLiftOpt::Group(gname);
+                auto group = GasLiftGroup(gname);
                 group.max_lift_gas(max_lift_gas_value);
                 group.max_total_gas(max_total_gas_value);
 
@@ -1009,7 +1019,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus( well_name , handlerContext.currentStep , status, handlerContext.keyword.location() );
@@ -1083,7 +1093,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 bool update_well = this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1145,7 +1155,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1212,7 +1222,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
-            const Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+            const Well::Status status = WellStatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
@@ -1309,7 +1319,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
              * well status is updated
              */
             if (conn_defaulted(record)) {
-                const auto new_well_status = Well::StatusFromString(status_str);
+                const auto new_well_status = WellStatusFromString(status_str);
 
                 for (const auto& wname : well_names) {
                     if ((new_well_status == open) && !this->getWell(wname, currentStep).canOpen()) {
@@ -1587,7 +1597,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             if (well_names.empty())
                 this->invalidNamePattern( wellNamePattern, handlerContext);
 
-            const auto cmode = Well::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
+            const auto cmode = WellWELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             const auto new_arg = record.getItem("NEW_VALUE").get<UDAValue>(0);
 
             for (const auto& well_name : well_names) {
@@ -1661,7 +1671,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
                 auto phase = Well::GuideRateTarget::UNDEFINED;
                 if (!record.getItem("PHASE").defaultApplied(0)) {
                     std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
-                    phase = Well::GuideRateTargetFromString(guideRatePhase);
+                    phase = WellGuideRateTargetFromString(guideRatePhase);
                 }
 
                 auto well = this->snapshots.back().wells.get(well_name);
@@ -1678,7 +1688,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
     void Schedule::handleWHISTCTL(HandlerContext& handlerContext) {
         const auto& record = handlerContext.keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const auto controlMode = Well::ProducerCModeFromString( cmodeString );
+        const auto controlMode = WellProducerCModeFromString(cmodeString);
 
         if (controlMode != Well::ProducerCMode::NONE) {
             if (!Well::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
@@ -1747,7 +1757,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
             const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
 
             for (const auto& wname : well_names) {
-                auto well = GasLiftOpt::Well(wname, use_glo);
+                auto well = GasLiftWell(wname, use_glo);
 
                 if (max_rate_item.hasValue(0))
                     well.max_rate( max_rate_item.getSIDouble(0) );
@@ -2259,7 +2269,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
                 throw OpmInputError(reason, handlerContext.keyword.location());
             }
 
-            const auto cmode = Well::WELTARGCModeFromString(control);
+            const auto cmode = WellWELTARGCModeFromString(control);
             if (cmode == Well::WELTARGCMode::GUID)
                 throw std::logic_error("Multiplying guide rate is not implemented");
 

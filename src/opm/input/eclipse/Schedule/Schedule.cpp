@@ -34,17 +34,23 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -56,9 +62,10 @@
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -155,6 +162,30 @@ namespace Opm {
         rptonly(rptonly_summary_section(SUMMARYSection{ deck })),
         gaslift_opt_active(deck.hasKeyword<ParserKeywords::LIFTOPT>())
     {
+    }
+
+    ScheduleStatic ScheduleStatic::serializationTestObject()
+    {
+        auto python = std::make_shared<Python>(Python::Enable::OFF);
+        ScheduleStatic st(python);
+        st.m_deck_message_limits = MessageLimits::serializationTestObject();
+        st.m_runspec = Runspec::serializationTestObject();
+        st.m_unit_system = UnitSystem::newFIELD();
+        st.m_input_path = "Some/funny/path";
+        st.rst_config = RSTConfig::serializationTestObject();
+        st.rst_info = ScheduleRestartInfo::serializationTestObject();
+        return st;
+    }
+
+    bool ScheduleStatic::operator==(const ScheduleStatic& other) const
+    {
+        return this->m_input_path == other.m_input_path &&
+               this->m_deck_message_limits == other.m_deck_message_limits &&
+               this->m_unit_system == other.m_unit_system &&
+               this->rst_config == other.rst_config &&
+               this->rst_info == other.rst_info &&
+               this->gaslift_opt_active == other.gaslift_opt_active &&
+               this->m_runspec == other.m_runspec;
     }
 
     Schedule::Schedule( const Deck& deck,
@@ -923,7 +954,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
         auto pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
-        auto gas_inflow = Well::GasInflowEquationFromString( record.getItem<ParserKeywords::WELSPECS::INFLOW_EQ>().get<std::string>(0) );
+        auto gas_inflow = WellGasInflowEquationFromString(record.getItem<ParserKeywords::WELSPECS::INFLOW_EQ>().get<std::string>(0));
 
         this->addWell(wellName,
                       group,
@@ -1743,8 +1774,8 @@ namespace {
             const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
             this->addGroupToGroup(parent_group.name, rst_group.name);
 
-            if (GasLiftOpt::Group::active(rst_group))
-                glo.add_group(GasLiftOpt::Group(rst_group));
+            if (GasLiftGroup::active(rst_group))
+                glo.add_group(GasLiftGroup(rst_group));
         }
 
         for (const auto& rst_well : rst_state.wells) {
@@ -1777,8 +1808,8 @@ namespace {
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
 
-            if (GasLiftOpt::Well::active(rst_well))
-                glo.add_well(GasLiftOpt::Well(rst_well));
+            if (GasLiftWell::active(rst_well))
+                glo.add_well(GasLiftWell(rst_well));
         }
         this->snapshots.back().glo.update( std::move(glo) );
         this->snapshots.back().update_tuning(rst_state.tuning);
@@ -2246,6 +2277,12 @@ std::ostream& operator<<(std::ostream& os, const Schedule& sched)
 {
     sched.dump_deck(os);
     return os;
+}
+
+void Schedule::HandlerContext::affected_well(const std::string& well_name)
+{
+    if (this->sim_update)
+        this->sim_update->affected_wells.insert(well_name);
 }
 
 }

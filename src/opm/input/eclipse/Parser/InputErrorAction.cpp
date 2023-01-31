@@ -1,5 +1,5 @@
 /*
-  Copyright 2019 Equinor ASA.
+  Copyright 2015 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -15,12 +15,26 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
+#include <config.h>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
-#ifndef PRODUCTION_CONTROLS_HPP
-#define PRODUCTION_CONTROLS_HPP
+#include <ostream>
 
 namespace Opm {
+
+std::ostream& operator<<(std::ostream& os, const InputErrorAction action)
+{
+    switch (action) {
+    case InputErrorAction::THROW_EXCEPTION: os << "throw exception"; break;
+    case InputErrorAction::WARN: os << "warn"; break;
+    case InputErrorAction::IGNORE: os << "ignore"; break;
+    case InputErrorAction::EXIT1: os << "exit1"; break;
+    case InputErrorAction::DELAYED_EXIT1: os << "delayed exit1"; break;
+    }
+
+    return os;
 }
-#endif
+
+}

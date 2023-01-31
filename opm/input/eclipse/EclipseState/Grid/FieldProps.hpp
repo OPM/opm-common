@@ -247,6 +247,9 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
                                                                                 {"KRNUMX",   keyword_info<int>{}},
                                                                                 {"KRNUMY",   keyword_info<int>{}},
                                                                                 {"KRNUMZ",   keyword_info<int>{}},
+                                                                                {"IMBNUMX",   keyword_info<int>{}},
+                                                                                {"IMBNUMY",   keyword_info<int>{}},
+                                                                                {"IMBNUMZ",   keyword_info<int>{}},
                                                                                 };
 }
 
@@ -509,7 +512,7 @@ public:
     bool operator==(const FieldProps& other) const;
     static bool rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg);
 
-    const Fieldprops::TranMap& getTran() const
+    const std::unordered_map<std::string,Fieldprops::TranCalculator>& getTran() const
     {
         return tran;
     }
@@ -574,7 +577,7 @@ private:
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
     std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;
 
-    Fieldprops::TranMap tran;
+    std::unordered_map<std::string,Fieldprops::TranCalculator> tran;
 };
 
 }

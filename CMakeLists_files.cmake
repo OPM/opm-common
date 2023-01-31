@@ -38,14 +38,28 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/OpmInputError.cpp
       src/opm/common/utility/parameters/Parameter.cpp
       src/opm/common/utility/parameters/ParameterGroup.cpp
+      src/opm/common/utility/parameters/ParameterRequirement.cpp
       src/opm/common/utility/parameters/ParameterTools.cpp
       src/opm/common/utility/numeric/calculateCellVol.cpp
       src/opm/common/utility/numeric/RootFinders.cpp
       src/opm/common/utility/shmatch.cpp
+      src/opm/common/utility/String.cpp
       src/opm/common/utility/TimeService.cpp
+      src/opm/material/common/Spline.cpp
+      src/opm/material/common/Tabulated1DFunction.cpp
+      src/opm/material/common/TridiagonalMatrix.cpp
+      src/opm/material/common/UniformXTabulated2DFunction.cpp
       src/opm/material/components/CO2.cpp
       src/opm/material/densead/Evaluation.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
+      src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
+      src/opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
+      src/opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
+      src/opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
+      src/opm/material/fluidsystems/blackoilpvt/LiveOilPvt.cpp
+      src/opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
+      src/opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
+      src/opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -78,17 +92,18 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/input/eclipse/EclipseState/EclipseState.cpp
     src/opm/input/eclipse/EclipseState/EndpointScaling.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/Box.cpp
     src/opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
+    src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
+    src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/FaceDir.cpp
     src/opm/input/eclipse/EclipseState/Grid/FaultCollection.cpp
     src/opm/input/eclipse/EclipseState/Grid/Fault.cpp
     src/opm/input/eclipse/EclipseState/Grid/FaultFace.cpp
     src/opm/input/eclipse/EclipseState/Grid/GridDims.cpp
     src/opm/input/eclipse/EclipseState/Grid/MapAxes.cpp
+    src/opm/input/eclipse/EclipseState/Grid/MinpvMode.cpp
     src/opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
     src/opm/input/eclipse/EclipseState/Grid/NNC.cpp
     src/opm/input/eclipse/EclipseState/Grid/Operate.cpp
@@ -102,6 +117,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/input/eclipse/EclipseState/Runspec.cpp
+    src/opm/input/eclipse/EclipseState/Phase.cpp
     src/opm/input/eclipse/EclipseState/TracerConfig.cpp
     src/opm/input/eclipse/EclipseState/MICPpara.cpp
     src/opm/input/eclipse/Schedule/Action/ActionAST.cpp
@@ -158,23 +174,20 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/WriteRestartFileEvents.cpp
     src/opm/input/eclipse/Schedule/Well/Connection.cpp
     src/opm/input/eclipse/Schedule/Well/injection.cpp
+    src/opm/input/eclipse/Schedule/Well/NameOrder.cpp
     src/opm/input/eclipse/Schedule/Well/PAvg.cpp
     src/opm/input/eclipse/Schedule/Well/PAvgCalculator.cpp
     src/opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.cpp
     src/opm/input/eclipse/Schedule/Well/Well.cpp
     src/opm/input/eclipse/Schedule/Well/WellConnections.cpp
-    src/opm/input/eclipse/Schedule/Well/NameOrder.cpp
     src/opm/input/eclipse/Schedule/Well/WellMatcher.cpp
-    src/opm/input/eclipse/Schedule/Well/WList.cpp
-    src/opm/input/eclipse/Schedule/Well/WListManager.cpp
+    src/opm/input/eclipse/Schedule/Well/WellEnums.cpp
+    src/opm/input/eclipse/Schedule/Well/WellBrineProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellEconProductionLimits.cpp
     src/opm/input/eclipse/Schedule/Well/WellFoamProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellInjectionProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellMICPProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellPolymerProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellBrineProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellTracerProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
     src/opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestState.cpp
@@ -198,6 +211,10 @@ if(ENABLE_ECL_INPUT)
     external/resinsight/cafPdmCore/cafSignal.cpp
     external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
     src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
+    src/opm/input/eclipse/Schedule/Well/WellTracerProperties.cpp
+    src/opm/input/eclipse/Schedule/Well/WList.cpp
+    src/opm/input/eclipse/Schedule/Well/WListManager.cpp
+    src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
@@ -245,6 +262,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/VFPInjTable.cpp
     src/opm/input/eclipse/Schedule/VFPProdTable.cpp
     src/opm/input/eclipse/Parser/ErrorGuard.cpp
+    src/opm/input/eclipse/Parser/InputErrorAction.cpp
     src/opm/input/eclipse/Parser/ParseContext.cpp
     src/opm/input/eclipse/Parser/Parser.cpp
     src/opm/input/eclipse/Parser/ParserEnums.cpp
@@ -261,32 +279,23 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
     src/opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
-    src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
+    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
+    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
+    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
     src/opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/GasPvtThermal.cpp
-    src/opm/material/fluidsystems/blackoilpvt/LiveOilPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/OilPvtThermal.cpp
-    src/opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
     src/opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
-    src/opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
+    src/opm/material/thermal/EclThermalLawManager.cpp
   )
 
-
-# This list is only used to register a CMake dependency between the the python
-# extension and the corresponding C++ wrapper files. The cpp files actually
-# listed here are repeated in the actual definition of the extension in the
-# setup.py file.
   list( APPEND PYTHON_CXX_SOURCE_FILES
           python/cxx/connection.cpp
           python/cxx/converters.cpp
@@ -397,17 +406,12 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_2dtables.cpp
-      tests/test_blackoilfluidstate.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
-      tests/test_components.cpp
       tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
       tests/test_EvaluationFormat.cpp
       tests/test_densead.cpp
-      tests/test_fluidmatrixinteractions.cpp
-      tests/test_fluidsystems.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp
@@ -416,29 +420,30 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_RootFinders.cpp
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
-      tests/test_spline.cpp
-      tests/test_tabulation.cpp
       tests/test_uniformtablelinear.cpp
+      tests/material/test_2dtables.cpp
+      tests/material/test_blackoilfluidstate.cpp
+      tests/material/test_components.cpp
+      tests/material/test_fluidmatrixinteractions.cpp
+      tests/material/test_fluidsystems.cpp
+      tests/material/test_spline.cpp
+      tests/material/test_tabulation.cpp
 )
 
 # tests that need to be linked to dune-common
 list(APPEND DUNE_TEST_SOURCE_FILES
-      tests/test_co2brine_ptflash.cpp
-      tests/test_immiscibleflash.cpp
-      tests/test_ncpflash.cpp
-      tests/test_pengrobinson.cpp
-      tests/test_threecomponents_ptflash.cpp
+      tests/material/test_co2brine_ptflash.cpp
+      tests/material/test_immiscibleflash.cpp
+      tests/material/test_ncpflash.cpp
+      tests/material/test_pengrobinson.cpp
+      tests/material/test_threecomponents_ptflash.cpp
 )
 
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/rst_test.cpp
     tests/test_ActiveGridCells.cpp
-    tests/test_co2brinepvt.cpp
     tests/test_CopyablePtr.cpp
-    tests/test_eclblackoilfluidsystem.cpp
-    tests/test_eclblackoilpvt.cpp
-    tests/test_eclmateriallawmanager.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -450,6 +455,10 @@ if(ENABLE_ECL_INPUT)
     tests/test_EInit.cpp
     tests/test_ExtESmry.cpp
     tests/test_Serialization.cpp
+    tests/material/test_co2brinepvt.cpp
+    tests/material/test_eclblackoilfluidsystem.cpp
+    tests/material/test_eclblackoilpvt.cpp
+    tests/material/test_eclmateriallawmanager.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
@@ -873,6 +882,8 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp
       opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp
       opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
+      opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
+      opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
       opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp
       opm/material/fluidmatrixinteractions/EclDefaultMaterialParams.hpp
       opm/material/fluidmatrixinteractions/ThreePhaseParkerVanGenuchten.hpp
@@ -1107,12 +1118,13 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/VFPInjTable.hpp
        opm/input/eclipse/Schedule/VFPProdTable.hpp
        opm/input/eclipse/Schedule/Well/Connection.hpp
-       opm/input/eclipse/Schedule/Well/ProductionControls.hpp
-       opm/input/eclipse/Schedule/Well/InjectionControls.hpp
        opm/input/eclipse/Schedule/Well/PAvg.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp
        opm/input/eclipse/Schedule/Well/Well.hpp
+       opm/input/eclipse/Schedule/Well/WellEnums.hpp
+       opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp
+       opm/input/eclipse/Schedule/Well/WellProductionControls.hpp
        opm/input/eclipse/Schedule/Well/WList.hpp
        opm/input/eclipse/Schedule/Well/NameOrder.hpp
        opm/input/eclipse/Schedule/Well/WellMatcher.hpp
@@ -1186,6 +1198,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/MSW/Valve.hpp
        opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp
        opm/input/eclipse/EclipseState/checkDeck.hpp
+       opm/input/eclipse/EclipseState/Phase.hpp
        opm/input/eclipse/EclipseState/Runspec.hpp
        opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp
        opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp

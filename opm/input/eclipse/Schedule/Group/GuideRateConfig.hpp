@@ -27,17 +27,18 @@
 
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
 namespace Opm {
 
+class Well;
 
 class GuideRateConfig {
 public:
 
  struct WellTarget {
     double guide_rate;
-    Well::GuideRateTarget target;
+    WellGuideRateTarget target;
     double scaling_factor;
 
     bool operator==(const WellTarget& data) const {

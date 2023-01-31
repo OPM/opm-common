@@ -35,24 +35,26 @@ namespace Opm {
 
 namespace Opm {
 
+    enum class WellSegmentCompPressureDrop {
+          HFA = 0,
+          HF_ = 1,
+          H__ = 2
+    };
+
     class DeckKeyword;
     class KeywordLocation;
 
     class WellSegments {
     public:
-        enum class LengthDepth{
+        enum class LengthDepth {
             INC = 0,
             ABS = 1
         };
         static const std::string LengthDepthToString(LengthDepth enumValue);
         static LengthDepth LengthDepthFromString(const std::string& stringValue);
 
+        using CompPressureDrop = WellSegmentCompPressureDrop;
 
-        enum class CompPressureDrop {
-            HFA = 0,
-            HF_ = 1,
-            H__ = 2
-        };
         static const std::string CompPressureDropToString(CompPressureDrop enumValue);
         static CompPressureDrop CompPressureDropFromString(const std::string& stringValue);
 

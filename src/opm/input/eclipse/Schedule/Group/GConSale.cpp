@@ -20,7 +20,6 @@
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include "../eval_uda.hpp"
 
 namespace Opm {

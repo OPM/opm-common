@@ -26,7 +26,9 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 namespace {
@@ -320,7 +322,7 @@ namespace {
         }
 
         std::string shut_status(const context&, std::size_t, std::size_t) const {
-            return Opm::Well::Status2String(well.getStatus());
+            return Opm::WellStatus2String(well.getStatus());
         }
 
         std::string region_number(const context&, std::size_t, std::size_t) const {
@@ -348,7 +350,7 @@ namespace {
         }
 
         std::string gas_inflow(const context&, std::size_t, std::size_t) const {
-            return Opm::Well::GasInflowEquation2String( well.gas_inflow_equation() );
+            return Opm::WellGasInflowEquation2String(well.gas_inflow_equation());
         }
     };
 

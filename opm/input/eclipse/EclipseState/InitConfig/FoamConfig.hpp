@@ -20,7 +20,7 @@
 #ifndef OPM_FOAMCONFIG_HPP
 #define OPM_FOAMCONFIG_HPP
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 
 #include <cstddef>
 #include <vector>

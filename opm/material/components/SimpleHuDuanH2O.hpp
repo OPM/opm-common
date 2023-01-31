@@ -37,7 +37,6 @@
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <cmath>
-#include <sstream>
 
 namespace Opm {
 
@@ -345,15 +344,16 @@ public:
                                       bool extrapolate)
     {
         if (temperature > 570) {
-            std::ostringstream oss;
-            oss << "Viscosity of water based on Hu et al is too different from IAPWS for T above 570K and "
-                << "(T = " << temperature << ")";
-            if(extrapolate)
+            const std::string msg =
+                "Viscosity of water based on Hu et al is too "
+                "different from IAPWS for T above 570K and (T = " +
+                std::to_string(getValue(temperature)) + ")";
+            if (extrapolate)
             {
-                OpmLog::warning(oss.str());
+                OpmLog::warning(msg);
             }
             else
-                throw NumericalProblem(oss.str());
+                throw NumericalProblem(msg);
         }
 
         const Evaluation rho = liquidDensity(temperature, pressure, extrapolate);
@@ -376,15 +376,17 @@ private:
         // systems below 647 K: Assessment of experimental data and
         // thermodynamics models, Chemical Geology, 2007.
         if (T > 647 || pressure > 100e6) {
-            std::ostringstream oss;
-            oss << "Density of water is only implemented for temperatures below 647K and "
-                << "pressures below 100MPa. (T = " << T << ", p=" << pressure;
-            if(extrapolate)
+            const std::string msg =
+                "Density of water is only implemented for temperatures "
+                "below 647K and pressures below 100MPa. (T = " +
+                std::to_string(getValue(T)) + ", p=" +
+                std::to_string(getValue(pressure)) + ")";
+            if (extrapolate)
             {
-                OpmLog::warning(oss.str());
+                OpmLog::warning(msg);
             }
             else
-                throw NumericalProblem(oss.str());
+                throw NumericalProblem(msg);
         }
 
         Evaluation p = pressure / 1e6; // to MPa

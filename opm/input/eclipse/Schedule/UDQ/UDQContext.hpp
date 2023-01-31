@@ -28,15 +28,16 @@
 
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
 namespace Opm {
+
     class SummaryState;
     class UDQFunctionTable;
     class UDQSet;
     class UDQState;
+    class WellMatcher;
 
-    class UDQContext{
+    class UDQContext {
     public:
         UDQContext(const UDQFunctionTable& udqft, const WellMatcher& wm, SummaryState& summary_state, UDQState& udq_state);
         std::optional<double> get(const std::string& key) const;
@@ -51,7 +52,7 @@ namespace Opm {
         std::vector<std::string> groups() const;
     private:
         const UDQFunctionTable& udqft;
-        WellMatcher well_matcher;
+        const WellMatcher& well_matcher;
         SummaryState& summary_state;
         UDQState& udq_state;
         //std::unordered_map<std::string, UDQSet> udq_results;

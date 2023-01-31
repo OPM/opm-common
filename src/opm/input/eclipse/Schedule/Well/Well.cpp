@@ -23,11 +23,22 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
 
@@ -393,7 +404,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
                 throw std::invalid_argument {
                     fmt::format("Unsupported control mode '{}' for "
                                 "history controlled injection well '{}'",
-                                Well::InjectorCMode2String(active_control), this->name())
+                                WellInjectorCMode2String(active_control), this->name())
                 };
             }
         }
@@ -1055,6 +1066,10 @@ void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<boo
     this->connections->applyWellPIScaling(scalingFactor, scalingApplicable);
 }
 
+bool Well::hasConnections() const {
+    return !this->connections->empty();
+}
+
 const WellConnections& Well::getConnections() const {
     return *this->connections;
 }
@@ -1331,7 +1346,7 @@ std::size_t Well::firstTimeStep() const {
     return this->init_step;
 }
 
-bool Well::hasBeenDefined(size_t timeStep) const {
+bool Well::hasBeenDefined(std::size_t timeStep) const {
     if (timeStep < this->init_step)
         return false;
     else
@@ -1341,38 +1356,6 @@ bool Well::hasBeenDefined(size_t timeStep) const {
 Well::GasInflowEquation Well::gas_inflow_equation() const {
     return this->gas_inflow;
 }
-
-const std::string Well::GasInflowEquation2String(GasInflowEquation enumValue) {
-    switch(enumValue) {
-    case GasInflowEquation::STD:
-        return "STD";
-    case GasInflowEquation::R_G:
-        return "R-G";
-    case GasInflowEquation::P_P:
-        return "P-P";
-    case GasInflowEquation::GPP:
-        return "GPP";
-    default:
-        throw std::invalid_argument("Unhandled enum value");
-    }
-}
-
-Well::GasInflowEquation Well::GasInflowEquationFromString(const std::string& stringValue) {
-    if (stringValue == "STD" || stringValue == "NO")
-        return GasInflowEquation::STD;
-
-    if (stringValue == "R-G" || stringValue == "YES")
-        return GasInflowEquation::R_G;
-
-    if (stringValue == "P-P")
-        return GasInflowEquation::P_P;
-
-    if (stringValue == "GPP")
-        return GasInflowEquation::GPP;
-
-    throw std::invalid_argument("Gas inflow equation type: " + stringValue + " not recognized");
-}
-
 
 bool Well::canOpen() const {
     if (this->allow_cross_flow)
@@ -1541,231 +1524,6 @@ double Well::temperature() const {
 void Well::setWellTemperature(const double temp) {
     this->well_temperature = temp;
 }
-
-std::ostream& operator<<(std::ostream& os, const Well::Status& st) {
-    os << Well::Status2String(st);
-    return os;
-}
-
-std::string Well::Status2String(Well::Status enumValue) {
-    switch( enumValue ) {
-    case Status::OPEN:
-        return "OPEN";
-    case Status::SHUT:
-        return "SHUT";
-    case Status::AUTO:
-        return "AUTO";
-    case Status::STOP:
-        return "STOP";
-    default:
-        throw std::invalid_argument("unhandled enum value");
-    }
-}
-
-
-Well::Status Well::StatusFromString(const std::string& stringValue) {
-    if (stringValue == "OPEN")
-        return Status::OPEN;
-    else if (stringValue == "SHUT")
-        return Status::SHUT;
-    else if (stringValue == "STOP")
-        return Status::STOP;
-    else if (stringValue == "AUTO")
-        return Status::AUTO;
-    else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue );
-}
-
-
-
-
-const std::string Well::InjectorCMode2String( InjectorCMode enumValue ) {
-    switch( enumValue ) {
-    case InjectorCMode::RESV:
-        return "RESV";
-    case InjectorCMode::RATE:
-        return "RATE";
-    case InjectorCMode::BHP:
-        return "BHP";
-    case InjectorCMode::THP:
-        return "THP";
-    case InjectorCMode::GRUP:
-        return "GRUP";
-    default:
-        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in InjectorCMode2String");
-    }
-}
-
-
-Well::InjectorCMode Well::InjectorCModeFromString(const std::string &stringValue) {
-    if (stringValue == "RATE")
-        return InjectorCMode::RATE;
-    else if (stringValue == "RESV")
-        return InjectorCMode::RESV;
-    else if (stringValue == "BHP")
-        return InjectorCMode::BHP;
-    else if (stringValue == "THP")
-        return InjectorCMode::THP;
-    else if (stringValue == "GRUP")
-        return InjectorCMode::GRUP;
-    else
-        throw std::invalid_argument("Unknown control mode string: " + stringValue);
-}
-
-std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm) {
-    os << Well::InjectorCMode2String(cm);
-    return os;
-}
-
-Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value) {
-    if (string_value == "ORAT")
-        return WELTARGCMode::ORAT;
-
-    if (string_value == "WRAT")
-        return WELTARGCMode::WRAT;
-
-    if (string_value == "GRAT")
-        return WELTARGCMode::GRAT;
-
-    if (string_value == "LRAT")
-        return WELTARGCMode::LRAT;
-
-    if (string_value == "CRAT")
-        return WELTARGCMode::CRAT;
-
-    if (string_value == "RESV")
-        return WELTARGCMode::RESV;
-
-    if (string_value == "BHP")
-        return WELTARGCMode::BHP;
-
-    if (string_value == "THP")
-        return WELTARGCMode::THP;
-
-    if (string_value == "VFP")
-        return WELTARGCMode::VFP;
-
-    if (string_value == "LIFT")
-        return WELTARGCMode::LIFT;
-
-    if (string_value == "GUID")
-        return WELTARGCMode::GUID;
-
-    throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
-}
-
-
-std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm) {
-    if (cm == Well::ProducerCMode::CMODE_UNDEFINED)
-        os << "UNDEFINED";
-    else
-        os << Well::ProducerCMode2String(cm);
-    return os;
-}
-
-const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
-    switch( enumValue ) {
-    case ProducerCMode::ORAT:
-        return "ORAT";
-    case ProducerCMode::WRAT:
-        return "WRAT";
-    case ProducerCMode::GRAT:
-        return "GRAT";
-    case ProducerCMode::LRAT:
-        return "LRAT";
-    case ProducerCMode::CRAT:
-        return "CRAT";
-    case ProducerCMode::RESV:
-        return "RESV";
-    case ProducerCMode::BHP:
-        return "BHP";
-    case ProducerCMode::THP:
-        return "THP";
-    case ProducerCMode::GRUP:
-        return "GRUP";
-    default:
-        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in ProducerCMode2String");
-    }
-}
-
-Well::ProducerCMode Well::ProducerCModeFromString( const std::string& stringValue ) {
-    if (stringValue == "ORAT")
-        return ProducerCMode::ORAT;
-    else if (stringValue == "WRAT")
-        return ProducerCMode::WRAT;
-    else if (stringValue == "GRAT")
-        return ProducerCMode::GRAT;
-    else if (stringValue == "LRAT")
-        return ProducerCMode::LRAT;
-    else if (stringValue == "CRAT")
-        return ProducerCMode::CRAT;
-    else if (stringValue == "RESV")
-        return ProducerCMode::RESV;
-    else if (stringValue == "BHP")
-        return ProducerCMode::BHP;
-    else if (stringValue == "THP")
-        return ProducerCMode::THP;
-    else if (stringValue == "GRUP")
-        return ProducerCMode::GRUP;
-    else if (stringValue == "NONE")
-        return ProducerCMode::NONE;
-    else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue );
-}
-
-
-const std::string Well::GuideRateTarget2String( GuideRateTarget enumValue ) {
-    switch( enumValue ) {
-    case GuideRateTarget::OIL:
-        return "OIL";
-    case GuideRateTarget::WAT:
-        return "WAT";
-    case GuideRateTarget::GAS:
-        return "GAS";
-    case GuideRateTarget::LIQ:
-        return "LIQ";
-    case GuideRateTarget::COMB:
-        return "COMB";
-    case GuideRateTarget::WGA:
-        return "WGA";
-    case GuideRateTarget::CVAL:
-        return "CVAL";
-    case GuideRateTarget::RAT:
-        return "RAT";
-    case GuideRateTarget::RES:
-        return "RES";
-    case GuideRateTarget::UNDEFINED:
-        return "UNDEFINED";
-    default:
-        throw std::invalid_argument("unhandled enum value");
-    }
-}
-
-Well::GuideRateTarget Well::GuideRateTargetFromString( const std::string& stringValue ) {
-    if (stringValue == "OIL")
-        return GuideRateTarget::OIL;
-    else if (stringValue == "WAT")
-        return GuideRateTarget::WAT;
-    else if (stringValue == "GAS")
-        return GuideRateTarget::GAS;
-    else if (stringValue == "LIQ")
-        return GuideRateTarget::LIQ;
-    else if (stringValue == "COMB")
-        return GuideRateTarget::COMB;
-    else if (stringValue == "WGA")
-        return GuideRateTarget::WGA;
-    else if (stringValue == "CVAL")
-        return GuideRateTarget::CVAL;
-    else if (stringValue == "RAT")
-        return GuideRateTarget::RAT;
-    else if (stringValue == "RES")
-        return GuideRateTarget::RES;
-    else if (stringValue == "UNDEFINED")
-        return GuideRateTarget::UNDEFINED;
-    else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue );
-}
-
 
 bool Well::cmp_structure(const Well& other) const {
     if ((this->segments && !other.segments) ||

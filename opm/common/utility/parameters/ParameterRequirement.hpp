@@ -36,9 +36,6 @@
 #ifndef OPM_PARAMETERREQUIREMENT_HEADER
 #define OPM_PARAMETERREQUIREMENT_HEADER
 
-#include <algorithm>
-#include <cassert>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -59,17 +56,8 @@ namespace Opm {
 	/// @todo Doc me!
 	/// @param
 	/// @return
-	struct ParameterRequirementProbability {
-	    std::string operator()(double x) const {
-		if ( (x < 0.0) || (x > 1.0) ) {
-		    std::ostringstream stream;
-		    stream << "The value '" << x
-                           << "' is not in the interval [0, 1].";
-		    return stream.str();
-		} else {
-		    return "";
-		}
-	    }
+        struct ParameterRequirementProbability {
+            std::string operator()(double x) const;
 	};
 
 	/// @brief
@@ -83,9 +71,8 @@ namespace Opm {
 		if (x > 0) {
 		    return "";
 		} else {
-		    std::ostringstream stream;
-		    stream << "The value '" << x << "' is not positive.";
-		    return stream.str();
+                    return "The value '" + std::to_string(x) +
+                           "' is not positive.";
 		}
 	    }
 	};
@@ -101,9 +88,8 @@ namespace Opm {
 		if (x < 0) {
 		    return "";
 		} else {
-		    std::ostringstream stream;
-		    stream << "The value '" << x << "' is not negative.";
-		    return stream.str();
+                    return "The value '" + std::to_string(x) +
+                           "' is not negative.";
 		}
 	    }
 	};
@@ -117,9 +103,8 @@ namespace Opm {
 	    template<typename T>
 	    std::string operator()(const T& x) const {
 		if (x > 0) {
-		    std::ostringstream stream;
-		    stream << "The value '" << x << "' is positive.";
-		    return stream.str();
+                    return "The value '" + std::to_string(x) +
+                           "' is positive.";
 		} else {
 		    return "";
 		}
@@ -135,9 +120,8 @@ namespace Opm {
 	    template<typename T>
 	    std::string operator()(const T& x) const {
 		if (x < 0) {
-		    std::ostringstream stream;
-		    stream << "The value '" << x << "' is negative.";
-		    return stream.str();
+                    return "The value '" + std::to_string(x) +
+                           "' is negative.";
 		} else {
 		    return "";
 		}
@@ -204,35 +188,15 @@ namespace Opm {
 	/// @brief
 	/// @todo Doc me!
 	/// @param
-	struct ParameterRequirementMemberOf {
-	    explicit ParameterRequirementMemberOf(const std::vector<std::string>& elements)
-	    : elements_(elements) {
-		assert(elements_.size() > 0);
-	    }
+        struct ParameterRequirementMemberOf {
+            explicit ParameterRequirementMemberOf(const std::vector<std::string>& elements);
 
-	/// @brief
-	/// @todo Doc me!
-	/// @param
-	/// @return
-	    std::string operator()(const std::string& x) const {
-		if (std::find(elements_.begin(), elements_.end(), x) == elements_.end()) {
-		    if (elements_.size() == 1) {
-			return "The string '" + x + "' is not '" + elements_[0] + "'.";
-		    }
-		    std::ostringstream stream;
-		    stream << "The string '" << x << "' is not among '";
-		    for (int i = 0; i < int(elements_.size()) - 2; ++i) {
-			stream << elements_[i] << "', '";
-		    }
-		    stream << elements_[elements_.size() - 2]
-			   << "' and '"
-			   << elements_[elements_.size() - 1]
-			   << "'.";
-		    return stream.str();
-		} else {
-		    return "";
-		}
-	    }
+            /// @brief
+            /// @todo Doc me!
+            /// @param
+            /// @return
+            std::string operator()(const std::string& x) const;
+
 	private:
 	    const std::vector<std::string> elements_;
 	};

@@ -43,6 +43,7 @@ Copyright 2018 Statoil ASA.
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
@@ -128,7 +129,8 @@ BOOST_AUTO_TEST_CASE(SUBTRACT)
 
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"P1"})), st, udq_state);
+    WellMatcher wm(NameOrder({"P1"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 4);
     auto res = def.eval(context);
@@ -150,7 +152,8 @@ BOOST_AUTO_TEST_CASE(TEST)
 
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"P1", "P2"})), st, udq_state);
+    WellMatcher wm(NameOrder({"P1", "P2"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_group_var("MAU", "GOPR", 4);
     st.update_group_var("XXX", "GOPR", 5);
@@ -195,7 +198,8 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQDefine def_add(udqp, "WU",0, location, {"WOPR", "+", "1"});
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"P1"})), st, udq_state);
+    WellMatcher wm(NameOrder({"P1"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
 
@@ -219,7 +223,8 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     UDQFunctionTable udqft(udqp);
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"P1", "P2", "P3", "P4"})), st, udq_state);
+    WellMatcher wm(NameOrder({"P1", "P2", "P3", "P4"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1.0);
     st.update_well_var("P2", "WOPR", 2.0);
@@ -345,7 +350,8 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         UDQDefine def(udqp, "WUBHP",0, location, {"WBHP"});
         SummaryState st(TimeService::now());
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, WellMatcher(NameOrder({"W1", "W2", "W3"})), st, udq_state);
+        WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
+        UDQContext context(udqft, wm, st, udq_state);
 
         st.update_well_var("W1", "WBHP", 11);
         st.update_well_var("W2", "WBHP", 2);
@@ -364,7 +370,8 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         UDQDefine def(udqp, "WUBHP",0, location, {"WBHP" , "'P*'"});
         SummaryState st(TimeService::now());
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, WellMatcher(NameOrder({"I1", "I2", "P1", "P2"})), st, udq_state);
+        WellMatcher wm(NameOrder({"I1", "I2", "P1", "P2"}));
+        UDQContext context(udqft, wm, st, udq_state);
 
 
         st.update_well_var("P1", "WBHP", 1);
@@ -382,7 +389,8 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         UDQDefine def(udqp, "WUBHP",0, location, {"NINT" , "(", "WBHP", ")"});
         SummaryState st(TimeService::now());
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, WellMatcher(NameOrder({"P1", "P2", "I1", "I2"})), st, udq_state);
+        WellMatcher wm(NameOrder({"P1", "P2", "I1", "I2"}));
+        UDQContext context(udqft, wm, st, udq_state);
         st.update_well_var("P1", "WBHP", 4);
         st.update_well_var("P2", "WBHP", 3);
         st.update_well_var("I1", "WBHP", 2);
@@ -1010,7 +1018,8 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     NameOrder wo; wo.add("P1");
-    UDQContext context(udqft, WellMatcher(wo), st, udq_state);
+    WellMatcher wm(wo);
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P1", "WWPR", 2);
@@ -1031,7 +1040,8 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQDefine def_cmp(udqp, "WU",0, location, {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"P1", "P2"})), st, udq_state);
+    WellMatcher wm(NameOrder({"P1", "P2"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("P1", "WOPR",  0);
     st.update_well_var("P1", "WWPR", 10);
@@ -1060,7 +1070,8 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     UDQFunctionTable udqft;
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"PA1", "PB2", "PC3", "PD4"})), st, udq_state);
+    WellMatcher wm(NameOrder({"PA1", "PB2", "PC3", "PD4"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("PA1", "WOPR", 1);
     st.update_well_var("PB2", "WOPR", 2);
@@ -1130,7 +1141,8 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     UDQDefine def_sort(udqp , "WUPR3",0, location, {"SORTD", "(", "WUPR1", ")" });
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"OP1", "OP2", "OP3", "OP4"})), st, udq_state);
+    WellMatcher wm(NameOrder({"OP1", "OP2", "OP3", "OP4"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("OP1", "WWIR", 1.0);
     st.update_well_var("OP2", "WWIR", 2.0);
@@ -1176,7 +1188,8 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     UDQDefine def_sort(udqp , "WUPR3",0, location, {"SORTA", "(", "WUPR1", ")" });
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"OPL01", "OPL02", "OPU01", "OPU02"})), st, udq_state);
+    WellMatcher wm(NameOrder({"OPL01", "OPL02", "OPU01", "OPU02"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("OPL01", "WWCT", 0.7);
     st.update_well_var("OPL02", "WWCT", 0.8);
@@ -1206,7 +1219,8 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQDefine def_wuwct(udqp , "WUWCT",0, location, {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"P1", "P2", "P3", "P4"})), st, udq_state);
+    WellMatcher wm(NameOrder({"P1", "P2", "P3", "P4"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -1268,7 +1282,8 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     UDQDefine def(udqp, "WUOPRL",0, location, {"(", "WOPR", "OP1", "-", "150", ")", "*", "0.90"});
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"OP1", "OP2", "OP3"})), st, udq_state);
+    WellMatcher wm(NameOrder({"OP1", "OP2", "OP3"}));
+    UDQContext context(udqft, wm, st, udq_state);
 
     st.update_well_var("OP1", "WOPR", 300);
     st.update_well_var("OP2", "WOPR", 3000);
@@ -1317,20 +1332,21 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     ErrorGuard errors;
     std::vector<std::string> tokens = {"WBHP", "+"};
     KeywordLocation location;
-    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::IGNORE);
+    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputErrorAction::IGNORE);
     {
         UDQDefine def1(udqp, "WUBHP",0, location, tokens, parseContext, errors);
         SummaryState st(TimeService::now());
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, WellMatcher(NameOrder({"P1"})), st, udq_state);
+        WellMatcher wm(NameOrder({"P1"}));
+        UDQContext context(udqft, wm, st, udq_state);
         st.update_well_var("P1", "WBHP", 1);
 
         auto res = def1.eval(context);
         BOOST_CHECK_EQUAL(res["P1"].get(), udqp.undefinedValue());
     }
 
-    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
+    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP",0, location, tokens, parseContext, errors), OpmInputError);
 }
 
@@ -1341,7 +1357,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
     std::vector<std::string> tokens1 = {"WBHP", "+", "1"};
     std::vector<std::string> tokens2 = {"SUM", "(", "WBHP", ")"};
     KeywordLocation location;
-    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::IGNORE);
+    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputErrorAction::IGNORE);
     {
         UDQDefine def1(udqp, "FUBHP",0, location, tokens1, parseContext, errors);
         UDQDefine def2(udqp, "WUBHP",0, location, tokens2, parseContext, errors);
@@ -1349,7 +1365,8 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
         SummaryState st(TimeService::now());
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, WellMatcher(NameOrder({"P1", "P2"})), st, udq_state);
+        WellMatcher wm(NameOrder({"P1", "P2"}));
+        UDQContext context(udqft, wm, st, udq_state);
         st.update_well_var("P1", "WBHP", 1);
         st.update_well_var("P2", "WBHP", 2);
 
@@ -1362,7 +1379,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
             BOOST_CHECK_EQUAL(res2[index].get(), 3);
     }
 
-    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
+    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputErrorAction::THROW_EXCEPTION);
 
     // This fails because the well expression (WBHP + 1) is assigned to the field variable FUBHP
     BOOST_CHECK_THROW( UDQDefine(udqp, "FUBHP",0, location, tokens1, parseContext, errors), OpmInputError);
@@ -1882,7 +1899,8 @@ UDQ
     SummaryState st(TimeService::now());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, WellMatcher(NameOrder({"W1", "W2", "W3"})), st, udq_state);
+    WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
+    UDQContext context(udqft, wm, st, udq_state);
     st.update_well_var("W1", "WOPR", 1);
     st.update_well_var("W2", "WOPR", 2);
     st.update_well_var("W3", "WOPR", 3);
@@ -2080,7 +2098,8 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     st.update_well_var("W3", "WGLIR", 3);
 
     NameOrder wo({"W1", "W2", "W3"});
-    udq.eval(0, WellMatcher(wo), st, udq_state);
+    WellMatcher wm(wo);
+    udq.eval(0, wm, st, udq_state);
     {
         std::unordered_set<std::string> required_keys;
         udq.required_summary(required_keys);
@@ -2640,7 +2659,8 @@ UDQ
     UDQState udq_state(0);
     SummaryState st(TimeService::now());
     UDQFunctionTable udqft;
-    UDQContext context(udqft, WellMatcher(NameOrder({"W1", "W2", "W3"})), st, udq_state);
+    WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
+    UDQContext context(udqft, wm, st, udq_state);
     st.update_well_var("W1", "WBHP", 400);
     st.update_well_var("W2", "WBHP", 300);
     st.update_well_var("W3", "WBHP", 200);

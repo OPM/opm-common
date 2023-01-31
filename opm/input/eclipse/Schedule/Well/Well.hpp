@@ -30,29 +30,16 @@
 #include <utility>
 #include <vector>
 
-#include <stddef.h>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
-#include <opm/input/eclipse/Schedule/Well/ProductionControls.hpp>
-#include <opm/input/eclipse/Schedule/Well/InjectionControls.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
-#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellProductionControls.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
-
-#include <opm/common/utility/ActiveGridCells.hpp>
 
 namespace Opm {
 
@@ -68,116 +55,45 @@ class SICD;
 class SummaryState;
 class UDQActive;
 class UDQConfig;
+class Valve;
 class TracerConfig;
+class WellConnections;
+struct WellBrineProperties;
+class WellEconProductionLimits;
+struct WellFoamProperties;
+struct WellMICPProperties;
+struct WellPolymerProperties;
+class WellSegments;
+class WellTracerProperties;
+class WVFPEXP;
 
 namespace RestartIO {
 struct RstWell;
 }
 
-
 class Well {
 public:
-
-    enum class Status {
-        OPEN = 1,
-        STOP = 2,
-        SHUT = 3,
-        AUTO = 4
-    };
-    static std::string Status2String(Status enumValue);
-    static Status StatusFromString(const std::string& stringValue);
-
-
+    using Status = WellStatus;
 
     /*
       The elements in this enum are used as bitmasks to keep track
       of which controls are present, i.e. the 2^n structure must
       be intact.
     */
-    enum class InjectorCMode : int{
-        RATE =  1 ,
-        RESV =  2 ,
-        BHP  =  4 ,
-        THP  =  8 ,
-        GRUP = 16 ,
-        CMODE_UNDEFINED = 512
-    };
-    static const std::string InjectorCMode2String( InjectorCMode enumValue );
-    static InjectorCMode InjectorCModeFromString( const std::string& stringValue );
-
+    using InjectorCMode = WellInjectorCMode;
 
     /*
-      The items BHP, THP and GRUP only apply in prediction mode:
-      WCONPROD. The elements in this enum are used as bitmasks to
-      keep track of which controls are present, i.e. the 2^n
-      structure must be intact.The NONE item is only used in WHISTCTL
-      to cancel its effect.
-
       The properties are initialized with the CMODE_UNDEFINED
       value, but the undefined value is never assigned apart from
       that; and it is not part of the string conversion routines.
     */
-    enum class ProducerCMode : int {
-        NONE =     0,
-        ORAT =     1,
-        WRAT =     2,
-        GRAT =     4,
-        LRAT =     8,
-        CRAT =    16,
-        RESV =    32,
-        BHP  =    64,
-        THP  =   128,
-        GRUP =   256,
-        CMODE_UNDEFINED = 1024
-    };
-    static const std::string ProducerCMode2String( ProducerCMode enumValue );
-    static ProducerCMode ProducerCModeFromString( const std::string& stringValue );
+    using ProducerCMode = WellProducerCMode;
 
+    using WELTARGCMode = WellWELTARGCMode;
 
+    using GuideRateTarget = WellGuideRateTarget;
 
-    enum class WELTARGCMode {
-        ORAT =  1,
-        WRAT =  2,
-        GRAT =  3,
-        LRAT =  4,
-        CRAT =  5,   // Not supported
-        RESV =  6,
-        BHP  =  7,
-        THP  =  8,
-        VFP  =  9,
-        LIFT = 10,   // Not supported
-        GUID = 11
-    };
-
-    static WELTARGCMode WELTARGCModeFromString(const std::string& stringValue);
-
-
-    enum class GuideRateTarget {
-        OIL = 0,
-        WAT = 1,
-        GAS = 2,
-        LIQ = 3,
-        COMB = 4,
-        WGA = 5,
-        CVAL = 6,
-        RAT = 7,
-        RES = 8,
-        UNDEFINED = 9
-    };
-    static const std::string GuideRateTarget2String( GuideRateTarget enumValue );
-    static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
-
-
-    enum class GasInflowEquation {
-        STD = 0,
-        R_G = 1,
-        P_P = 2,
-        GPP = 3
-    };
-    static const std::string GasInflowEquation2String(GasInflowEquation enumValue);
-    static GasInflowEquation GasInflowEquationFromString(const std::string& stringValue);
-
-
+    using GasInflowEquation = WellGasInflowEquation;
 
     struct WellGuideRate {
         bool available;
@@ -213,34 +129,7 @@ public:
         }
     };
 
-
-    struct InjectionControls {
-    public:
-        InjectionControls(int controls_arg) :
-            controls(controls_arg)
-        {}
-
-        double bhp_limit;
-        double thp_limit;
-
-
-        InjectorType injector_type;
-        InjectorCMode cmode = InjectorCMode::CMODE_UNDEFINED;
-        double surface_rate;
-        double reservoir_rate;
-        int    vfp_table_number;
-        bool   prediction_mode;
-        double rs_rv_inj;
-
-        bool hasControl(InjectorCMode cmode_arg) const {
-            return (this->controls & static_cast<int>(cmode_arg)) != 0;
-        }
-
-    private:
-        int controls;
-    };
-
-
+    using InjectionControls = WellInjectionControls;
 
     struct WellInjectionProperties {
         std::string name;
@@ -324,52 +213,7 @@ public:
         }
     };
 
-    struct ProductionControls {
-    public:
-        ProductionControls(int controls_arg) :
-            controls(controls_arg)
-        {
-        }
-
-        ProducerCMode cmode = ProducerCMode::NONE;
-        double oil_rate{0};
-        double water_rate{0};
-        double gas_rate{0};
-        double liquid_rate{0};
-        double resv_rate{0};
-        double bhp_history{0};
-        double thp_history{0};
-        double bhp_limit{0};
-        double thp_limit{0};
-        double alq_value{0};
-        int    vfp_table_number{0};
-        bool   prediction_mode{0};
-
-        bool hasControl(ProducerCMode cmode_arg) const {
-            return (this->controls & static_cast<int>(cmode_arg)) != 0;
-        }
-
-        bool operator==(const ProductionControls& other) const {
-            return this->cmode == other.cmode &&
-                   this->oil_rate == other.oil_rate &&
-                   this->water_rate == other.water_rate &&
-                   this->gas_rate == other.gas_rate &&
-                   this->liquid_rate == other.liquid_rate &&
-                   this->resv_rate == other.resv_rate &&
-                   this->bhp_history == other.bhp_history &&
-                   this->thp_history == other.thp_history &&
-                   this->bhp_limit == other.bhp_limit &&
-                   this->thp_limit == other.thp_limit &&
-                   this->alq_value == other.alq_value &&
-                   this->vfp_table_number == other.vfp_table_number &&
-                   this->prediction_mode == other.prediction_mode;
-        }
-
-
-    private:
-        int controls;
-    };
-
+    using ProductionControls = WellProductionControls;
 
     class WellProductionProperties {
     public:
@@ -513,7 +357,7 @@ public:
     GuideRateTarget getRawGuideRatePhase() const;
     double getGuideRateScalingFactor() const;
 
-    bool hasBeenDefined(size_t timeStep) const;
+    bool hasBeenDefined(std::size_t timeStep) const;
     std::size_t firstTimeStep() const;
     const WellType& wellType() const;
     bool predictionMode() const;
@@ -523,7 +367,7 @@ public:
     InjectorCMode injection_cmode() const;
     ProducerCMode production_cmode() const;
     InjectorType injectorType() const;
-    size_t seqIndex() const;
+    std::size_t seqIndex() const;
     bool getAutomaticShutIn() const;
     bool getAllowCrossFlow() const;
     const std::string& name() const;
@@ -540,6 +384,7 @@ public:
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
 
+    bool hasConnections() const;
     const std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
@@ -738,11 +583,6 @@ private:
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
 std::ostream& operator<<( std::ostream&, const Well::WellProductionProperties& );
-
-
-std::ostream& operator<<(std::ostream& os, const Well::Status& st);
-std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm);
-std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm);
 
 }
 #endif

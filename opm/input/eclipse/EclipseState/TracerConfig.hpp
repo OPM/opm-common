@@ -20,8 +20,10 @@
 #ifndef OPM_TRACER_CONFIG_HPP
 #define OPM_TRACER_CONFIG_HPP
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
+
+#include <optional>
 
 namespace Opm {
 

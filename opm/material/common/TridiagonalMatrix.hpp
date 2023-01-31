@@ -27,12 +27,11 @@
 #ifndef OPM_TRIDIAGONAL_MATRIX_HH
 #define OPM_TRIDIAGONAL_MATRIX_HH
 
-#include <iostream>
-#include <vector>
 #include <algorithm>
+#include <cassert>
 #include <cmath>
-
-#include <assert.h>
+#include <iosfwd>
+#include <vector>
 
 namespace Opm {
 
@@ -722,42 +721,7 @@ public:
     /*!
      * \brief Print the matrix to a given output stream.
      */
-    void print(std::ostream& os = std::cout) const
-    {
-        size_t n = size();
-
-        // row 0
-        os << at(0, 0) << "\t"
-           << at(0, 1) << "\t";
-
-        if (n > 3)
-            os << "\t";
-        if (n > 2)
-            os << at(0, n-1);
-        os << "\n";
-
-        // row 1 .. n - 2
-        for (unsigned rowIdx = 1; rowIdx < n-1; ++rowIdx) {
-            if (rowIdx > 1)
-                os << "\t";
-            if (rowIdx == n - 2)
-                os << "\t";
-
-            os << at(rowIdx, rowIdx - 1) << "\t"
-               << at(rowIdx, rowIdx) << "\t"
-               << at(rowIdx, rowIdx + 1) << "\n";
-        }
-
-        // row n - 1
-        if (n > 2)
-            os << at(n-1, 0) << "\t";
-        if (n > 3)
-            os << "\t";
-        if (n > 4)
-            os << "\t";
-        os << at(n-1, n-2) << "\t"
-           << at(n-1, n-1) << "\n";
-    }
+    void print(std::ostream& os) const;
 
 private:
     template <class XVector, class BVector>

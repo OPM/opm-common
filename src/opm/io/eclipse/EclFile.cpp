@@ -28,13 +28,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iterator>
-#include <sstream>
 #include <string>
 #include <numeric>
 #include <cmath>
-
-#include <iostream>
-
 
 namespace Opm { namespace EclIO {
 

@@ -33,7 +33,6 @@
 #include "config.h"
 #include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 
-#include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <sstream>

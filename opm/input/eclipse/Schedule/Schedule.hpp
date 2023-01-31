@@ -25,46 +25,56 @@
 #include <memory>
 #include <optional>
 #include <iosfwd>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm
 {
+    namespace Action {
+        class ActionX;
+        class PyAction;
+        class State;
+    }
     class ActiveGridCells;
     class Deck;
     class DeckKeyword;
     class DeckRecord;
     class EclipseState;
-    class FieldPropsManager;
-    class GTNode;
-    class ParseContext;
-    class SCHEDULESection;
-    class SummaryState;
     class ErrorGuard;
+    class FieldPropsManager;
+    class GasLiftOpt;
+    class GTNode;
+    class GuideRateConfig;
+    class GuideRateModel;
+    enum class InputErrorAction;
+    class ParseContext;
+    class Python;
+    class RPTConfig;
+    class SCHEDULESection;
+    struct SimulatorUpdate;
+    class SummaryState;
+    class TracerConfig;
     class UDQConfig;
+    class Well;
+    enum class WellGasInflowEquation;
     class WellMatcher;
+    enum class WellProducerCMode;
+    enum class WellStatus;
+    class WellTestConfig;
 
     namespace RestartIO { struct RstState; }
 
@@ -111,27 +121,9 @@ namespace Opm
         }
 
 
-        static ScheduleStatic serializationTestObject() {
-            auto python = std::make_shared<Python>(Python::Enable::OFF);
-            ScheduleStatic st(python);
-            st.m_deck_message_limits = MessageLimits::serializationTestObject();
-            st.m_runspec = Runspec::serializationTestObject();
-            st.m_unit_system = UnitSystem::newFIELD();
-            st.m_input_path = "Some/funny/path";
-            st.rst_config = RSTConfig::serializationTestObject();
-            st.rst_info = ScheduleRestartInfo::serializationTestObject();
-            return st;
-        }
+        static ScheduleStatic serializationTestObject();
 
-        bool operator==(const ScheduleStatic& other) const {
-            return this->m_input_path == other.m_input_path &&
-                   this->m_deck_message_limits == other.m_deck_message_limits &&
-                   this->m_unit_system == other.m_unit_system &&
-                   this->rst_config == other.rst_config &&
-                   this->rst_info == other.rst_info &&
-                   this->gaslift_opt_active == other.gaslift_opt_active &&
-                   this->m_runspec == other.m_runspec;
-        }
+        bool operator==(const ScheduleStatic& other) const;
     };
 
 
@@ -278,7 +270,7 @@ namespace Opm
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
-        Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
+        WellProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
         void evalAction(const SummaryState& summary_state, std::size_t timeStep);
@@ -556,10 +548,7 @@ namespace Opm
             , grid(grid_)
             {}
 
-            void affected_well(const std::string& well_name) {
-                if (this->sim_update)
-                    this->sim_update->affected_wells.insert(well_name);
-            }
+            void affected_well(const std::string& well_name);
 
             /// \brief Mark that the well occured in a  WELSEGS keyword
             void welsegs_handled(const std::string& well_name)
@@ -605,7 +594,7 @@ namespace Opm
                      bool allowCrossFlow,
                      bool automaticShutIn,
                      int pvt_table,
-                     Well::GasInflowEquation gas_inflow,
+                     WellGasInflowEquation gas_inflow,
                      std::size_t timeStep,
                      Connection::Order wellConnectionOrder);
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
@@ -613,7 +602,7 @@ namespace Opm
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
-        bool updateWellStatus( const std::string& well, std::size_t reportStep, Well::Status status, std::optional<KeywordLocation> = {});
+        bool updateWellStatus( const std::string& well, std::size_t reportStep, WellStatus status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::size_t load_start,
                                     std::size_t load_end,
@@ -650,7 +639,7 @@ namespace Opm
         void prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword);
         void store_wgnames(const DeckKeyword& keyword);
         std::vector<std::string> wellNames(const std::string& pattern, const HandlerContext& context);
-        std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputError::Action error_action, ErrorGuard& errors, const KeywordLocation& location) const;
+        std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputErrorAction error_action, ErrorGuard& errors, const KeywordLocation& location) const;
         void invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const;
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;

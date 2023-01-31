@@ -80,7 +80,7 @@ private:
 };
 
 template <class AddWellSegments>
-Opm::SegmentMatcher::SegmentSet
+Opm::SegmentSet
 Opm::SegmentMatcher::Impl::findSegments(const SetDescriptor& request,
                                         AddWellSegments      addSegments) const
 {
@@ -275,13 +275,13 @@ Opm::SegmentMatcher::SetDescriptor::wellNames(std::string_view wellNamePattern)
 
 // ---------------------------------------------------------------------------
 
-Opm::SegmentMatcher::SegmentSet::SegmentSet()
+Opm::SegmentSet::SegmentSet()
 {
     this->segmentStart_.push_back(this->segments_.size());
 }
 
 std::vector<std::string_view>
-Opm::SegmentMatcher::SegmentSet::wells() const
+Opm::SegmentSet::wells() const
 {
     auto wellset = std::vector<std::string_view>{};
     wellset.reserve(this->wells_.size());
@@ -298,8 +298,8 @@ Opm::SegmentMatcher::SegmentSet::wells() const
     return wellset;
 }
 
-Opm::SegmentMatcher::SegmentSet::WellSegmentRange
-Opm::SegmentMatcher::SegmentSet::segments(std::string_view well) const
+Opm::SegmentSet::WellSegmentRange
+Opm::SegmentSet::segments(std::string_view well) const
 {
     using Ix = std::vector<std::string>::size_type;
 
@@ -322,8 +322,8 @@ Opm::SegmentMatcher::SegmentSet::segments(std::string_view well) const
     }
 }
 
-Opm::SegmentMatcher::SegmentSet::WellSegmentRange
-Opm::SegmentMatcher::SegmentSet::segments(const std::size_t well) const
+Opm::SegmentSet::WellSegmentRange
+Opm::SegmentSet::segments(const std::size_t well) const
 {
     if (well >= this->numWells()) {
         return {};
@@ -339,7 +339,7 @@ Opm::SegmentMatcher::SegmentSet::segments(const std::size_t well) const
     };
 }
 
-void Opm::SegmentMatcher::SegmentSet::establishNameLookupIndex()
+void Opm::SegmentSet::establishNameLookupIndex()
 {
     using Ix = std::vector<std::string>::size_type;
 
@@ -355,8 +355,8 @@ void Opm::SegmentMatcher::SegmentSet::establishNameLookupIndex()
               });
 }
 
-void Opm::SegmentMatcher::SegmentSet::addWellSegments(const std::string&      well,
-                                                      const std::vector<int>& segments)
+void Opm::SegmentSet::addWellSegments(const std::string&      well,
+                                      const std::vector<int>& segments)
 {
     assert (! segments.empty());
 
@@ -371,7 +371,7 @@ void Opm::SegmentMatcher::SegmentSet::addWellSegments(const std::string&      we
 // ---------------------------------------------------------------------------
 
 Opm::SegmentMatcher::SegmentMatcher(const ScheduleState& mswInputData)
-    : pImpl_{ new Impl { mswInputData } }
+    : pImpl_{ std::make_unique<Impl>(mswInputData) }
 {}
 
 Opm::SegmentMatcher::SegmentMatcher(SegmentMatcher&& rhs)
@@ -387,7 +387,7 @@ Opm::SegmentMatcher::operator=(SegmentMatcher&& rhs)
 
 Opm::SegmentMatcher::~SegmentMatcher() = default;
 
-Opm::SegmentMatcher::SegmentSet
+Opm::SegmentSet
 Opm::SegmentMatcher::findSegments(const SetDescriptor& segments) const
 {
     auto segSet = this->pImpl_->

@@ -18,7 +18,7 @@
  */
 
 #include <stdexcept>
-#include <iostream>
+#include <ostream>
 
 #define BOOST_TEST_MODULE FaultTests
 

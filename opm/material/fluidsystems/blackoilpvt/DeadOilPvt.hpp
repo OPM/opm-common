@@ -53,13 +53,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif // HAVE_ECL_INPUT
 
-    void setNumRegions(size_t numRegions)
-    {
-        oilReferenceDensity_.resize(numRegions);
-        inverseOilB_.resize(numRegions);
-        inverseOilBMu_.resize(numRegions);
-        oilMu_.resize(numRegions);
-    }
+    void setNumRegions(size_t numRegions);
 
     /*!
      * \brief Initialize the reference densities of all fluids for a given PVT region
@@ -96,32 +90,7 @@ public:
     /*!
      * \brief Finish initializing the oil phase PVT properties.
      */
-    void initEnd()
-    {
-        // calculate the final 2D functions which are used for interpolation.
-        size_t numRegions = oilMu_.size();
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            // calculate the table which stores the inverse of the product of the oil
-            // formation volume factor and the oil viscosity
-            const auto& oilMu = oilMu_[regionIdx];
-            const auto& invOilB = inverseOilB_[regionIdx];
-            assert(oilMu.numSamples() == invOilB.numSamples());
-
-            std::vector<Scalar> invBMuColumn;
-            std::vector<Scalar> pressureColumn;
-            invBMuColumn.resize(oilMu.numSamples());
-            pressureColumn.resize(oilMu.numSamples());
-
-            for (unsigned pIdx = 0; pIdx < oilMu.numSamples(); ++pIdx) {
-                pressureColumn[pIdx] = invOilB.xAt(pIdx);
-                invBMuColumn[pIdx] = invOilB.valueAt(pIdx)*1/oilMu.valueAt(pIdx);
-            }
-
-            inverseOilBMu_[regionIdx].setXYArrays(pressureColumn.size(),
-                                                  pressureColumn,
-                                                  invBMuColumn);
-        }
-    }
+    void initEnd();
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.

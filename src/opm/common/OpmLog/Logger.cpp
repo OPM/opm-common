@@ -16,12 +16,13 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <sstream>
+
+#include <config.h>
+#include <opm/common/OpmLog/Logger.hpp>
+
 #include <stdexcept>
-#include <iostream>
 
 #include <opm/common/OpmLog/LogBackend.hpp>
-#include <opm/common/OpmLog/Logger.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 
 namespace Opm {

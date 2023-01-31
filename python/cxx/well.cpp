@@ -1,6 +1,7 @@
 #include <tuple>
 
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <pybind11/stl.h>
 #include "export.hpp"
 
@@ -13,7 +14,7 @@ namespace {
     }
 
     std::string status( const Well& w )  {
-        return Well::Status2String( w.getStatus() );
+        return WellStatus2String( w.getStatus() );
     }
 
     std::string preferred_phase( const Well& w ) {

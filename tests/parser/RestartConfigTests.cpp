@@ -23,6 +23,7 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
@@ -539,7 +540,7 @@ BASIC=1
     ErrorGuard errors;
     auto deck = Parser().parseString( data);
     EclipseState es(deck);
-    parseContext.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
+    parseContext.update(ParseContext::RPT_MIXED_STYLE, InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_THROW( Schedule( deck, es, parseContext, errors, {} ), std::exception );
 }
 
@@ -790,12 +791,12 @@ DATES             -- 3
     EclipseState es1(deck1);
     EclipseState es2(deck2);
 
-    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
-    ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
+    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::IGNORE);
+    ctx.update(ParseContext::RPT_MIXED_STYLE, InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_THROW( Schedule( deck1, es1, ctx, errors, {} ), std::exception );
 
 
-    ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::IGNORE);
+    ctx.update(ParseContext::RPT_MIXED_STYLE, InputErrorAction::IGNORE);
     Schedule sched1(deck1, es1, ctx, errors, {});
 
 
@@ -819,9 +820,9 @@ DATES             -- 3
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
 
-    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::THROW_EXCEPTION);
+    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_THROW( Schedule( deck2, es2, ctx, errors, {} ), std::exception );
-    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
+    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::IGNORE);
 
     Schedule sched2(deck2, es2, ctx, errors, {});
 

@@ -38,7 +38,6 @@
 #include <opm/material/binarycoefficients/H2O_N2.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-#include <iostream>
 #include <cassert>
 
 namespace Opm {

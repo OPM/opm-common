@@ -117,8 +117,6 @@ private:
     std::vector<TranAction> actions;
 };
 
-using TranMap = std::unordered_map<std::string, TranCalculator>;
-
 } // namespace Fieldprops
 } // end namespace Opm
 #endif // TRAN_CALCULATOR_HPP

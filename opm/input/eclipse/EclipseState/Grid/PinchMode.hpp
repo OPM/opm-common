@@ -20,22 +20,24 @@
 #ifndef OPM_PINCHMODE_HPP
 #define OPM_PINCHMODE_HPP
 
+#include <iosfwd>
 #include <string>
 
 namespace Opm {
     
-    namespace PinchMode {
-        enum ModeEnum {
-            ALL = 1,
-            TOPBOT = 2,
-            TOP = 3,
-            GAP = 4,
-            NOGAP = 5,
-        };
+enum class PinchMode {
+    ALL = 1,
+    TOPBOT = 2,
+    TOP = 3,
+    GAP = 4,
+    NOGAP = 5,
+};
 
-        const std::string PinchMode2String(const ModeEnum enumValue);
-        ModeEnum PinchModeFromString(const std::string& stringValue);
-    }
+std::string PinchMode2String(const PinchMode enumValue);
+PinchMode PinchModeFromString(const std::string& stringValue);
+
+std::ostream& operator<<(std::ostream&, const PinchMode);
+
 }
 
 

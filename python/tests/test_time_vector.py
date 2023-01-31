@@ -83,7 +83,8 @@ class TestTimeVector(unittest.TestCase):
                                     datetime.datetime(1998,  8,  1)])
 
     def test_str(self):
-        tv = TimeVector(datetime.date(1997, 11, 6), base_string = open(test_path("data/schedule/part1.sch")).read())
+        with open(test_path("data/schedule/part1.sch")) as f:
+            tv = TimeVector(datetime.date(1997, 11, 6), base_string = f.read())
         tv.load(test_path("data/schedule/part3.sch"))
         tv.load(test_path("data/schedule/part2.sch"))
 

@@ -25,7 +25,6 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
@@ -39,7 +38,6 @@
 namespace Opm {
     class Schedule;
     class UDQInput;
-    class UDQActive;
     class Actdims;
 
     namespace Action {

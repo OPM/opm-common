@@ -61,14 +61,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        gasReferenceDensity_.resize(numRegions);
-        inverseGasB_.resize(numRegions);
-        inverseGasBMu_.resize(numRegions);
-        gasMu_.resize(numRegions);
-    }
-
+    void setNumRegions(size_t numRegions);
 
     /*!
      * \brief Initialize the reference densities of all fluids for a given PVT region
@@ -103,42 +96,13 @@ public:
      *
      * \param samplePoints A container of \f$(p_g, B_g)\f$ values
      */
-    void setGasFormationVolumeFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
-    {
-        SamplingPoints tmp(samplePoints);
-        auto it = tmp.begin();
-        const auto& endIt = tmp.end();
-        for (; it != endIt; ++ it)
-            std::get<1>(*it) = 1.0/std::get<1>(*it);
-
-        inverseGasB_[regionIdx].setContainerOfTuples(tmp);
-        assert(inverseGasB_[regionIdx].monotonic());
-    }
+    void setGasFormationVolumeFactor(unsigned regionIdx,
+                                     const SamplingPoints& samplePoints);
 
     /*!
      * \brief Finish initializing the oil phase PVT properties.
      */
-    void initEnd()
-    {
-        // calculate the final 2D functions which are used for interpolation.
-        size_t numRegions = gasMu_.size();
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
-            // calculate the table which stores the inverse of the product of the gas
-            // formation volume factor and the gas viscosity
-            const auto& gasMu = gasMu_[regionIdx];
-            const auto& invGasB = inverseGasB_[regionIdx];
-            assert(gasMu.numSamples() == invGasB.numSamples());
-
-            std::vector<Scalar> pressureValues(gasMu.numSamples());
-            std::vector<Scalar> invGasBMuValues(gasMu.numSamples());
-            for (unsigned pIdx = 0; pIdx < gasMu.numSamples(); ++pIdx) {
-                pressureValues[pIdx] = invGasB.xAt(pIdx);
-                invGasBMuValues[pIdx] = invGasB.valueAt(pIdx) * (1.0/gasMu.valueAt(pIdx));
-            }
-
-            inverseGasBMu_[regionIdx].setXYContainers(pressureValues, invGasBMuValues);
-        }
-    }
+    void initEnd();
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.

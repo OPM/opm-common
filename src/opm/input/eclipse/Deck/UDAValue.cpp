@@ -18,7 +18,7 @@
 */
 #include <fmt/format.h>
 
-#include <iostream>
+#include <ostream>
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 

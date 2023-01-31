@@ -20,14 +20,17 @@
 #ifndef OPM_MINPVMODE_HPP
 #define OPM_MINPVMODE_HPP
 
+#include <iosfwd>
+
 namespace Opm {
-    
-    namespace MinpvMode {
-        enum ModeEnum {
-            Inactive  = 1,
-            EclSTD = 2,
-        };
-    }
+
+enum class MinpvMode {
+    Inactive  = 1,
+    EclSTD = 2,
+};
+
+std::ostream& operator<<(std::ostream&, const MinpvMode&);
+
 }
 
 #endif

@@ -146,8 +146,14 @@ namespace Opm
 	const T& element(int index) const
 	{
 #ifndef NDEBUG
-	    OPM_ERROR_IF(index < 0, "The index of a SparseVector must be non-negative (is " << index << ")");
-	    OPM_ERROR_IF(index >= size_, "The index of a SparseVector must be smaller than the maximum value (is " << index << ", max value: " << size_ <<")");
+            OPM_ERROR_IF(index < 0,
+                         "The index of a SparseVector must be non-negative "
+                         "(is " + std::to_string(index) + ")");
+            OPM_ERROR_IF(index >= size_,
+                         "The index of a SparseVector must be smaller "
+                         "than the maximum value "
+                         "(is " + std::to_string(index) +
+                         ", max value: " + std::to_string(size_) + ")");
 #endif
 	    std::vector<int>::const_iterator lb = std::lower_bound(indices_.begin(), indices_.end(), index);
 	    if (lb != indices_.end() && *lb == index) {
@@ -163,8 +169,14 @@ namespace Opm
 	const T& nonzeroElement(int nzindex) const
 	{
 #ifndef NDEBUG
-	    OPM_ERROR_IF(nzindex < 0, "The index of a SparseVector must be non-negative (is " << nzindex << ")");
-	    OPM_ERROR_IF(nzindex >= nonzeroSize(), "The index of a SparseVector must be smaller than the maximum value (is " << nzindex << ", max value: " << nonzeroSize() <<")");
+            OPM_ERROR_IF(nzindex < 0,
+                         "The index of a SparseVector must be non-negative "
+                         "(is " + std::to_string(nzindex) + ")");
+            OPM_ERROR_IF(nzindex >= nonzeroSize(),
+                         "The index of a SparseVector must be smaller "
+                         "than the maximum value " +
+                         "(is " + std::to_string(nzindex) +
+                         ", max value: " + std::to_string(nonzeroSize()) + ")");
 #endif
 	    return data_[nzindex];
 	}

@@ -126,45 +126,47 @@ static void printHelp() {
 }
 
 
-template <typename T>
-void writeGrdeclData(std::ofstream& ofileH, const std::string& name, const std::vector<T>& array)
+struct GrdeclDataFormatParams
 {
     int ncol;
     int w;
     int pre;
-    bool is_string = false;
-    bool is_int = false;
+    bool is_string;
+    bool is_int;
+};
 
-    if constexpr (std::is_same<T, float>::value){
-        ncol = 4;
-        w = 11;
-        pre = 7;
-    } else if constexpr (std::is_same<T, double>::value){
-        ncol = 3;
-        w = 21;
-        pre = 14;
-    } else if constexpr (std::is_same<T, int>::value){
-        ncol = 8;
-        w = 6;
-        is_int = true;
-    } else if constexpr (std::is_same<T, std::string>::value){
-        ncol = 5;
-        is_string = true;
+template <typename T>
+GrdeclDataFormatParams getFormat()
+{
+    if constexpr (std::is_same<T, float>::value) {
+        return {4, 11, 7, false, false};
+    } else if constexpr (std::is_same<T, double>::value) {
+        return {3, 21, 14, false, false};
+    } else if constexpr (std::is_same<T, int>::value) {
+        return {8, 6, -1, false, true};
+    } else if constexpr (std::is_same<T, std::string>::value) {
+        return {5, -1, -1, true, false};
     }
+}
+
+template <typename T>
+void writeGrdeclData(std::ofstream& ofileH, const std::string& name, const std::vector<T>& array)
+{
+    const auto p = getFormat<T>();
 
     int64_t data_size = static_cast<int64_t>(array.size());
 
     ofileH << "\n" << name << std::endl;
 
     for (int64_t n = 0; n < data_size; n++){
-        if (is_string)
+        if (p.is_string)
             ofileH << " " << array[n];
-        else if (is_int)
-            ofileH << " " << std::setw(w) << array[n];
+        else if (p.is_int)
+            ofileH << " " << std::setw(p.w) << array[n];
         else
-            ofileH << " " << std::setw(w) << std::setprecision(pre) << std::scientific << array[n];
+            ofileH << " " << std::setw(p.w) << std::setprecision(p.pre) << std::scientific << array[n];
 
-        if ((n+1) % ncol == 0)
+        if ((n+1) % p.ncol == 0)
             ofileH << "\n";
     }
 
