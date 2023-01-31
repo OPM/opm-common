@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -56,6 +57,59 @@ namespace {
             return s;
         }
     }
+
+    class EvalAssign
+    {
+    public:
+        static EvalAssign field()
+        {
+            return { []() {
+                return [](const auto& assign) { return assign.eval(); };
+            }};
+        }
+
+        static EvalAssign group(const std::size_t    report_step,
+                                const Opm::Schedule& sched)
+        {
+            return { [report_step, &sched]() {
+                return [groups = sched.groupNames(report_step)]
+                    (const auto& assign)
+                {
+                    return assign.eval(groups);
+                };
+            }};
+        }
+
+        static EvalAssign well(const std::size_t    report_step,
+                               const Opm::Schedule& sched)
+        {
+            return { [report_step, &sched]() {
+                return [wells = sched.wellNames(report_step)]
+                    (const auto& assign)
+                {
+                    return assign.eval(wells);
+                };
+            }};
+        }
+
+        Opm::UDQSet operator()(const Opm::UDQAssign& assign) const
+        {
+            if (! this->eval_.has_value()) {
+                this->eval_ = this->create_();
+            }
+
+            return (*this->eval_)(assign);
+        }
+
+    private:
+        using Eval = std::function<Opm::UDQSet(const Opm::UDQAssign&)>;
+        using Create = std::function<Eval()>;
+
+        Create create_;
+        mutable std::optional<Eval> eval_;
+
+        EvalAssign(Create create) : create_{ std::move(create) } {}
+    };
 } // Anonymous namespace
 
 namespace Opm {
@@ -446,28 +500,30 @@ namespace Opm {
                                 UDQState&         udq_state,
                                 UDQContext&       context) const
     {
-        const auto wells  = sched.wellNames(report_step);
-        const auto groups = sched.groupNames(report_step);
+        const auto handlers = std::map<UDQVarType, EvalAssign> {
+            { UDQVarType::FIELD_VAR  , EvalAssign::field()                   },
+            { UDQVarType::GROUP_VAR  , EvalAssign::group(report_step, sched) },
+            { UDQVarType::WELL_VAR   , EvalAssign::well(report_step, sched)  },
+        };
 
-        for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
-            if (udq_state.assign(assign.report_step(), assign.keyword())) {
-                auto ws = assign.eval(wells);
-                context.update_assign(report_step, assign.keyword(), ws);
+        for (const auto& index_pair : this->input_index) {
+            const auto& keyword = index_pair.first;
+            auto asgn_pos = this->m_assignments.find(keyword);
+            if ((asgn_pos == this->m_assignments.end()) ||
+                ! udq_state.assign(asgn_pos->second.report_step(), keyword))
+            {
+                // No such ASSIGN or ASSIGN not active
+                continue;
             }
-        }
 
-        for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
-            if (udq_state.assign(assign.report_step(), assign.keyword())) {
-                auto ws = assign.eval(groups);
-                context.update_assign(report_step, assign.keyword(), ws);
+            auto handler = handlers.find(asgn_pos->second.var_type());
+            if (handler == handlers.end()) {
+                // Unhandled variable type.
+                continue;
             }
-        }
 
-        for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
-            if (udq_state.assign(assign.report_step(), assign.keyword())) {
-                auto ws = assign.eval();
-                context.update_assign(report_step, assign.keyword(), ws);
-            }
+            context.update_assign(report_step, keyword,
+                                  handler->second(asgn_pos->second));
         }
     }
 
