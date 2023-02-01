@@ -39,6 +39,10 @@
 namespace Dune { template<typename,int> class FieldVector; }
 #endif
 
+#if HAVE_DUNE_ISTL
+namespace Dune { template<typename,typename> class BlockVector; }
+#endif
+
 namespace Opm {
 namespace detail {
 
@@ -390,6 +394,13 @@ protected:
     struct is_vector<std::vector<T1,Allocator>> {
         constexpr static bool value = true;
     };
+
+#if HAVE_DUNE_ISTL
+    template<class T1, class Allocator>
+    struct is_vector<Dune::BlockVector<T1,Allocator>> {
+        constexpr static bool value = true;
+    };
+#endif
 
     //! \brief Predicate for detecting variants.
     template<class T>
