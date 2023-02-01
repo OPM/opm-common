@@ -159,9 +159,12 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     Opm::time_point start;
     start = Opm::TimeService::now();
     const auto& materialParams = materialLawManager.materialLawParams(0).template getRealParams<Opm::EclMultiplexerApproach::Default>();
-    const auto& waterpvt = FluidSystem::waterPvt();
-    const auto& oilpvt = FluidSystem::oilPvt();
-    const auto& gaspvt = FluidSystem::gasPvt();
+    // const auto& waterpvt = FluidSystem::waterPvt();
+    // const auto& oilpvt = FluidSystem::oilPvt();
+    // const auto& gaspvt = FluidSystem::gasPvt();
+    const auto& waterpvt = FluidSystem::waterPvt();//.template getRealPvt<Opm::WaterPvtApproach::ConstantCompressibilityWater>();
+    const auto& oilpvt = FluidSystem::oilPvt();//.template getRealPvt<Opm::OilPvtApproach::LiveOil>();
+    const auto& gaspvt = FluidSystem::gasPvt();//.template getRealPvt<Opm::GasPvtApproach::DryGas>();
     for (unsigned step = 0; step < num_total; ++step) {
         for (unsigned elemIdx = 0; elemIdx < nc; ++elemIdx) {
             // const auto& materialParams =

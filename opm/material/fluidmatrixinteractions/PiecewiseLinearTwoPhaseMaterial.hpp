@@ -217,6 +217,11 @@ public:
     }
 
     template <class Evaluation>
+    static size_t findSegmentIndexDescending(const ValueVector& xValues, const Evaluation& x){
+        return findSegmentIndexDescending_(xValues, scalarValue(x));
+    }
+    
+    template <class Evaluation>
     static Evaluation eval(const ValueVector& xValues, const ValueVector& yValues, const Evaluation& x, unsigned segIdx){
         Scalar x0 = xValues[segIdx];
         Scalar x1 = xValues[segIdx + 1];

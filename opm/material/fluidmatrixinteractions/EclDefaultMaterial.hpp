@@ -306,14 +306,111 @@ public:
      * oil relative permeability models" section of the ECLipse
      * technical description.
      */
-    //static void relativePermeabilitiesNew(ContainerT& values, const Params& params, const FluidState& fluidState)
-    template <class ContainerT, class FluidState,class ParamsOilWater, class ParamsGasOil>
-    static void relativePermeabilitiesNew(ContainerT& values,
-                                          const Scalar& Swco,
-                                          const ParamsOilWater& oilwaterparams,
-                                          const ParamsGasOil& gasoilparams, 
-                                          const FluidState& fluidState)
+     /*!
+     * \brief The relative permeability of all phases.
+     *
+     * The relative permeability of the water phase it uses the same
+     * value as the relative permeability for water in the water-oil
+     * law with \f$S_o = 1 - S_w\f$. The gas relative permebility is
+     * taken from the gas-oil material law, but with \f$S_o = 1 -
+     * S_g\f$.  The relative permeability of the oil phase is
+     * calculated using the relative permeabilities of the oil phase
+     * in the two two-phase systems.
+     *
+     * A more detailed description can be found in the "Three phase
+     * oil relative permeability models" section of the ECLipse
+     * technical description.
+     */
+    template <class ContainerT, class FluidState>
+    static void relativePermeabilitiesSimple(ContainerT& values,
+                                             const Params& params,
+                                             const FluidState& fluidState)
+   
     {
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
+        
+        
+        // values[waterPhaseIdx] = krw<FluidState, Evaluation>(params, fluidState);
+        const auto& oilwaterparams = params.oilWaterParams();
+        const auto& gasoilparams = params.gasOilParams(); 
+        const Evaluation Sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
+        const Evaluation krwv = OilWaterMaterialLaw::twoPhaseSatKrw(oilwaterparams, Sw);
+                
+        values[waterPhaseIdx] = krwv;
+        
+        const Scalar Swco = params.Swl();
+        Evaluation krnv;
+        const Evaluation Sw_eff = max(Evaluation(Swco), decay<Evaluation>(fluidState.saturation(waterPhaseIdx)));
+
+        const Evaluation Sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
+        
+        const Evaluation Sw_ow = Sg + Sw_eff;
+        const Evaluation kro_ow = OilWaterMaterialLaw::twoPhaseSatKrn(oilwaterparams, Sw_ow);
+   
+       
+
+// const Evaluation kro_go = relpermOilInOilGasSystem<Evaluation>(params, fluidState);
+        const Evaluation So_go = 1.0 - Sw_ow;
+        const Evaluation kro_go = GasOilMaterialLaw::twoPhaseSatKrw(gasoilparams , So_go);
+        constexpr const Scalar epsilon = 1e-5;
+        Scalar Sw_ow_wco = scalarValue(Sw_ow) - Swco;
+        if ( Sw_ow_wco < epsilon) {
+            const Evaluation kro2 = (kro_ow + kro_go) / 2;
+            if ( Sw_ow_wco > epsilon / 2) {
+                const Evaluation kro1 = (Sg * kro_go + (Sw - Swco) * kro_ow) / (Sw_ow - Swco);
+                const Evaluation alpha = (epsilon - (Sw_ow - Swco)) / (epsilon / 2);
+                
+                krnv = kro2 * alpha + kro1 * (1 - alpha);
+            }
+            
+            krnv = kro2;
+        } else {
+            krnv = (Sg * kro_go + (Sw - Swco) * kro_ow) / (Sw_ow - Swco);
+        }
+        
+        
+        values[oilPhaseIdx] = krnv;
+        //values[gasPhaseIdx] = krg<FluidState, Evaluation>(params, fluidState);
+        const Evaluation Sw_eff2 = 1.0 - Swco - Sg;
+        const Evaluation krgv = GasOilMaterialLaw::twoPhaseSatKrn(gasoilparams, Sw_eff2);
+        
+        values[gasPhaseIdx] = krgv;
+    }
+
+
+
+
+/*!
+     * \brief The relative permeability of all phases.
+     *
+     * The relative permeability of the water phase it uses the same
+     * value as the relative permeability for water in the water-oil
+     * law with \f$S_o = 1 - S_w\f$. The gas relative permebility is
+     * taken from the gas-oil material law, but with \f$S_o = 1 -
+     * S_g\f$.  The relative permeability of the oil phase is
+     * calculated using the relative permeabilities of the oil phase
+     * in the two two-phase systems.
+     *
+     * A more detailed description can be found in the "Three phase
+     * oil relative permeability models" section of the ECLipse
+     * technical description.
+     */
+    //     template <class ContainerT, class FluidState,class ParamsOilWater, class ParamsGasOil>
+    // static void relativePermeabilitiesNew(ContainerT& values,
+    //                                       const Scalar& Swco,
+    //                                       const ParamsOilWater& oilwaterparams,
+    //                                       const ParamsGasOil& gasoilparams, 
+    //                                       const FluidState& fluidState)
+    template <class ContainerT, class FluidState>        
+    static void relativePermeabilitiesNew(ContainerT& values,
+                                          const Params& params,
+                                          const FluidState& fluidState)        
+    {
+        const auto& oilwaterparams = params.oilWaterParams();
+        const auto& gasoilparams = params.gasOilParams();
+        const auto& gasoilparams_tab =params.gasOilParams().drainageParams().effectiveLawParams().template getRealParams<Opm::SatCurveMultiplexerApproach::PiecewiseLinear>();
+        const auto& oilwaterparams_tab =params.oilWaterParams().drainageParams().effectiveLawParams().template getRealParams<Opm::SatCurveMultiplexerApproach::PiecewiseLinear>();
+        Scalar Swco = params.Swl();
         //const Evaluation SwUnscaled = scaledToUnscaledSatKrw(params, SwScaled);
         //const Evaluation krwUnscaled = EffLaw::twoPhaseSatKrw(params.effectiveLawParams(), SwUnscaled);
         //return unscaledToScaledKrw_(SwScaled, params, krwUnscaled);
@@ -329,8 +426,8 @@ public:
         //const Evaluation krwv = OilWaterMaterialLaw::twoPhaseSatKrw(oilwaterparams, Sw);
         //const auto& oilwaterparams =params.oilWaterParams().drainageParams().effectiveLawParams().template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
         //const Evaluation krwv = PLTwoPhaseLawOilWater::twoPhaseSatKrw(oilwaterparams, Sw);
-        size_t segIdx_ow = PLTwoPhaseLawOilWater::findSegmentIndex(oilwaterparams.SwKrwSamples(), Sw);
-        const Evaluation krwv = PLTwoPhaseLawOilWater::eval(oilwaterparams.SwKrwSamples(), oilwaterparams.krwSamples(), Sw, segIdx_ow);
+        size_t segIdx_ow = PLTwoPhaseLawOilWater::findSegmentIndex(oilwaterparams_tab.SwKrwSamples(), Sw);
+        const Evaluation krwv = PLTwoPhaseLawOilWater::eval(oilwaterparams_tab.SwKrwSamples(), oilwaterparams_tab.krwSamples(), Sw, segIdx_ow);
         
         values[waterPhaseIdx] = krwv;
         
@@ -342,19 +439,21 @@ public:
         
         const Evaluation Sw_ow = Sg + Sw_eff;
         // const Evaluation kro_ow = relpermOilInOilWaterSystem<Evaluation>(params, fluidState);
+        //const Evaluation kro_ow = OilWaterMaterialLaw::twoPhaseSatKrn(oilwaterparams, Sw_ow);
         //const Evaluation kro_ow = PLTwoPhaseLawOilWater::twoPhaseSatKrn(oilwaterparams, Sw_ow);
         //size_t segIdx_ow = PLTwoPhaseLawOilWater::findSegmentIndex(oilwaterparams.SwKrwSamples(), Sw);
         //NB assumes same index but probalby one should ahve used same x values also
         //const Evaluation kro_ow = PLTwoPhaseLawOilWater::eval(oilwaterparams.SwKrnSamples(), oilwaterparams.krnSamples(), Sw_ow, segIdx_ow);
-        const Evaluation kro_ow = PLTwoPhaseLawOilWater::eval(oilwaterparams.SwKrwSamples(), oilwaterparams.krnSamples(), Sw_ow, segIdx_ow);
+        size_t segIdx_ow_o = PLTwoPhaseLawOilWater::findSegmentIndex(oilwaterparams_tab.SwKrnSamples(), Sw_ow);
+        const Evaluation kro_ow = PLTwoPhaseLawOilWater::eval(oilwaterparams_tab.SwKrnSamples(), oilwaterparams_tab.krnSamples(), Sw_ow, segIdx_ow_o);
 
 // const Evaluation kro_go = relpermOilInOilGasSystem<Evaluation>(params, fluidState);
         const Evaluation So_go = 1.0 - Sw_ow;
-        //const Evaluation kro_go = GasOilMaterialLaw::twoPhaseSatKrw(params.gasOilParams(), So_go);
+        //const Evaluation kro_go = GasOilMaterialLaw::twoPhaseSatKrw(gasoilparams, So_go);
         //const auto& gasoilparams =params.gasOilParams().drainageParams().effectiveLawParams().template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
         //const Evaluation kro_go = PLTwoPhaseLawGasOil::twoPhaseSatKrw(gasoilparams, So_go);
-        size_t segIdx_go = PLTwoPhaseLawGasOil::findSegmentIndex(gasoilparams.SwKrwSamples(), So_go);
-        const Evaluation kro_go = PLTwoPhaseLawGasOil::eval(gasoilparams.SwKrwSamples(), gasoilparams.krwSamples(), So_go, segIdx_go);
+        size_t segIdx_go = PLTwoPhaseLawGasOil::findSegmentIndex(gasoilparams_tab.SwKrwSamples(), So_go);
+        const Evaluation kro_go = PLTwoPhaseLawGasOil::eval(gasoilparams_tab.SwKrwSamples(), gasoilparams_tab.krwSamples(), So_go, segIdx_go);
         // avoid the division by zero: chose a regularized kro which is used if Sw - Swco
         // < epsilon/2 and interpolate between the oridinary and the regularized kro between
         // epsilon and epsilon/2
@@ -378,10 +477,11 @@ public:
         values[oilPhaseIdx] = krnv;
         //values[gasPhaseIdx] = krg<FluidState, Evaluation>(params, fluidState);
         const Evaluation Sw_eff2 = 1.0 - Swco - Sg;
-        //Evaluation krgv = PLTwoPhaseLawGasOil::twoPhaseSatKrn(gasoilparams, Sw_eff2);
+        //Evaluation krgv = GasOilMaterialLaw::twoPhaseSatKrn(gasoilparams, Sw_eff2);
         //size_t segIdx_go = PLTwoPhaseLawGasOil::findSegmentIndex(gasoilparams.SwKrnSamples(), Sw_eff2);
         //const Evaluation krgv = PLTwoPhaseLawGasOil::eval(gasoilparams.SwKrnSamples(), gasoilparams.krnSamples(), Sw_eff2, segIdx_go);
-        const Evaluation krgv = PLTwoPhaseLawGasOil::eval(gasoilparams.SwKrwSamples(), gasoilparams.krnSamples(), Sw_eff2, segIdx_go);
+        size_t segIdx_go_g = PLTwoPhaseLawGasOil::findSegmentIndexDescending(gasoilparams_tab.SwKrnSamples(), Sw_eff2);
+        const Evaluation krgv = PLTwoPhaseLawGasOil::eval(gasoilparams_tab.SwKrnSamples(), gasoilparams_tab.krnSamples(), Sw_eff2, segIdx_go_g);
         values[gasPhaseIdx] = krgv;
     }
 
