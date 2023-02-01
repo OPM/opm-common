@@ -185,10 +185,10 @@ protected:
     //! \brief Handler for vectors.
     //! \tparam T Type for vector elements
     //! \param data The vector to (de-)serialize
-    template <typename T>
-    void vector(const std::vector<T>& data)
+    template <typename Vector>
+    void vector(const Vector& data)
     {
-        if constexpr (std::is_pod_v<T>) {
+        if constexpr (std::is_pod_v<typename Vector::value_type>) {
           if (m_op == Operation::PACKSIZE) {
               (*this)(data.size());
               m_packSize += m_packer.packSize(data.data(), data.size());
@@ -198,7 +198,7 @@ protected:
           } else if (m_op == Operation::UNPACK) {
               std::size_t size = 0;
               (*this)(size);
-              auto& data_mut = const_cast<std::vector<T>&>(data);
+              auto& data_mut = const_cast<Vector&>(data);
               data_mut.resize(size);
               m_packer.unpack(data_mut.data(), size, m_buffer, m_position);
           }
@@ -206,7 +206,7 @@ protected:
             if (m_op == Operation::UNPACK) {
                 std::size_t size = 0;
                 (*this)(size);
-                auto& data_mut = const_cast<std::vector<T>&>(data);
+                auto& data_mut = const_cast<Vector&>(data);
                 data_mut.resize(size);
                 std::for_each(data_mut.begin(), data_mut.end(), std::ref(*this));
             } else {
