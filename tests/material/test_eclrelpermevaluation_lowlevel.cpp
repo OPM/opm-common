@@ -61,6 +61,7 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <dune/common/fmatrix.hh>
 #include <type_traits>
 #include <cmath>
 
@@ -170,6 +171,12 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     // const auto& waterpvt = FluidSystem::waterPvt();
     // const auto& oilpvt = FluidSystem::oilPvt();
     // const auto& gaspvt = FluidSystem::gasPvt();
+    std::vector<Dune::FieldVector<double,3>> solution(nc);
+    for (unsigned elemIdx = 0; elemIdx < nc; ++elemIdx) {
+        solution[elemIdx][0] = Scalar(elemIdx) / nc * 350e5 + 100e5;
+        solution[elemIdx][1] = Scalar(elemIdx) / (nc*2);
+        solution[elemIdx][1] = (1.0- Scalar(elemIdx)) / (nc*2);
+    }
     for (unsigned step = 0; step < num_total; ++step) {
         for (unsigned elemIdx = 0; elemIdx < nc; ++elemIdx) {
             //const auto& materialParams = materialLawManager.materialLawParams(elemIdx).template getRealParams<Opm::EclMultiplexerApproach::Default>();
@@ -178,8 +185,13 @@ inline Opm::time_point::duration testAll(const char * deck_file)
 //             //const signed pvtRegionIdx = 0;
             FluidState& fluidState = intQuant[elemIdx];
             Opm::Valgrind::SetUndefined(fluidState);
-            Evaluation p = Scalar(elemIdx + nc * step) / num_total * 350e5 + 100e5;
-
+            
+            Evaluation p = 0;
+            if (std::is_same<Evaluation, Scalar>::value){
+                p = solution[elemIdx][0];                
+            }else{
+                p = Opm::MathToolbox<Evaluation>::createVariable(solution[elemIdx][0],0);//Scalar(elemIdx + nc * step) / num_total * 350e5 + 100e5;    
+            }    
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (FluidSystem::phaseIsActive(phaseIdx)) {
                     fluidState.setPressure(phaseIdx, p);
@@ -187,11 +199,19 @@ inline Opm::time_point::duration testAll(const char * deck_file)
             }
             Evaluation Sw = 0.0;
             if constexpr (true) {
-                Sw = Scalar(elemIdx + nc * step) / num_total;
+                if (std::is_same<Evaluation, Scalar>::value){
+                    Sw = solution[elemIdx][1]; 
+                }else{
+                    Sw = Opm::MathToolbox<Evaluation>::createVariable(solution[elemIdx][1],1);//Scalar(elemIdx + nc * step) / num_total;
+                }
             }
             Evaluation Sg = 0.0;
             if constexpr (true) {
-                Sg = Scalar(elemIdx + nc * step) / num_total;
+                if (std::is_same<Evaluation, Scalar>::value){
+                    Sg = solution[elemIdx][2];
+                }else{
+                    Sg = Opm::MathToolbox<Evaluation>::createVariable(solution[elemIdx][2],2);//Scalar(elemIdx + nc * step) / num_total;
+                }
             }
             Evaluation So = 1 - Sw - Sg;
 
@@ -315,8 +335,8 @@ inline Opm::time_point::duration testAll(const char * deck_file)
             // //MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
             // //MaterialLaw::relativePermeabilities(mobility, materialParams, fluidState);
             //MaterialLaw::DefaultMaterial::capillaryPressures(pC, materialParams, fluidState);
-            //MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, materialParams, fluidState);
-            MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, Swco, oilwaterparams, gasoilparams, fluidState);
+            MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, materialParams, fluidState);
+            //MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, Swco, oilwaterparams, gasoilparams, fluidState);
             // rocktabTables = eclState.getTableManager().getRocktabTables();
             // const auto& rocktabTable = rocktabTables.template getTable<RocktabTable>(regionIdx);
             // const auto& pressureColumn = rocktabTable.getPressureColumn();

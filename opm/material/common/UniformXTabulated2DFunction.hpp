@@ -393,12 +393,18 @@ public:
     {
 #ifndef NDEBUG
         if (!extrapolate && !applies(x, y)) {
-            std::ostringstream oss;
-            oss << "Attempt to get undefined table value (" << x << ", " << y << ")";
-            throw NumericalIssue(oss.str());
+            if constexpr (std::is_floating_point_v<Evaluation>) {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x) + ", " +
+                                       std::to_string(y) + ")");
+            } else {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x.value()) + ", " +
+                                       std::to_string(y.value()) + ")");
+            }
         };
 #endif
-
+    
         // bi-linear interpolation: first, calculate the x and y indices in the lookup
         // table ...
         i = xSegmentIndex(x, extrapolate);

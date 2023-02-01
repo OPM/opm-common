@@ -289,7 +289,7 @@ inline Opm::time_point::duration testAll(const char * deck_file)
             // //MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
             // //MaterialLaw::relativePermeabilities(mobility, materialParams, fluidState);
             MaterialLaw::DefaultMaterial::capillaryPressures(pC, materialParams, fluidState);
-            MaterialLaw::DefaultMaterial::relativePermeabilities(mobility, materialParams, fluidState);
+            MaterialLaw::DefaultMaterial::relativePermeabilitiesSimple(mobility, materialParams, fluidState);
             
             // rocktabTables = eclState.getTableManager().getRocktabTables();
             // const auto& rocktabTable = rocktabTables.template getTable<RocktabTable>(regionIdx);
