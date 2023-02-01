@@ -35,6 +35,10 @@
 #include <variant>
 #include <vector>
 
+#if HAVE_DUNE_COMMON
+namespace Dune { template<typename,int> class FieldVector; }
+#endif
+
 namespace Opm {
 namespace detail {
 
@@ -483,6 +487,13 @@ protected:
     struct is_array<std::array<T,N>> {
         constexpr static bool value = true;
     };
+
+#if HAVE_DUNE_COMMON
+    template<class T, int N>
+    struct is_array<Dune::FieldVector<T,N>> {
+        constexpr static bool value = true;
+    };
+#endif
 
     //! Detect existence of \c serializeOp member function
     //!
