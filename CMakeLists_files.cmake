@@ -1035,6 +1035,19 @@ if(ENABLE_ECL_INPUT)
        external/resinsight/cafPdmCore/cafAppEnum.h
        external/resinsight/cafPdmCore/cafAssert.h
        external/resinsight/cafPdmCore/cafSignal.h
+       external/resinsight/LibCore/cvfArray.inl
+       external/resinsight/LibCore/cvfCollection.inl
+       external/resinsight/LibCore/cvfFlags.inl
+       external/resinsight/LibCore/cvfMath.inl
+       external/resinsight/LibCore/cvfMatrix3.inl
+       external/resinsight/LibCore/cvfMatrix4.inl
+       external/resinsight/LibCore/cvfObject.inl
+       external/resinsight/LibCore/cvfQuat.inl
+       external/resinsight/LibCore/cvfRect.inl
+       external/resinsight/LibCore/cvfVector2.inl
+       external/resinsight/LibCore/cvfVector3.inl
+       external/resinsight/LibCore/cvfVector4.inl
+       external/resinsight/ReservoirDataModel/cvfGeometryTools.inl
        opm/io/eclipse/SummaryNode.hpp
        opm/json/JsonObject.hpp
        opm/input/eclipse/Utility/Functional.hpp
