@@ -20,11 +20,12 @@
 #ifndef OPM_SINGLENUMERICALAQUIFER_HPP
 #define OPM_SINGLENUMERICALAQUIFER_HPP
 
-#include <vector>
-#include <set>
-
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
+
+#include <set>
+#include <unordered_map>
+#include <vector>
 
 namespace Opm {
     class NNC;
