@@ -63,6 +63,25 @@ list (APPEND MAIN_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
+    external/resinsight/LibCore/cvfAssert.cpp
+    external/resinsight/LibCore/cvfAtomicCounter.cpp
+    external/resinsight/LibCore/cvfCharArray.cpp
+    external/resinsight/LibCore/cvfMath.cpp
+    external/resinsight/LibCore/cvfObject.cpp
+    external/resinsight/LibCore/cvfPlane.cpp
+    external/resinsight/LibCore/cvfString.cpp
+    external/resinsight/LibCore/cvfSystem.cpp
+    external/resinsight/LibCore/cvfVector3.cpp
+    external/resinsight/LibGeometry/cvfBoundingBox.cpp
+    external/resinsight/LibGeometry/cvfBoundingBoxTree.cpp
+    external/resinsight/LibGeometry/cvfRay.cpp
+    external/resinsight/ReservoirDataModel/cvfGeometryTools.cpp
+    external/resinsight/ReservoirDataModel/RigHexIntersectionTools.cpp
+    external/resinsight/ReservoirDataModel/RigWellLogExtractor.cpp
+    external/resinsight/ReservoirDataModel/RigWellPath.cpp
+    external/resinsight/CommonCode/cvfStructGrid.cpp
+    external/resinsight/cafPdmCore/cafSignal.cpp
+    external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
     src/opm/io/eclipse/SummaryNode.cpp
     src/opm/json/JsonObject.cpp
     src/opm/input/eclipse/Deck/Deck.cpp
@@ -191,25 +210,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestState.cpp
-    external/resinsight/LibCore/cvfAssert.cpp
-    external/resinsight/LibCore/cvfAtomicCounter.cpp
-    external/resinsight/LibCore/cvfCharArray.cpp
-    external/resinsight/LibCore/cvfMath.cpp
-    external/resinsight/LibCore/cvfObject.cpp
-    external/resinsight/LibCore/cvfPlane.cpp
-    external/resinsight/LibCore/cvfString.cpp
-    external/resinsight/LibCore/cvfSystem.cpp
-    external/resinsight/LibCore/cvfVector3.cpp
-    external/resinsight/LibGeometry/cvfBoundingBox.cpp
-    external/resinsight/LibGeometry/cvfBoundingBoxTree.cpp
-    external/resinsight/LibGeometry/cvfRay.cpp
-    external/resinsight/ReservoirDataModel/cvfGeometryTools.cpp
-    external/resinsight/ReservoirDataModel/RigHexIntersectionTools.cpp
-    external/resinsight/ReservoirDataModel/RigWellLogExtractor.cpp
-    external/resinsight/ReservoirDataModel/RigWellPath.cpp
-    external/resinsight/CommonCode/cvfStructGrid.cpp
-    external/resinsight/cafPdmCore/cafSignal.cpp
-    external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
     src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     src/opm/input/eclipse/Schedule/Well/WellTracerProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WList.cpp
@@ -954,40 +954,87 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/NullSolidEnergyLaw.hpp
 )
 
-file(GLOB RI_CORE_HEADERS
-  LIST_DIRECTORIES false
-  RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-  "/external/resinsight/LibCore/*.h")
-file(GLOB RI_GEOMETRY_HEADERS
-  LIST_DIRECTORIES false
-  RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-  "/external/resinsight/LibGeometry/*.h")
-file(GLOB RI_MODEL_HEADERS
-  LIST_DIRECTORIES false
-  RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-  "/external/resinsight/ReservoirDataModel/*.h")
-file(GLOB RI_COMMON_HEADERS
-  LIST_DIRECTORIES false
-  RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-  "/external/resinsight/CommonCode/*.h")
-file(GLOB RI_PDM_HEADERS
-  LIST_DIRECTORIES false
-  RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-  "/external/resinsight/cafPdmCore/*.h")
-file(GLOB RI_HEX_HEADERS
-  LIST_DIRECTORIES false
-  RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-  "/external/resinsight/cafHexGridIntersectionTools/*.h")
-
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
-       ${RI_CORE_HEADERS} 
-       ${RI_GEOMETRY_HEADERS}
-       ${RI_MODEL_HEADERS}
-       ${RI_COMMON_HEADERS}
-       ${RI_PDM_HEADERS}
-       ${RI_HEX_HEADERS}
-
+       external/resinsight/CommonCode/cvfStructGrid.h
+       external/resinsight/LibCore/cvfArray.h
+       external/resinsight/LibCore/cvfArrayWrapperConst.h
+       external/resinsight/LibCore/cvfArrayWrapperToEdit.h
+       external/resinsight/LibCore/cvfAssert.h
+       external/resinsight/LibCore/cvfAtomicCounter.h
+       external/resinsight/LibCore/cvfBase.h
+       external/resinsight/LibCore/cvfBase64.h
+       external/resinsight/LibCore/cvfCharArray.h
+       external/resinsight/LibCore/cvfCodeLocation.h
+       external/resinsight/LibCore/cvfCollection.h
+       external/resinsight/LibCore/cvfColor3.h
+       external/resinsight/LibCore/cvfColor4.h
+       external/resinsight/LibCore/cvfConfigCore.h
+       external/resinsight/LibCore/cvfDebugTimer.h
+       external/resinsight/LibCore/cvfFlags.h
+       external/resinsight/LibCore/cvfFunctorRange.h
+       external/resinsight/LibCore/cvfLibCore.h
+       external/resinsight/LibCore/cvfLogDestination.h
+       external/resinsight/LibCore/cvfLogDestinationConsole.h
+       external/resinsight/LibCore/cvfLogDestinationFile.h
+       external/resinsight/LibCore/cvfLogEvent.h
+       external/resinsight/LibCore/cvfLogManager.h
+       external/resinsight/LibCore/cvfLogger.h
+       external/resinsight/LibCore/cvfMath.h
+       external/resinsight/LibCore/cvfMatrix3.h
+       external/resinsight/LibCore/cvfMatrix4.h
+       external/resinsight/LibCore/cvfMutex.h
+       external/resinsight/LibCore/cvfObject.h
+       external/resinsight/LibCore/cvfPlane.h
+       external/resinsight/LibCore/cvfProgramOptions.h
+       external/resinsight/LibCore/cvfPropertySet.h
+       external/resinsight/LibCore/cvfPropertySetCollection.h
+       external/resinsight/LibCore/cvfQuat.h
+       external/resinsight/LibCore/cvfRect.h
+       external/resinsight/LibCore/cvfString.h
+       external/resinsight/LibCore/cvfSystem.h
+       external/resinsight/LibCore/cvfTBBControl.h
+       external/resinsight/LibCore/cvfTimer.h
+       external/resinsight/LibCore/cvfTrace.h
+       external/resinsight/LibCore/cvfValueArray.h
+       external/resinsight/LibCore/cvfVariant.h
+       external/resinsight/LibCore/cvfVector2.h
+       external/resinsight/LibCore/cvfVector3.h
+       external/resinsight/LibCore/cvfVector4.h
+       external/resinsight/LibCore/cvfVersion.h
+       external/resinsight/LibGeometry/cvfArrowGenerator.h
+       external/resinsight/LibGeometry/cvfBoundingBox.h
+       external/resinsight/LibGeometry/cvfBoundingBoxTree.h
+       external/resinsight/LibGeometry/cvfBoxGenerator.h
+       external/resinsight/LibGeometry/cvfEdgeKey.h
+       external/resinsight/LibGeometry/cvfFrustum.h
+       external/resinsight/LibGeometry/cvfGeometryBuilder.h
+       external/resinsight/LibGeometry/cvfGeometryBuilderFaceList.h
+       external/resinsight/LibGeometry/cvfGeometryBuilderTriangles.h
+       external/resinsight/LibGeometry/cvfGeometryUtils.h
+       external/resinsight/LibGeometry/cvfLibGeometry.h
+       external/resinsight/LibGeometry/cvfMeshEdgeExtractor.h
+       external/resinsight/LibGeometry/cvfOutlineEdgeExtractor.h
+       external/resinsight/LibGeometry/cvfPatchGenerator.h
+       external/resinsight/LibGeometry/cvfPrimitiveTests.h
+       external/resinsight/LibGeometry/cvfRay.h
+       external/resinsight/LibGeometry/cvfTriangleMeshEdgeExtractor.h
+       external/resinsight/LibGeometry/cvfTriangleVertexSplitter.h
+       external/resinsight/LibGeometry/cvfVertexCompactor.h
+       external/resinsight/LibGeometry/cvfVertexWelder.h
+       external/resinsight/ReservoirDataModel/RigCellGeometryTools.h
+       external/resinsight/ReservoirDataModel/RigEclipseCaseData.h
+       external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h
+       external/resinsight/ReservoirDataModel/RigMainGrid.h
+       external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h
+       external/resinsight/ReservoirDataModel/RigWellLogExtractor.h
+       external/resinsight/ReservoirDataModel/RigWellPath.h
+       external/resinsight/ReservoirDataModel/RigWellPathIntersectionTools.h
+       external/resinsight/ReservoirDataModel/cvfGeometryTools.h
+       external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
+       external/resinsight/cafPdmCore/cafAppEnum.h
+       external/resinsight/cafPdmCore/cafAssert.h
+       external/resinsight/cafPdmCore/cafSignal.h
        opm/io/eclipse/SummaryNode.hpp
        opm/json/JsonObject.hpp
        opm/input/eclipse/Utility/Functional.hpp
