@@ -119,23 +119,6 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     
      typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
     
-    // if (FluidSystem::numActivePhases() != 3)
-    // std::abort();
-
-    // if (!FluidSystem::enableDissolvedGas())
-    //     std::abort();
-    // if (!FluidSystem::enableVaporizedOil())
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(oilPhaseIdx) != oilCompIdx)
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(gasPhaseIdx) != gasCompIdx)
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(waterPhaseIdx) != waterCompIdx)
-    //     std::abort();
-    // if (FluidSystem::soluteComponentIndex(oilPhaseIdx) != gasCompIdx)
-    //     std::abort();
-    // if (FluidSystem::soluteComponentIndex(gasPhaseIdx) != oilCompIdx)
-    //     std::abort();
     std::vector<int> pvtnum(nc,0);
     const std::string& name("PVTNUM");
     if (eclState.fieldProps().has_int(name)){

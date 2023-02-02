@@ -122,23 +122,6 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     
      typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
     
-    // if (FluidSystem::numActivePhases() != 3)
-    // std::abort();
-
-    // if (!FluidSystem::enableDissolvedGas())
-    //     std::abort();
-    // if (!FluidSystem::enableVaporizedOil())
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(oilPhaseIdx) != oilCompIdx)
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(gasPhaseIdx) != gasCompIdx)
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(waterPhaseIdx) != waterCompIdx)
-    //     std::abort();
-    // if (FluidSystem::soluteComponentIndex(oilPhaseIdx) != gasCompIdx)
-    //     std::abort();
-    // if (FluidSystem::soluteComponentIndex(gasPhaseIdx) != oilCompIdx)
-    //     std::abort();
     std::vector<int> pvtnum(nc,0);
     const std::string& name("PVTNUM");
     if (eclState.fieldProps().has_int(name)){
@@ -200,26 +183,6 @@ inline Opm::time_point::duration testAll(const char * deck_file)
             if (FluidSystem::phaseIsActive(oilPhaseIdx))
                 fluidState.setSaturation(oilPhaseIdx, So);
 
-
-
-            // if (FluidSystem::enableDissolvedGas()) {
-            //     const Evaluation& RsSat
-            //         = FluidSystem::saturatedDissolutionFactor(fluidState, oilPhaseIdx, pvtRegionIdx);
-            //     fluidState.setRs(RsSat);
-            // }
-            // if (FluidSystem::enableVaporizedOil()) {
-            //     const Evaluation& RvSat
-            //         = FluidSystem::saturatedDissolutionFactor(fluidState, gasPhaseIdx, pvtRegionIdx);
-            //     fluidState.setRv(RvSat);
-            // }
-
-            // Evaluation SoMax = Opm::max(So, 0.5);
-            // ParamCache paramCache;
-            // paramCache.setRegionIndex(pvtRegionIdx);
-            // if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
-            //     paramCache.setMaxOilSat(SoMax);
-            // }
-            // paramCache.updateAll(fluidState);
 
             // calculate the phase densities
             Evaluation T=278;

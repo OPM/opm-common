@@ -39,6 +39,7 @@
 #include <opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
+#include <opm/material/fluidmatrixinteractions/EclDefaultMaterialExperimental.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/densead/Evaluation.hpp>
@@ -123,25 +124,8 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     // create a parameter cache
     typedef typename FluidSystem::template ParameterCache<Evaluation> ParamCache;
     
-     typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
+    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
     
-    // if (FluidSystem::numActivePhases() != 3)
-    // std::abort();
-
-    // if (!FluidSystem::enableDissolvedGas())
-    //     std::abort();
-    // if (!FluidSystem::enableVaporizedOil())
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(oilPhaseIdx) != oilCompIdx)
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(gasPhaseIdx) != gasCompIdx)
-    //     std::abort();
-    // if (FluidSystem::solventComponentIndex(waterPhaseIdx) != waterCompIdx)
-    //     std::abort();
-    // if (FluidSystem::soluteComponentIndex(oilPhaseIdx) != gasCompIdx)
-    //     std::abort();
-    // if (FluidSystem::soluteComponentIndex(gasPhaseIdx) != oilCompIdx)
-    //     std::abort();
     std::vector<int> pvtnum(nc,0);
     const std::string& name("PVTNUM");
     if (eclState.fieldProps().has_int(name)){
@@ -179,10 +163,6 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     }
     for (unsigned step = 0; step < num_total; ++step) {
         for (unsigned elemIdx = 0; elemIdx < nc; ++elemIdx) {
-            //const auto& materialParams = materialLawManager.materialLawParams(elemIdx).template getRealParams<Opm::EclMultiplexerApproach::Default>();
-//             std::array<Evaluation, numPhases> viscosity;
-//             const auto& pvtRegionIdx = pvtnum[elemIdx];
-//             //const signed pvtRegionIdx = 0;
             FluidState& fluidState = intQuant[elemIdx];
             Opm::Valgrind::SetUndefined(fluidState);
             
@@ -226,140 +206,16 @@ inline Opm::time_point::duration testAll(const char * deck_file)
 
 
 
-//             // if (FluidSystem::enableDissolvedGas()) {
-//             //     const Evaluation& RsSat
-//             //         = FluidSystem::saturatedDissolutionFactor(fluidState, oilPhaseIdx, pvtRegionIdx);
-//             //     fluidState.setRs(RsSat);
-//             // }
-//             // if (FluidSystem::enableVaporizedOil()) {
-//             //     const Evaluation& RvSat
-//             //         = FluidSystem::saturatedDissolutionFactor(fluidState, gasPhaseIdx, pvtRegionIdx);
-//             //     fluidState.setRv(RvSat);
-//             // }
-
-//             // Evaluation SoMax = Opm::max(So, 0.5);
-//             // ParamCache paramCache;
-//             // paramCache.setRegionIndex(pvtRegionIdx);
-//             // if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
-//             //     paramCache.setMaxOilSat(SoMax);
-//             // }
-//             // paramCache.updateAll(fluidState);
-
-//             // calculate the phase densities
-//             Evaluation T=278;
-//             Evaluation rho;
-//             if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
-//                 //const auto& waterpvt = FluidSystem::waterPvt();
-//                 //Evaluation salt= 0.0;
-//                 //Evaluation b = waterpvt.saturatedInverseFormationVolumeFactor(pvtRegionIdx, T, p, salt);//, Rsw, saltConcentration);
-//                 //Evaluation mu = waterpvt.saturatedViscosity(pvtRegionIdx, T, p,salt);
-//                 Evaluation b;
-//                 Evaluation mu;
-//                 waterpvt.inverseBAndMu(b,mu,pvtRegionIdx, p);
-//                 fluidState.setInvB(waterPhaseIdx, b);
-//                 viscosity[waterPhaseIdx] = mu;
-//             }
-//             if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
-// //                if (FluidSystem::enableVaporizedOil()) {
-//                 size_t segIdx = gaspvt.saturatedOilVaporizationFactorTable()[pvtRegionIdx].findSegmentIndex_(p,/*extrapolate=*/true);
-//                 const Evaluation& RvSat = gaspvt.saturatedOilVaporizationFactorTable()[pvtRegionIdx].eval(p, segIdx);
-//                 fluidState.setRv(RvSat);
-// //                }
-//                 //size_t segIdx = gaspvt.inverseSaturatedGasB()[pvtRegionIdx].findSegmentIndex_(p,/*extrapolate=*/true);
-//                 Evaluation b  =gaspvt.inverseSaturatedGasB()[pvtRegionIdx].eval(p, segIdx);
-//                 const Evaluation& invBMu = gaspvt.inverseSaturatedGasBMu()[pvtRegionIdx].eval(p, segIdx);
-//                 Evaluation mu = b/invBMu;
-//                 viscosity[oilPhaseIdx] =mu;          
-//                 fluidState.setInvB(gasPhaseIdx, b);
-//             }
-//             if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
-//                 //if (FluidSystem::enableDissolvedGas()) {
-//                 // const Evaluation& RsSat
-//                 //     = FluidSystem::saturatedDissolutionFactor(fluidState, oilPhaseIdx, pvtRegionIdx);
-//                 size_t segIdx = oilpvt.saturatedGasDissolutionFactorTable()[pvtRegionIdx].findSegmentIndex_(p,/*extrapolate=*/true);
-//                 const Evaluation& RsSat = oilpvt.saturatedGasDissolutionFactorTable()[pvtRegionIdx].eval(p, segIdx);
-//                 fluidState.setRs(RsSat);
-//                 //}
-                
-//                 Evaluation b  =oilpvt.inverseSaturatedOilBTable()[pvtRegionIdx].eval(p, segIdx);
-//                 Evaluation invBMu = oilpvt.inverseSaturatedOilBMuTable()[pvtRegionIdx].eval(p,segIdx);
-//                 Evaluation mu = b/invBMu;
-//                 viscosity[oilPhaseIdx] =mu;          
-//                 fluidState.setInvB(oilPhaseIdx, b);
-//             }
-            
-//             if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
-//                 rho = fluidState.invB(waterPhaseIdx);
-//                 rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-//                 if (FluidSystem::enableDissolvedGasInWater()) {
-//                     rho += fluidState.invB(waterPhaseIdx) * fluidState.Rsw()
-//                         * FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
-//                 }
-//                 fluidState.setDensity(waterPhaseIdx, rho);
-//             }
-            
-//             if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
-//                 rho = fluidState.invB(gasPhaseIdx);
-//                 rho *= FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
-//                 if (FluidSystem::enableVaporizedOil()) {
-//                     rho += fluidState.invB(gasPhaseIdx) * fluidState.Rv()
-//                         * FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
-//                 }
-//                 if (FluidSystem::enableVaporizedWater()) {
-//                     rho += fluidState.invB(gasPhaseIdx) * fluidState.Rvw()
-//                         * FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-//                 }
-//                 fluidState.setDensity(gasPhaseIdx, rho);
-//             }
-
-//             if (FluidSystem::phaseIsActive(oilPhaseIdx)) {                
-//                 rho = fluidState.invB(oilPhaseIdx);
-//                 rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
-//                 if (FluidSystem::enableDissolvedGas()) {
-//                     rho += fluidState.invB(oilPhaseIdx) * fluidState.Rs()
-//                         * FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
-//                 }
-//                 fluidState.setDensity(oilPhaseIdx, rho);
-//             }
 
             std::array<Evaluation, numPhases> mobility;
-            // for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            //     if (FluidSystem::phaseIsActive(phaseIdx)) {
-            //         // const Evaluation mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-            //         const Evaluation mu = FluidSystem::viscosity(fluidState, phaseIdx, pvtRegionIdx);
-            //         mobility[phaseIdx] = mu;
-            //     }
-            // }
 
             std::array<Evaluation, numPhases> pC;
-            // //MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
-            // //MaterialLaw::relativePermeabilities(mobility, materialParams, fluidState);
+            // MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+            // MaterialLaw::relativePermeabilities(mobility, materialParams, fluidState);
             //MaterialLaw::DefaultMaterial::capillaryPressures(pC, materialParams, fluidState);
-            MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, materialParams, fluidState);
+            //MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, materialParams, fluidState);
             //MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, Swco, oilwaterparams, gasoilparams, fluidState);
-            // rocktabTables = eclState.getTableManager().getRocktabTables();
-            // const auto& rocktabTable = rocktabTables.template getTable<RocktabTable>(regionIdx);
-            // const auto& pressureColumn = rocktabTable.getPressureColumn();
-            // const auto& poroColumn = rocktabTable.getPoreVolumeMultiplierColumn();
-            // const auto& transColumn = rocktabTable.getTransmissibilityMultiplierColumn();
-           
-            // Evaluation porosity_;
-            // Evaluation rockCompTransMultiplier_;
-            // Scalar rockCompressibility = problem.rockCompressibility(globalSpaceIdx);
-            // if (rockCompressibility > 0.0) {
-            //     Scalar rockRefPressure = problem.rockReferencePressure(globalSpaceIdx);
-            //     Evaluation x;
-            //     if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
-            //         x = rockCompressibility*(fluidState_.pressure(oilPhaseIdx) - rockRefPressure);
-            //     } else if (FluidSystem::phaseIsActive(waterPhaseIdx)){
-            //         x = rockCompressibility*(fluidState_.pressure(waterPhaseIdx) - rockRefPressure);
-            //     } else {
-            //         x = rockCompressibility*(fluidState_.pressure(gasPhaseIdx) - rockRefPressure);
-            //     }
-            //     porosity_ *= 1.0 + x + 0.5*x*x;
-            // }
-            // porosity_ *= problem.template rockCompPoroMultiplier<Evaluation>(*this, globalSpaceIdx);
-            // rockCompTransMultiplier_ = problem.template rockCompTransMultiplier<Evaluation>(*this, globalSpaceIdx);
+            Opm::EclDefaultMaterialExperimental<MaterialLaw::DefaultMaterial>::relativePermeabilitiesNew(mobility, Swco, oilwaterparams, gasoilparams, fluidState);
         }
     }
     Opm::time_point::duration total_time = Opm::TimeService::now() - start;
