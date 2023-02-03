@@ -1009,6 +1009,59 @@ BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
     BOOST_CHECK(!res3["I2"].defined());
 }
 
+BOOST_AUTO_TEST_CASE(UDQASSIGN_NUMBERED_ITEMS_TEST) {
+    using Vsz = std::vector<std::size_t>;
+
+    const auto selector = UDQSet::EnumeratedWellItems {
+        "PROD01", Vsz { 1, 3, 5, 7 }
+    };
+
+    const auto as = UDQAssign {
+        "SUVTRIG", std::vector { selector }, 0.123, 42
+    };
+
+    const auto segments = std::vector {
+        UDQSet::EnumeratedWellItems { "PROD01", Vsz { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, } },
+        UDQSet::EnumeratedWellItems { "PROD02", Vsz { 1, 2, 3, 4, 5, } },
+        UDQSet::EnumeratedWellItems { "PROD06", Vsz { 2, 4, 6, 8, 10, } },
+        UDQSet::EnumeratedWellItems { "I-45", Vsz { 1, 2, 3, } },
+    };
+
+    const auto us = as.eval(segments);
+
+    BOOST_CHECK_EQUAL(us.size(), std::size_t{23});
+    BOOST_CHECK_CLOSE(us("PROD01", 1).get(), 0.123, 1.0e-8);
+    BOOST_CHECK_MESSAGE(!us("PROD01", 2).defined(), R"(SUVTRIG("PROD01", 2) must not be defined)");
+    BOOST_CHECK_CLOSE(us("PROD01", 3).get(), 0.123, 1.0e-8);
+    BOOST_CHECK_MESSAGE(!us("PROD01", 4).defined(), R"(SUVTRIG("PROD01", 4) must not be defined)");
+    BOOST_CHECK_CLOSE(us("PROD01", 5).get(), 0.123, 1.0e-8);
+    BOOST_CHECK_MESSAGE(!us("PROD01", 6).defined(), R"(SUVTRIG("PROD01", 6) must not be defined)");
+    BOOST_CHECK_CLOSE(us("PROD01", 7).get(), 0.123, 1.0e-8);
+    BOOST_CHECK_MESSAGE(!us("PROD01",  8).defined(), R"(SUVTRIG("PROD01", 8) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD01",  9).defined(), R"(SUVTRIG("PROD01", 9) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD01", 10).defined(), R"(SUVTRIG("PROD01", 10) must not be defined)");
+
+    BOOST_CHECK_MESSAGE(!us("PROD02", 1).defined(), R"(SUVTRIG("PROD02", 1) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD02", 2).defined(), R"(SUVTRIG("PROD02", 2) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD02", 3).defined(), R"(SUVTRIG("PROD02", 3) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD02", 4).defined(), R"(SUVTRIG("PROD02", 4) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD02", 5).defined(), R"(SUVTRIG("PROD02", 5) must not be defined)");
+
+    BOOST_CHECK_MESSAGE(!us("PROD06",  2).defined(), R"(SUVTRIG("PROD06", 2) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD06",  4).defined(), R"(SUVTRIG("PROD06", 4) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD06",  6).defined(), R"(SUVTRIG("PROD06", 6) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD06",  8).defined(), R"(SUVTRIG("PROD06", 8) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("PROD06", 10).defined(), R"(SUVTRIG("PROD06", 10) must not be defined)");
+
+    BOOST_CHECK_THROW(!us("PROD06", 3).defined(), std::out_of_range);
+
+    BOOST_CHECK_MESSAGE(!us("I-45", 1).defined(), R"(SUVTRIG("I-45", 1) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("I-45", 2).defined(), R"(SUVTRIG("I-45", 2) must not be defined)");
+    BOOST_CHECK_MESSAGE(!us("I-45", 3).defined(), R"(SUVTRIG("I-45", 3) must not be defined)");
+
+    BOOST_CHECK_THROW(!us("Hello", 42).defined(), std::out_of_range);
+}
+
 BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     KeywordLocation location;
     UDQFunctionTable udqft;

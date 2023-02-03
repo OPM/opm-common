@@ -185,6 +185,16 @@ public:
     struct EnumeratedWellItems {
         std::string well{};
         std::vector<std::size_t> numbers{};
+
+        bool operator==(const EnumeratedWellItems& rhs) const;
+        static EnumeratedWellItems serializationTestObject();
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->well);
+            serializer(this->numbers);
+        }
     };
 
     /// Construct empty, named UDQ set of specific variable type
