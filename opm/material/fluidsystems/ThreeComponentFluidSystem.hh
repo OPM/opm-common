@@ -196,6 +196,7 @@ namespace Opm {
             // Use LBC method to calculate viscosity
             LhsEval mu;
             mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx); 
+            return mu;
 
         }
 

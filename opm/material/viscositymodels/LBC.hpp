@@ -49,33 +49,36 @@ public:
                       unsigned phaseIdx)
     {
         const Scalar MPa_atm = 0.101325;
-        const Scalar R = 8.3144598e-3;//Mj/kmol*K
+        const Scalar R = Opm::Constants<Scalar>::R;
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
-        const auto& rho = Opm::decay<LhsEval>(fluidState.density(phaseIdx));
+        const auto& P = Opm::decay<LhsEval>(fluidState.pressure(phaseIdx));
+        const auto& Z = Opm::decay<LhsEval>(fluidState.compressFactor(phaseIdx));
 
         LhsEval sumMm = 0.0;
         LhsEval sumVolume = 0.0;
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa;
+            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa => pa;
             const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol;
+            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol => kg/mol;
             const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            const Scalar v_c = FluidSystem::criticalVolume(compIdx);  // in m3/kmol
+            const Scalar v_c = FluidSystem::criticalVolume(compIdx) / 1000;  // in m3/kmol => m3/mol
             sumMm += x*Mm;
             sumVolume += x*v_c;
         }
 
-        LhsEval rho_pc = sumMm/sumVolume; //mixture pseudocritical density
-        LhsEval rho_r = rho/rho_pc;
+        LhsEval rho_pc = 1.0 / sumVolume;
+        LhsEval V = (R * T * Z)/P;
+        LhsEval rho = 1.0 / V;
+        LhsEval rho_r = rho / rho_pc;
 
 
         LhsEval xsum_T_c = 0.0; //mixture pseudocritical temperature
         LhsEval xsum_Mm = 0.0; //mixture molar mass
         LhsEval xsum_p_ca = 0.0;  //mixture pseudocritical pressure
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa;
+            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa => pa;
             const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol;
+            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol => kg/mol;
             const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
             Scalar p_ca = p_c / MPa_atm;
             xsum_T_c += x*T_c;
@@ -87,9 +90,9 @@ public:
         LhsEval my0 = 0.0;
         LhsEval sumxrM = 0.0;
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa;
+            const Scalar& p_c = FluidSystem::criticalPressure(compIdx)/1e6; // in Mpa => pa;
             const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol;
+            const Scalar Mm = FluidSystem::molarMass(compIdx) * 1000; //in kg/kmol => kg/mol;
             const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
             Scalar p_ca = p_c / MPa_atm;
             Scalar zeta = std::pow(T_c / (std::pow(Mm,3.0) * std::pow(p_ca,4.0)),1./6);

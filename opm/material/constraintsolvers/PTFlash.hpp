@@ -248,7 +248,7 @@ protected:
         
         // If temperature is below estimated critical temperature --> phase = liquid; else vapor
         typename Vector::field_type L;
-        if (T < Tc_est) {
+        if (T >= Tc_est) { //TODO
             // Liquid
             L = 1.0;
 

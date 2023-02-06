@@ -34,13 +34,12 @@
 
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
 #include <opm/material/viscositymodels/LBC.hpp>
-//#include <opm/material/viscositymodels/LBC.hpp>
 
 namespace Opm {
 /*!
  * \ingroup FluidSystem
  *
- * \brief A two phase two component system, co2 brine
+ * \brief A two phase two component system with components co2 brine
  */
 
     template<class Scalar>
@@ -64,7 +63,6 @@ namespace Opm {
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, Co2BrineFluidSystem<Scalar>>;
         using ViscosityModel = typename Opm::ViscosityModels<Scalar, Co2BrineFluidSystem<Scalar>>;
-        //using ViscosityModel = typename Opm::ViscosityModels<Scalar, Co2BrineFluidSystem<Scalar>>;
 
         using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, Co2BrineFluidSystem<Scalar>>;
 

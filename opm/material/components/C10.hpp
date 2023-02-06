@@ -75,9 +75,9 @@ public:
     { return 2.10e6; /* [N/m^2] */ }
 
     /*!
-     * \brief Critical volume of \f$C_10\f$ [m2/kmol].
+     * \brief Critical volume of \f$C_10\f$ [m3/kmol].
      */
-    static Scalar criticalVolume() {return 6.098e-4; }
+    static Scalar criticalVolume() {return 6.098e-1; }
 
     /*!
      * \brief Acentric factor of \f$C_10\f$.
