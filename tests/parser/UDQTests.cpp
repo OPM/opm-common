@@ -1,14 +1,18 @@
 /*
-Copyright 2018 Statoil ASA.
+  Copyright 2018 Statoil ASA.
+
   This file is part of the Open Porous Media project (OPM).
+
   OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
+
   OPM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
+
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -91,7 +95,6 @@ BOOST_AUTO_TEST_CASE(TYPE_COERCION) {
     BOOST_CHECK_THROW( UDQ::coerce(UDQVarType::GROUP_VAR, UDQVarType::WELL_VAR), std::logic_error );
     BOOST_CHECK_THROW( UDQ::coerce(UDQVarType::WELL_VAR, UDQVarType::GROUP_VAR), std::logic_error );
 }
-
 
 BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
 {
@@ -178,18 +181,13 @@ BOOST_AUTO_TEST_CASE(TEST)
     BOOST_CHECK_EQUAL( res4["P1"].get(), 1.00 );
     BOOST_CHECK_EQUAL( res4["P2"].get(), 1.00 );
 
-    /*
-      This expression has a well set as target type, and involves group with
-      wildcard that is not supported by flow.
-    */
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2",0, location, {"GOPR", "G*", "*", "2.0"}), OpmInputError);
+    // This expression has a well set as target type, and involves group
+    // with wildcard that is not supported by flow.
+    BOOST_CHECK_THROW( UDQDefine(udqp, "GUPR2",0, location, {"GOPR", "G*", "*", "2.0"}), OpmInputError);
 
-    /*
-      UDQVarType == BLOCK is not yet supported.
-    */
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2",0, location, {"BPR", "1","1", "1", "*", "2.0"}), OpmInputError);
+    // UDQVarType == BLOCK is not yet supported.
+    BOOST_CHECK_THROW( UDQDefine(udqp, "BUPR2",0, location, {"BPR", "1","1", "1", "*", "2.0"}), std::invalid_argument);
 }
-
 
 BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQFunctionTable udqft;
@@ -207,14 +205,11 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     BOOST_CHECK_EQUAL( res_add["P1"].get() , 2);
 }
 
-
 BOOST_AUTO_TEST_CASE(UDQ_TABLE_EXCEPTION) {
     UDQParams udqp;
     KeywordLocation location;
     BOOST_CHECK_THROW(UDQDefine(udqp, "WU",0, location, {"TUPRICE[WOPR]"}), std::invalid_argument);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     std::vector<std::string> wells = {"P1", "P2", "P3", "P4"};
@@ -231,13 +226,14 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     st.update_well_var("P3", "WOPR", 3.0);
     st.update_well_var("P4", "WOPR", 4.0);
 
-    /*{
+#if 0
+    {
         UDQDefine def_fxxx(udqp, "FU_SCALAR", {"123"});
         auto fxxx_res = def_fxxx.eval(context);
         BOOST_CHECK_EQUAL( fxxx_res[0].get(), 123.0 );
         BOOST_CHECK( fxxx_res.var_type() == UDQVarType::FIELD_VAR);
     }
-    */
+#endif
 
     {
         UDQDefine def_fopr(udqp, "FUOPR",0, location, {"SUM", "(", "WOPR", ")"});
@@ -265,7 +261,6 @@ BOOST_AUTO_TEST_CASE(UDQWellSetNANTest) {
     BOOST_CHECK(ws.has("P1"));
     BOOST_CHECK(ws.has("P2"));
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
@@ -310,7 +305,6 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     BOOST_CHECK_EQUAL(empty.size() , 0U);
 }
 
-
 BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
     std::vector<std::string> groups = {"G1", "G2", "G3", "G4"};
     UDQSet gs = UDQSet::groups("NAME", groups);
@@ -339,8 +333,6 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
         BOOST_CHECK_EQUAL(res[0].get(), 10.0);
     }
 }
-
-
 
 BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     UDQParams udqp;
@@ -404,10 +396,6 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     }
 }
 
-
-
-
-
 BOOST_AUTO_TEST_CASE(KEYWORDS) {
     const std::string input = R"(
 RUNSPEC
@@ -435,7 +423,6 @@ UDQPARAM
     BOOST_CHECK( r1 != r2 );
 }
 
-
 BOOST_AUTO_TEST_CASE(ENUM_CONVERSION) {
     BOOST_CHECK_THROW(UDQ::varType("WWCT"), std::invalid_argument);
     BOOST_CHECK_THROW(UDQ::varType("XUCT"), std::invalid_argument);
@@ -461,7 +448,6 @@ BOOST_AUTO_TEST_CASE(ENUM_CONVERSION) {
     BOOST_CHECK(UDQ::actionType("UNITS") == UDQAction::UNITS );
     BOOST_CHECK(UDQ::actionType("ASSIGN") == UDQAction::ASSIGN );
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_KEWYORDS) {
     const std::string input = R"(
@@ -544,10 +530,6 @@ UDQ
   BOOST_CHECK_THROW( make_schedule(input), std::exception);
 }
 
-
-
-
-
 BOOST_AUTO_TEST_CASE(UDQ_DEFINE_WITH_SLASH) {
     const std::string input = R"(
 UDQ
@@ -564,7 +546,6 @@ UDQ
     BOOST_CHECK_EQUAL_COLLECTIONS(data.begin(), data.end(),
                                   exp.begin(), exp.end());
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_DATA) {
     const std::string input = R"(
@@ -670,7 +651,6 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
         }
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
     UDQFunctionTable udqft;
@@ -820,7 +800,6 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS2) {
     UDQFunctionTable udqft;
     auto arg1 = UDQSet::scalar("NAME", 0);
@@ -829,7 +808,6 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS2) {
     auto eq = UDQBinaryFunction::EQ(0, arg1, arg2);
     BOOST_CHECK_EQUAL(eq[0].get(), 1);
 }
-
 
 BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
     UDQFunctionTable udqft;
@@ -938,7 +916,6 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(UNION_FUNCTIONS) {
     UDQFunctionTable udqft;
     UDQSet arg1("NAME", 5);
@@ -957,9 +934,6 @@ BOOST_AUTO_TEST_CASE(UNION_FUNCTIONS) {
     BOOST_CHECK_EQUAL( 2, result[2].get() );
     BOOST_CHECK_EQUAL( 3, result[3].get() );
 }
-
-
-
 
 BOOST_AUTO_TEST_CASE(FUNCTIONS_INVALID_ARGUMENT) {
     UDQSet arg("NAME",3);
@@ -982,8 +956,6 @@ BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
     BOOST_CHECK_EQUAL( result[2].get(), 5);
     BOOST_CHECK_EQUAL( result[4].get(), 2);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
     UDQAssign as1("WUPR", std::vector<std::string>{}, 1.0, 1);
@@ -1111,11 +1083,12 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     BOOST_CHECK_EQUAL( res_cmp["P2"].get() , 0.0);
 }
 
-/*BOOST_AUTO_TEST_CASE(UDQPARSE_ERROR) {
+#if 0
+BOOST_AUTO_TEST_CASE(UDQPARSE_ERROR) {
     setUDQFunctionTable udqft;
     UDQDefine def1(udqft, "WUBHP", {"WWCT", "+"});
 }
-*/
+#endif
 
 BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     KeywordLocation location;
@@ -1231,8 +1204,6 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     BOOST_CHECK( st.has_well_var("OP4", "WUPR3"));
 }
 
-
-
 BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     KeywordLocation location;
     UDQParams udqp;
@@ -1257,8 +1228,6 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     BOOST_CHECK_EQUAL(res_sort["OPL01"].get(), 2.0);
     BOOST_CHECK_EQUAL(res_sort["OPU01"].get() + res_sort["OPU02"].get(), 7.0);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQParams udqp;
@@ -1347,7 +1316,6 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     for (std::size_t index = 0; index < res.size(); index++)
         BOOST_CHECK( res[index].get() == (300 - 150)*0.90);
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
     KeywordLocation location;
@@ -1438,9 +1406,6 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
     BOOST_CHECK_THROW( UDQDefine(udqp, "FUBHP",0, location, tokens1, parseContext, errors), OpmInputError);
 }
 
-
-
-
 BOOST_AUTO_TEST_CASE(UDA_VALUE) {
     UDAValue value0;
     BOOST_CHECK(value0.is<double>());
@@ -1473,10 +1438,7 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE) {
     BOOST_CHECK_THROW( value2 *= 10, std::exception );
 }
 
-
-/*
-  The unit/dimension handling in the UDAvalue is hacky at best.
-*/
+// The unit/dimension handling in the UDAvalue is hacky at best.
 
 BOOST_AUTO_TEST_CASE(UDA_VALUE_DIM) {
     UDAValue value0(1);
@@ -1488,7 +1450,6 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE_DIM) {
     BOOST_CHECK_EQUAL( value1.get<double>(), 1);
     BOOST_CHECK_EQUAL( value1.getSI(), 10);
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_INPUT_BASIC) {
     std::string deck_string = R"(
@@ -1542,7 +1503,6 @@ UDQ
     BOOST_CHECK( wubhp1.is<UDQAssign>() );
 }
 
-
 BOOST_AUTO_TEST_CASE(UDQ_INPUT_OVERWRITE) {
     std::string deck_string = R"(
 SCHEDULE
@@ -1579,7 +1539,6 @@ UDQ
     const auto& def2 = fuopr.get<UDQDefine>();
     BOOST_CHECK_EQUAL(def2.input_string(), "MAX(WOPR)");
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     UDQActive usage;
@@ -1731,7 +1690,8 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
 }
 
 namespace {
-    Schedule make_udq_schedule(const std::string& schedule_string) {
+    Schedule make_udq_schedule(const std::string& schedule_string)
+    {
 #include "data/integration_tests/udq2.data"
         deck_string += schedule_string;
         return make_schedule(deck_string);
@@ -1868,7 +1828,6 @@ WCONPROD
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(UDQ_SCIENTIFIC_LITERAL) {
     std::string deck_string = R"(
 SCHEDULE
@@ -1889,7 +1848,6 @@ UDQ
     auto res0 = def0.eval(context);
     BOOST_CHECK_CLOSE( res0[0].get(), -0.00125*3, 1e-6);
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_NEGATIVE_PREFIX_BASIC) {
     std::string deck_string = R"(
@@ -1973,7 +1931,6 @@ UDQ
     BOOST_CHECK_EQUAL( res1["W3"].get(), 0);
 }
 
-
 BOOST_AUTO_TEST_CASE(UDQ_UADD_PARSER) {
     std::string deck_string = R"(
 SCHEDULE
@@ -2001,7 +1958,6 @@ UDQ
     BOOST_CHECK_EQUAL( st.get("FU_UMUL"), 50);   // 10 * (2 + 3)
     BOOST_CHECK_EQUAL( st.get("FU_UMIN"), 5);    // min(10, 2+3)
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_DEFINE_ORDER) {
     std::string deck_string = R"(
@@ -2043,9 +1999,6 @@ DEFINE FU_PAR3 FU_PAR2 + 1/
     BOOST_CHECK_EQUAL(st.get("FU_PAR3"), undefined_value);
 }
 
-
-
-
 BOOST_AUTO_TEST_CASE(UDQSTATE) {
     double undefined_value = 1234;
     UDQState st(undefined_value);
@@ -2083,8 +2036,6 @@ BOOST_AUTO_TEST_CASE(UDQSTATE) {
     BOOST_CHECK_EQUAL(st.get_well_var("P1", "WUPR"), 75);
     BOOST_CHECK_EQUAL(st.get_well_var("P2", "WUPR"), undefined_value);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(UDQ_UADD_PARSER2) {
     std::string deck_string = R"(
@@ -2166,7 +2117,6 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
         BOOST_CHECK_EQUAL( required_keys.count("FMWIA"), 1);
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_UNDEFINED) {
     std::string deck_string = R"(
@@ -2360,8 +2310,6 @@ DEFINE FU_VAR91 GOPR TEST  /
     udq.eval(0, {}, st, udq_state);
 }
 
-
-
 BOOST_AUTO_TEST_CASE(UDQ_KEY_ERROR) {
     std::string deck_string = R"(
 -- udq #2
@@ -2380,7 +2328,6 @@ UDQ
 
     BOOST_CHECK_THROW(udq.eval(0, {}, st, udq_state), std::exception);
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
     std::string deck_string = R"(
@@ -2478,7 +2425,6 @@ TSTEP
     BOOST_CHECK( unique[2].second == schedule.getUDQConfig(10));
 }
 
-
 BOOST_AUTO_TEST_CASE(UDQ_DIV_TEST) {
     KeywordLocation location;
     UDQFunctionTable udqft;
@@ -2491,7 +2437,6 @@ BOOST_AUTO_TEST_CASE(UDQ_DIV_TEST) {
     auto res_div = def_div.eval(context);
     BOOST_CHECK_EQUAL( res_div[0].get() , 2.0);
 }
-
 
 BOOST_AUTO_TEST_CASE(UDQ_LEADING_SIGN) {
     std::string deck_string = R"(
@@ -2745,8 +2690,6 @@ UDQ
 
     BOOST_CHECK_NO_THROW( make_schedule(valid) );
 }
-
-
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_RST) {
     std::unordered_set<std::string> selector{"W1", "W2"};

@@ -111,6 +111,10 @@ private:
     std::size_t m_report_step;
     UDQUpdate m_update_status;
     mutable std::optional<std::string> string_data;
+
+    UDQSet scatter_scalar_value(UDQSet&& res, const UDQContext& context) const;
+    UDQSet scatter_scalar_well_value(const UDQContext& context, const std::optional<double>& value) const;
+    UDQSet scatter_scalar_group_value(const UDQContext& context, const std::optional<double>& value) const;
 };
 
 } // Namespace Opm

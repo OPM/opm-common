@@ -76,58 +76,6 @@ std::vector<std::string> quote_split(const std::string& item)
     return items;
 }
 
-std::vector<Opm::UDQToken>
-make_tokens(const std::vector<std::string>& string_tokens)
-{
-    if (string_tokens.empty()) {
-        return {};
-    }
-
-    std::vector<Opm::UDQToken> tokens;
-    std::size_t token_index = 0;
-    while (true) {
-        const auto& string_token = string_tokens[token_index];
-        auto token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
-        token_index += 1;
-
-        if (token_type == Opm::UDQTokenType::ecl_expr) {
-            std::vector<std::string> selector;
-            while (true) {
-                if (token_index == string_tokens.size()) {
-                    break;
-                }
-
-                auto next_type = Opm::UDQ::tokenType(string_tokens[token_index]);
-                if (next_type == Opm::UDQTokenType::ecl_expr) {
-                    const auto& select_token = string_tokens[token_index];
-                    if (Opm::RawConsts::is_quote()(select_token[0])) {
-                        selector.push_back(select_token.substr(1, select_token.size() - 2));
-                    }
-                    else {
-                        selector.push_back(select_token);
-                    }
-
-                    token_index += 1;
-                }
-                else {
-                    break;
-                }
-            }
-
-            tokens.emplace_back(string_token, selector);
-        }
-        else {
-            tokens.emplace_back(string_token, token_type);
-        }
-
-        if (token_index == string_tokens.size()) {
-            break;
-        }
-    }
-
-    return tokens;
-}
-
 std::string
 next_token(const std::string&              item,
            std::size_t&                    offset,
@@ -164,6 +112,91 @@ next_token(const std::string&              item,
     offset += token.size();
 
     return Opm::trim_copy(token);
+}
+
+std::vector<std::string>
+normalize_string_tokens(const std::vector<std::string>& deck_data)
+{
+    auto string_tokens = std::vector<std::string>{};
+
+    const auto splitters = std::vector<std::string> {
+        " ", "TU*[]", "(", ")", "[", "]", ",",
+        "+", "-", "/", "*",
+        "==", "!=", "^", ">=", "<=", ">", "<",
+    };
+
+    for (const auto& deck_item : deck_data) {
+        for (const auto& item : quote_split(deck_item)) {
+            if (Opm::RawConsts::is_quote{}(item[0])) {
+                string_tokens.push_back(item);
+                continue;
+            }
+
+            std::size_t offset = 0;
+            while (offset < item.size()) {
+                auto token = next_token(item, offset, splitters);
+                if (!token.empty()) {
+                    string_tokens.push_back(std::move(token));
+                }
+            }
+        }
+    }
+
+    return string_tokens;
+}
+
+std::vector<Opm::UDQToken>
+make_udq_tokens(const std::vector<std::string>& string_tokens)
+{
+    if (string_tokens.empty()) {
+        return {};
+    }
+
+    std::vector<Opm::UDQToken> tokens;
+    std::size_t token_index = 0;
+    while (true) {
+        const auto& string_token = string_tokens[token_index];
+        const auto token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
+        token_index += 1;
+
+        if (token_type == Opm::UDQTokenType::ecl_expr) {
+            std::vector<std::string> selector;
+            while (true) {
+                if (token_index == string_tokens.size()) {
+                    break;
+                }
+
+                if (auto next_token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
+                    (next_token_type == Opm::UDQTokenType::ecl_expr) ||
+                    (next_token_type == Opm::UDQTokenType::number))
+                {
+                    const auto& select_token = string_tokens[token_index];
+                    if (Opm::RawConsts::is_quote()(select_token[0])) {
+                        selector.push_back(select_token.substr(1, select_token.size() - 2));
+                    }
+                    else {
+                        selector.push_back(select_token);
+                    }
+
+                    token_index += 1;
+                }
+                else {
+                    break;
+                }
+            }
+
+            tokens.emplace_back(string_token, selector);
+        }
+        else {
+            tokens.emplace_back(string_token, token_type);
+        }
+
+        if (token_index == string_tokens.size()) {
+            break;
+        }
+    }
+
+    return tokens;
 }
 
 // This function unconditionally returns true and is therefore not a real
@@ -203,7 +236,6 @@ UDQDefine::UDQDefine(const UDQParams&                udq_params_arg,
     : UDQDefine(udq_params_arg, keyword, report_step, location, deck_data, parseContext, errors)
 {}
 
-
 UDQDefine::UDQDefine(const UDQParams&                udq_params_arg,
                      const std::string&              keyword,
                      const std::size_t               report_step,
@@ -220,37 +252,12 @@ UDQDefine::UDQDefine(const UDQParams&                udq_params,
                      const ParseContext&             parseContext,
                      ErrorGuard&                     errors)
     : m_keyword      (keyword)
+    , m_tokens       (make_udq_tokens(normalize_string_tokens(deck_data)))
     , m_var_type     (UDQ::varType(keyword))
     , m_location     (location)
     , m_report_step  (report_step)
     , m_update_status(UDQUpdate::ON)
 {
-    const auto splitters = std::vector<std::string> {
-        " ", "TU*[]", "(", ")", "[", "]", ",",
-        "+", "-", "/", "*",
-        "==", "!=", "^", ">=", "<=", ">", "<",
-    };
-
-    auto string_tokens = std::vector<std::string>{};
-    for (const std::string& deck_item : deck_data) {
-        for (const std::string& item : quote_split(deck_item)) {
-            if (RawConsts::is_quote()(item[0])) {
-                string_tokens.push_back(item);
-                continue;
-            }
-
-            std::size_t offset = 0;
-            while (offset < item.size()) {
-                auto token = next_token(item, offset, splitters);
-                if (!token.empty()) {
-                    string_tokens.push_back(std::move(token));
-                }
-            }
-        }
-    }
-
-    this->m_tokens = make_tokens(string_tokens);
-
     this->ast = std::make_shared<UDQASTNode>
         (UDQParser::parse(udq_params,
                           this->m_var_type,
@@ -295,7 +302,8 @@ UDQSet UDQDefine::eval(const UDQContext& context) const
 
         if (!dynamic_type_check(this->var_type(), res->var_type())) {
             throw std::invalid_argument {
-                "Invalid runtime type conversion detected when evaluating UDQ"
+                "Invalid runtime type conversion "
+                "detected when evaluating UDQ " + this->m_keyword
             };
         }
     }
@@ -316,45 +324,10 @@ UDQSet UDQDefine::eval(const UDQContext& context) const
     }
 
     if (res->var_type() == UDQVarType::SCALAR) {
-        // If the right hand side evaluates to a scalar that scalar value
-        // should be set for all wells in the wellset:
-        //
-        //   UDQ
-        //     DEFINE WUINJ1  SUM(WOPR) * 1.25 /
-        //     DEFINE WUINJ2  WOPR OP1  * 5.0 /
-        //   /
-        //
-        // Both the expressions "SUM(WOPR)" and "WOPR OP1" evaluate to a
-        // scalar, this should then be copied all wells, so that
-        // WUINJ1:$WELL should evaulate to the same numerical value for all
-        // wells. We implement the same behavior for group sets - but there
-        // is lots of uncertainty regarding the semantics of group sets.
-
-        const auto& scalar_value = (*res)[0].value();
-        if (this->var_type() == UDQVarType::WELL_VAR) {
-            const std::vector<std::string> wells = context.wells();
-            UDQSet well_res = UDQSet::wells(this->m_keyword, wells);
-
-            for (const auto& well : wells) {
-                well_res.assign(well, scalar_value);
-            }
-
-            return well_res;
-        }
-
-        if (this->var_type() == UDQVarType::GROUP_VAR) {
-            const std::vector<std::string> groups = context.groups();
-            UDQSet group_res = UDQSet::groups(this->m_keyword, groups);
-
-            for (const auto& group : groups) {
-                group_res.assign(group, scalar_value);
-            }
-
-            return group_res;
-        }
+        return this->scatter_scalar_value(*std::move(res), context);
     }
 
-    return *res;
+    return *std::move(res);
 }
 
 const KeywordLocation& UDQDefine::location() const
@@ -436,6 +409,55 @@ bool UDQDefine::operator==(const UDQDefine& data) const
         && (this->status() == data.status())
         && (this->input_string() == data.input_string())
         ;
+}
+
+UDQSet UDQDefine::scatter_scalar_value(UDQSet&& res, const UDQContext& context) const
+{
+    // If the right hand side evaluates to a scalar that scalar value should
+    // be set for all elements of the UDQ set.  For example, in
+    //
+    //   UDQ
+    //     DEFINE WUINJ1  SUM(WOPR) * 1.25 /
+    //     DEFINE WUINJ2  WOPR OP1  * 5.0 /
+    //   /
+    //
+    // both the expressions "SUM(WOPR)" and "WOPR OP1" produce scalar
+    // values.  This scalar value must then be copied/assigned to all wells
+    // in order for WUINJ1:$WELL to produce the same numerical value for
+    // every well.
+    //
+    // We mirror this behavior for group sets, but there is lots of
+    // uncertainty regarding the semantics of group sets.
+
+    if (this->var_type() == UDQVarType::WELL_VAR) {
+        return this->scatter_scalar_well_value(context, res[0].value());
+    }
+
+    if (this->var_type() == UDQVarType::GROUP_VAR) {
+        return this->scatter_scalar_group_value(context, res[0].value());
+    }
+
+    return std::move(res);
+}
+
+UDQSet UDQDefine::scatter_scalar_well_value(const UDQContext&            context,
+                                            const std::optional<double>& value) const
+{
+    if (! value.has_value()) {
+        return UDQSet::wells(this->m_keyword, context.wells());
+    }
+
+    return UDQSet::wells(this->m_keyword, context.wells(), *value);
+}
+
+UDQSet UDQDefine::scatter_scalar_group_value(const UDQContext&            context,
+                                             const std::optional<double>& value) const
+{
+    if (! value.has_value()) {
+        return UDQSet::groups(this->m_keyword, context.groups());
+    }
+
+    return UDQSet::groups(this->m_keyword, context.groups(), *value);
 }
 
 } // namespace Opm
