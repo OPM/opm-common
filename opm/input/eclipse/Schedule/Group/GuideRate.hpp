@@ -135,7 +135,6 @@ private:
         }
     };
 
-    using GRValPtr = std::unique_ptr<GRValState>;
     using pair = std::pair<Phase, std::string>;
 
     void well_compute(const std::string& wgname,
@@ -166,7 +165,7 @@ private:
 
     const Schedule& schedule;
 
-    std::unordered_map<std::string, GRValPtr> values{};
+    std::unordered_map<std::string, GRValState> values{};
     std::unordered_map<pair, double, pair_hash> injection_group_values{};
     std::unordered_map<std::string, RateVector> potentials{};
     bool guide_rates_expired {false};

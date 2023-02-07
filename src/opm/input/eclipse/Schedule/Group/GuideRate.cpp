@@ -97,7 +97,7 @@ double Opm::GuideRate::get(const std::string&           name,
         return this->potentials.at(name).eval(model_target);
     }
 
-    const auto& value = *iter->second;
+    const auto& value = iter->second;
     const auto grvalue = this->get_grvalue_result(value);
     if (value.curr.target == model_target) {
         return grvalue;
@@ -255,7 +255,7 @@ void Opm::GuideRate::group_compute(const std::string& wgname,
         // Use existing GR value if sufficently recent.
         if ((iter != this->values.end()) && is_formula &&
             !this->guide_rates_expired &&
-            (iter->second->curr.value > 0.0))
+            (iter->second.curr.value > 0.0))
         {
             return;
         }
@@ -330,7 +330,7 @@ void Opm::GuideRate::well_compute(const std::string& wgname,
             auto existing = this->values.find(wgname);
             if ((existing != this->values.end()) &&
                 !this->guide_rates_expired &&
-                (existing->second->curr.value > 0.0))
+                (existing->second.curr.value > 0.0))
             {
                 return;
             }
@@ -365,30 +365,27 @@ void Opm::GuideRate::assign_grvalue(const std::string&    wgname,
                                     GuideRateValue&&      value)
 {
     auto& v = this->values[wgname];
-    if (v == nullptr) {
-        v = std::make_unique<GRValState>();
-    }
 
-    if (value.sim_time > v->curr.sim_time) {
+    if (value.sim_time > v.curr.sim_time) {
         // We've advanced in time since we previously calculated/stored this
         // guiderate value.  Push current value into the past and prepare to
         // capture new value.
-        std::swap(v->prev, v->curr);
+        std::swap(v.prev, v.curr);
     }
 
-    v->curr = std::move(value);
+    v.curr = std::move(value);
 
-    if ((v->prev.sim_time < 0.0) || ! (v->prev.value > 0.0)) {
+    if ((v.prev.sim_time < 0.0) || ! (v.prev.value > 0.0)) {
         // No previous non-zero guiderate exists.  No further actions.
         return;
     }
 
     // Incorporate damping &c.
     const auto new_guide_rate = model.allow_increase()
-        ? v->curr.value : std::min(v->curr.value, v->prev.value);
+        ? v.curr.value : std::min(v.curr.value, v.prev.value);
 
     const auto damping_factor = model.damping_factor();
-    v->curr.value = damping_factor*new_guide_rate + (1 - damping_factor)*v->prev.value;
+    v.curr.value = damping_factor*new_guide_rate + (1 - damping_factor)*v.prev.value;
 }
 
 void Opm::GuideRate::init_grvalue(const std::size_t  report_step,
@@ -458,7 +455,7 @@ void Opm::GuideRate::updateGuideRateExpiration(const double      sim_time,
 
     auto curr_sim_time = [](const auto& grMapElem)
     {
-        return grMapElem.second->curr.sim_time;
+        return grMapElem.second.curr.sim_time;
     };
 
     // Get previous general update time--earliest 'curr.sim_time' in
