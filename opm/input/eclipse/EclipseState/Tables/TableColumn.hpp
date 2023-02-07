@@ -40,7 +40,7 @@ namespace Opm {
 
         size_t size( ) const;
         const std::string& name() const;
-        void assertOrder(double value1 , double value2) const;
+        void assertOrder(double value1 , double value2, size_t index) const;
         void addValue(double);
         void addDefault();
         void updateValue(size_t index, double value);

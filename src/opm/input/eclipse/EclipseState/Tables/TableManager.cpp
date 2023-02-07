@@ -1526,7 +1526,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
                 try {
-                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, useJFunc(), tableIdx );
+                    std::shared_ptr<TableType> table = std::make_shared<TableType>(dataItem, useJFunc(), tableIdx );
                     container.addTable( tableIdx , table );
                 } catch (const std::runtime_error& err) {
                     throw OpmInputError(err, tableKeyword.location());

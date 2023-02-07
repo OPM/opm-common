@@ -55,10 +55,10 @@ namespace Opm {
         return m_values.size();
     }
 
-
-    void TableColumn::assertOrder(double value1 , double value2) const {
+//inpur keyword, print keyword.name() / print correct order m_schema.m_order 
+    void TableColumn::assertOrder(double value1 , double value2, size_t index) const {
         if (!m_schema.validOrder( value1 , value2) )
-            throw std::invalid_argument("Incorrect ordering of values in column: " + m_schema.name());
+            throw std::invalid_argument("Incorrect ordering of values in column: " + m_schema.name() + ", at row: " + std::to_string(index) + ", between values: " + std::to_string(value1) + " and " + std::to_string(value2));
     }
 
     const std::string& TableColumn::name() const {
@@ -70,7 +70,7 @@ namespace Opm {
         if (nextIndex < m_values.size()) {
             if (!m_default[nextIndex]) {
                 double nextValue = m_values[nextIndex];
-                assertOrder( value , nextValue );
+                assertOrder( value , nextValue, index);
             }
         }
     }
@@ -81,7 +81,7 @@ namespace Opm {
             size_t prevIndex = index - 1;
             if (!m_default[prevIndex]) {
                 double prevValue = m_values[prevIndex];
-                assertOrder( prevValue , value );
+                assertOrder( prevValue , value, index );
             }
         }
     }
