@@ -79,7 +79,7 @@ struct Packing<true,T>
                      std::vector<char>& buffer,
                      int& position)
     {
-        std::memcpy(&buffer[position], data, n*sizeof(T));
+        std::memcpy(buffer.data() + position, data, n*sizeof(T));
         position += n*sizeof(T);
     }
 
@@ -104,7 +104,7 @@ struct Packing<true,T>
                        std::vector<char>& buffer,
                        int& position)
     {
-        std::memcpy(data, &buffer[position], n*sizeof(T));
+        std::memcpy(data, buffer.data() + position, n*sizeof(T));
         position += n*sizeof(T);
     }
 };
