@@ -93,7 +93,7 @@ namespace Opm {
 
         if ( (deckItem.data_size() % numColumns()) != 0) {
             throw std::runtime_error {
-                fmt::format("For table with ID {}: "
+                fmt::format("{For table {} with ID {}: "
                             "Number of input table elements ({}) is "
                             "not a multiple of table's specified number "
                             "of columns ({})",
