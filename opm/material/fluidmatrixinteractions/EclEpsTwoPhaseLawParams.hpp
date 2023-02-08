@@ -62,33 +62,33 @@ public:
      */
     void finalize()
     {
-#ifndef NDEBUG
-        assert(config_);
-        if (config_->enableSatScaling()) {
-            assert(unscaledPoints_);
-        }
-        assert(effectiveLawParams_);
-#endif
-        EnsureFinalized :: finalize();
+// #ifndef NDEBUG
+//         assert(config_);
+//         if (config_->enableSatScaling()) {
+//             assert(unscaledPoints_);
+//         }
+//         assert(effectiveLawParams_);
+// #endif
+//         EnsureFinalized :: finalize();
     }
 
     /*!
      * \brief Set the endpoint scaling configuration object.
      */
     void setConfig(std::shared_ptr<EclEpsConfig> value)
-    { config_ = value; }
+    { config_ = *value; }
 
     /*!
      * \brief Returns the endpoint scaling configuration object.
      */
     const EclEpsConfig& config() const
-    { return *config_; }
+    { return config_; }
 
     /*!
      * \brief Set the scaling points which are seen by the nested material law
      */
     void setUnscaledPoints(std::shared_ptr<ScalingPoints> value)
-    { unscaledPoints_ = value; }
+    { unscaledPoints_ = value.get(); }
 
     /*!
      * \brief Returns the scaling points which are seen by the nested material law
@@ -118,7 +118,7 @@ public:
      * \brief Sets the parameter object for the effective/nested material law.
      */
     void setEffectiveLawParams(std::shared_ptr<EffLawParams> value)
-    { effectiveLawParams_ = value; }
+    { effectiveLawParams_ = value.get(); }
 
     /*!
      * \brief Returns the parameter object for the effective/nested material law.
@@ -127,10 +127,12 @@ public:
     { return *effectiveLawParams_; }
 
 private:
-    std::shared_ptr<EffLawParams> effectiveLawParams_;
-
-    std::shared_ptr<EclEpsConfig> config_;
-    std::shared_ptr<ScalingPoints> unscaledPoints_;
+    //std::shared_ptr<EffLawParams> effectiveLawParams_;
+    EffLawParams* effectiveLawParams_;
+    //std::shared_ptr<EclEpsConfig> config_;
+    EclEpsConfig config_;
+    //std::shared_ptr<ScalingPoints> unscaledPoints_;
+    ScalingPoints* unscaledPoints_;
     ScalingPoints scaledPoints_;
 };
 

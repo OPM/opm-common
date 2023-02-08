@@ -34,7 +34,8 @@
 #endif
 
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
-#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawManagerTable.hpp>
+//#include <opm/material/fluidmatrixinteractions/EclMaterialDefaultLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterialParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
@@ -112,9 +113,13 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     const auto& eclGrid = eclState.getInputGrid();
     //size_t nc = eclGrid.getCartesianSize();
     size_t nc = eclGrid.getNumActive();
-    typedef Opm::EclMaterialLawManager<MaterialTraits> MaterialLawManager;
+    typedef Opm::EclMaterialLawManagerTable<MaterialTraits> MaterialLawManager;
+    //typedef Opm::EclMaterialDefaultLawManager<MaterialTraits> MaterialDefaultLawManager;
+
     MaterialLawManager  materialLawManager;
     typedef typename MaterialLawManager::MaterialLaw MaterialLaw;
+    
+    
     materialLawManager.initFromState(eclState);
     materialLawManager.initParamsForElements(eclState, nc);
     // create a parameter cache
@@ -138,17 +143,24 @@ inline Opm::time_point::duration testAll(const char * deck_file)
     unsigned num_total = ceil(double(numevals)/double(nc));
     //num_total=23;
     std::vector<FluidState> intQuant(nc);
-    std::cout << "Doing evaluation " << num_total << " of nc " << nc << " total " << nc*num_total << std::endl;
-    Opm::time_point start;
-    start = Opm::TimeService::now();
+
     //const auto& materialParams = materialLawManager.materialLawParams(0).template getRealParams<Opm::EclMultiplexerApproach::Default>();
     const auto& waterpvt = FluidSystem::waterPvt();
     const auto& oilpvt = FluidSystem::oilPvt();
     const auto& gaspvt = FluidSystem::gasPvt();
+    using ParamsT = typename MaterialLaw::DefaultMaterial::Params; 
+    std::vector<ParamsT> materialParamsVector(nc);
+    for(int i=0; i < nc; ++i){
+         materialParamsVector[i] = materialLawManager.materialLawParams(i).template getRealParams<Opm::EclMultiplexerApproach::Default>();
+    }
+    std::cout << "Doing evaluation " << num_total << " of nc " << nc << " total " << nc*num_total << std::endl;
+    Opm::time_point start;
+    start = Opm::TimeService::now();    
+    //const auto& materialParams =  materialParamsVector[0];
     for (unsigned step = 0; step < num_total; ++step) {
         for (unsigned elemIdx = 0; elemIdx < nc; ++elemIdx) {
-            const auto& materialParams =
-                materialLawManager.materialLawParams(elemIdx).template getRealParams<Opm::EclMultiplexerApproach::Default>();
+            //const auto& materialParams = materialLawManager.materialLawParams(elemIdx).template getRealParams<Opm::EclMultiplexerApproach::Default>();
+            const auto& materialParams =  materialParamsVector[elemIdx];
             // const auto& pvtRegionIdx = pvtnum[elemIdx];
             FluidState& fluidState = intQuant[elemIdx];
             Opm::Valgrind::SetUndefined(fluidState);
@@ -184,8 +196,9 @@ inline Opm::time_point::duration testAll(const char * deck_file)
             std::array<Evaluation, numPhases> pC;
             // //MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
             // //MaterialLaw::relativePermeabilities(mobility, materialParams, fluidState);
-            MaterialLaw::DefaultMaterial::capillaryPressures(pC, materialParams, fluidState);
+//            MaterialLaw::DefaultMaterial::capillaryPressures(pC, materialParams, fluidState);
             MaterialLaw::DefaultMaterial::relativePermeabilitiesSimple(mobility, materialParams, fluidState);
+            //MaterialLaw::DefaultMaterial::relativePermeabilities(mobility, materialParams, fluidState);
             
         }
     }

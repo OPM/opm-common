@@ -63,37 +63,37 @@ public:
      * \brief The parameter object for the gas-oil twophase law.
      */
     const GasOilParams& gasOilParams() const
-    { EnsureFinalized::check(); return *gasOilParams_; }
+    { EnsureFinalized::check(); return gasOilParams_; }
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.
      */
     GasOilParams& gasOilParams()
-    { EnsureFinalized::check(); return *gasOilParams_; }
+    { EnsureFinalized::check(); return gasOilParams_; }
 
     /*!
      * \brief Set the parameter object for the gas-oil twophase law.
      */
     void setGasOilParams(std::shared_ptr<GasOilParams> val)
-    { gasOilParams_ = val; }
+    { gasOilParams_ = *val; }
 
     /*!
      * \brief The parameter object for the oil-water twophase law.
      */
     const OilWaterParams& oilWaterParams() const
-    { EnsureFinalized::check(); return *oilWaterParams_; }
+    { EnsureFinalized::check(); return oilWaterParams_; }
 
     /*!
      * \brief The parameter object for the oil-water twophase law.
      */
     OilWaterParams& oilWaterParams()
-    { EnsureFinalized::check(); return *oilWaterParams_; }
+    { EnsureFinalized::check(); return oilWaterParams_; }
 
     /*!
      * \brief Set the parameter object for the oil-water twophase law.
      */
     void setOilWaterParams(std::shared_ptr<OilWaterParams> val)
-    { oilWaterParams_ = val; }
+    { oilWaterParams_ = *val; }
 
     /*!
      * \brief Set the saturation of "connate" water.
@@ -137,9 +137,10 @@ public:
     }
 
 private:
-    std::shared_ptr<GasOilParams> gasOilParams_;
-    std::shared_ptr<OilWaterParams> oilWaterParams_;
-
+    //std::shared_ptr<GasOilParams> gasOilParams_;
+    GasOilParams gasOilParams_;
+    //std::shared_ptr<OilWaterParams> oilWaterParams_;
+    OilWaterParams oilWaterParams_;
     Scalar Swl_;
 };
 } // namespace Opm
