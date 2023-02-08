@@ -215,7 +215,7 @@ inline Opm::time_point::duration testAll(const char * deck_file)
             //MaterialLaw::DefaultMaterial::capillaryPressures(pC, materialParams, fluidState);
             //MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, materialParams, fluidState);
             //MaterialLaw::DefaultMaterial::relativePermeabilitiesNew(mobility, Swco, oilwaterparams, gasoilparams, fluidState);
-            Opm::EclDefaultMaterialExperimental<MaterialLaw::DefaultMaterial>::relativePermeabilitiesNew(mobility, Swco, oilwaterparams, gasoilparams, fluidState);
+            Opm::EclDefaultMaterialExperimental<typename MaterialLaw::DefaultMaterial>::relativePermeabilities(mobility, Swco, oilwaterparams, gasoilparams, fluidState);
         }
     }
     Opm::time_point::duration total_time = Opm::TimeService::now() - start;
