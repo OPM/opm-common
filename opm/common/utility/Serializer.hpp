@@ -27,12 +27,21 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
 #include <vector>
+
+#if HAVE_DUNE_COMMON
+namespace Dune { template<typename,int> class FieldVector; }
+#endif
+
+#if HAVE_DUNE_ISTL
+namespace Dune { template<typename,typename> class BlockVector; }
+#endif
 
 namespace Opm {
 namespace detail {
@@ -180,10 +189,10 @@ protected:
     //! \brief Handler for vectors.
     //! \tparam T Type for vector elements
     //! \param data The vector to (de-)serialize
-    template <typename T>
-    void vector(const std::vector<T>& data)
+    template <typename Vector>
+    void vector(const Vector& data)
     {
-        if constexpr (std::is_pod_v<T>) {
+        if constexpr (std::is_pod_v<typename Vector::value_type>) {
           if (m_op == Operation::PACKSIZE) {
               (*this)(data.size());
               m_packSize += m_packer.packSize(data.data(), data.size());
@@ -193,7 +202,7 @@ protected:
           } else if (m_op == Operation::UNPACK) {
               std::size_t size = 0;
               (*this)(size);
-              auto& data_mut = const_cast<std::vector<T>&>(data);
+              auto& data_mut = const_cast<Vector&>(data);
               data_mut.resize(size);
               m_packer.unpack(data_mut.data(), size, m_buffer, m_position);
           }
@@ -201,7 +210,7 @@ protected:
             if (m_op == Operation::UNPACK) {
                 std::size_t size = 0;
                 (*this)(size);
-                auto& data_mut = const_cast<std::vector<T>&>(data);
+                auto& data_mut = const_cast<Vector&>(data);
                 data_mut.resize(size);
                 std::for_each(data_mut.begin(), data_mut.end(), std::ref(*this));
             } else {
@@ -386,6 +395,13 @@ protected:
         constexpr static bool value = true;
     };
 
+#if HAVE_DUNE_ISTL
+    template<class T1, class Allocator>
+    struct is_vector<Dune::BlockVector<T1,Allocator>> {
+        constexpr static bool value = true;
+    };
+#endif
+
     //! \brief Predicate for detecting variants.
     template<class T>
     struct is_variant {
@@ -482,6 +498,13 @@ protected:
     struct is_array<std::array<T,N>> {
         constexpr static bool value = true;
     };
+
+#if HAVE_DUNE_COMMON
+    template<class T, int N>
+    struct is_array<Dune::FieldVector<T,N>> {
+        constexpr static bool value = true;
+    };
+#endif
 
     //! Detect existence of \c serializeOp member function
     //!
