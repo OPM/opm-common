@@ -540,8 +540,13 @@ public:
         data_[dstart_() + varIdx] = derVal;
     }
 
-private:
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(data_);
+    }
 
+private:
     FastSmallVector<ValueT, staticSize> data_;
 };
 

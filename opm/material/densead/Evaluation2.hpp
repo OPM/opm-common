@@ -526,8 +526,13 @@ public:
         data_[dstart_() + varIdx] = derVal;
     }
 
-private:
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(data_);
+    }
 
+private:
     std::array<ValueT, 3> data_;
 };
 
