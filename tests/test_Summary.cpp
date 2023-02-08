@@ -76,9 +76,19 @@ namespace {
        return unit::cubic(unit::meter) / unit::day;
     }
 
+    double metres_per_second()
+    {
+        return unit::meter / unit::second;
+    }
+
+    double cp()
+    {
+        return prefix::centi * unit::Poise;
+    }
+
     double cp_rm3_per_db()
     {
-        return prefix::centi*unit::Poise * unit::cubic(unit::meter)
+        return cp() * unit::cubic(unit::meter)
             /  (unit::day * unit::barsa);
     }
 
@@ -3310,6 +3320,54 @@ namespace {
         rates.set(data::Rates::opt::vaporized_oil, sign *             10*sm3_pr_day() );
     }
 
+    void fill_velocity(const std::size_t segnum,
+                       const double      sign,
+                       data::Segment&    segment)
+    {
+        using I = data::SegmentPhaseQuantity::Item;
+
+        const auto vel = (12.0 - 1.0*(segnum - 1))*metres_per_second();
+
+        const auto v_oil = vel;
+        const auto v_wat = vel;
+        const auto v_gas = (segnum < 11) ? vel : 0.0; // No free gas in segments 11..26.
+
+        segment.velocity
+            .set(I::Oil,   sign * v_oil)
+            .set(I::Gas,   sign * v_gas)
+            .set(I::Water, sign * v_wat);
+    }
+
+    void fill_holdup_fraction(const std::size_t segnum,
+                              data::Segment&    segment)
+    {
+        using I = data::SegmentPhaseQuantity::Item;
+
+        const auto resv_oil = 200.0 - 5*(segnum - 1);
+        const auto resv_wat = 100.0 - 2*(segnum - 1);
+        const auto resv_gas = (segnum < 11) // No free gas in segments 11..26
+            ? 5000.0 - 100*(segnum - 1)
+            : 0.0;
+
+        const auto resv_tot = resv_oil + resv_wat + resv_gas;
+
+        segment.holdup
+            .set(I::Oil,   resv_oil / resv_tot)
+            .set(I::Gas,   resv_gas / resv_tot)
+            .set(I::Water, resv_wat / resv_tot);
+    }
+
+    void fill_viscosity(const std::size_t segnum,
+                        data::Segment&    segment)
+    {
+        using I = data::SegmentPhaseQuantity::Item;
+
+        segment.viscosity
+            .set(I::Oil,   (100.0 + segnum) /  100.0 * cp())
+            .set(I::Gas,   (100.0 + segnum) / 1000.0 * cp())
+            .set(I::Water, (100.0 + segnum) /  300.0 * cp());
+    }
+
     std::size_t numSegProd01()
     {
         return 26;
@@ -3338,6 +3396,9 @@ namespace {
         auto res = data::Segment{};
 
         fill_surface_rates(segID, sign, res.rates);
+        fill_velocity(segID, sign, res);
+        fill_holdup_fraction(segID, res);
+        fill_viscosity(segID, res);
 
         const auto pres_idx = Opm::data::SegmentPressures::Value::Pressure;
         res.pressures[pres_idx] = (100.0 + segID)*unit::barsa;
@@ -3634,6 +3695,30 @@ BOOST_AUTO_TEST_CASE(Write_Read)
     //   'PROD01'  21 /
     // /
     //
+    // SOFT
+    //   'PROD01'  1 /
+    //   'PROD01'  10 /
+    //   'PROD01'  21 /
+    // /
+    //
+    // SOHF
+    //   'PROD01'  1 /
+    //   'PROD01'  10 /
+    //   'PROD01'  21 /
+    // /
+    //
+    // SOFV
+    //   'PROD01'  1 /
+    //   'PROD01'  10 /
+    //   'PROD01'  21 /
+    // /
+    //
+    // SOVIS
+    //   'PROD01'  1 /
+    //   'PROD01'  10 /
+    //   'PROD01'  21 /
+    // /
+    //
     // SOFRF
     //   'PROD01'  1 /
     //   'PROD01'  10 /
@@ -3655,6 +3740,22 @@ BOOST_AUTO_TEST_CASE(Write_Read)
     //   'PROD01' /
     // /
     //
+    // SGFT
+    //   'PROD01' /
+    // /
+    //
+    // SGHF
+    //   'PROD01' /
+    // /
+    //
+    // SGFV
+    //   'PROD01' /
+    // /
+    //
+    // SGVIS
+    //   'PROD01' /
+    // /
+    //
     // SGFRF
     //   'PROD01'  2 /
     // /
@@ -3672,6 +3773,18 @@ BOOST_AUTO_TEST_CASE(Write_Read)
     // /
     //
     // SWFR
+    // /
+    //
+    // SWFT
+    // /
+    //
+    // SWHF
+    // /
+    //
+    // SWFV
+    // /
+    //
+    // SWVIS
     // /
     //
     // SWGR
@@ -3695,24 +3808,60 @@ BOOST_AUTO_TEST_CASE(Write_Read)
     //  1* 16 /
     // /
 
-    // Segment 1: SOFR, SOFRF, SOFRS, SGFR, SWFR
+    // Segment 1:
+    //    SOFR, SOFT, SOHF, SOVF, SOVIS, SOFRF, SOFRS,
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 1;
 
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
                           segID*1000.0 + 200.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SOFT", segID),
+                          0.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SOFT", segID),
+                          1.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SOFT", segID),
+                          2.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOHF", segID),
+                          200.0 / (200.0 + 100.0 + 5000.0), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFV", segID),
+                          12.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOVIS", segID),
+                          (100.0 + 1) / 100.0, 1.0e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFRF", segID),
                           segID*1000.0 + 190.0, 1.0e-10);
@@ -3723,22 +3872,75 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          5000.0 / (200.0 + 100.0 + 5000.0), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + 1) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          100.0 / (200.0 + 100.0 + 5000.0), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + 1) / 300.0, 2.5e-6);
     }
 
-    // Segment 2: SGFR, SGFRF, SWFR
+    // Segment 2:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS, SGFRF
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 2;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3746,25 +3948,82 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFRF", segID),
-                          50.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 2.5e-6);
     }
 
-    // Segment 3: SGFR, SGFRS, SWFR, SWGR
+    // Segment 3:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS, SGFRS
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
+    //    SWGR,
     {
         const auto segID = 3;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3772,28 +4031,87 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFRS", segID),
                           segID*1000.0 + 350.0, 1.0e-10);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 2.5e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWGR", segID),
                           (segID*1000.0 + 100.0) / (segID*1000.0 + 400.0), 3.0e-6);
     }
 
-    // Segment 4: SGFR, SWFR
+    // Segment 4:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 4;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3801,22 +4119,82 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 2.5e-6);
     }
 
-    // Segment 5: SGFR, SOGR, SWFR
+    // Segment 5:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
+    //    SOGR
     {
         const auto segID = 5;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3824,25 +4202,85 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOGR", segID),
-                          (segID*1000.0 + 200.0) / (segID*1000.0 + 400.0), 2.5e-6);
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 2.5e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOGR", segID),
+                          (segID*1000.0 + 200.0) / (segID*1000.0 + 400.0), 2.5e-6);
     }
 
-    // Segment 6: SGFR, SWFR
+    // Segment 6:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
+    //    SOGR
     {
         const auto segID = 6;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3850,22 +4288,82 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 3.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 3.0e-6);
     }
 
-    // Segment 7: SGFR, SOGR, SWFR
+    // Segment 7:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
+    //    SOGR
     {
         const auto segID = 7;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3873,25 +4371,84 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOGR", segID),
-                          (segID*1000.0 + 200.0) / (segID*1000.0 + 400.0), 2.0e-6);
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 3.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 3.5e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOGR", segID),
+                          (segID*1000.0 + 200.0) / (segID*1000.0 + 400.0), 2.0e-6);
     }
 
-    // Segment 8: SGFR, SWFR
+    // Segment 8:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 8;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3899,22 +4456,81 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 3.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 9: SGFR, SWFR
+    // Segment 9:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 9;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3922,22 +4538,83 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 3.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 10: SOFR, SOFRF, SOFRS, SGFR, SGOR, SWFR, SPR
+    // Segment 10:
+    //    SOFR, SOFT, SOHF, SOVF, SOVIS, SOFRF, SOFRS,
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SGOR,
+    //    SPR, SPRD, SPRDH,
     {
         const auto segID = 10;
 
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3945,6 +4622,33 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
                           segID*1000.0 + 200.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SOFT", segID),
+                          0.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SOFT", segID),
+                          1.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SOFT", segID),
+                          2.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOHF", segID),
+                          ( 200.0 -   5.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOVIS", segID),
+                          (100.0 + segID) / 100.0, 2.5e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFRF", segID),
+                          segID*1000.0 + 190.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFRS", segID),
+                          10.0, 1.0e-10);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFRF", segID),
                           segID*1000.0 + 190.0, 1.0e-10);
 
@@ -3954,28 +4658,84 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGOR", segID),
-                          (segID*1000.0 + 400.0) / (segID*1000.0 + 200.0), 6.0e-6);
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          (5000.0 - 100.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 3.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          ( 100.0 -   2.0*(segID - 1)) /
+                          ( 200.0 -   5.0*(segID - 1) +
+                            100.0 -   2.0*(segID - 1) +
+                           5000.0 - 100.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SPR", segID),
                           100.0 + segID, 1.0e-10);
     }
 
-    // Segment 11: SGFR, SWFR
+    // Segment 11:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 11;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -3983,22 +4743,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 12: SGFR, SWFR
+    // Segment 12:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 12;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4006,22 +4823,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 13: SGFR, SWFR
+    // Segment 13:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 13;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4029,22 +4903,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 14: SGFR, SWFR
+    // Segment 14:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 14;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4052,22 +4983,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 15: SGFR, SWFR
+    // Segment 15:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 15;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4075,22 +5063,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 16: SGFR, SWFR
+    // Segment 16:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 16;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4098,22 +5143,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 17: SGFR, SWFR
+    // Segment 17:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 17;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4121,22 +5223,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 18: SGFR, SWFR
+    // Segment 18:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 18;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4144,22 +5303,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 19: SGFR, SWFR
+    // Segment 19:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 19;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4167,51 +5383,188 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 20: SGFR, SWFR
+    // Segment 20:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 20;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
 
-        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
-                          segID*1000.0 + 100.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 21: SOFR, SOFRF, SOFRS, SGFR, SWFR
+    // Segment 21:
+    //    SOFR, SOFT, SOHF, SOVF, SOVIS, SOFRF, SOFRS,
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 21;
 
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
                           segID*1000.0 + 200.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
+                          segID*1000.0 + 200.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SOFT", segID),
+                          0.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SOFT", segID),
+                          1.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SOFT", segID),
+                          2.0*(segID*1000.0 + 200.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOHF", segID),
+                          ( 200.0 - 5.0*(segID - 1)) /
+                          ( 200.0 - 5.0*(segID - 1) +
+                            100.0 - 2.0*(segID - 1)), 2.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOVIS", segID),
+                          (100.0 + segID) / 100.0, 3.5e-6);
 
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFRF", segID),
                           segID*1000.0 + 190.0, 1.0e-10);
@@ -4222,22 +5575,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 22: SGFR, SWFR
+    // Segment 22:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 22;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4245,22 +5655,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 23: SGFR, SWFR
+    // Segment 23:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 23;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4268,22 +5735,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 24: SGFR, SWFR
+    // Segment 24:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 24;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4291,22 +5815,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 25: SGFR, SWFR
+    // Segment 25:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 25;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4314,22 +5895,79 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
-    // Segment 26: SGFR, SWFR
+    // Segment 26:
+    //    SGFR, SGFT, SGHF, SGVF, SGVIS,
+    //    SWFR, SWFT, SWHF, SWFV, SWVIS,
+    //    SPRD, SPRDH,
     {
         const auto segID = 26;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));
@@ -4337,8 +5975,48 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
                           segID*1000.0 + 400.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SGFT", segID),
+                          0.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SGFT", segID),
+                          1.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SGFT", segID),
+                          2.0*(segID*1000.0 + 400.0), 1.0e-10);
+
+        // Gas holdup fraction = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGHF", segID),
+                          0.0, 1.0e-6);
+
+        // Flow velocity = 0.  No free gas.
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFV", segID),
+                          0.0, 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGVIS", segID),
+                          (100.0 + segID) / 1000.0, 5.0e-6);
+
         BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
                           segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 0, "SWFT", segID),
+                          0.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 1, "SWFT", segID),
+                          1.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, 2, "SWFT", segID),
+                          2.0*(segID*1000.0 + 100.0), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWHF", segID),
+                          (100.0 - 2.0*(segID - 1)) /
+                          (200.0 - 5.0*(segID - 1) +
+                           100.0 - 2.0*(segID - 1)), 5.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFV", segID),
+                          12.0 - 1.0*(segID - 1), 1.0e-6);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWVIS", segID),
+                          (100.0 + segID) / 300.0, 4.0e-6);
     }
 
     // Segment 256: No such segment
@@ -4346,13 +6024,27 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         const auto segID = 256;
 
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFRS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRF", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFRS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWFR" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWFT" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWHF" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWFV" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWVIS", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR"  , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPRD" , segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPRDH", segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGOR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOGR" , segID));
         BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWGR" , segID));

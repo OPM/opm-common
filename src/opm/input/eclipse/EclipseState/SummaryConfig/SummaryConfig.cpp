@@ -1146,9 +1146,9 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
 
         const auto kw_whitelist = std::vector<const char*> {
-            "SOFR" , "SOFRF", "SOFRS",
-            "SGFR" , "SGFRF", "SGFRS",
-            "SWFR" ,
+            "SOFR" , "SOFRF", "SOFRS", "SOFT", "SOFV", "SOHF", "SOVIS",
+            "SGFR" , "SGFRF", "SGFRS", "SGFT", "SGFV", "SGHF", "SGVIS",
+            "SWFR" ,                   "SWFT", "SWFV", "SWHF", "SWVIS",
             "SGOR" , "SOGR" , "SWCT" , "SWGR" ,
             "SPR"  , "SPRD" , "SPRDH", "SPRDF", "SPRDA",
         };
