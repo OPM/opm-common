@@ -40,7 +40,7 @@ namespace Opm {
 
         size_t size( ) const;
         const std::string& name() const;
-        void assertOrder(double value1 , double value2, size_t index) const;
+        void assertOrder(double value1 , double value2, size_t index, std::string tableName) const;
         void addValue(double);
         void addDefault();
         void updateValue(size_t index, double value);
@@ -80,9 +80,9 @@ namespace Opm {
         }
 
     private:
-        void assertUpdate(size_t index, double value) const;
-        void assertPrevious(size_t index , double value) const;
-        void assertNext(size_t index , double value) const;
+        void assertUpdate(std::string tableName, size_t index, double value) const;
+        void assertPrevious(std::string tableName, size_t index , double value) const;
+        void assertNext(std::string tableName, size_t index , double value) const;
 
         ColumnSchema m_schema;
         std::string m_name;

@@ -55,48 +55,48 @@ namespace Opm {
         return m_values.size();
     }
 
-//inpur keyword, print keyword.name() / print correct order m_schema.m_order 
-    void TableColumn::assertOrder(double value1 , double value2, size_t index) const {
+//TODO: Print schema
+    void TableColumn::assertOrder(double value1 , double value2, size_t index, std::string tableName) const {
         if (!m_schema.validOrder( value1 , value2) )
-            throw std::invalid_argument("Incorrect ordering of values in column: " + m_schema.name() + ", at row: " + std::to_string(index) + ", between values: " + std::to_string(value1) + " and " + std::to_string(value2));
+            throw std::invalid_argument("Table " + tableName + " has incorrect ordering of values (not " + m_schema.orderSchema() + " ) in column: " + m_schema.name() + ", at row: " + std::to_string(index) + ", between values: " + std::to_string(value1) + " and " + std::to_string(value2));
     }
 
     const std::string& TableColumn::name() const {
         return m_name;
     }
 
-    void TableColumn::assertNext(size_t index , double value) const {
+    void TableColumn::assertNext(std::string tableName, size_t index , double value) const {
         size_t nextIndex = index + 1;
         if (nextIndex < m_values.size()) {
             if (!m_default[nextIndex]) {
                 double nextValue = m_values[nextIndex];
-                assertOrder( value , nextValue, index);
+                assertOrder( value , nextValue, index, tableName );
             }
         }
     }
 
 
-    void TableColumn::assertPrevious(size_t index , double value) const {
+    void TableColumn::assertPrevious(std::string tableName, size_t index , double value) const {
         if (index > 0) {
             size_t prevIndex = index - 1;
             if (!m_default[prevIndex]) {
                 double prevValue = m_values[prevIndex];
-                assertOrder( prevValue , value, index );
+                assertOrder( prevValue , value, index, tableName );
             }
         }
     }
 
 
-    void TableColumn::assertUpdate(size_t index, double value) const {
-        assertNext( index , value );
-        assertPrevious( index, value );
+    void TableColumn::assertUpdate(std::string tableName, size_t index, double value) const {
+        assertNext( tableName, index , value );
+        assertPrevious( tableName, index, value );
     }
 
 
 
-
+//TODO: Input tableName
     void TableColumn::addValue(double value) {
-        assertUpdate( m_values.size() , value );
+        assertUpdate( "tableName", m_values.size() , value );
         m_values.push_back( value );
         m_default.push_back( false );
     }
@@ -116,9 +116,9 @@ namespace Opm {
 
     }
 
-
-    void TableColumn::updateValue(  size_t index , double value ) {
-        assertUpdate( index , value );
+//TODO: Input tableName
+    void TableColumn::updateValue( size_t index , double value ) {
+        assertUpdate(  "tableName",  index , value );
         m_values[index] = value;
         if (m_default[index]) {
             m_default[index] = false;
