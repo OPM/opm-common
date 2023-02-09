@@ -54,11 +54,11 @@ namespace Opm {
         return result;
     }
 
-    void SimpleTable::addRow( const std::vector<double>& row) {
+    void SimpleTable::addRow( const std::vector<double>& row, const std::string& tableName) {
         if (row.size() == numColumns()) {
             for (size_t colIndex  = 0; colIndex < numColumns(); colIndex++) {
                 auto& col = getColumn( colIndex );
-                col.addValue( row[colIndex] );
+                col.addValue( row[colIndex], tableName );
             }
         } else
             throw std::invalid_argument("Size mismatch");
@@ -107,19 +107,19 @@ namespace Opm {
             for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
                 size_t deckItemIdx = rowIdx*numColumns() + colIdx;
                 if (deckItem.defaultApplied(deckItemIdx))
-                    column.addDefault( );
+                    column.addDefault( tableName  );
                 else if (m_jfunc) {
-                    column.addValue( deckItem.getData<double>()[deckItemIdx] );
+                    column.addValue( deckItem.getData<double>()[deckItemIdx], tableName );
                 }
                 else {
                     if (scaling_factor > 0.0)
-                        column.addValue( scaling_factor * deckItem.get<double>(deckItemIdx) );
+                        column.addValue( scaling_factor * deckItem.get<double>(deckItemIdx), tableName );
                     else
-                        column.addValue( deckItem.getSIDouble(deckItemIdx) );
+                        column.addValue( deckItem.getSIDouble(deckItemIdx), tableName );
                 }
             }
             if (colIdx > 0)
-                column.applyDefaults(getColumn( 0 ));
+                column.applyDefaults(getColumn( 0 ), tableName);
         }
     }
 

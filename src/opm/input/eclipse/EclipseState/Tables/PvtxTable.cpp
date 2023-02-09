@@ -94,7 +94,7 @@ namespace Opm {
             auto range = ranges[ tableIdx ];
             for (size_t  rowIdx = range.first; rowIdx < range.second; rowIdx++) {
                 const auto& deckRecord = keyword.getRecord(rowIdx);
-                m_outerColumn.addValue( deckRecord.getItem( 0 ).getSIDouble( 0 ));
+                m_outerColumn.addValue( deckRecord.getItem( 0 ).getSIDouble( 0 ),  keyword.name());
 
                 const auto& dataItem = deckRecord.getItem(1);
                 m_underSaturatedTables.emplace_back(this->m_underSaturatedSchema, keyword.name(),  dataItem, tableIdx );
@@ -109,7 +109,7 @@ namespace Opm {
                 for (size_t col_index = 0; col_index < m_underSaturatedSchema.size(); col_index++)
                     row[col_index + 1] = underSaturatedTable.get( col_index , 0 );
 
-                m_saturatedTable.addRow( row );
+                m_saturatedTable.addRow( row, keyword.name() );
             }
         }
     }

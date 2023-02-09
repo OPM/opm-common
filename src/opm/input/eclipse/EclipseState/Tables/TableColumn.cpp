@@ -58,7 +58,7 @@ namespace Opm {
 //TODO: Print schema
     void TableColumn::assertOrder(double value1 , double value2, size_t index, std::string tableName) const {
         if (!m_schema.validOrder( value1 , value2) )
-            throw std::invalid_argument("Table " + tableName + " has incorrect ordering of values (not " + m_schema.orderSchema() + " ) in column: " + m_schema.name() + ", at row: " + std::to_string(index) + ", between values: " + std::to_string(value1) + " and " + std::to_string(value2));
+            throw std::invalid_argument("Table " + tableName + " has incorrect ordering of values (not " + m_schema.orderSchema() + ") in column: " + m_schema.name() + ", at row: " + std::to_string(index) + ", between values: " + std::to_string(value1) + " and " + std::to_string(value2));
     }
 
     const std::string& TableColumn::name() const {
@@ -93,20 +93,18 @@ namespace Opm {
     }
 
 
-
-//TODO: Input tableName
-    void TableColumn::addValue(double value) {
-        assertUpdate( "tableName", m_values.size() , value );
+    void TableColumn::addValue(double value, std::string tableName) {
+        assertUpdate( tableName, m_values.size() , value );
         m_values.push_back( value );
         m_default.push_back( false );
     }
 
 
-    void TableColumn::addDefault() {
+    void TableColumn::addDefault(std::string tableName) {
         Table::DefaultAction defaultAction = m_schema.getDefaultMode( );
 
         if (defaultAction == Table::DEFAULT_CONST)
-            addValue( m_schema.getDefaultValue( ));
+            addValue( m_schema.getDefaultValue( ), tableName);
         else if (defaultAction == Table::DEFAULT_LINEAR) {
             m_values.push_back( -1 ); // Should never even be read.
             m_default.push_back( true );
@@ -116,9 +114,9 @@ namespace Opm {
 
     }
 
-//TODO: Input tableName
-    void TableColumn::updateValue( size_t index , double value ) {
-        assertUpdate(  "tableName",  index , value );
+
+    void TableColumn::updateValue( size_t index , double value, std::string tableName ) {
+        assertUpdate(  tableName,  index , value );
         m_values[index] = value;
         if (m_default[index]) {
             m_default[index] = false;
@@ -280,7 +278,7 @@ namespace Opm {
     }
 
 
-    void TableColumn::applyDefaults( const TableColumn& argColumn ) {
+    void TableColumn::applyDefaults( const TableColumn& argColumn, std::string tableName ) {
         if (m_schema.getDefaultMode() == Table::DEFAULT_LINEAR) {
             if (size() != argColumn.size())
                 throw std::invalid_argument("Size mismatch with argument column");
@@ -320,7 +318,7 @@ namespace Opm {
 
                         double value = m_values[before]*(1-alpha) + m_values[after]*alpha;
 
-                        updateValue( rowIdx , value );
+                        updateValue( rowIdx , value, tableName );
                     }
                 }
             }

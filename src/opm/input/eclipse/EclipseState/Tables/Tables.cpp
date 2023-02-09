@@ -854,7 +854,7 @@ PlymaxTable::PlymaxTable(const DeckRecord& record)
     for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
         auto& column = getColumn(colIdx);
 
-        column.addValue(record.getItem(colIdx).getSIDouble(0));
+        column.addValue(record.getItem(colIdx).getSIDouble(0), "PLYMAX");
     }
 }
 
@@ -882,7 +882,7 @@ PlyrockTable::PlyrockTable(const DeckRecord& record)
     for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
         auto& column = getColumn(colIdx);
 
-        column.addValue(record.getItem(colIdx).getSIDouble(0));
+        column.addValue(record.getItem(colIdx).getSIDouble(0), "PLYROCK");
     }
 }
 
@@ -1146,7 +1146,7 @@ GasvisctTable::GasvisctTable(const Deck& deck, const DeckItem& deckItem)
             size_t deckIndex = rowIdx * m_schema.size() + columnIndex;
 
             if (deckItem.defaultApplied(deckIndex))
-                column.addDefault();
+                column.addDefault("GASVISCT");
             else {
                 double rawValue = deckItem.get<double>(deckIndex);
                 double SIValue;
@@ -1156,7 +1156,7 @@ GasvisctTable::GasvisctTable(const Deck& deck, const DeckItem& deckItem)
                 else
                     SIValue = viscosityDimension.convertRawToSi(rawValue);
 
-                column.addValue(SIValue);
+                column.addValue(SIValue, "GASVISCT");
             }
         }
     }

@@ -52,7 +52,7 @@ namespace Opm {
                    double scaling_factor = 0.0);
         size_t numColumns() const;
         size_t numRows() const;
-        void addRow( const std::vector<double>& row);
+        void addRow( const std::vector<double>& row, const std::string& tableName);
         const TableColumn& getColumn(const std::string &name) const;
         const TableColumn& getColumn(size_t colIdx) const;
         bool hasColumn(const std::string& name) const;
