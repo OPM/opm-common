@@ -3369,7 +3369,8 @@ namespace Evaluator {
         if (pos == aquifer_units.end()) return false;
 
         // if the aquifer does not exist, should we warn?
-        if ( !this->es_.aquifer().hasAquifer(this->node_->number) ) return false;
+        if ( !this->es_.aquifer().hasAquifer(this->node_->number) &&
+             !this->sched_.hasAquiferFlux(this->node_->number)) return false;
 
         this->paramUnit_ = pos->second;
         return true;
@@ -4275,8 +4276,12 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
     for (const auto& node : requiredSegmentVectors(sched))
         makeEvaluator(node);
 
-    if (aqConfig.hasAnalyticalAquifer()) {
-        const auto aquiferIDs = analyticAquiferIDs(aqConfig);
+    const auto& aquflux_ids = sched.getAquiferFluxListEnd();
+    if (aqConfig.hasAnalyticalAquifer() || !aquflux_ids.empty()) {
+        auto aquiferIDs = analyticAquiferIDs(aqConfig);
+        if ( !aquflux_ids.empty() ) {
+            aquiferIDs.insert(aquiferIDs.end(), aquflux_ids.begin(), aquflux_ids.end());
+        }
 
         for (const auto& node : requiredAquiferVectors(aquiferIDs))
             makeEvaluator(node);

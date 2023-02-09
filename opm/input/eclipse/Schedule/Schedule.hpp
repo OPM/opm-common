@@ -263,6 +263,7 @@ namespace Opm
         const Well& getWellatEnd(const std::string& well_name) const;
         // get the list of the constant flux aquifer through the whole schedule
         std::vector<int> getAquiferFluxListEnd() const;
+        bool hasAquiferFlux(int id) const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
         void shut_well(const std::string& well_name, std::size_t report_step);
@@ -367,6 +368,7 @@ namespace Opm
             this->template pack_unpack_map<int, VFPInjTable>(serializer);
             this->template pack_unpack_map<std::string, Group>(serializer);
             this->template pack_unpack_map<std::string, Well>(serializer);
+            // TODO: anything related to aquflux aquifers?
         }
 
         template <typename T, class Serializer>
