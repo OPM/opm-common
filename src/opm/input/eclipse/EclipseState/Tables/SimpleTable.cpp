@@ -27,7 +27,7 @@
 
 namespace Opm {
 
-    SimpleTable::SimpleTable( TableSchema schema, const std::string tableName, const DeckItem& deckItem,
+    SimpleTable::SimpleTable( TableSchema schema, const std::string& tableName, const DeckItem& deckItem,
                               const int tableID) :
         m_schema( std::move( schema ) ),
         m_jfunc (false)
@@ -85,7 +85,7 @@ namespace Opm {
         return col[row];
     }
 
-    void SimpleTable::init( const std::string tableName,
+    void SimpleTable::init( const std::string& tableName,
                             const DeckItem& deckItem,
                             const int tableID,
                             double scaling_factor) {
