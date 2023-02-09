@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -110,7 +111,6 @@ namespace Opm
 PvtgTable::PvtgTable(const DeckKeyword& keyword, size_t tableIdx)
     : PvtxTable("P")
 {
-
     m_underSaturatedSchema.addColumn(ColumnSchema("RV", Table::STRICTLY_DECREASING, Table::DEFAULT_NONE));
     m_underSaturatedSchema.addColumn(ColumnSchema("BG", Table::RANDOM, Table::DEFAULT_LINEAR));
     m_underSaturatedSchema.addColumn(ColumnSchema("MUG", Table::RANDOM, Table::DEFAULT_LINEAR));
@@ -141,7 +141,6 @@ PvtgTable::operator==(const PvtgTable& data) const
 PvtgwTable::PvtgwTable(const DeckKeyword& keyword, size_t tableIdx)
     : PvtxTable("P")
 {
-
     m_underSaturatedSchema.addColumn(ColumnSchema("RW", Table::STRICTLY_DECREASING, Table::DEFAULT_NONE));
     m_underSaturatedSchema.addColumn(ColumnSchema("BG", Table::RANDOM, Table::DEFAULT_LINEAR));
     m_underSaturatedSchema.addColumn(ColumnSchema("MUG", Table::RANDOM, Table::DEFAULT_LINEAR));
@@ -1968,7 +1967,6 @@ TracerVdTable::getTracerConcentration() const
 
 namespace
 {
-
     /*
      * Create a compile-time sequence of integers [0,N). In C++14 this can be
      * replaced by std::index_sequence.
@@ -1977,46 +1975,47 @@ namespace
     struct seq {
         using type = seq;
     };
+
     template <std::size_t N, std::size_t... Is>
     struct mkseq : mkseq<N - 1, N - 1, Is...> {
     };
+
     template <std::size_t... Is>
     struct mkseq<0u, Is...> : seq<Is...> {
         using type = seq<Is...>;
     };
 
-    /*
-     * Convenince function for creating a 'flat table', e.g. PVTW and DENSITY.
-     * Assumes the following:
-     *
-     * 1. The table has vector semantics with no other to enforce
-     * 2. That the following struct is implemented:
-     * struct record {
-     *  static constexpr std::size_t size = [number-of-members]
-     *  double members ...;
-     * };
-     * 3. The table is declared as
-     * struct table : public FlatTable< table > {
-     *  using FlatTable< table >::FlatTable;
-     * }
-     *
-     * If some field can *not* be defaulted, e.g. 0, specialise the flat_props
-     * struct (in this namespace) as such:
-     * template<> struct< record, 0 > {
-     *  static constexpr bool can_default() { return false; }
-     *  static constexpr const char* errmsg() { "error message"; }
-     * };
-     * and the parser will throw std::invalid_argument if the field is defaulted in
-     * the input.
-     *
-     */
+    // Convenince function for creating a 'flat table', e.g. PVTW and
+    // DENSITY.  Assumes the following:
+    //
+    // 1. The table has vector semantics with no other to enforce
+    // 2. That the following struct is implemented:
+    // struct record {
+    //  static constexpr std::size_t size = [number-of-members]
+    //  double members ...;
+    // };
+    // 3. The table is declared as
+    // struct table : public FlatTable< table > {
+    //  using FlatTable< table >::FlatTable;
+    // }
+    //
+    // If some field can *not* be defaulted, e.g. 0, specialise the
+    // flat_props struct (in this namespace) as such:
+    // template<> struct<record, 0> {
+    //  static constexpr bool can_default() { return false; }
+    //  static constexpr const char* errmsg() { "error message"; }
+    // };
+    // and the parser will throw std::invalid_argument if the field is
+    // defaulted in the input.
 
     template <typename T, std::size_t N>
-    struct flat_props {
+    struct flat_props
+    {
         static constexpr bool can_default()
         {
             return true;
         }
+
         static constexpr const char* errmsg()
         {
             return "";
@@ -2029,7 +2028,9 @@ namespace
         const auto& item = rec.getItem(N);
 
         if (item.defaultApplied(0) && !flat_props<T, N>::can_default()) {
-            throw std::invalid_argument {flat_props<T, N>::errmsg()};
+            throw std::invalid_argument {
+                flat_props<T, N>::errmsg()
+            };
         }
 
         return item.getSIDouble(0);
@@ -2038,7 +2039,7 @@ namespace
     template <typename T, std::size_t... Is>
     T flat_get(const DeckRecord& record, seq<Is...>)
     {
-        return {flat_get<T, Is>(record)...};
+        return { flat_get<T, Is>(record)... };
     }
 
     template <typename T, std::size_t... Is>
@@ -2055,11 +2056,13 @@ namespace
     }
 
     template <>
-    struct flat_props<PVTWRecord, 0> {
+    struct flat_props<PVTWRecord, 0>
+    {
         static constexpr bool can_default()
         {
             return false;
         }
+
         static constexpr const char* errmsg()
         {
             return "PVTW reference pressure cannot be defaulted";
@@ -2075,11 +2078,13 @@ namespace
     };
 
     template <std::size_t N>
-    struct flat_props<PVCDORecord, N> {
+    struct flat_props<PVCDORecord, N>
+    {
         static constexpr bool can_default()
         {
             return false;
         }
+
         static constexpr const char* errmsg()
         {
             return pvcdo_err[N];
@@ -2099,13 +2104,15 @@ namespace
 // ------------------------------------------------------------------------
 
 template <typename RecordType>
-FlatTableWithCopy<RecordType>::FlatTableWithCopy(const DeckKeyword& kw, std::string_view expect)
+FlatTableWithCopy<RecordType>::FlatTableWithCopy(const DeckKeyword& kw,
+                                                 std::string_view   expect)
 {
     if (!expect.empty() && (kw.name() != expect)) {
-        throw std::invalid_argument {fmt::format("Keyword {} cannot be used to "
-                                                 "initialise {} table structures",
-                                                 kw.name(),
-                                                 expect)};
+        throw std::invalid_argument {
+            fmt::format("Keyword {} cannot be used to "
+                        "initialise {} table structures",
+                        kw.name(), expect)
+        };
     }
 
     this->table_.reserve(kw.size());
@@ -2116,53 +2123,55 @@ FlatTableWithCopy<RecordType>::FlatTableWithCopy(const DeckKeyword& kw, std::str
             // table in region R-1.  Table must not be defaulted in region 1
             // (i.e., when PVTNUM=1).
             if (this->table_.empty()) {
-                throw OpmInputError {"First record cannot be defaulted", kw.location()};
+                throw OpmInputError {
+                    "First record cannot be defaulted",
+                    kw.location()
+                };
             }
 
             this->table_.push_back(this->table_.back());
-        } else {
-            this->table_.push_back(flat_get<RecordType>(record, mkseq<RecordType::size> {}));
+        }
+        else {
+            this->table_.push_back(flat_get<RecordType>(record, mkseq<RecordType::size>{}));
         }
     }
 }
 
 template <typename RecordType>
-FlatTableWithCopy<RecordType>::FlatTableWithCopy(std::initializer_list<RecordType> records)
-    : table_ {records}
-{
-}
+FlatTableWithCopy<RecordType>::
+FlatTableWithCopy(std::initializer_list<RecordType> records)
+    : table_{ records }
+{}
 
 // ------------------------------------------------------------------------
 
 GravityTable::GravityTable(const DeckKeyword& kw)
     : FlatTableWithCopy(kw, ParserKeywords::GRAVITY::keywordName)
-{
-}
+{}
 
 GravityTable::GravityTable(std::initializer_list<GRAVITYRecord> records)
     : FlatTableWithCopy(records)
-{
-}
+{}
 
 // ------------------------------------------------------------------------
 
 DensityTable::DensityTable(const DeckKeyword& kw)
     : FlatTableWithCopy(kw, ParserKeywords::DENSITY::keywordName)
-{
-}
+{}
 
 DensityTable::DensityTable(std::initializer_list<DENSITYRecord> records)
     : FlatTableWithCopy(records)
-{
-}
+{}
 
 DensityTable::DensityTable(const GravityTable& gravity)
 {
     this->table_.reserve(gravity.size());
 
-    constexpr auto default_air_density = 1.22 * unit::kilogram / unit::cubic(unit::meter);
+    constexpr auto default_air_density =
+        1.22 * unit::kilogram / unit::cubic(unit::meter);
 
-    constexpr auto default_water_density = 1000.0 * unit::kilogram / unit::cubic(unit::meter);
+    constexpr auto default_water_density =
+        1000.0 * unit::kilogram / unit::cubic(unit::meter);
 
     // Degrees API defined as
     //
@@ -2170,10 +2179,15 @@ DensityTable::DensityTable(const GravityTable& gravity)
     //
     // with SG being the specific gravity of oil relative to pure water.
 
-    std::transform(gravity.begin(), gravity.end(), std::back_inserter(this->table_), [](const GRAVITYRecord& record) {
-        return DENSITYRecord {(141.5 / (record.oil_api + 131.5)) * default_water_density,
-                              record.water_sg * default_water_density,
-                              record.gas_sg * default_air_density};
+    std::transform(gravity.begin(), gravity.end(),
+                   std::back_inserter(this->table_),
+        [](const GRAVITYRecord& record)
+    {
+        return DENSITYRecord {
+            (141.5 / (record.oil_api + 131.5)) * default_water_density,
+            record.water_sg * default_water_density,
+            record.gas_sg * default_air_density
+        };
     });
 }
 
@@ -2181,34 +2195,40 @@ DensityTable::DensityTable(const GravityTable& gravity)
 
 PvtwTable::PvtwTable(const DeckKeyword& kw)
     : FlatTableWithCopy(kw, ParserKeywords::PVTW::keywordName)
-{
-}
+{}
 
 PvtwTable::PvtwTable(std::initializer_list<PVTWRecord> records)
     : FlatTableWithCopy(records)
-{
-}
+{}
+
+// ------------------------------------------------------------------------
+
+RockTable::RockTable(const DeckKeyword& kw)
+    : FlatTableWithCopy(kw, ParserKeywords::ROCK::keywordName)
+{}
+
+RockTable::RockTable(std::initializer_list<ROCKRecord> records)
+    : FlatTableWithCopy(records)
+{}
 
 // ------------------------------------------------------------------------
 
 template <typename T>
 FlatTable<T>::FlatTable(const DeckKeyword& kw)
-    : std::vector<T>(flat_records<T>(kw, mkseq<T::size> {}))
-{
-}
+    : std::vector<T>(flat_records<T>(kw, mkseq<T::size>{}))
+{}
 
 template FlatTable<DiffCoeffRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<DiffCoeffWatRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<DiffCoeffGasRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<PVCDORecord>::FlatTable(const DeckKeyword&);
-template FlatTable<ROCKRecord>::FlatTable(const DeckKeyword&);
-template FlatTable<PlyvmhRecord>::FlatTable(const DeckKeyword&);
-template FlatTable<VISCREFRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<PlmixparRecord>::FlatTable(const DeckKeyword&);
+template FlatTable<PlyvmhRecord>::FlatTable(const DeckKeyword&);
+template FlatTable<SatFuncLETRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<ShrateRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<Stone1exRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<TlmixparRecord>::FlatTable(const DeckKeyword&);
+template FlatTable<VISCREFRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<WATDENTRecord>::FlatTable(const DeckKeyword&);
-template FlatTable<SatFuncLETRecord>::FlatTable(const DeckKeyword&);
 
 } // namespace Opm

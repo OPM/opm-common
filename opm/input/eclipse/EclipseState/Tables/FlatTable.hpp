@@ -313,12 +313,21 @@ struct ROCKRecord {
     }
 };
 
-struct RockTable : public FlatTable< ROCKRecord > {
-    using FlatTable< ROCKRecord >::FlatTable;
+struct RockTable : public FlatTableWithCopy<ROCKRecord>
+{
+    RockTable() = default;
+    explicit RockTable(const DeckKeyword& kw);
+    explicit RockTable(std::initializer_list<ROCKRecord> records);
 
     static RockTable serializationTestObject()
     {
         return RockTable({{1.0, 2.0}});
+    }
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        FlatTableWithCopy::serializeOp(serializer);
     }
 };
 

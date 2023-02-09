@@ -17,11 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-
 #define BOOST_TEST_MODULE SimulationConfigTests
 
 #include <boost/test/unit_test.hpp>
+
+#include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -29,7 +29,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -37,6 +36,9 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+
+#include <cstddef>
+#include <string>
 
 using namespace Opm;
 
@@ -280,7 +282,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
 }
 
 
-BOOST_AUTO_TEST_CASE(TESTRockConfig) {
+BOOST_AUTO_TEST_CASE(TESTRockConfig_Standard)
+{
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -309,4 +312,46 @@ ROCKOPTS
     BOOST_CHECK_EQUAL(rc.rocknum_property(), "SATNUM");
     const auto& comp = rc.comp();
     BOOST_CHECK_EQUAL(comp.size(), 3U);
+}
+
+BOOST_AUTO_TEST_CASE(TESTRockConfig_Default)
+{
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+
+TABDIMS
+  3  / -- NTSFUN = 3
+
+PROPS
+
+ROCKOPTS
+  1* 1* SATNUM /
+
+ROCK
+123.4 0.40E-05 /
+/
+271.8 1.61e-05 /
+
+)");
+
+    const auto grid = EclipseGrid { 10, 10, 10 };
+    const auto fp = FieldPropsManager {
+        deck, Phases{true, true, true}, grid, TableManager()
+    };
+
+    const auto rc = RockConfig { deck, fp };
+
+    BOOST_CHECK_EQUAL(rc.rocknum_property(), "SATNUM");
+
+    const auto& comp = rc.comp();
+    BOOST_REQUIRE_EQUAL(comp.size(), std::size_t{3});
+
+    BOOST_CHECK_CLOSE(comp[0].pref, 123.4*1.0e5, 1.0e-8);
+    BOOST_CHECK_CLOSE(comp[0].compressibility, 0.4e-5/1.0e5, 1.0e-8);
+
+    BOOST_CHECK_CLOSE(comp[1].pref, 123.4*1.0e5, 1.0e-8);
+    BOOST_CHECK_CLOSE(comp[1].compressibility, 0.4e-5/1.0e5, 1.0e-8);
+
+    BOOST_CHECK_CLOSE(comp[2].pref, 271.8*1.0e5, 1.0e-8);
+    BOOST_CHECK_CLOSE(comp[2].compressibility, 1.61e-5/1.0e5, 1.0e-8);
 }
