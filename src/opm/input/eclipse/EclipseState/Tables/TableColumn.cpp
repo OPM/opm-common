@@ -58,7 +58,7 @@ namespace Opm {
 //TODO: Print schema
     void TableColumn::assertOrder(double value1 , double value2, size_t index, std::string tableName) const {
         if (!m_schema.validOrder( value1 , value2) )
-            throw std::invalid_argument("Table " + tableName + " has incorrect ordering of values (not " + m_schema.orderSchema() + ") in column: " + m_schema.name() + ", at row: " + std::to_string(index) + ", between values: " + std::to_string(value1) + " and " + std::to_string(value2));
+            throw std::invalid_argument("Non-monotonic values in keyword " + tableName + ", at row: " + std::to_string(index) + ".\n" +  m_schema.name() + " need to be entered in " + m_schema.orderSchema() + " order." );
     }
 
     const std::string& TableColumn::name() const {
