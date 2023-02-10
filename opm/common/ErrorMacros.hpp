@@ -43,12 +43,14 @@
 // macros used to time blocks for example with tracy
 // time block of main part of codes which do not effect performance
 #ifndef OPM_TIMEBLOCK
-#define OPM_TIMEBLOCK(x) /* nothing */
+#define OPM_TIMEBLOCK(x)\
+    do { /* nothing */ } while (false)
 #endif
 
 // detailed timing which may effect performance
 #ifndef OPM_TIMEBLOCK_LOCAL
-#define OPM_TIMEBLOCK_LOCAL(x) /* nothing */
+#define OPM_TIMEBLOCK_LOCAL(x)\
+    do { /* nothing */ } while (false)
 #endif
 
 
