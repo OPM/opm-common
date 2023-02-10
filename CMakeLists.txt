@@ -114,8 +114,13 @@ macro (config_hook)
       set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                             set(HAVE_ECL_OUTPUT 1)")
     endif()
-
-    find_package(Boost COMPONENTS filesystem regex system unit_test_framework)
+    # We need to use the correct search mode. Otherwise not finding one
+    # boost component beloq will mark the previously found ones as not
+    # found again. (Code stolen from UseDynamicBoost.cmake
+    if(Boost_DIR)
+      set(_Boost_CONFIG_MODE CONFIG)
+    endif()
+    find_package(Boost COMPONENTS filesystem regex system unit_test_framework ${_Boost_CONFIG_MODE})
 
     if (HAVE_DYNAMIC_BOOST_TEST)
       set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
@@ -356,10 +361,12 @@ target_compile_options(dunecommon INTERFACE ${dflags})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
-foreach(src examples/co2brinepvt.cpp ${DUNE_TEST_SOURCE_FILES})
-  get_filename_component(tgt ${src} NAME_WE)
-  target_link_libraries(${tgt} dunecommon)
-endforeach()
+if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+  foreach(src examples/co2brinepvt.cpp ${DUNE_TEST_SOURCE_FILES})
+    get_filename_component(tgt ${src} NAME_WE)
+    target_link_libraries(${tgt} dunecommon)
+  endforeach()
+endif()
 
 # Install build system files and documentation
 install(DIRECTORY cmake
