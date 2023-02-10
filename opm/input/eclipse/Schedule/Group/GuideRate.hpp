@@ -52,9 +52,22 @@ public:
             , wat_rat(wrat)
         {}
 
+        static RateVector serializationTestObject()
+        {
+            return RateVector{1.0, 2.0, 3.0};
+        }
+
         double eval(const WellGuideRateTarget target) const;
         double eval(const Group::GuideRateProdTarget target) const;
         double eval(const GuideRateModel::Target target) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(oil_rat);
+            serializer(gas_rat);
+            serializer(wat_rat);
+        }
 
         double oil_rat{0.0};
         double gas_rat{0.0};
@@ -69,6 +82,11 @@ public:
             , target  (tg)
         {}
 
+        static GuideRateValue serializationTestObject()
+        {
+            return GuideRateValue{1.0, 2.0, GuideRateModel::Target::LIQ};
+        }
+
         bool operator==(const GuideRateValue& other) const
         {
             return (this->sim_time == other.sim_time)
@@ -80,12 +98,22 @@ public:
             return !(*this == other);
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(sim_time);
+            serializer(value);
+            serializer(target);
+        }
+
         double sim_time { std::numeric_limits<double>::lowest() };
         double value { std::numeric_limits<double>::lowest() };
         GuideRateModel::Target target { GuideRateModel::Target::NONE };
     };
 
     GuideRate(const Schedule& schedule);
+
+    void setSerializationTestData();
 
     void compute(const std::string& wgname,
                  const std::size_t  report_step,
@@ -119,11 +147,49 @@ public:
     void updateGuideRateExpiration(const double      sim_time,
                                    const std::size_t report_step);
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        if (serializer.isSerializing()) {
+            serializer(values.size());
+            for (const auto& [key, value] : values) {
+              serializer(key);
+              serializer(*value);
+            }
+        } else {
+            std::size_t size = 0;
+            serializer(size);
+            for (size_t i = 0; i < size; ++i) {
+                std::string key;
+                serializer(key);
+                auto val = values.emplace(key, std::make_unique<GRValState>());
+                if (val.first != values.end())
+                    serializer(*val.first->second);
+            }
+        }
+        serializer(injection_group_values);
+        serializer(potentials);
+        serializer(guide_rates_expired);
+    }
+
 private:
     struct GRValState
     {
         GuideRateValue curr{};
         GuideRateValue prev{};
+
+        static GRValState serializationTestObject()
+        {
+            return GRValState{GuideRateValue::serializationTestObject(),
+                              GuideRateValue::serializationTestObject()};
+        }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(curr);
+            serializer(prev);
+        }
     };
 
     struct pair_hash
