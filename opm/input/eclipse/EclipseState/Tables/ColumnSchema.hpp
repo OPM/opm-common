@@ -37,6 +37,7 @@ namespace Opm {
         static ColumnSchema serializationTestObject();
 
         const std::string& name() const;
+        std::string orderSchema() const;
         bool validOrder( double value1 , double value2) const;
         bool lookupValid( ) const;
         bool acceptsDefault( ) const;

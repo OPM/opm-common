@@ -62,7 +62,29 @@ namespace Opm {
     const std::string& ColumnSchema::name() const {
         return m_name;
     }
-
+ 
+    std::string ColumnSchema::orderSchema() const {
+        switch (m_order) {
+        case Table::RANDOM:            
+            return "random";
+            break;
+        case Table::INCREASING:
+            return "increasing";
+            break;
+        case Table::STRICTLY_INCREASING:
+            return "strictly increasing";
+            break;
+        case Table::DECREASING:
+            return "decreasing";
+            break;
+        case Table::STRICTLY_DECREASING:
+            return "strictly decreasing";
+            break;
+        default:
+             throw std::invalid_argument("Internal error - should not be here\n");
+        }
+    }
+ 
     bool ColumnSchema::validOrder( double value1 , double value2) const {
         switch (m_order) {
         case Table::RANDOM:
