@@ -96,6 +96,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/EndpointScaling.cpp
     src/opm/input/eclipse/EclipseState/Grid/Box.cpp
     src/opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
+    src/opm/input/eclipse/EclipseState/Grid/Carfin.cpp
+    src/opm/input/eclipse/EclipseState/Grid/CarfinManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
     src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
     src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
@@ -110,6 +112,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/Grid/NNC.cpp
     src/opm/input/eclipse/EclipseState/Grid/Operate.cpp
     src/opm/input/eclipse/EclipseState/Grid/PinchMode.cpp
+    src/opm/input/eclipse/EclipseState/Grid/readKeywordCarfin.cpp
     src/opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
     src/opm/input/eclipse/EclipseState/Grid/setKeywordBox.cpp
     src/opm/input/eclipse/EclipseState/Grid/TranCalculator.cpp
@@ -445,6 +448,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
     tests/parser/BoxTests.cpp
+    tests/parser/CarfinTests.cpp
     tests/parser/ColumnSchemaTests.cpp
     tests/parser/ConnectionTests.cpp
     tests/parser/COMPSEGUnits.cpp
@@ -973,12 +977,14 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp
        opm/input/eclipse/EclipseState/Grid/Fault.hpp
        opm/input/eclipse/EclipseState/Grid/Box.hpp
+       opm/input/eclipse/EclipseState/Grid/Carfin.hpp
        opm/input/eclipse/EclipseState/Grid/FieldProps.hpp
        opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp
        opm/input/eclipse/EclipseState/Grid/FaultFace.hpp
        opm/input/eclipse/EclipseState/Grid/NNC.hpp
        opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp
        opm/input/eclipse/EclipseState/Grid/BoxManager.hpp
+       opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp
        opm/input/eclipse/EclipseState/Grid/FaceDir.hpp
        opm/input/eclipse/EclipseState/Grid/MapAxes.hpp
        opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp
