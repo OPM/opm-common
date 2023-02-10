@@ -2521,6 +2521,10 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
         st.update_conn_var(node.wgname, node.keyword, node.number, value);
         break;
 
+    case Cat::Segment:
+        st.update_segment_var(node.wgname, node.keyword, node.number, value);
+        break;
+
     default:
         st.update(node.unique_key(), value);
         break;
