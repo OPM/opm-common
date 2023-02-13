@@ -38,6 +38,14 @@ namespace Opm {
         }
     }
 
+    bool AquiferFlux::operator==(const AquiferFlux& other) const {
+       return this->id == other.id &&
+              this->flux == other.flux &&
+              this->salt_concentration == other.salt_concentration &&
+              this->temperature == other.temperature &&
+              this->datum_pressure == other.datum_pressure;
+    }
+
     int AquiferFlux::name() const
     {
         return this->id;

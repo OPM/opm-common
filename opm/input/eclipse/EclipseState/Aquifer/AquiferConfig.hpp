@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 #include <cstddef>
@@ -43,10 +44,12 @@ namespace Opm {
 
 class AquiferConfig {
 public:
+    using AquFluxs = std::unordered_map<int, AquiferFlux>;
+
     AquiferConfig() = default;
     AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
                   const Deck& deck, const FieldPropsManager& field_props);
-    AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
+    AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const AquFluxs& aqufluxs, const Aquancon& conn);
     void load_connections(const Deck& deck, const EclipseGrid& grid);
 
     void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
@@ -58,6 +61,7 @@ public:
     bool active() const;
     const AquiferCT& ct() const;
     const Aquifetp& fetp() const;
+    const AquFluxs& aquflux() const;
     const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other) const;
     bool hasAquifer(const int aquID) const;
@@ -74,12 +78,15 @@ public:
         serializer(aquifetp);
         serializer(aquiferct);
         serializer(aqconn);
+        // TODO:
+        // serializer(aquiferflux);
         serializer(numerical_aquifers);
     }
 
 private:
     Aquifetp aquifetp{};
     AquiferCT aquiferct{};
+    AquFluxs aquiferflux{};
     mutable NumericalAquifers numerical_aquifers{};
     Aquancon aqconn{};
 };

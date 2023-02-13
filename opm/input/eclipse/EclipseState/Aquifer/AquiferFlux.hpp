@@ -40,6 +40,8 @@ namespace  Opm {
         // to work with ScheduleState::map_member
         int name() const;
 
+        bool operator==(const AquiferFlux& other) const;
+
         static std::unordered_map<int, AquiferFlux> aqufluxFromKeywords(const std::vector<const DeckKeyword*>& keywords);
     };
 } // end of namespace Opm
