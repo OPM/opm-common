@@ -55,6 +55,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
@@ -92,8 +93,6 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
-
-#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 
 #include "Well/injection.hpp"
 
@@ -2263,7 +2262,7 @@ Well{0} entered with disallowed 'FIELD' parent group:
         static const std::unordered_map<std::string,handler_function> handler_functions = {
             { "AQUCT",    &Schedule::handleAQUCT     },
             { "AQUFETP",  &Schedule::handleAQUFETP   },
-            {"AQUFLUX",   &Schedule::handleAQUFLUX},
+            { "AQUFLUX",  &Schedule::handleAQUFLUX   },
             { "BOX",      &Schedule::handleGEOKeyword},
             { "BRANPROP", &Schedule::handleBRANPROP  },
             { "COMPDAT" , &Schedule::handleCOMPDAT   },

@@ -214,13 +214,13 @@ namespace Opm {
                 throw std::logic_error("Bug: when loading from restart a valid TracerConfig object must be supplied");
 
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection(0, restart_step, parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, "");
             this->load_rst(*rst, *tracer_config, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection(restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
         } else {
-            this->iterateScheduleSection(0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
         }
 
         //m_grid = std::make_shared<SparseScheduleGrid>(grid, gridWrapper.getHitKeys());
@@ -624,8 +624,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                        block.location().lineno));
                 }
             }
-            // TODO: we should pass in the AQUFLUX related (SOLUTION keywords that can be updated with SCHEDULE)
-            // if there is no RESTART, we just give it to the Report Step zero. 
             this->create_next(block);
 
             std::unordered_map<std::string, double> wpimult_global_factor;
@@ -1128,21 +1126,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     std::vector<int> Schedule::getAquiferFluxListEnd() const {
-        // TODO: currently, we assume that after an aquifer is created, we will not be able to remove it anymore
-        // we can only update/modify it
+        // TODO: here, we assume that after an aquifer is created, we will not be able to remove it anymore
+        // we can only update/modify it within SCHEDULE
         const auto& aquifers = this->snapshots.back().aqufluxs;
         std::vector<int> ids; ids.reserve(aquifers.size());
-        for (const auto& elem : aquifers) {
-            ids.push_back(elem.first);
+        for ([[maybe_unused]] const auto& [id, aqu]  : aquifers) {
+            ids.push_back(id);
         }
         return ids;
-    }
-
-    bool Schedule::hasAquiferFlux(const int id) const {
-        // TODO: currently, we assume that after an aquifer is created, we will not be able to remove it anymore
-        // we can only update/modify it
-        const auto& aquifers = this->snapshots.back().aqufluxs;
-        return aquifers.has(id);
     }
 
     const Well& Schedule::getWell(const std::string& wellName, std::size_t timeStep) const {
@@ -1494,13 +1485,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->end_report(reportStep);
         if (reportStep < this->m_sched_deck.size() - 1) {
             iterateScheduleSection(
-                    reportStep + 1,
-                    this->m_sched_deck.size(),
-                    parseContext,
-                    errors,
-                    grid,
-                    &target_wellpi,
-                    prefix);
+                reportStep + 1,
+                this->m_sched_deck.size(),
+                parseContext,
+                errors,
+                grid,
+                &target_wellpi,
+                prefix);
         }
     }
 
@@ -1544,8 +1535,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         if (reportStep < this->m_sched_deck.size() - 1) {
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
-                                         parseContext, errors, grid,
-                                         &target_wellpi,
+                                         parseContext, errors, grid, &target_wellpi,
                                          prefix, log_to_debug);
         }
         OpmLog::debug("\\----------------------------------------------------------------------");

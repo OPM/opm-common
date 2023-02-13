@@ -883,7 +883,6 @@ Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
 namespace {
     int getNumberOfAnalyticAquifers(const Opm::AquiferConfig& cfg)
     {
-        // TODO: this can be function for AquiferConfig
         const auto numAnalyticAquifers = cfg.ct().size() + cfg.fetp().size() + cfg.aquflux().size();
 
         return static_cast<int>(numAnalyticAquifers);

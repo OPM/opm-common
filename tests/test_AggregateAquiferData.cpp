@@ -339,6 +339,12 @@ AQUTAB
         return Opm::Aquifetp(properties);
     }
 
+    Opm::AquiferConfig::AquFluxs createAquiferFluxs() {
+        // TODO: just for compilation for now, will complete it
+        Opm::AquiferConfig::AquFluxs aquifers;
+        return aquifers;
+    }
+
     Opm::AquiferConfig createAquiferConfig()
     {
         auto aquancon = AquiferConnections{};
@@ -346,7 +352,7 @@ AQUTAB
         connectFetkovic(aquancon);
 
         return {
-            createFetkovich(), createCarterTracy(), Opm::Aquancon(aquancon.getAllConnections())
+            createFetkovich(), createCarterTracy(), createAquiferFluxs(), Opm::Aquancon(aquancon.getAllConnections())
         };
     }
 
