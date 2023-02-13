@@ -139,7 +139,16 @@ bool AquiferConfig::hasAnalyticalAquifer() const {
         || !this->aquiferflux.empty();
 }
 
+void AquiferConfig::appendAqufluxSchedule(const std::vector<int>& ids) {
+    for (const auto& id : ids) {
+        if (this->aquiferflux.find(id) == this->aquiferflux.end()) {
+            // we create an inactvie dummy aquflux aquifers
+            this->aquiferflux.insert({id, AquiferFlux{id}});
+        }
+    }
 }
+
+} // end of namespace Opm
 
 std::vector<int> Opm::analyticAquiferIDs(const AquiferConfig& cfg)
 {

@@ -56,6 +56,8 @@ public:
     void loadFromRestart(const RestartIO::RstAquifer& aquifers,
                          const TableManager&          tables);
 
+    void appendAqufluxSchedule(const std::vector<int>& ids);
+
     static AquiferConfig serializationTestObject();
 
     bool active() const;

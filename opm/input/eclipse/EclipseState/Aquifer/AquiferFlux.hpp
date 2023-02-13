@@ -32,9 +32,12 @@ namespace Opm {
 namespace  Opm {
     struct AquiferFlux {
         explicit AquiferFlux(const DeckRecord& record);
+        // using id to create a noninactive dummy aquifer
+        explicit AquiferFlux(const int id);
         int id;
         double flux;
         double salt_concentration;
+        bool active;
         std::optional<double> temperature;
         std::optional<double> datum_pressure;
         // to work with ScheduleState::map_member

@@ -613,9 +613,6 @@ namespace Opm
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
                                     const ScheduleGrid& grid,
-                                    // TODO: depending on the usage of the function, passing Deck or SOLUTIONSection
-                                    // might be better
-                                    const std::unordered_map<int, AquiferFlux>& aqufluxs,
                                     const std::unordered_map<std::string, double> * target_wellpi,
                                     const std::string& prefix,
                                     const bool log_to_debug = false);

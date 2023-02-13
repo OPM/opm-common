@@ -28,6 +28,7 @@ namespace Opm {
     : id (record.getItem<ParserKeywords::AQUFLUX::AQUIFER_ID>().get<int>(0))
     , flux(record.getItem<ParserKeywords::AQUFLUX::FLUX>().getSIDouble(0))
     , salt_concentration(record.getItem<ParserKeywords::AQUFLUX::SC_0>().getSIDouble(0))
+    , active(true)
     {
         if (record.getItem<ParserKeywords::AQUFLUX::TEMP>().hasValue(0)) {
             this->temperature = record.getItem<ParserKeywords::AQUFLUX::TEMP>().getSIDouble(0);
@@ -38,10 +39,17 @@ namespace Opm {
         }
     }
 
+    AquiferFlux::AquiferFlux(const int aquifer_id)
+    : id (aquifer_id)
+    , active(false)
+    {
+    }
+
     bool AquiferFlux::operator==(const AquiferFlux& other) const {
        return this->id == other.id &&
               this->flux == other.flux &&
               this->salt_concentration == other.salt_concentration &&
+              this->active == other.active &&
               this->temperature == other.temperature &&
               this->datum_pressure == other.datum_pressure;
     }
