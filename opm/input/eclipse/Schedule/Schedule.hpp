@@ -367,7 +367,7 @@ namespace Opm
             this->template pack_unpack_map<int, VFPInjTable>(serializer);
             this->template pack_unpack_map<std::string, Group>(serializer);
             this->template pack_unpack_map<std::string, Well>(serializer);
-            // TODO: anything related to aquflux aquifers?
+            this->template pack_unpack_map<int, AquiferFlux>(serializer);
         }
 
         template <typename T, class Serializer>

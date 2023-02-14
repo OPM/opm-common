@@ -467,6 +467,8 @@ namespace Opm {
                              return this->groups;
             else if constexpr ( std::is_same_v<T, Well> )
                                   return this->wells;
+            else if constexpr ( std::is_same_v<T, AquiferFlux> )
+                                  return this->aqufluxs;
             else
                 static_assert(always_false2<K,T>::value, "Template type <K,T> not supported in get_map()");
         }

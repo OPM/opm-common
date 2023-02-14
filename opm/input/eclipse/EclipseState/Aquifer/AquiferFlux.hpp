@@ -32,18 +32,34 @@ namespace Opm {
 namespace  Opm {
     struct AquiferFlux {
         explicit AquiferFlux(const DeckRecord& record);
+
         // using id to create a noninactive dummy aquifer
-        explicit AquiferFlux(const int id);
+        explicit AquiferFlux(int id);
+
+        AquiferFlux() = default;
+
         int id;
         double flux;
         double salt_concentration;
         bool active;
         std::optional<double> temperature;
         std::optional<double> datum_pressure;
+
         // to work with ScheduleState::map_member
         int name() const;
 
         bool operator==(const AquiferFlux& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->id);
+            serializer(this->flux);
+            serializer(this->salt_concentration);
+            serializer(this->active);
+            serializer(this->temperature);
+            serializer(this->datum_pressure);
+        }
 
         static std::unordered_map<int, AquiferFlux> aqufluxFromKeywords(const std::vector<const DeckKeyword*>& keywords);
     };

@@ -80,8 +80,7 @@ public:
         serializer(aquifetp);
         serializer(aquiferct);
         serializer(aqconn);
-        // TODO:
-        // serializer(aquiferflux);
+        serializer(aquiferflux);
         serializer(numerical_aquifers);
     }
 

@@ -83,7 +83,8 @@ AquiferConfig AquiferConfig::serializationTestObject()
 
 bool AquiferConfig::active() const {
     return this->hasAnalyticalAquifer() ||
-           this->hasNumericalAquifer();
+           this->hasNumericalAquifer() ||
+           !this->aquiferflux.empty() ;
 }
 
 bool AquiferConfig::operator==(const AquiferConfig& other) const {
