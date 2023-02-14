@@ -484,10 +484,6 @@ public:
     /*!
      * \brief Return the PVT region where the current fluid state is assumed to be part of.
      *
-     * This is an ECL specfic concept. It is basically a kludge to account for the fact
-     * that the fluids components treated by the black-oil model exhibit different
-     * compositions in different parts of the reservoir, while the black-oil model always
-     * treats them as "oil", "gas" and "water".
      */
     unsigned short pvtRegionIndex() const
     { return pvtRegionIdx_; }
