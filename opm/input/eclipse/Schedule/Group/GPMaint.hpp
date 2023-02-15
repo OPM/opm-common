@@ -20,6 +20,7 @@
 #ifndef GPMAINT_HPP
 #define GPMAINT_HPP
 
+#include <cstddef>
 #include <optional>
 #include <string>
 
@@ -44,15 +45,9 @@ public:
         double error_integral;
         double initial_rate;
 
-        static State serializationTestObject()
-        {
-            State result;
-            result.report_step = 1;
-            result.error_integral = 2.0;
-            result.initial_rate = 3.0;
+        static State serializationTestObject();
 
-            return result;
-        }
+        bool operator==(const State& rhs) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
