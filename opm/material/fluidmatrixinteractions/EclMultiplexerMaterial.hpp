@@ -26,7 +26,7 @@
  */
 #ifndef OPM_ECL_MULTIPLEXER_MATERIAL_HPP
 #define OPM_ECL_MULTIPLEXER_MATERIAL_HPP
-
+#include <opm/common/ErrorMacros.hpp>
 #include "EclMultiplexerMaterialParams.hpp"
 #include "EclDefaultMaterial.hpp"
 #include "EclStone1Material.hpp"
@@ -134,6 +134,7 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
+        OPM_TIMEBLOCK_LOCAL(capillaryPressures);
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::capillaryPressures(values,
@@ -406,6 +407,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
+        OPM_TIMEBLOCK_LOCAL(relativePermeabilities);
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::relativePermeabilities(values,

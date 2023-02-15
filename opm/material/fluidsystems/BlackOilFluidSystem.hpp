@@ -26,7 +26,7 @@
  */
 #ifndef OPM_BLACK_OIL_FLUID_SYSTEM_HPP
 #define OPM_BLACK_OIL_FLUID_SYSTEM_HPP
-
+#include <opm/common/ErrorMacros.hpp>
 #include "BlackOilDefaultIndexTraits.hpp"
 #include "blackoilpvt/OilPvtMultiplexer.hpp"
 #include "blackoilpvt/GasPvtMultiplexer.hpp"
@@ -723,6 +723,7 @@ public:
                                                 unsigned phaseIdx,
                                                 unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(inverseFormationVolumeFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -822,6 +823,7 @@ public:
                                                          unsigned phaseIdx,
                                                          unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(saturatedInverseFormationVolumeFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -965,6 +967,7 @@ public:
                              unsigned phaseIdx,
                              unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(viscosity);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1125,6 +1128,7 @@ public:
                                               unsigned regionIdx,
                                               const LhsEval& maxOilSaturation)
     {
+        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1154,6 +1158,7 @@ public:
                                               unsigned phaseIdx,
                                               unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
