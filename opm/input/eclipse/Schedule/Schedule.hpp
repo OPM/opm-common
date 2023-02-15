@@ -673,6 +673,8 @@ namespace Opm
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
 
+        void handleAQUCT     (HandlerContext&);
+        void handleAQUFETP   (HandlerContext&);
         void handleBRANPROP  (HandlerContext&);
         void handleCOMPDAT   (HandlerContext&);
         void handleCOMPLUMP  (HandlerContext&);

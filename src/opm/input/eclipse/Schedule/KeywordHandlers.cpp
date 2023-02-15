@@ -124,7 +124,13 @@ namespace {
     }
 
 }
+    void Schedule::handleAQUCT(HandlerContext& handlerContext) {
+        throw OpmInputError("AQUCT is not supported as SCHEDULE keyword", handlerContext.keyword.location());
+    }
 
+    void Schedule::handleAQUFETP(HandlerContext& handlerContext) {
+        throw OpmInputError("AQUFETP is not supported as SCHEDULE keyword", handlerContext.keyword.location());
+    }
 
     void Schedule::handleBRANPROP(HandlerContext& handlerContext) {
         auto ext_network = this->snapshots.back().network.get();
@@ -2245,6 +2251,8 @@ Well{0} entered with disallowed 'FIELD' parent group:
     bool Schedule::handleNormalKeyword(HandlerContext& handlerContext) {
         using handler_function = void (Schedule::*) (HandlerContext&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
+            { "AQUCT",    &Schedule::handleAQUCT     },
+            { "AQUFETP",  &Schedule::handleAQUFETP   },
             { "BOX",      &Schedule::handleGEOKeyword},
             { "BRANPROP", &Schedule::handleBRANPROP  },
             { "COMPDAT" , &Schedule::handleCOMPDAT   },
