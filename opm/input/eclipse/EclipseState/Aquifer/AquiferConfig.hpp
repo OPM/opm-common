@@ -28,6 +28,7 @@
 
 #include <cstddef>
 #include <vector>
+#include <unordered_set>
 
 namespace Opm {
     class TableManager;
@@ -56,7 +57,7 @@ public:
     void loadFromRestart(const RestartIO::RstAquifer& aquifers,
                          const TableManager&          tables);
 
-    void appendAqufluxSchedule(const std::vector<int>& ids);
+    void appendAqufluxSchedule(const std::unordered_set<int>& ids);
 
     static AquiferConfig serializationTestObject();
 

@@ -467,8 +467,6 @@ namespace Opm {
                              return this->groups;
             else if constexpr ( std::is_same_v<T, Well> )
                                   return this->wells;
-            else if constexpr ( std::is_same_v<T, AquiferFlux> )
-                                  return this->aqufluxs;
             else
                 static_assert(always_false2<K,T>::value, "Template type <K,T> not supported in get_map()");
         }
@@ -478,7 +476,7 @@ namespace Opm {
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
         // constant flux aquifers
-        map_member<int, AquiferFlux> aqufluxs;
+        std::unordered_map<int, AquiferFlux> aqufluxs;
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 
@@ -506,6 +504,7 @@ namespace Opm {
             serializer(m_message_limits);
             serializer(m_whistctl_mode);
             serializer(target_wellpi);
+            serializer(aqufluxs);
         }
 
 

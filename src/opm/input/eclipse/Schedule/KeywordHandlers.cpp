@@ -134,10 +134,11 @@ namespace {
     }
 
     void Schedule::handleAQUFLUX(Schedule::HandlerContext& handlerContext) {
+        // auto& aqufluxs = this->snapshots.back().aqufluxs;
         auto& aqufluxs = this->snapshots.back().aqufluxs;
         for (const auto& record : handlerContext.keyword) {
             AquiferFlux aquifer(record);
-            aqufluxs.update(aquifer);
+            aqufluxs.insert({aquifer.id, aquifer});
         }
     }
 

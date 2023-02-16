@@ -116,7 +116,7 @@ namespace Opm {
         // For the ease of the implementation, we create inactive aquifer in the AquiferConfig.
         // At the moment, it only works for Constant Flux Aquifers(AQUFLUX) as indicated by the function name
         // When we know and decide to handle the same for AQUFETP and AQUCT, this part will be refactored
-        void appendAqufluxSchedule(const std::vector<int> ids);
+        void appendAqufluxSchedule(const std::unordered_set<int>& ids);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

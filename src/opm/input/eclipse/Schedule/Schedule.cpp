@@ -1125,13 +1125,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->getWell(well_name, this->snapshots.size() - 1);
     }
 
-    std::vector<int> Schedule::getAquiferFluxListEnd() const {
-        // TODO: here, we assume that after an aquifer is created, we will not be able to remove it anymore
-        // we can only update/modify it within SCHEDULE
-        const auto& aquifers = this->snapshots.back().aqufluxs;
-        std::vector<int> ids; ids.reserve(aquifers.size());
-        for ([[maybe_unused]] const auto& [id, aqu]  : aquifers) {
-            ids.push_back(id);
+    std::unordered_set<int> Schedule::getAquiferFluxSchedule() const {
+        std::unordered_set<int> ids;
+        for (const auto& snapshot : this->snapshots) {
+            const auto& aquflux = snapshot.aqufluxs;
+            for ([[maybe_unused]] const auto& [id, aqu]  : aquflux) {
+                ids.insert(id);
+            }
         }
         return ids;
     }

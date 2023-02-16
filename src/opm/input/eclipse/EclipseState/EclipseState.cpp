@@ -290,7 +290,7 @@ namespace Opm {
             this->aquifer_config.loadFromRestart(aquifers, this->m_tables);
     }
 
-    void EclipseState::appendAqufluxSchedule(const std::vector<int> ids) {
+    void EclipseState::appendAqufluxSchedule(const std::unordered_set<int>& ids) {
         this->aquifer_config.appendAqufluxSchedule(ids);
     }
 

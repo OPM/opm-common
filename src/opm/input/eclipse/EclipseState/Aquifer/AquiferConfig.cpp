@@ -140,10 +140,11 @@ bool AquiferConfig::hasAnalyticalAquifer() const {
         || !this->aquiferflux.empty();
 }
 
-void AquiferConfig::appendAqufluxSchedule(const std::vector<int>& ids) {
+void AquiferConfig::appendAqufluxSchedule(const std::unordered_set<int>& ids) {
     for (const auto& id : ids) {
         if (this->aquiferflux.find(id) == this->aquiferflux.end()) {
-            // we create an inactvie dummy aquflux aquifers
+            // we create an inactvie dummy aquflux aquifers,
+            // while essentially, we only need the list of the ids
             this->aquiferflux.insert({id, AquiferFlux{id}});
         }
     }
