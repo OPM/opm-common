@@ -245,9 +245,8 @@ std::tuple<
 EclMaterialLawManager<Traits>::InitParams::HystParams::
 readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type)
 {
-    const EclEpsConfig& config = *(this->parent_.gasOilConfig_);
+    const EclEpsConfig& config = (type == EclTwoPhaseSystemType::OilWater)?  *(this->parent_.oilWaterConfig_): *(this->parent_.gasOilConfig_);
     unsigned satRegionIdx = epsGridProperties.satRegion( elemIdx );
-
     // Copy-construct a new instance of EclEpsScalingPointsInfo
     EclEpsScalingPointsInfo<Scalar> destInfo(this->parent_.unscaledEpsInfo_[satRegionIdx]);
     // TODO: currently epsGridProperties does not implement a face direction, e.g. SWLX, SWLY,...
