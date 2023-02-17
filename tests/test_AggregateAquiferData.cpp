@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -339,9 +340,9 @@ AQUTAB
         return Opm::Aquifetp(properties);
     }
 
-    Opm::AquiferConfig::AquFluxs createAquiferFluxs() {
+    Opm::AquiferFlux createAquiferFluxs() {
         // TODO: just for compilation for now, will complete it
-        Opm::AquiferConfig::AquFluxs aquifers;
+        Opm::AquiferFlux aquifers;
         return aquifers;
     }
 

@@ -34,13 +34,13 @@ AquiferConfig::AquiferConfig(const TableManager& tables,
                              const FieldPropsManager& field_props)
     : aquifetp(tables, deck)
     , aquiferct(tables, deck)
-    , aquiferflux(AquiferFlux::aqufluxFromKeywords(SOLUTIONSection(deck).getKeywordList("AQUFLUX")) )
+    , aquiferflux(SOLUTIONSection(deck).getKeywordList("AQUFLUX"))
     , numerical_aquifers(deck, grid, field_props)
 {}
 
 AquiferConfig::AquiferConfig(const Aquifetp& fetp,
                              const AquiferCT& ct,
-                             const AquFluxs& aqufluxs,
+                             const AquiferFlux& aqufluxs,
                              const Aquancon& conn)
     : aquifetp(fetp)
     , aquiferct(ct)
@@ -65,8 +65,8 @@ void AquiferConfig::loadFromRestart(const RestartIO::RstAquifer& aquifers,
 {
     this->aquifetp.loadFromRestart(aquifers, tables);
     this->aquiferct.loadFromRestart(aquifers, tables);
+    this->aquiferflux.loadFromRestart(aquifers);
     this->aqconn.loadFromRestart(aquifers);
-    // TODO: loadFromrestart for AQUFLUX;
 }
 
 AquiferConfig AquiferConfig::serializationTestObject()
@@ -75,16 +75,15 @@ AquiferConfig AquiferConfig::serializationTestObject()
     result.aquifetp = Aquifetp::serializationTestObject();
     result.aquiferct = AquiferCT::serializationTestObject();
     result.aqconn = Aquancon::serializationTestObject();
+    result.aquiferflux = AquiferFlux::serializationTestObject();
     result.numerical_aquifers = NumericalAquifers::serializationTestObject();
-    // TODO: serializationTestObject for AQUFLUX
 
     return result;
 }
 
 bool AquiferConfig::active() const {
     return this->hasAnalyticalAquifer() ||
-           this->hasNumericalAquifer() ||
-           !this->aquiferflux.empty() ;
+           this->hasNumericalAquifer();
 }
 
 bool AquiferConfig::operator==(const AquiferConfig& other) const {
@@ -107,7 +106,7 @@ const Aquancon& AquiferConfig::connections() const {
     return this->aqconn;
 }
 
-const AquiferConfig::AquFluxs& AquiferConfig::aquflux() const {
+const AquiferFlux& AquiferConfig::aquflux() const {
     return this->aquiferflux;
 }
 
@@ -119,7 +118,7 @@ bool AquiferConfig::hasAquifer(const int aquID) const {
 bool AquiferConfig::hasAnalyticalAquifer(const int aquID) const {
     return aquifetp.hasAquifer(aquID) ||
            aquiferct.hasAquifer(aquID) ||
-           aquiferflux.count(aquID) > 0;
+           aquiferflux.hasAquifer(aquID);
 }
 
 bool AquiferConfig::hasNumericalAquifer() const {
@@ -137,17 +136,11 @@ NumericalAquifers& AquiferConfig::mutableNumericalAquifers() const {
 bool AquiferConfig::hasAnalyticalAquifer() const {
     return (this->aquiferct.size() > std::size_t{0})
         || (this->aquifetp.size() > std::size_t{0})
-        || !this->aquiferflux.empty();
+        || (this->aquiferflux.size() > std::size_t{0});
 }
 
 void AquiferConfig::appendAqufluxSchedule(const std::unordered_set<int>& ids) {
-    for (const auto& id : ids) {
-        if (this->aquiferflux.find(id) == this->aquiferflux.end()) {
-            // we create an inactvie dummy aquflux aquifers,
-            // while essentially, we only need the list of the ids
-            this->aquiferflux.insert({id, AquiferFlux{id}});
-        }
-    }
+    this->aquiferflux.appendAqufluxSchedule(ids);
 }
 
 } // end of namespace Opm
@@ -165,8 +158,8 @@ std::vector<int> Opm::analyticAquiferIDs(const AquiferConfig& cfg)
     for (const auto& aquifer : cfg.fetp())
         aquiferIDs.push_back(aquifer.aquiferID);
 
-    for ([[maybe_unused]] const auto& [id, aqu] : cfg.aquflux())
-        aquiferIDs.push_back(id);
+    for (const auto& aquifer : cfg.aquflux())
+        aquiferIDs.push_back(aquifer.second.id);
 
     std::sort(aquiferIDs.begin(), aquiferIDs.end());
 

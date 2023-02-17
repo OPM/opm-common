@@ -24,7 +24,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
-    AquiferFlux::AquiferFlux(const DeckRecord& record)
+    SingleAquiferFlux::SingleAquiferFlux(const DeckRecord& record)
     : id (record.getItem<ParserKeywords::AQUFLUX::AQUIFER_ID>().get<int>(0))
     , flux(record.getItem<ParserKeywords::AQUFLUX::FLUX>().getSIDouble(0))
     , salt_concentration(record.getItem<ParserKeywords::AQUFLUX::SC_0>().getSIDouble(0))
@@ -39,13 +39,23 @@ namespace Opm {
         }
     }
 
-    AquiferFlux::AquiferFlux(const int aquifer_id)
+    SingleAquiferFlux::SingleAquiferFlux(const int aquifer_id)
     : id (aquifer_id)
     , active(false)
     {
     }
 
-    bool AquiferFlux::operator==(const AquiferFlux& other) const {
+    SingleAquiferFlux::SingleAquiferFlux(const int id_arg, const double flux_arg, const double sal,
+                                         const bool active_arg, double temp, double pres)
+       : id(id_arg)
+       , flux(flux_arg)
+       , salt_concentration(sal)
+       , active(active_arg)
+       , temperature(temp)
+       , datum_pressure(pres)
+    {}
+
+    bool SingleAquiferFlux::operator==(const SingleAquiferFlux& other) const {
        return this->id == other.id &&
               this->flux == other.flux &&
               this->salt_concentration == other.salt_concentration &&
@@ -54,21 +64,58 @@ namespace Opm {
               this->datum_pressure == other.datum_pressure;
     }
 
-    int AquiferFlux::name() const
-    {
-        return this->id;
+    SingleAquiferFlux SingleAquiferFlux::serializationTestObject() {
+        SingleAquiferFlux result(1, 5., 3.0, true, 8.0, 10.0);
+        return result;
     }
 
-    std::unordered_map<int, AquiferFlux>
-            AquiferFlux::aqufluxFromKeywords(const std::vector<const DeckKeyword*>& keywords)
-    {
-        std::unordered_map<int, AquiferFlux> aquifer_constant_flux;
-        for (const auto* keyword : keywords) {
-            for (const auto& record : *keyword) {
-                AquiferFlux aquifer(record);
-                aquifer_constant_flux.insert_or_assign(aquifer.id, aquifer);
+    void AquiferFlux::appendAqufluxSchedule(const std::unordered_set<int>& ids) {
+        for (const auto& id : ids) {
+            if (this->m_aquifers.count(id) == 0) {
+                // we create an inactvie dummy aquflux aquifers,
+                // while essentially, we only need the list of the ids
+                this->m_aquifers.insert({id, SingleAquiferFlux{id}});
             }
         }
-        return aquifer_constant_flux;
+    }
+
+    AquiferFlux::AquiferFlux(const std::vector<const DeckKeyword*>& keywords) {
+        for (const auto* keyword : keywords) {
+            for (const auto& record : *keyword) {
+                SingleAquiferFlux aquifer(record);
+                this->m_aquifers.insert_or_assign(aquifer.id, aquifer);
+            }
+        }
+    }
+
+    bool AquiferFlux::operator==(const AquiferFlux& other) const {
+        return this->m_aquifers == other.m_aquifers;
+    }
+
+    bool AquiferFlux::hasAquifer(const int id) const {
+        return this->m_aquifers.count(id) > 0;
+    }
+
+    size_t AquiferFlux::size() const {
+        return this->m_aquifers.size();
+    }
+
+    std::unordered_map<int, SingleAquiferFlux>::const_iterator AquiferFlux::begin() const {
+        return this->m_aquifers.begin();
+    }
+
+    std::unordered_map<int, SingleAquiferFlux>::const_iterator AquiferFlux::end() const {
+        return this->m_aquifers.end();
+    }
+
+    void AquiferFlux::loadFromRestart(const RestartIO::RstAquifer&) {
+        // TODO: adding the restart functionality
+    }
+
+    AquiferFlux AquiferFlux::serializationTestObject() {
+        AquiferFlux result;
+        auto single_aquifer = SingleAquiferFlux::serializationTestObject();
+        result.m_aquifers.insert({single_aquifer.id, single_aquifer});
+        return result;
     }
 } // end of namespace Opm

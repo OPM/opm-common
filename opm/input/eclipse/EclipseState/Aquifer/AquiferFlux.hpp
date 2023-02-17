@@ -22,6 +22,7 @@
 
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Opm {
@@ -29,26 +30,27 @@ namespace Opm {
     class DeckRecord;
 }
 
+namespace Opm::RestartIO {
+        class RstAquifer;
+} // Opm::RestartIO
+
 namespace  Opm {
-    struct AquiferFlux {
-        explicit AquiferFlux(const DeckRecord& record);
+    struct SingleAquiferFlux {
+        explicit SingleAquiferFlux(const DeckRecord& record);
 
-        // using id to create a noninactive dummy aquifer
-        explicit AquiferFlux(int id);
+        // using id to create an inactive dummy aquifer
+        explicit SingleAquiferFlux(int id);
+        SingleAquiferFlux() = default;
+        SingleAquiferFlux(int id, double flux, double sal, bool active_, double temp, double pres);
 
-        AquiferFlux() = default;
-
-        int id;
-        double flux;
-        double salt_concentration;
-        bool active;
+        int id {0};
+        double flux {0.};
+        double salt_concentration {0.};
+        bool active {false};
         std::optional<double> temperature;
         std::optional<double> datum_pressure;
 
-        // to work with ScheduleState::map_member
-        int name() const;
-
-        bool operator==(const AquiferFlux& other) const;
+        bool operator==(const SingleAquiferFlux& other) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -61,7 +63,38 @@ namespace  Opm {
             serializer(this->datum_pressure);
         }
 
-        static std::unordered_map<int, AquiferFlux> aqufluxFromKeywords(const std::vector<const DeckKeyword*>& keywords);
+        static SingleAquiferFlux serializationTestObject();
+    };
+
+    class AquiferFlux {
+    public:
+        using AquFluxs = std::unordered_map<int, SingleAquiferFlux>;
+
+        explicit AquiferFlux(const std::vector<const DeckKeyword*>& keywords);
+        AquiferFlux() = default;
+
+        void appendAqufluxSchedule(const std::unordered_set<int>& ids);
+
+        bool hasAquifer(int id) const;
+
+        bool operator==(const AquiferFlux& other) const;
+
+        size_t size() const;
+
+        std::unordered_map<int, SingleAquiferFlux>::const_iterator begin() const;
+        std::unordered_map<int, SingleAquiferFlux>::const_iterator end() const;
+
+        void loadFromRestart(const RestartIO::RstAquifer& rst);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer) {
+            serializer(this->m_aquifers);
+        }
+
+        static AquiferFlux serializationTestObject();
+
+    private:
+        AquFluxs m_aquifers;
     };
 } // end of namespace Opm
 

@@ -476,7 +476,7 @@ namespace Opm {
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
         // constant flux aquifers
-        std::unordered_map<int, AquiferFlux> aqufluxs;
+        std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 

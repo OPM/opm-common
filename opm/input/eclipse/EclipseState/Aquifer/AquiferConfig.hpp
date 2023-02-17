@@ -45,18 +45,22 @@ namespace Opm {
 
 class AquiferConfig {
 public:
-    using AquFluxs = std::unordered_map<int, AquiferFlux>;
 
     AquiferConfig() = default;
     AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
                   const Deck& deck, const FieldPropsManager& field_props);
-    AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const AquFluxs& aqufluxs, const Aquancon& conn);
+    AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const AquiferFlux& aqufluxs, const Aquancon& conn);
     void load_connections(const Deck& deck, const EclipseGrid& grid);
 
     void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
     void loadFromRestart(const RestartIO::RstAquifer& aquifers,
                          const TableManager&          tables);
 
+    // there might be some aquifers (AQUFLUX only for now) are opened through
+    // SCHEDULE section while not specified in the SOLUTION section.
+    // We create dummy aquifers in the AquiferConfig to make sure we are aware of them
+    // when we handle the SUMMARY section.
+    // Since those aquifers are not active, basically we only need the id information
     void appendAqufluxSchedule(const std::unordered_set<int>& ids);
 
     static AquiferConfig serializationTestObject();
@@ -64,7 +68,7 @@ public:
     bool active() const;
     const AquiferCT& ct() const;
     const Aquifetp& fetp() const;
-    const AquFluxs& aquflux() const;
+    const AquiferFlux& aquflux() const;
     const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other) const;
     bool hasAquifer(const int aquID) const;
@@ -88,7 +92,7 @@ public:
 private:
     Aquifetp aquifetp{};
     AquiferCT aquiferct{};
-    AquFluxs aquiferflux{};
+    AquiferFlux aquiferflux{};
     mutable NumericalAquifers numerical_aquifers{};
     Aquancon aqconn{};
 };

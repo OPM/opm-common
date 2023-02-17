@@ -912,8 +912,6 @@ namespace {
 
     int getMaximumAnalyticAquiferID(const Opm::AquiferConfig& cfg)
     {
-        // TODO: this can be based on AQUCT and AQUFETP and AQUFLUX
-        // but there are pros and cons
         const auto& aquifer_ids = analyticAquiferIDs(cfg);
         return *max_element(std::begin(aquifer_ids), std::end(aquifer_ids));
     }
