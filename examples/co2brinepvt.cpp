@@ -93,15 +93,14 @@ int main(int argc, char **argv)
     if (argc > 6)
         rs = atof(argv[6]);
 
-    size_t num_regions = 1;
-    Opm::Co2GasPvt<double> co2Pvt(num_regions);
-
     const double MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
     std::vector<double> salinity = {0.0};
     if (molality > 0.0)
         salinity[0] = 1 / ( 1 + 1 / (molality*MmNaCl));
     Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity);
+
+    Opm::Co2GasPvt<double> co2Pvt(salinity);
 
     double value;
     if (prop == "density") {
@@ -146,9 +145,19 @@ int main(int argc, char **argv)
             throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
         }
     } else if (prop == "rsSat") {
+        if (phase == "CO2") {
+            value = co2Pvt.saturatedWaterVaporizationFactor(/*regionIdx=*/0,
+                                                   T,
+                                                   p);
+        } else if (phase == "brine") {
             value = brineCo2Pvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
                                                    T,
                                                    p);
+        } else {
+            throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
+        }
+
+
     } else if (prop == "diffusionCoefficient") {
         size_t comp_idx = 0; // not used
         if (phase == "CO2") {
