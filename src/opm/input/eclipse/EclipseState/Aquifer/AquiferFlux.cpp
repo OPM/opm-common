@@ -100,11 +100,11 @@ namespace Opm {
         return this->m_aquifers.size();
     }
 
-    std::unordered_map<int, SingleAquiferFlux>::const_iterator AquiferFlux::begin() const {
+    AquiferFlux::AquFluxs::const_iterator AquiferFlux::begin() const {
         return this->m_aquifers.begin();
     }
 
-    std::unordered_map<int, SingleAquiferFlux>::const_iterator AquiferFlux::end() const {
+    AquiferFlux::AquFluxs::const_iterator AquiferFlux::end() const {
         return this->m_aquifers.end();
     }
 

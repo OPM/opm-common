@@ -913,7 +913,11 @@ namespace {
     int getMaximumAnalyticAquiferID(const Opm::AquiferConfig& cfg)
     {
         const auto& aquifer_ids = analyticAquiferIDs(cfg);
-        return *max_element(std::begin(aquifer_ids), std::end(aquifer_ids));
+        if (!aquifer_ids.empty()) {
+            return *max_element(std::begin(aquifer_ids), std::end(aquifer_ids));
+        } else {
+            return 0;
+        }
     }
 }
 

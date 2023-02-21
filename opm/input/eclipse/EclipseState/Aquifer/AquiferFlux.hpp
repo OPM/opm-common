@@ -81,8 +81,8 @@ namespace  Opm {
 
         size_t size() const;
 
-        std::unordered_map<int, SingleAquiferFlux>::const_iterator begin() const;
-        std::unordered_map<int, SingleAquiferFlux>::const_iterator end() const;
+        AquFluxs::const_iterator begin() const;
+        AquFluxs::const_iterator end() const;
 
         void loadFromRestart(const RestartIO::RstAquifer& rst);
 
