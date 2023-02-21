@@ -26,6 +26,9 @@
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
+
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 namespace Opm {
@@ -164,6 +167,11 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
         break;
     }
 
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        throw std::domain_error("Saturation keyword family III is not applicable for a gas-oil system");
+    }
+
     case SatFuncControls::KeywordFamily::Undefined:
         throw std::domain_error("No valid saturation keyword family specified");
     }
@@ -290,6 +298,29 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
         break;
     }
 
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        const GsfTable& gsfTable = tableManager.getGsfTables().getTable<GsfTable>( satRegionIdx );
+        const WsfTable& wsfTable = tableManager.getWsfTables().getTable<WsfTable>( satRegionIdx );
+
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+
+        std::vector<double> SwColumn = wsfTable.getColumn("SW").vectorCopy();
+
+        realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, wsfTable.getColumn("KRW")));
+        std::vector<double> SwSamples(gsfTable.numRows());
+        for (size_t sampleIdx = 0; sampleIdx < gsfTable.numRows(); ++ sampleIdx)
+            SwSamples[sampleIdx] = 1 - gsfTable.get("SG", sampleIdx);
+        realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, gsfTable.getColumn("KRG")));
+        //Capillary pressure is read from GSF.
+        // TODO need to check if gas/water sg
+        std::vector<double> SgColumn = gsfTable.getColumn("SG").vectorCopy();
+        realParams.setPcnwSamples(SgColumn, gsfTable.getColumn("PCGW").vectorCopy());
+        realParams.finalize();
+
+        break;
+    }
     case SatFuncControls::KeywordFamily::Undefined:
         throw std::domain_error("No valid saturation keyword family specified");
     }
@@ -399,6 +430,11 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         }
         realParams.finalize();
         break;
+    }
+
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        throw std::domain_error("Saturation keyword family III is not applicable for a oil-water system");
     }
 
     case SatFuncControls::KeywordFamily::Undefined:

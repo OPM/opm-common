@@ -1056,6 +1056,7 @@ set( keywords
      001_Eclipse300/D/DZV
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GCONPROD
+     001_Eclipse300/G/GSF
      001_Eclipse300/H/HEATCR
      001_Eclipse300/H/HEATCRT
      001_Eclipse300/L/LIVEOIL
@@ -1082,6 +1083,7 @@ set( keywords
      001_Eclipse300/T/TREFS
      001_Eclipse300/W/WINJTEMP
      001_Eclipse300/W/WATDENT
+     001_Eclipse300/W/WSF
      001_Eclipse300/Z/ZFACT1
      001_Eclipse300/Z/ZFACT1S
      001_Eclipse300/Z/ZFACTOR

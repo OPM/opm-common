@@ -34,6 +34,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -406,6 +408,84 @@ namespace { namespace SatFunc {
                     const auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& pc = t.getPcogColumn();
+                    std::transform(std::begin(pc), std::end(pc),
+                                   linTable.column(tableID, primID, 2),
+                                   [&units](const double Pc) -> double
+                                   {
+                                       return units.from_si(uPress, Pc);
+                                   });
+                }
+
+                // Inform createSatfuncTable() of number of active rows in
+                // this table.  Needed to compute slopes of piecewise linear
+                // interpolants.
+                return numActRows;
+            });
+        }
+
+
+        /// Create linearised and padded 'TAB' vector entries of normalised
+        /// GSF tables for all saturation function regions from Family Two
+        /// table data (GSF keyword).
+        ///
+        /// \param[in] numRows Number of rows to allocate in the output
+        ///    vector for each table.  Expected to be equal to the number of
+        ///    declared saturation nodes in the simulation run's TABDIMS
+        ///    keyword (Item 3).
+        ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention capillary pressure values (Pascal) to declared
+        ///    conventions of the run specification.
+        ///
+        /// \param[in] gsf Collection of GSF tables for all saturation
+        ///    regions.
+        ///
+        /// \return Linearised and padded 'TAB' vector values for output
+        ///    GSF tables.  A unit-converted copy of the input table \p
+        ///    gsf with added derivatives.
+        std::vector<double>
+        fromGSF(const std::size_t          numRows,
+                const double               tolcrit,
+                const Opm::UnitSystem&     units,
+                const Opm::TableContainer& gsf)
+        {
+            using Gsf = ::Opm::GsfTable;
+
+            const auto numTab = gsf.size();
+            const auto numDep = std::size_t{2}; // Krg, Pcgw
+
+            return detail::createSatfuncTable(numTab, numRows, numDep,
+                [tolcrit, &units, &gsf](const std::size_t           tableID,
+                                         const std::size_t           primID,
+                                         Opm::LinearisedOutputTable& linTable)
+                -> std::size_t
+            {
+                const auto& t = gsf.getTable<Gsf>(tableID);
+
+                auto numActRows = std::size_t{0};
+
+                // Sg
+                {
+                    const auto& Sg = t.getSgColumn();
+
+                    numActRows = Sg.size();
+                    std::copy(std::begin(Sg), std::end(Sg),
+                              linTable.column(tableID, primID, 0));
+                }
+
+                // Krg(Sg)
+                detail::outputRelperm(t.getKrgColumn(), tolcrit,
+                                      linTable.column(tableID, primID, 1));
+
+                // Pcgw(Sg)
+                {
+                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+
+                    const auto& pc = t.getPcgwColumn();
                     std::transform(std::begin(pc), std::end(pc),
                                    linTable.column(tableID, primID, 2),
                                    [&units](const double Pc) -> double
@@ -1164,6 +1244,83 @@ namespace { namespace SatFunc {
                 return numActRows;
             });
         }
+
+         /// Create linearised and padded 'TAB' vector entries of normalised
+        /// WSF tables for all saturation function regions from Family Three
+        /// table data (WSF keyword).
+        ///
+        /// \param[in] numRows Number of rows to allocate for each table in
+        ///    the output vector.  Expected to be equal to the number of
+        ///    declared saturation nodes in the simulation run's TABDIMS
+        ///    keyword (Item 3).
+        ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention capillary pressure values (Pascal) to declared
+        ///    conventions of the run specification.
+        ///
+        /// \param[in] swfn Collection of WSF tables for all saturation
+        ///    regions.
+        ///
+        /// \return Linearised and padded 'TAB' vector values for output
+        ///    WSF tables.  A unit-converted copy of the input table \p
+        ///    wsf with added derivatives.
+        std::vector<double>
+        fromWsf(const std::size_t          numRows,
+                const double               tolcrit,
+                const Opm::UnitSystem&     units,
+                const Opm::TableContainer& wsf)
+        {
+            using WSF = ::Opm::WsfTable;
+
+            const auto numTab = wsf.size();
+            const auto numDep = std::size_t{2}; // Krw, {zero pc}
+
+            return detail::createSatfuncTable(numTab, numRows, numDep,
+                [tolcrit, &wsf, &units]
+                    (const std::size_t           tableID,
+                     const std::size_t           primID,
+                     Opm::LinearisedOutputTable& linTable)
+                -> std::size_t
+            {
+                const auto& t = wsf.getTable<WSF>(tableID);
+
+                auto numActRows = std::size_t{0};
+
+                // Sw
+                {
+                    const auto& Sw = t.getSwColumn();
+
+                    numActRows = Sw.size();
+                    std::copy(std::begin(Sw), std::end(Sw),
+                              linTable.column(tableID, primID, 0));
+                }
+
+                // Krw(Sw)
+                detail::outputRelperm(t.getKrwColumn(), tolcrit,
+                                      linTable.column(tableID, primID, 1));
+
+                // Pcow = zero
+                {
+                    const auto& krw = t.getKrwColumn();
+                    std::transform(std::begin(krw), std::end(krw),
+                                   linTable.column(tableID, primID, 2),
+                                   [&units](const double Pc) -> double
+                                   {
+                                       return 0.0;
+                                   });
+                }
+
+                // Inform createSatfuncTable() of number of active rows in
+                // this table.  Needed to compute slopes of piecewise linear
+                // interpolants.
+                return numActRows;
+            });
+        }
+
     } // Water
 
 
@@ -2306,16 +2463,25 @@ namespace Opm {
                      tabMgr.hasTables("SOF2"))) ||
             (wat && tabMgr.hasTables("SWFN"));
 
-        if ((famI + famII) != 1) {
-            // Both Fam I && Fam II or neither of them.  Can't have that.
+        const auto famIII =      // GSF WSF
+            tabMgr.hasTables("GSF") &&
+            tabMgr.hasTables("WSF");
+
+        if ((famI + famII + famIII) != 1) {
+            // Both Fam I && Fam II && Fam III or neither of them.  Can't have that.
             return;             // Logging here?
         }
         else if (famI) {
             this->addSatFunc_FamilyOne(es, gas, oil, wat);
         }
-        else {
+        else if (famII){
             // Family II
             this->addSatFunc_FamilyTwo(es, gas, oil, wat);
+        }
+        else {
+            // Family II
+            assert(gas && wat && !oil);
+            this->addSatFunc_FamilyThree(es);
         }
     }
 
@@ -2497,6 +2663,38 @@ namespace Opm {
                 SatFunc::Water::fromSWFN(nssfun, tolcrit, this->units, tables);
 
             this->addData(Ix::SwfnTableStart, swfn);
+            this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
+            this->m_tabdims[Ix::SwfnNumTables]   = tables.size();
+        }
+    }
+
+    void Tables::addSatFunc_FamilyThree(const EclipseState& es)
+    {
+        const auto& tabMgr = es.getTableManager();
+        const auto& tabd   = es.runspec().tabdims();
+        const auto  nssfun = tabd.getNumSatNodes();
+        const auto  tolcrit = es.runspec()
+            .saturationFunctionControls()
+            .minimumRelpermMobilityThreshold();
+
+        {
+            const auto& tables = tabMgr.getGsfTables();
+            const auto gsf =
+                SatFunc::Gas::fromGSF(nssfun, tolcrit,
+                                      this->units, tables);
+
+            this->addData(Ix::SgfnTableStart, gsf);
+            this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
+            this->m_tabdims[Ix::SgfnNumTables]   = tables.size();
+        }
+
+        {
+            const auto& tables = tabMgr.getWsfTables();
+
+            const auto wsf =
+                SatFunc::Water::fromWsf(nssfun, tolcrit, this->units, tables);
+
+            this->addData(Ix::SwfnTableStart, wsf);
             this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
             this->m_tabdims[Ix::SwfnNumTables]   = tables.size();
         }

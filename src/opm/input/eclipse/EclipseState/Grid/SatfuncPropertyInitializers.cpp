@@ -27,6 +27,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
@@ -72,7 +74,7 @@ namespace {
      * If SWFN, SGFN and SOF3 are specified in the deck it return II
      * If keywords are missing or mixed, an error is given.
      */
-    enum class SatfuncFamily { none = 0, I = 1, II = 2 };
+    enum class SatfuncFamily { none = 0, I = 1, II = 2, III = 3 };
 
     SatfuncFamily
     getSaturationFunctionFamily(const Opm::TableManager& tm,
@@ -101,6 +103,10 @@ namespace {
                      (twoP && tm.hasTables("SOF2")))) ||
             (wat && tm.hasTables("SWFN"));
 
+        const auto family3 = //WSF, GSF gas-water CO2STORE case
+            tm.hasTables("GSF") &&
+            tm.hasTables("WSF");
+
         if (gas && tm.hasTables("SGOF") && tm.hasTables("SLGOF")) {
             throw std::invalid_argument("Both SGOF and SLGOF have been specified but these tables are mutually exclusive!");
         }
@@ -115,6 +121,9 @@ namespace {
 
         if (family2)
             return SatfuncFamily::II;
+
+        if (family3)
+            return SatfuncFamily::III;
 
         throw std::invalid_argument {
             "Saturation functions must be specified using "
@@ -135,6 +144,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& wsfTables = tm.getWsfTables();
 
         const auto famI = [&swofTables]( int i ) {
             return swofTables.getTable<Opm::SwofTable>( i ).getSwColumn().front();
@@ -147,7 +157,9 @@ namespace {
         const auto famII = [&swfnTables]( int i ) {
             return swfnTables.getTable<Opm::SwfnTable>( i ).getSwColumn().front();
         };
-
+        const auto famIII = [&wsfTables]( int i ) {
+            return wsfTables.getTable<Opm::WsfTable>( i ).getSwColumn().front();
+        };
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( !swofTables.empty() )
@@ -158,6 +170,7 @@ namespace {
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
             case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III: return map( famIII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -175,6 +188,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& wsfTables = tm.getWsfTables();
 
         const auto famI = [&swofTables]( int i ) {
             return swofTables.getTable<Opm::SwofTable>( i ).getSwColumn().back();
@@ -187,7 +201,9 @@ namespace {
         const auto famII = [&swfnTables]( int i ) {
             return swfnTables.getTable<Opm::SwfnTable>( i ).getSwColumn().back();
         };
-
+        const auto famIII = [&wsfTables]( int i ) {
+            return wsfTables.getTable<Opm::WsfTable>( i ).getSwColumn().back();
+        };
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( !swofTables.empty() )
@@ -198,6 +214,8 @@ namespace {
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
             case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III: return map( famIII, Opm::fun::iota( num_tables ) );
+
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -216,6 +234,7 @@ namespace {
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& gsfTables = tm.getGsfTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
             return sgofTables.getTable<Opm::SgofTable>( i ).getSgColumn().front();
@@ -232,7 +251,9 @@ namespace {
         const auto famII = [&sgfnTables]( int i ) {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getSgColumn().front();
         };
-
+        const auto famIII = [&gsfTables]( int i ) {
+            return gsfTables.getTable<Opm::GsfTable>( i ).getSgColumn().front();
+        };
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( sgofTables.empty() && sgofLetTables.empty() && slgofTables.empty() )
@@ -247,6 +268,8 @@ namespace {
 
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
 
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
@@ -267,6 +290,7 @@ namespace {
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& gsfTables = tm.getGsfTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
             return sgofTables.getTable<Opm::SgofTable>( i ).getSgColumn().back();
@@ -284,6 +308,9 @@ namespace {
         const auto famII = [&sgfnTables]( int i ) {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getSgColumn().back();
         };
+        const auto famIII = [&gsfTables]( int i ) {
+            return gsfTables.getTable<Opm::GsfTable>( i ).getSgColumn().back();
+        };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
@@ -299,6 +326,8 @@ namespace {
 
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
 
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
@@ -375,6 +404,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& wsfTables = tm.getWsfTables();
 
         const auto famI = [&swofTables, tolcrit](const int i) -> double
         {
@@ -389,7 +419,10 @@ namespace {
         {
             return critical_water(swfnTables.getTable<Opm::SwfnTable>(i), tolcrit);
         };
-
+        const auto famIII = [&wsfTables, tolcrit](const int i) -> double
+        {
+            return critical_water(wsfTables.getTable<Opm::WsfTable>(i), tolcrit);
+        };
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( !swofTables.empty() )
@@ -400,6 +433,8 @@ namespace {
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
             case SatfuncFamily::II: return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III: return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
+
             default: throw std::domain_error("No valid saturation keyword family specified");
         }
     }
@@ -448,6 +483,7 @@ namespace {
         const auto& sgofTables = tm.getSgofTables();
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
+        const auto& gsfTables = tm.getGsfTables();
 
         const auto famI_sgof = [&sgofTables, tolcrit](const int i) -> double
         {
@@ -468,6 +504,11 @@ namespace {
             return critical_gas(sgfnTables.getTable<Opm::SgfnTable>(i), tolcrit);
         };
 
+        const auto famIII = [&gsfTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(gsfTables.getTable<Opm::GsfTable>(i), tolcrit);
+        };
+
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( sgofTables.empty() && sgofLetTables.empty() && slgofTables.empty() )
@@ -482,6 +523,8 @@ namespace {
 
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
 
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
@@ -580,7 +623,8 @@ namespace {
                 return ph.active(::Opm::Phase::GAS)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
-
+            case SatfuncFamily::III:
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
             default: throw std::domain_error("No valid saturation keyword family specified");
         }
     }
@@ -674,7 +718,8 @@ namespace {
                 return ph.active(::Opm::Phase::WATER)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
-
+            case SatfuncFamily::III:
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -693,6 +738,7 @@ namespace {
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& gsfTables = tm.getGsfTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
             return sgofTables.getTable<Opm::SgofTable>( i ).getKrgColumn().back();
@@ -710,6 +756,10 @@ namespace {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getKrgColumn().back();
         };
 
+        const auto& famIII = [&gsfTables]( int i ) {
+            return gsfTables.getTable<Opm::GsfTable>( i ).getKrgColumn().back();
+        };
+
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( sgofTables.empty() && sgofLetTables.empty() && slgofTables.empty() )
@@ -722,6 +772,8 @@ namespace {
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -741,6 +793,7 @@ namespace {
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& gsfTables = tm.getGsfTables();
 
         auto sr = std::vector<double>(num_tables, 0.0);
         if (ph.active(Opm::Phase::OIL)) {
@@ -786,6 +839,14 @@ namespace {
             return sgfn.getKrgColumn().eval(ix);
         };
 
+        const auto famIII = [&gsfTables, &sr](const int i) -> double
+        {
+            const auto& gsf = gsfTables.getTable<Opm::GsfTable>(i);
+            const auto  ix   = gsf.getSgColumn().lookup(sr[i]);
+
+            return gsf.getKrgColumn().eval(ix);
+        };
+
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( sgofTables.empty() && sgofLetTables.empty() && slgofTables.empty() )
@@ -798,6 +859,8 @@ namespace {
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -816,6 +879,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& wsfTables = tm.getWsfTables();
 
         auto sr = std::vector<double>(num_tables, 0.0);
         if (ph.active(Opm::Phase::OIL)) {
@@ -853,6 +917,14 @@ namespace {
             return swfn.getKrwColumn().eval(ix);
         };
 
+        const auto& famIII = [&wsfTables, &sr](const int i) -> double
+        {
+            const auto& wsf = wsfTables.getTable<Opm::WsfTable>(i);
+            const auto  ix   = wsf.getSwColumn().lookup(sr[i]);
+
+            return wsf.getKrwColumn().eval(ix);
+        };
+
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( !swofTables.empty() )
@@ -864,6 +936,8 @@ namespace {
 
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -930,6 +1004,8 @@ namespace {
                 return ph.active(::Opm::Phase::GAS)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1006,6 +1082,8 @@ namespace {
                 return ph.active(::Opm::Phase::WATER)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1063,6 +1141,8 @@ namespace {
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1105,6 +1185,8 @@ namespace {
 
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1171,6 +1253,8 @@ namespace {
                 return ph.active(::Opm::Phase::GAS) && ph.active(::Opm::Phase::WATER)
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1188,6 +1272,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& wsfTables = tm.getWsfTables();
 
         const auto& famI = [&swofTables]( int i ) {
             return swofTables.getTable<Opm::SwofTable>( i ).getKrwColumn().back();
@@ -1199,6 +1284,10 @@ namespace {
 
         const auto& famII = [&swfnTables]( int i ) {
             return swfnTables.getTable<Opm::SwfnTable>( i ).getKrwColumn().back();
+        };
+
+        const auto& famIII = [&wsfTables]( int i ) {
+            return wsfTables.getTable<Opm::WsfTable>( i ).getKrwColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -1213,6 +1302,8 @@ namespace {
 
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::III:
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
