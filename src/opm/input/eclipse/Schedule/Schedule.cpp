@@ -1125,6 +1125,17 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->getWell(well_name, this->snapshots.size() - 1);
     }
 
+    std::unordered_set<int> Schedule::getAquiferFluxSchedule() const {
+        std::unordered_set<int> ids;
+        for (const auto& snapshot : this->snapshots) {
+            const auto& aquflux = snapshot.aqufluxs;
+            for ([[maybe_unused]] const auto& [id, aqu]  : aquflux) {
+                ids.insert(id);
+            }
+        }
+        return ids;
+    }
+
     const Well& Schedule::getWell(const std::string& wellName, std::size_t timeStep) const {
         return this->snapshots[timeStep].wells.get(wellName);
     }

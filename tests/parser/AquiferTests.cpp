@@ -22,6 +22,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -556,8 +557,9 @@ PORO
 
     const auto& fetp  = conf.fetp();
     const auto& ct    = conf.ct();
+    const auto& aquflux = conf.aquflux();
     const auto& conn  = conf.connections();
-    Opm::AquiferConfig conf2(fetp, ct, conn);
+    Opm::AquiferConfig conf2(fetp, ct, aquflux, conn);
     BOOST_CHECK( conf == conf2 );
 }
 

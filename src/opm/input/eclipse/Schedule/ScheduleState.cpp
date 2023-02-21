@@ -115,6 +115,7 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     this->m_wellgroup_events.reset();
     this->m_geo_keywords.clear();
     this->target_wellpi.clear();
+    this->aqufluxs.clear();
     this->m_save_step = false;
 
     auto next_rft = this->rft_config().next();

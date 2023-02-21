@@ -883,7 +883,7 @@ Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
 namespace {
     int getNumberOfAnalyticAquifers(const Opm::AquiferConfig& cfg)
     {
-        const auto numAnalyticAquifers = cfg.ct().size() + cfg.fetp().size();
+        const auto numAnalyticAquifers = cfg.ct().size() + cfg.fetp().size() + cfg.aquflux().size();
 
         return static_cast<int>(numAnalyticAquifers);
     }
@@ -912,16 +912,12 @@ namespace {
 
     int getMaximumAnalyticAquiferID(const Opm::AquiferConfig& cfg)
     {
-        auto maxAquID = [](const auto& aquiferCollection) -> int
-        {
-            return std::accumulate(aquiferCollection.begin(), aquiferCollection.end(), 0,
-                                   [](const int maxID, const auto& aquiferData)
-                                   {
-                                       return std::max(maxID, aquiferData.aquiferID);
-                                   });
-        };
-
-        return std::max(maxAquID(cfg.ct()), maxAquID(cfg.fetp()));
+        const auto& aquifer_ids = analyticAquiferIDs(cfg);
+        if (!aquifer_ids.empty()) {
+            return *max_element(std::begin(aquifer_ids), std::end(aquifer_ids));
+        } else {
+            return 0;
+        }
     }
 }
 

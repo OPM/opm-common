@@ -633,6 +633,8 @@ captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
         }
     });
 
+    // TODO: we should make the AQUFLUX aquifer here
+
     numericAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
         (const int aquiferID, const std::size_t cellIndex, const NumericalAquiferCell& aqCell)
     {

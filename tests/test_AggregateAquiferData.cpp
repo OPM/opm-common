@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -339,6 +340,12 @@ AQUTAB
         return Opm::Aquifetp(properties);
     }
 
+    Opm::AquiferFlux createAquiferFluxs() {
+        // TODO: just for compilation for now, will complete it
+        Opm::AquiferFlux aquifers;
+        return aquifers;
+    }
+
     Opm::AquiferConfig createAquiferConfig()
     {
         auto aquancon = AquiferConnections{};
@@ -346,7 +353,7 @@ AQUTAB
         connectFetkovic(aquancon);
 
         return {
-            createFetkovich(), createCarterTracy(), Opm::Aquancon(aquancon.getAllConnections())
+            createFetkovich(), createCarterTracy(), createAquiferFluxs(), Opm::Aquancon(aquancon.getAllConnections())
         };
     }
 
