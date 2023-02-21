@@ -47,6 +47,23 @@ namespace {
         return ijk[2] + dims[2]*(ijk[1] + dims[1]*ijk[0]);
     }
 
+    std::vector<std::size_t>
+    computeColumnarGlobalIndex(const std::vector<std::size_t>&                             activeCells,
+                               const std::array<int, 3>&                                   cartDims,
+                               const std::function<std::array<int, 3>(const std::size_t)>& getIJK)
+    {
+        auto colGlobIx = activeCells;
+
+        std::transform(colGlobIx.begin(), colGlobIx.end(), colGlobIx.begin(),
+                       [&cartDims, &getIJK]
+            (const std::size_t cell)
+        {
+            return columnarGlobalIdx(cartDims, getIJK(cell));
+        });
+
+        return colGlobIx;
+    }
+
     std::vector<int>
     buildMappingTables(const std::size_t                                           numActive,
                        const std::array<int, 3>&                                   cartDims,
@@ -57,11 +74,12 @@ namespace {
         auto activeCells = std::vector<std::size_t>(numActive, std::size_t{0});
         std::iota(activeCells.begin(), activeCells.end(), std::size_t{0});
 
+        const auto colGlobIx = computeColumnarGlobalIndex(activeCells, cartDims, getIJK);
+
         std::sort(activeCells.begin(), activeCells.end(),
-            [&cartDims, &getIJK](const std::size_t cell1, const std::size_t cell2) -> bool
+            [&colGlobIx](const std::size_t cell1, const std::size_t cell2)
         {
-            return columnarGlobalIdx(cartDims, getIJK(cell1))
-                <  columnarGlobalIdx(cartDims, getIJK(cell2));
+            return colGlobIx[cell1] < colGlobIx[cell2];
         });
 
         auto columnarActiveID = 0;
