@@ -129,41 +129,7 @@ std::time_t create_start_time(const Opm::Deck& deck) {
 
 namespace Opm {
 
-Phase get_phase( const std::string& str ) {
-    if( str == "OIL" ) return Phase::OIL;
-    if( str == "GAS" ) return Phase::GAS;
-    if( str == "WAT" ) return Phase::WATER;
-    if( str == "WATER" )   return Phase::WATER;
-    if( str == "SOLVENT" ) return Phase::SOLVENT;
-    if( str == "POLYMER" ) return Phase::POLYMER;
-    if( str == "ENERGY" ) return Phase::ENERGY;
-    if( str == "POLYMW" ) return Phase::POLYMW;
-    if( str == "FOAM" ) return Phase::FOAM;
-    if( str == "BRINE" ) return Phase::BRINE;
-    if( str == "ZFRACTION" ) return Phase::ZFRACTION;
-
-    throw std::invalid_argument( "Unknown phase '" + str + "'" );
-}
-
-std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
-    switch( p ) {
-        case Phase::OIL:     return stream << "OIL";
-        case Phase::GAS:     return stream << "GAS";
-        case Phase::WATER:   return stream << "WATER";
-        case Phase::SOLVENT: return stream << "SOLVENT";
-        case Phase::POLYMER: return stream << "POLYMER";
-        case Phase::ENERGY:  return stream << "ENERGY";
-        case Phase::POLYMW:  return stream << "POLYMW";
-        case Phase::FOAM:    return stream << "FOAM";
-        case Phase::BRINE:   return stream << "BRINE";
-        case Phase::ZFRACTION:    return stream << "ZFRACTION";
-
-    }
-
-    return stream;
-}
-
-using un = std::underlying_type< Phase >::type;
+using un = std::underlying_type<Phase>::type;
 
 Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, bool polymw, bool foam, bool brine, bool zfraction) noexcept :
     bits( (oil ? (1 << static_cast< un >( Phase::OIL ) )     : 0) |
