@@ -477,3 +477,414 @@ BOOST_AUTO_TEST_CASE(Cube_3x3x3_exclude_diagonals)
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // Grid_Based
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Grid_Based_NY_Larger_Than_NX)
+
+namespace {
+    std::vector<double> coord_2x3x4()
+    {
+        return {
+            0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   2.0, 0.0, 0.0,   2.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   1.0, 1.0, 0.0,   1.0, 1.0, 0.0,   2.0, 1.0, 0.0,   2.0, 1.0, 0.0,
+            0.0, 2.0, 0.0,   0.0, 2.0, 0.0,   1.0, 2.0, 0.0,   1.0, 2.0, 0.0,   2.0, 2.0, 0.0,   2.0, 2.0, 0.0,
+            0.0, 3.0, 0.0,   0.0, 3.0, 0.0,   1.0, 3.0, 0.0,   1.0, 3.0, 0.0,   2.0, 3.0, 0.0,   2.0, 3.0, 0.0,
+        };
+    }
+
+    std::vector<double> zcorn_2x3x4()
+    {
+        return {
+            // Top, layer 1
+            0.0, 0.0,    0.0, 0.0,    0.0, 0.0,    0.0, 0.0, //  0.. 1
+            0.0, 0.0,    0.0, 0.0,    0.0, 0.0,    0.0, 0.0, //  2.. 3
+            0.0, 0.0,    0.0, 0.0,    0.0, 0.0,    0.0, 0.0, //  4.. 5
+
+            // Bottom, layer 1
+            1.0, 1.0,    1.0, 1.0,    1.0, 1.0,    1.0, 1.0, //  0.. 1
+            1.0, 1.0,    1.0, 1.0,    1.0, 1.0,    1.0, 1.0, //  2.. 3
+            1.0, 1.0,    1.0, 1.0,    1.0, 1.0,    1.0, 1.0, //  4.. 5
+
+            // Top, layer 2
+            1.0, 1.0,    1.0, 1.0,    1.0, 1.0,    1.0, 1.0, //  6.. 7
+            1.0, 1.0,    1.0, 1.0,    1.0, 1.0,    1.0, 1.0, //  8.. 9
+            1.0, 1.0,    1.0, 1.0,    1.0, 1.0,    1.0, 1.0, // 10..11
+
+            // Bottom, layer 2
+            2.0, 2.0,    2.0, 2.0,    2.0, 2.0,    2.0, 2.0, //  6.. 7
+            2.0, 2.0,    2.0, 2.0,    2.0, 2.0,    2.0, 2.0, //  8.. 9
+            2.0, 2.0,    2.0, 2.0,    2.0, 2.0,    2.0, 2.0, // 10..11
+
+            // Top, layer 3
+            2.0, 2.0,    2.0, 2.0,    2.0, 2.0,    2.0, 2.0, // 12..13
+            2.0, 2.0,    2.0, 2.0,    2.0, 2.0,    2.0, 2.0, // 14..15
+            2.0, 2.0,    2.0, 2.0,    2.0, 2.0,    2.0, 2.0, // 16..17
+
+            // Bottom, layer 3
+            3.0, 3.0,    3.0, 3.0,    3.0, 3.0,    3.0, 3.0, // 12..13
+            3.0, 3.0,    3.0, 3.0,    3.0, 3.0,    3.0, 3.0, // 14..15
+            3.0, 3.0,    3.0, 3.0,    3.0, 3.0,    3.0, 3.0, // 16..17
+
+            // Top, layer 4
+            3.0, 3.0,    3.0, 3.0,    3.0, 3.0,    3.0, 3.0, // 18..19
+            3.0, 3.0,    3.0, 3.0,    3.0, 3.0,    3.0, 3.0, // 20..21
+            3.0, 3.0,    3.0, 3.0,    3.0, 3.0,    3.0, 3.0, // 22..23
+
+            // Bottom, layer 4
+            4.0, 4.0,    4.0, 4.0,    4.0, 4.0,    4.0, 4.0, // 18..19
+            4.0, 4.0,    4.0, 4.0,    4.0, 4.0,    4.0, 4.0, // 20..21
+            4.0, 4.0,    4.0, 4.0,    4.0, 4.0,    4.0, 4.0, // 22..23
+        };
+    }
+
+    std::vector<int> actnum_2x3x4_exclude_alternate_centre()
+    {
+        return {
+            1, 1,
+            0, 1,
+            1, 1,
+
+            1, 1,
+            1, 0,
+            1, 1,
+
+            1, 1,
+            0, 1,
+            1, 1,
+
+            1, 1,
+            1, 0,
+            1, 1,
+        };
+    }
+
+    std::vector<int> actnum_2x3x4_exclude_centre_column()
+    {
+        return {
+            1, 1,
+            1, 0,
+            1, 1,
+
+            1, 1,
+            1, 0,
+            1, 1,
+
+            1, 1,
+            1, 0,
+            1, 1,
+
+            1, 1,
+            1, 0,
+            1, 1,
+        };
+    }
+
+    std::vector<int> actnum_2x3x4_exclude_diagonals()
+    {
+        return {
+            0, 1,
+            1, 1,
+            0, 1,
+
+            1, 1,
+            1, 0,
+            1, 1,
+
+            0, 1,
+            1, 1,
+            0, 1,
+
+            1, 1,
+            1, 0,
+            1, 1,
+        };
+    }
+} // Namespace Anonymous
+
+// K = 0
+// +------+------+
+// |  16  |  20  |
+// +------+------+
+// |   8  |  12  |
+// +------+------+
+// |   0  |   4  |
+// +------+------+
+//
+// K = 1
+// +------+------+
+// |  17  |  21  |
+// +------+------+
+// |   9  |  13  |
+// +------+------+
+// |   1  |   5  |
+// +------+------+
+//
+// K = 2
+// +------+------+
+// |  18  |  22  |
+// +------+------+
+// |  10  |  14  |
+// +------+------+
+// |   2  |   6  |
+// +------+------+
+//
+// K = 3
+// +------+------+
+// |  19  |  23  |
+// +------+------+
+// |  11  |  15  |
+// +------+------+
+// |   3  |   7  |
+// +------+------+
+BOOST_AUTO_TEST_CASE(Cube_2x3x4_Full)
+{
+    const auto grid = Opm::EclipseGrid {{2, 3, 4}, coord_2x3x4(), zcorn_2x3x4() };
+
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
+
+    // K = 0
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  0);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  4);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 2),  8);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 3), 12);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 4), 16);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 5), 20);
+
+    // K = 1
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 6),  1);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 7),  5);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 8),  9);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 9), 13);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(10), 17);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(11), 21);
+
+    // K = 2
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(12),  2);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(13),  6);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(14), 10);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(15), 14);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(16), 18);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(17), 22);
+
+    // K = 3
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(18),  3);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(19),  7);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(20), 11);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(21), 15);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(22), 19);
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(23), 23);
+}
+
+// K = 0
+// +------+------+
+// |  12  |  16  |
+// +------+------+
+// | :::: |  10  |
+// +------+------+
+// |   0  |   4  |
+// +------+------+
+//
+// K = 1
+// +------+------+
+// |  13  |  17  |
+// +------+------+
+// |   8  | :::: |
+// +------+------+
+// |   1  |   5  |
+// +------+------+
+//
+// K = 2
+// +------+------+
+// |  14  |  18  |
+// +------+------+
+// | :::: |  11  |
+// +------+------+
+// |   2  |   6  |
+// +------+------+
+//
+// K = 3
+// +------+------+
+// |  15  |  19  |
+// +------+------+
+// |   9  | :::: |
+// +------+------+
+// |   3  |   7  |
+// +------+------+
+BOOST_AUTO_TEST_CASE(Cube_2x3x4_Exclude_Alternate_Centre)
+{
+    const auto actnum = actnum_2x3x4_exclude_alternate_centre();
+    const auto grid = Opm::EclipseGrid {{2, 3, 4}, coord_2x3x4(), zcorn_2x3x4(), actnum.data() };
+
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
+
+    // K = 0
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  0); // (0,0,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  4); // (1,0,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 2), 10); // (1,1,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 3), 12); // (0,2,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 4), 16); // (1,2,0)
+
+    // K = 1
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 5),  1); // (0,0,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 6),  5); // (1,0,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 7),  8); // (0,1,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 8), 13); // (0,2,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 9), 17); // (1,2,1)
+
+    // K = 2
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(10),  2); // (0,0,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(11),  6); // (1,0,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(12), 11); // (1,1,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(13), 14); // (0,2,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(14), 18); // (1,2,2)
+
+    // K = 3
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(15),  3); // (0,0,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(16),  7); // (1,0,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(17),  9); // (0,1,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(18), 15); // (0,2,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(19), 19); // (1,2,3)
+}
+
+// K = 0
+// +------+------+
+// |  12  |  16  |
+// +------+------+
+// |   8  | :::: |
+// +------+------+
+// |   0  |   4  |
+// +------+------+
+//
+// K = 1
+// +------+------+
+// |  13  |  17  |
+// +------+------+
+// |   9  | :::: |
+// +------+------+
+// |   1  |   5  |
+// +------+------+
+//
+// K = 2
+// +------+------+
+// |  14  |  18  |
+// +------+------+
+// |  10  | :::: |
+// +------+------+
+// |   2  |   6  |
+// +------+------+
+//
+// K = 3
+// +------+------+
+// |  15  |  19  |
+// +------+------+
+// |  11  | :::: |
+// +------+------+
+// |   3  |   7  |
+// +------+------+
+BOOST_AUTO_TEST_CASE(Cube_2x3x4_Exclude_Centre_Column)
+{
+    const auto actnum = actnum_2x3x4_exclude_centre_column();
+    const auto grid = Opm::EclipseGrid {{2, 3, 4}, coord_2x3x4(), zcorn_2x3x4(), actnum.data() };
+
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
+
+    // K = 0
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  0); // (0,0,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  4); // (1,0,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 2),  8); // (0,1,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 3), 12); // (0,2,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 4), 16); // (1,2,0)
+
+    // K = 1
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 5),  1); // (0,0,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 6),  5); // (1,0,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 7),  9); // (0,1,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 8), 13); // (0,2,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 9), 17); // (1,2,1)
+
+    // K = 2
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(10),  2); // (0,0,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(11),  6); // (1,0,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(12), 10); // (0,1,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(13), 14); // (0,2,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(14), 18); // (1,2,2)
+
+    // K = 3
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(15),  3); // (0,0,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(16),  7); // (1,0,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(17), 11); // (0,1,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(18), 15); // (0,2,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(19), 19); // (1,2,3)
+}
+
+// K = 0
+// +------+------+
+// | :::: |  14  |
+// +------+------+
+// |   6  |  10  |
+// +------+------+
+// | :::: |   2  |
+// +------+------+
+//
+// K = 1
+// +------+------+
+// |  12  |  15  |
+// +------+------+
+// |   7  | :::: |
+// +------+------+
+// |   0  |   3  |
+// +------+------+
+//
+// K = 2
+// +------+------+
+// | :::: |  16  |
+// +------+------+
+// |   8  |  11  |
+// +------+------+
+// | :::: |   4  |
+// +------+------+
+//
+// K = 3
+// +------+------+
+// |  13  |  17  |
+// +------+------+
+// |   9  | :::: |
+// +------+------+
+// |   1  |   5  |
+// +------+------+
+BOOST_AUTO_TEST_CASE(Cube_2x3x4_Exclude_Diagonals)
+{
+    const auto actnum = actnum_2x3x4_exclude_diagonals();
+    const auto grid = Opm::EclipseGrid {{2, 3, 4}, coord_2x3x4(), zcorn_2x3x4(), actnum.data() };
+
+    const auto map = Opm::buildColumnarActiveIndexMappingTables(grid);
+
+    // K = 0
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 0),  2); // (0,1,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 1),  6); // (1,0,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 2), 10); // (1,1,0)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 3), 14); // (1,2,0)
+
+    // K = 1
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 4),  0); // (0,0,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 5),  3); // (1,0,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 6),  7); // (0,1,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 7), 12); // (0,2,1)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 8), 15); // (1,2,1)
+
+    // K = 2
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex( 9),  4); // (1,0,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(10),  8); // (0,1,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(11), 11); // (1,1,2)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(12), 16); // (1,1,2)
+
+    // K = 3
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(13),  1); // (0,0,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(14),  5); // (1,0,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(15),  9); // (0,1,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(16), 13); // (0,2,3)
+    BOOST_CHECK_EQUAL(map.getColumnarActiveIndex(17), 17); // (1,2,3)
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Grid_Based_NY_Larger_Than_NX
