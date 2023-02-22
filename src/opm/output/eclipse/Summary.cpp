@@ -2230,7 +2230,11 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
   {"FGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FPR"      , Opm::UnitSystem::measure::pressure },
-
+  {"FGCDI"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FGCDM"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FWCD"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FWIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FWIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
 };
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_units = {
@@ -2243,7 +2247,12 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_u
   {"RGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"RGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"RWIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
-  {"RRPV"     , Opm::UnitSystem::measure::geometric_volume }
+  {"RRPV"     , Opm::UnitSystem::measure::geometric_volume },
+  {"RGCDI"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RGCDM"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RWCD"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RWIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"RWIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
 };
 
 static const auto interregion_units =

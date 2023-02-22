@@ -53,6 +53,11 @@ public:
         OilResVolume = 13,
         GasResVolume = 14,
         SALT = 15,
+        CO2InWaterPhase = 16,
+        CO2InGasPhaseInMob = 17,
+        CO2InGasPhaseMob = 18,
+        WaterInGasPhase = 19,
+        WaterInWaterPhase = 20,
     };
 
     /*
