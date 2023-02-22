@@ -42,6 +42,7 @@ opm_add_test(EclipseStateTests
 list(APPEND EXTRA_TESTS EclipseStateTests)
 
 foreach (test BoxTest
+              CarfinTest
               CheckDeckValidity
               EclipseGridCreateFromDeck
               IncludeTest
