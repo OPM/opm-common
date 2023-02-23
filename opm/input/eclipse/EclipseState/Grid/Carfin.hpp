@@ -101,6 +101,7 @@ namespace Opm
         std::array<std::size_t, 3> m_dims{};
         std::array<std::size_t, 3> m_offset{};
         std::array<std::size_t, 3> m_end_offset{};
+        std::string name_grid;
 
         std::vector<cell_index> m_active_index_list;
         std::vector<cell_index> m_global_index_list;

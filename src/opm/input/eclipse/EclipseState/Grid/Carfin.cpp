@@ -154,6 +154,8 @@ namespace Opm
         assert_dims(name, j1 , j2, ny, this->m_globalGridDims_.getNY());
         assert_dims(name, k1 , k2, nz, this->m_globalGridDims_.getNZ());
 
+        this->name_grid = name;
+
         this->m_dims[0] = nx;  
         this->m_dims[1] = ny;
         this->m_dims[2] = nz;
@@ -249,9 +251,9 @@ namespace Opm
         return m_dims[dim];
     }
 
- //   std::string Carfin::NAME() const {
- //       return ?;
- //   }
+    std::string Carfin::NAME() const {
+        return name_grid;
+    }
 
     int Carfin::I1() const {
         return lower(0);

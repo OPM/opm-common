@@ -51,25 +51,11 @@ EclipseState makeState(const std::string& fileName) {
 
 }
 
-BOOST_AUTO_TEST_CASE( PARSE_CARFIN_OK ) {
-    EclipseState state = makeState( prefix() + "CARFIN/CARFINTEST1" );
-    {
-        size_t i, j, k;
-        const EclipseGrid& grid = state.getInputGrid();
-        for (k = 0; k < grid.getNZ(); k++) {
-            for (j = 0; j < grid.getNY(); j++) {
-                for (i = 0; i < grid.getNX(); i++) {
-
-                }
-            }
-        }
-    }
-}
-
 BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
     auto deck = makeDeck( prefix() + "CARFIN/CARFINTEST1" );
     EclipseGrid grid(deck);
-    const auto& carfin_keyword = deck["CARFIN"][0];
+    const auto& carfin_keyword1 = deck["CARFIN"][0];
+    const auto& carfin_keyword2 = deck["CARFIN"][1];
     Carfin lgr(grid,
             [&grid](const std::size_t global_index)
             {
@@ -79,9 +65,14 @@ BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
             {
                 return grid.activeIndex(global_index);
             });
-    lgr.update(carfin_keyword.getRecord(0));
+    lgr.update(carfin_keyword1.getRecord(0));
     BOOST_CHECK_EQUAL(lgr.size(), 324);
 
     lgr.reset();
     BOOST_CHECK_EQUAL(lgr.size(), 1000);
+
+    lgr.update(carfin_keyword2.getRecord(0));
+    BOOST_CHECK_EQUAL(lgr.size(), 576);
+    BOOST_CHECK_EQUAL(lgr.NAME(), "LGR2");
+
 }
