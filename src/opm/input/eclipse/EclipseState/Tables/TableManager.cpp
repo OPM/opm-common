@@ -101,6 +101,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
@@ -421,6 +423,9 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "SSFN",  m_tabdims.getNumSatTables() );
         addTables( "MSFN",  m_tabdims.getNumSatTables() );
 
+        addTables( "GSF",  m_tabdims.getNumSatTables() );
+        addTables( "WSF",  m_tabdims.getNumSatTables() );
+
         addTables( "PLYADS", m_tabdims.getNumSatTables() );
         addTables( "PLYROCK", m_tabdims.getNumSatTables());
         addTables( "PLYVISC", m_tabdims.getNumPVTTables());
@@ -507,6 +512,9 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         }
         initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<MsfnTable>(deck, "MSFN" , m_tabdims.getNumSatTables());
+
+        initSimpleTableContainer<WsfTable>(deck, "WSF" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<GsfTable>(deck, "GSF" , m_tabdims.getNumSatTables());
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims.getNumEquilRegions());
@@ -915,6 +923,14 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
     const TableContainer& TableManager::getSsfnTables() const {
         return getTables("SSFN");
+    }
+
+    const TableContainer& TableManager::getWsfTables() const {
+        return getTables("WSF");
+    }
+
+    const TableContainer& TableManager::getGsfTables() const {
+        return getTables("GSF");
     }
 
     const TableContainer& TableManager::getRsvdTables() const {

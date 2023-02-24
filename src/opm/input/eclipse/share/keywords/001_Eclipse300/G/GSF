@@ -1,5 +1,5 @@
 {
-  "name": "SWFN",
+  "name": "GSF",
   "sections": [
     "PROPS"
   ],
@@ -7,8 +7,8 @@
     "keyword": "TABDIMS",
     "item": "NTSFUN"
   },
-  "requires": ["WATER"],
-  "prohibits": ["WSF"],
+  "requires": ["GAS"],
+  "prohibits": ["SGOF", "SLGOF", "SGFN"],
   "items": [
     {
       "name": "DATA",

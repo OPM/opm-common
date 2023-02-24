@@ -8,7 +8,7 @@
     "item": "NTSFUN"
   },
   "requires": ["GAS"],
-  "prohibits": ["SGOF"],
+  "prohibits": ["SGOF", "GSF"],
   "items": [
     {
       "name": "DATA",

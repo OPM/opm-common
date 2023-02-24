@@ -90,6 +90,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -728,6 +730,55 @@ SgfnTable::getJFuncColumn() const
 {
     SimpleTable::assertJFuncPressure(true);
     return SimpleTable::getColumn(2);
+}
+
+GsfTable::GsfTable(const DeckItem& item, const int tableID)
+{
+    m_schema.addColumn(ColumnSchema("SG", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("KRG", Table::INCREASING, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("PCGW", Table::INCREASING, Table::DEFAULT_LINEAR));
+
+    SimpleTable::init("GSF", item, tableID);
+}
+
+
+const TableColumn&
+GsfTable::getSgColumn() const
+{
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn&
+GsfTable::getKrgColumn() const
+{
+    return SimpleTable::getColumn(1);
+}
+
+const TableColumn&
+GsfTable::getPcgwColumn() const
+{
+    return SimpleTable::getColumn(2);
+}
+
+WsfTable::WsfTable(const DeckItem& item, const int tableID)
+{
+    m_schema.addColumn(ColumnSchema("SW", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("KRW", Table::INCREASING, Table::DEFAULT_LINEAR));
+
+    SimpleTable::init("WSF", item, tableID);
+}
+
+
+const TableColumn&
+WsfTable::getSwColumn() const
+{
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn&
+WsfTable::getKrwColumn() const
+{
+    return SimpleTable::getColumn(1);
 }
 
 SsfnTable::SsfnTable(const DeckItem& item, const int tableID)

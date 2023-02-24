@@ -452,6 +452,119 @@ static const char* letDeckString =
     " 0.0  0.03 1.8 1.9 1.0 0.95   0.0  0.01 3.5 4.0 1.1 1.0   1.0 1.0 1.0 0.2 0.01 /\n"
     "\n";
 
+static const char* fam3DeckStringGasWater =
+    "RUNSPEC\n"
+    "\n"
+    "DIMENS\n"
+    "   10 10 3 /\n"
+    "\n"
+    "TABDIMS\n"
+    "/\n"
+    "\n"
+    "WATER\n"
+    "GAS\n"
+    "\n"
+    "DISGAS\n"
+    "\n"
+    "FIELD\n"
+    "\n"
+    "GRID\n"
+    "\n"
+    "DX\n"
+    "       300*1000 /\n"
+    "DY\n"
+    "   300*1000 /\n"
+    "DZ\n"
+    "   100*20 100*30 100*50 /\n"
+    "\n"
+    "TOPS\n"
+    "   100*8325 /\n"
+    "\n"
+    "\n"
+    "PORO\n"
+    "  300*0.15 /\n"
+    "PROPS\n"
+    "\n"
+    "\n"
+    "GSF\n"
+    "0      0   0\n"
+    "0.001  0   0\n"
+    "0.02   0   0\n"
+    "0.05   0.005   0\n"
+    "0.12   0.025   0\n"
+    "0.2    0.075   0\n"
+    "0.25   0.125   0\n"
+    "0.3    0.190   0\n"
+    "0.4    0.410   0\n"
+    "0.45   0.60    0\n"
+    "0.5    0.72    0\n"
+    "0.6    0.87    0\n"
+    "0.7    0.94    0\n"
+    "0.85   0.98    0\n"
+    "0.88   0.984   0 /\n"
+    "\n"
+    "WSF\n"
+    "0.12  0   \n"
+    "0.22   0   \n"
+    "0.55   0.005   \n"
+    "0.88   0.984   /\n";
+
+static const char* fam2DeckStringGasWater =
+    "RUNSPEC\n"
+    "\n"
+    "DIMENS\n"
+    "   10 10 3 /\n"
+    "\n"
+    "TABDIMS\n"
+    "/\n"
+    "\n"
+    "WATER\n"
+    "GAS\n"
+    "\n"
+    "DISGAS\n"
+    "\n"
+    "FIELD\n"
+    "\n"
+    "GRID\n"
+    "\n"
+    "DX\n"
+    "       300*1000 /\n"
+    "DY\n"
+    "   300*1000 /\n"
+    "DZ\n"
+    "   100*20 100*30 100*50 /\n"
+    "\n"
+    "TOPS\n"
+    "   100*8325 /\n"
+    "\n"
+    "\n"
+    "PORO\n"
+    "  300*0.15 /\n"
+    "PROPS\n"
+    "\n"
+    "\n"
+    "SGFN\n"
+    "0      0   0\n"
+    "0.001  0   0\n"
+    "0.02   0   0\n"
+    "0.05   0.005   0\n"
+    "0.12   0.025   0\n"
+    "0.2    0.075   0\n"
+    "0.25   0.125   0\n"
+    "0.3    0.190   0\n"
+    "0.4    0.410   0\n"
+    "0.45   0.60    0\n"
+    "0.5    0.72    0\n"
+    "0.6    0.87    0\n"
+    "0.7    0.94    0\n"
+    "0.85   0.98    0\n"
+    "0.88   0.984   0 /\n"
+    "\n"
+    "SWFN\n"
+    "0.12  0   0\n"
+    "0.22   0   0\n"
+    "0.55   0.005  0\n"
+    "0.88   0.984  0 /\n";
 
 template <class Scalar>
 inline Scalar computeLetCurve(const Scalar S, const Scalar L, const Scalar E, const Scalar T)
@@ -671,6 +784,60 @@ inline void testAll()
                             throw std::logic_error("Discrepancy between capillary pressure of family 1 and family 2 keywords");
                         if (std::abs(krFam1[phaseIdx] - krFam2[phaseIdx]) > 1e-1)
                             throw std::logic_error("Discrepancy between relative permeabilities of family 1 and family 2 keywords");
+                    }
+                }
+            }
+        }
+
+        // Water gas
+        {
+            const auto fam2Deck = parser.parseString(fam2DeckStringGasWater);
+            const Opm::EclipseState fam2EclState(fam2Deck);
+
+            Opm::EclMaterialLawManager<MaterialTraits> fam2materialLawManager;
+            fam2materialLawManager.initFromState(fam2EclState);
+            fam2materialLawManager.initParamsForElements(fam2EclState, n);
+
+            const auto fam3Deck = parser.parseString(fam3DeckStringGasWater);
+            const Opm::EclipseState fam3EclState(fam3Deck);
+
+            MaterialLawManager fam3materialLawManager;
+            fam3materialLawManager.initFromState(fam3EclState);
+            fam3materialLawManager.initParamsForElements(fam3EclState, n);
+
+            for (unsigned elemIdx = 0; elemIdx < n; ++ elemIdx) {
+                for (int i = 0; i < 100; ++ i) {
+                    Scalar Sw = 0;
+                    Scalar So = Scalar(i)/100;
+                    Scalar Sg = 1 - Sw - So;
+                    FluidState fs;
+                    fs.setSaturation(waterPhaseIdx, Sw);
+                    fs.setSaturation(oilPhaseIdx, So);
+                    fs.setSaturation(gasPhaseIdx, Sg);
+
+                    Scalar pcFam2[numPhases]  = { 0.0, 0.0 };
+                    Scalar pcFam3[numPhases]  = { 0.0, 0.0 };
+                    MaterialLaw::capillaryPressures(pcFam2,
+                                                    fam2materialLawManager.materialLawParams(elemIdx),
+                                                    fs);
+                    MaterialLaw::capillaryPressures(pcFam3,
+                                                    fam3materialLawManager.materialLawParams(elemIdx),
+                                                    fs);
+
+                    Scalar krFam2[numPhases] = { 0.0, 0.0 };
+                    Scalar krFam3[numPhases] = { 0.0, 0.0 };
+                    MaterialLaw::relativePermeabilities(krFam2,
+                                                        fam2materialLawManager.materialLawParams(elemIdx),
+                                                        fs);
+                    MaterialLaw::relativePermeabilities(krFam3,
+                                                        fam3materialLawManager.materialLawParams(elemIdx),
+                                                        fs);
+
+                    for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+                        if (std::abs(pcFam2[phaseIdx] - pcFam3[phaseIdx]) > 1e-5)
+                            throw std::logic_error("Discrepancy between capillary pressure of family 2 and family 3 keywords");
+                        if (std::abs(krFam2[phaseIdx] - krFam3[phaseIdx]) > 1e-1)
+                            throw std::logic_error("Discrepancy between relative permeabilities of family 2 and family 3 keywords");
                     }
                 }
             }

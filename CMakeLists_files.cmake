@@ -1050,6 +1050,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp
        opm/input/eclipse/EclipseState/Tables/OilvisctTable.hpp
        opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp
+       opm/input/eclipse/EclipseState/Tables/WsfTable.hpp
+       opm/input/eclipse/EclipseState/Tables/GsfTable.hpp
        opm/input/eclipse/EclipseState/Tables/MiscTable.hpp
        opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp
        opm/input/eclipse/EclipseState/Tables/PvdsTable.hpp

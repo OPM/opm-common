@@ -103,11 +103,18 @@ namespace {
                      (twoP && deck.hasKeyword<Opm::ParserKeywords::SOF2>()))) ||
             (wat && deck.hasKeyword<Opm::ParserKeywords::SWFN>());
 
+        const auto family3 = //WSF, GSF gas-water CO2STORE case
+            deck.hasKeyword<Opm::ParserKeywords::GSF>() &&
+            deck.hasKeyword<Opm::ParserKeywords::WSF>();
+
         if (family1)
             return Opm::SatFuncControls::KeywordFamily::Family_I;
 
         if (family2)
             return Opm::SatFuncControls::KeywordFamily::Family_II;
+
+        if (family3)
+            return Opm::SatFuncControls::KeywordFamily::Family_III;
 
         return Opm::SatFuncControls::KeywordFamily::Undefined;
     }

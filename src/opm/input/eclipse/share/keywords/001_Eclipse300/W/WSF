@@ -1,5 +1,5 @@
 {
-  "name": "SWFN",
+  "name": "WSF",
   "sections": [
     "PROPS"
   ],
@@ -8,7 +8,7 @@
     "item": "NTSFUN"
   },
   "requires": ["WATER"],
-  "prohibits": ["WSF"],
+  "prohibits": ["SWOF", "SWFN"],
   "items": [
     {
       "name": "DATA",
@@ -16,8 +16,7 @@
       "size_type": "ALL",
       "dimension": [
         "1",
-        "1",
-        "Pressure"
+        "1"
       ]
     }
   ]

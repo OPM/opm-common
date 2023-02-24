@@ -105,6 +105,15 @@ namespace Opm {
                                   const bool          oil,
                                   const bool          wat);
 
+        /// Add saturation function tables corresponding to family III (WSF,
+        ///  GSF) to the tabular data (TABDIMS and TAB vectors).
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate table
+        ///    dimensions ("TABDIMS" keyword) and an initialised \c
+        ///    TableManager sub-object.
+        ///
+        void addSatFunc_FamilyThree(const EclipseState& es);
+
         /// Add gas PVT tables (keywords PVDG and PVTG) to the tabular data
         /// (TABDIMS and TAB vectors).
         ///
