@@ -115,6 +115,15 @@ public:
     Scalar Swl() const
     { EnsureFinalized::check(); return Swl_; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        // This is for restart serialization.
+        // Only dynamic state in the parameters need to be stored.
+        serializer(*gasOilParams_);
+        serializer(*oilWaterParams_);
+    }
+
 private:
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;

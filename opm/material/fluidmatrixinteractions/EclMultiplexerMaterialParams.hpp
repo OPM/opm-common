@@ -204,6 +204,32 @@ public:
         return this->template castTo<TwoPhaseParams>();
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        switch (approach()) {
+        case EclMultiplexerApproach::Stone1:
+            serializer(castTo<Stone1Params>());
+            break;
+
+        case EclMultiplexerApproach::Stone2:
+            serializer(castTo<Stone2Params>());
+            break;
+
+        case EclMultiplexerApproach::Default:
+            serializer(castTo<DefaultParams>());
+            break;
+
+        case EclMultiplexerApproach::TwoPhase:
+            serializer(castTo<TwoPhaseParams>());
+            break;
+
+        case EclMultiplexerApproach::OnePhase:
+            // Do nothing, no parameters.
+            break;
+        }
+    }
+
 private:
     template <class ParamT>
     ParamT& castTo()
