@@ -27,14 +27,14 @@
 #ifndef OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_PARAMS_HPP
 #define OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_PARAMS_HPP
 
-#include "EclHysteresisConfig.hpp"
-#include "EclEpsScalingPoints.hpp"
+#include <opm/material/common/EnsureFinalized.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
+#include <opm/material/fluidmatrixinteractions/EclHysteresisConfig.hpp>
 
 #include <cassert>
 #include <cmath>
 #include <memory>
-
-#include <opm/material/common/EnsureFinalized.hpp>
 
 namespace Opm {
 /*!
