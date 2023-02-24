@@ -116,6 +116,10 @@ namespace {
                                         "Use either SGOF (or SLGOF) and/or SWOF or SGFN/SWFN and SOF2/SOF3");
         }
 
+        if (family3 && !(gas && wat)) {
+            throw std::invalid_argument("Saturation family 3 should only be used for GAS and WATER case");
+        }
+
         if (family1)
             return SatfuncFamily::I;
 
@@ -624,7 +628,7 @@ namespace {
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
             default: throw std::domain_error("No valid saturation keyword family specified");
         }
     }
@@ -719,7 +723,7 @@ namespace {
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1005,7 +1009,7 @@ namespace {
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1083,7 +1087,7 @@ namespace {
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1142,7 +1146,7 @@ namespace {
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1186,7 +1190,7 @@ namespace {
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1254,7 +1258,7 @@ namespace {
                     ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
                     : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil systems");
+                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }

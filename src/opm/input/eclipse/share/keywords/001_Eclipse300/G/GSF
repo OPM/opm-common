@@ -8,6 +8,7 @@
     "item": "NTSFUN"
   },
   "requires": ["GAS"],
+  "prohibits": ["SGOF", "SLGOF", "SGFN"],
   "items": [
     {
       "name": "DATA",

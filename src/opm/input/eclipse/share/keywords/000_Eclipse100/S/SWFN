@@ -8,6 +8,7 @@
     "item": "NTSFUN"
   },
   "requires": ["WATER"],
+  "prohibits": ["WSF"],
   "items": [
     {
       "name": "DATA",

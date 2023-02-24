@@ -1271,7 +1271,6 @@ namespace { namespace SatFunc {
         std::vector<double>
         fromWsf(const std::size_t          numRows,
                 const double               tolcrit,
-                const Opm::UnitSystem&     units,
                 const Opm::TableContainer& wsf)
         {
             using WSF = ::Opm::WsfTable;
@@ -1280,7 +1279,7 @@ namespace { namespace SatFunc {
             const auto numDep = std::size_t{2}; // Krw, {zero pc}
 
             return detail::createSatfuncTable(numTab, numRows, numDep,
-                [tolcrit, &wsf, &units]
+                [tolcrit, &wsf]
                     (const std::size_t           tableID,
                      const std::size_t           primID,
                      Opm::LinearisedOutputTable& linTable)
@@ -1308,7 +1307,7 @@ namespace { namespace SatFunc {
                     const auto& krw = t.getKrwColumn();
                     std::transform(std::begin(krw), std::end(krw),
                                    linTable.column(tableID, primID, 2),
-                                   [&units](const double Pc) -> double
+                                   [](const double) -> double
                                    {
                                        return 0.0;
                                    });
@@ -2468,7 +2467,7 @@ namespace Opm {
             tabMgr.hasTables("WSF");
 
         if ((famI + famII + famIII) != 1) {
-            // Both Fam I && Fam II && Fam III or neither of them.  Can't have that.
+            // No known saturation function family or at least two of the families I, II, or II. Can't have that.
             return;             // Logging here?
         }
         else if (famI) {
@@ -2692,7 +2691,7 @@ namespace Opm {
             const auto& tables = tabMgr.getWsfTables();
 
             const auto wsf =
-                SatFunc::Water::fromWsf(nssfun, tolcrit, this->units, tables);
+                SatFunc::Water::fromWsf(nssfun, tolcrit, tables);
 
             this->addData(Ix::SwfnTableStart, wsf);
             this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
