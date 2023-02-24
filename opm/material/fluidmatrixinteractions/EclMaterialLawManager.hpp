@@ -51,6 +51,7 @@ namespace Opm {
 
 class EclipseState;
 class EclEpsConfig;
+class EclEpsGridProperties;
 template<class Scalar> class EclEpsScalingPoints;
 template<class Scalar> struct EclEpsScalingPointsInfo;
 class EclHysteresisConfig;
@@ -349,6 +350,18 @@ public:
 
     const EclEpsScalingPointsInfo<Scalar>& oilWaterScaledEpsInfoDrainage(size_t elemIdx) const
     { return oilWaterScaledEpsInfoDrainage_[elemIdx]; }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        // This is for restart serialization.
+        // Only dynamic state in the parameters need to be stored.
+        // For that reason we do not serialize the vector
+        // as that would recreate the objects inside.
+        for (auto& mat : materialLawParams_) {
+            serializer(mat);
+        }
+    }
 
 private:
     const MaterialLawParams& materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const;

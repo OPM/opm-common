@@ -143,6 +143,13 @@ public:
     Scalar eta() const
     { EnsureFinalized::check(); return eta_; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(*gasOilParams_);
+        serializer(*oilWaterParams_);
+    }
+
 private:
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;

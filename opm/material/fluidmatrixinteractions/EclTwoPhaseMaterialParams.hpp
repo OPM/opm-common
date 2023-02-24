@@ -124,6 +124,16 @@ public:
      */
     void setGasWaterParams(std::shared_ptr<GasWaterParams> val)
     { gasWaterParams_ = val; }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        // This is for restart serialization.
+        // Only dynamic state in the parameters need to be stored.
+        serializer(*gasOilParams_);
+        serializer(*oilWaterParams_);
+        serializer(*gasWaterParams_);
+    }
     
 private:
     EclTwoPhaseApproach approach_;

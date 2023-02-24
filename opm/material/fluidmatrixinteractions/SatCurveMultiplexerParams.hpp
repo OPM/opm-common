@@ -155,6 +155,20 @@ public:
         return this->template castTo<PLParams>();
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        switch (approach()) {
+        case SatCurveMultiplexerApproach::LET:
+            serializer(castTo<LETParams>());
+            break;
+
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            serializer(castTo<PLParams>());
+            break;
+        }
+    }
+
 private:
     template <class ParamT>
     ParamT& castTo()

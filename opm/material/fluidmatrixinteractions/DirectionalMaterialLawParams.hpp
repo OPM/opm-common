@@ -25,16 +25,28 @@
 #define OPM_DIRECTIONAL_MATERIAL_LAW_PARAMS_HH
 
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 namespace Opm {
+
 template <class MaterialLawParams>
 struct DirectionalMaterialLawParams {
     using vector_type = std::vector<MaterialLawParams>;
-    DirectionalMaterialLawParams() : materialLawParamsX_{}, materialLawParamsY_{}, materialLawParamsZ_{} {}
-    DirectionalMaterialLawParams(std::size_t size) :
-        materialLawParamsX_(size), materialLawParamsY_(size), materialLawParamsZ_(size) {}
-    vector_type& getArray(int index) {
+    DirectionalMaterialLawParams()
+        : materialLawParamsX_{}
+        , materialLawParamsY_{}
+        , materialLawParamsZ_{}
+    {}
+
+    DirectionalMaterialLawParams(std::size_t size)
+        : materialLawParamsX_(size)
+        , materialLawParamsY_(size)
+        , materialLawParamsZ_(size)
+    {}
+
+    vector_type& getArray(int index)
+    {
         switch(index) {
             case 0:
                 return materialLawParamsX_;
@@ -46,9 +58,12 @@ struct DirectionalMaterialLawParams {
                 throw std::runtime_error("Unexpected mobility array index");
         }
     }
+
     vector_type materialLawParamsX_;
     vector_type materialLawParamsY_;
     vector_type materialLawParamsZ_;
 };
+
 } // namespace Opm
+
 #endif
