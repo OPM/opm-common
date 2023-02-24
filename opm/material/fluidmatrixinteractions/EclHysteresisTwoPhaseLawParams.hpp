@@ -71,6 +71,19 @@ public:
         // deltaSwImbKrw_ = 0.0;
     }
 
+    static EclHysteresisTwoPhaseLawParams serializationTestObject()
+    {
+        EclHysteresisTwoPhaseLawParams<EffLawT> result;
+        result.deltaSwImbKrn_ = 1.0;
+        result.Sncrt_ = 2.0;
+        result.initialImb_ = true;
+        result.pcSwMic_ = 3.0;
+        result.krnSwMdc_ = 4.0;
+        result.KrndHy_ = 5.0;
+
+        return result;
+    }
+
     /*!
      * \brief Calculate all dependent quantities once the independent
      *        quantities of the parameter object have been set.
@@ -376,6 +389,28 @@ public:
 
         if (updateParams)
             updateDynamicParams_();
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        // only serializes dynamic state - see update() and updateDynamic_()
+        serializer(deltaSwImbKrn_);
+        serializer(Sncrt_);
+        serializer(initialImb_);
+        serializer(pcSwMic_);
+        serializer(krnSwMdc_);
+        serializer(KrndHy_);
+    }
+
+    bool operator==(const EclHysteresisTwoPhaseLawParams& rhs) const
+    {
+        return this->deltaSwImbKrn_ == rhs.deltaSwImbKrn_ &&
+               this->Sncrt_ == rhs.Sncrt_ &&
+               this->initialImb_ == rhs.initialImb_ &&
+               this->pcSwMic_ == rhs.pcSwMic_ &&
+               this->krnSwMdc_ == rhs.krnSwMdc_ &&
+               this->KrndHy_ == rhs.KrndHy_;
     }
 
 private:
