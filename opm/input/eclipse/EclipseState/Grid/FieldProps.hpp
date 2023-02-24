@@ -131,6 +131,8 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"TEMPI",   keyword_info<double>{}.unit_string("Temperature")},
                                                                                       {"THCONR",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCONSF", keyword_info<double>{}},
+                                                                                      {"HEATCR",  keyword_info<double>{}.unit_string("Energy/ReservoirVolume*AbsoluteTemperature")},
+                                                                                      {"HEATCRT", keyword_info<double>{}.unit_string("Energy/ReservoirVolume*AbsoluteTemperature*AbsoluteTemperature")},
                                                                                       {"THCROCK", keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCOIL",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCGAS",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
