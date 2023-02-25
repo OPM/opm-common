@@ -300,8 +300,8 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
 
     case SatFuncControls::KeywordFamily::Family_III:
     {
-        const GsfTable& gsfTable = tableManager.getGsfTables().getTable<GsfTable>( satRegionIdx );
-        const WsfTable& wsfTable = tableManager.getWsfTables().getTable<WsfTable>( satRegionIdx );
+        const GsfTable& gsfTable = tableManager.getGsfTables().template getTable<GsfTable>( satRegionIdx );
+        const WsfTable& wsfTable = tableManager.getWsfTables().template getTable<WsfTable>( satRegionIdx );
 
         effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
         auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
