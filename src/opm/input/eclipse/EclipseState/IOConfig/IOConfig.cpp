@@ -239,12 +239,21 @@ namespace Opm {
         return m_output_enabled;
     }
 
-    void IOConfig::setOutputEnabled(bool enabled){
+    void IOConfig::setOutputEnabled(bool enabled) {
         m_output_enabled = enabled;
     }
 
     std::string IOConfig::getOutputDir() const {
         return m_output_dir;
+    }
+
+    std::string IOConfig::getInputDir() const {
+        std::filesystem::path path(m_deck_filename);
+        if (path.has_parent_path()) {
+            return path.parent_path();
+        } else {
+            return std::filesystem::current_path();
+        }
     }
 
     void IOConfig::setOutputDir(const std::string& outputDir) {

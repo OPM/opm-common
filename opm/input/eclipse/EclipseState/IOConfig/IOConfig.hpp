@@ -182,6 +182,8 @@ namespace Opm {
         /// i.e. /path/to/sim/CASE
         std::string fullBasePath( ) const;
 
+        std::string getInputDir() const;
+
         bool initOnly() const;
 
         bool operator==(const IOConfig& data) const;
