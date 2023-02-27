@@ -41,7 +41,6 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/common/version.hh>
 #include <dune/common/classname.hh>
 
 #include <limits>
@@ -89,9 +88,6 @@ public:
         using InputEval = typename FluidState::Scalar;
         using ComponentVector = Dune::FieldVector<typename FluidState::Scalar, numComponents>;
 
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,7)
-        Dune::FMatrixPrecision<InputEval>::set_singular_limit(1e-35);
-#endif
         if (tolerance <= 0) {
             tolerance = std::min<Scalar>(1e-3, 1e8 * std::numeric_limits<Scalar>::epsilon());
         }

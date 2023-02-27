@@ -39,7 +39,6 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/common/version.hh>
 
 #include <limits>
 
@@ -160,10 +159,6 @@ public:
 
         typedef Dune::FieldVector<FlashEval, numEq> FlashDefectVector;
         typedef CompositionalFluidState<FlashEval, FluidSystem, /*energy=*/false> FlashFluidState;
-
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,7)
-        Dune::FMatrixPrecision<InputEval>::set_singular_limit(1e-35);
-#endif
 
         if (tolerance <= 0)
             tolerance = std::min<Scalar>(1e-3,
