@@ -26,12 +26,14 @@
  */
 #ifndef OPM_BLACK_OIL_FLUID_SYSTEM_HPP
 #define OPM_BLACK_OIL_FLUID_SYSTEM_HPP
-#include <opm/common/ErrorMacros.hpp>
+
 #include "BlackOilDefaultIndexTraits.hpp"
 #include "blackoilpvt/OilPvtMultiplexer.hpp"
 #include "blackoilpvt/GasPvtMultiplexer.hpp"
 #include "blackoilpvt/WaterPvtMultiplexer.hpp"
 #include "blackoilpvt/BrineCo2Pvt.hpp"
+
+#include <opm/common/TimingMacros.hpp>
 
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/Constants.hpp>

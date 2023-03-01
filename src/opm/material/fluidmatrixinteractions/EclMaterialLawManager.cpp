@@ -24,6 +24,7 @@
 #include <config.h>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 
+#include <opm/common/TimingMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>

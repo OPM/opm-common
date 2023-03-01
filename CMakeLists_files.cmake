@@ -691,6 +691,7 @@ endif()
 list( APPEND PUBLIC_HEADER_FILES
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
+      opm/common/TimingMacros.hpp
       opm/common/OpmLog/CounterLog.hpp
       opm/common/OpmLog/EclipsePRTLog.hpp
       opm/common/OpmLog/LogBackend.hpp

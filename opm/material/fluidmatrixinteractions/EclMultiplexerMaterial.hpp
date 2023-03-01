@@ -26,12 +26,14 @@
  */
 #ifndef OPM_ECL_MULTIPLEXER_MATERIAL_HPP
 #define OPM_ECL_MULTIPLEXER_MATERIAL_HPP
-#include <opm/common/ErrorMacros.hpp>
+
 #include "EclMultiplexerMaterialParams.hpp"
 #include "EclDefaultMaterial.hpp"
 #include "EclStone1Material.hpp"
 #include "EclStone2Material.hpp"
 #include "EclTwoPhaseMaterial.hpp"
+
+#include <opm/common/TimingMacros.hpp>
 
 #include <algorithm>
 #include <stdexcept>
