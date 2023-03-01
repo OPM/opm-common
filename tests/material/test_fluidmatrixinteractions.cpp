@@ -29,6 +29,8 @@
  */
 #include "config.h"
 
+#include <opm/common/TimingMacros.hpp>
+
 // include the local AD framwork
 #include <opm/material/densead/Math.hpp>
 

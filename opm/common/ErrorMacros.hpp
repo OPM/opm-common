@@ -40,20 +40,6 @@
 # define OPM_MESSAGE_IF(cond, m) do {} while (false)
 #endif
 
-// macros used to time blocks for example with tracy
-// time block of main part of codes which do not effect performance
-#ifndef OPM_TIMEBLOCK
-#define OPM_TIMEBLOCK(x)\
-    do { /* nothing */ } while (false)
-#endif
-
-// detailed timing which may effect performance
-#ifndef OPM_TIMEBLOCK_LOCAL
-#define OPM_TIMEBLOCK_LOCAL(x)\
-    do { /* nothing */ } while (false)
-#endif
-
-
 // Macro to throw an exception. NOTE: For this macro to work, the
 // exception class must exhibit a constructor with the signature
 // (const std::string &message). Since this condition is not fulfilled
