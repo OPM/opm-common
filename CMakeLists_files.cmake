@@ -264,6 +264,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
+    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerTable.cpp
     src/opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
@@ -872,8 +873,12 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp
       opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp
       opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
+<<<<<<< HEAD
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
+=======
+      opm/material/fluidmatrixinteractions/EclMaterialLawManagerTable.hpp
+>>>>>>> 376afbcc4 (addded new files to cmake system)
       opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp
       opm/material/fluidmatrixinteractions/EclDefaultMaterialParams.hpp
       opm/material/fluidmatrixinteractions/ThreePhaseParkerVanGenuchten.hpp
