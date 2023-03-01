@@ -132,8 +132,8 @@ public:
     {
         // This is for restart serialization.
         // Only dynamic state in the parameters need to be stored.
-        serializer(*gasOilParams_);
-        serializer(*oilWaterParams_);
+        serializer(gasOilParams_);
+        serializer(oilWaterParams_);
     }
 
 private:

@@ -752,7 +752,10 @@ readGasOilEffectiveParameters_(Container& dest,
         }
         break;
     }
-
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        throw std::domain_error("Family III not handled");
+    }
     case SatFuncControls::KeywordFamily::Undefined:
         throw std::domain_error("No valid saturation keyword family specified");
     }
@@ -958,6 +961,10 @@ readOilWaterEffectiveParameters_(Container& dest,
         break;
     }
 
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        throw std::domain_error("Family III not handled");
+    }
     case SatFuncControls::KeywordFamily::Undefined:
         throw std::domain_error("No valid saturation keyword family specified");
     }
@@ -1012,7 +1019,10 @@ readGasWaterEffectiveParameters_(Container& dest,
 
         break;
     }
-
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        throw std::domain_error("Family III not handled");
+    }
     case SatFuncControls::KeywordFamily::Undefined:
         throw std::domain_error("No valid saturation keyword family specified");
     }
