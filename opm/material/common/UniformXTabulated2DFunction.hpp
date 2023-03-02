@@ -317,6 +317,16 @@ public:
     template <class Evaluation>
     Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
     {
+        Evaluation alpha, beta1, beta2;
+        unsigned i, j1, j2;
+        findPoints(i, j1, j2, alpha, beta1, beta2, x, y, extrapolate);
+        return eval(i, j1, j2, alpha, beta1, beta2);
+    }
+
+        template <class Evaluation>
+    void findPoints(unsigned& i, unsigned& j1, unsigned& j2, Evaluation& alpha, Evaluation& beta1, Evaluation& beta2,
+               const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
+    {
 #ifndef NDEBUG
         if (!extrapolate && !applies(x, y)) {
             if constexpr (std::is_floating_point_v<Evaluation>) {
@@ -333,8 +343,8 @@ public:
 
         // bi-linear interpolation: first, calculate the x and y indices in the lookup
         // table ...
-        unsigned i = xSegmentIndex(x, extrapolate);
-        const Evaluation& alpha = xToAlpha(x, i);
+        i = xSegmentIndex(x, extrapolate);
+        alpha = xToAlpha(x, i);
         // The 'shift' is used to shift the points used to interpolate within
         // the (i) and (i+1) sets of sample points, so that when approaching
         // the boundary of the domain given by the samples, one gets the same
@@ -368,11 +378,16 @@ public:
         auto yLower =  y - alpha*shift;
         auto yUpper =  y + (1-alpha)*shift;
 
-        unsigned j1 = ySegmentIndex(yLower, i, extrapolate);
-        unsigned j2 = ySegmentIndex(yUpper, i + 1, extrapolate);
-        const Evaluation& beta1 = yToBeta(yLower, i, j1);
-        const Evaluation& beta2 = yToBeta(yUpper, i + 1, j2);
+        j1 = ySegmentIndex(yLower, i, extrapolate);
+        j2 = ySegmentIndex(yUpper, i + 1, extrapolate);
+        beta1 = yToBeta(yLower, i, j1);
+        beta2 = yToBeta(yUpper, i + 1, j2);
 
+    }
+
+    template <class Evaluation>
+    Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
+    {
         // evaluate the two function values for the same y value ...
         const Evaluation& s1 = valueAt(i, j1)*(1.0 - beta1) + valueAt(i, j1 + 1)*beta1;
         const Evaluation& s2 = valueAt(i + 1, j2)*(1.0 - beta2) + valueAt(i + 1, j2 + 1)*beta2;
