@@ -46,8 +46,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         ///    aquifer (or connection) in the various output arrays.
         ///
         /// \param[in] aqConfig Aquifer configuration object.  Keeps track
-        ///    of aquifer types (Carter-Tracy vs. Fetkovich) and provides
-        ///    read-only access to the individual aquifer objects.
+        ///    of aquifer types (Carter-Tracy, Fetkovich, constant flux &c)
+        ///    and provides read-only access to the individual aquifer
+        ///    objects.
         ///
         /// \param[in] grid Simulation grid.  Needed to map active to
         ///    Cartesian cell indices and to extract (I,J,K) index tuples of
@@ -60,8 +61,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         /// into internal arrays.
         ///
         /// \param[in] aqConfig Aquifer configuration object.  Keeps track
-        ///    of aquifer types (Carter-Tracy vs. Fetkovich) and provides
-        ///    read-only access to the individual aquifer objects.
+        ///    of aquifer types (Carter-Tracy, Fetkovich, constant flux &c)
+        ///    and provides read-only access to the individual aquifer
+        ///    objects.
         ///
         /// \param[in] aquData Dynamic aquifer data, including time
         ///    constants, water mass densities, water viscosities, and
@@ -184,6 +186,21 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         /// Aggregate ACAQ array (Double Precision) for all analytic aquifer
         /// connections.  Separate array for each aquifer.
         std::vector<WindowedArray<double>> doubleprecAnalyticAquiferConn_;
+
+        void handleCarterTracy(const AquiferConfig&  aqConfig,
+                               const data::Aquifers& aquData,
+                               const SummaryState&   summaryState,
+                               const UnitSystem&     usys);
+
+        void handleFetkovich(const AquiferConfig&  aqConfig,
+                             const data::Aquifers& aquData,
+                             const SummaryState&   summaryState,
+                             const UnitSystem&     usys);
+
+        void handleNumeric(const AquiferConfig&  aqConfig,
+                           const data::Aquifers& aquData,
+                           const SummaryState&   summaryState,
+                           const UnitSystem&     usys);
     };
 
 }}} // Opm::RestartIO::Helpers

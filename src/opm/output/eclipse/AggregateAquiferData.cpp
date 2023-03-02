@@ -26,14 +26,13 @@
 #include <opm/output/eclipse/VectorItems/aquifer.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-
-#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -133,6 +132,19 @@ namespace {
             };
         }
 
+        namespace Common
+        {
+            template <typename IAaqArray>
+            void staticContrib(const int  numActiveConn,
+                               IAaqArray& iaaq)
+            {
+                using Ix = VI::IAnalyticAquifer::index;
+
+                iaaq[Ix::NumAquiferConn] = numActiveConn;
+                iaaq[Ix::Unknown_1] = 1; // Not characterised; =1 in all cases seen thus far.
+            }
+        } // Common
+
         namespace CarterTracy
         {
             template <typename IAaqArray>
@@ -142,13 +154,12 @@ namespace {
             {
                 using Ix = VI::IAnalyticAquifer::index;
 
-                iaaq[Ix::NumAquiferConn] = numActiveConn;
+                Common::staticContrib(numActiveConn, iaaq);
+
                 iaaq[Ix::WatPropTable] = aquifer.pvttableID; // One-based (=AQUCT(10))
 
                 iaaq[Ix::CTInfluenceFunction] = aquifer.inftableID;
                 iaaq[Ix::TypeRelated1] = VI::IAnalyticAquifer::Value::ModelType::CarterTracy;
-
-                iaaq[Ix::Unknown_1] = 1; // Not characterised; =1 in all cases seen thus far.
             }
         } // CarterTracy
 
@@ -161,11 +172,10 @@ namespace {
             {
                 using Ix = VI::IAnalyticAquifer::index;
 
-                iaaq[Ix::NumAquiferConn] = numActiveConn;
-                iaaq[Ix::WatPropTable] = aquifer.pvttableID; // One-based (=AQUFETP(7))
+                Common::staticContrib(numActiveConn, iaaq);
 
+                iaaq[Ix::WatPropTable] = aquifer.pvttableID; // One-based (=AQUFETP(7))
                 iaaq[Ix::TypeRelated1] = VI::IAnalyticAquifer::Value::ModelType::Fetkovich;
-                iaaq[Ix::Unknown_1] = 1; // Not characterised; =1 in all cases seen thus far.
             }
         } // Fetkovich
     } // IntegerAnalyticAquifer
@@ -574,34 +584,23 @@ captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
                            const SummaryState&   summaryState,
                            const UnitSystem&     usys)
 {
-    FetkovichAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
-        (const Aquifetp::AQUFETP_data& aquifer)
-    {
-        const auto aquIndex = static_cast<WindowedArray<int>::Idx>(aquifer.aquiferID - 1);
 
-        auto iaaq = this->integerAnalyticAq_[aquIndex];
-        const auto nActiveConn = this->numActiveConn_[aquIndex];
-        IntegerAnalyticAquifer::Fetkovich::staticContrib(aquifer, nActiveConn, iaaq);
 
-        auto xaqPos = aquData.find(aquifer.aquiferID);
-        if ((xaqPos != aquData.end()) &&
-            xaqPos->second.typeData.is<data::AquiferType::Fetkovich>())
-        {
-            const auto& aquFetPData = xaqPos->second;
+    this->maxActiveAnalyticAquiferID_ = aqDims.maxAquiferID;
 
-            auto saaq = this->singleprecAnalyticAq_[aquIndex];
-            SinglePrecAnalyticAquifer::Fetkovich::staticContrib(aquifer, aquFetPData, usys, saaq);
-        }
+    this->handleFetkovich(aqConfig, aquData, summaryState, usys);
+    this->handleCarterTracy(aqConfig, aquData, summaryState, usys);
+    this->handleNumeric(aqConfig, aquData, summaryState, usys);
+}
 
-        auto xaaq = this->doubleprecAnalyticAq_[aquIndex];
-        const auto tot_influx = this->totalInflux_[aquIndex];
-        auto sumVar = [&summaryState, &aquifer](const std::string& vector)
-        {
-            return getSummaryVariable(summaryState, vector, aquifer.aquiferID);
-        };
-        DoublePrecAnalyticAquifer::Fetkovich::dynamicContrib(sumVar, tot_influx, usys, xaaq);
-    });
 
+void
+Opm::RestartIO::Helpers::AggregateAquiferData::
+handleCarterTracy(const AquiferConfig&  aqConfig,
+                  const data::Aquifers& aquData,
+                  const SummaryState&   summaryState,
+                  const UnitSystem&     usys)
+{
     CarterTracyAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
         (const AquiferCT::AQUCT_data& aquifer)
     {
@@ -628,15 +627,61 @@ captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
                 return getSummaryVariable(summaryState, vector, aquifer.aquiferID);
             };
 
-            DoublePrecAnalyticAquifer::CarterTracy::dynamicContrib(sumVar, aquCTData,
-                                                                   tot_influx, usys, xaaq);
+            DoublePrecAnalyticAquifer::CarterTracy::
+                dynamicContrib(sumVar, aquCTData, tot_influx, usys, xaaq);
         }
     });
+}
 
-    // TODO: we should make the AQUFLUX aquifer here
+void
+Opm::RestartIO::Helpers::AggregateAquiferData::
+handleFetkovich(const AquiferConfig&  aqConfig,
+                const data::Aquifers& aquData,
+                const SummaryState&   summaryState,
+                const UnitSystem&     usys)
+{
+    FetkovichAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
+        (const Aquifetp::AQUFETP_data& aquifer)
+    {
+        const auto aquIndex = static_cast<WindowedArray<int>::Idx>(aquifer.aquiferID - 1);
 
+        auto iaaq = this->integerAnalyticAq_[aquIndex];
+        const auto nActiveConn = this->numActiveConn_[aquIndex];
+        IntegerAnalyticAquifer::Fetkovich::staticContrib(aquifer, nActiveConn, iaaq);
+
+        auto xaqPos = aquData.find(aquifer.aquiferID);
+        if ((xaqPos != aquData.end()) &&
+            xaqPos->second.typeData.is<data::AquiferType::Fetkovich>())
+        {
+            const auto& aquFetPData = xaqPos->second;
+
+            auto saaq = this->singleprecAnalyticAq_[aquIndex];
+            SinglePrecAnalyticAquifer::Fetkovich::
+                staticContrib(aquifer, aquFetPData, usys, saaq);
+        }
+
+        auto xaaq = this->doubleprecAnalyticAq_[aquIndex];
+        const auto tot_influx = this->totalInflux_[aquIndex];
+        auto sumVar = [&summaryState, &aquifer](const std::string& vector)
+        {
+            return getSummaryVariable(summaryState, vector, aquifer.aquiferID);
+        };
+        DoublePrecAnalyticAquifer::Fetkovich::
+            dynamicContrib(sumVar, tot_influx, usys, xaaq);
+    });
+}
+
+void
+Opm::RestartIO::Helpers::AggregateAquiferData::
+handleNumeric(const AquiferConfig&  aqConfig,
+              const data::Aquifers& aquData,
+              const SummaryState&   summaryState,
+              const UnitSystem&     usys)
+{
     numericAquiferLoop(aqConfig, [this, &summaryState, &aquData, &usys]
-        (const int aquiferID, const std::size_t cellIndex, const NumericalAquiferCell& aqCell)
+        (const int                   aquiferID,
+         const std::size_t           cellIndex,
+         const NumericalAquiferCell& aqCell)
     {
         auto iaqn = this->integerNumericAq_[aqCell.record_id];
         IntegerNumericAquifer::staticContrib(aqCell, aquiferID, iaqn);
