@@ -16,17 +16,22 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <config.h>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/shmatch.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+
+#include <fmt/format.h>
+
+#include <algorithm>
 
 namespace Opm {
 
@@ -106,7 +111,7 @@ namespace Opm {
             // Fill threshold pressure table.
             const auto& thpres = solutionSection.get<ParserKeywords::THPRES>().back();
 
-            for( const auto& rec : thpres ) {
+            for (const auto& rec : thpres) {
                 const auto& region1Item = rec.getItem<ParserKeywords::THPRES::REGION1>();
                 const auto& region2Item = rec.getItem<ParserKeywords::THPRES::REGION2>();
                 const auto& thpressItem = rec.getItem<ParserKeywords::THPRES::VALUE>();
@@ -127,6 +132,8 @@ namespace Opm {
                     addBarrier( r1 , r2 );
             }
         }
+
+        this->logPressures();
     }
 
     void ThresholdPressure::readFaults(const Deck& deck,
@@ -271,6 +278,34 @@ namespace Opm {
         return full_arg.active() == rst_arg.active() &&
                full_arg.m_thresholdPressureTable == rst_arg.m_thresholdPressureTable &&
                full_arg.m_pressureTable == rst_arg.m_pressureTable;
+    }
+
+    void ThresholdPressure::logPressures() {
+        if (!this->active()) {
+            return;
+        }
+        if (!std::any_of(m_pressureTable.begin(), m_pressureTable.end(),
+                         [](const auto& in) {
+                              return in.second.first;
+                         })) {
+            return;
+        }
+        auto lineFormat = [](auto s1, auto s2, auto s3)
+        {
+            return fmt::format("{:4}{:^16}{:13}{:^9}{:21}{:^18}\n",
+                               " ", s1, " ", s2, " ", s3);
+        };
+
+        std::string str = "\nLIST OF ALL NON-ZERO THRESHOLD PRESSURES\n"
+                          "----------------------------------------\n"
+                          "\n";
+        str += lineFormat("FLOW FROM REGION", "TO REGION", "THRESHOLD PRESSURE");
+        str += lineFormat(std::string(16, '-'), std::string(9, '-'), std::string(18, '-'));
+        for (const auto& it : m_pressureTable) {
+            str += lineFormat(it.first.first, it.first.second, it.second.second);
+        }
+        str += lineFormat(std::string(16, '-'), std::string(9, '-'), std::string(18, '-'));
+        OpmLog::note(str);
     }
 
 } //namespace Opm

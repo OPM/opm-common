@@ -104,6 +104,9 @@ namespace Opm {
             serializer(m_thresholdFaultTable);
         }
 
+        //! \brief Logs table of non-zero pressures to PRT file.
+        void logPressures();
+
     private:
         bool m_active;
         bool m_restart;
