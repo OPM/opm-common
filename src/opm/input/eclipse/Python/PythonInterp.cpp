@@ -82,6 +82,8 @@ PythonInterp::PythonInterp(bool enable) {
             throw std::logic_error("An instance of the Python interpreter is already running");
 
         this->guard = std::make_unique<py::scoped_interpreter>();
+        py::exec(R"~~(import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL))~~");
     }
 }
 
