@@ -349,6 +349,11 @@ namespace Opm {
 
         bool has_gpmaint() const;
 
+        bool hasAnalyticalAquifers() const
+        {
+            return ! this->aqufluxs.empty();
+        }
+
         /*********************************************************************/
 
         ptr_member<GConSale> gconsale;

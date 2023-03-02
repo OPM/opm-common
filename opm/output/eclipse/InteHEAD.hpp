@@ -30,8 +30,10 @@ namespace Opm {
 
 class EclipseGrid;
 class EclipseState;
-class UnitSystem;
 class Phases;
+class ScheduleState;
+class UnitSystem;
+
 }
 
 namespace Opm { namespace RestartIO {
@@ -164,7 +166,7 @@ namespace Opm { namespace RestartIO {
             // Maximum aquifer ID across all of the model's analytic aquifers.
             int maxAquiferID {0};
 
-            // Number of numeric aquifer records (lines of AQUNUM data)
+            // Number of numeric aquifer records (lines of AQUNUM data, AQUDIMS(1))
             int numNumericAquiferRecords {0};
 
             // Number of data elements per aquifer in IAAQ array.
@@ -250,6 +252,10 @@ namespace Opm { namespace RestartIO {
 
     InteHEAD::AquiferDims
     inferAquiferDimensions(const EclipseState& es);
+
+    InteHEAD::AquiferDims
+    inferAquiferDimensions(const EclipseState&  es,
+                           const ScheduleState& sched);
 }} // Opm::RestartIO
 
 #endif // OPM_INTEHEAD_HEADER_INCLUDED

@@ -28,10 +28,12 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -59,12 +61,38 @@ namespace {
         return summaryState.get(key, 0.0);
     }
 
+    std::size_t maxNumberOfAquifers(const Opm::RestartIO::InteHEAD::AquiferDims& aqDims)
+    {
+        return std::max(aqDims.maxNumAquifers, aqDims.numNumericAquiferRecords);
+    }
+
     template <typename AquiferCallBack>
     void CarterTracyAquiferLoop(const Opm::AquiferConfig& aqConfig,
                                 AquiferCallBack&&         aquiferOp)
     {
         for (const auto& aqData : aqConfig.ct()) {
             aquiferOp(aqData);
+        }
+    }
+
+    template <typename AquiferCallBack>
+    void ConstantFluxAquiferLoop(const Opm::AquiferConfig& aqConfig,
+                                 const Opm::ScheduleState& sched,
+                                 AquiferCallBack&&         aquiferOp)
+    {
+        // Note: Loop 'aqConfig' before 'sched'.  That way, dynamic settings
+        // in 'sched' will override the static settings in 'aqConfig'.
+
+        for (const auto& aquifer : aqConfig.aquflux()) {
+            if (aquifer.second.active) {
+                aquiferOp(aquifer.second);
+            }
+        }
+
+        for (const auto& aquifer : sched.aqufluxs) {
+            if (aquifer.second.active) {
+                aquiferOp(aquifer.second);
+            }
         }
     }
 
@@ -100,10 +128,6 @@ namespace {
                                        ConnectionCallBack&&      connectionOp)
     {
         for (const auto& [aquiferID, connections] : aqConfig.connections().data()) {
-            if ( !aqConfig.hasAnalyticalAquifer(int(aquiferID)) ) {
-                continue;
-            }
-
             const auto tot_influx =
                 std::accumulate(connections.begin(), connections.end(), 0.0,
                     [](const double t, const Opm::Aquancon::AquancCell& connection) -> double
@@ -163,6 +187,19 @@ namespace {
             }
         } // CarterTracy
 
+        namespace ConstantFlux
+        {
+            template <typename IAaqArray>
+            void staticContrib(const int numActiveConn, IAaqArray& iaaq)
+            {
+                namespace IAAQ = VI::IAnalyticAquifer;
+
+                Common::staticContrib(numActiveConn, iaaq);
+
+                iaaq[IAAQ::index::TypeRelated1] = IAAQ::Value::ModelType::ConstantFlux;
+            }
+        } // ConstantFlux
+
         namespace Fetkovich
         {
             template <typename IAaqArray>
@@ -218,7 +255,7 @@ namespace {
         {
             using WA = Opm::RestartIO::Helpers::WindowedArray<int>;
 
-            return std::vector<WA>(aqDims.maxAquiferID, WA {
+            return std::vector<WA>(maxNumberOfAquifers(aqDims), WA {
                 WA::NumWindows{ static_cast<WA::Idx>(aqDims.maxNumActiveAquiferConn) },
                 WA::WindowSize{ static_cast<WA::Idx>(aqDims.numIntConnElem) }
             });
@@ -317,6 +354,23 @@ namespace {
             }
         } // CarterTracy
 
+        namespace ConstantFlux {
+            template <typename SAaqArray>
+            void staticContrib(const Opm::SingleAquiferFlux& aquifer,
+                               const Opm::UnitSystem&        usys,
+                               SAaqArray&                    saaq)
+            {
+                using M = Opm::UnitSystem::measure;
+                using Ix = VI::SAnalyticAquifer::index;
+
+                auto q = usys.from_si(M::liquid_surface_rate, aquifer.flux);
+
+                // Unit hack: *to_si()* here since we don't have an area unit.
+                saaq[Ix::ConstFluxValue] =
+                    usys.to_si(M::length, usys.to_si(M::length, q));
+            }
+        } // ConstantFlux
+
         namespace Fetkovich {
             template <typename SAaqArray>
             void staticContrib(const Opm::Aquifetp::AQUFETP_data& aquifer,
@@ -361,7 +415,7 @@ namespace {
         {
             using WA = Opm::RestartIO::Helpers::WindowedArray<float>;
 
-            return std::vector<WA>(aqDims.maxAquiferID, WA {
+            return std::vector<WA>(maxNumberOfAquifers(aqDims), WA {
                 WA::NumWindows{ static_cast<WA::Idx>(aqDims.maxNumActiveAquiferConn) },
                 WA::WindowSize{ static_cast<WA::Idx>(aqDims.numRealConnElem) }
             });
@@ -452,6 +506,18 @@ namespace {
             }
         } // CarterTracy
 
+        namespace ConstantFlux {
+            template <typename SummaryVariable, typename XAaqArray>
+            void dynamicContrib(SummaryVariable&&      summaryVariable,
+                                const double           tot_influx,
+                                const Opm::UnitSystem& usys,
+                                XAaqArray&             xaaq)
+            {
+                Common::dynamicContrib(std::forward<SummaryVariable>(summaryVariable),
+                                       tot_influx, usys, xaaq);
+            }
+        } // ConstantFlux
+
         namespace Fetkovich {
             template <typename SummaryVariable, typename XAaqArray>
             void dynamicContrib(SummaryVariable&&      summaryVariable,
@@ -525,7 +591,7 @@ namespace {
         {
             using WA = Opm::RestartIO::Helpers::WindowedArray<double>;
 
-            return std::vector<WA>(aqDims.maxAquiferID, WA {
+            return std::vector<WA>(maxNumberOfAquifers(aqDims), WA {
                 WA::NumWindows{ static_cast<WA::Idx>(aqDims.maxNumActiveAquiferConn) },
                 WA::WindowSize{ static_cast<WA::Idx>(aqDims.numDoubConnElem) }
             });
@@ -538,8 +604,8 @@ AggregateAquiferData(const InteHEAD::AquiferDims& aqDims,
                      const AquiferConfig&         aqConfig,
                      const EclipseGrid&           grid)
     : maxActiveAnalyticAquiferID_   { aqDims.maxAquiferID }
-    , numActiveConn_                ( aqDims.maxAquiferID, 0 )
-    , totalInflux_                  ( aqDims.maxAquiferID, 0.0 )
+    , numActiveConn_                ( maxNumberOfAquifers(aqDims), 0 )
+    , totalInflux_                  ( maxNumberOfAquifers(aqDims), 0.0 )
     , integerAnalyticAq_            { IntegerAnalyticAquifer::       allocate(aqDims) }
     , singleprecAnalyticAq_         { SinglePrecAnalyticAquifer::    allocate(aqDims) }
     , doubleprecAnalyticAq_         { DoublePrecAnalyticAquifer::    allocate(aqDims) }
@@ -549,7 +615,7 @@ AggregateAquiferData(const InteHEAD::AquiferDims& aqDims,
     , singleprecAnalyticAquiferConn_{ SinglePrecAnalyticAquiferConn::allocate(aqDims) }
     , doubleprecAnalyticAquiferConn_{ DoublePrecAnalyticAquiferConn::allocate(aqDims) }
 {
-    if (! aqConfig.hasAnalyticalAquifer()) {
+    if (! aqConfig.connections().active()) {
         return;
     }
 
@@ -579,20 +645,35 @@ AggregateAquiferData(const InteHEAD::AquiferDims& aqDims,
 
 void
 Opm::RestartIO::Helpers::AggregateAquiferData::
-captureDynamicdAquiferData(const AquiferConfig&  aqConfig,
-                           const data::Aquifers& aquData,
-                           const SummaryState&   summaryState,
-                           const UnitSystem&     usys)
+captureDynamicAquiferData(const InteHEAD::AquiferDims& aqDims,
+                          const AquiferConfig&         aqConfig,
+                          const ScheduleState&         sched,
+                          const data::Aquifers&        aquData,
+                          const SummaryState&          summaryState,
+                          const UnitSystem&            usys)
 {
+    if (! (aqConfig.active() || sched.hasAnalyticalAquifers())) {
+        return;
+    }
 
+    this->allocateDynamicBackingStorage(aqDims);
 
     this->maxActiveAnalyticAquiferID_ = aqDims.maxAquiferID;
 
     this->handleFetkovich(aqConfig, aquData, summaryState, usys);
     this->handleCarterTracy(aqConfig, aquData, summaryState, usys);
+    this->handleConstantFlux(aqConfig, sched, summaryState, usys);
     this->handleNumeric(aqConfig, aquData, summaryState, usys);
 }
 
+void
+Opm::RestartIO::Helpers::AggregateAquiferData::
+allocateDynamicBackingStorage(const InteHEAD::AquiferDims& aqDims)
+{
+    this->integerAnalyticAq_    = IntegerAnalyticAquifer::   allocate(aqDims);
+    this->singleprecAnalyticAq_ = SinglePrecAnalyticAquifer::allocate(aqDims);
+    this->doubleprecAnalyticAq_ = DoublePrecAnalyticAquifer::allocate(aqDims);
+}
 
 void
 Opm::RestartIO::Helpers::AggregateAquiferData::
@@ -630,6 +711,36 @@ handleCarterTracy(const AquiferConfig&  aqConfig,
             DoublePrecAnalyticAquifer::CarterTracy::
                 dynamicContrib(sumVar, aquCTData, tot_influx, usys, xaaq);
         }
+    });
+}
+
+void
+Opm::RestartIO::Helpers::AggregateAquiferData::
+handleConstantFlux(const AquiferConfig&  aqConfig,
+                   const ScheduleState&  sched,
+                   const SummaryState&   summaryState,
+                   const UnitSystem&     usys)
+{
+    ConstantFluxAquiferLoop(aqConfig, sched, [this, &usys, &summaryState]
+        (const SingleAquiferFlux& aquifer)
+    {
+        const auto aquIndex = static_cast<WindowedArray<int>::Idx>(aquifer.id - 1);
+
+        auto iaaq = this->integerAnalyticAq_[aquIndex];
+        const auto nActiveConn = this->numActiveConn_[aquIndex];
+        IntegerAnalyticAquifer::ConstantFlux::staticContrib(nActiveConn, iaaq);
+
+        auto saaq = this->singleprecAnalyticAq_[aquIndex];
+        SinglePrecAnalyticAquifer::ConstantFlux::staticContrib(aquifer, usys, saaq);
+
+        auto xaaq = this->doubleprecAnalyticAq_[aquIndex];
+        const auto tot_influx = this->totalInflux_[aquIndex];
+        auto sumVar = [&summaryState, &aquifer](const std::string& vector)
+        {
+            return getSummaryVariable(summaryState, vector, aquifer.id);
+        };
+        DoublePrecAnalyticAquifer::ConstantFlux::
+            dynamicContrib(sumVar, tot_influx, usys, xaaq);
     });
 }
 

@@ -35,12 +35,13 @@ namespace Opm::RestartIO {
 } // Opm::RestartIO
 
 namespace  Opm {
-    struct SingleAquiferFlux {
+    struct SingleAquiferFlux
+    {
+        SingleAquiferFlux() = default;
         explicit SingleAquiferFlux(const DeckRecord& record);
 
         // using id to create an inactive dummy aquifer
         explicit SingleAquiferFlux(int id);
-        SingleAquiferFlux() = default;
         SingleAquiferFlux(int id, double flux, double sal, bool active_, double temp, double pres);
 
         int id {0};
@@ -52,7 +53,7 @@ namespace  Opm {
 
         bool operator==(const SingleAquiferFlux& other) const;
 
-        template<class Serializer>
+        template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(this->id);
@@ -66,12 +67,16 @@ namespace  Opm {
         static SingleAquiferFlux serializationTestObject();
     };
 
-    class AquiferFlux {
+    class AquiferFlux
+    {
     public:
         using AquFluxs = std::unordered_map<int, SingleAquiferFlux>;
 
-        explicit AquiferFlux(const std::vector<const DeckKeyword*>& keywords);
         AquiferFlux() = default;
+        explicit AquiferFlux(const std::vector<const DeckKeyword*>& keywords);
+
+        // Primarily for unit testing purposes.
+        explicit AquiferFlux(const std::vector<SingleAquiferFlux>& aquifers);
 
         void appendAqufluxSchedule(const std::unordered_set<int>& ids);
 
@@ -86,15 +91,16 @@ namespace  Opm {
 
         void loadFromRestart(const RestartIO::RstAquifer& rst);
 
-        template<class Serializer>
-        void serializeOp(Serializer& serializer) {
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
             serializer(this->m_aquifers);
         }
 
         static AquiferFlux serializationTestObject();
 
     private:
-        AquFluxs m_aquifers;
+        AquFluxs m_aquifers{};
     };
 } // end of namespace Opm
 

@@ -22,12 +22,16 @@
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
-#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -35,6 +39,7 @@
 #include <chrono>
 #include <cmath>
 #include <ctime>
+#include <initializer_list>
 #include <numeric>
 #include <ratio>
 #include <utility>
@@ -881,11 +886,66 @@ Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
 }
 
 namespace {
+    template <typename T, class A>
+    int numUnique(std::vector<T, A> elems)
+    {
+        if (elems.empty())     { return 0; }
+        if (elems.size() == 1) { return 1; }
+
+        std::sort(elems.begin(), elems.end());
+        auto end = std::unique(elems.begin(), elems.end());
+
+        return std::distance(elems.begin(), end);
+    }
+
+    int numberOfCarterTracyAquifers(const Opm::AquiferConfig& cfg)
+    {
+        return cfg.ct().size();
+    }
+
+    int numberOfFetkovichAquifers(const Opm::AquiferConfig& cfg)
+    {
+        return cfg.fetp().size();
+    }
+
+    int numberOfConstantFluxAquifers(const Opm::AquiferConfig& cfg)
+    {
+        return cfg.aquflux().size();
+    }
+
+    int numberOfConstantFluxAquifers(const Opm::AquiferConfig& cfg,
+                                     const Opm::ScheduleState& sched)
+    {
+        auto aquiferIDs = std::vector<int>{};
+        aquiferIDs.reserve(numberOfConstantFluxAquifers(cfg)
+                           + sched.aqufluxs.size());
+
+        for (const auto& [id, aq] : cfg.aquflux()) {
+            if (aq.active) {
+                aquiferIDs.push_back(id);
+            }
+        }
+
+        for (const auto& aq : sched.aqufluxs) {
+            aquiferIDs.push_back(aq.first);
+        }
+
+        return numUnique(std::move(aquiferIDs));
+    }
+
     int getNumberOfAnalyticAquifers(const Opm::AquiferConfig& cfg)
     {
-        const auto numAnalyticAquifers = cfg.ct().size() + cfg.fetp().size() + cfg.aquflux().size();
+        return numberOfCarterTracyAquifers(cfg)
+            +  numberOfFetkovichAquifers(cfg)
+            +  numberOfConstantFluxAquifers(cfg);
+    }
 
-        return static_cast<int>(numAnalyticAquifers);
+    int getNumberOfAnalyticAquifers(const Opm::AquiferConfig& cfg,
+                                    const Opm::ScheduleState& sched)
+    {
+        return numberOfCarterTracyAquifers(cfg)
+            +  numberOfFetkovichAquifers(cfg)
+            +  numberOfConstantFluxAquifers(cfg, sched);
     }
 
     int getMaximumNumberOfAnalyticAquifers(const Opm::Runspec& runspec)
@@ -910,14 +970,47 @@ namespace {
         return maxNumActiveConn;
     }
 
+    template <typename AquiferCollection>
+    int maxAquID(const AquiferCollection& aquiferCollection)
+    {
+        return std::accumulate(aquiferCollection.begin(), aquiferCollection.end(), 0,
+                               [](const int maxID, const auto& aquiferData)
+                               {
+                                   return std::max(maxID, aquiferData.aquiferID);
+                               });
+    }
+
+    template <typename AquFluxIter>
+    int maxAquID(AquFluxIter begin, AquFluxIter end)
+    {
+        auto maxIDPos =
+            std::max_element(begin, end,
+                             [](const auto& aq1, const auto& aq2)
+                             {
+                                 return aq1.first < aq2.first;
+                             });
+
+        return (maxIDPos == end) ? 0 : maxIDPos->first;
+    }
+
     int getMaximumAnalyticAquiferID(const Opm::AquiferConfig& cfg)
     {
-        const auto& aquifer_ids = analyticAquiferIDs(cfg);
-        if (!aquifer_ids.empty()) {
-            return *max_element(std::begin(aquifer_ids), std::end(aquifer_ids));
-        } else {
-            return 0;
-        }
+        return std::max({
+                maxAquID(cfg.ct()),
+                maxAquID(cfg.fetp()),
+                maxAquID(cfg.aquflux().begin(), cfg.aquflux().end())
+            });
+    }
+
+    int getMaximumAnalyticAquiferID(const int                 maxAquiferID,
+                                    const Opm::ScheduleState& sched)
+    {
+        return std::max(maxAquiferID, maxAquID(sched.aqufluxs.begin(), sched.aqufluxs.end()));
+    }
+
+    bool hasAnalyticalAquifer(const Opm::ScheduleState& sched)
+    {
+        return ! sched.aqufluxs.empty();
     }
 }
 
@@ -942,6 +1035,22 @@ Opm::RestartIO::inferAquiferDimensions(const EclipseState& es)
 
     if (cfg.hasNumericalAquifer()) {
         dim.numNumericAquiferRecords = cfg.numericalAquifers().numRecords();
+    }
+
+    return dim;
+}
+
+Opm::RestartIO::InteHEAD::AquiferDims
+Opm::RestartIO::inferAquiferDimensions(const EclipseState&  es,
+                                       const ScheduleState& sched)
+{
+    auto dim = inferAquiferDimensions(es);
+
+    if (const auto& cfg = es.aquifer();
+        cfg.hasAnalyticalAquifer() || hasAnalyticalAquifer(sched))
+    {
+        dim.numAquifers = getNumberOfAnalyticAquifers(cfg, sched);
+        dim.maxAquiferID = getMaximumAnalyticAquiferID(dim.maxAquiferID, sched);
     }
 
     return dim;
