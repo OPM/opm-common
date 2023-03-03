@@ -88,6 +88,7 @@ namespace Opm {
         size_t size() const;
         bool active() const;
         bool restart() const;
+        bool irreversible() const;
 
         bool operator==(const ThresholdPressure& data) const;
         static bool rst_cmp(const ThresholdPressure& full_arg, const ThresholdPressure& rst_arg);
