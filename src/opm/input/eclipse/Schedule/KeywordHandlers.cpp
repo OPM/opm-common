@@ -137,8 +137,8 @@ namespace {
         // auto& aqufluxs = this->snapshots.back().aqufluxs;
         auto& aqufluxs = this->snapshots.back().aqufluxs;
         for (const auto& record : handlerContext.keyword) {
-            SingleAquiferFlux aquifer(record);
-            aqufluxs.insert({aquifer.id, aquifer});
+            const auto aquifer = SingleAquiferFlux { record };
+            aqufluxs.insert_or_assign(aquifer.id, aquifer);
         }
     }
 
