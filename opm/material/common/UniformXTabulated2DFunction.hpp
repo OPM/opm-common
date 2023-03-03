@@ -323,9 +323,16 @@ public:
         return eval(i, j1, j2, alpha, beta1, beta2);
     }
 
-        template <class Evaluation>
-    void findPoints(unsigned& i, unsigned& j1, unsigned& j2, Evaluation& alpha, Evaluation& beta1, Evaluation& beta2,
-               const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
+    template <class Evaluation>
+    void findPoints(unsigned& i,
+                    unsigned& j1,
+                    unsigned& j2,
+                    Evaluation& alpha,
+                    Evaluation& beta1,
+                    Evaluation& beta2,
+                    const Evaluation& x,
+                    const Evaluation& y,
+                    bool extrapolate) const
     {
 #ifndef NDEBUG
         if (!extrapolate && !applies(x, y)) {
@@ -382,7 +389,6 @@ public:
         j2 = ySegmentIndex(yUpper, i + 1, extrapolate);
         beta1 = yToBeta(yLower, i, j1);
         beta2 = yToBeta(yUpper, i + 1, j2);
-
     }
 
     template <class Evaluation>

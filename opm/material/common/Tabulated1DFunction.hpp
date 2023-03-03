@@ -38,13 +38,14 @@
 
 namespace Opm {
 
+struct SegmentIndex {
+    size_t value;
+};
+
 /*!
  * \brief Implements a linearly interpolated scalar function that depends on one
  *        variable.
  */
-struct SegmentIndex {
-    size_t value;
-};
 template <class Scalar>
 class Tabulated1DFunction
 {
@@ -260,8 +261,7 @@ public:
     template <class Evaluation>
     Evaluation eval(const Evaluation& x, bool extrapolate = false) const
     {
-        SegmentIndex segIdx;
-        segIdx.value = findSegmentIndex(x, extrapolate);
+        SegmentIndex segIdx = findSegmentIndex(x, extrapolate);
         return eval(x, segIdx);
     }
 
@@ -291,8 +291,8 @@ public:
      */
     template <class Evaluation>
     Evaluation evalDerivative(const Evaluation& x, bool extrapolate = false) const
-    {        
-        size_t segIdx = findSegmentIndex(x, extrapolate);
+    {
+        size_t segIdx = findSegmentIndex(x, extrapolate).value;
         return evalDerivative_(x, segIdx);
     }
 
@@ -358,7 +358,7 @@ public:
             x0 = xMin();
         };
 
-        size_t i = findSegmentIndex(x0, extrapolate);
+        size_t i = findSegmentIndex(x0, extrapolate).value;
         if (xValues_[i + 1] >= x1) {
             // interval is fully contained within a single function
             // segment
@@ -373,7 +373,7 @@ public:
 
         // make sure that the segments which are completly in the
         // interval [x0, x1] all exhibit the same monotonicity.
-        size_t iEnd = findSegmentIndex(x1, extrapolate);
+        size_t iEnd = findSegmentIndex(x1, extrapolate).value;
         for (; i < iEnd - 1; ++i) {
             updateMonotonicity_(i, r);
             if (!r)
@@ -432,7 +432,7 @@ public:
     }
 
     template <class Evaluation>
-    size_t findSegmentIndex(const Evaluation& x, bool extrapolate = false) const
+    SegmentIndex findSegmentIndex(const Evaluation& x, bool extrapolate = false) const
     {
         if (!isfinite(x)) {
             throw std::runtime_error("We can not search for extrapolation/interpolation "
@@ -453,9 +453,9 @@ public:
         }
 
         if (x <= xValues_[1])
-            return 0;
+            return SegmentIndex{0};
         else if (x >= xValues_[xValues_.size() - 2])
-            return xValues_.size() - 2;
+            return SegmentIndex{xValues_.size() - 2};
         else {
             // bisection
             size_t lowerIdx = 1;
@@ -496,7 +496,7 @@ public:
                 OpmLog::debug(msg);
                 throw std::runtime_error(msg);
             }
-            return lowerIdx;
+            return SegmentIndex{lowerIdx};
         }
     }
 
