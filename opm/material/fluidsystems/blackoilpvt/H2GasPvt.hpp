@@ -221,11 +221,6 @@ public:
     const Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    bool operator==(const H2GasPvt<Scalar>& data) const
-    {
-        return gasReferenceDensity_ == data.gasReferenceDensity_;
-    }
-
 private:
     std::vector<Scalar> gasReferenceDensity_;
 };  // end class H2GasPvt

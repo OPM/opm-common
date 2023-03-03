@@ -36,18 +36,19 @@ void BrineH2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     if( !eclState.getTableManager().getDensityTable().empty()) {
-        OpmLog::warning("WARNING: H2STORE is enabled but DENSITY is in the deck. \n"
+        OpmLog::warning("H2STORE is enabled but DENSITY is in the deck. \n"
                         "The surface density is computed based on H2-BRINE PVT "
                         "at standard conditions (STCOND) and DENSITY is ignored ");
     }
 
-    if( eclState.getTableManager().hasTables("PVDG") || !eclState.getTableManager().getPvtgTables().empty()) {
-        OpmLog::warning("WARNING: H2STORE is enabled but PVDG or PVTG is in the deck. \n"
-                        "H2 pvt properties are calculated based on ideal gas relations, "
-                        "and PVDG/PVTG input is ignored.");
+    if(eclState.getTableManager().hasTables("PVDO") || 
+       !eclState.getTableManager().getPvtgTables().empty()) {
+        OpmLog::warning("H2STORE is enabled but PVDO or PVTO is in the deck. \n"
+                        "H2 PVT properties are calculated internally, "
+                        "and PVDO/PVTO input is ignored.");
     }
     // Check if DISGAS has been activated (enables H2 dissolved in brine)
-    setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGAS());
+    setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
 
     // We only supported single pvt region for the H2-brine module
     size_t numRegions = 1;
@@ -58,7 +59,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
     const Scalar MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
     Brine::salinity = 1 / ( 1 + 1 / (molality*MmNaCl)); // convert to mass fraction
-    salinity_[regionIdx] = molality;  // molality used in functions
+    salinity_[regionIdx] = molality;  // molality used in BrineH2Pvt functions
 
     // set the surface conditions using the STCOND keyword
     Scalar T_ref = eclState.getTableManager().stCond().temperature;

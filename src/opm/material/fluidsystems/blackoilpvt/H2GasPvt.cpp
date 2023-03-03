@@ -36,13 +36,13 @@ void H2GasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     if( !eclState.getTableManager().getDensityTable().empty()) {
-        OpmLog::warning("WARNING: H2STORE is enabled but DENSITY is in the deck. \n"
+        OpmLog::warning("H2STORE is enabled but DENSITY is in the deck. \n"
                         "The surface density is computed based on H2-BRINE PVT "
                         "at standard conditions (STCOND) and DENSITY is ignored ");
         }
 
     if( eclState.getTableManager().hasTables("PVDG") || !eclState.getTableManager().getPvtgTables().empty()) {
-        OpmLog::warning("WARNING: H2STORE is enabled but PVDG or PVTG is in the deck. \n"
+        OpmLog::warning("H2STORE is enabled but PVDG or PVTG is in the deck. \n"
                         "H2 pvt properties are calculated based on ideal gas relations, "
                         "and PVDG/PVTG input is ignored.");
     }

@@ -82,11 +82,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     setEnableVaporizedWater(eclState.getSimulationConfig().hasVAPWAT());
 
     if (eclState.getSimulationConfig().hasDISGASW()) {
-        if (eclState.runspec().co2Storage())
+        if (eclState.runspec().co2Storage() || eclState.runspec().h2Storage())
             setEnableDissolvedGasInWater(eclState.getSimulationConfig().hasDISGASW());
         else
             OPM_THROW(std::runtime_error,
-                      "DISGASW only supported in combination with CO2STORE");
+                      "DISGASW only supported in combination with CO2STORE or H2STORE");
     }
 
     if (phaseIsActive(gasPhaseIdx)) {
