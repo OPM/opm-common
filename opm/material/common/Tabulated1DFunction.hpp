@@ -291,10 +291,8 @@ public:
      */
     template <class Evaluation>
     Evaluation evalDerivative(const Evaluation& x, bool extrapolate = false) const
-    {
-        
-        SegmentIndex segIdx;
-        segIdx.value = findSegmentIndex(x, extrapolate);
+    {        
+        size_t segIdx = findSegmentIndex(x, extrapolate);
         return evalDerivative_(x, segIdx);
     }
 
@@ -504,9 +502,9 @@ public:
 
 private:
     template <class Evaluation>
-    Evaluation evalDerivative_(const Evaluation& x, SegmentIndex segIdxIn) const
+    Evaluation evalDerivative_(const Evaluation& x, size_t segIdx) const
     {
-        size_t segIdx = segIdxIn.value;
+
         Scalar x0 = xValues_[segIdx];
         Scalar x1 = xValues_[segIdx + 1];
 
