@@ -106,13 +106,13 @@ public:
      * \brief Set the endpoint scaling configuration object.
      */
     void setConfig(std::shared_ptr<EclHysteresisConfig> value)
-    { config_ = value; }
+    { config_ = *value; }
 
     /*!
      * \brief Returns the endpoint scaling configuration object.
      */
     const EclHysteresisConfig& config() const
-    { return *config_; }
+    { return config_; }
 
     /*!
      * \brief Sets the parameters used for the drainage curve
@@ -454,7 +454,8 @@ private:
         }
     }
 
-    std::shared_ptr<EclHysteresisConfig> config_;
+    //std::shared_ptr<EclHysteresisConfig> config_;
+    EclHysteresisConfig config_;
     EffLawParams imbibitionParams_;
     EffLawParams drainageParams_;
 

@@ -209,6 +209,31 @@ public:
         return (1.0 + X*(1.0 + X/2.0))/BwRef;
     }
 
+
+    template <class Evaluation>
+    void inverseBAndMu(Evaluation& bw, Evaluation& muW, unsigned regionIdx,
+                      // const Evaluation& /*temperature*/,
+                      const Evaluation& pressure) const
+                      // const Evaluation& /*Rsw*/,
+                      // const Evaluation& /*saltconcentration*/) const
+    {
+        // cf. ECLiPSE 2011 technical description, p. 116
+        Scalar pRef = waterReferencePressure_[regionIdx];
+        const Evaluation& X = waterCompressibility_[regionIdx]*(pressure - pRef);
+
+        Scalar BwRef = waterReferenceFormationVolumeFactor_[regionIdx];
+
+        // TODO (?): consider the salt concentration of the brine
+        bw = (1.0 + X*(1.0 + X/2.0))/BwRef;
+        
+        Scalar BwMuwRef = waterViscosity_[regionIdx]*BwRef;
+        
+        const Evaluation& Y =
+            (waterCompressibility_[regionIdx] - waterViscosibility_[regionIdx])
+            * (pressure - pRef);
+        muW =  BwMuwRef*bw/(1 + Y*(1 + Y/2));
+    }
+
     /*!
      * \brief Returns the saturation pressure of the water phase [Pa]
      *        depending on its mass fraction of the gas component

@@ -264,6 +264,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
+    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerTable.cpp
     src/opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
     src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
@@ -441,6 +442,13 @@ if(ENABLE_ECL_INPUT)
     tests/material/test_eclblackoilfluidsystem.cpp
     tests/material/test_eclblackoilpvt.cpp
     tests/material/test_eclmateriallawmanager.cpp
+    tests/material/test_propertyevaluation.cpp
+    tests/material/test_eclpropertyevaluation.cpp
+    tests/material/test_eclpropertyevaluation_lowlevel.cpp
+    tests/material/test_eclpropertyevaluation_lowlevel_spe9.cpp
+    tests/material/test_relpermevaluation.cpp
+    tests/material/test_eclrelpermevaluation.cpp
+    tests/material/test_eclrelpermevaluation_lowlevel.cpp   
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
@@ -868,6 +876,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
+      opm/material/fluidmatrixinteractions/EclMaterialLawManagerTable.hpp
       opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp
       opm/material/fluidmatrixinteractions/EclDefaultMaterialParams.hpp
       opm/material/fluidmatrixinteractions/ThreePhaseParkerVanGenuchten.hpp

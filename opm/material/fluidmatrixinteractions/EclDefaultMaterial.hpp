@@ -306,6 +306,89 @@ public:
      * oil relative permeability models" section of the ECLipse
      * technical description.
      */
+     /*!
+     * \brief The relative permeability of all phases.
+     *
+     * The relative permeability of the water phase it uses the same
+     * value as the relative permeability for water in the water-oil
+     * law with \f$S_o = 1 - S_w\f$. The gas relative permebility is
+     * taken from the gas-oil material law, but with \f$S_o = 1 -
+     * S_g\f$.  The relative permeability of the oil phase is
+     * calculated using the relative permeabilities of the oil phase
+     * in the two two-phase systems.
+     *
+     * A more detailed description can be found in the "Three phase
+     * oil relative permeability models" section of the ECLipse
+     * technical description.
+     */
+    template <class ContainerT, class FluidState>
+    static void relativePermeabilitiesSimple(ContainerT& values,
+                                             const Params& params,
+                                             const FluidState& fluidState)
+   
+    {
+        using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
+        
+        
+        // values[waterPhaseIdx] = krw<FluidState, Evaluation>(params, fluidState);
+        const auto& oilwaterparams = params.oilWaterParams();
+        const auto& gasoilparams = params.gasOilParams(); 
+        const Evaluation Sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
+        const Evaluation krwv = OilWaterMaterialLaw::twoPhaseSatKrw(oilwaterparams, Sw);
+                
+        values[waterPhaseIdx] = krwv;
+
+        // const Evaluation kro_go = relpermOilInOilGasSystem<Evaluation>(params, fluidState);
+        const Scalar Swco = params.Swl();
+        Evaluation krnv;
+        const Evaluation Sw_eff = max(Evaluation(Swco), decay<Evaluation>(fluidState.saturation(waterPhaseIdx)));
+        const Evaluation Sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));       
+        const Evaluation Sw_ow = Sg + Sw_eff;
+        const Evaluation kro_ow = OilWaterMaterialLaw::twoPhaseSatKrn(oilwaterparams, Sw_ow);
+   
+       
+        //values[gasPhaseIdx] = krg<FluidState, Evaluation>(params, fluidState);
+        const Evaluation So_go = 1.0 - Sw_ow;
+        const Evaluation kro_go = GasOilMaterialLaw::twoPhaseSatKrw(gasoilparams , So_go);
+        constexpr const Scalar epsilon = 1e-5;
+        Scalar Sw_ow_wco = scalarValue(Sw_ow) - Swco;
+        if ( Sw_ow_wco < epsilon) {
+            const Evaluation kro2 = (kro_ow + kro_go) / 2;
+            if ( Sw_ow_wco > epsilon / 2) {
+                const Evaluation kro1 = (Sg * kro_go + (Sw - Swco) * kro_ow) / (Sw_ow - Swco);
+                const Evaluation alpha = (epsilon - (Sw_ow - Swco)) / (epsilon / 2);
+                
+                krnv = kro2 * alpha + kro1 * (1 - alpha);
+            }
+            
+            krnv = kro2;
+        } else {
+            krnv = (Sg * kro_go + (Sw - Swco) * kro_ow) / (Sw_ow - Swco);
+        }
+               
+        values[oilPhaseIdx] = krnv;
+        //Evaluation krgv = GasOilMaterialLaw::twoPhaseSatKrn(gasoilparams, Sw_eff2);
+        const Evaluation Sw_eff2 = 1.0 - Swco - Sg;
+        const Evaluation krgv = GasOilMaterialLaw::twoPhaseSatKrn(gasoilparams, Sw_eff2);
+        
+        values[gasPhaseIdx] = krgv;
+    }
+
+    /*!
+     * \brief The relative permeability of all phases.
+     *
+     * The relative permeability of the water phase it uses the same
+     * value as the relative permeability for water in the water-oil
+     * law with \f$S_o = 1 - S_w\f$. The gas relative permebility is
+     * taken from the gas-oil material law, but with \f$S_o = 1 -
+     * S_g\f$.  The relative permeability of the oil phase is
+     * calculated using the relative permeabilities of the oil phase
+     * in the two two-phase systems.
+     *
+     * A more detailed description can be found in the "Three phase
+     * oil relative permeability models" section of the ECLipse
+     * technical description.
+     */
     template <class ContainerT, class FluidState>
     static void relativePermeabilities(ContainerT& values,
                                        const Params& params,

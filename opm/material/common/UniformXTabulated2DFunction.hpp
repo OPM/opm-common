@@ -387,6 +387,90 @@ public:
         return result;
     }
 
+        template <class Evaluation>
+    void findPoints(unsigned& i, unsigned& j1, unsigned& j2, Evaluation& alpha, Evaluation& beta1, Evaluation& beta2,
+               const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
+    {
+#ifndef NDEBUG
+        if (!extrapolate && !applies(x, y)) {
+            if constexpr (std::is_floating_point_v<Evaluation>) {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x) + ", " +
+                                       std::to_string(y) + ")");
+            } else {
+                throw NumericalProblem("Attempt to get undefined table value (" +
+                                       std::to_string(x.value()) + ", " +
+                                       std::to_string(y.value()) + ")");
+            }
+        };
+#endif
+    
+        // bi-linear interpolation: first, calculate the x and y indices in the lookup
+        // table ...
+        i = xSegmentIndex(x, extrapolate);
+        alpha = xToAlpha(x, i);
+        // The 'shift' is used to shift the points used to interpolate within
+        // the (i) and (i+1) sets of sample points, so that when approaching
+        // the boundary of the domain given by the samples, one gets the same
+        // value as one would get by interpolating along the boundary curve
+        // itself.
+        Evaluation shift = 0.0;
+        if (interpolationGuide_ == InterpolationPolicy::Vertical) {
+            // Shift is zero, no need to reset it.
+        } else {
+            // find upper and lower y value
+            if (interpolationGuide_ == InterpolationPolicy::LeftExtreme) {
+                // The domain is above the boundary curve, up to y = infinity.
+                // The shift is therefore the same for all values of y.
+                shift = yPos_[i+1] - yPos_[i];
+            } else {
+                assert(interpolationGuide_ == InterpolationPolicy::RightExtreme);
+                // The domain is below the boundary curve, down to y = 0.
+                // The shift is therefore no longer the the same for all
+                // values of y, since at y = 0 the shift must be zero.
+                // The shift is computed by linear interpolation between
+                // the maximal value at the domain boundary curve, and zero.
+                shift = yPos_[i+1] - yPos_[i];
+                auto yEnd = yPos_[i]*(1.0 - alpha) + yPos_[i+1]*alpha;
+                if (yEnd > 0.) {
+                    shift = shift * y / yEnd;
+                } else {
+                    shift = 0.;
+                }
+            }
+        }
+        auto yLower =  y - alpha*shift;
+        auto yUpper =  y + (1-alpha)*shift;
+
+        j1 = ySegmentIndex(yLower, i, extrapolate);
+        j2 = ySegmentIndex(yUpper, i + 1, extrapolate);
+        beta1 = yToBeta(yLower, i, j1);
+        beta2 = yToBeta(yUpper, i + 1, j2);
+
+    }
+
+    template <class Evaluation>
+    Evaluation eval(unsigned& i, unsigned& j1, unsigned& j2, Evaluation& alpha, Evaluation& beta1, Evaluation& beta2,
+         const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
+    {
+        // evaluate the two function values for the same y value ...
+        const Evaluation& s1 = valueAt(i, j1)*(1.0 - beta1) + valueAt(i, j1 + 1)*beta1;
+        const Evaluation& s2 = valueAt(i + 1, j2)*(1.0 - beta2) + valueAt(i + 1, j2 + 1)*beta2;
+
+        Valgrind::CheckDefined(s1);
+        Valgrind::CheckDefined(s2);
+
+        // ... and combine them using the x position
+        const Evaluation& result = s1*(1.0 - alpha) + s2*alpha;
+        Valgrind::CheckDefined(result);
+
+        return result;
+    }
+
+
+
+
+    
     /*!
      * \brief Set the x-position of a vertical line.
      *
