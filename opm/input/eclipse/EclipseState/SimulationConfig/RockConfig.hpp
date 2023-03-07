@@ -87,7 +87,7 @@ struct RockComp {
 private:
     bool m_active = false;
     std::vector<RockComp> m_comp;
-    std::string num_property = "PVTNUM";
+    std::string num_property;
     std::size_t num_tables = 0;
     bool m_water_compaction = false;
     Hysteresis hyst_mode = Hysteresis::REVERS;
