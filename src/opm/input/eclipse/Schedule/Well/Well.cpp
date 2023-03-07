@@ -1376,13 +1376,13 @@ bool Well::canOpen() const {
         if (prod.WaterRate.is<std::string>())
           return true;
 
-        if (!prod.OilRate.zero())
+        if (!prod.OilRate.isZero())
             return true;
 
-        if (!prod.GasRate.zero())
+        if (!prod.GasRate.isZero())
             return true;
 
-        if (!prod.WaterRate.zero())
+        if (!prod.WaterRate.isZero())
             return true;
 
         return false;
@@ -1391,7 +1391,7 @@ bool Well::canOpen() const {
         if (inj.surfaceInjectionRate.is<std::string>())
             return true;
 
-        return !inj.surfaceInjectionRate.zero();
+        return !inj.surfaceInjectionRate.isZero();
     }
 }
 

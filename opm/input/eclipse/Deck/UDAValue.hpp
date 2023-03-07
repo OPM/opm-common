@@ -65,7 +65,11 @@ public:
       The getSI() can only be called for numerical values.
     */
     double getSI() const;
-    bool zero() const;
+
+    /*
+      Return true if and only if the type is numeric, and that numeric value is 0.0.
+    */
+    bool isZero() const;
 
     //epsilon limit  = 1.E-20  (~= 0.)
     double epsilonLimit() const;

@@ -972,7 +972,17 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
 
-            const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            // If status is OPEN, but we have only zero rates, we override it to be STOP instead.
+            // Note that comparing the UDAValues using '... == UDAValue(0.0)' will not work,
+            // since the rhs will have unity dimensions, and the ORAT etc. will not.
+            const bool allZeroRates =
+                record.getItem("ORAT").get<UDAValue>(0).isZero() &&
+                record.getItem("WRAT").get<UDAValue>(0).isZero() &&
+                record.getItem("GRAT").get<UDAValue>(0).isZero();
+            if (status == Well::Status::OPEN && allZeroRates) {
+                status = Well::Status::STOP;
+            }
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus( well_name , handlerContext.currentStep , status, handlerContext.keyword.location() );
@@ -1029,7 +1039,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     const auto& oil_rate = properties->OilRate;
                     const auto& water_rate = properties->WaterRate;
                     const auto& gas_rate = properties->GasRate;
-                    if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
+                    if (oil_rate.isZero() && water_rate.isZero() && gas_rate.isZero()) {
                         std::string msg =
                             "Well " + well2.name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string(this->seconds(handlerContext.currentStep) / (60*60*24)) + " days";
@@ -1148,14 +1158,14 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         "This well will be closed at " + std::to_string ( this->seconds(handlerContext.currentStep) / (60*60*24) ) + " days";
 
                     if (injection->surfaceInjectionRate.is<double>()) {
-                        if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
+                        if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.isZero()) {
                             OpmLog::note(msg);
                             this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
                         }
                     }
 
                     if (injection->reservoirInjectionRate.is<double>()) {
-                        if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
+                        if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.isZero()) {
                             OpmLog::note(msg);
                             this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
                         }
@@ -1206,7 +1216,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     this->snapshots.back().wells.update( std::move(well2) );
                 }
 
-                if ( ! well2.getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
+                if ( ! well2.getAllowCrossFlow() && (injection->surfaceInjectionRate.isZero())) {
                     std::string msg =
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string ( this->seconds(handlerContext.currentStep) / (60*60*24) ) + " days";
