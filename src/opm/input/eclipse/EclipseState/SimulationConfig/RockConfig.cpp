@@ -120,6 +120,7 @@ bool RockConfig::active() const {
 }
 
 RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
+		: RockConfig {}
 {
     using rock = ParserKeywords::ROCK;
     using rockopts = ParserKeywords::ROCKOPTS;
