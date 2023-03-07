@@ -30,9 +30,9 @@ namespace Opm {
     class DeckRecord;
 }
 
-namespace Opm::RestartIO {
-        class RstAquifer;
-} // Opm::RestartIO
+namespace Opm { namespace RestartIO {
+    class RstAquifer;
+}} // Opm::RestartIO
 
 namespace  Opm {
     struct SingleAquiferFlux

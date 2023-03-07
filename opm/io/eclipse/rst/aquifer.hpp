@@ -77,6 +77,12 @@ namespace Opm { namespace RestartIO {
             double time_constant{};
         };
 
+        struct ConstantFlux {
+            int aquiferID{};
+
+            double flow_rate{};
+        };
+
         class Connections {
         public:
             struct Cell {
@@ -120,6 +126,7 @@ namespace Opm { namespace RestartIO {
         bool hasAnalyticAquifers() const;
 
         const std::vector<CarterTracy>&             carterTracy() const;
+        const std::vector<ConstantFlux>&            constantFlux() const;
         const std::vector<Fetkovich>&               fetkovich() const;
         const std::unordered_map<int, Connections>& connections() const;
 
@@ -127,6 +134,7 @@ namespace Opm { namespace RestartIO {
         class Implementation;
         std::unique_ptr<Implementation> pImpl_;
     };
+
 }} // Opm::RestartIO
 
 #endif  // OPM_RESTART_AQUIFER_HPP

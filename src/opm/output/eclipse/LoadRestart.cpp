@@ -1316,19 +1316,20 @@ namespace {
     Opm::data::AquiferType
     determineAquiferType(const AquiferVectors::Window<int>& iaaq)
     {
-        const auto t1 = iaaq[VI::IAnalyticAquifer::TypeRelated1];
+        using MType = Opm::RestartIO::Helpers::VectorItems::
+            IAnalyticAquifer::Value::ModelType;
 
-        if (t1 == 1) {
-            return Opm::data::AquiferType::CarterTracy;
-        }
+        using AType = Opm::data::AquiferType;
 
-        if (t1 == 0) {
-            return Opm::data::AquiferType::Fetkovich;
+        switch (iaaq[VI::IAnalyticAquifer::TypeRelated1]) {
+        case MType::Fetkovich:    return AType::Fetkovich;
+        case MType::CarterTracy:  return AType::CarterTracy;
+        case MType::ConstantFlux: return AType::ConstantFlux;
         }
 
         throw std::runtime_error {
-            "Unknown Aquifer Type:"
-            " T1 = "  + std::to_string(t1)
+            "Unknown Aquifer Type: T1 = " +
+            std::to_string(iaaq[VI::IAnalyticAquifer::TypeRelated1])
         };
     }
 

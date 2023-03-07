@@ -116,7 +116,8 @@ namespace Opm {
     }
 
     void AquiferFlux::loadFromRestart(const RestartIO::RstAquifer&) {
-        // TODO: adding the restart functionality
+        // Constant flux aquifer objects loaded from restart file added to
+        // Schedule only.
     }
 
     AquiferFlux AquiferFlux::serializationTestObject() {
