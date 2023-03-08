@@ -34,4 +34,7 @@ foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
     execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                             ${BASE_DIR}/tmp_gen/ParserKeywords/ParserInit${name}.cpp
                             ${BASE_DIR}/ParserKeywords/ParserInit${name}.cpp)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                            ${BASE_DIR}/tmp_gen/ParserKeywords/Builtin${name}.cpp
+                            ${BASE_DIR}/ParserKeywords/Builtin${name}.cpp)
 endforeach()
