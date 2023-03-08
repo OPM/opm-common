@@ -782,6 +782,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/components/Air.hpp
       opm/material/components/C1.hpp
       opm/material/components/Brine.hpp
+      opm/material/components/BrineDynamic.hpp
       opm/material/fluidstates/BlackOilFluidState.hpp
       opm/material/fluidstates/NonEquilibriumFluidState.hpp
       opm/material/fluidstates/FluidStateSaturationModules.hpp

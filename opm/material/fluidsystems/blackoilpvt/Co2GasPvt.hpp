@@ -30,7 +30,7 @@
 #include <opm/material/Constants.hpp>
 
 #include <opm/material/components/CO2.hpp>
-#include <opm/material/components/Brine.hpp>
+#include <opm/material/components/BrineDynamic.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
@@ -53,7 +53,7 @@ class Co2GasPvt
 {
     using CO2 = ::Opm::CO2<Scalar>;
     using H2O = SimpleHuDuanH2O<Scalar>;
-    using Brine = ::Opm::Brine<Scalar, H2O>;
+    using Brine = ::Opm::BrineDynamic<Scalar, H2O>;
     static constexpr bool extrapolate = true;
 
 public:
@@ -69,10 +69,9 @@ public:
     {
         int num_regions = salinity_.size();
         setNumRegions(num_regions);
-        Brine::salinity = salinity[0];
         for (int i = 0; i < num_regions; ++i) {
             gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, extrapolate);
+            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
         }
     }
 #if HAVE_ECL_INPUT
@@ -202,7 +201,7 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure);
+        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
         return inverseFormationVolumeFactor(regionIdx,temperature,pressure, Evaluation(0.0), rvw);
     }
 
@@ -225,7 +224,7 @@ public:
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
-    { return rvwSat_(regionIdx, temperature, pressure); }
+    { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
 
     /*!
     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water phase.
@@ -234,8 +233,11 @@ public:
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure,
-                                              const Evaluation& /*saltConcentration*/) const
-    { return rvwSat_(regionIdx, temperature, pressure); }
+                                              const Evaluation& saltConcentration) const
+    {
+        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        return rvwSat_(regionIdx, temperature, pressure, salinity);
+    }
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
@@ -246,7 +248,7 @@ public:
                                               const Evaluation& pressure,
                                               const Evaluation& /*oilSaturation*/,
                                               const Evaluation& /*maxOilSaturation*/) const
-    { return rvwSat_(regionIdx, temperature, pressure); }
+    { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
@@ -255,7 +257,7 @@ public:
     Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
-    { return rvwSat_(regionIdx, temperature, pressure); }
+    { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
 
     template <class Evaluation>
     Evaluation diffusionCoefficient(const Evaluation& temperature,
@@ -282,7 +284,8 @@ private:
     template <class LhsEval>
     LhsEval rvwSat_(unsigned regionIdx,
                     const LhsEval& temperature,
-                    const LhsEval& pressure) const
+                    const LhsEval& pressure,
+                    const LhsEval& salinity) const
     {
         if (!enableVaporization_)
             return 0.0;
@@ -293,7 +296,7 @@ private:
         LhsEval xlCO2;
         BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
                                                     pressure,
-                                                    salinity_[regionIdx],
+                                                    salinity,
                                                     /*knownPhaseIdx=*/-1,
                                                     xlCO2,
                                                     xgH2O,
@@ -302,7 +305,7 @@ private:
         // normalize the phase compositions
         xgH2O = max(0.0, min(1.0, xgH2O));
 
-        return convertXgWToRvw(convertxgWToXgW(xgH2O), regionIdx);
+        return convertXgWToRvw(convertxgWToXgW(xgH2O, salinity), regionIdx);
     }
 
     /*!
@@ -335,13 +338,17 @@ private:
      * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    LhsEval convertxgWToXgW(const LhsEval& xgW) const
+    LhsEval convertxgWToXgW(const LhsEval& xgW, const LhsEval& salinity) const
     {
         Scalar M_CO2 = CO2::molarMass();
-        Scalar M_Brine = Brine::molarMass();
+        LhsEval M_Brine = Brine::molarMass(salinity);
 
         return xgW*M_Brine / (xgW*(M_Brine - M_CO2) + M_CO2);
     }
+
+    template <class LhsEval>
+    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P, const LhsEval& saltConcentration) const
+    { return saltConcentration/H2O::liquidDensity(T, P, true); }
 
     std::vector<Scalar> brineReferenceDensity_;
     std::vector<Scalar> gasReferenceDensity_;

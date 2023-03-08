@@ -96,7 +96,7 @@ public:
     template <class Evaluation>
     static void calculateMoleFractions(const Evaluation& temperature,
                                        const Evaluation& pg,
-                                       Scalar salinity,
+                                       const Evaluation& salinity,
                                        const int knownPhaseIdx,
                                        Evaluation& xlCO2,
                                        Evaluation& ygH2O,
@@ -105,12 +105,12 @@ public:
         Evaluation A = computeA_(temperature, pg, extrapolate);
 
         /* salinity: conversion from mass fraction to mol fraction */
-        Scalar x_NaCl = salinityToMolFrac_(salinity);
+        Evaluation x_NaCl = salinityToMolFrac_(salinity);
 
         // if both phases are present the mole fractions in each phase can be calculate
         // with the mutual solubility function
         if (knownPhaseIdx < 0) {
-            Scalar molalityNaCl = moleFracToMolality_(x_NaCl); // molality of NaCl //CHANGED
+            Evaluation molalityNaCl = moleFracToMolality_(x_NaCl); // molality of NaCl //CHANGED
             Evaluation m0_CO2 = molalityCO2inPureWater_(temperature, pg, extrapolate); // molality of CO2 in pure water
             Evaluation gammaStar = activityCoefficient_(temperature, pg, molalityNaCl);// activity coefficient of CO2 in brine
             Evaluation m_CO2 = m0_CO2 / gammaStar; // molality of CO2 in brine
@@ -212,14 +212,15 @@ private:
      *
      * \param salinity the salinity [kg NaCl / kg solution]
      */
-    static Scalar salinityToMolFrac_(Scalar salinity) {
+    template <class Evaluation>
+    static Evaluation salinityToMolFrac_(const Evaluation& salinity) {
 
         const Scalar Mw = H2O::molarMass(); /* molecular weight of water [kg/mol] */
         const Scalar Ms = 58.8e-3; /* molecular weight of NaCl  [kg/mol] */
 
-        const Scalar X_NaCl = salinity;
+        const Evaluation X_NaCl = salinity;
         /* salinity: conversion from mass fraction to mol fraction */
-        const Scalar x_NaCl = -Mw * X_NaCl / ((Ms - Mw) * X_NaCl - Ms);
+        const Evaluation x_NaCl = -Mw * X_NaCl / ((Ms - Mw) * X_NaCl - Ms);
         return x_NaCl;
     }
 
@@ -228,7 +229,8 @@ private:
      *
      * \param x_NaCl mole fraction of NaCL in brine [mol/mol]
      */
-    static Scalar moleFracToMolality_(Scalar x_NaCl)
+    template <class Evaluation>
+    static Evaluation moleFracToMolality_(const Evaluation& x_NaCl)
     {
         // conversion from mol fraction to molality (dissolved CO2 neglected)
         return 55.508 * x_NaCl / (1 - x_NaCl);
@@ -263,7 +265,7 @@ private:
     template <class Evaluation>
     static Evaluation activityCoefficient_(const Evaluation& temperature,
                                            const Evaluation& pg,
-                                           Scalar molalityNaCl)
+                                           const Evaluation& molalityNaCl)
     {
         const Evaluation& lambda = computeLambda_(temperature, pg); // lambda_{CO2-Na+}
         const Evaluation& xi = computeXi_(temperature, pg); // Xi_{CO2-Na+-Cl-}
