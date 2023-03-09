@@ -24,6 +24,10 @@
 #include <config.h>
 #include <opm/material/densead/Evaluation.hpp>
 
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif
+
 #include <ostream>
 
 namespace Opm {
@@ -52,13 +56,27 @@ void printEvaluation(std::ostream& os,
                                   const Evaluation<T,size1,size2>&, \
                                   bool);
 
+#if HAVE_QUAD
+#define INSTANCE(size) \
+    INSTANCE_IMPL(double,size,0u) \
+    INSTANCE_IMPL(quad,size,0u) \
+    INSTANCE_IMPL(float,size,0u)
+#else
 #define INSTANCE(size) \
     INSTANCE_IMPL(double,size,0u) \
     INSTANCE_IMPL(float,size,0u)
+#endif
 
+#if HAVE_QUAD
+#define INSTANCE_DYN(size) \
+    INSTANCE_IMPL(double,-1,size) \
+    INSTANCE_IMPL(quad,-1,size) \
+    INSTANCE_IMPL(float,-1,size)
+#else
 #define INSTANCE_DYN(size) \
     INSTANCE_IMPL(double,-1,size) \
     INSTANCE_IMPL(float,-1,size)
+#endif
 
 INSTANCE(1)
 INSTANCE(2)

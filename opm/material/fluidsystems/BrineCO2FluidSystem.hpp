@@ -490,12 +490,22 @@ private:
         Valgrind::CheckDefined(xlH2O);
         Valgrind::CheckDefined(xlCO2);
 
-        auto tostring = [](const auto& val) -> std::string
+        auto cast = [](const auto d)
+        {
+#if HAVE_QUAD
+            if constexpr (std::is_same_v<decltype(d), const quad>)
+                return static_cast<double>(d);
+            else
+#endif
+            return d;
+        };
+
+        auto tostring = [cast](const auto& val) -> std::string
                         {
                             if constexpr (DenseAd::is_evaluation<LhsEval>::value) {
-                                return std::to_string(getValue(val.value()));
+                                return std::to_string(cast(getValue(val.value())));
                             } else {
-                                return std::to_string(val);
+                                return std::to_string(cast(val));
                             }
                         };
 
