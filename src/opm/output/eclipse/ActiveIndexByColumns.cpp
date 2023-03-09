@@ -26,11 +26,14 @@
 #include <cstddef>
 #include <functional>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 namespace {
-    std::size_t columnarGlobalIdx(const std::array<int, 3>& dims,
-                                  const std::array<int, 3>& ijk)
+    std::size_t columnarGlobalIdx(const std::array<int, 3>&           dims,
+                                  const std::array<int, 3>&           ijk,
+                                  const std::array<int, 3>::size_type outer,
+                                  const std::array<int, 3>::size_type middle)
     {
         // Linear index assuming C-like loop order
         //
@@ -38,13 +41,57 @@ namespace {
         //         for (j = 0 .. Ny - 1)
         //             for (k = 0 .. Nz - 1)
         //
-        // as opposed to the usual Fortran-like loop order ("natural ordering")
+        // or, if Ny > Nx, the alternate loop order
+        //
+        //     for (j = 0 .. Ny - 1)
+        //         for (i = 0 .. Nx - 1)
+        //             for (k = 0 .. Nz - 1)
+        //
+        // swapping the 'i' and 'j' loops.  This is opposed to the usual,
+        // Fortran-like, loop order ("natural ordering")
         //
         //     for (k = 0 .. Nz - 1)
         //         for (j = 0 .. Ny - 1)
         //             for (i = 0 .. Nx - 1)
         //
-        return ijk[2] + dims[2]*(ijk[1] + dims[1]*ijk[0]);
+        // that is used elsewhere.  In other words, the inner loop is always
+        // across the model layers while we ensure that the 'outer' loop
+        // always iterates over an index range that is at least as large as
+        // that of the 'middle' loop.
+
+        return ijk[2] + dims[2]*(ijk[middle] + dims[middle]*ijk[outer]);
+    }
+
+    std::pair<std::array<int, 3>::size_type, std::array<int, 3>::size_type>
+    inferOuterLoopOrdering(const std::array<int, 3>& cartDims)
+    {
+        auto outer  = std::array<int, 3>::size_type{0};
+        auto middle = std::array<int, 3>::size_type{1};
+
+        if (cartDims[middle] > cartDims[outer]) {
+            std::swap(outer, middle);
+        }
+
+        return { outer, middle };
+    }
+
+    std::vector<std::size_t>
+    computeColumnarGlobalIndex(const std::vector<std::size_t>&                             activeCells,
+                               const std::array<int, 3>&                                   cartDims,
+                               const std::function<std::array<int, 3>(const std::size_t)>& getIJK)
+    {
+        auto colGlobIx = activeCells;
+
+        const auto [outer, middle] = inferOuterLoopOrdering(cartDims);
+
+        std::transform(colGlobIx.begin(), colGlobIx.end(), colGlobIx.begin(),
+                       [&cartDims, &getIJK, outer, middle]
+            (const std::size_t cell)
+        {
+            return columnarGlobalIdx(cartDims, getIJK(cell), outer, middle);
+        });
+
+        return colGlobIx;
     }
 
     std::vector<int>
@@ -57,11 +104,12 @@ namespace {
         auto activeCells = std::vector<std::size_t>(numActive, std::size_t{0});
         std::iota(activeCells.begin(), activeCells.end(), std::size_t{0});
 
+        const auto colGlobIx = computeColumnarGlobalIndex(activeCells, cartDims, getIJK);
+
         std::sort(activeCells.begin(), activeCells.end(),
-            [&cartDims, &getIJK](const std::size_t cell1, const std::size_t cell2) -> bool
+            [&colGlobIx](const std::size_t cell1, const std::size_t cell2)
         {
-            return columnarGlobalIdx(cartDims, getIJK(cell1))
-                <  columnarGlobalIdx(cartDims, getIJK(cell2));
+            return colGlobIx[cell1] < colGlobIx[cell2];
         });
 
         auto columnarActiveID = 0;
