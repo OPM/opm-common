@@ -25,7 +25,7 @@ find_opm_package (
    ZLIB;
    ZOLTAN;
    METIS;
-   Quadmath
+   QuadMath
   "
   # header to search for
   "dune/fem/space/shapefunctionset/legendre.hh"
