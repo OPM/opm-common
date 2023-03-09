@@ -151,6 +151,14 @@ macro (sources_hook)
   endif()
   set_source_files_properties(src/opm/input/eclipse/Python/Python.cpp
                               PROPERTIES COMPILE_FLAGS -Wno-shadow)
+  if(QuadMath_FOUND)
+    get_target_property(qm_defs QuadMath::QuadMath INTERFACE_COMPILE_DEFINITIONS)
+    get_target_property(qm_options QuadMath::QuadMath INTERFACE_COMPILE_OPTIONS)
+    set_source_files_properties(src/opm/material/components/CO2.cpp
+                                PROPERTIES COMPILE_DEFINITIONS "${qm_defs}"
+                                COMPILE_OPTIONS "${qm_options}")
+  endif()
+
 endmacro (sources_hook)
 
 macro (fortran_hook)

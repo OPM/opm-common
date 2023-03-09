@@ -23,6 +23,9 @@
 
 #include <config.h>
 #include <opm/material/components/CO2.hpp>
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif
 
 #include "co2tables.inc"
 
@@ -36,6 +39,7 @@ const UniformTabulated2DFunction<double>&
 CO2<double>::tabulatedDensity = CO2Tables::tabulatedDensity;
 template<>
 const double CO2<double>::brineSalinity = CO2Tables::brineSalinity;
+
 template<>
 const UniformTabulated2DFunction<double>&
 CO2<float>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
@@ -44,5 +48,16 @@ const UniformTabulated2DFunction<double>&
 CO2<float>::tabulatedDensity = CO2Tables::tabulatedDensity;
 template<>
 const float CO2<float>::brineSalinity = CO2Tables::brineSalinity;
+
+#if HAVE_QUAD
+template<>
+const UniformTabulated2DFunction<double>&
+CO2<quad>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
+template<>
+const UniformTabulated2DFunction<double>&
+CO2<quad>::tabulatedDensity = CO2Tables::tabulatedDensity;
+template<>
+const quad CO2<quad>::brineSalinity = CO2Tables::brineSalinity;
+#endif
 
 } // namespace Opm
