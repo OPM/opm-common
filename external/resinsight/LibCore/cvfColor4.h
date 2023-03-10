@@ -39,6 +39,7 @@
 
 #include "cvfColor3.h"
 
+namespace external {
 namespace cvf {
 
 class Color4ub;
@@ -124,3 +125,4 @@ private:
 };
 
 }
+} //namespace external

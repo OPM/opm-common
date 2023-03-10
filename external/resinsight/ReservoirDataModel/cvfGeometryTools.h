@@ -25,6 +25,8 @@
 #include <list>
 #include <map>
 
+namespace external
+{
 namespace cvf
 {
 class EdgeSplitStorage;
@@ -251,5 +253,5 @@ private:
 };
 
 } // namespace cvf
-
+} //namespace external
 #include "cvfGeometryTools.inl"

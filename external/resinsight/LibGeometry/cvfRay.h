@@ -42,6 +42,7 @@
 #include "../LibCore/cvfMatrix4.h"
 #include "../LibCore/cvfString.h"
 
+namespace external {
 namespace cvf {
 
 class BoundingBox;
@@ -91,3 +92,4 @@ private:
 };
 
 }
+} //namespace external

@@ -52,6 +52,8 @@
 // }
 // } // namespace caf
 
+namespace external 
+{
 namespace cvf
 {
 //--------------------------------------------------------------------------------------------------
@@ -409,3 +411,4 @@ void StructGridInterface::characteristicCellSizes( double* iSize, double* jSize,
 }
 
 } // namespace cvf
+} //namespace external

@@ -59,4 +59,3 @@
 #include "cvfTriangleVertexSplitter.h"
 #include "cvfVertexCompactor.h"
 #include "cvfVertexWelder.h"
-

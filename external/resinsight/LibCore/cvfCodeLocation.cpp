@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <cstring>
 
+namespace external {
 namespace cvf {
 
 
@@ -179,3 +180,4 @@ void CodeLocation::swap(CodeLocation& other)
 
 } // namespace cvf
 
+} //namespace external

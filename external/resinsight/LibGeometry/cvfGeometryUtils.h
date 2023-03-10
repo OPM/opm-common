@@ -40,6 +40,7 @@
 #include "cvfVector3.h"
 #include "cvfGeometryBuilder.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -80,3 +81,4 @@ public:
 };
 
 }
+} //namespace external

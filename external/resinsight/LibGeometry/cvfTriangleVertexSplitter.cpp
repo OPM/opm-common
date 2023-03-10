@@ -40,6 +40,7 @@
 #include "cvfFrustum.h"
 #include "cvfOutlineEdgeExtractor.h"
 
+namespace external {
 namespace cvf {
 
 //==================================================================================================
@@ -326,3 +327,4 @@ bool TriangleVertexSplitter::isNormalDifferenceBelowThreshold(const Vec3f& n1, c
 }
 
 } // namespace cvf
+} //namespace external

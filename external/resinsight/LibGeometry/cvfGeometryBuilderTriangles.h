@@ -38,7 +38,7 @@
 #pragma once
 
 #include "cvfGeometryBuilder.h"
-
+namespace external {
 namespace cvf {
 
 
@@ -68,3 +68,4 @@ private:
 };
 
 }
+} //namespace external

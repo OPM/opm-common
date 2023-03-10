@@ -38,6 +38,7 @@
 #pragma once
 #include "cvfVector2.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -97,5 +98,6 @@ typedef Rect<int>       Recti;  ///< A rect with integer components
 typedef Rect<uint>      Rectui; ///< A rect with unsigned integer components
 
 }
-
+} //namespace external
 #include "cvfRect.inl"
+

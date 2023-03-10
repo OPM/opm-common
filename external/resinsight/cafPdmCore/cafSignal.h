@@ -43,6 +43,8 @@
 #include <string>
 #include <type_traits>
 
+namespace external 
+{
 namespace caf
 {
 class SignalEmitter;
@@ -190,3 +192,4 @@ private:
     const SignalEmitter*                                   m_emitter;
 };
 } // namespace caf
+} //namespace external

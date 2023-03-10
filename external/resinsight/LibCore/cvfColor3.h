@@ -39,7 +39,7 @@
 
 #include "cvfBase.h"
 
-
+namespace external {
 namespace cvf {
 
 // Forward declarations
@@ -183,3 +183,4 @@ private:
 
 }
 
+} //namespace external

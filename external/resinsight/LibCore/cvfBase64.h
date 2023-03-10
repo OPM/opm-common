@@ -40,7 +40,7 @@
 #include "cvfString.h"
 #include "cvfArray.h"
 
-
+namespace external {
 namespace cvf {
 
 //==================================================================================================
@@ -56,3 +56,4 @@ public:
 };
 
 }
+} //namespace external

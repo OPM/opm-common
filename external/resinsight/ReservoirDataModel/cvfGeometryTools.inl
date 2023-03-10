@@ -19,6 +19,8 @@
 
 #include <cmath>
 
+namespace external
+{
 namespace cvf
 {
 //--------------------------------------------------------------------------------------------------
@@ -1034,3 +1036,4 @@ bool EdgeIntersectStorage<IndexType>::findIntersection( IndexType               
 }
 
 } // namespace cvf
+} //namespace external

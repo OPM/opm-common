@@ -41,6 +41,7 @@
 #include "cvfString.h"
 #include "cvfCollection.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -151,3 +152,4 @@ private:
 
 }
 
+} //namespace external

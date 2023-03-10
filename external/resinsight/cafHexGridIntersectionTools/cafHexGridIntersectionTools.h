@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "../LibCore/cvfBase.h"
@@ -8,6 +7,8 @@
 #include <cmath>
 #include <vector>
 
+namespace external 
+{
 namespace cvf
 {
 class Plane;
@@ -107,3 +108,4 @@ public:
 };
 
 }; // namespace caf
+} //namespace external

@@ -41,6 +41,7 @@
 
 #include <vector>
 
+namespace external {
 namespace cvf {
 
 
@@ -71,3 +72,4 @@ private:
 };
 
 }
+} //namespace external

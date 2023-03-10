@@ -41,6 +41,7 @@
 
 #include <limits>
 
+namespace external {
 namespace cvf {
 
 
@@ -132,5 +133,5 @@ typedef Vector2<uint>   Vec2ui;  ///< A vector with uint components
 typedef Vector2<ushort> Vec2us;  ///< A vector with ushort components
 
 }
-
+} //namespace external
 #include "cvfVector2.inl"

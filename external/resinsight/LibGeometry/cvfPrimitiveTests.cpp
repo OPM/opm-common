@@ -40,6 +40,7 @@
 
 #include <limits>
 
+namespace external {
 namespace cvf {
 
 
@@ -104,3 +105,4 @@ bool PrimitiveTests::intersectLines(const Vec2d& p1, const Vec2d& p2, const Vec2
 
 
 } // namespace cvf
+} //namespace external

@@ -44,6 +44,7 @@
 #include <cstdio>
 #include <cstdarg>
 
+namespace external {
 namespace cvf {
 
 
@@ -329,3 +330,4 @@ int System::strcmp(const char* str1, const char* str2)
 
 } // namespace cvf
 
+} //namespace external

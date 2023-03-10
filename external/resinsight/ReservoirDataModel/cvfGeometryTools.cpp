@@ -19,6 +19,7 @@
 
 #include "cvfGeometryTools.h"
 
+namespace external {
 namespace cvf
 {
 //--------------------------------------------------------------------------------------------------
@@ -1294,3 +1295,4 @@ bool FanEarClipTesselator::isTriangleValid( size_t u, size_t v, size_t w )
 }
 
 } // namespace cvf
+} //namespace external

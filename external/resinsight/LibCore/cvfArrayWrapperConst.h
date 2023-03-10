@@ -36,6 +36,7 @@
 
 #pragma once
 
+namespace external {
 namespace cvf {
 
 //--------------------------------------------------------------------------------------------------
@@ -152,3 +153,4 @@ inline const ArrayWrapperConst< const  ElmType*, ElmType > wrapArrayConst( ElmTy
 
 }
 
+} //namespace external

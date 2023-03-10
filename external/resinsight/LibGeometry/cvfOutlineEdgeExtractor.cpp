@@ -40,6 +40,7 @@
 #include "cvfEdgeKey.h"
 #include "cvfGeometryUtils.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -288,3 +289,4 @@ bool OutlineEdgeExtractor::isFaceAngleAboveThreshold(size_t faceIdx1, size_t fac
 
 } // namespace cvf
 
+} //namespace external

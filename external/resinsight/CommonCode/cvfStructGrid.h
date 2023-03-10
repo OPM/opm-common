@@ -42,6 +42,8 @@
 
 // #include "../cafPdmCore/cafAppEnum.h"
 
+namespace external 
+{
 namespace cvf
 {
 class CellFilterBase;
@@ -130,3 +132,4 @@ private:
 };
 
 } // namespace cvf
+} //namespace external

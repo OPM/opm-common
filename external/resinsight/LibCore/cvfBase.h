@@ -89,6 +89,7 @@
 // Brings in size_t and definition of NULL
 #include <cstddef>
 
+namespace external {
 // Added due to conflict between std::min/max and define in Windows.h
 #define CVF_MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define CVF_MAX(X, Y) ((X) > (Y) ? (X) : (Y))
@@ -124,7 +125,9 @@ typedef int64_t int64;
 #endif 
 
 }
+} //namespace external
 
 #include "cvfConfigCore.h"
 #include "cvfVersion.h"
 #include "cvfAssert.h"
+

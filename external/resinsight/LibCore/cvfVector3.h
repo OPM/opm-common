@@ -39,6 +39,7 @@
 
 #include "cvfVector2.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -158,5 +159,6 @@ typedef Vector3<uint>   Vec3ui;  ///< A vector with uint components
 typedef Vector3<size_t> Vec3st;  ///< A vector with size_t components
 
 }
-
+} //namespace external
 #include "cvfVector3.inl"
+

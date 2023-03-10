@@ -43,6 +43,7 @@
 #include <cstdio>
 #include <cstdarg>
 
+namespace external {
 namespace cvf {
 
 
@@ -220,3 +221,4 @@ String DebugTimer::makeMessageStartString(const char* msg)
 
 } // namespace cvf
 
+} //namespace external

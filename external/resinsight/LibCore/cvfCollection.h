@@ -42,6 +42,7 @@
 #include <vector>
 #include <algorithm>
 
+namespace external {
 namespace cvf {
 
 
@@ -97,5 +98,5 @@ private:
 };
 
 }
-
+} //namespace external
 #include "cvfCollection.inl"

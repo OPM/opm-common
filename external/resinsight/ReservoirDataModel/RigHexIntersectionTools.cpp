@@ -25,6 +25,7 @@
 
 #include "../cafHexGridIntersectionTools/cafHexGridIntersectionTools.h"
 
+namespace external {
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
@@ -247,3 +248,4 @@ bool operator<( const HexIntersectionInfo& hi1, const HexIntersectionInfo& hi2 )
 
     return false;
 }
+} //namespace external

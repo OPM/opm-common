@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfVector3.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -48,3 +49,4 @@ template<> Vector3<size_t> const Vector3<size_t>::UNDEFINED(UNDEFINED_SIZE_T, UN
 
 
 } // namespace cvf
+} //namespace external

@@ -53,6 +53,7 @@
 #include <fcntl.h>
 #endif
 
+namespace external {
 namespace cvf {
 
 
@@ -487,3 +488,4 @@ Assert::FailAction Assert::reportFailedAssert(const char* fileName, int lineNumb
 
 } // namespace cvf
 
+} //namespace external

@@ -37,6 +37,7 @@
 
 #pragma once
 
+namespace external {
 namespace cvf {
 
 
@@ -72,5 +73,5 @@ private:
 };
 
 }
-
+} //namespace external
 #include "cvfFlags.inl"

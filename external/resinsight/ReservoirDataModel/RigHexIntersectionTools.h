@@ -23,6 +23,8 @@
 
 #include <array>
 
+namespace external {
+
 //==================================================================================================
 ///  Internal class for intersection point info
 //==================================================================================================
@@ -72,3 +74,4 @@ struct RigHexIntersectionTools
                                               cvf::Mat4d                            transformMatrixForPlane,
                                               std::vector<std::vector<cvf::Vec3d>>& polygons );
 };
+} //namespace external

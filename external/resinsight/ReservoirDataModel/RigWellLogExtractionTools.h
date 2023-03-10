@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cmath>
 
+namespace external {
 //==================================================================================================
 ///
 /// Default tolerance is 0.1 meters to handle inaccuracies across faults
@@ -131,3 +132,4 @@ struct RigMDEnterLeaveCellIdxKey
                  !RigWellLogExtractionTools::isEqualDepth( key1.measuredDepth, key2.measuredDepth ) );
     }
 };
+} //namespace external

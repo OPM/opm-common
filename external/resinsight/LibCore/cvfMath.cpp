@@ -40,6 +40,7 @@
 
 #include <cmath>
 
+namespace external {
 namespace cvf {
 
 
@@ -350,3 +351,4 @@ bool Math::isUndefined(float val)
 
 } // namespace cvf
 
+} //namespace external

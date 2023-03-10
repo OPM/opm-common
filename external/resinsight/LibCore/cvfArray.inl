@@ -34,7 +34,8 @@
 //
 //##################################################################################################
 
-
+namespace external 
+{
 namespace cvf {
 
 
@@ -781,3 +782,4 @@ void Array<T>::swap(Array& other)
 }
 
 }  // namespace cvf
+} //namespace external

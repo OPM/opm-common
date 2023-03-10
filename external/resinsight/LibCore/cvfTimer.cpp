@@ -53,7 +53,7 @@
 #include "mach/mach_time.h"
 #endif
 
-
+namespace external {
 namespace cvf {
 
 
@@ -273,3 +273,4 @@ double Timer::lapTime()
 
 } // namespace cvf
 
+} //namespace external

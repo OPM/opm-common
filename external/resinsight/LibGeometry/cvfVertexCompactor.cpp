@@ -39,6 +39,7 @@
 #include "cvfVertexCompactor.h"
 #include "cvfGeometryUtils.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -135,3 +136,4 @@ ref<UIntArray> VertexCompactor::perVertexOriginalIndices()
 }
 
 } // namespace cvf
+} //namespace external

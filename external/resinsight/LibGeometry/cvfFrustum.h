@@ -42,6 +42,7 @@
 
 #include <map>
 
+namespace external {
 namespace cvf {
 
 class BoundingBox;
@@ -89,3 +90,4 @@ private:
 };
 
 }
+} //namespace external

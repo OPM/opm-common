@@ -44,7 +44,7 @@
 #include "cvfVector4.h"
 #include "cvfMatrix3.h"
 
-
+namespace external {
 namespace cvf {
 
 
@@ -139,5 +139,5 @@ typedef Matrix4<float>  Mat4f;
 typedef Matrix4<double> Mat4d;
 
 }
-
+} //namespace external
 #include "cvfMatrix4.inl"

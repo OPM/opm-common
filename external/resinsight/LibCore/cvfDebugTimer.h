@@ -39,7 +39,7 @@
 
 #include "cvfString.h"
 
-
+namespace external {
 namespace cvf {
 
 class Timer;
@@ -84,3 +84,4 @@ private:
 };
 
 }
+} //namespace external

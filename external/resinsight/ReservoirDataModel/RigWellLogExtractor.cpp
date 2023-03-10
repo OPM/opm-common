@@ -21,6 +21,7 @@
 #include "RigWellPath.h"
 #include "../LibCore/cvfTrace.h"
 
+namespace external {
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
@@ -362,3 +363,4 @@ void RigWellLogExtractor::appendIntersectionToArrays( double                    
     m_intersectedCellsGlobIdx.push_back( intersection.m_hexIndex );
     m_intersectedCellFaces.push_back( intersection.m_face );
 }
+} //namespace external

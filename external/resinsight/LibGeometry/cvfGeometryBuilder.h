@@ -41,6 +41,7 @@
 #include "cvfArray.h"
 #include "cvfMatrix4.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -77,3 +78,4 @@ public:
 
 
 }
+} //namespace external

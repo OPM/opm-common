@@ -41,6 +41,7 @@
 #include "cvfString.h"
 #include "cvfCodeLocation.h"
 
+namespace external {
 namespace cvf {
 
 class LogEvent;
@@ -110,3 +111,4 @@ private:
 } // cvf
 
 
+} //namespace external

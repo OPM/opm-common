@@ -40,6 +40,7 @@
 #include "cvfArray.h"
 #include "cvfVector3.h"
 
+namespace external {
 namespace cvf {
 
 //=================================================================================================
@@ -68,3 +69,4 @@ private:
 };
 
 }
+} //namespace external

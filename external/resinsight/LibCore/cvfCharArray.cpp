@@ -42,6 +42,7 @@
 #include <sstream>
 #include <iomanip>
 
+namespace external {
 namespace cvf {
 
 
@@ -181,3 +182,4 @@ char* CharArray::ptr()
 
 } // namespace cvf
 
+} //namespace external

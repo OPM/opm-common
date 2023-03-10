@@ -44,6 +44,8 @@
 
 #include "cvfAtomicCounter.h"
 
+namespace external {
+
 #if !defined(CVF_ATOMIC_COUNTER_CLASS_EXISTS) && !defined(CVF_USE_NON_THREADSAFE_REFERENCE_COUNT)
 #error No support for atomics. Define CVF_USE_NON_THREADSAFE_REFERENCE_COUNT to be able to compile
 #endif
@@ -193,5 +195,6 @@ cref<T> make_cref(Args&&... args);
 /// @}
 
 }
+} //namespace external
 
 #include "cvfObject.inl"

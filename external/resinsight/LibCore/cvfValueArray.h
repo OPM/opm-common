@@ -40,6 +40,7 @@
 #include "cvfVector4.h"
 #include "cvfColor4.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -74,3 +75,4 @@ typedef ValueArray<Color4ub>    Color4ubValueArray;
 }
 
 
+} //namespace external

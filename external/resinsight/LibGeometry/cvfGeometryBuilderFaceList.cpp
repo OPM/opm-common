@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfGeometryBuilderFaceList.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -161,3 +162,4 @@ ref<UIntArray> GeometryBuilderFaceList::faceList() const
 
 } // namespace cvf
 
+} //namespace external

@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfGeometryBuilder.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -363,3 +364,4 @@ void GeometryBuilder::addFace(const UIntArray& indices)
 
 } // namespace cvf
 
+} //namespace external

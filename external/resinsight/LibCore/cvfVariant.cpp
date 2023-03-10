@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfVariant.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -450,3 +451,4 @@ void Variant::assignData(const void* pointerToData, size_t dataSizeInBytes)
 
 
 }  // namespace gc
+} //namespace external

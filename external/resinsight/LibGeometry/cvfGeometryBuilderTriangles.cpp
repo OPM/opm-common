@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfGeometryBuilderTriangles.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -149,3 +150,4 @@ ref<UShortArray> GeometryBuilderTriangles::trianglesUShort() const
 
 
 } // namespace cvf
+} //namespace external

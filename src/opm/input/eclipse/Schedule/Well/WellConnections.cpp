@@ -152,7 +152,7 @@ namespace {
 
     // Calculate permeability thickness Kh for line segment in a cell for x,y,z directions
     std::array<double, 3>
-    permThickness(const cvf::Vec3d& connection_vector,
+    permThickness(const external::cvf::Vec3d& connection_vector,
                   const std::array<double,3>& cell_perm,
                   const double ntg)
     {
@@ -160,7 +160,7 @@ namespace {
         Opm::Connection::Direction direction[3] = {Opm::Connection::DirectionFromString("X"),
                                                    Opm::Connection::DirectionFromString("Y"),
                                                    Opm::Connection::DirectionFromString("Z")};
-        cvf::Vec3d effective_connection = connection_vector;
+        external::cvf::Vec3d effective_connection = connection_vector;
         effective_connection[2] *= ntg;
         for (size_t i = 0; i < 3; ++i)
         {
@@ -172,7 +172,7 @@ namespace {
 
     // Calculate directional (x,y,z) peaceman connection factors CFx, CFy, CFz
     std::array<double, 3>
-    connectionFactor(const cvf::Vec3d& connection_vector,
+    connectionFactor(const external::cvf::Vec3d& connection_vector,
                      const std::array<double,3>& cell_perm,
                      std::array<double,3> cell_size,
                      const double ntg,
@@ -184,7 +184,7 @@ namespace {
         Opm::Connection::Direction direction[3] = {Opm::Connection::DirectionFromString("X"),
                                                    Opm::Connection::DirectionFromString("Y"),
                                                    Opm::Connection::DirectionFromString("Z")};
-        cvf::Vec3d effective_connection = connection_vector;
+        external::cvf::Vec3d effective_connection = connection_vector;
         effective_connection[2] *= ntg;
         for (size_t i = 0; i < 3; ++i)
         {
@@ -513,7 +513,7 @@ namespace Opm {
                                       const ScheduleGrid& grid,
                                       const std::string& wname,
                                       const KeywordLocation& location,
-                                      cvf::ref<cvf::BoundingBoxTree>& cellSearchTree) {
+                                      external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree) {
 
         // const std::string& completionNamePattern = record.getItem("BRANCH_NUMBER").getTrimmedString(0);
         const auto& perf_top = record.getItem("PERF_TOP");
@@ -553,15 +553,15 @@ namespace Opm {
             coord_top[i] =  Opm::linearInterpolation(this->md, this->coord[i], perf_top.getSIDouble(0));
             coord_bot[i] =  Opm::linearInterpolation(this->md, this->coord[i], perf_bot.getSIDouble(0));
         }
-        cvf::Vec3d p_top(coord_top[0], coord_top[1], coord_top[2]);
-        cvf::Vec3d p_bot(coord_bot[0], coord_bot[1], coord_bot[2]);
-        std::vector<cvf::Vec3d> points{p_top, p_bot};
+        external::cvf::Vec3d p_top(coord_top[0], coord_top[1], coord_top[2]);
+        external::cvf::Vec3d p_bot(coord_bot[0], coord_bot[1], coord_bot[2]);
+        std::vector<external::cvf::Vec3d> points{p_top, p_bot};
         std::vector<double> md_interval{perf_top.getSIDouble(0), perf_bot.getSIDouble(0)};
         
-        cvf::ref<RigWellPath> wellPathGeometry = new RigWellPath;
+        external::cvf::ref<external::RigWellPath> wellPathGeometry = new external::RigWellPath;
         wellPathGeometry->setWellPathPoints(points);
         wellPathGeometry->setMeasuredDepths(md_interval);
-        cvf::ref<RigEclipseWellLogExtractor> e = new RigEclipseWellLogExtractor(wellPathGeometry.p(), *ecl_grid, cellSearchTree);
+        external::cvf::ref<external::RigEclipseWellLogExtractor> e = new external::RigEclipseWellLogExtractor(wellPathGeometry.p(), *ecl_grid, cellSearchTree);
         
         // Keep the AABB search tree of the grid  to avoid redoing an expensive calulation 
         cellSearchTree = e->getCellSearchTree();
@@ -579,7 +579,7 @@ namespace Opm {
             J = ijk[1];
             k = ijk[2];
             // std::cout<< "I: " << I << " J: " << J << " K: " << k << std::endl;
-            cvf::Vec3d connection_vector = intersections[is].intersectionLengthsInCellCS;
+            external::cvf::Vec3d connection_vector = intersections[is].intersectionLengthsInCellCS;
 
 
             const CompletedCells::Cell& cell = grid.get_cell(I, J, k);

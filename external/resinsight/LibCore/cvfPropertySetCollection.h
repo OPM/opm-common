@@ -43,6 +43,7 @@
 
 #include <map>
 
+namespace external {
 namespace cvf {
 
 
@@ -72,3 +73,4 @@ private:
 
 
 }  // namespace cvf
+} //namespace external

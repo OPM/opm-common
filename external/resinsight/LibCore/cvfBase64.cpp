@@ -50,6 +50,8 @@ CVF_GCC_DIAGNOSTIC_IGNORE("-Wunused-parameter")
 #include <stdlib.h>
 #endif
 
+namespace external 
+{
 
 // Doxygen conditional section to hide contents of the cvf_base64 namespace
 /// \cond CVF_NEVER_INCLUDE
@@ -235,3 +237,4 @@ cvf::ref<cvf::UByteArray> Base64::decode(const std::string& encodedData)
 }
 
 } // namespace cvf
+} //namespace external

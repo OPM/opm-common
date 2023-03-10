@@ -40,6 +40,7 @@
 #include "cvfArray.h"
 #include <map>
 
+namespace external {
 namespace cvf {
 
 
@@ -79,3 +80,4 @@ private:
 };
 
 }
+} //namespace external

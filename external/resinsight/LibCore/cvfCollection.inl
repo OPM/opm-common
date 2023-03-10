@@ -35,6 +35,7 @@
 //##################################################################################################
 
 
+namespace external {
 namespace cvf {
 
 
@@ -330,3 +331,4 @@ typename Collection<T>::const_iterator Collection<T>::end() const
 }
 
 }  // namespace cvf
+} //namespace external

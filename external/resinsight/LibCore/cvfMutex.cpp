@@ -49,6 +49,7 @@
 #include <pthread.h>
 #endif
 
+namespace external {
 namespace cvf {
 
 
@@ -218,3 +219,4 @@ Mutex::ScopedLock::~ScopedLock()
 
 } // namespace cvf
 
+} //namespace external

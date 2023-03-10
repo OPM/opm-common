@@ -37,9 +37,9 @@
 
 #include "cvfAtomicCounter.h"
 
+namespace external {
 // Some older GCC version do not support atomics, we have seen this for RHEL5
 #if defined(CVF_ATOMIC_COUNTER_CLASS_EXISTS)
-
 namespace cvf {
 
 #ifdef WIN32
@@ -185,3 +185,4 @@ int AtomicCounter::operator -- (int) // postfix
 
 
 #endif // CVF_ATOMICS_COMPILED
+} //namespace external

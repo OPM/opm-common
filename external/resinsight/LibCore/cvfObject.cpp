@@ -41,6 +41,7 @@
 
 #include <map>
 
+namespace external {
 namespace cvf {
 
 
@@ -133,3 +134,4 @@ void Object::dumpActiveObjectInstances()
 
 } // namespace cvf
 
+} //namespace external

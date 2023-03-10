@@ -40,6 +40,7 @@
 #include "cvfSystem.h"
 #include "cvfVector3.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -105,5 +106,5 @@ typedef Matrix3<float>  Mat3f;
 typedef Matrix3<double> Mat3d;
 
 }
-
+} //namespace external
 #include "cvfMatrix3.inl"

@@ -39,6 +39,7 @@
 #include "cvfBoundingBox.h"
 #include "cvfFrustum.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -229,3 +230,4 @@ bool Frustum::isOutside(const BoundingBox& bbox) const
 
 } // namespace cvf
 
+} //namespace external

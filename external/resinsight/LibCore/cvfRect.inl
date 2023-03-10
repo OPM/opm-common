@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -602,3 +602,4 @@ bool Rect<T>::clipTest(double p, double q, double *u1, double *u2)
 
 }  // namespace cvf
 
+} //namespace external

@@ -39,6 +39,7 @@
 #include "cvfPatchGenerator.h"
 #include "cvfGeometryUtils.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -178,3 +179,4 @@ void PatchGenerator::generate(GeometryBuilder* builder)
 
 } // namespace cvf
 
+} //namespace external

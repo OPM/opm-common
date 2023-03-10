@@ -41,6 +41,7 @@
 
 #include <limits>
 
+namespace external {
 namespace cvf {
 
 
@@ -454,3 +455,4 @@ void BoundingBox::cutAbove(double depth)
 
 } // namespace cvf
 
+} //namespace external
