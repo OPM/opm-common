@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <iostream>
 
+namespace external 
+{
 #define CAF_ASSERT( expr )                                                                                   \
     do                                                                                                       \
     {                                                                                                        \
@@ -60,3 +62,4 @@ void assertAbort()
         }                                                                                                    \
     } while ( false )
 #endif
+} //namespace external

@@ -24,7 +24,7 @@
 #include "../LibCore/cvfVector3.h"
 
 #include <vector>
-
+namespace external {
 namespace cvf
 {
 class BoundingBox;
@@ -103,3 +103,4 @@ private:
     size_t m_uniqueStartIndex;
     size_t m_uniqueEndIndex;
 };
+} //namespace external

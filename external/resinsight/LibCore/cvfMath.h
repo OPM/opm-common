@@ -39,6 +39,7 @@
 
 #include "cvfBase.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -111,5 +112,6 @@ const float	        UNDEFINED_FLOAT_THRESHOLD   = 2.99e+38f;
 
 
 } // namespace cvf
+} //namespace external
 
 #include "cvfMath.inl"

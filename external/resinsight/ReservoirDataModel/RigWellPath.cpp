@@ -24,6 +24,7 @@
 
 #include <algorithm>
 
+namespace external {
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
@@ -695,3 +696,4 @@ std::pair<size_t, size_t> RigWellPath::closestIndices( const cvf::Vec3d& positio
 
     return { cvf::UNDEFINED_SIZE_T, cvf::UNDEFINED_SIZE_T };
 }
+} //namespace external

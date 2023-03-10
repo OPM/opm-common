@@ -37,6 +37,7 @@
 
 #pragma once
 
+namespace external {
 namespace cvf {
 
 
@@ -81,3 +82,4 @@ private:
 } // cvf
 
 
+} //namespace external

@@ -30,6 +30,7 @@
 
 #include <map>
 
+namespace external {
 //==================================================================================================
 ///
 //==================================================================================================
@@ -321,3 +322,4 @@ std::vector<size_t> RigEclipseWellLogExtractor::findCloseCellIndices( const cvf:
  {
     return m_cellSearchTree;
  }
+ } //namespace external

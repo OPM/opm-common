@@ -27,6 +27,7 @@
 #include <list>
 #include <vector>
 
+namespace external {
 class RigCellGeometryTools
 {
 public:
@@ -88,3 +89,4 @@ private:
 
     static double isLeftOfLine2D( const cvf::Vec3d& point1, const cvf::Vec3d& point2, const cvf::Vec3d& point3 );
 };
+} //namespace external

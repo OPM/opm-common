@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -484,3 +484,4 @@ Matrix3<S> Matrix3<S>::fromRotation(Vector3<S> axis, S angle)
 
 } 
 
+} //namespace external

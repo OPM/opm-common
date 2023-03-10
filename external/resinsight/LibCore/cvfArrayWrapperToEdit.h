@@ -36,6 +36,7 @@
 
 #pragma once
 
+namespace external {
 namespace cvf {
 
 //--------------------------------------------------------------------------------------------------
@@ -131,3 +132,4 @@ inline ArrayWrapperToEdit< ElmType*, ElmType > wrapArrayToEdit(ElmType* array, s
 
 }
 
+} //namespace external

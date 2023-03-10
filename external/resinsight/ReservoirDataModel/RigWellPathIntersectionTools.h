@@ -25,6 +25,8 @@
 
 #include <array>
 
+namespace external {
+
 class RigWellPath;
 class RigMainGrid;
 class RigEclipseCaseData;
@@ -71,3 +73,4 @@ public:
         buildContinuousIntersections( const std::vector<WellPathCellIntersectionInfo>& originalIntersections,
                                       const cvf::StructGridInterface*                  grid );
 };
+} //namespace external

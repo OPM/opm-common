@@ -39,6 +39,7 @@
 
 #include "cvfObject.h"
 
+namespace external {
 namespace cvf {
 
 class LogEvent;
@@ -60,3 +61,4 @@ public:
 } // cvf
 
 
+} //namespace external

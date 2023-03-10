@@ -35,6 +35,8 @@
 //##################################################################################################
 #include "cafSignal.h"
 
+namespace external 
+{
 using namespace caf;
 
 //--------------------------------------------------------------------------------------------------
@@ -117,3 +119,4 @@ void SignalObserver::disconnectAllSignals()
         observedSignal->disconnect( const_cast<SignalObserver*>( this ) );
     }
 }
+} //namespace external

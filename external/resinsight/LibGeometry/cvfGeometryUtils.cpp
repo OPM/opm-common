@@ -42,6 +42,7 @@
 
 #include <map>
 
+namespace external {
 namespace cvf {
 
 
@@ -953,3 +954,4 @@ bool GeometryUtils::project(const Mat4d& projectionMultViewMatrix, const Vec2i& 
 }
 
 } // namespace cvf
+} //namespace external

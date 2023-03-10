@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <array>
 
+namespace external
+{
 namespace caf
 {
 //--------------------------------------------------------------------------------------------------
@@ -1590,3 +1592,4 @@ cvf::uint HexGridIntersectionTools::planeMcTetIntersection( const cvf::Plane&   
 } // namespace caf
 
 // clang-format on
+} //namespace external

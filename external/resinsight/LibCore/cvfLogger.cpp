@@ -40,6 +40,7 @@
 #include "cvfLogEvent.h"
 #include "cvfLogDestination.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -216,3 +217,4 @@ void Logger::log(const String& message, Logger::Level messageLevel, const CodeLo
 
 } // namespace cvf
 
+} //namespace external

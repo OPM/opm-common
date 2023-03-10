@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -508,3 +508,4 @@ inline void Vector4<S>::set(S x, S y, S z, S w)
 }
 
 }  // namespace cvf
+} //namespace external

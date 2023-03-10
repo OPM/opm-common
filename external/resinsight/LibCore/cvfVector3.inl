@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -797,3 +797,4 @@ const Vector3<S> Vector3<S>::perpendicularVector(bool* perpendicularOK) const
 
 
 }  // namespace cvf
+} //namespace external

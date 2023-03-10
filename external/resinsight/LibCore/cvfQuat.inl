@@ -35,7 +35,7 @@
 //##################################################################################################
 
 
-
+namespace external {
 namespace cvf {
 
 
@@ -393,3 +393,4 @@ Quat<S> Quat<S>::fromRotationMatrix(const Matrix4<S>& rotMat)
 }
 
 }  // namespace cvf
+} //namespace external

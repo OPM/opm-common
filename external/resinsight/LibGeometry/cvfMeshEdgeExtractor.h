@@ -39,6 +39,7 @@
 
 #include "cvfArray.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -67,3 +68,4 @@ private:
 }
 
 
+} //namespace external

@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfLogEvent.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -144,3 +145,4 @@ void LogEvent::swap(LogEvent& other)
 
 } // namespace cvf
 
+} //namespace external

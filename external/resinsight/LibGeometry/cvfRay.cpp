@@ -40,6 +40,7 @@
 #include "../LibGeometry/cvfBoundingBox.h"
 #include "../LibCore/cvfPlane.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -530,3 +531,4 @@ double Ray::maximumDistance() const
 }
 
 } // namespace cvf
+} //namespace external

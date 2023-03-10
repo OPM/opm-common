@@ -39,6 +39,7 @@
 #include "cvfLogManager.h"
 #include "cvfLogDestinationConsole.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -253,3 +254,4 @@ String LogManager::nameOfParentLogger(const String& childLoggerName)
 
 } // namespace cvf
 
+} //namespace external

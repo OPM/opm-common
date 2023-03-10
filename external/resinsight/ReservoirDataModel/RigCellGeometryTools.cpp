@@ -30,6 +30,8 @@
 #include <array>
 #include <vector>
 
+namespace external
+{
 //--------------------------------------------------------------------------------------------------
 /// Efficient Computation of Volume of Hexahedral Cells
 /// Jeffrey Grandy, Lawrence Livermore National Laboratory
@@ -840,3 +842,4 @@ bool RigCellGeometryTools::pointInsidePolygon2D( const cvf::Vec3d point, const s
     }
     return wn != 0;
 }
+} //namespace external

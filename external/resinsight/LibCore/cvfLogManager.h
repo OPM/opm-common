@@ -44,6 +44,7 @@
 
 #include <map>
 
+namespace external {
 namespace cvf {
 
 class LogDestination;
@@ -93,3 +94,4 @@ private:
 } // cvf
 
 
+} //namespace external

@@ -24,18 +24,22 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
-class RigEclipseCaseData;
-class RigWellPath;
-class RigResultAccessor;
 namespace Opm {
 class EclipseGrid;
 class ScheduleGrid;
 }
 
+namespace external {
+
+class RigEclipseCaseData;
+class RigWellPath;
+class RigResultAccessor;
+
 namespace cvf
 {
 class BoundingBox;
 }
+
 
 //==================================================================================================
 ///
@@ -67,3 +71,4 @@ private:
     const Opm::EclipseGrid& m_grid;
     cvf::ref<cvf::BoundingBoxTree> m_cellSearchTree;
 };
+} //namespace external

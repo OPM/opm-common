@@ -44,6 +44,8 @@
 
 #include <vector>
 
+namespace external 
+{
 namespace caf
 {
 //==================================================================================================
@@ -387,3 +389,4 @@ bool operator!=( T value, const caf::AppEnum<T>& appEnum )
 
 //     return str;
 // }
+} //namespace external

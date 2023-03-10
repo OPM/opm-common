@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfTBBControl.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -84,3 +85,4 @@ bool TBBControl::isEnabled()
 
 } // namespace cvf
 
+} //namespace external

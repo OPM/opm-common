@@ -39,6 +39,7 @@
 #include "cvfColor3.h"
 #include "cvfMath.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -449,3 +450,4 @@ const ubyte* Color3ub::ptr() const
 
 } // namespace cvf
 
+} //namespace external

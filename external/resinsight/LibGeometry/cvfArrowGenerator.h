@@ -37,6 +37,7 @@
 
 #pragma once
 
+namespace external {
 namespace cvf {
 
 class GeometryBuilder;
@@ -68,3 +69,4 @@ private:
 };
 
 }
+} //namespace external

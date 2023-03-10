@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -195,3 +195,4 @@ inline bool Flags<FlagEnum>::testFlag(FlagEnum flag) const
 
 
 }  // namespace cvf
+} //namespace external

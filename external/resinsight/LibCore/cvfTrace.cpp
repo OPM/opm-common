@@ -53,6 +53,7 @@
 #include <android/log.h>
 #endif
 
+namespace external {
 namespace cvf {
 
 //==================================================================================================
@@ -161,3 +162,4 @@ void Trace::showTraceOutput(String text, bool addNewLine)
 
 } // namespace cvf
 
+} //namespace external

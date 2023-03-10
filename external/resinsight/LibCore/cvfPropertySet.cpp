@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfPropertySet.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -177,3 +178,4 @@ std::vector<Variant> PropertySet::allValues() const
 
 
 }  // namespace gc
+} //namespace external

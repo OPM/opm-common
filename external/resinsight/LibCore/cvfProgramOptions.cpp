@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfProgramOptions.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -716,3 +717,4 @@ std::vector<String> ProgramOptions::breakStringIntoLines(const String& str, size
 
 } // namespace cvf
 
+} //namespace external

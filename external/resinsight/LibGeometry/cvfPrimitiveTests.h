@@ -39,6 +39,7 @@
 
 #include "cvfVector2.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -54,3 +55,4 @@ public:
 };
 
 }
+} //namespace external

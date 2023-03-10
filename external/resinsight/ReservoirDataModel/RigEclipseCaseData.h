@@ -35,6 +35,8 @@
 #include <set>
 #include <vector>
 
+namespace external {
+
 class RigCaseCellResultsData;
 class RigFormationNames;
 class RigMainGrid;
@@ -156,3 +158,4 @@ private:
 
     mutable std::map<std::tuple<QString, bool, bool>, cvf::Collection<RigWellPath>> m_simWellBranchCache;
 };
+} //namespace external

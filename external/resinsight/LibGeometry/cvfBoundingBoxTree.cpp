@@ -47,6 +47,7 @@
 #include <limits>
 #include <thread>
 
+namespace external {
 #define ALLOCATION_CHUNK_SIZE 10000
 
 namespace cvf {
@@ -937,3 +938,4 @@ void BoundingBoxTree::findIntersections(const cvf::BoundingBox& bb, std::vector<
 
 } // namespace cvf
 
+} //namespace external

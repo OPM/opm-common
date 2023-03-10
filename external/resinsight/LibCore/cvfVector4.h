@@ -39,6 +39,7 @@
 
 #include "cvfVector3.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -125,5 +126,5 @@ typedef Vector4<double> Vec4d;  ///< A vector with double components
 typedef Vector4<int>    Vec4i;  ///< A vector with int components
 
 }
-
+} //namespace external
 #include "cvfVector4.inl"

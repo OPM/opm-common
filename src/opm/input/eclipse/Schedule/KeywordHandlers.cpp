@@ -230,7 +230,7 @@ namespace {
     void Schedule::handleCOMPTRAJ(HandlerContext& handlerContext)  {
         // Keyword WELTRAJ must be read first
         std::unordered_set<std::string> wells;
-        cvf::ref<cvf::BoundingBoxTree> cellSearchTree = nullptr; 
+        external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr; 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, handlerContext );

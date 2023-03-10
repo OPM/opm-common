@@ -39,6 +39,8 @@
 
 #include "cvfBase.h"
 
+namespace external {
+
 #ifdef WIN32
   #define CVF_ATOMIC_COUNTER_CLASS_EXISTS
 #elif defined(CVF_IOS) || defined(CVF_OSX)
@@ -89,3 +91,4 @@ private:
 } // namespace cvf
 
 #endif
+} //namespace external

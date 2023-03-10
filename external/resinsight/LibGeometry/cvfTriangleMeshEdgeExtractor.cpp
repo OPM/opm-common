@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfTriangleMeshEdgeExtractor.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -151,3 +152,4 @@ ref<UIntArray> TriangleMeshEdgeExtractor::lineIndices() const
 }
 
 } // namespace cvf
+} //namespace external

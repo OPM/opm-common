@@ -48,6 +48,7 @@
 #include <limits>
 #include <iosfwd>
 
+namespace external {
 namespace cvf {
 
 
@@ -1562,3 +1563,4 @@ void String::swap(String& other)
 
 } // namespace cvf
 
+} //namespace external

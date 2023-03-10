@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -589,3 +589,4 @@ cref<T> make_cref(Args&&... args)
 
 }  // namespace cvf
 
+} //namespace external

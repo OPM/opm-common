@@ -42,6 +42,8 @@
 
 #include <vector>
 
+namespace external 
+{
 namespace cvf {
 
 
@@ -147,5 +149,5 @@ typedef Array<Color3f>          Color3fArray;
 typedef Array<Color4ub>         Color4ubArray;
 
 }
-
+} //namespace external
 #include "cvfArray.inl"

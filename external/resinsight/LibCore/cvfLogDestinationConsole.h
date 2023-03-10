@@ -40,6 +40,7 @@
 #include "cvfLogDestination.h"
 #include "cvfMutex.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -65,3 +66,4 @@ private:
 } // cvf
 
 
+} //namespace external

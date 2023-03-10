@@ -49,6 +49,7 @@
 #include <cstdarg>
 #endif
 
+namespace external {
 namespace cvf {
 
 
@@ -157,3 +158,4 @@ void LogDestinationConsole::writeToStderr(const char* theString, bool addNewLine
 
 } // namespace cvf
 
+} //namespace external

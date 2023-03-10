@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -105,3 +105,4 @@ int Math::sign(const T& val)
 
 
 }  // namespace cvf
+} //namespace external

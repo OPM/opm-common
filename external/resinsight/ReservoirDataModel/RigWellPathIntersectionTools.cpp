@@ -30,6 +30,7 @@
 
 #include "RimEclipseCase.h"
 
+namespace external {
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
@@ -231,3 +232,4 @@ std::vector<WellPathCellIntersectionInfo> RigWellPathIntersectionTools::buildCon
 
     return intersectionsNoGap;
 }
+} //namespace external

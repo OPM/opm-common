@@ -39,6 +39,7 @@
 
 #include "cvfString.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -65,3 +66,4 @@ private:
 #define CVF_TRACE_FILELINE               cvf::Trace::showFileLineNumber(__FILE__, __LINE__, "");
 #define CVF_TRACE_FILELINE_MSG(message)  cvf::Trace::showFileLineNumber(__FILE__, __LINE__, message);
 
+} //namespace external

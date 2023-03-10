@@ -39,6 +39,7 @@
 
 #include "cvfObject.h"
 
+namespace external {
 namespace cvf {
 
 class PrivateTimerState;
@@ -65,3 +66,4 @@ private:
 };
 
 }
+} //namespace external

@@ -41,6 +41,7 @@
 #include "cvfString.h"
 #include "cvfLogger.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -78,3 +79,4 @@ private:
 } // cvf
 
 
+} //namespace external

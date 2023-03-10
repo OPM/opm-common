@@ -37,6 +37,7 @@
 
 #include <QDebug>
 
+namespace external {
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
@@ -775,3 +776,4 @@ const std::vector<double>* RigEclipseCaseData::resultValues( RiaDefines::Porosit
 
     return swatResults;
 }
+} //namespace external

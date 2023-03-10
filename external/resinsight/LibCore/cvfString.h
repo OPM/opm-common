@@ -41,6 +41,7 @@
 
 #include <string>
 
+namespace external {
 namespace cvf {
 
 
@@ -138,3 +139,4 @@ private:
 String   operator+(const char* str1, const String& str2);
 
 }
+} //namespace external

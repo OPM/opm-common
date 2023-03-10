@@ -37,6 +37,7 @@
 
 #pragma once
 
+namespace external {
 namespace cvf {
 
 // Forward of base class for assert handlers
@@ -103,3 +104,4 @@ private:
 #   define CVF_TIGHT_ASSERT_MSG(expr, msg)  ((void)0)
 #endif
 
+} //namespace external

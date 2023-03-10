@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfEdgeKey.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -128,3 +129,4 @@ EdgeKey EdgeKey::fromkeyVal(int64 edgeKeyVal)
 
 } // namespace cvf
 
+} //namespace external

@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-
+namespace external {
 namespace cvf {
 
 
@@ -935,3 +935,4 @@ cvf::Vector4<S> operator*(const cvf::Matrix4<S>& m, const cvf::Vector4<S>& v)
 
 } 
 
+} //namespace external

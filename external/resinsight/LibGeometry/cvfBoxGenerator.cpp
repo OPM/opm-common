@@ -40,6 +40,7 @@
 #include "cvfPatchGenerator.h"
 #include "cvfGeometryUtils.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -189,3 +190,4 @@ void BoxGenerator::generate(GeometryBuilder* builder)
 
 } // namespace cvf
 
+} //namespace external

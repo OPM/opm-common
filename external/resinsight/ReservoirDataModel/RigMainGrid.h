@@ -28,6 +28,7 @@
 #include "cvfCollection.h"
 
 #include <vector>
+namespace external {
 
 class RigActiveCellInfo;
 class RigNNCData;
@@ -142,3 +143,4 @@ private:
 
     bool m_dualPorosity;
 };
+} //namespace external

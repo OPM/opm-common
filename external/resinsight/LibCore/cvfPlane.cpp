@@ -39,6 +39,7 @@
 #include "cvfPlane.h"
 #include "cvfMath.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -673,3 +674,4 @@ Plane::Side Plane::side(const Vec3dArray& points) const
 
 } // namespace cvf
 
+} //namespace external

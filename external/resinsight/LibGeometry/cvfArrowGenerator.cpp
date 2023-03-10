@@ -39,6 +39,7 @@
 #include "cvfArrowGenerator.h"
 #include "cvfGeometryUtils.h"
 
+namespace external {
 namespace cvf {
 
 //==================================================================================================
@@ -116,3 +117,4 @@ void ArrowGenerator::generate(GeometryBuilder* builder)
 }
 
 } // namespace cvf
+} //namespace external

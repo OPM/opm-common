@@ -40,6 +40,7 @@
 #include "../LibCore/cvfObject.h"
 #include "cvfBoundingBox.h"
 
+namespace external {
 namespace cvf {
 
 class BoundingBoxTreeImpl;
@@ -67,3 +68,4 @@ private:
 
 } // Namespace cvf
 
+} //namespace external

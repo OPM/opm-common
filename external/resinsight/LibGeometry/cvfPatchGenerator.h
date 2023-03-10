@@ -39,6 +39,7 @@
 
 #include "cvfVector3.h"
 
+namespace external {
 namespace cvf {
 
 class GeometryBuilder;
@@ -79,3 +80,4 @@ private:
 
 
 }
+} //namespace external

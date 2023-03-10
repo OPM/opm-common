@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfVector2.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -48,3 +49,4 @@ template<> Vector2<int>    const Vector2<int>::UNDEFINED(UNDEFINED_INT, UNDEFINE
 
 } // namespace cvf
 
+} //namespace external

@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfVertexWelder.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -276,3 +277,4 @@ ref<Vec3fArray> VertexWelder::createVertexArray() const
 
 } // namespace cvf
 
+} //namespace external

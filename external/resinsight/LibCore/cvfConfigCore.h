@@ -37,6 +37,7 @@
 
 #pragma once
 
+namespace external {
 
 
 // Define this one to tell windows.h to not define min() and max() as macros
@@ -74,3 +75,4 @@
 #endif
 
 
+} //namespace external

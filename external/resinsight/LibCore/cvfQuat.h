@@ -39,6 +39,7 @@
 
 #include "cvfVector3.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -96,5 +97,5 @@ typedef Quat<float>  Quatf;
 typedef Quat<double> Quatd;
 
 }
-
+} //namespace external
 #include "cvfQuat.inl"

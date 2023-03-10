@@ -38,6 +38,7 @@
 #include "cvfBase.h"
 #include "cvfPropertySetCollection.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -173,3 +174,4 @@ PropertySet* PropertySetCollection::firstPropertySetOfType(const String& classTy
 
 
 }  // namespace gc
+} //namespace external

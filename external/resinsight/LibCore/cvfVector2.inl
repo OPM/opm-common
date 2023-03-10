@@ -35,6 +35,7 @@
 //##################################################################################################
 
 
+namespace external {
 namespace cvf {
 
 
@@ -530,3 +531,4 @@ inline void Vector2<S>::set(S x, S y)
 
 
 }  // namespace cvf
+} //namespace external

@@ -39,6 +39,7 @@
 
 #include <memory>
 
+namespace external {
 namespace cvf {
 
 
@@ -76,3 +77,4 @@ private:
 } // cvf
 
 
+} //namespace external

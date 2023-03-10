@@ -39,6 +39,7 @@
 #include "cvfMeshEdgeExtractor.h"
 #include "cvfEdgeKey.h"
 
+namespace external {
 namespace cvf {
 
 
@@ -167,3 +168,4 @@ ref<UIntArray> MeshEdgeExtractor::lineIndices() const
 
 } // namespace cvf
 
+} //namespace external
