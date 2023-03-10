@@ -136,18 +136,18 @@ struct Builtin {
         for(const auto& kw_pair : loader) {
             const auto& keywords = kw_pair.second;
             auto& source = newSources[kw_pair.first];
-            newHeader << fmt::format("            emplace{}(this->keywords);\n", kw_pair.first);
+            newHeader << fmt::format("            emplace{}();\n", kw_pair.first);
             source << fmt::format(R"(
-void Builtin::emplace{}([[maybe_unused]] std::unordered_map<std::string, ::Opm::ParserKeyword>& keywords) const {{
+void Builtin::emplace{}() const {{
 )",
                                   kw_pair.first);
             declareEmplace << fmt::format(R"(
-    void emplace{}(std::unordered_map<std::string, ::Opm::ParserKeyword>& keywords) const;
+    void emplace{}() const;
 )",
                                           kw_pair.first);
 
             for (const auto& kw: keywords)
-                source << fmt::format("    keywords.emplace(\"{0}\", {0}());\n", kw.className());
+                source << fmt::format("    this->keywords.emplace(\"{0}\", {0}());\n", kw.className());
             source <<"}\n";
             source <<"} }\n";
         }
