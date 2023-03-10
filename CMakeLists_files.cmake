@@ -959,7 +959,6 @@ if(ENABLE_ECL_INPUT)
        external/resinsight/CommonCode/cvfStructGrid.h
        external/resinsight/LibCore/cvfArray.h
        external/resinsight/LibCore/cvfArrayWrapperConst.h
-       external/resinsight/LibCore/cvfArrayWrapperToEdit.h
        external/resinsight/LibCore/cvfAssert.h
        external/resinsight/LibCore/cvfAtomicCounter.h
        external/resinsight/LibCore/cvfBase.h
@@ -975,20 +974,13 @@ if(ENABLE_ECL_INPUT)
        external/resinsight/LibCore/cvfFunctorRange.h
        external/resinsight/LibCore/cvfLibCore.h
        external/resinsight/LibCore/cvfLogDestination.h
-       external/resinsight/LibCore/cvfLogDestinationConsole.h
-       external/resinsight/LibCore/cvfLogDestinationFile.h
-       external/resinsight/LibCore/cvfLogEvent.h
-       external/resinsight/LibCore/cvfLogManager.h
        external/resinsight/LibCore/cvfLogger.h
        external/resinsight/LibCore/cvfMath.h
        external/resinsight/LibCore/cvfMatrix3.h
        external/resinsight/LibCore/cvfMatrix4.h
-       external/resinsight/LibCore/cvfMutex.h
        external/resinsight/LibCore/cvfObject.h
        external/resinsight/LibCore/cvfPlane.h
-       external/resinsight/LibCore/cvfProgramOptions.h
        external/resinsight/LibCore/cvfPropertySet.h
-       external/resinsight/LibCore/cvfPropertySetCollection.h
        external/resinsight/LibCore/cvfQuat.h
        external/resinsight/LibCore/cvfRect.h
        external/resinsight/LibCore/cvfString.h
@@ -997,39 +989,21 @@ if(ENABLE_ECL_INPUT)
        external/resinsight/LibCore/cvfTimer.h
        external/resinsight/LibCore/cvfTrace.h
        external/resinsight/LibCore/cvfValueArray.h
-       external/resinsight/LibCore/cvfVariant.h
        external/resinsight/LibCore/cvfVector2.h
        external/resinsight/LibCore/cvfVector3.h
        external/resinsight/LibCore/cvfVector4.h
        external/resinsight/LibCore/cvfVersion.h
-       external/resinsight/LibGeometry/cvfArrowGenerator.h
        external/resinsight/LibGeometry/cvfBoundingBox.h
        external/resinsight/LibGeometry/cvfBoundingBoxTree.h
-       external/resinsight/LibGeometry/cvfBoxGenerator.h
-       external/resinsight/LibGeometry/cvfEdgeKey.h
-       external/resinsight/LibGeometry/cvfFrustum.h
-       external/resinsight/LibGeometry/cvfGeometryBuilder.h
-       external/resinsight/LibGeometry/cvfGeometryBuilderFaceList.h
-       external/resinsight/LibGeometry/cvfGeometryBuilderTriangles.h
-       external/resinsight/LibGeometry/cvfGeometryUtils.h
-       external/resinsight/LibGeometry/cvfLibGeometry.h
-       external/resinsight/LibGeometry/cvfMeshEdgeExtractor.h
-       external/resinsight/LibGeometry/cvfOutlineEdgeExtractor.h
-       external/resinsight/LibGeometry/cvfPatchGenerator.h
-       external/resinsight/LibGeometry/cvfPrimitiveTests.h
        external/resinsight/LibGeometry/cvfRay.h
-       external/resinsight/LibGeometry/cvfTriangleMeshEdgeExtractor.h
-       external/resinsight/LibGeometry/cvfTriangleVertexSplitter.h
-       external/resinsight/LibGeometry/cvfVertexCompactor.h
-       external/resinsight/LibGeometry/cvfVertexWelder.h
        external/resinsight/ReservoirDataModel/RigCellGeometryTools.h
-       external/resinsight/ReservoirDataModel/RigEclipseCaseData.h
+       #external/resinsight/ReservoirDataModel/RigEclipseCaseData.h
        external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h
-       external/resinsight/ReservoirDataModel/RigMainGrid.h
+       #external/resinsight/ReservoirDataModel/RigMainGrid.h
        external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h
        external/resinsight/ReservoirDataModel/RigWellLogExtractor.h
        external/resinsight/ReservoirDataModel/RigWellPath.h
-       external/resinsight/ReservoirDataModel/RigWellPathIntersectionTools.h
+       #external/resinsight/ReservoirDataModel/RigWellPathIntersectionTools.h
        external/resinsight/ReservoirDataModel/cvfGeometryTools.h
        external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
        external/resinsight/cafPdmCore/cafAppEnum.h
