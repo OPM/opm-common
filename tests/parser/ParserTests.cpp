@@ -35,6 +35,7 @@
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserRecord.hpp>
@@ -2356,7 +2357,7 @@ GUIDERAT
 )";
 
     BOOST_CHECK_EQUAL( parser.size(), 0 );
-    parser.addParserKeyword( builtin.GUIDERAT );
+    parser.addParserKeyword( builtin.get_GUIDERAT() );
     BOOST_CHECK_EQUAL( parser.size(), 1 );
     auto deck = parser.parseString(deck_string);
     BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
