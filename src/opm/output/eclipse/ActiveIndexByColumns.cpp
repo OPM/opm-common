@@ -82,10 +82,10 @@ namespace {
     {
         auto colGlobIx = activeCells;
 
-        const auto [outer, middle] = inferOuterLoopOrdering(cartDims);
+        const auto& [outer, middle] = inferOuterLoopOrdering(cartDims);
 
         std::transform(colGlobIx.begin(), colGlobIx.end(), colGlobIx.begin(),
-                       [&cartDims, &getIJK, outer, middle]
+                       [&cartDims, &getIJK, outer=outer, middle=middle]
             (const std::size_t cell)
         {
             return columnarGlobalIdx(cartDims, getIJK(cell), outer, middle);
