@@ -1,0 +1,17 @@
+{
+  "name": "CNAMES",
+  "sections": [
+    "PROPS"
+  ],
+  "size": "UNKNOWN",
+  "items": [
+    {
+      "name": "NAME_COMP1",
+      "value_type": "STRING"
+    },
+    {
+      "name": "NAME_COMP2",
+      "value_type": "STRING"
+    }
+  ]
+}

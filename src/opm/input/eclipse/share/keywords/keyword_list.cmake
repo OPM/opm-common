@@ -1047,6 +1047,7 @@ set( keywords
 
      001_Eclipse300/B/BLOCK_PROBE300
      001_Eclipse300/C/CIRCLE
+     001_Eclipse300/C/CNAMES
      001_Eclipse300/C/COMPS
      001_Eclipse300/C/CO2STORE
      001_Eclipse300/C/CREF
@@ -1055,6 +1056,7 @@ set( keywords
      001_Eclipse300/D/DREFS
      001_Eclipse300/D/DZV
      001_Eclipse300/G/GASVISCT
+     001_Eclipse300/G/GASWAT
      001_Eclipse300/G/GCONPROD
      001_Eclipse300/G/GSF
      001_Eclipse300/H/HEATCR
@@ -1062,6 +1064,7 @@ set( keywords
      001_Eclipse300/L/LIVEOIL
      001_Eclipse300/M/MW
      001_Eclipse300/M/MWS
+     001_Eclipse300/N/NCOMPS
      001_Eclipse300/O/OILCOMPR
      001_Eclipse300/O/OILMW
      001_Eclipse300/O/OILVTIM
@@ -1088,6 +1091,7 @@ set( keywords
      001_Eclipse300/Z/ZFACT1S
      001_Eclipse300/Z/ZFACTOR
      001_Eclipse300/Z/ZFACTORS
+     001_Eclipse300/Z/ZMFVD
      002_Frontsim/N/NOGRAV
 
      900_OPM/B/BC

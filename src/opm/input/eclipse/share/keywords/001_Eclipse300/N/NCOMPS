@@ -1,0 +1,13 @@
+{
+  "name": "NCOMPS",
+  "sections": [
+    "PROPS"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "NUM_COMPS",
+      "value_type": "INT"
+    }
+  ]
+}

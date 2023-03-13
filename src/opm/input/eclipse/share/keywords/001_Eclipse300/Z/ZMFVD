@@ -1,0 +1,23 @@
+{
+  "name": "ZMFVD",
+  "sections": [
+    "PROPS"
+  ],
+  "items": [
+    {
+      "name": "DEPTH",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "name": "COMPOSITION1",
+      "value_type": "DOUBLE",
+      "dimension": "1"
+    },
+    {
+        "name": "COMPOSITION2",
+        "value_type": "DOUBLE",
+        "dimension": "1"
+      }
+  ]
+}
