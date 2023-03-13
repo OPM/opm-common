@@ -364,10 +364,13 @@ target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
-  foreach(src examples/co2brinepvt.cpp ${DUNE_TEST_SOURCE_FILES})
+  foreach(src ${DUNE_TEST_SOURCE_FILES})
     get_filename_component(tgt ${src} NAME_WE)
     target_link_libraries(${tgt} dunecommon)
   endforeach()
+endif()
+if(BUILD_EXAMPLES)
+  target_link_libraries(co2brinepvt dunecommon)
 endif()
 
 # Install build system files and documentation
