@@ -1514,7 +1514,8 @@ inline quantity well_control_mode( const fn_args& args )
     const auto* well = args.schedule_wells.front();
     auto xwPos = args.wells.find(well->name());
     if ((xwPos == args.wells.end()) ||
-        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT)) {
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT ||
+         xwPos->second.dynamicStatus == Opm::Well::Status::STOP )) {
         // No dynamic results for 'well'.  Treat as shut/stopped.
         return { 0.0, unit };
     }
