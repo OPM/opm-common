@@ -83,7 +83,7 @@ namespace {
         const auto phases = inferActivePhases(deck);
         const auto wat    = phases.active(Opm::Phase::WATER) || deck.hasKeyword<Opm::ParserKeywords::GASWAT>();
         const auto oil    = phases.active(Opm::Phase::OIL);
-        const auto gas    = phases.active(Opm::Phase::GAS); || deck.hasKeyword<Opm::ParserKeywords::GASWAT>();
+        const auto gas    = phases.active(Opm::Phase::GAS) || deck.hasKeyword<Opm::ParserKeywords::GASWAT>();
 
         const auto threeP = gas && oil && wat;
         const auto twoP = (!gas && oil && wat) || (gas && oil && !wat);
