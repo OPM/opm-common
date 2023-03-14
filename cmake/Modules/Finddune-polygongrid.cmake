@@ -37,7 +37,6 @@ int main (void) {
 }
 "
 # config variables
-# config variables
   "HAVE_DUNE_POLYGONGRID
   ")
 
