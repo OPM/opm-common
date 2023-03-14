@@ -314,9 +314,7 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
             SwSamples[sampleIdx] = 1 - gsfTable.get("SG", sampleIdx);
         realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, gsfTable.getColumn("KRG")));
         //Capillary pressure is read from GSF.
-        // TODO need to check if gas/water sg
-        std::vector<double> SgColumn = gsfTable.getColumn("SG").vectorCopy();
-        realParams.setPcnwSamples(SgColumn, gsfTable.getColumn("PCGW").vectorCopy());
+        realParams.setPcnwSamples(SwSamples, gsfTable.getColumn("PCGW").vectorCopy());
         realParams.finalize();
 
         break;
