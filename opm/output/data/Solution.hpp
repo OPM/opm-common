@@ -15,22 +15,25 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_OUTPUT_DATA_SOLUTION_HPP
 #define OPM_OUTPUT_DATA_SOLUTION_HPP
 
-#include <string>
-#include <map>
-
 #include <opm/output/data/Cells.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-namespace Opm {
-namespace data {
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
-class Solution : public std::map< std::string, data::CellData > {
-    using Base = std::map< std::string, data::CellData >;
+namespace Opm { namespace data {
+
+class Solution : public std::map<std::string, data::CellData>
+{
+    using Base = std::map<std::string, data::CellData>;
 
     public:
         Solution() = default;
@@ -75,7 +78,6 @@ class Solution : public std::map< std::string, data::CellData > {
         bool si = true;
 };
 
-}
-}
+}} // namespace Opm::data
 
-#endif
+#endif // OPM_OUTPUT_DATA_SOLUTION_HPP

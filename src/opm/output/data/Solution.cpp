@@ -17,27 +17,38 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-
 #include <opm/output/data/Solution.hpp>
+
 #include <opm/output/data/Cells.hpp>
 
+#include <algorithm>
+#include <map>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
-namespace Opm {
-namespace data {
+namespace Opm { namespace data {
 
-Solution::Solution( bool init_si ) : si( init_si ) {}
+Solution::Solution(const bool init_si)
+    : si(init_si)
+{}
 
-bool Solution::has(const std::string& keyword) const {
-    return this->count( keyword ) > 0;
+bool Solution::has(const std::string& keyword) const
+{
+    return this->find(keyword) != this->end();
 }
 
-std::vector<double>& Solution::data(const std::string& keyword) {
-    return this->at( keyword ).data;
+std::vector<double>&
+Solution::data(const std::string& keyword)
+{
+    return this->at(keyword).data;
 }
 
-const std::vector<double>& Solution::data(const std::string& keyword) const {
-    return this->at( keyword ).data;
+const std::vector<double>&
+Solution::data(const std::string& keyword) const
+{
+    return this->at(keyword).data;
 }
 
 std::pair< Solution::iterator, bool > Solution::insert( std::string name,
@@ -48,30 +59,38 @@ std::pair< Solution::iterator, bool > Solution::insert( std::string name,
     return this->emplace( name, CellData{ m, std::move( xs ), type } );
 }
 
-void data::Solution::convertToSI( const UnitSystem& units ) {
-    if (this->si) return;
+void data::Solution::convertToSI(const UnitSystem& units)
+{
+    if (this->si) {
+        return;
+    }
 
-    for( auto& elm : *this ) {
-        UnitSystem::measure dim = elm.second.dim;
-        if (dim != UnitSystem::measure::identity)
-            units.to_si( dim , elm.second.data );
+    for (auto& elm : *this) {
+        const auto dim = elm.second.dim;
+
+        if (dim != UnitSystem::measure::identity) {
+            units.to_si(dim, elm.second.data);
+        }
     }
 
     this->si = true;
 }
 
-void data::Solution::convertFromSI( const UnitSystem& units ) {
-    if (!this->si) return;
+void data::Solution::convertFromSI(const UnitSystem& units)
+{
+    if (!this->si) {
+        return;
+    }
 
-    for (auto& elm : *this ) {
-        UnitSystem::measure dim = elm.second.dim;
-        if (dim != UnitSystem::measure::identity)
-            units.from_si( dim , elm.second.data );
+    for (auto& elm : *this) {
+        const auto dim = elm.second.dim;
+
+        if (dim != UnitSystem::measure::identity) {
+            units.from_si(dim, elm.second.data);
+        }
     }
 
     this->si = false;
 }
 
-}
-}
-
+}} // namespace Opm::data
