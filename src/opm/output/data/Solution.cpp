@@ -51,12 +51,15 @@ Solution::data(const std::string& keyword) const
     return this->at(keyword).data;
 }
 
-std::pair< Solution::iterator, bool > Solution::insert( std::string name,
-                                                        UnitSystem::measure m,
-                                                        std::vector< double > xs,
-                                                        TargetType type ) {
-
-    return this->emplace( name, CellData{ m, std::move( xs ), type } );
+std::pair<Solution::iterator, bool>
+Solution::insert(std::string               name,
+                 const UnitSystem::measure m,
+                 std::vector<double>       xs,
+                 const TargetType          type)
+{
+    return this->emplace(std::piecewise_construct,
+                         std::forward_as_tuple(std::move(name)),
+                         std::forward_as_tuple(m, std::move(xs), type));
 }
 
 void data::Solution::convertToSI(const UnitSystem& units)
