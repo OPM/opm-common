@@ -1,23 +1,23 @@
 {
   "name": "ZMFVD",
+  "comment": "Hardcoded two components.",
   "sections": [
     "PROPS"
   ],
+  "size": {
+      "keyword": "EQLDIMS",
+      "item": "NTEQUL"
+    },
   "items": [
     {
-      "name": "DEPTH",
+      "name": "DATA",
       "value_type": "DOUBLE",
-      "dimension": "Length"
-    },
-    {
-      "name": "COMPOSITION1",
-      "value_type": "DOUBLE",
-      "dimension": "1"
-    },
-    {
-        "name": "COMPOSITION2",
-        "value_type": "DOUBLE",
-        "dimension": "1"
-      }
+      "size_type": "ALL",
+      "dimension": [
+        "Length",
+        "1",
+        "1"
+      ]
+    }
   ]
 }

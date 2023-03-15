@@ -7,7 +7,6 @@
     "keyword": "TABDIMS",
     "item": "NTSFUN"
   },
-  "requires": ["WATER"],
   "prohibits": ["SWOF", "SWFN"],
   "items": [
     {
