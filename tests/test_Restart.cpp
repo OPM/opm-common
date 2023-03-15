@@ -97,7 +97,6 @@ namespace {
     }
 }
 
-
 namespace Opm {
 namespace data {
 
@@ -201,18 +200,16 @@ data::Wells mkWells() {
     }
 }
 
-data::Solution mkSolution( int numCells ) {
-
+data::Solution mkSolution(int numCells)
+{
     using measure = UnitSystem::measure;
-    using namespace data;
 
-    data::Solution sol = {
-        { "PRESSURE", { measure::pressure, std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } },
-        { "TEMP", { measure::temperature,  std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } },
-        { "SWAT", { measure::identity,     std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } },
-        { "SGAS", { measure::identity,     std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } }
+    auto sol = data::Solution {
+        { "PRESSURE", data::CellData { measure::pressure,    {}, data::TargetType::RESTART_SOLUTION } },
+        { "TEMP",     data::CellData { measure::temperature, {}, data::TargetType::RESTART_SOLUTION } },
+        { "SWAT",     data::CellData { measure::identity,    {}, data::TargetType::RESTART_SOLUTION } },
+        { "SGAS",     data::CellData { measure::identity,    {}, data::TargetType::RESTART_SOLUTION } },
     };
-
 
     sol.data("PRESSURE").assign( numCells, 6.0 );
     sol.data("TEMP").assign( numCells, 7.0 );
@@ -222,8 +219,8 @@ data::Solution mkSolution( int numCells ) {
     fun::iota rsi( 300, 300 + numCells );
     fun::iota rvi( 400, 400 + numCells );
 
-    sol.insert( "RS", measure::identity, { rsi.begin(), rsi.end() } , TargetType::RESTART_SOLUTION );
-    sol.insert( "RV", measure::identity, { rvi.begin(), rvi.end() } , TargetType::RESTART_SOLUTION );
+    sol.insert("RS", measure::identity, { rsi.begin(), rsi.end() }, data::TargetType::RESTART_SOLUTION);
+    sol.insert("RV", measure::identity, { rvi.begin(), rvi.end() }, data::TargetType::RESTART_SOLUTION);
 
     return sol;
 }
