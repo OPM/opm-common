@@ -1,0 +1,36 @@
+{
+  "name": "WINJGAS",
+  "sections": [
+    "SCHEDULE"
+  ],
+"items": [
+  {
+    "item": 1,
+    "name": "WELL",
+    "value_type": "STRING"
+  },
+  {
+      "item": 2,
+      "name": "FLUID",
+      "value_type": "STRING",
+      "default": "GRUP"
+    },
+    {
+      "item": 3,
+      "name": "STREAM",
+      "value_type": "STRING"
+    },
+    {
+      "item": 4,
+      "name": "MAKEUPGAS",
+      "value_type": "STRING"
+    },
+    {
+      "item": 5,
+      "name": "STAGE",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": 0
+    }
+]
+}

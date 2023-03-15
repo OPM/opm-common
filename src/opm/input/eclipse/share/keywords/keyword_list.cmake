@@ -1084,6 +1084,8 @@ set( keywords
      001_Eclipse300/T/THERMAL
      001_Eclipse300/T/TREF
      001_Eclipse300/T/TREFS
+     001_Eclipse300/W/WELLSTRE
+     001_Eclipse300/W/WINJGAS
      001_Eclipse300/W/WINJTEMP
      001_Eclipse300/W/WATDENT
      001_Eclipse300/W/WSF
