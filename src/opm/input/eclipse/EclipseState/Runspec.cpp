@@ -49,12 +49,11 @@ namespace {
     {
         return {
             deck.hasKeyword<Opm::ParserKeywords::OIL>(),
-            deck.hasKeyword<Opm::ParserKeywords::GAS>(),
-            deck.hasKeyword<Opm::ParserKeywords::WATER>(),
+            deck.hasKeyword<Opm::ParserKeywords::GAS>() || deck.hasKeyword<Opm::ParserKeywords::GASWAT>(),
+            deck.hasKeyword<Opm::ParserKeywords::WATER>() || deck.hasKeyword<Opm::ParserKeywords::GASWAT>(),
             deck.hasKeyword<Opm::ParserKeywords::SOLVENT>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMER>(),
-            deck.hasKeyword<Opm::ParserKeywords::THERMAL>() ||
-            deck.hasKeyword<Opm::ParserKeywords::TEMP>(),
+            deck.hasKeyword<Opm::ParserKeywords::THERMAL>() || deck.hasKeyword<Opm::ParserKeywords::TEMP>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMW>(),
             deck.hasKeyword<Opm::ParserKeywords::FOAM>(),
             deck.hasKeyword<Opm::ParserKeywords::BRINE>(),
@@ -608,7 +607,7 @@ Runspec::Runspec( const Deck& deck )
                                   "See the OPM manual for details on the used models.";
                 OpmLog::note(msg);
             } else {
-                throw std::runtime_error("The CO2 storage option is given. Activate GAS and WATER or OIL ");
+                throw std::runtime_error("The CO2 storage option is given. Activate GAS, plus WATER or OIL ");
             }
 
         }

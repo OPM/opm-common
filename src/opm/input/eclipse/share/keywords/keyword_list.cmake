@@ -1047,6 +1047,7 @@ set( keywords
 
      001_Eclipse300/B/BLOCK_PROBE300
      001_Eclipse300/C/CIRCLE
+     001_Eclipse300/C/CNAMES
      001_Eclipse300/C/COMPS
      001_Eclipse300/C/CO2STORE
      001_Eclipse300/C/CREF
@@ -1054,14 +1055,18 @@ set( keywords
      001_Eclipse300/D/DREF
      001_Eclipse300/D/DREFS
      001_Eclipse300/D/DZV
+     001_Eclipse300/F/FIELDSEP
      001_Eclipse300/G/GASVISCT
+     001_Eclipse300/G/GASWAT
      001_Eclipse300/G/GCONPROD
      001_Eclipse300/G/GSF
      001_Eclipse300/H/HEATCR
      001_Eclipse300/H/HEATCRT
+     001_Eclipse300/H/HWELLS
      001_Eclipse300/L/LIVEOIL
      001_Eclipse300/M/MW
      001_Eclipse300/M/MWS
+     001_Eclipse300/N/NCOMPS
      001_Eclipse300/O/OILCOMPR
      001_Eclipse300/O/OILMW
      001_Eclipse300/O/OILVTIM
@@ -1070,6 +1075,7 @@ set( keywords
      001_Eclipse300/P/PREFS
      001_Eclipse300/R/REGION2REGION_PROBE_E300
      001_Eclipse300/S/SALINITY
+     001_Eclipse300/S/SOLID
      001_Eclipse300/S/STCOND
      001_Eclipse300/T/TEMPI
      001_Eclipse300/T/TEMPVD
@@ -1081,6 +1087,8 @@ set( keywords
      001_Eclipse300/T/THERMAL
      001_Eclipse300/T/TREF
      001_Eclipse300/T/TREFS
+     001_Eclipse300/W/WELLSTRE
+     001_Eclipse300/W/WINJGAS
      001_Eclipse300/W/WINJTEMP
      001_Eclipse300/W/WATDENT
      001_Eclipse300/W/WSF
@@ -1088,6 +1096,7 @@ set( keywords
      001_Eclipse300/Z/ZFACT1S
      001_Eclipse300/Z/ZFACTOR
      001_Eclipse300/Z/ZFACTORS
+     001_Eclipse300/Z/ZMFVD
      002_Frontsim/N/NOGRAV
 
      900_OPM/B/BC

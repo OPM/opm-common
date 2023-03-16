@@ -7,7 +7,6 @@
     "keyword": "TABDIMS",
     "item": "NTSFUN"
   },
-  "requires": ["GAS"],
   "prohibits": ["SGOF", "SLGOF", "SGFN"],
   "items": [
     {

@@ -1,0 +1,25 @@
+{
+  "name": "WELLSTRE",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "item": 1,
+      "name": "STREAM",
+      "value_type": "STRING"
+    },
+    {
+        "item": 2,
+        "name": "XMOLE1",
+        "value_type": "DOUBLE",
+        "dimension": "1"
+      },
+      {
+        "item": 3,
+        "name": "XMOLE2",
+        "value_type": "DOUBLE",
+        "dimension": "1"
+      }
+  ]
+}
