@@ -2231,9 +2231,9 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
   {"FGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FPR"      , Opm::UnitSystem::measure::pressure },
-  {"FGCDI"    , Opm::UnitSystem::measure::gas_surface_volume },
-  {"FGCDM"    , Opm::UnitSystem::measure::gas_surface_volume },
-  {"FWCD"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FGCDI"    , Opm::UnitSystem::measure::moles },
+  {"FGCDM"    , Opm::UnitSystem::measure::moles },
+  {"FWCD"     , Opm::UnitSystem::measure::moles },
   {"FWIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
   {"FWIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
 };
