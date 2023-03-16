@@ -82,6 +82,7 @@ namespace Opm {
             polymer_density,
             salinity,
             gas_oil_ratio_rate,
+            moles,
             _count // New entries must be added *before* this
         };
 
