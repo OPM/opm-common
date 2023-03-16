@@ -64,15 +64,14 @@ BOOST_AUTO_TEST_CASE(Create)
 
 BOOST_AUTO_TEST_CASE(Create2)
 {
-
     std::vector<double> data(100);
-    data::Solution c = {
-        { "TRANX", { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } },
-        { "TRANY", { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } },
-        { "TRANZ", { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } }
+    const auto c = data::Solution {
+        { "TRANX", data::CellData { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } },
+        { "TRANY", data::CellData { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } },
+        { "TRANZ", data::CellData { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } },
     };
 
-    auto c2 = c;
+    const auto c2 = c;
     BOOST_CHECK_EQUAL( c2.size() , 3U );
     BOOST_CHECK( c2.has("TRANX") );
 }
