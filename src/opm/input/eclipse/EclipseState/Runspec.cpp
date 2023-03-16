@@ -49,12 +49,11 @@ namespace {
     {
         return {
             deck.hasKeyword<Opm::ParserKeywords::OIL>(),
-            deck.hasKeyword<Opm::ParserKeywords::GAS>(),
-            deck.hasKeyword<Opm::ParserKeywords::WATER>(),
+            deck.hasKeyword<Opm::ParserKeywords::GAS>() || deck.hasKeyword<Opm::ParserKeywords::GASWAT>(),
+            deck.hasKeyword<Opm::ParserKeywords::WATER>() || deck.hasKeyword<Opm::ParserKeywords::GASWAT>(),
             deck.hasKeyword<Opm::ParserKeywords::SOLVENT>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMER>(),
-            deck.hasKeyword<Opm::ParserKeywords::THERMAL>() ||
-            deck.hasKeyword<Opm::ParserKeywords::TEMP>(),
+            deck.hasKeyword<Opm::ParserKeywords::THERMAL>() || deck.hasKeyword<Opm::ParserKeywords::TEMP>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMW>(),
             deck.hasKeyword<Opm::ParserKeywords::FOAM>(),
             deck.hasKeyword<Opm::ParserKeywords::BRINE>(),
@@ -81,9 +80,9 @@ namespace {
     inferKeywordFamily(const Opm::Deck& deck)
     {
         const auto phases = inferActivePhases(deck);
-        const auto wat    = phases.active(Opm::Phase::WATER) || deck.hasKeyword<Opm::ParserKeywords::GASWAT>();
+        const auto wat    = phases.active(Opm::Phase::WATER);
         const auto oil    = phases.active(Opm::Phase::OIL);
-        const auto gas    = phases.active(Opm::Phase::GAS) || deck.hasKeyword<Opm::ParserKeywords::GASWAT>();
+        const auto gas    = phases.active(Opm::Phase::GAS);
 
         const auto threeP = gas && oil && wat;
         const auto twoP = (!gas && oil && wat) || (gas && oil && !wat);
@@ -607,9 +606,6 @@ Runspec::Runspec( const Deck& deck )
                 std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used \n"
                                   "See the OPM manual for details on the used models.";
                 OpmLog::note(msg);
-            } else if (runspecSection.hasKeyword<ParserKeywords::GASWAT>()) {
-                // TODO: Make sure gas and water phases are actived internally
-                throw std::runtime_error("The CO2 storage option is given with GASWAT activated. Activate GAS and WATER instead.");
             } else {
                 throw std::runtime_error("The CO2 storage option is given. Activate GAS, plus WATER or OIL ");
             }

@@ -1055,12 +1055,14 @@ set( keywords
      001_Eclipse300/D/DREF
      001_Eclipse300/D/DREFS
      001_Eclipse300/D/DZV
+     001_Eclipse300/F/FIELDSEP
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GASWAT
      001_Eclipse300/G/GCONPROD
      001_Eclipse300/G/GSF
      001_Eclipse300/H/HEATCR
      001_Eclipse300/H/HEATCRT
+     001_Eclipse300/H/HWELLS
      001_Eclipse300/L/LIVEOIL
      001_Eclipse300/M/MW
      001_Eclipse300/M/MWS
@@ -1073,6 +1075,7 @@ set( keywords
      001_Eclipse300/P/PREFS
      001_Eclipse300/R/REGION2REGION_PROBE_E300
      001_Eclipse300/S/SALINITY
+     001_Eclipse300/S/SOLID
      001_Eclipse300/S/STCOND
      001_Eclipse300/T/TEMPI
      001_Eclipse300/T/TEMPVD
