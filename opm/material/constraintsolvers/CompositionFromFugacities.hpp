@@ -166,17 +166,27 @@ public:
             }
         }
 
+        auto cast = [](const auto d)
+        {
+#if HAVE_QUAD
+            if constexpr (std::is_same_v<decltype(d), const quad>)
+                return static_cast<double>(d);
+            else
+#endif
+                return d;
+        };
+
         std::string msg =
             std::string("Calculating the ")
             + FluidSystem::phaseName(phaseIdx)
             + "Phase composition failed. Initial {x} = {";
         for (const auto& v : xInit)
-            msg += " " + std::to_string(getValue(v));
+            msg += " " + std::to_string(cast(getValue(v)));
         msg += " }, {fug_t} = {";
         for (const auto& v : targetFug)
-            msg += " " + std::to_string(getValue(v));
-        msg += " }, p = " + std::to_string(getValue(fluidState.pressure(phaseIdx)))
-             + ", T = " + std::to_string(getValue(fluidState.temperature(phaseIdx)));
+            msg += " " + std::to_string(cast(getValue(v)));
+        msg += " }, p = " + std::to_string(cast(getValue(fluidState.pressure(phaseIdx))))
+             + ", T = " + std::to_string(cast(getValue(fluidState.temperature(phaseIdx))));
         throw NumericalProblem(msg);
     }
 
