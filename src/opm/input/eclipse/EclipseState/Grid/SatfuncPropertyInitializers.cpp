@@ -1108,14 +1108,14 @@ namespace {
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
-        if (! ph.active(::Opm::Phase::OIL) ||
-            ! ph.active(::Opm::Phase::GAS))
+        if (!ph.active(::Opm::Phase::GAS))
             return std::vector<double>(num_tables, 0.0);
 
         const auto& sgofTables = tm.getSgofTables();
         const auto& sgofLetTables = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& gsfTables = tm.getGsfTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
             return sgofTables.getTable<Opm::SgofTable>( i ).getPcogColumn().back();
@@ -1133,6 +1133,10 @@ namespace {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getPcogColumn().back();
         };
 
+        const auto& famIII = [&gsfTables]( int i ) {
+            return gsfTables.getTable<Opm::GsfTable>( i ).getPcgwColumn().back();
+        };
+
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
                 if( sgofTables.empty() && sgofLetTables.empty() && slgofTables.empty() )
@@ -1146,7 +1150,7 @@ namespace {
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
+                return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -1158,8 +1162,7 @@ namespace {
     {
         const auto num_tables  = tm.getTabdims().getNumSatTables();
 
-        if (! ph.active(::Opm::Phase::OIL) ||
-            ! ph.active(::Opm::Phase::WATER))
+        if (! ph.active(::Opm::Phase::WATER))
             return std::vector<double>(num_tables, 0.0);
 
         const auto& swofTables = tm.getSwofTables();
@@ -1190,7 +1193,7 @@ namespace {
             case SatfuncFamily::II:
                 return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
-                throw std::domain_error("Saturation keyword family III is not applicable for a oil system");
+                return std::vector<double>(num_tables, 0.0);
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }

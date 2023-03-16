@@ -134,6 +134,11 @@ public:
                 Snmaxd_ = info.Sgu+info.Swl;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
             }
+            else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Sncrd_ = info.Sgcr;
+                Snmaxd_ = info.Sgu;
+                KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
+            }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Sncrd_ = info.Sowcr;
@@ -147,6 +152,9 @@ public:
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Swcrd_ = info.Sogcr;
                 pcmaxd_ = info.maxPcgo;
+            } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Swcrd_ = info.Swcr;
+                pcmaxd_ = info.maxPcgo + info.maxPcow;
             }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
@@ -182,6 +190,9 @@ public:
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Sncri_ = info.Sgcr+info.Swl;
             }
+            else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Sncri_ = info.Sgcr;
+            }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Sncri_ = info.Sowcr;
@@ -194,6 +205,10 @@ public:
                 Swcri_ = info.Sogcr;
                 Swmaxi_ = 1.0 - info.Sgl - info.Swl;
                 pcmaxi_ = info.maxPcgo;
+            } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Swcri_ = info.Swcr;
+                Swmaxi_ = 1.0 - info.Sgl;
+                pcmaxi_ = info.maxPcgo + info.maxPcow;
             }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
