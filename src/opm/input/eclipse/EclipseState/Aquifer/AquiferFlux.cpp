@@ -88,6 +88,13 @@ namespace Opm {
         }
     }
 
+    AquiferFlux::AquiferFlux(const std::vector<SingleAquiferFlux>& aquifers)
+    {
+        for (const auto& aquifer : aquifers) {
+            this->m_aquifers.emplace(aquifer.id, aquifer);
+        }
+    }
+
     bool AquiferFlux::operator==(const AquiferFlux& other) const {
         return this->m_aquifers == other.m_aquifers;
     }

@@ -31,7 +31,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WatPropTable = 1,   // PVT number (ACUCT(10) or AQUFETP(7))
 
             CTInfluenceFunction =  9, // AQUCT(11)
-            TypeRelated1 = 10,        // =1 for CT, =0 for FETP
+            TypeRelated1 = 10,        // =0 for FETP, =1 for CT, =2 for FLUX
 
             Unknown_1 = 11,     // Unknown item.  =1 in all cases seen thus far.
         };
@@ -40,6 +40,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             enum ModelType : int {
                 Fetkovich = 0,
                 CarterTracy = 1,
+                ConstantFlux = 2,
             };
         } // Value
     } // IAnalyticAquifer
@@ -95,6 +96,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     namespace SAnalyticAquifer {
         enum index : std::vector<float>::size_type {
             Compressibility = 0, // Total aquifer compressibility (AQUCT(6), AQUFETP(5))
+
+            ConstFluxValue = 0, // Constant flux aquifer's flux value (AQUFLUX(2))
 
             FetInitVol = 1,     // Initial aquifer volume (AQUFETP(4))
             FetProdIndex = 2,   // Aquifer productivity index (AQUFETP(6))
