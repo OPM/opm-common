@@ -164,7 +164,7 @@ public:
                         const Evaluation& Rs) const
     {
 
-        const Evaluation xlCO2 = convertXoGToxoG_(convertRsToXoG_(Rs,regionIdx));
+        const Evaluation xlCO2 = convertRsToXoG_(Rs,regionIdx);
         return (liquidEnthalpyBrineCO2_(temperature,
                                        pressure,
                                        salinity_[regionIdx],
