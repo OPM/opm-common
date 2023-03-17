@@ -122,7 +122,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
             if (phaseIsActive(waterPhaseIdx))
-                molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
+                molarMass_[regionIdx][waterCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
             if (!phaseIsActive(gasPhaseIdx)) {
                 OPM_THROW(std::runtime_error,
                           "CO2STORE requires gas phase\n");
