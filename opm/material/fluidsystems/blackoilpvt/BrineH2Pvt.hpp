@@ -129,25 +129,25 @@ public:
     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
     */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
-                        const Evaluation& temperature,
-                        const Evaluation& pressure,
-                        const Evaluation& Rs,
+    Evaluation internalEnergy(unsigned /*regionIdx*/,
+                        const Evaluation& /*temperature*/,
+                        const Evaluation& /*pressure*/,
+                        const Evaluation& /*Rs*/,
                         const Evaluation& /*saltConcentration*/) const
     {
-        // NOT IMPLEMENTED YET!
+        throw std::runtime_error("Requested internal energy for the H2-brine PVT module. Not yet implemented.");
     }
 
     /*!
     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
     */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
-                        const Evaluation& temperature,
-                        const Evaluation& pressure,
-                        const Evaluation& Rs) const
+    Evaluation internalEnergy(unsigned /*regionIdx*/,
+                        const Evaluation& /*temperature*/,
+                        const Evaluation& /*pressure*/,
+                        const Evaluation& /*Rs*/) const
     {
-        // NOT IMPLEMENTED YET!
+        throw std::runtime_error("Requested internal energy for the H2-brine PVT module. Not yet implemented.");
     }
 
     /*!
