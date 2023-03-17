@@ -1340,6 +1340,18 @@ public:
     }
 
     /*!
+     * \brief Convert a water mass fraction in the gas phase the corresponding mole fraction.
+     */
+    template <class LhsEval>
+    static LhsEval convertXgWToxgW(const LhsEval& XgW, unsigned regionIdx)
+    {
+        Scalar MW = molarMass_[regionIdx][waterCompIdx];
+        Scalar MG = molarMass_[regionIdx][gasCompIdx];
+
+        return XgW*MG / (MW*(1 - XgW) + XgW*MG);
+    }
+
+    /*!
      * \brief Convert a gas mass fraction in the oil phase the corresponding mole fraction.
      */
     template <class LhsEval>
