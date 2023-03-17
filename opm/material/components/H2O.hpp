@@ -39,6 +39,7 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
+#include <opm/material/common/quad.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 
 #include <cmath>
