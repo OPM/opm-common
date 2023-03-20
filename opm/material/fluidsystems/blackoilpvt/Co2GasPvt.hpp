@@ -274,7 +274,7 @@ private:
         // normalize the phase compositions
         xgH2O = max(0.0, min(1.0, xgH2O));
 
-        return convertXgOToRvw(convertxgOToXgO(xgH2O), regionIdx);
+        return convertXgWToRvw(convertxgWToXgW(xgH2O), regionIdx);
     }
 
     /*!
@@ -282,12 +282,12 @@ private:
      *        corresponding water vaporization factor.
      */
     template <class LhsEval>
-    LhsEval convertXgOToRvw(const LhsEval& XgO, unsigned regionIdx) const
+    LhsEval convertXgWToRvw(const LhsEval& XgW, unsigned regionIdx) const
     {
-        Scalar rho_oRef = brineReferenceDensity_[regionIdx];
+        Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
-        return XgO/(1.0 - XgO)*(rho_gRef/rho_oRef);
+        return XgW/(1.0 - XgW)*(rho_gRef/rho_wRef);
     }
 
     /*!
@@ -307,7 +307,7 @@ private:
      * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    LhsEval convertxgOToXgO(const LhsEval& xgW) const
+    LhsEval convertxgWToXgW(const LhsEval& xgW) const
     {
         Scalar M_CO2 = CO2::molarMass();
         Scalar M_Brine = Brine::molarMass();
