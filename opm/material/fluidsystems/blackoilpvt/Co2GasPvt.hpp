@@ -127,8 +127,8 @@ public:
     {
         Evaluation result = 0;
         const Evaluation xBrine = convertRvwToXgW_(rv,regionIdx);
-        result += xBrine * Brine::gasEnthalpy(temperature, pressure);
-        result += (1 - xBrine) * CO2::gasEnthalpy(temperature, pressure, extrapolate);
+        result += xBrine * Brine::gasInternalEnergy(temperature, pressure);
+        result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
         return result;
     }
 
