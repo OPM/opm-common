@@ -123,11 +123,13 @@ public:
     Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
-                        const Evaluation& rv) const
+                        const Evaluation& rv,
+                        const Evaluation& rvw) const
     {
+        // assume ideal mixture
         Evaluation result = 0;
-        const Evaluation xBrine = convertRvwToXgW_(rv,regionIdx);
-        result += xBrine * Brine::gasInternalEnergy(temperature, pressure);
+        const Evaluation xBrine = convertRvwToXgW_(Opm::max(rvw,rv),regionIdx);
+        result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
         result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
         return result;
     }
@@ -162,9 +164,15 @@ public:
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
-                                            const Evaluation& /*Rv*/,
-                                            const Evaluation& /*Rvw*/) const
-    { return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure); }
+                                            const Evaluation& rv,
+                                            const Evaluation& rvw) const
+    {
+        // assume ideal mixture
+        const Evaluation xBrine = convertRvwToXgW_(Opm::max(rvw,rv),regionIdx);
+        const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
+        const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
+        return 1 / ( ( xBrine/rhoH2O + (1 - xBrine)/rhoCo2) * gasReferenceDensity_[regionIdx]);
+    }
 
     /*!
      * \brief Returns the formation volume factor [-] of water saturated gas at given pressure.
@@ -174,8 +182,8 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        // Neglects impact of vapporized water on the density
-        return CO2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
+        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure);
+        return inverseFormationVolumeFactor(regionIdx,temperature,pressure, rvw, rvw);
     }
 
     /*!

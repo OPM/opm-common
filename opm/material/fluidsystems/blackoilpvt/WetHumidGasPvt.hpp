@@ -122,6 +122,7 @@ public:
     Evaluation internalEnergy(unsigned,
                         const Evaluation&,
                         const Evaluation&,
+                        const Evaluation&,
                         const Evaluation&) const
     {
         throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
