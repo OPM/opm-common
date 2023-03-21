@@ -45,10 +45,6 @@ Deck makeDeck(const std::string& fileName) {
     return parser.parseFile(boxFile.string());
 }
 
-EclipseState makeState(const std::string& fileName) {
-    return EclipseState( makeDeck(fileName) );
-}
-
 }
 
 BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
