@@ -169,7 +169,7 @@ int main(int argc, char **argv)
         }
     } else if (prop == "internalEnergy") {
         if (phase == "CO2") {
-            value = co2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rv, rv);
+            value = co2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rv, 0.0);
         } else if (phase == "brine") {
             value = brineCo2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rs);
         } else {
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
         }
     } else if (prop == "enthalpy") {
         if (phase == "CO2") {
-            value = p / densityGas(co2Pvt, p, T, rv) + co2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rv, rv);
+            value = p / densityGas(co2Pvt, p, T, rv) + co2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rv, 0.0);
         } else if (phase == "brine") {
             value = p / densityBrine(brineCo2Pvt, p, T, rs) + brineCo2Pvt.internalEnergy(/*regionIdx=*/0 ,T,p, rs);
         } else {

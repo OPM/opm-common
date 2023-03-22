@@ -137,6 +137,10 @@ public:
     {
         // assume ideal mixture
         Evaluation result = 0;
+
+        // The CO2STORE option both works for GAS/WATER and GAS/OIL systems
+        // Either rv og rvw should be zero
+        assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
         result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
@@ -181,6 +185,9 @@ public:
             return CO2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
 
         // assume ideal mixture
+        // The CO2STORE option both works for GAS/WATER and GAS/OIL systems
+        // Either rv og rvw should be zero
+        assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
         const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
@@ -196,19 +203,19 @@ public:
                                                      const Evaluation& pressure) const
     {
         const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure);
-        return inverseFormationVolumeFactor(regionIdx,temperature,pressure, rvw, rvw);
+        return inverseFormationVolumeFactor(regionIdx,temperature,pressure, Evaluation(0.0), rvw);
     }
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
      *        depending on its mass fraction of the brine component
      *
-     * \param Rv The surface volume of brine component vaporized in what will yield one cubic meter of water at the surface [-]
+     * \param Rvw The surface volume of brine component vaporized in what will yield one cubic meter of water at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
                                   const Evaluation& /*temperature*/,
-                                  const Evaluation& /*Rv*/) const
+                                  const Evaluation& /*Rvw*/) const
     { return 0.0; /* not implemented */ }
 
     /*!
@@ -258,16 +265,16 @@ public:
         return BinaryCoeffBrineCO2::gasDiffCoeff(temperature, pressure, extrapolate);
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    Scalar waterReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    const Scalar salinity(unsigned regionIdx) const
+    Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
 private:
@@ -321,8 +328,8 @@ private:
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
-        const LhsEval& rho_wG = Rvw*rho_gRef;
-        return rho_wG/(rho_wRef + rho_wG);
+        const LhsEval& rho_wG = Rvw*rho_wRef;
+        return rho_wG/(rho_gRef + rho_wG);
     }
     /*!
      * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
