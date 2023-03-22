@@ -385,6 +385,30 @@ load_carter_tracy(const int              aquiferID,
 
 // ---------------------------------------------------------------------
 
+Opm::RestartIO::RstAquifer::ConstantFlux
+load_constant_flux(const int              aquiferID,
+                   const AquiferVectors&  aquifers,
+                   const Opm::UnitSystem& usys)
+{
+    auto aquifer = Opm::RestartIO::RstAquifer::ConstantFlux{};
+
+    using M = Opm::UnitSystem::measure;
+    using Ix = VI::SAnalyticAquifer::index;
+
+    const auto saaq = aquifers.saaq(aquiferID);
+
+    const auto q = usys.to_si(M::liquid_surface_rate, saaq[Ix::ConstFluxValue]);
+
+    aquifer.aquiferID = aquiferID + 1;
+
+    // Unit hack: *from_si()* here since we don't have an area unit.
+    aquifer.flow_rate = usys.from_si(M::length, usys.from_si(M::length, q));
+
+    return aquifer;
+}
+
+// ---------------------------------------------------------------------
+
 Opm::RestartIO::RstAquifer::Fetkovich
 load_fetkovich(const int              aquiferID,
                const AquiferVectors&  aquifers,
@@ -490,14 +514,20 @@ public:
 
     bool hasAnalyticAquifers() const
     {
-        return ! (this->connections_.empty() &&
-                  this->carterTracy_.empty() &&
-                  this->fetkovich_  .empty());
+        return ! (this->connections_ .empty() &&
+                  this->carterTracy_ .empty() &&
+                  this->constantFlux_.empty() &&
+                  this->fetkovich_   .empty());
     }
 
     const std::vector<RstAquifer::CarterTracy>& carterTracy() const
     {
         return this->carterTracy_;
+    }
+
+    const std::vector<RstAquifer::ConstantFlux>& constantFlux() const
+    {
+        return this->constantFlux_;
     }
 
     const std::vector<RstAquifer::Fetkovich>& fetkovich() const
@@ -513,6 +543,7 @@ public:
 private:
     std::unordered_map<int, RstAquifer::Connections> connections_{};
     std::vector<RstAquifer::CarterTracy>             carterTracy_{};
+    std::vector<RstAquifer::ConstantFlux>            constantFlux_{};
     std::vector<RstAquifer::Fetkovich>               fetkovich_{};
 
     void loadAnalyticAquiferConnections(const AquiferVectors&                   vectors,
@@ -529,6 +560,10 @@ private:
     void loadCarterTracy(const int             aquiferID,
                          const AquiferVectors& aquifers,
                          const UnitSystem&     usys);
+
+    void loadConstantFlux(const int             aquiferID,
+                          const AquiferVectors& aquifers,
+                          const UnitSystem&     usys);
 
     void loadFetkovich(const int             aquiferID,
                        const AquiferVectors& aquifers,
@@ -559,7 +594,7 @@ loadAnalyticAquiferConnections(const AquiferVectors&                   aquifers,
                                const UnitSystem&                       usys)
 {
     const auto occurence   = ConnectionOccurrence { aquifers.maxAquiferID(), *rstView };
-    const auto connections = ConnectionVectors { rstView->intehead(), std::move(rstView) };
+    const auto connections = ConnectionVectors { rstView->intehead(), rstView };
 
     this->connections_ =
         load_aquifer_connections(occurence, aquifers, connections,
@@ -597,6 +632,10 @@ loadAnalyticAquifer(const int             aquiferID,
         this->loadCarterTracy(aquiferID, aquifers, usys);
         return;
 
+    case VI::IAnalyticAquifer::Value::ModelType::ConstantFlux:
+        this->loadConstantFlux(aquiferID, aquifers, usys);
+        return;
+
     case VI::IAnalyticAquifer::Value::ModelType::Fetkovich:
         this->loadFetkovich(aquiferID, aquifers, usys);
         return;
@@ -619,6 +658,15 @@ loadCarterTracy(const int             aquiferID,
 
 void
 Opm::RestartIO::RstAquifer::Implementation::
+loadConstantFlux(const int             aquiferID,
+                 const AquiferVectors& aquifers,
+                 const UnitSystem&     usys)
+{
+    this->constantFlux_.push_back(load_constant_flux(aquiferID, aquifers, usys));
+}
+
+void
+Opm::RestartIO::RstAquifer::Implementation::
 loadFetkovich(const int             aquiferID,
               const AquiferVectors& aquifers,
               const UnitSystem&     usys)
@@ -631,11 +679,11 @@ loadFetkovich(const int             aquiferID,
 Opm::RestartIO::RstAquifer::RstAquifer(std::shared_ptr<EclIO::RestartFileView> rstView,
                                        const EclipseGrid*                      grid,
                                        const UnitSystem&                       usys)
-    : pImpl_{ new Implementation{ std::move(rstView), grid, usys } }
+    : pImpl_{ std::make_unique<Implementation>(std::move(rstView), grid, usys) }
 {}
 
 Opm::RestartIO::RstAquifer::RstAquifer(const RstAquifer& rhs)
-    : pImpl_{ new Implementation{ *rhs.pImpl_ } }
+    : pImpl_{ std::make_unique<Implementation>(*rhs.pImpl_) }
 {}
 
 Opm::RestartIO::RstAquifer::RstAquifer(RstAquifer&& rhs)
@@ -645,7 +693,7 @@ Opm::RestartIO::RstAquifer::RstAquifer(RstAquifer&& rhs)
 Opm::RestartIO::RstAquifer&
 Opm::RestartIO::RstAquifer::operator=(const RstAquifer& rhs)
 {
-    this->pImpl_.reset(new Implementation{ *rhs.pImpl_ });
+    this->pImpl_ = std::make_unique<Implementation>(*rhs.pImpl_);
     return *this;
 }
 
@@ -656,8 +704,7 @@ Opm::RestartIO::RstAquifer::operator=(RstAquifer&& rhs)
     return *this;
 }
 
-Opm::RestartIO::RstAquifer::~RstAquifer()
-{}
+Opm::RestartIO::RstAquifer::~RstAquifer() = default;
 
 bool Opm::RestartIO::RstAquifer::hasAnalyticAquifers() const
 {
@@ -668,6 +715,12 @@ const std::vector<Opm::RestartIO::RstAquifer::CarterTracy>&
 Opm::RestartIO::RstAquifer::carterTracy() const
 {
     return this->pImpl_->carterTracy();
+}
+
+const std::vector<Opm::RestartIO::RstAquifer::ConstantFlux>&
+Opm::RestartIO::RstAquifer::constantFlux() const
+{
+    return this->pImpl_->constantFlux();
 }
 
 const std::vector<Opm::RestartIO::RstAquifer::Fetkovich>&

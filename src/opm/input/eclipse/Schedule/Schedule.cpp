@@ -1745,7 +1745,10 @@ namespace {
     }
 }
 
-    void Schedule::load_rst(const RestartIO::RstState& rst_state, const TracerConfig& tracer_config, const ScheduleGrid& grid, const FieldPropsManager& fp)
+    void Schedule::load_rst(const RestartIO::RstState& rst_state,
+                            const TracerConfig&        tracer_config,
+                            const ScheduleGrid&        grid,
+                            const FieldPropsManager&   fp)
     {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;
@@ -1916,6 +1919,15 @@ namespace {
         this->snapshots.back().wtest_config.update( WellTestConfig{rst_state, report_step});
 
         this->snapshots.back().network_balance.update(Network::Balance { rst_state.netbalan });
+
+        for (const auto& aquflux : rst_state.aquifers.constantFlux()) {
+            auto aqPos =  this->snapshots.back().aqufluxs
+                .insert_or_assign(aquflux.aquiferID,
+                                  SingleAquiferFlux { aquflux.aquiferID });
+
+            aqPos.first->second.flux = aquflux.flow_rate;
+            aqPos.first->second.active = true;
+        }
 
         if (!rst_state.wlists.empty())
             this->snapshots.back().wlist_manager.update( WListManager(rst_state) );
