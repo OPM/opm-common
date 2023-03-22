@@ -176,11 +176,15 @@ public:
                                             const Evaluation& rv,
                                             const Evaluation& rvw) const
     {
+
+        if (!enableVaporization_)
+            return CO2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
+
         // assume ideal mixture
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
         const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
-        return 1 / ( ( xBrine/rhoH2O + (1 - xBrine)/rhoCo2) * gasReferenceDensity_[regionIdx]);
+        return 1.0 / ( ( xBrine/rhoH2O + (1.0 - xBrine)/rhoCo2) * gasReferenceDensity_[regionIdx]);
     }
 
     /*!
