@@ -35,6 +35,9 @@ template<class Scalar>
 void Co2GasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
+
+    setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
+
     if (!eclState.getTableManager().getDensityTable().empty()) {
         OpmLog::warning("CO2STOR is enabled but DENSITY is in the deck. \n"
                         "The surface density is computed based on CO2-BRINE "

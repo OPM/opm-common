@@ -103,6 +103,15 @@ public:
     }
 
     /*!
+     * \brief Specify whether the PVT model should consider that the water component can
+     *        vaporize in the gas phase
+     *
+     * By default, vaporized water is considered.
+     */
+    void setEnableVaporizationWater(bool yesno)
+    { enableVaporization_ = yesno; }
+
+    /*!
      * \brief Finish initializing the co2 phase PVT properties.
      */
     void initEnd()
@@ -128,7 +137,7 @@ public:
     {
         // assume ideal mixture
         Evaluation result = 0;
-        const Evaluation xBrine = convertRvwToXgW_(Opm::max(rvw,rv),regionIdx);
+        const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
         result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
         return result;
@@ -153,7 +162,7 @@ public:
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
-        // Neglects impact of vapporized water on the visosity
+        // Neglects impact of vaporized water on the visosity
         return CO2::gasViscosity(temperature, pressure, extrapolate);
     }
 
@@ -168,7 +177,7 @@ public:
                                             const Evaluation& rvw) const
     {
         // assume ideal mixture
-        const Evaluation xBrine = convertRvwToXgW_(Opm::max(rvw,rv),regionIdx);
+        const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
         const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
         return 1 / ( ( xBrine/rhoH2O + (1 - xBrine)/rhoCo2) * gasReferenceDensity_[regionIdx]);
@@ -188,9 +197,9 @@ public:
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
-     *        depending on its mass fraction of the oil component
+     *        depending on its mass fraction of the brine component
      *
-     * \param Rv The surface volume of oil component dissolved in what will yield one cubic meter of gas at the surface [-]
+     * \param Rv The surface volume of brine component vaporized in what will yield one cubic meter of water at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
@@ -264,7 +273,7 @@ private:
                     const LhsEval& temperature,
                     const LhsEval& pressure) const
     {
-        if (!enableDissolution_)
+        if (!enableVaporization_)
             return 0.0;
 
         // calulate the equilibrium composition for the given
@@ -299,7 +308,7 @@ private:
     }
 
     /*!
-     * \brief Convert a water vapporization factor to the the corresponding mass fraction
+     * \brief Convert a water vaporization factor to the the corresponding mass fraction
      *        of the water component in the gas phase.
      */
     template <class LhsEval>
@@ -326,7 +335,7 @@ private:
     std::vector<Scalar> brineReferenceDensity_;
     std::vector<Scalar> gasReferenceDensity_;
     std::vector<Scalar> salinity_;
-    bool enableDissolution_ = true;
+    bool enableVaporization_ = true;
 };
 
 } // namespace Opm
