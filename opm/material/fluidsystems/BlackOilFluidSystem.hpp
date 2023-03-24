@@ -1076,7 +1076,9 @@ public:
 
         case gasPhaseIdx:
             return
-                 gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
+                 gasPvt_->internalEnergy(regionIdx, T, p,
+                 BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
+                  BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
                   + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         case waterPhaseIdx:
@@ -1337,6 +1339,30 @@ public:
 
         const LhsEval& rho_gW = Rvw*rho_wRef;
         return rho_gW/(rho_gRef + rho_gW);
+    }
+
+    /*!
+     * \brief Convert a water mass fraction in the gas phase the corresponding mole fraction.
+     */
+    template <class LhsEval>
+    static LhsEval convertXgWToxgW(const LhsEval& XgW, unsigned regionIdx)
+    {
+        Scalar MW = molarMass_[regionIdx][waterCompIdx];
+        Scalar MG = molarMass_[regionIdx][gasCompIdx];
+
+        return XgW*MG / (MW*(1 - XgW) + XgW*MG);
+    }
+
+    /*!
+     * \brief Convert a gas mass fraction in the water phase the corresponding mole fraction.
+     */
+    template <class LhsEval>
+    static LhsEval convertXwGToxwG(const LhsEval& XwG, unsigned regionIdx)
+    {
+        Scalar MW = molarMass_[regionIdx][waterCompIdx];
+        Scalar MG = molarMass_[regionIdx][gasCompIdx];
+
+        return XwG*MW / (MG*(1 - XwG) + XwG*MW);
     }
 
     /*!

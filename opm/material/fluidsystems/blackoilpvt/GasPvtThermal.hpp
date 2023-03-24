@@ -148,7 +148,8 @@ public:
     Evaluation internalEnergy(unsigned regionIdx,
                               const Evaluation& temperature,
                               const Evaluation& pressure,
-                              const Evaluation& Rv) const
+                              const Evaluation& Rv,
+                              const Evaluation& ) const
     {
         if (!enableInternalEnergy_)
              throw std::runtime_error("Requested the internal energy of gas but it is disabled");
