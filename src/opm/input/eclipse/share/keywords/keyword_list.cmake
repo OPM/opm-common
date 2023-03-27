@@ -1052,6 +1052,8 @@ set( keywords
      001_Eclipse300/C/CO2STORE
      001_Eclipse300/C/CREF
      001_Eclipse300/C/CREFS
+     001_Eclipse300/D/DIFFCGAS
+     001_Eclipse300/D/DIFFCWAT
      001_Eclipse300/D/DREF
      001_Eclipse300/D/DREFS
      001_Eclipse300/D/DZV

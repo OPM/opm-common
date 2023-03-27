@@ -2198,6 +2198,8 @@ FlatTable<T>::FlatTable(const DeckKeyword& kw)
 }
 
 template FlatTable<DiffCoeffRecord>::FlatTable(const DeckKeyword&);
+template FlatTable<DiffCoeffWatRecord>::FlatTable(const DeckKeyword&);
+template FlatTable<DiffCoeffGasRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<PVCDORecord>::FlatTable(const DeckKeyword&);
 template FlatTable<ROCKRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<PlyvmhRecord>::FlatTable(const DeckKeyword&);
