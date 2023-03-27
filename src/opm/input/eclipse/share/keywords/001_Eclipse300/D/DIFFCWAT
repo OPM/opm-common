@@ -1,0 +1,23 @@
+{
+  "name": "DIFFCWAT",
+  "comment": "Hardcoded two components.",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTPVT"
+  },
+  "items": [
+  {
+    "name": "CO2_IN_WATER",
+    "value_type": "DOUBLE",
+    "dimension": "Length*Length/Time"
+  },
+  {
+    "name": "H20_IN_WATER",
+    "value_type": "DOUBLE",
+    "dimension": "Length*Length/Time"
+  }
+  ]
+}
