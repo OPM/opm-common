@@ -43,6 +43,7 @@ namespace Opm {
     class FaultCollection;
     class DeckKeyword;
     class FieldPropsManager;
+    class Deck;
 
     class TransMult {
 
