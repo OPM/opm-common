@@ -231,7 +231,7 @@ static Opm::Deck createPinchedNOGAPCPDeck() {
         "ACTNUM \n"
         "  1000*1 / \n"
         "PINCH \n"
-        "  0.2 NOGAP / \n"
+        "  0.2 NOGAP 5.0 / \n"
         "EDIT\n"
         "\n";
 
@@ -838,6 +838,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     BOOST_CHECK_EQUAL(grid2.getPinchThresholdThickness(), 0.2);
     BOOST_CHECK_EQUAL(grid2.getPinchGapMode(), Opm::PinchMode::GAP);
     BOOST_CHECK_EQUAL(grid3.getPinchGapMode(), Opm::PinchMode::NOGAP);
+    BOOST_CHECK_EQUAL(grid2.getPinchMaxEmptyGap(), 1e20);
+    BOOST_CHECK_EQUAL(grid3.getPinchMaxEmptyGap(), 5.0);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructorMINPV) {

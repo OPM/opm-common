@@ -114,6 +114,7 @@ namespace Opm {
         PinchMode getPinchOption() const;
         PinchMode getMultzOption() const;
         PinchMode getPinchGapMode() const;
+        double getPinchMaxEmptyGap() const;
 
         MinpvMode getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;
@@ -227,6 +228,7 @@ namespace Opm {
         PinchMode m_pinchoutMode;
         PinchMode m_multzMode;
         PinchMode m_pinchGapMode;
+        double    m_pinchMaxEmptyGap = 1e20;
 
         mutable std::optional<std::vector<double>> active_volume;
 

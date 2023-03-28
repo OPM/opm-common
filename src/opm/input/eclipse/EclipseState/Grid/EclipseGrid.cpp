@@ -349,6 +349,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             m_multzMode = PinchModeFromString(multzString);
             auto pinchGapString = record.getItem<ParserKeywords::PINCH::CONTROL_OPTION>().get< std::string >(0);
             m_pinchGapMode = PinchModeFromString(pinchGapString);
+            m_pinchMaxEmptyGap = record.getItem<ParserKeywords::PINCH::MAX_EMPTY_GAP>().getSIDouble(0);
         }
 
         if (deck.hasKeyword<ParserKeywords::MINPV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
@@ -543,6 +544,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     PinchMode EclipseGrid::getPinchGapMode() const {
         return m_pinchGapMode;
     }
+
+    double EclipseGrid::getPinchMaxEmptyGap() const {
+        return m_pinchMaxEmptyGap;
+    }
+
 
     const std::vector<double>& EclipseGrid::getMinpvVector( ) const {
         return m_minpvVector;
