@@ -421,8 +421,9 @@ public:
      * error. (But not calling it will still work.)
      */
     template <class FluidState>
-    static void updateHysteresis(Params& params, const FluidState& fluidState)
+    static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
+        bool changed = false;
         const Scalar Swco = params.Swl();
 
         const Scalar Sw = clampSaturation(fluidState, waterPhaseIdx);
@@ -439,11 +440,11 @@ public:
             //
             // Though be aware that from a physical perspective this is definitively
             // incorrect!
-            params.oilWaterParams().update(/*pcSw=*/  Sw, //1.0 - So, (Effect is significant vs benchmark.)
+            changed = changed || params.oilWaterParams().update(/*pcSw=*/  Sw, //1.0 - So, (Effect is significant vs benchmark.)
                                            /*krwSw=*/ 1.0 - So,
                                            /*krnSw=*/ 1.0 - So);
 
-            params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
+            changed = changed || params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
                                          /*krwSw=*/ 1.0 - Swco - Sg,
                                          /*krnSw=*/ 1.0 - Swco - Sg);
         }
@@ -451,14 +452,15 @@ public:
             const Scalar Sw_ow = Sg + std::max(Swco, Sw);
             const Scalar So_go = 1.0 - Sw_ow;
 
-            params.oilWaterParams().update(/*pcSw=*/  Sw,
+            changed = changed || params.oilWaterParams().update(/*pcSw=*/  Sw,
                                            /*krwSw=*/ 1 - Sg,
                                            /*krnSw=*/ Sw_ow);
 
-            params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
-                                         /*krwSw=*/ So_go,
-                                         /*krnSw=*/ 1.0 - Swco - Sg);
+            changed = changed || params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
+                                                              /*krwSw=*/ So_go,
+                                                              /*krnSw=*/ 1.0 - Swco - Sg);
         }
+        return changed;
     }
 
     template <class FluidState>

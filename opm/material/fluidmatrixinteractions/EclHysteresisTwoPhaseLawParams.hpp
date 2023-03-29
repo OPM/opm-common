@@ -374,7 +374,7 @@ public:
      * This updates the scanning curves and the imbibition<->drainage reversal points as
      * appropriate.
      */
-    void update(Scalar pcSw, Scalar /* krwSw */, Scalar krnSw)
+    bool update(Scalar pcSw, Scalar /* krwSw */, Scalar krnSw)
     {
         bool updateParams = false;
 
@@ -412,6 +412,8 @@ public:
 
         if (updateParams)
             updateDynamicParams_();
+
+        return updateParams;
     }
 
     template<class Serializer>
