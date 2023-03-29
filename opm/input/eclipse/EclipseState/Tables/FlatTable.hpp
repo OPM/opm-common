@@ -191,6 +191,63 @@ struct DiffCoeffTable : public FlatTable< DiffCoeffRecord > {
     }
 };
 
+
+struct DiffCoeffWatRecord {
+    static constexpr std::size_t size = 2;
+
+    // hardcoded to 2 components
+    double co2_in_water;
+    double h2o_in_water;
+
+    bool operator==(const DiffCoeffWatRecord& data) const {
+        return co2_in_water == data.co2_in_water &&
+               h2o_in_water == data.h2o_in_water;}
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(co2_in_water);
+        serializer(h2o_in_water);
+    }
+};
+
+struct DiffCoeffWatTable : public FlatTable< DiffCoeffWatRecord > {
+    using FlatTable< DiffCoeffWatRecord >::FlatTable;
+
+    static DiffCoeffWatTable serializationTestObject()
+    {
+        return DiffCoeffWatTable({{1.0, 2.0}});
+    }
+};
+
+struct DiffCoeffGasRecord {
+    static constexpr std::size_t size = 2;
+
+    // hardcoded to 2 components
+    double co2_in_gas;
+    double h2o_in_gas;
+
+    bool operator==(const DiffCoeffGasRecord& data) const {
+        return co2_in_gas == data.co2_in_gas &&
+               h2o_in_gas == data.h2o_in_gas;}
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(co2_in_gas);
+        serializer(h2o_in_gas);
+    }
+};
+
+struct DiffCoeffGasTable : public FlatTable< DiffCoeffGasRecord > {
+    using FlatTable< DiffCoeffGasRecord >::FlatTable;
+
+    static DiffCoeffGasTable serializationTestObject()
+    {
+        return DiffCoeffGasTable({{1.0, 2.0}});
+    }
+};
+
 struct PVTWRecord {
     static constexpr std::size_t size = 5;
 

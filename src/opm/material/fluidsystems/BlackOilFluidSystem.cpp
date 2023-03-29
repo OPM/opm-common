@@ -159,6 +159,29 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               "or set it to zero.");
                 }
             }
+        } else if ( eclState.runspec().co2Storage()
+                && eclState.runspec().phases().active(Phase::GAS)
+                && eclState.runspec().phases().active(Phase::WATER))
+        {
+            diffusionCoefficients_.resize(numRegions,{0,0,0,0,0,0,0,0,0});
+            // diffusion coefficients can be set using DIFFCGAS and DIFFCWAT
+            // for CO2STORE cases with gas + water
+            const auto& diffCoeffWatTables = eclState.getTableManager().getDiffusionCoefficientWaterTable();
+            if (!diffCoeffWatTables.empty()) {
+                for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                    const auto& diffCoeffWatTable = diffCoeffWatTables[regionIdx];
+                    setDiffusionCoefficient(diffCoeffWatTable.co2_in_water, gasCompIdx, waterPhaseIdx, regionIdx);
+                    setDiffusionCoefficient(diffCoeffWatTable.h2o_in_water, waterCompIdx, waterPhaseIdx, regionIdx);
+                }
+            }
+            const auto& diffCoeffGasTables = eclState.getTableManager().getDiffusionCoefficientGasTable();
+            if (!diffCoeffGasTables.empty()) {
+                for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                    const auto& diffCoeffGasTable = diffCoeffGasTables[regionIdx];
+                    setDiffusionCoefficient(diffCoeffGasTable.co2_in_gas, gasCompIdx, gasPhaseIdx, regionIdx);
+                    setDiffusionCoefficient(diffCoeffGasTable.h2o_in_gas, waterCompIdx, gasPhaseIdx, regionIdx);
+                }
+            }
         }
     }
 }

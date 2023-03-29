@@ -175,6 +175,12 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         if( deck.hasKeyword( "DIFFC" ) )
             this->m_diffCoeffTable = DiffCoeffTable( deck["DIFFC"].back() );
 
+        if( deck.hasKeyword( "DIFFCWAT" ) )
+            this->m_diffCoeffWatTable = DiffCoeffWatTable( deck["DIFFCWAT"].back() );
+
+        if( deck.hasKeyword( "DIFFCGAS" ) )
+            this->m_diffCoeffGasTable = DiffCoeffGasTable( deck["DIFFCGAS"].back() );
+
         if( deck.hasKeyword( "ROCK" ) )
             this->m_rockTable = RockTable( deck["ROCK"].back() );
 
@@ -279,6 +285,8 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         result.m_pvcdoTable = PvcdoTable::serializationTestObject();
         result.m_densityTable = DensityTable::serializationTestObject();
         result.m_diffCoeffTable = DiffCoeffTable::serializationTestObject();
+        result.m_diffCoeffWatTable = DiffCoeffWatTable::serializationTestObject();
+        result.m_diffCoeffGasTable = DiffCoeffGasTable::serializationTestObject();
         result.m_plyvmhTable = PlyvmhTable::serializationTestObject();
         result.m_rockTable = RockTable::serializationTestObject();
         result.m_plmixparTable = PlmixparTable::serializationTestObject();
@@ -1130,6 +1138,14 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return this->m_diffCoeffTable;
     }
 
+    const DiffCoeffWatTable& TableManager::getDiffusionCoefficientWaterTable() const {
+        return this->m_diffCoeffWatTable;
+    }
+
+    const DiffCoeffGasTable& TableManager::getDiffusionCoefficientGasTable() const {
+        return this->m_diffCoeffGasTable;
+    }
+
     const RockTable& TableManager::getRockTable() const {
         return this->m_rockTable;
     }
@@ -1268,6 +1284,8 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&
                m_diffCoeffTable == data.m_diffCoeffTable &&
+               m_diffCoeffWatTable == data.m_diffCoeffWatTable &&
+               m_diffCoeffGasTable == data.m_diffCoeffGasTable &&
                m_plmixparTable == data.m_plmixparTable &&
                m_plyvmhTable == data.m_plyvmhTable &&
                m_shrateTable == data.m_shrateTable &&
