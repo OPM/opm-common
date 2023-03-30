@@ -90,6 +90,14 @@ void apply_GRIDUNIT(const UnitSystem& deck_units, const UnitSystem& grid_units, 
 }
 
 }
+EclipseGrid::EclipseGrid()
+    : GridDims(),
+      m_minpvMode(MinpvMode::Inactive),
+      m_pinchoutMode(PinchMode::TOPBOT),
+      m_multzMode(PinchMode::TOP),
+      m_pinchGapMode(PinchMode::GAP),
+      m_pinchMaxEmptyGap(ParserKeywords::PINCH::MAX_EMPTY_GAP::defaultValue)
+{}
 
 EclipseGrid::EclipseGrid(const std::array<int, 3>& dims ,
                          const std::vector<double>& coord ,
@@ -99,7 +107,8 @@ EclipseGrid::EclipseGrid(const std::array<int, 3>& dims ,
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
       m_multzMode(PinchMode::TOP),
-      m_pinchGapMode(PinchMode::GAP)
+      m_pinchGapMode(PinchMode::GAP),
+      m_pinchMaxEmptyGap(ParserKeywords::PINCH::MAX_EMPTY_GAP::defaultValue)
 {
     initCornerPointGrid( coord , zcorn , actnum );
 }
@@ -115,7 +124,8 @@ EclipseGrid::EclipseGrid(const std::string& fileName )
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
       m_multzMode(PinchMode::TOP),
-      m_pinchGapMode(PinchMode::GAP)
+      m_pinchGapMode(PinchMode::GAP),
+      m_pinchMaxEmptyGap(ParserKeywords::PINCH::MAX_EMPTY_GAP::defaultValue)
 {
 
     Opm::EclIO::EclFile egridfile(fileName);
@@ -129,7 +139,8 @@ EclipseGrid::EclipseGrid(const GridDims& gd)
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
       m_multzMode(PinchMode::TOP),
-      m_pinchGapMode(PinchMode::GAP)
+      m_pinchGapMode(PinchMode::GAP),
+      m_pinchMaxEmptyGap(ParserKeywords::PINCH::MAX_EMPTY_GAP::defaultValue)
 {
     this->m_nactive = this->getCartesianSize();
     this->active_volume = std::nullopt;
@@ -149,7 +160,8 @@ EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
       m_multzMode(PinchMode::TOP),
-      m_pinchGapMode(PinchMode::GAP)
+      m_pinchGapMode(PinchMode::GAP),
+      m_pinchMaxEmptyGap(ParserKeywords::PINCH::MAX_EMPTY_GAP::defaultValue)
 {
 
     m_coord.reserve((nx+1)*(ny+1)*6);
@@ -257,7 +269,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
       m_multzMode(PinchMode::TOP),
-      m_pinchGapMode(PinchMode::GAP)
+      m_pinchGapMode(PinchMode::GAP),
+      m_pinchMaxEmptyGap(ParserKeywords::PINCH::MAX_EMPTY_GAP::defaultValue)
 {
     if (deck.hasKeyword("GDFILE")){
 

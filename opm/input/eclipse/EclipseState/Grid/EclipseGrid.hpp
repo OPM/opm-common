@@ -53,7 +53,7 @@ namespace Opm {
 
     class EclipseGrid : public GridDims {
     public:
-        EclipseGrid() = default;
+        EclipseGrid();
         explicit EclipseGrid(const std::string& filename);
 
         /*
@@ -228,7 +228,7 @@ namespace Opm {
         PinchMode m_pinchoutMode;
         PinchMode m_multzMode;
         PinchMode m_pinchGapMode;
-        double    m_pinchMaxEmptyGap = 1e20;
+        double    m_pinchMaxEmptyGap;
 
         mutable std::optional<std::vector<double>> active_volume;
 
@@ -249,7 +249,7 @@ namespace Opm {
         std::optional<MapAxes> m_mapaxes;
 
         // Mapping to/from active cells.
-        int m_nactive;
+        int m_nactive {};
         std::vector<int> m_active_to_global;
         std::vector<int> m_global_to_active;
         // Numerical aquifer cells, needs to be active
