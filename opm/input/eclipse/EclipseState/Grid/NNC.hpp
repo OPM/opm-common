@@ -131,7 +131,6 @@ private:
     void load_input(const EclipseGrid& grid, const Deck& deck);
     void load_edit(const EclipseGrid& grid, const Deck& deck);
     void add_edit(const NNCdata& edit_node);
-    bool update_nnc(std::size_t global_index1, std::size_t global_index2, double tran_mult);
 
     std::vector<NNCdata> m_input;
     std::vector<NNCdata> m_edit;
