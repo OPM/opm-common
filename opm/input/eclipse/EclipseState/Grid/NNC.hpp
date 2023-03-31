@@ -109,8 +109,11 @@ public:
     static NNC serializationTestObject();
 
     bool addNNC(const size_t cell1, const size_t cell2, const double trans);
+    /// \brief Get the combined information from NNC
     const std::vector<NNCdata>& input() const { return m_input; }
+    /// \brief Get the information from EDITNNC keyword
     const std::vector<NNCdata>& edit() const { return m_edit; }
+    /// \brief Get the information from EDITNNCR keyword
     const std::vector<NNCdata>& editr() const { return m_editr; }
     KeywordLocation input_location(const NNCdata& nnc) const;
     KeywordLocation edit_location(const NNCdata& nnc) const;
@@ -137,8 +140,11 @@ private:
     void load_editr(const EclipseGrid& grid, const Deck& deck);
     void add_edit(const NNCdata& edit_node);
 
+    /// \brief Stores NNC not coinciding with entries in EDITNNCR
     std::vector<NNCdata> m_input;
+    /// \brief EDITNNC data not coinciding with entries in EDITNNCR.
     std::vector<NNCdata> m_edit;
+    /// \brief EDITNNCR data.
     std::vector<NNCdata> m_editr;
     std::optional<KeywordLocation> m_nnc_location;
     std::optional<KeywordLocation> m_edit_location;

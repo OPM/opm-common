@@ -219,13 +219,13 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         std::sort(nnc_editr.begin(), nnc_editr.end());
 
         // remove duplicates (based on only cell1 and cell2 members
-        auto new_end = std::unique(nnc_editr.begin(), nnc_editr.end(),
-                                   [](const NNCdata& d1, const NNCdata& d2){
-                                       return d1.cell1 == d2.cell1 && d1.cell2 == d2.cell2;
-                                   });
+        auto equality = [](const NNCdata& d1, const NNCdata& d2){
+            return d1.cell1 == d2.cell1 && d1.cell2 == d2.cell2;
+        };
+        auto new_end = std::unique(nnc_editr.begin(), nnc_editr.end(), equality);
         nnc_editr.resize(new_end - nnc_editr.begin());
 
-        // Remove corresponding EDITNNC entries in m_edit as EDIT_NNCR
+        // Remove corresponding EDITNNC entries in m_edit as EDITNNCR
         // will overwrite transmissibilities anyway
         std::vector<NNCdata> slim_edit;
         slim_edit.reserve(m_edit.size());
@@ -234,31 +234,15 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
                             std::back_inserter(slim_edit));
         m_edit = std::move(slim_edit);
 
-        // If we have a corresponding NNC already, then we overwrite
-        // its transmissibility from EDITNNCR. Otherwise we internalize it
-        // in m_editr
-        auto current_input = this->m_input.begin();
-        for (auto&& current_editr : nnc_editr) {
-            if (current_input == this->m_input.end()) {
-                m_editr.push_back(std::move(current_editr));
-                continue;
-            }
-            if (current_input->cell1 != current_editr.cell1 || current_input->cell2 != current_editr.cell2) {
-                current_input = std::lower_bound(current_input,
-                                                 this->m_input.end(),
-                                                 NNCdata(current_editr.cell1, current_editr.cell2, 0));
-            }
-
-            if (current_input != this->m_input.end()
-                && current_input->cell1 == current_editr.cell1
-                && current_input->cell2 == current_editr.cell2)
-            {
-                current_input->trans = current_editr.trans;
-            }
-            else {
-                m_editr.push_back(std::move(current_editr));
-            }
-        }
+        // Remove corresponding NNC entries in m_input as EDITNNCR
+        // will overwrite transmissibilities anyway
+        std::vector<NNCdata> slim_input;
+        slim_edit.reserve(m_input.size());
+        std::set_difference(m_input.begin(), m_input.end(),
+                            nnc_editr.begin(), nnc_editr.end(),
+                            std::back_inserter(slim_input));
+        m_input = std::move(slim_input);
+        m_editr = {nnc_editr.begin(), nnc_editr.end()};
     }
 
     NNC NNC::serializationTestObject()
@@ -286,7 +270,9 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     bool NNC::operator==(const NNC& data) const {
         return m_input == data.m_input &&
                m_edit == data.m_edit &&
+               m_editr == data.m_editr &&
                m_edit_location == data.m_edit_location &&
+               m_editr_location == data.m_editr_location &&
                m_nnc_location == data.m_nnc_location;
 
     }

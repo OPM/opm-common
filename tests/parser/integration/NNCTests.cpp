@@ -385,6 +385,7 @@ BOOST_AUTO_TEST_CASE(readDeck_EDIT)
     EclipseGrid grid(10,10,10);
 
     NNC nnc(grid, deck);
+    BOOST_CHECK(nnc.editr().empty());
     const std::vector<NNCdata>& data = nnc.edit();
 
     BOOST_CHECK_EQUAL(data.size(), 2); //neighbouring connections in EDITNNC are ignored
