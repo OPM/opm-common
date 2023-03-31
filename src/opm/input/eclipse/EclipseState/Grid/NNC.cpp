@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <array>
+#include <deque>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -176,9 +177,9 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     }
 
     void NNC::load_editr(const EclipseGrid& grid, const Deck& deck) {
-        using NNCinsert = std::tuple<std::array<std::size_t,3>,double>;
-        std::vector<NNCinsert> nnc_editr;
-        std::size_t insertion_index = 0;
+        // Will contain EDITNNCR data in reverse order to be able
+        // use unique to only keep the last one from the data file.
+        std::deque<NNCdata> nnc_editr;
 
         const auto& keyword_list = deck.getKeywordList<ParserKeywords::EDITNNCR>();
 
@@ -201,7 +202,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
                     continue;
 
                 double trans = record.getItem(6).getSIDouble(0);
-                nnc_editr.push_back( {{g1, g2, insertion_index }, trans});
+                nnc_editr.emplace_front(g1, g2, trans);
             }
 
             if (!this->m_editr_location)
@@ -214,75 +215,48 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
 
         // Make the entries unique (i.e. only one entry for each index pair)
         // the entry surviving should be last one (i.e. later enrtries overwrite previous entries)
-        std::sort(nnc_editr.begin(), nnc_editr.end(),
-                  [](const NNCinsert& d1, NNCinsert& d2) {
-                      return std::get<0>(d1) <  std::get<0>(d2);
-                  }
-                  );
+        // Will keep the insertion order of entries for same cell pair.
+        std::sort(nnc_editr.begin(), nnc_editr.end());
 
-        std::size_t g1 = -1, g2 = -1;
-        auto target = nnc_editr.begin() - 1;
-
-        for(auto current =  nnc_editr.begin(); current != nnc_editr.end(); ++current)
-        {
-            const auto& indices = std::get<0>(*current);
-            if ( indices[0] == g1 && indices[1] == g2){
-                // overwrites previous entry
-                *target = std::move(*current);
-            }
-            else{
-                ++target;
-                if (target != current) {
-                    *target = std::move(*current);
-                }
-                g1 = indices[0];
-                g2 = indices[1];
-            }
-        }
-
-        nnc_editr.resize((++target) - nnc_editr.begin());
+        // remove duplicates (based on only cell1 and cell2 members
+        auto new_end = std::unique(nnc_editr.begin(), nnc_editr.end(),
+                                   [](const NNCdata& d1, const NNCdata& d2){
+                                       return d1.cell1 == d2.cell1 && d1.cell2 == d2.cell2;
+                                   });
+        nnc_editr.resize(new_end - nnc_editr.begin());
 
         // Remove corresponding EDITNNC entries in m_edit as EDIT_NNCR
         // will overwrite transmissibilities anyway
         std::vector<NNCdata> slim_edit;
         slim_edit.reserve(m_edit.size());
-        struct Comp
-        {
-            bool operator()(const NNCinsert& d1, NNCdata& d2){
-                return std::get<0>(d1)[0] < d2.cell1   && std::get<0>(d1)[1]  < d2.cell2 ;
-            }
-            bool operator()(const NNCdata& d1, NNCinsert& d2){
-                return d1.cell1 < std::get<0>(d2)[0] &&  d1.cell2 < std::get<0>(d2)[1];
-            }
-        };
         std::set_difference(m_edit.begin(), m_edit.end(),
                             nnc_editr.begin(), nnc_editr.end(),
-                            std::back_inserter(slim_edit),
-                            Comp());
+                            std::back_inserter(slim_edit));
         m_edit = std::move(slim_edit);
 
         // If we have a corresponding NNC already, then we overwrite
         // its transmissibility from EDITNNCR. Otherwise we internalize it
         // in m_editr
         auto current_input = this->m_input.begin();
-        for (const auto& current_editr : nnc_editr) {
+        for (auto&& current_editr : nnc_editr) {
             if (current_input == this->m_input.end()) {
-                m_editr.push_back({std::get<0>(current_editr)[0], std::get<0>(current_editr)[1], std::get<double>(current_editr)});
+                m_editr.push_back(std::move(current_editr));
                 continue;
             }
-            if (current_input->cell1 != std::get<0>(current_editr)[0] || current_input->cell2 != std::get<0>(current_editr)[1]) {
+            if (current_input->cell1 != current_editr.cell1 || current_input->cell2 != current_editr.cell2) {
                 current_input = std::lower_bound(current_input,
                                                  this->m_input.end(),
-                                                 NNCdata(std::get<0>(current_editr)[0], std::get<0>(current_editr)[1], 0));
+                                                 NNCdata(current_editr.cell1, current_editr.cell2, 0));
             }
 
             if (current_input != this->m_input.end()
-                && current_input->cell1 == std::get<0>(current_editr)[0]
-                && current_input->cell2 == std::get<0>(current_editr)[1]) {
-                current_input->trans = std::get<double>(current_editr);
+                && current_input->cell1 == current_editr.cell1
+                && current_input->cell2 == current_editr.cell2)
+            {
+                current_input->trans = current_editr.trans;
             }
             else {
-                m_editr.push_back({std::get<0>(current_editr)[0], std::get<0>(current_editr)[1], std::get<double>(current_editr)});
+                m_editr.push_back(std::move(current_editr));
             }
         }
     }
