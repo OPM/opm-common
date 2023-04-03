@@ -1,0 +1,23 @@
+{
+  "name": "GSF",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTSFUN"
+  },
+  "prohibits": ["SGOF", "SLGOF", "SGFN"],
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "1",
+        "1",
+        "Pressure"
+      ]
+    }
+  ]
+}

@@ -40,10 +40,10 @@ namespace Opm {
 
         size_t size( ) const;
         const std::string& name() const;
-        void assertOrder(double value1 , double value2) const;
-        void addValue(double);
-        void addDefault();
-        void updateValue(size_t index, double value);
+        void assertOrder(double value1 , double value2, size_t index, std::string tableName) const;
+        void addValue(double, std::string tableName);
+        void addDefault(std::string tableName);
+        void updateValue(size_t index, double value, std::string tableName);
         double operator[](size_t index) const;
         bool defaultApplied(size_t index) const;
         bool hasDefault( ) const;
@@ -59,7 +59,7 @@ namespace Opm {
         */
         TableIndex lookup(double argValue) const;
         double eval( const TableIndex& index) const;
-        void applyDefaults( const TableColumn& argColumn );
+        void applyDefaults( const TableColumn& argColumn, std::string tableName );
         void assertUnitRange() const;
         TableColumn& operator= (const TableColumn& other);
 
@@ -80,9 +80,9 @@ namespace Opm {
         }
 
     private:
-        void assertUpdate(size_t index, double value) const;
-        void assertPrevious(size_t index , double value) const;
-        void assertNext(size_t index , double value) const;
+        void assertUpdate(std::string tableName, size_t index, double value) const;
+        void assertPrevious(std::string tableName, size_t index , double value) const;
+        void assertNext(std::string tableName, size_t index , double value) const;
 
         ColumnSchema m_schema;
         std::string m_name;

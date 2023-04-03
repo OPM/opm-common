@@ -22,10 +22,11 @@ find_opm_package (
   "dune-common REQUIRED;
    dune-grid  REQUIRED;
    dune-alugrid;
+   dune-polygongrid;
    ZLIB;
    ZOLTAN;
    METIS;
-   Quadmath
+   QuadMath
   "
   # header to search for
   "dune/fem/space/shapefunctionset/legendre.hh"

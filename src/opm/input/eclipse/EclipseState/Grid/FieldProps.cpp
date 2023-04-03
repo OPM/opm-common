@@ -470,24 +470,25 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
     this->tran.emplace( "TRANZ", Fieldprops::TranCalculator("TRANZ") );
 
     if (deck.hasKeyword<ParserKeywords::MULTREGP>()) {
-        const DeckKeyword& multregpKeyword = deck["MULTREGP"].back();
-        for (const auto& record : multregpKeyword) {
-            int region_value = record.getItem("REGION").get<int>(0);
-            if (region_value <= 0)
-                continue;
+        for (const auto& keyword : deck["MULTREGP"]) {
+            for (const auto& record : keyword) {
+                int region_value = record.getItem("REGION").get<int>(0);
+                if (region_value <= 0)
+                    continue;
 
-            std::string region_name = make_region_name( record.getItem("REGION_TYPE").get<std::string>(0) );
-            double multiplier = record.getItem("MULTIPLIER").get<double>(0);
-            auto iter = std::find_if(this->multregp.begin(), this->multregp.end(), [region_value](const MultregpRecord& mregp) { return mregp.region_value == region_value; });
-            /*
-              There is some weirdness if the same region value is entered in several records,
-              then only the last applies.
-            */
-            if (iter != this->multregp.end()) {
-                iter->region_name = region_name;
-                iter->multiplier = multiplier;
-            } else
-                this->multregp.emplace_back( region_value, multiplier, region_name );
+                std::string region_name = make_region_name( record.getItem("REGION_TYPE").get<std::string>(0) );
+                double multiplier = record.getItem("MULTIPLIER").get<double>(0);
+                auto iter = std::find_if(this->multregp.begin(), this->multregp.end(), [region_value](const MultregpRecord& mregp) { return mregp.region_value == region_value; });
+                /*
+                  There is some weirdness if the same region value is entered in several records,
+                  then only the last applies.
+                */
+                if (iter != this->multregp.end()) {
+                    iter->region_name = region_name;
+                    iter->multiplier = multiplier;
+                } else
+                    this->multregp.emplace_back( region_value, multiplier, region_name );
+            }
         }
     }
 

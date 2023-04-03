@@ -805,8 +805,13 @@ public:
         data_[dstart_() + varIdx] = derVal;
     }
 
-private:
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(data_);
+    }
 
+private:
 {% if numDerivs < 0 %}\
     FastSmallVector<ValueT, staticSize> data_;
 {% elif numDerivs == 0 %}\

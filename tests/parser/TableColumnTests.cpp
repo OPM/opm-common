@@ -34,9 +34,9 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
     TableColumn column( schema );
     BOOST_CHECK_EQUAL( column.size() , 0U );
 
-    column.addValue( 0 );
-    column.addValue( 1 );
-    column.addValue( 2 );
+    column.addValue( 0, "TableTested"  );
+    column.addValue( 1, "TableTested"  );
+    column.addValue( 2, "TableTested"  );
 
     BOOST_CHECK_EQUAL( column.size() , 3U );
 
@@ -62,13 +62,13 @@ BOOST_AUTO_TEST_CASE( TestDefault ) {
     TableColumn column( schema );
 
 
-    column.addDefault( );
-    column.addDefault( );
-    column.addDefault( );
+    column.addDefault( "TableTested"  );
+    column.addDefault( "TableTested"  );
+    column.addDefault( "TableTested"  );
     BOOST_CHECK_EQUAL( column.size() , 3U );
     BOOST_CHECK_THROW( column[0] , std::invalid_argument );
 
-    column.updateValue(0 , 10);
+    column.updateValue(0 , 10, "TableTested" );
     BOOST_CHECK_EQUAL( column[0] , 10 );
     BOOST_CHECK( column.hasDefault( ) );
 }
@@ -80,23 +80,23 @@ BOOST_AUTO_TEST_CASE( TestAscending ) {
 
     BOOST_CHECK_EQUAL( column.size() , 0U );
 
-    column.addValue( 10 );
-    BOOST_CHECK_THROW( column.addValue( 9 ) , std::invalid_argument );
-    column.addDefault( );
+    column.addValue( 10, "TableTested"  );
+    BOOST_CHECK_THROW( column.addValue( 9, "TableTested"  ) , std::invalid_argument );
+    column.addDefault("TableTested"  );
     BOOST_CHECK( column.hasDefault( ) );
-    BOOST_CHECK_THROW( column.updateValue( 1, 9 ) , std::invalid_argument );
-    column.addValue( 12 );
-    BOOST_CHECK_THROW( column.updateValue( 1, 13 ) , std::invalid_argument );
-    column.updateValue( 1, 11 );
+    BOOST_CHECK_THROW( column.updateValue( 1, 9, "TableTested"  ) , std::invalid_argument );
+    column.addValue( 12, "TableTested"  );
+    BOOST_CHECK_THROW( column.updateValue( 1, 13, "TableTested"  ) , std::invalid_argument );
+    column.updateValue( 1, 11, "TableTested"  );
 
-    column.addDefault( );
-    column.addDefault( );
-    column.addDefault( );
-    column.addValue(16);
+    column.addDefault( "TableTested"  );
+    column.addDefault( "TableTested"  );
+    column.addDefault( "TableTested"  );
+    column.addValue(16, "TableTested" );
 
-    column.updateValue( 3,13 );
-    column.updateValue( 4,14 );
-    column.updateValue( 5,15 );
+    column.updateValue( 3,13, "TableTested"  );
+    column.updateValue( 4,14, "TableTested"  );
+    column.updateValue( 5,15, "TableTested"  );
     BOOST_CHECK( !column.hasDefault( ) );
 }
 
@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE( TestWeaklyAscending ) {
     ColumnSchema schema("COLUMN" , Table::INCREASING  , Table::DEFAULT_LINEAR);
     TableColumn column( schema );
 
-    column.addValue(1);
-    column.addValue(1);
+    column.addValue(1, "TableTested" );
+    column.addValue(1, "TableTested" );
 
     BOOST_CHECK( !column.hasDefault( ) );
 }
@@ -118,22 +118,22 @@ BOOST_AUTO_TEST_CASE( TestDescending ) {
 
     BOOST_CHECK_EQUAL( column.size() , 0U );
 
-    column.addValue( -10 );
-    BOOST_CHECK_THROW( column.addValue( -9 ) , std::invalid_argument );
-    column.addDefault( );
-    BOOST_CHECK_THROW( column.updateValue( 1, -9 ) , std::invalid_argument );
-    column.addValue( -12 );
-    BOOST_CHECK_THROW( column.updateValue( 1, -13 ) , std::invalid_argument );
-    column.updateValue( 1, -11 );
+    column.addValue( -10, "TableTested"  );
+    BOOST_CHECK_THROW( column.addValue( -9, "TableTested"  ) , std::invalid_argument );
+    column.addDefault( "TableTested" );
+    BOOST_CHECK_THROW( column.updateValue( 1, -9, "TableTested" ) , std::invalid_argument );
+    column.addValue( -12, "TableTested"  );
+    BOOST_CHECK_THROW( column.updateValue( 1, -13, "TableTested"  ) , std::invalid_argument );
+    column.updateValue( 1, -11, "TableTested"  );
 
-    column.addDefault( );
-    column.addDefault( );
-    column.addDefault( );
-    column.addValue(-16);
+    column.addDefault( "TableTested"  );
+    column.addDefault( "TableTested"  );
+    column.addDefault( "TableTested"  );
+    column.addValue(-16, "TableTested" );
 
-    column.updateValue( 3,-13 );
-    column.updateValue( 4,-14 );
-    column.updateValue( 5,-15 );
+    column.updateValue( 3,-13, "TableTested"  );
+    column.updateValue( 4,-14, "TableTested"  );
+    column.updateValue( 5,-15, "TableTested"  );
 }
 
 
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE( TestDEFAULT_NONE) {
     ColumnSchema schema("COLUMN" , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE);
     TableColumn column( schema );
 
-    BOOST_CHECK_THROW( column.addDefault(  ) , std::invalid_argument );
+    BOOST_CHECK_THROW( column.addDefault( "TableTested" ) , std::invalid_argument );
 }
 
 
@@ -152,23 +152,23 @@ BOOST_AUTO_TEST_CASE( Test_MIN_MAX) {
     BOOST_CHECK_THROW( column.max( ) , std::invalid_argument );
     BOOST_CHECK_THROW( column.min( ) , std::invalid_argument );
 
-    column.addValue( 1 );
+    column.addValue( 1, "TableTested"  );
     BOOST_CHECK_EQUAL( 1 , column.min() );
     BOOST_CHECK_EQUAL( 1 , column.max() );
 
-    column.addValue( 100 );
+    column.addValue( 100, "TableTested"  );
     BOOST_CHECK_EQUAL( 1 , column.min() );
     BOOST_CHECK_EQUAL( 100 , column.max() );
 
-    column.addValue( 50 );
+    column.addValue( 50, "TableTested" );
     BOOST_CHECK_EQUAL( 1 , column.min() );
     BOOST_CHECK_EQUAL( 100 , column.max() );
 
-    column.addDefault( );
+    column.addDefault( "TableTested"  );
     BOOST_CHECK_THROW( column.max( ) , std::invalid_argument );
     BOOST_CHECK_THROW( column.min( ) , std::invalid_argument );
 
-    column.updateValue( 3 , 67 );
+    column.updateValue( 3 , 67, "TableTested"  );
     BOOST_CHECK_EQUAL( 1 , column.min() );
     BOOST_CHECK_EQUAL( 100 , column.max() );
 }
@@ -177,8 +177,8 @@ BOOST_AUTO_TEST_CASE( Test_IN_RANGE) {
     ColumnSchema schema("COLUMN" , Table::RANDOM , Table::DEFAULT_LINEAR);
     TableColumn column( schema );
 
-    column.addValue(10);
-    column.addValue(20);
+    column.addValue(10, "TableTested" );
+    column.addValue(20, "TableTested" );
     BOOST_CHECK_THROW( column.inRange( 15 ) , std::invalid_argument );
 
 
@@ -187,9 +187,9 @@ BOOST_AUTO_TEST_CASE( Test_IN_RANGE) {
 
 
     BOOST_CHECK_THROW( column2.inRange( 15 ) , std::invalid_argument );
-    column2.addValue(10);
+    column2.addValue(10, "TableTested" );
     BOOST_CHECK_THROW( column2.inRange( 15 ) , std::invalid_argument );
-    column2.addValue(20);
+    column2.addValue(20, "TableTested" );
     BOOST_CHECK( column2.inRange( 15 ));
     BOOST_CHECK( column2.inRange( 10 ));
     BOOST_CHECK( column2.inRange( 20 ));
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE( Test_IN_RANGE) {
     BOOST_CHECK( !column2.inRange( 9 ));
     BOOST_CHECK( !column2.inRange( 21 ));
 
-    column2.addDefault( );
+    column2.addDefault( "TableTested" );
     BOOST_CHECK_THROW( column2.inRange( 15 ) , std::invalid_argument );
 }
 
@@ -219,14 +219,14 @@ BOOST_AUTO_TEST_CASE( Test_Table_Index ) {
         /* Can not look up in empty column */
         BOOST_CHECK_THROW( column.lookup( 0.67 ) , std::invalid_argument );
 
-        column.addValue( 10 );
+        column.addValue( 10, "TableTested"  );
 
-        column.addDefault( );
+        column.addDefault( "TableTested"  );
         /* Can not look up in column with defaults */
         BOOST_CHECK_THROW( column.lookup( 0.67 ) , std::invalid_argument );
 
 
-        column.updateValue(1 , 20 );
+        column.updateValue(1 , 20, "TableTested"  );
     }
 }
 
@@ -235,16 +235,16 @@ BOOST_AUTO_TEST_CASE( Test_EVAL_INCREASING ) {
     ColumnSchema schema("COLUMN" , Table::INCREASING , Table::DEFAULT_LINEAR);
     TableColumn column( schema );
 
-    column.addValue(0);
+    column.addValue(0, "TableTested") ;
 
     /* Out of range - constant end-point extrapolation , size = 1*/
     BOOST_CHECK_EQUAL( column.eval( column.lookup( -1 )) , 0 );
     BOOST_CHECK_EQUAL( column.eval( column.lookup(  1 )) , 0 );
 
 
-    column.addValue(1);
-    column.addValue(2);
-    column.addValue(3);
+    column.addValue(1, "TableTested" );
+    column.addValue(2, "TableTested" );
+    column.addValue(3, "TableTested" );
 
     BOOST_CHECK_EQUAL( column.eval( column.lookup( 0 )) , 0 );
     BOOST_CHECK_EQUAL( column.eval( column.lookup( 1 )) , 1 );
@@ -265,10 +265,10 @@ BOOST_AUTO_TEST_CASE( Test_EVAL_DECREASING ) {
     ColumnSchema schema("COLUMN" , Table::DECREASING , Table::DEFAULT_LINEAR);
     TableColumn column( schema );
 
-    column.addValue(3);
-    column.addValue(2);
-    column.addValue(1);
-    column.addValue(0);
+    column.addValue(3, "TableTested" );
+    column.addValue(2, "TableTested" );
+    column.addValue(1, "TableTested" );
+    column.addValue(0, "TableTested" );
 
     BOOST_CHECK_EQUAL( column.eval( column.lookup( 0 )) , 0 );
     BOOST_CHECK_EQUAL( column.eval( column.lookup( 1 )) , 1 );
@@ -290,8 +290,8 @@ BOOST_AUTO_TEST_CASE( Test_EVAL_DECREASING ) {
 BOOST_AUTO_TEST_CASE( Test_CONST_DEFAULT ) {
     ColumnSchema schema("COLUMN" , Table::DECREASING , 1.0);
     TableColumn column( schema );
-    column.addDefault( );
-    column.addDefault( );
+    column.addDefault( "TableTested"  );
+    column.addDefault( "TableTested"  );
     BOOST_CHECK( !column.hasDefault( ) );
 
     BOOST_CHECK_EQUAL( column[0] , 1.0 );
@@ -305,17 +305,17 @@ BOOST_AUTO_TEST_CASE( Test_LINEAR_DEFAULT ) {
     TableColumn argColumn( argSchema );
     TableColumn valueColumn( valueSchema );
 
-    argColumn.addValue( 0 );    valueColumn.addValue( 0 );
-    argColumn.addValue( 0.05 ); valueColumn.addDefault( );
-    argColumn.addValue( 0.10 ); valueColumn.addValue(1.0);
-    argColumn.addValue( 0.50 ); valueColumn.addDefault( );
-    argColumn.addValue( 0.80 ); valueColumn.addValue(1.0);
-    argColumn.addValue( 0.95 ); valueColumn.addDefault( );
-    argColumn.addValue( 1.00 );
+    argColumn.addValue( 0, "TableTested"  );    valueColumn.addValue( 0, "TableTested"  );
+    argColumn.addValue( 0.05, "TableTested"  ); valueColumn.addDefault( "TableTested"  );
+    argColumn.addValue( 0.10, "TableTested"  ); valueColumn.addValue(1.0, "TableTested" );
+    argColumn.addValue( 0.50, "TableTested"  ); valueColumn.addDefault( "TableTested" );
+    argColumn.addValue( 0.80, "TableTested"  ); valueColumn.addValue(1.0, "TableTested" );
+    argColumn.addValue( 0.95, "TableTested"  ); valueColumn.addDefault( "TableTested" );
+    argColumn.addValue( 1.00, "TableTested"  );
 
-    BOOST_CHECK_THROW( valueColumn.applyDefaults( argColumn ) , std::invalid_argument );
-    valueColumn.addValue(0.0);
-    valueColumn.applyDefaults( argColumn );
+    BOOST_CHECK_THROW( valueColumn.applyDefaults( argColumn, "TableTested"  ) , std::invalid_argument );
+    valueColumn.addValue(0.0, "TableTested" );
+    valueColumn.applyDefaults( argColumn, "TableTested"  );
 
     BOOST_CHECK( !valueColumn.hasDefault( ) );
     BOOST_CHECK_CLOSE( valueColumn[1] , 0.50 , 1e-6);

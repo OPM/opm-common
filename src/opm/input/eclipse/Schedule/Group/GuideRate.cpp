@@ -71,6 +71,14 @@ Opm::GuideRate::GuideRate(const Schedule& schedule_arg)
     : schedule(schedule_arg)
 {}
 
+void Opm::GuideRate::setSerializationTestData()
+{
+    values.emplace("test1", std::make_unique<GRValState>(GRValState::serializationTestObject()));
+    injection_group_values = {{{Phase::FOAM, "test2"}, 1.0}};
+    potentials = {{"test3", RateVector::serializationTestObject()}};
+    guide_rates_expired = true;
+}
+
 double Opm::GuideRate::get(const std::string&          well,
                            const Well::GuideRateTarget target,
                            const RateVector&           rates) const

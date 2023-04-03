@@ -307,6 +307,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::energy, 1.0), 1000, 1e-10);
     BOOST_CHECK_CLOSE( metric.to_si( Meas::icd_strength, 1.0), 7.46496e+14, 1e-10);
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_oil_ratio_rate, 1.0), 1.1574074074074073e-05, 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::moles, 1.0), 1000, 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> METRIC
@@ -346,6 +347,8 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::energy, 1000.0), 1, 1e-10);
     BOOST_CHECK_CLOSE( metric.from_si( Meas::icd_strength, 7.46496e+14), 1.0, 1e-10);
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_oil_ratio_rate, 1.0), 86.400e3, 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::moles, 1), 0.001, 1.0e-10 );
+
 }
 
 BOOST_AUTO_TEST_CASE(FIELD_UNITS)
@@ -394,6 +397,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::energy , 1.0 ) , 1054.3503 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::icd_strength , 1.0 ) , 6.418842091749854e+16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_oil_ratio_rate, 1.0), 1.1574074074074073e-05*178.1076066790352, 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::moles, 1.0), 453.59237, 1.0e-5 );
 
 
     // ----------------------------------------------------------------
@@ -433,6 +437,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::energy , 1054.3503 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::icd_strength , 6.418842091749854e+16 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_oil_ratio_rate, 1.0), 86.400e3*5.614583333333335e-03, 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::moles, 1.0), 0.0022046226, 1.0e-5 );
 
 }
 
@@ -482,6 +487,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::energy , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::icd_strength , 1.0 ) , 1.313172e+24 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_oil_ratio_rate, 1.0), 2.777777777777778e-4, 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::moles, 1), 1, 1.0e-10 );
 
 
     // ----------------------------------------------------------------
@@ -522,6 +528,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::energy , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::icd_strength , 1.0 ) , 7.615148662932201e-25 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_oil_ratio_rate, 1.0), 3.6e3, 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::moles, 1), 1, 1.0e-10 );
 
 }
 
@@ -571,6 +578,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::energy , 1.0 ) , 1.0e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::icd_strength , 1.0 ) , 7.56387072e+14 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_oil_ratio_rate, 1.0), 1.1574074074074073e-05, 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::moles, 1), 1000, 1.0e-10 );
 
 
     // ----------------------------------------------------------------
@@ -611,6 +619,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::energy , 1.0 ) , 1.0e-3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::icd_strength , 1.0 ) , 1.322074420647951e-15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_oil_ratio_rate, 1.0), 86.400e3, 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::moles, 1), 0.001, 1.0e-10 );
 
 }
 

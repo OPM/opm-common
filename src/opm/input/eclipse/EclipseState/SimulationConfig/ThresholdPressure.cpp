@@ -247,6 +247,10 @@ namespace Opm {
         return m_restart;
     }
 
+    bool ThresholdPressure::irreversible() const {
+        return m_irreversible;
+    }
+
     bool ThresholdPressure::hasThresholdPressure(int r1 , int r2) const {
         std::pair<int,int> indexPair = makeIndex(r1,r2);
         auto iter = m_pressureTable.find( indexPair );

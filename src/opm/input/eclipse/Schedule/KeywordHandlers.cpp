@@ -55,6 +55,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
@@ -126,7 +127,22 @@ namespace {
     }
 
 }
+    void Schedule::handleAQUCT(HandlerContext& handlerContext) {
+        throw OpmInputError("AQUCT is not supported as SCHEDULE keyword", handlerContext.keyword.location());
+    }
 
+    void Schedule::handleAQUFETP(HandlerContext& handlerContext) {
+        throw OpmInputError("AQUFETP is not supported as SCHEDULE keyword", handlerContext.keyword.location());
+    }
+
+    void Schedule::handleAQUFLUX(Schedule::HandlerContext& handlerContext) {
+        // auto& aqufluxs = this->snapshots.back().aqufluxs;
+        auto& aqufluxs = this->snapshots.back().aqufluxs;
+        for (const auto& record : handlerContext.keyword) {
+            const auto aquifer = SingleAquiferFlux { record };
+            aqufluxs.insert_or_assign(aquifer.id, aquifer);
+        }
+    }
 
     void Schedule::handleBRANPROP(HandlerContext& handlerContext) {
         auto ext_network = this->snapshots.back().network.get();
@@ -2308,6 +2324,9 @@ Well{0} entered with disallowed 'FIELD' parent group:
     bool Schedule::handleNormalKeyword(HandlerContext& handlerContext) {
         using handler_function = void (Schedule::*) (HandlerContext&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
+            { "AQUCT",    &Schedule::handleAQUCT     },
+            { "AQUFETP",  &Schedule::handleAQUFETP   },
+            { "AQUFLUX",  &Schedule::handleAQUFLUX   },
             { "BOX",      &Schedule::handleGEOKeyword},
             { "BRANPROP", &Schedule::handleBRANPROP  },
             { "COMPDAT" , &Schedule::handleCOMPDAT   },

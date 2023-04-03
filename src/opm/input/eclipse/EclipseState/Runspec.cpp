@@ -49,12 +49,11 @@ namespace {
     {
         return {
             deck.hasKeyword<Opm::ParserKeywords::OIL>(),
-            deck.hasKeyword<Opm::ParserKeywords::GAS>(),
-            deck.hasKeyword<Opm::ParserKeywords::WATER>(),
+            deck.hasKeyword<Opm::ParserKeywords::GAS>() || deck.hasKeyword<Opm::ParserKeywords::GASWAT>(),
+            deck.hasKeyword<Opm::ParserKeywords::WATER>() || deck.hasKeyword<Opm::ParserKeywords::GASWAT>(),
             deck.hasKeyword<Opm::ParserKeywords::SOLVENT>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMER>(),
-            deck.hasKeyword<Opm::ParserKeywords::THERMAL>() ||
-            deck.hasKeyword<Opm::ParserKeywords::TEMP>(),
+            deck.hasKeyword<Opm::ParserKeywords::THERMAL>() || deck.hasKeyword<Opm::ParserKeywords::TEMP>(),
             deck.hasKeyword<Opm::ParserKeywords::POLYMW>(),
             deck.hasKeyword<Opm::ParserKeywords::FOAM>(),
             deck.hasKeyword<Opm::ParserKeywords::BRINE>(),
@@ -103,11 +102,18 @@ namespace {
                      (twoP && deck.hasKeyword<Opm::ParserKeywords::SOF2>()))) ||
             (wat && deck.hasKeyword<Opm::ParserKeywords::SWFN>());
 
+        const auto family3 = //WSF, GSF gas-water CO2STORE case
+            deck.hasKeyword<Opm::ParserKeywords::GSF>() &&
+            deck.hasKeyword<Opm::ParserKeywords::WSF>();
+
         if (family1)
             return Opm::SatFuncControls::KeywordFamily::Family_I;
 
         if (family2)
             return Opm::SatFuncControls::KeywordFamily::Family_II;
+
+        if (family3)
+            return Opm::SatFuncControls::KeywordFamily::Family_III;
 
         return Opm::SatFuncControls::KeywordFamily::Undefined;
     }
@@ -129,41 +135,7 @@ std::time_t create_start_time(const Opm::Deck& deck) {
 
 namespace Opm {
 
-Phase get_phase( const std::string& str ) {
-    if( str == "OIL" ) return Phase::OIL;
-    if( str == "GAS" ) return Phase::GAS;
-    if( str == "WAT" ) return Phase::WATER;
-    if( str == "WATER" )   return Phase::WATER;
-    if( str == "SOLVENT" ) return Phase::SOLVENT;
-    if( str == "POLYMER" ) return Phase::POLYMER;
-    if( str == "ENERGY" ) return Phase::ENERGY;
-    if( str == "POLYMW" ) return Phase::POLYMW;
-    if( str == "FOAM" ) return Phase::FOAM;
-    if( str == "BRINE" ) return Phase::BRINE;
-    if( str == "ZFRACTION" ) return Phase::ZFRACTION;
-
-    throw std::invalid_argument( "Unknown phase '" + str + "'" );
-}
-
-std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
-    switch( p ) {
-        case Phase::OIL:     return stream << "OIL";
-        case Phase::GAS:     return stream << "GAS";
-        case Phase::WATER:   return stream << "WATER";
-        case Phase::SOLVENT: return stream << "SOLVENT";
-        case Phase::POLYMER: return stream << "POLYMER";
-        case Phase::ENERGY:  return stream << "ENERGY";
-        case Phase::POLYMW:  return stream << "POLYMW";
-        case Phase::FOAM:    return stream << "FOAM";
-        case Phase::BRINE:   return stream << "BRINE";
-        case Phase::ZFRACTION:    return stream << "ZFRACTION";
-
-    }
-
-    return stream;
-}
-
-using un = std::underlying_type< Phase >::type;
+using un = std::underlying_type<Phase>::type;
 
 Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, bool polymw, bool foam, bool brine, bool zfraction) noexcept :
     bits( (oil ? (1 << static_cast< un >( Phase::OIL ) )     : 0) |
@@ -635,7 +607,7 @@ Runspec::Runspec( const Deck& deck )
                                   "See the OPM manual for details on the used models.";
                 OpmLog::note(msg);
             } else {
-                throw std::runtime_error("The CO2 storage option is given. Activate GAS and WATER or OIL ");
+                throw std::runtime_error("The CO2 storage option is given. Activate GAS, plus WATER or OIL ");
             }
 
         }

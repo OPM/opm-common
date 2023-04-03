@@ -30,6 +30,7 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
@@ -348,6 +349,11 @@ namespace Opm {
 
         bool has_gpmaint() const;
 
+        bool hasAnalyticalAquifers() const
+        {
+            return ! this->aqufluxs.empty();
+        }
+
         /*********************************************************************/
 
         ptr_member<GConSale> gconsale;
@@ -474,6 +480,8 @@ namespace Opm {
         map_member<int, VFPInjTable> vfpinj;
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
+        // constant flux aquifers
+        std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 
@@ -501,6 +509,7 @@ namespace Opm {
             serializer(m_message_limits);
             serializer(m_whistctl_mode);
             serializer(target_wellpi);
+            serializer(aqufluxs);
         }
 
 

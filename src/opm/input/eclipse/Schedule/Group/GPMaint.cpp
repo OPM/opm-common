@@ -17,11 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <config.h>
 #include <opm/input/eclipse/Schedule/Group/GPMaint.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 
 namespace Opm {
+
+GPMaint::State GPMaint::State::serializationTestObject()
+{
+    return State{1, 2.0, 3.0};
+}
+
+bool GPMaint::State::operator==(const GPMaint::State& rhs) const
+{
+    return this->report_step == rhs.report_step &&
+           this->error_integral == rhs.error_integral &&
+           this->initial_rate == rhs.initial_rate;
+}
 
 GPMaint::GPMaint(std::size_t report_step, const DeckRecord& record)
 {

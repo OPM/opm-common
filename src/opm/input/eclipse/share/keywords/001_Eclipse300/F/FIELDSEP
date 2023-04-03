@@ -1,0 +1,67 @@
+{
+  "name": "FIELDSEP",
+  "sections": [
+    "SOLUTION"
+  ],
+"items": [
+  {
+    "item": 1,
+    "name": "STAGE",
+    "value_type": "INT"
+  },
+  {
+      "item": 2,
+      "name": "TEMPERATURE",
+      "value_type": "DOUBLE",
+      "dimension": "Temperature",
+      "default": 15.56
+    },
+    {
+      "item": 3,
+      "name": "PRESSURE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "default": 1.01325
+    },
+    {
+      "item": 4,
+      "name": "LIQ_DESTINATION",
+      "value_type": "INT"
+    },
+    {
+      "item": 5,
+      "name": "VAP_DESTINATION",
+      "value_type":  "INT"
+    },
+    {
+        "item": 6,
+        "name": "KVALUE",
+        "value_type": "DOUBLE",
+        "dimension": "1",
+        "default": 0
+      },
+      {
+        "item": 7,
+        "name": "TABLE_NUM",
+        "value_type": "INT",
+        "default": 0
+      },
+      {
+        "item": 8,
+        "name": "EOS_NUM",
+        "value_type": "INT"
+      },
+      {
+        "item": 9,
+        "name": "REF_TEMP",
+        "value_type": "DOUBLE",
+        "dimension": "Temperature"
+      },
+      {
+        "item": 10,
+        "name": "REF_PRESS",
+        "value_type": "DOUBLE",
+        "dimension": "Pressure"
+      }
+]
+}

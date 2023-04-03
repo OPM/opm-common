@@ -39,6 +39,7 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
+#include <opm/material/common/quad.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 
 #include <cmath>
@@ -981,13 +982,24 @@ private:
                                    const Evaluation& temperature,
                                    const Evaluation& pressure)
     {
-        auto tostring = [](const auto& val) -> std::string
+        auto cast = [](const auto d)
         {
-            if constexpr (DenseAd::is_evaluation<Evaluation>::value)
-                return std::to_string(getValue(val.value()));
+#if HAVE_QUAD
+            if constexpr (std::is_same_v<decltype(d), const quad>)
+                return static_cast<double>(d);
             else
-                return std::to_string(getValue(val));
+#endif
+                return d;
         };
+        auto tostring = [cast](const auto& val) -> std::string
+        {
+           if constexpr (DenseAd::is_evaluation<Evaluation>::value) {
+                return std::to_string(cast(getValue(val.value())));
+           }
+            else
+                return std::to_string(cast(getValue(val)));
+        };
+
         return type + " is only implemented for temperatures "
                "below 623.15K and pressures below 100MPa. (T = " +
                tostring(temperature) + ", p="  +  tostring(pressure);

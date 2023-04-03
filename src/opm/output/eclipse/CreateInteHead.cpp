@@ -601,7 +601,7 @@ createInteHead(const EclipseState& es,
         .params_NWELZ       (155 + num_water_tracer, 122 + 2*num_water_tracer, 130 + nxwelz_tracer_shift, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
         .params_NCON        (25, 41, 58 + 5*num_water_tracer)       // n{isx}conz: number of data elements per completion in ICON
         .params_GRPZ        (getNGRPZ(nwgmax, ngmax, num_water_tracer, rspec))
-        .aquiferDimensions  (inferAquiferDimensions(es))
+        .aquiferDimensions  (inferAquiferDimensions(es, sched[lookup_step]))
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched[lookup_step].tuning()))
         .liftOptParam       (getLiftOptPar(sched, report_step, lookup_step))

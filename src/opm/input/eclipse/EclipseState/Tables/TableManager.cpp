@@ -101,6 +101,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
@@ -172,6 +174,12 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         if( deck.hasKeyword( "DIFFC" ) )
             this->m_diffCoeffTable = DiffCoeffTable( deck["DIFFC"].back() );
+
+        if( deck.hasKeyword( "DIFFCWAT" ) )
+            this->m_diffCoeffWatTable = DiffCoeffWatTable( deck["DIFFCWAT"].back() );
+
+        if( deck.hasKeyword( "DIFFCGAS" ) )
+            this->m_diffCoeffGasTable = DiffCoeffGasTable( deck["DIFFCGAS"].back() );
 
         if( deck.hasKeyword( "ROCK" ) )
             this->m_rockTable = RockTable( deck["ROCK"].back() );
@@ -277,6 +285,8 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         result.m_pvcdoTable = PvcdoTable::serializationTestObject();
         result.m_densityTable = DensityTable::serializationTestObject();
         result.m_diffCoeffTable = DiffCoeffTable::serializationTestObject();
+        result.m_diffCoeffWatTable = DiffCoeffWatTable::serializationTestObject();
+        result.m_diffCoeffGasTable = DiffCoeffGasTable::serializationTestObject();
         result.m_plyvmhTable = PlyvmhTable::serializationTestObject();
         result.m_rockTable = RockTable::serializationTestObject();
         result.m_plmixparTable = PlmixparTable::serializationTestObject();
@@ -421,6 +431,9 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "SSFN",  m_tabdims.getNumSatTables() );
         addTables( "MSFN",  m_tabdims.getNumSatTables() );
 
+        addTables( "GSF",  m_tabdims.getNumSatTables() );
+        addTables( "WSF",  m_tabdims.getNumSatTables() );
+
         addTables( "PLYADS", m_tabdims.getNumSatTables() );
         addTables( "PLYROCK", m_tabdims.getNumSatTables());
         addTables( "PLYVISC", m_tabdims.getNumPVTTables());
@@ -507,6 +520,9 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         }
         initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<MsfnTable>(deck, "MSFN" , m_tabdims.getNumSatTables());
+
+        initSimpleTableContainer<WsfTable>(deck, "WSF" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<GsfTable>(deck, "GSF" , m_tabdims.getNumSatTables());
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims.getNumEquilRegions());
@@ -917,6 +933,14 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return getTables("SSFN");
     }
 
+    const TableContainer& TableManager::getWsfTables() const {
+        return getTables("WSF");
+    }
+
+    const TableContainer& TableManager::getGsfTables() const {
+        return getTables("GSF");
+    }
+
     const TableContainer& TableManager::getRsvdTables() const {
         return getTables("RSVD");
     }
@@ -1114,6 +1138,14 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return this->m_diffCoeffTable;
     }
 
+    const DiffCoeffWatTable& TableManager::getDiffusionCoefficientWaterTable() const {
+        return this->m_diffCoeffWatTable;
+    }
+
+    const DiffCoeffGasTable& TableManager::getDiffusionCoefficientGasTable() const {
+        return this->m_diffCoeffGasTable;
+    }
+
     const RockTable& TableManager::getRockTable() const {
         return this->m_rockTable;
     }
@@ -1252,6 +1284,8 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&
                m_diffCoeffTable == data.m_diffCoeffTable &&
+               m_diffCoeffWatTable == data.m_diffCoeffWatTable &&
+               m_diffCoeffGasTable == data.m_diffCoeffGasTable &&
                m_plmixparTable == data.m_plmixparTable &&
                m_plyvmhTable == data.m_plyvmhTable &&
                m_shrateTable == data.m_shrateTable &&
@@ -1526,7 +1560,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
                 try {
-                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, useJFunc(), tableIdx );
+                    std::shared_ptr<TableType> table = std::make_shared<TableType>(dataItem, useJFunc(), tableIdx );
                     container.addTable( tableIdx , table );
                 } catch (const std::runtime_error& err) {
                     throw OpmInputError(err, tableKeyword.location());

@@ -53,6 +53,11 @@ public:
         OilResVolume = 13,
         GasResVolume = 14,
         SALT = 15,
+        CO2InWaterPhase = 16,
+        CO2InGasPhaseInMob = 17,
+        CO2InGasPhaseMob = 18,
+        WaterInGasPhase = 19,
+        WaterInWaterPhase = 20,
     };
 
     /*
@@ -63,6 +68,7 @@ public:
       for totals, i.e. field properties.
     */
 
+    static Inplace serializationTestObject();
 
     void add(const std::string& region, Phase phase, std::size_t region_number, double value);
     void add(Phase phase, double value);
@@ -85,6 +91,15 @@ public:
     std::vector<double> get_vector(const std::string& region, Phase phase) const;
 
     static const std::vector<Phase>& phases();
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(phase_values);
+    }
+
+    bool operator==(const Inplace& rhs) const;
+
 private:
     std::unordered_map<std::string, std::unordered_map<Phase, std::unordered_map<std::size_t, double>>> phase_values;
 };

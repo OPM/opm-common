@@ -1514,7 +1514,8 @@ inline quantity well_control_mode( const fn_args& args )
     const auto* well = args.schedule_wells.front();
     auto xwPos = args.wells.find(well->name());
     if ((xwPos == args.wells.end()) ||
-        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT)) {
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT ||
+         xwPos->second.dynamicStatus == Opm::Well::Status::STOP )) {
         // No dynamic results for 'well'.  Treat as shut/stopped.
         return { 0.0, unit };
     }
@@ -2230,7 +2231,11 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
   {"FGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FPR"      , Opm::UnitSystem::measure::pressure },
-
+  {"FGCDI"    , Opm::UnitSystem::measure::moles },
+  {"FGCDM"    , Opm::UnitSystem::measure::moles },
+  {"FWCD"     , Opm::UnitSystem::measure::moles },
+  {"FWIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FWIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
 };
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_units = {
@@ -2243,7 +2248,12 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_u
   {"RGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"RGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"RWIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
-  {"RRPV"     , Opm::UnitSystem::measure::geometric_volume }
+  {"RRPV"     , Opm::UnitSystem::measure::geometric_volume },
+  {"RGCDI"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RGCDM"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RWCD"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RWIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"RWIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
 };
 
 static const auto interregion_units =
@@ -2519,6 +2529,10 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
 
     case Cat::Connection:
         st.update_conn_var(node.wgname, node.keyword, node.number, value);
+        break;
+
+    case Cat::Segment:
+        st.update_segment_var(node.wgname, node.keyword, node.number, value);
         break;
 
     default:

@@ -31,13 +31,16 @@
 
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
+
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -49,6 +52,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -97,6 +101,15 @@ namespace {
     {
         using M = Opm::UnitSystem::measure;
         return Opm::UnitSystem::newMETRIC().to_si(M::pressure, 1.0);
+    }
+
+    double fluxUnit()
+    {
+        using M = Opm::UnitSystem::measure;
+        const auto usys = Opm::UnitSystem::newMETRIC();
+
+        auto q = usys.to_si(M::liquid_surface_rate, 1.0);
+        return usys.from_si(M::length, usys.from_si(M::length, q));
     }
 
     double compressibilityUnit()
@@ -204,7 +217,7 @@ AQUTAB
             const auto cartCell1 = std::size_t{699}; // one-based IJK = (20,5,7)
             const auto cartCell2 = std::size_t{799}; // one-based IJK = (20,5,8)
             const auto cartCell3 = std::size_t{899}; // one-based IJK = (20,5,9)
-            const auto effFaceArea = 4.0 * 0.2;     // DY * DZ
+            const auto effFaceArea = 4.0 * 0.2;      // DY * DZ
             const auto influxCoeff = effFaceArea;
 
             aquancon.addConnection(aquiferID, cartCell1, 1.0*influxCoeff,  6.0*effFaceArea, FDir::XMinus);
@@ -288,7 +301,8 @@ AQUTAB
             const auto effFaceArea = 4.0 * 0.2;     // DY * DZ
             const auto influxCoeff = effFaceArea;
 
-            aquancon.addConnection(aquiferID, cartCell, influxCoeff, effFaceArea, FDir::YPlus);
+            aquancon.addConnection(aquiferID, cartCell, influxCoeff,
+                                   effFaceArea, FDir::YPlus);
         }
 
         {
@@ -297,7 +311,8 @@ AQUTAB
             const auto effFaceArea = 4.0 * 0.2;     // DY * DZ
             const auto influxCoeff = 1.0;           // [m^2]
 
-            aquancon.addConnection(aquiferID, cartCell, influxCoeff, effFaceArea, FDir::ZPlus);
+            aquancon.addConnection(aquiferID, cartCell, influxCoeff,
+                                   effFaceArea, FDir::ZPlus);
         }
     }
 
@@ -318,7 +333,8 @@ AQUTAB
 
             auto& fetp = properties
                 .emplace_back(aquiferID, pvtTable, prodIndex, compr,
-                              initialVolume, datumDepth, initialPressure, initialTemperature);
+                              initialVolume, datumDepth,
+                              initialPressure, initialTemperature);
 
             fetp.finishInitialisation(waterProperties());
         }
@@ -331,7 +347,8 @@ AQUTAB
 
             auto& fetp = properties
                 .emplace_back(aquiferID, pvtTable, prodIndex, compr,
-                              initialVolume, datumDepth, initialPressure, initialTemperature);
+                              initialVolume, datumDepth,
+                              initialPressure, initialTemperature);
 
             fetp.finishInitialisation(waterProperties());
         }
@@ -339,14 +356,76 @@ AQUTAB
         return Opm::Aquifetp(properties);
     }
 
+    void connectConstantFluxAquifers(AquiferConnections& aquancon)
+    {
+        using FDir = Opm::FaceDir::DirEnum;
+
+        {
+            const auto aquiferID = 3;
+            const auto cartCell1 = std::size_t{680}; // one-based IJK = (1,5, 7)
+            const auto cartCell2 = std::size_t{780}; // one-based IJK = (1,5, 8)
+            const auto cartCell3 = std::size_t{880}; // one-based IJK = (1,5, 9)
+            const auto cartCell4 = std::size_t{980}; // one-based IJK = (1,5,10)
+            const auto effFaceArea = 5.0 * 0.2;      // DX * DZ
+            const auto influxCoeff = effFaceArea;
+
+            aquancon.addConnection(aquiferID, cartCell1, 1.0*influxCoeff,  6.0*effFaceArea, FDir::YPlus);
+            aquancon.addConnection(aquiferID, cartCell2, 2.0*influxCoeff, 12.0*effFaceArea, FDir::YPlus);
+            aquancon.addConnection(aquiferID, cartCell3, 3.0*influxCoeff, 18.0*effFaceArea, FDir::YPlus);
+            aquancon.addConnection(aquiferID, cartCell4, 4.0*influxCoeff, 24.0*effFaceArea, FDir::YPlus);
+        }
+
+        {
+            const auto aquiferID = 5;
+            const auto cartCell = std::size_t{490}; // one-based IJK = (11,5,5)
+            const auto effFaceArea = 5.0 * 0.2;     // DX * DZ
+            const auto influxCoeff = 1.0;           // [m^2]
+
+            aquancon.addConnection(aquiferID, cartCell, influxCoeff, effFaceArea, FDir::XPlus);
+        }
+    }
+
+    Opm::AquiferFlux createConstantFluxAquifers()
+    {
+        const auto uQ     = fluxUnit();
+        const auto uP     = pressureUnit();
+        const auto salt   = 0.0;
+        const auto temp   = 300.0*temperatureUnit();
+        const auto active = true;
+
+        return Opm::AquiferFlux { std::vector {
+                Opm::SingleAquiferFlux { 3, 12.34*uQ, salt, active, temp, 234.5*uP },
+                Opm::SingleAquiferFlux { 5, 43.21*uQ, salt, active, temp, 345.6*uP },
+            }};
+    }
+
     Opm::AquiferConfig createAquiferConfig()
     {
         auto aquancon = AquiferConnections{};
         connectCarterTracy(aquancon);
         connectFetkovic(aquancon);
+        connectConstantFluxAquifers(aquancon);
 
         return {
-            createFetkovich(), createCarterTracy(), Opm::Aquancon(aquancon.getAllConnections())
+            createFetkovich(),
+            createCarterTracy(),
+            createConstantFluxAquifers(),
+            Opm::Aquancon { aquancon.getAllConnections() }
+        };
+    }
+
+    Opm::AquiferConfig createEmptyAquiferConfig()
+    {
+        auto aquancon = AquiferConnections{};
+        connectCarterTracy(aquancon);
+        connectFetkovic(aquancon);
+        connectConstantFluxAquifers(aquancon);
+
+        return {
+            Opm::Aquifetp{},
+            Opm::AquiferCT{},
+            Opm::AquiferFlux{},
+            Opm::Aquancon { aquancon.getAllConnections() }
         };
     }
 
@@ -422,11 +501,37 @@ END
     {
         auto aqDims = Opm::RestartIO::InteHEAD::AquiferDims{};
 
-        aqDims.numAquifers = 4; // 1, 2, 4, 6
+        aqDims.numAquifers = 6; // 1, 2, 3, 4, 5, 6
         aqDims.maxNumAquifers = 10; // >= 6
-        aqDims.maxNumAquiferConn = 5;       // >= 3
-        aqDims.maxNumActiveAquiferConn = 3; // ID = 1
+        aqDims.maxNumAquiferConn = 5;       // >= 4
+        aqDims.maxNumActiveAquiferConn = 4; // ID = 3
         aqDims.maxAquiferID = 6;
+
+        return aqDims;
+    }
+
+    Opm::RestartIO::InteHEAD::AquiferDims syntheticDynamicAquiferDimensionsSOLUTION()
+    {
+        auto aqDims = Opm::RestartIO::InteHEAD::AquiferDims{};
+
+        aqDims.numAquifers = 0;
+        aqDims.maxNumAquifers = 10; // >= 5
+        aqDims.maxNumAquiferConn = 5;       // >= 4
+        aqDims.maxNumActiveAquiferConn = 4; // ID = 3
+        aqDims.maxAquiferID = 0;
+
+        return aqDims;
+    }
+
+    Opm::RestartIO::InteHEAD::AquiferDims syntheticDynamicAquiferDimensionsSCHEDULE()
+    {
+        auto aqDims = Opm::RestartIO::InteHEAD::AquiferDims{};
+
+        aqDims.numAquifers = 2; // 3, 5
+        aqDims.maxNumAquifers = 10; // >= 5
+        aqDims.maxNumAquiferConn = 5;       // >= 4
+        aqDims.maxNumActiveAquiferConn = 4; // ID = 3
+        aqDims.maxAquiferID = 5;
 
         return aqDims;
     }
@@ -520,9 +625,17 @@ AQUANCON
         state.update("AAQR:2", 222.333);
         state.update("AAQT:2", 333.444);
 
+        state.update("AAQP:3", 212.121);
+        state.update("AAQR:3", 333.222);
+        state.update("AAQT:3", 444.333);
+
         state.update("AAQP:4", 555.444);
         state.update("AAQR:4", 333.222);
         state.update("AAQT:4", 222.111);
+
+        state.update("AAQP:5", 444.555);
+        state.update("AAQR:5", 323.232);
+        state.update("AAQT:5", 232.131);
 
         state.update("AAQP:6", 456.123);
         state.update("AAQR:6", 34.567);
@@ -613,17 +726,38 @@ AQUANCON
         return aquiferValues;
     }
 
+    Opm::ScheduleState emptyScheduleState()
+    {
+        return {};
+    }
+
+    Opm::ScheduleState dynamicAquFluxState()
+    {
+        auto sched = emptyScheduleState();
+        const auto cfg = createAquiferConfig();
+
+        sched.aqufluxs.insert(cfg.aquflux().begin(),
+                              cfg.aquflux().end());
+
+        return sched;
+    }
+
     template <class Coll1, class Coll2>
-    void check_is_close(const Coll1& coll1, const Coll2& coll2, const double tol)
+    void check_is_close(const Coll1&     coll1,
+                        const Coll2&     coll2,
+                        const double     tol,
+                        std::string_view context)
     {
         BOOST_REQUIRE_EQUAL(std::size(coll1), std::size(coll2));
 
         if (coll1.empty()) { return; }
 
+        auto i  = 0;
         auto c1 = std::begin(coll1);
         auto e1 = std::end  (coll1);
         auto c2 = std::begin(coll2);
-        for (; c1 != e1; ++c1, ++c2) {
+        for (; c1 != e1; ++c1, ++c2, ++i) {
+            BOOST_TEST_MESSAGE(context << '[' << i << ']');
             BOOST_CHECK_CLOSE(*c1, *c2, tol);
         }
     }
@@ -676,6 +810,8 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             20,  5,  8, 994,   3,   0, 0,
             // Connection 2
             20,  5,  9, 995,   5,   0, 0,
+            // Connection 3 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
         };
 
         const auto& icaq = aquiferData.getIntegerAquiferConnectionData(1);
@@ -692,11 +828,13 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             1.0f/3.0f,  2.0f,
             // Connection 2
             1.0f/2.0f,  3.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
         };
 
         const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(1);
 
-        check_is_close(scaq, expect, 1.0e-7);
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:1");
     }
 
     // ICAQ:2
@@ -707,6 +845,8 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             // Connection 1 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
             // Connection 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 3 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
         };
 
@@ -724,22 +864,26 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             0.0f,  0.0f,
             // Connection 2 (nonexistent)
             0.0f,  0.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
         };
 
         const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(2);
 
-        check_is_close(scaq, expect, 1.0e-7);
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:2");
     }
 
-    // ICAQ:3 (not activated/connected)
+    // ICAQ:3
     {
         const auto expect = std::vector<int> {
             // Connection 0
-            0, 0, 0, 0, 0, 0, 0,
+            1, 5,  7, 47, 4, 0, 0,
             // Connection 1
-            0, 0, 0, 0, 0, 0, 0,
+            1, 5,  8, 48, 4, 0, 0,
             // Connection 2
-            0, 0, 0, 0, 0, 0, 0,
+            1, 5,  9, 49, 4, 0, 0,
+            // Connection 3
+            1, 5, 10, 50, 4, 0, 0,
         };
 
         const auto& icaq = aquiferData.getIntegerAquiferConnectionData(3);
@@ -747,20 +891,22 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
         BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
     }
 
-    // SCAQ:3 (not activated/connected)
+    // SCAQ:3
     {
         const auto expect = std::vector<float> {
             // Connection 0
-            0.0f,  0.0f,
+            1.0f/10.0f,  3.0f/5.0f,
             // Connection 1
-            0.0f,  0.0f,
+            1.0f/ 5.0f,  6.0f/5.0f,
             // Connection 2
-            0.0f,  0.0f,
+            3.0f/10.0f,  9.0f/5.0f,
+            // Connection 3
+            2.0f/ 5.0f, 12.0f/5.0f,
         };
 
         const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(3);
 
-        check_is_close(scaq, expect, 1.0e-7);
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:3");
     }
 
     // ICAQ:4
@@ -771,6 +917,8 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             // Connection 1 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
             // Connection 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 3 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
         };
 
@@ -788,21 +936,25 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             0.0f,  0.0f,
             // Connection 2 (nonexistent)
             0.0f,  0.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
         };
 
         const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(4);
 
-        check_is_close(scaq, expect, 1.0e-7);
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:4");
     }
 
-    // ICAQ:5 (not activated/connected)
+    // ICAQ:5
     {
         const auto expect = std::vector<int> {
             // Connection 0
+            11, 5, 5, 543, 2, 0, 0,
+            // Connection 1 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
-            // Connection 1
+            // Connection 2 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
-            // Connection 2
+            // Connection 3 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
         };
 
@@ -811,20 +963,22 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
         BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
     }
 
-    // SCAQ:5 (not activated/connected)
+    // SCAQ:5
     {
         const auto expect = std::vector<float> {
             // Connection 0
+            1.0f,  1.0f,
+            // Connection 1 (nonexistent)
             0.0f,  0.0f,
-            // Connection 1
+            // Connection 2 (nonexistent)
             0.0f,  0.0f,
-            // Connection 2
+            // Connection 3 (nonexistent)
             0.0f,  0.0f,
         };
 
         const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(5);
 
-        check_is_close(scaq, expect, 1.0e-7);
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:5");
     }
 
     // ICAQ:6
@@ -835,6 +989,8 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             // Connection 1 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
             // Connection 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 3 (nonexistent)
             0, 0, 0, 0, 0, 0, 0,
         };
 
@@ -852,11 +1008,13 @@ BOOST_AUTO_TEST_CASE(Static_Information_Analytic_Aquifers)
             0.0f,  0.0f,
             // Connection 2 (nonexistent)
             0.0f,  0.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
         };
 
         const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(6);
 
-        check_is_close(scaq, expect, 1.0e-7);
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:6");
     }
 }
 
@@ -868,8 +1026,11 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
     auto aquiferData = Opm::RestartIO::Helpers::
         AggregateAquiferData{ aqDims, aqConfig, createGrid() };
 
-    aquiferData.captureDynamicdAquiferData(aqConfig, aquiferValues(aqConfig), sim_state(),
-                                           Opm::UnitSystem::newMETRIC());
+    aquiferData.captureDynamicAquiferData(aqDims, aqConfig,
+                                          emptyScheduleState(),
+                                          aquiferValues(aqConfig),
+                                          sim_state(),
+                                          Opm::UnitSystem::newMETRIC());
 
     // IAAQ
     {
@@ -879,11 +1040,11 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
             // Aquifer 2
             1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
             // Aquifer 3
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,
             // Aquifer 4
             1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
             // Aquifer 5
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,
             // Aquifer 6
             1, 1, 0, 0, 0, 0, 0, 0, 0, 3, 1, 1, 0, 0, 0, 0, 0, 0,
         };
@@ -907,9 +1068,9 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
             0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (40..47)
 
             // Aquifer 3
-            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 (48..55)
-            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (56..63)
-            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (64..71)
+            12.34f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 (48..55)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (56..63)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (64..71)
 
             // Aquifer 4
             1.5312e-4f, 2.0e10f, 910.0f, 3.365274725274725e+03f, 250.0f, 2000.0f, 0.0f, 0.0f, //  0.. 7 (72..79)
@@ -917,9 +1078,9 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
             0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (88..95)
 
             // Aquifer 5
-            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 ( 96..103)
-            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (104..111)
-            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (112..119)
+            43.21f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 ( 96..103)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (104..111)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (112..119)
 
             // Aquifer 6
             3.0e-5f, 900.0f, 5000.0f, 0.3f, 269.0f, 2000.0f, 10.0f, 1.0f, //  0.. 7 (120..127)
@@ -929,7 +1090,7 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
 
         const auto& saaq = aquiferData.getSinglePrecAquiferData();
 
-        check_is_close(saaq, expect, 1.0e-7);
+        check_is_close(saaq, expect, 1.0e-7, "SAAQ");
     }
 
     // XAAQ
@@ -942,13 +1103,13 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
             222.333, 121.212, 333.444, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 
             // Aquifer 3
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            333.222, 212.121, 444.333, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 
             // Aquifer 4
             333.222, 555.444, 222.111, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 
             // Aquifer 5
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            323.232, 444.555, 232.131, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 
             // Aquifer 6
             34.567, 456.123, 4444.5555, 1.0, 18.409712143375852, 458.0307, 0.0, 0.0, 100.321, 50.706,
@@ -956,7 +1117,7 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Analytic_Aquifers)
 
         const auto& xaaq = aquiferData.getDoublePrecAquiferData();
 
-        check_is_close(xaaq, expect, 1.0e-7);
+        check_is_close(xaaq, expect, 1.0e-7, "XAAQ");
     }
 }
 
@@ -965,7 +1126,8 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Numeric_Aquifers)
     const auto aqDims = syntheticNumericAquiferDimensions();
     const auto aqConfig = createNumericAquiferConfig();
 
-    BOOST_REQUIRE_MESSAGE(aqConfig.hasNumericalAquifer(), "Aquifer configuration object must have numeric aquifers");
+    BOOST_REQUIRE_MESSAGE(aqConfig.hasNumericalAquifer(),
+                          "Aquifer configuration object must have numeric aquifers");
 
     auto aquiferData = Opm::RestartIO::Helpers::
         AggregateAquiferData{ aqDims, aqConfig, createGrid() };
@@ -980,10 +1142,11 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Numeric_Aquifers)
         BOOST_CHECK_EQUAL(aquiferData.getNumericAquiferDoublePrecData().size(), 4u * 13);
     }
 
-    aquiferData.captureDynamicdAquiferData(aqConfig,
-                                           numericAquiferValues(aqConfig),
-                                           aqunum_sim_state(),
-                                           Opm::UnitSystem::newMETRIC());
+    aquiferData.captureDynamicAquiferData(aqDims, aqConfig,
+                                          emptyScheduleState(),
+                                          numericAquiferValues(aqConfig),
+                                          aqunum_sim_state(),
+                                          Opm::UnitSystem::newMETRIC());
 
     // IAQN
     {
@@ -1015,7 +1178,321 @@ BOOST_AUTO_TEST_CASE(Dynamic_Information_Numeric_Aquifers)
         };
 
         const auto& raqn = aquiferData.getNumericAquiferDoublePrecData();
-        check_is_close(raqn, expect, 1.0e-10);
+        check_is_close(raqn, expect, 1.0e-10, "RAQN");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Constant_Flux_Aquifer_SCHEDULE)
+{
+    const auto aqConfig = createEmptyAquiferConfig();
+
+    BOOST_CHECK_MESSAGE(! aqConfig.active(), "Empty aquifer configuration object must not be active()");
+
+    auto aquiferData = Opm::RestartIO::Helpers::AggregateAquiferData {
+        syntheticDynamicAquiferDimensionsSOLUTION(), aqConfig, createGrid()
+    };
+
+    BOOST_CHECK_EQUAL(aquiferData.maximumActiveAnalyticAquiferID(), 0);
+
+    aquiferData.captureDynamicAquiferData(syntheticDynamicAquiferDimensionsSCHEDULE(),
+                                          aqConfig, dynamicAquFluxState(),
+                                          Opm::data::Aquifers{},
+                                          sim_state(), Opm::UnitSystem::newMETRIC());
+
+    BOOST_CHECK_EQUAL(aquiferData.maximumActiveAnalyticAquiferID(), 5);
+
+    // ICAQ:1
+    {
+        const auto expect = std::vector<int> {
+            // Connection 0
+            20,  5,  7, 993,   1,   0, 0,
+            // Connection 1
+            20,  5,  8, 994,   3,   0, 0,
+            // Connection 2
+            20,  5,  9, 995,   5,   0, 0,
+            // Connection 3 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+        };
+
+        const auto& icaq = aquiferData.getIntegerAquiferConnectionData(1);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
+    }
+
+    // SCAQ:1
+    {
+        const auto expect = std::vector<float> {
+            // Connection 0
+            1.0f/6.0f,  1.0f,
+            // Connection 1
+            1.0f/3.0f,  2.0f,
+            // Connection 2
+            1.0f/2.0f,  3.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
+        };
+
+        const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(1);
+
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:1");
+    }
+
+    // ICAQ:2
+    {
+        const auto expect = std::vector<int> {
+            // Connection 0
+            20,  1,  7, 955,   4,   0, 0,
+            // Connection 1 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 3 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+        };
+
+        const auto& icaq = aquiferData.getIntegerAquiferConnectionData(2);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
+    }
+
+    // SCAQ:2
+    {
+        const auto expect = std::vector<float> {
+            // Connection 0
+            1.0f,  1.0f,
+            // Connection 1 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 2 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
+        };
+
+        const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(2);
+
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:2");
+    }
+
+    // ICAQ:3
+    {
+        const auto expect = std::vector<int> {
+            // Connection 0
+            1, 5,  7, 47, 4, 0, 0,
+            // Connection 1
+            1, 5,  8, 48, 4, 0, 0,
+            // Connection 2
+            1, 5,  9, 49, 4, 0, 0,
+            // Connection 3
+            1, 5, 10, 50, 4, 0, 0,
+        };
+
+        const auto& icaq = aquiferData.getIntegerAquiferConnectionData(3);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
+    }
+
+    // SCAQ:3
+    {
+        const auto expect = std::vector<float> {
+            // Connection 0
+            1.0f/10.0f,  3.0f/5.0f,
+            // Connection 1
+            1.0f/ 5.0f,  6.0f/5.0f,
+            // Connection 2
+            3.0f/10.0f,  9.0f/5.0f,
+            // Connection 3
+            2.0f/ 5.0f, 12.0f/5.0f,
+        };
+
+        const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(3);
+
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:3");
+    }
+
+    // ICAQ:4
+    {
+        const auto expect = std::vector<int> {
+            // Connection 0
+            20,  1,  5, 953,   6,   0, 0,
+            // Connection 1 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 3 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+        };
+
+        const auto& icaq = aquiferData.getIntegerAquiferConnectionData(4);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
+    }
+
+    // SCAQ:4
+    {
+        const auto expect = std::vector<float> {
+            // Connection 0
+            1.0f,  0.8f,
+            // Connection 1 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 2 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
+        };
+
+        const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(4);
+
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:4");
+    }
+
+    // ICAQ:5
+    {
+        const auto expect = std::vector<int> {
+            // Connection 0
+            11, 5, 5, 543, 2, 0, 0,
+            // Connection 1 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 3 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+        };
+
+        const auto& icaq = aquiferData.getIntegerAquiferConnectionData(5);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
+    }
+
+    // SCAQ:5
+    {
+        const auto expect = std::vector<float> {
+            // Connection 0
+            1.0f,  1.0f,
+            // Connection 1 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 2 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
+        };
+
+        const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(5);
+
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:5");
+    }
+
+    // ICAQ:6
+    {
+        const auto expect = std::vector<int> {
+            // Connection 0
+            20,  4,  6, 982,   2,   0, 0,
+            // Connection 1 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+            // Connection 3 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0,
+        };
+
+        const auto& icaq = aquiferData.getIntegerAquiferConnectionData(6);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(icaq.begin(), icaq.end(), expect.begin(), expect.end());
+    }
+
+    // SCAQ:6
+    {
+        const auto expect = std::vector<float> {
+            // Connection 0
+            1.0f,  0.8f,
+            // Connection 1 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 2 (nonexistent)
+            0.0f,  0.0f,
+            // Connection 3 (nonexistent)
+            0.0f,  0.0f,
+        };
+
+        const auto& scaq = aquiferData.getSinglePrecAquiferConnectionData(6);
+
+        check_is_close(scaq, expect, 1.0e-7, "SCAQ:6");
+    }
+
+    // IAAQ
+    {
+        const auto expect = std::vector<int> {
+            // Aquifer 1 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            // Aquifer 2 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            // Aquifer 3
+            4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,
+            // Aquifer 4 (nonexistent)
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            // Aquifer 5
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,
+        };
+
+        const auto& iaaq = aquiferData.getIntegerAquiferData();
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(iaaq.begin(), iaaq.end(), expect.begin(), expect.end());
+    }
+
+    // SAAQ
+    {
+        const auto expect = std::vector<float> {
+            // Aquifer 1
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23
+
+            // Aquifer 2
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 (24..38)
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (32..39)
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (40..47)
+
+            // Aquifer 3
+            12.34f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 (48..55)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (56..63)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (64..71)
+
+            // Aquifer 4
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 (72..79)
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (80..87)
+            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (88..95)
+
+            // Aquifer 5
+            43.21f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  0.. 7 ( 96..103)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //  8..15 (104..111)
+             0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16..23 (112..119)
+        };
+
+        const auto& saaq = aquiferData.getSinglePrecAquiferData();
+
+        check_is_close(saaq, expect, 1.0e-7, "SAAQ");
+    }
+
+    // XAAQ
+    {
+        const auto expect = std::vector<double> {
+            // Aquifer 1
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+
+            // Aquifer 2
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+
+            // Aquifer 3
+            333.222, 212.121, 444.333, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+
+            // Aquifer 4
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+
+            // Aquifer 5
+            323.232, 444.555, 232.131, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        };
+
+        const auto& xaaq = aquiferData.getDoublePrecAquiferData();
+
+        check_is_close(xaaq, expect, 1.0e-7, "XAAQ");
     }
 }
 

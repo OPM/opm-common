@@ -232,12 +232,22 @@ public:
             }
         }
 
+        auto cast = [](const auto d)
+        {
+#if HAVE_QUAD
+            if constexpr (std::is_same_v<decltype(d), const quad>)
+                return static_cast<double>(d);
+            else
+#endif
+                return d;
+        };
+
         std::string msg = "NcpFlash solver failed: "
                           "{c_alpha^kappa} = {";
         for (const auto& v : globalMolarities)
-            msg += " " + std::to_string(getValue(v));
+            msg += " " + std::to_string(cast(getValue(v)));
         msg += " }, T = ";
-        msg += std::to_string(getValue(fluidState.temperature(/*phaseIdx=*/0)));
+        msg += std::to_string(cast(getValue(fluidState.temperature(/*phaseIdx=*/0))));
         throw NumericalProblem(msg);
     }
 

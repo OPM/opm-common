@@ -34,7 +34,6 @@
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/AggregateActionxData.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -43,16 +42,19 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -88,6 +90,12 @@ namespace {
             std::unordered_set<std::string>
         {
             "THRESHPR",
+            "FLOGASN+",
+            "FLOOILN+",
+            "FLOWATN+",
+            "FLRGASN+",
+            "FLROILN+",
+            "FLRWATN+",
         };
 
         return extra_solution.count(vector) > 0;
@@ -457,16 +465,24 @@ namespace {
         rstFile.write("RAQN", aquiferData.getNumericAquiferDoublePrecData());
     }
 
-    void updateAndWriteAquiferData(const AquiferConfig&           aqConfig,
+    void updateAndWriteAquiferData(const EclipseState&            es,
+                                   const ScheduleState&           sched,
                                    const data::Aquifers&          aquData,
                                    const SummaryState&            summaryState,
                                    const UnitSystem&              usys,
                                    Helpers::AggregateAquiferData& aquiferData,
                                    EclIO::OutputStream::Restart&  rstFile)
     {
-        aquiferData.captureDynamicdAquiferData(aqConfig, aquData, summaryState, usys);
+        const auto& aqConfig = es.aquifer();
 
-        if (aqConfig.hasAnalyticalAquifer()) {
+        aquiferData.captureDynamicAquiferData(inferAquiferDimensions(es, sched),
+                                              aqConfig,
+                                              sched,
+                                              aquData,
+                                              summaryState,
+                                              usys);
+
+        if (aqConfig.hasAnalyticalAquifer() || sched.hasAnalyticalAquifers()) {
             writeAnalyticAquiferData(aquiferData, rstFile);
         }
 
@@ -500,9 +516,9 @@ namespace {
         }
 
         // Write well and MSW data only when applicable (i.e., when present)
-        const auto& wells = schedule.wellNames(sim_step);
-
-        if (! wells.empty()) {
+        if (const auto& wells = schedule.wellNames(sim_step);
+            ! wells.empty())
+        {
             const auto haveMSW =
                 std::any_of(std::begin(wells), std::end(wells),
                     [&schedule, sim_step](const std::string& well)
@@ -519,11 +535,16 @@ namespace {
                       wells, wellSol, action_state, wtest_state, sumState, inteHD, rstFile);
         }
 
-        if ((es.aquifer().hasAnalyticalAquifer() || es.aquifer().hasNumericalAquifer()) &&
-            aquiferData.has_value())
+        if (const auto& aqCfg = es.aquifer();
+            aqCfg.active() && aquiferData.has_value())
         {
-            updateAndWriteAquiferData(es.aquifer(), aquDynData, sumState,
-                                      schedule.getUnits(), aquiferData.value(), rstFile);
+            updateAndWriteAquiferData(es,
+                                      schedule[sim_step],
+                                      aquDynData,
+                                      sumState,
+                                      schedule.getUnits(),
+                                      aquiferData.value(),
+                                      rstFile);
         }
     }
 

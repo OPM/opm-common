@@ -32,6 +32,14 @@ static const std::string FIELD_NAME = std::string{"FIELD"};
 static const std::size_t FIELD_ID   = 0;
 }
 
+
+Inplace Inplace::serializationTestObject() {
+    Inplace result;
+    result.add("test1", Phase::WaterResVolume, 1, 2.0);
+
+    return result;
+}
+
 void Inplace::add(const std::string& region, Inplace::Phase phase, std::size_t region_id, double value) {
     this->phase_values[region][phase][region_id] = value;
 }
@@ -147,10 +155,19 @@ const std::vector<Inplace::Phase>& Inplace::phases() {
         Inplace::Phase::OilResVolume,
         Inplace::Phase::GasResVolume,
         Inplace::Phase::SALT,
+        Inplace::Phase::CO2InWaterPhase,
+        Inplace::Phase::CO2InGasPhaseInMob,
+        Inplace::Phase::CO2InGasPhaseMob,
+        Inplace::Phase::WaterInGasPhase,
+        Inplace::Phase::WaterInWaterPhase,
     };
 
     return phases_;
 }
 
+bool Inplace::operator==(const Inplace& rhs) const
+{
+    return this->phase_values == rhs.phase_values;
+}
 
 }

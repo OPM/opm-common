@@ -114,8 +114,13 @@ macro (config_hook)
       set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                             set(HAVE_ECL_OUTPUT 1)")
     endif()
-
-    find_package(Boost COMPONENTS filesystem regex system unit_test_framework)
+    # We need to use the correct search mode. Otherwise not finding one
+    # boost component beloq will mark the previously found ones as not
+    # found again. (Code stolen from UseDynamicBoost.cmake
+    if(Boost_DIR)
+      set(_Boost_CONFIG_MODE CONFIG)
+    endif()
+    find_package(Boost COMPONENTS filesystem regex system unit_test_framework ${_Boost_CONFIG_MODE})
 
     if (HAVE_DYNAMIC_BOOST_TEST)
       set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
@@ -136,6 +141,8 @@ macro (sources_hook)
     list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserInit.cpp)
     foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
         list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp)
+        list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/ParserInit${name}.cpp)
+        list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/Builtin${name}.cpp)
         list(INSERT opm-common_HEADERS 0 ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp)
     endforeach()
     if (OPM_ENABLE_EMBEDDED_PYTHON)
@@ -144,6 +151,15 @@ macro (sources_hook)
   endif()
   set_source_files_properties(src/opm/input/eclipse/Python/Python.cpp
                               PROPERTIES COMPILE_FLAGS -Wno-shadow)
+  if(QuadMath_FOUND)
+    get_target_property(qm_defs QuadMath::QuadMath INTERFACE_COMPILE_DEFINITIONS)
+    get_target_property(qm_options QuadMath::QuadMath INTERFACE_COMPILE_OPTIONS)
+    set_source_files_properties(src/opm/material/components/CO2.cpp
+                                src/opm/material/densead/Evaluation.cpp
+                                PROPERTIES COMPILE_DEFINITIONS "${qm_defs}"
+                                COMPILE_OPTIONS "${qm_options}")
+  endif()
+
 endmacro (sources_hook)
 
 macro (fortran_hook)
@@ -356,10 +372,15 @@ target_compile_options(dunecommon INTERFACE ${dflags})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
 target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
-foreach(src examples/co2brinepvt.cpp ${DUNE_TEST_SOURCE_FILES})
-  get_filename_component(tgt ${src} NAME_WE)
-  target_link_libraries(${tgt} dunecommon)
-endforeach()
+if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+  foreach(src ${DUNE_TEST_SOURCE_FILES})
+    get_filename_component(tgt ${src} NAME_WE)
+    target_link_libraries(${tgt} dunecommon)
+  endforeach()
+endif()
+if(BUILD_EXAMPLES)
+  target_link_libraries(co2brinepvt dunecommon)
+endif()
 
 # Install build system files and documentation
 install(DIRECTORY cmake

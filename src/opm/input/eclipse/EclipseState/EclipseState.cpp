@@ -290,6 +290,10 @@ namespace Opm {
             this->aquifer_config.loadFromRestart(aquifers, this->m_tables);
     }
 
+    void EclipseState::appendAqufluxSchedule(const std::unordered_set<int>& ids) {
+        this->aquifer_config.appendAqufluxSchedule(ids);
+    }
+
     void EclipseState::assignRunTitle(const Deck& deck)
     {
         if (! deck.hasKeyword<ParserKeywords::TITLE>()) {

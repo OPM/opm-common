@@ -149,14 +149,12 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
     , summary( eclipseState, summaryConfig, grid , schedule, base_name, writeEsmry )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
 {
-    const auto& aqConfig = this->es.aquifer();
-
-    if (aqConfig.hasAnalyticalAquifer() || aqConfig.hasNumericalAquifer()) {
-        this->aquiferData = RestartIO::Helpers::AggregateAquiferData {
-            RestartIO::inferAquiferDimensions(this->es),
-            aqConfig,
-            this->grid
-        };
+    if (const auto& aqConfig = this->es.aquifer();
+        aqConfig.connections().active() || aqConfig.hasNumericalAquifer())
+    {
+        this->aquiferData
+            .emplace(RestartIO::inferAquiferDimensions(this->es),
+                     aqConfig, this->grid);
     }
 }
 

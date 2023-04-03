@@ -27,14 +27,14 @@
 #ifndef OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_PARAMS_HPP
 #define OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_PARAMS_HPP
 
-#include "EclHysteresisConfig.hpp"
-#include "EclEpsScalingPoints.hpp"
+#include <opm/material/common/EnsureFinalized.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
+#include <opm/material/fluidmatrixinteractions/EclHysteresisConfig.hpp>
 
 #include <cassert>
 #include <cmath>
 #include <memory>
-
-#include <opm/material/common/EnsureFinalized.hpp>
 
 namespace Opm {
 /*!
@@ -71,6 +71,19 @@ public:
         // deltaSwImbKrw_ = 0.0;
     }
 
+    static EclHysteresisTwoPhaseLawParams serializationTestObject()
+    {
+        EclHysteresisTwoPhaseLawParams<EffLawT> result;
+        result.deltaSwImbKrn_ = 1.0;
+        result.Sncrt_ = 2.0;
+        result.initialImb_ = true;
+        result.pcSwMic_ = 3.0;
+        result.krnSwMdc_ = 4.0;
+        result.KrndHy_ = 5.0;
+
+        return result;
+    }
+
     /*!
      * \brief Calculate all dependent quantities once the independent
      *        quantities of the parameter object have been set.
@@ -93,13 +106,13 @@ public:
      * \brief Set the endpoint scaling configuration object.
      */
     void setConfig(std::shared_ptr<EclHysteresisConfig> value)
-    { config_ = value; }
+    { config_ = *value; }
 
     /*!
      * \brief Returns the endpoint scaling configuration object.
      */
     const EclHysteresisConfig& config() const
-    { return *config_; }
+    { return config_; }
 
     /*!
      * \brief Sets the parameters used for the drainage curve
@@ -121,6 +134,11 @@ public:
                 Snmaxd_ = info.Sgu+info.Swl;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
             }
+            else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Sncrd_ = info.Sgcr;
+                Snmaxd_ = info.Sgu;
+                KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
+            }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Sncrd_ = info.Sowcr;
@@ -134,6 +152,9 @@ public:
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Swcrd_ = info.Sogcr;
                 pcmaxd_ = info.maxPcgo;
+            } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Swcrd_ = info.Swcr;
+                pcmaxd_ = info.maxPcgo + info.maxPcow;
             }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
@@ -169,6 +190,9 @@ public:
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Sncri_ = info.Sgcr+info.Swl;
             }
+            else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Sncri_ = info.Sgcr;
+            }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Sncri_ = info.Sowcr;
@@ -181,6 +205,10 @@ public:
                 Swcri_ = info.Sogcr;
                 Swmaxi_ = 1.0 - info.Sgl - info.Swl;
                 pcmaxi_ = info.maxPcgo;
+            } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Swcri_ = info.Swcr;
+                Swmaxi_ = 1.0 - info.Sgl;
+                pcmaxi_ = info.maxPcgo + info.maxPcow;
             }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
@@ -378,6 +406,28 @@ public:
             updateDynamicParams_();
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        // only serializes dynamic state - see update() and updateDynamic_()
+        serializer(deltaSwImbKrn_);
+        serializer(Sncrt_);
+        serializer(initialImb_);
+        serializer(pcSwMic_);
+        serializer(krnSwMdc_);
+        serializer(KrndHy_);
+    }
+
+    bool operator==(const EclHysteresisTwoPhaseLawParams& rhs) const
+    {
+        return this->deltaSwImbKrn_ == rhs.deltaSwImbKrn_ &&
+               this->Sncrt_ == rhs.Sncrt_ &&
+               this->initialImb_ == rhs.initialImb_ &&
+               this->pcSwMic_ == rhs.pcSwMic_ &&
+               this->krnSwMdc_ == rhs.krnSwMdc_ &&
+               this->KrndHy_ == rhs.KrndHy_;
+    }
+
 private:
     void updateDynamicParams_()
     {
@@ -419,7 +469,7 @@ private:
         }
     }
 
-    std::shared_ptr<EclHysteresisConfig> config_;
+    EclHysteresisConfig config_;
     EffLawParams imbibitionParams_;
     EffLawParams drainageParams_;
 

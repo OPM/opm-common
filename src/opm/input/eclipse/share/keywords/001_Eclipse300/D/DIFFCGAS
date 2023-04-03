@@ -1,0 +1,23 @@
+{
+  "name": "DIFFCGAS",
+  "comment": "Hardcoded two components.",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTPVT"
+  },
+  "items": [
+  {
+    "name": "CO2_IN_GAS",
+    "value_type": "DOUBLE",
+    "dimension": "Length*Length/Time"
+  },
+  {
+    "name": "H20_IN_GAS",
+    "value_type": "DOUBLE",
+    "dimension": "Length*Length/Time"
+  }
+]
+}

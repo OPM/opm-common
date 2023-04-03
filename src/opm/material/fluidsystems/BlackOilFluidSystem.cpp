@@ -122,7 +122,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
             if (phaseIsActive(waterPhaseIdx))
-                molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
+                molarMass_[regionIdx][waterCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass();
             if (!phaseIsActive(gasPhaseIdx)) {
                 OPM_THROW(std::runtime_error,
                           "CO2STORE requires gas phase\n");
@@ -157,6 +157,29 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               "but not implemented in Flow. "
                               "Please default DIFFC item 7 and item 8 "
                               "or set it to zero.");
+                }
+            }
+        } else if ( eclState.runspec().co2Storage()
+                && eclState.runspec().phases().active(Phase::GAS)
+                && eclState.runspec().phases().active(Phase::WATER))
+        {
+            diffusionCoefficients_.resize(numRegions,{0,0,0,0,0,0,0,0,0});
+            // diffusion coefficients can be set using DIFFCGAS and DIFFCWAT
+            // for CO2STORE cases with gas + water
+            const auto& diffCoeffWatTables = eclState.getTableManager().getDiffusionCoefficientWaterTable();
+            if (!diffCoeffWatTables.empty()) {
+                for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                    const auto& diffCoeffWatTable = diffCoeffWatTables[regionIdx];
+                    setDiffusionCoefficient(diffCoeffWatTable.co2_in_water, gasCompIdx, waterPhaseIdx, regionIdx);
+                    setDiffusionCoefficient(diffCoeffWatTable.h2o_in_water, waterCompIdx, waterPhaseIdx, regionIdx);
+                }
+            }
+            const auto& diffCoeffGasTables = eclState.getTableManager().getDiffusionCoefficientGasTable();
+            if (!diffCoeffGasTables.empty()) {
+                for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                    const auto& diffCoeffGasTable = diffCoeffGasTables[regionIdx];
+                    setDiffusionCoefficient(diffCoeffGasTable.co2_in_gas, gasCompIdx, gasPhaseIdx, regionIdx);
+                    setDiffusionCoefficient(diffCoeffGasTable.h2o_in_gas, waterCompIdx, gasPhaseIdx, regionIdx);
                 }
             }
         }

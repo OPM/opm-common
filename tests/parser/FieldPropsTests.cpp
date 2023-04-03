@@ -379,6 +379,9 @@ ENDBOX
 
 MULTREGP
   2 8 F /  -- This should be ignored
+/
+
+MULTREGP
   2 5 M /
 /
 
@@ -421,7 +424,7 @@ ENDBOX
         BOOST_CHECK_EQUAL(poro[g], 0.10);
         BOOST_CHECK_EQUAL(ntg[g], 1.0);
         BOOST_CHECK_EQUAL(multpv[g], 1.0);
-        BOOST_CHECK_EQUAL(porv[g],3.0);
+        BOOST_CHECK_EQUAL(porv[g], 3.0);
     }
 
     // k = 3: poro * V * multpv

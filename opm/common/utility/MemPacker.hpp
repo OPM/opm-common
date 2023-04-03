@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef SIMPLE_PACKER_HPP
-#define SIMPLE_PACKER_HPP
+#ifndef MEM_PACKER_HPP
+#define MEM_PACKER_HPP
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -27,7 +27,7 @@
 #include <string>
 
 namespace Opm {
-namespace TestUtil {
+namespace Serialization {
 namespace detail {
 
 //! \brief Abstract struct for packing which is (partially) specialized for specific types.
@@ -79,7 +79,7 @@ struct Packing<true,T>
                      std::vector<char>& buffer,
                      int& position)
     {
-        std::memcpy(&buffer[position], data, n*sizeof(T));
+        std::memcpy(buffer.data() + position, data, n*sizeof(T));
         position += n*sizeof(T);
     }
 
@@ -104,7 +104,7 @@ struct Packing<true,T>
                        std::vector<char>& buffer,
                        int& position)
     {
-        std::memcpy(data, &buffer[position], n*sizeof(T));
+        std::memcpy(data, buffer.data() + position, n*sizeof(T));
         position += n*sizeof(T);
     }
 };
@@ -134,79 +134,41 @@ struct Packing<false,T>
 template <std::size_t Size>
 struct Packing<false,std::bitset<Size>>
 {
-    static std::size_t packSize(const std::bitset<Size>& data)
-    {
-        return Packing<true,unsigned long long>::packSize(data.to_ullong());
-    }
+    static std::size_t packSize(const std::bitset<Size>& data);
 
     static void pack(const std::bitset<Size>& data,
-                     std::vector<char>& buffer, int& position)
-    {
-        Packing<true,unsigned long long>::pack(data.to_ullong(), buffer, position);
-    }
+                     std::vector<char>& buffer, int& position);
 
     static void unpack(std::bitset<Size>& data,
-                       std::vector<char>& buffer, int& position)
-    {
-        unsigned long long d;
-        Packing<true,unsigned long long>::unpack(d, buffer, position);
-        data = std::bitset<Size>(d);
-    }
+                       std::vector<char>& buffer, int& position);
 };
 
 template<>
 struct Packing<false,std::string>
 {
-    static std::size_t packSize(const std::string& data)
-    {
-        return sizeof(std::size_t) + data.size();
-    }
+    static std::size_t packSize(const std::string& data);
 
     static void pack(const std::string& data,
-                     std::vector<char>& buffer, int& position)
-    {
-        Packing<true,std::size_t>::pack(data.size(), buffer, position);
-        Packing<true,char>::pack(data.data(), data.size(), buffer, position);
-    }
+                     std::vector<char>& buffer, int& position);
 
-    static void unpack(std::string& data, std::vector<char>& buffer, int& position)
-    {
-        std::size_t length = 0;
-        Packing<true,std::size_t>::unpack(length, buffer, position);
-        std::vector<char> cStr(length+1, '\0');
-        Packing<true,char>::unpack(cStr.data(), length, buffer, position);
-        data.clear();
-        data.append(cStr.data(), length);
-    }
+    static void unpack(std::string& data, std::vector<char>& buffer, int& position);
 };
 
 template<>
 struct Packing<false,time_point>
 {
-    static std::size_t packSize(const time_point&)
-    {
-        return Packing<true,std::time_t>::packSize(std::time_t());
-    }
+    static std::size_t packSize(const time_point&);
 
     static void pack(const time_point& data,
-                     std::vector<char>& buffer, int& position)
-    {
-        Packing<true,std::time_t>::pack(TimeService::to_time_t(data),
-                                        buffer, position);
-    }
+                     std::vector<char>& buffer, int& position);
 
-    static void unpack(time_point& data, std::vector<char>& buffer, int& position)
-    {
-        std::time_t res;
-        Packing<true,std::time_t>::unpack(res, buffer, position);
-        data = TimeService::from_time_t(res);
-    }
+    static void unpack(time_point& data, std::vector<char>& buffer, int& position);
 };
 
 }
 
-//! \brief Struct handling packing of serialization for test purposes.
-struct Packer {
+//! \brief Struct handling packing of serialization to a memory buffer.
+struct MemPacker {
     //! \brief Calculates the pack size for a variable.
     //! \tparam T The type of the data to be packed
     //! \param data The data to pack
@@ -286,7 +248,7 @@ struct Packer {
     }
 };
 
-} // end namespace TestUtil
+} // end namespace Serialization
 } // end namespace Opm
 
-#endif // SIMPLE_PACKER_HPP
+#endif // MEM_PACKER_HPP

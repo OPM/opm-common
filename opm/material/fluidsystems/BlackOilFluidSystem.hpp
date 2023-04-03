@@ -33,6 +33,8 @@
 #include "blackoilpvt/WaterPvtMultiplexer.hpp"
 #include "blackoilpvt/BrineCo2Pvt.hpp"
 
+#include <opm/common/TimingMacros.hpp>
+
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/Constants.hpp>
 
@@ -723,6 +725,7 @@ public:
                                                 unsigned phaseIdx,
                                                 unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(inverseFormationVolumeFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -822,6 +825,7 @@ public:
                                                          unsigned phaseIdx,
                                                          unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(saturatedInverseFormationVolumeFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -965,6 +969,7 @@ public:
                              unsigned phaseIdx,
                              unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(viscosity);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1071,7 +1076,9 @@ public:
 
         case gasPhaseIdx:
             return
-                 gasPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
+                 gasPvt_->internalEnergy(regionIdx, T, p,
+                 BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
+                  BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
                   + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         case waterPhaseIdx:
@@ -1125,6 +1132,7 @@ public:
                                               unsigned regionIdx,
                                               const LhsEval& maxOilSaturation)
     {
+        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1154,6 +1162,7 @@ public:
                                               unsigned phaseIdx,
                                               unsigned regionIdx)
     {
+        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1291,6 +1300,20 @@ public:
     }
 
     /*!
+     * \brief Convert a gas dissolution factor to the the corresponding mass fraction
+     *        of the gas component in the water phase.
+     */
+    template <class LhsEval>
+    static LhsEval convertRswToXwG(const LhsEval& Rsw, unsigned regionIdx)
+    {
+        Scalar rho_wRef = referenceDensity_[regionIdx][waterPhaseIdx];
+        Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
+
+        const LhsEval& rho_wG = Rsw*rho_gRef;
+        return rho_wG/(rho_wRef + rho_wG);
+    }
+
+    /*!
      * \brief Convert an oil vaporization factor to the corresponding mass fraction
      *        of the oil component in the gas phase.
      */
@@ -1316,6 +1339,30 @@ public:
 
         const LhsEval& rho_gW = Rvw*rho_wRef;
         return rho_gW/(rho_gRef + rho_gW);
+    }
+
+    /*!
+     * \brief Convert a water mass fraction in the gas phase the corresponding mole fraction.
+     */
+    template <class LhsEval>
+    static LhsEval convertXgWToxgW(const LhsEval& XgW, unsigned regionIdx)
+    {
+        Scalar MW = molarMass_[regionIdx][waterCompIdx];
+        Scalar MG = molarMass_[regionIdx][gasCompIdx];
+
+        return XgW*MG / (MW*(1 - XgW) + XgW*MG);
+    }
+
+    /*!
+     * \brief Convert a gas mass fraction in the water phase the corresponding mole fraction.
+     */
+    template <class LhsEval>
+    static LhsEval convertXwGToxwG(const LhsEval& XwG, unsigned regionIdx)
+    {
+        Scalar MW = molarMass_[regionIdx][waterCompIdx];
+        Scalar MG = molarMass_[regionIdx][gasCompIdx];
+
+        return XwG*MW / (MG*(1 - XwG) + XwG*MW);
     }
 
     /*!

@@ -1,0 +1,22 @@
+{
+  "name": "WSF",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTSFUN"
+  },
+  "prohibits": ["SWOF", "SWFN"],
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "1",
+        "1"
+      ]
+    }
+  ]
+}

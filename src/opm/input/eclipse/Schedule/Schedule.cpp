@@ -1125,6 +1125,17 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->getWell(well_name, this->snapshots.size() - 1);
     }
 
+    std::unordered_set<int> Schedule::getAquiferFluxSchedule() const {
+        std::unordered_set<int> ids;
+        for (const auto& snapshot : this->snapshots) {
+            const auto& aquflux = snapshot.aqufluxs;
+            for ([[maybe_unused]] const auto& [id, aqu]  : aquflux) {
+                ids.insert(id);
+            }
+        }
+        return ids;
+    }
+
     const Well& Schedule::getWell(const std::string& wellName, std::size_t timeStep) const {
         return this->snapshots[timeStep].wells.get(wellName);
     }
@@ -1734,7 +1745,10 @@ namespace {
     }
 }
 
-    void Schedule::load_rst(const RestartIO::RstState& rst_state, const TracerConfig& tracer_config, const ScheduleGrid& grid, const FieldPropsManager& fp)
+    void Schedule::load_rst(const RestartIO::RstState& rst_state,
+                            const TracerConfig&        tracer_config,
+                            const ScheduleGrid&        grid,
+                            const FieldPropsManager&   fp)
     {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;
@@ -1905,6 +1919,15 @@ namespace {
         this->snapshots.back().wtest_config.update( WellTestConfig{rst_state, report_step});
 
         this->snapshots.back().network_balance.update(Network::Balance { rst_state.netbalan });
+
+        for (const auto& aquflux : rst_state.aquifers.constantFlux()) {
+            auto aqPos =  this->snapshots.back().aqufluxs
+                .insert_or_assign(aquflux.aquiferID,
+                                  SingleAquiferFlux { aquflux.aquiferID });
+
+            aqPos.first->second.flux = aquflux.flow_rate;
+            aqPos.first->second.active = true;
+        }
 
         if (!rst_state.wlists.empty())
             this->snapshots.back().wlist_manager.update( WListManager(rst_state) );

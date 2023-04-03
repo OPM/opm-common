@@ -1231,6 +1231,7 @@ namespace {
 
             xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WWIGR");
             xWell[Ix::WatVoidPrRate] = -get("WWVIR");
+            xWell[Ix::VoidPrRate] = -get("WWVIR");
         }
 
         template <class XWellArray>

@@ -26,6 +26,9 @@
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
+
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 namespace Opm {
@@ -104,9 +107,9 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
         const TableContainer& sgofTables = tableManager.getSgofTables();
         const TableContainer& slgofTables = tableManager.getSlgofTables();
         if (!sgofTables.empty())
-            readGasOilSgof_(effParams, Swco, tolcrit, sgofTables.getTable<SgofTable>(satRegionIdx));
+            readGasOilSgof_(effParams, Swco, tolcrit, sgofTables.template getTable<SgofTable>(satRegionIdx));
         else if (!slgofTables.empty())
-            readGasOilSlgof_(effParams, Swco, tolcrit, slgofTables.getTable<SlgofTable>(satRegionIdx));
+            readGasOilSlgof_(effParams, Swco, tolcrit, slgofTables.template getTable<SlgofTable>(satRegionIdx));
         else if ( !tableManager.getSgofletTable().empty() ) {
             const auto& letSgofTab = tableManager.getSgofletTable()[satRegionIdx];
             const std::vector<Scalar> dum; // dummy arg to comform with existing interface
@@ -151,17 +154,22 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
 
     case SatFuncControls::KeywordFamily::Family_II:
     {
-        const SgfnTable& sgfnTable = tableManager.getSgfnTables().getTable<SgfnTable>( satRegionIdx );
+        const SgfnTable& sgfnTable = tableManager.getSgfnTables().template getTable<SgfnTable>( satRegionIdx );
         if (!this->parent_.hasWater) {
             // oil and gas case
-            const Sof2Table& sof2Table = tableManager.getSof2Tables().getTable<Sof2Table>( satRegionIdx );
+            const Sof2Table& sof2Table = tableManager.getSof2Tables().template getTable<Sof2Table>( satRegionIdx );
             readGasOilFamily2_(effParams, Swco, tolcrit, sof2Table, sgfnTable, /*columnName=*/"KRO");
         }
         else {
-            const Sof3Table& sof3Table = tableManager.getSof3Tables().getTable<Sof3Table>( satRegionIdx );
+            const Sof3Table& sof3Table = tableManager.getSof3Tables().template getTable<Sof3Table>( satRegionIdx );
             readGasOilFamily2_(effParams, Swco, tolcrit, sof3Table, sgfnTable, /* columnName=*/"KROG");
         }
         break;
+    }
+
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        throw std::domain_error("Saturation keyword family III is not applicable for a gas-oil system");
     }
 
     case SatFuncControls::KeywordFamily::Undefined:
@@ -269,8 +277,8 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
     case SatFuncControls::KeywordFamily::Family_II:
     {
         //Todo: allow also for Sgwfn table input as alternative to Sgfn and Swfn table input
-        const SgfnTable& sgfnTable = tableManager.getSgfnTables().getTable<SgfnTable>( satRegionIdx );
-        const SwfnTable& swfnTable = tableManager.getSwfnTables().getTable<SwfnTable>( satRegionIdx );
+        const SgfnTable& sgfnTable = tableManager.getSgfnTables().template getTable<SgfnTable>( satRegionIdx );
+        const SwfnTable& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>( satRegionIdx );
 
         effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
         auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
@@ -290,6 +298,27 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
         break;
     }
 
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        const GsfTable& gsfTable = tableManager.getGsfTables().template getTable<GsfTable>( satRegionIdx );
+        const WsfTable& wsfTable = tableManager.getWsfTables().template getTable<WsfTable>( satRegionIdx );
+
+        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
+        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+
+        std::vector<double> SwColumn = wsfTable.getColumn("SW").vectorCopy();
+
+        realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, wsfTable.getColumn("KRW")));
+        std::vector<double> SwSamples(gsfTable.numRows());
+        for (size_t sampleIdx = 0; sampleIdx < gsfTable.numRows(); ++ sampleIdx)
+            SwSamples[sampleIdx] = 1 - gsfTable.get("SG", sampleIdx);
+        realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, gsfTable.getColumn("KRG")));
+        //Capillary pressure is read from GSF.
+        realParams.setPcnwSamples(SwSamples, gsfTable.getColumn("PCGW").vectorCopy());
+        realParams.finalize();
+
+        break;
+    }
     case SatFuncControls::KeywordFamily::Undefined:
         throw std::domain_error("No valid saturation keyword family specified");
     }
@@ -316,7 +345,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
     case SatFuncControls::KeywordFamily::Family_I:
     {
         if (tableManager.hasTables("SWOF")) {
-            const auto& swofTable = tableManager.getSwofTables().getTable<SwofTable>(satRegionIdx);
+            const auto& swofTable = tableManager.getSwofTables().template getTable<SwofTable>(satRegionIdx);
             const std::vector<double> SwColumn = swofTable.getColumn("SW").vectorCopy();
 
             effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
@@ -371,7 +400,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
 
     case SatFuncControls::KeywordFamily::Family_II:
     {
-        const auto& swfnTable = tableManager.getSwfnTables().getTable<SwfnTable>(satRegionIdx);
+        const auto& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>(satRegionIdx);
         const std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
         effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
@@ -381,7 +410,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
 
         if (!this->parent_.hasGas) {
-            const auto& sof2Table = tableManager.getSof2Tables().getTable<Sof2Table>(satRegionIdx);
+            const auto& sof2Table = tableManager.getSof2Tables().template getTable<Sof2Table>(satRegionIdx);
             // convert the saturations of the SOF2 keyword from oil to water saturations
             std::vector<double> SwSamples(sof2Table.numRows());
             for (size_t sampleIdx = 0; sampleIdx < sof2Table.numRows(); ++ sampleIdx)
@@ -389,7 +418,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
 
             realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, sof2Table.getColumn("KRO")));
         } else {
-            const auto& sof3Table = tableManager.getSof3Tables().getTable<Sof3Table>(satRegionIdx);
+            const auto& sof3Table = tableManager.getSof3Tables().template getTable<Sof3Table>(satRegionIdx);
             // convert the saturations of the SOF3 keyword from oil to water saturations
             std::vector<double> SwSamples(sof3Table.numRows());
             for (size_t sampleIdx = 0; sampleIdx < sof3Table.numRows(); ++ sampleIdx)
@@ -399,6 +428,11 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         }
         realParams.finalize();
         break;
+    }
+
+    case SatFuncControls::KeywordFamily::Family_III:
+    {
+        throw std::domain_error("Saturation keyword family III is not applicable for a oil-water system");
     }
 
     case SatFuncControls::KeywordFamily::Undefined:

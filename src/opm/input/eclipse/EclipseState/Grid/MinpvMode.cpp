@@ -28,11 +28,13 @@ namespace Opm {
 std::ostream& operator<<(std::ostream& os, const MinpvMode& mm)
 {
     if (mm == MinpvMode::EclSTD)
-        return (os << "EclStd");
+        os << "EclStd";
     else if (mm == MinpvMode::Inactive)
-        return (os << "Inactive");
+        os << "Inactive";
     else
         assert(0);
+
+    return os;
 }
 
 }

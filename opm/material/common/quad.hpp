@@ -336,6 +336,8 @@ inline bool isinf(quad val)
 
 } // namespace std
 
+#if HAVE_DUNE_COMMON
+
 // specialize Dune::className for __float128 since it former does not work properly with
 // __float128 (this is mainly the fault of GCC/libstdc++)
 #include <dune/common/classname.hh>
@@ -345,6 +347,8 @@ template <>
 inline std::string className<__float128>()
 { return "quad"; }
 } // namespace Dune
+
+#endif // HAVE_DUNE_COMMON
 
 #if HAVE_DUNE_FEM
 #include <dune/fem/io/streams/streams_inline.hh>

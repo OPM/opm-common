@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
 
     SimpleTable table(schema);
 
-    BOOST_CHECK_THROW( table.addRow( {1,2,3} ), std::invalid_argument);
-    table.addRow( {1,2} );
-    table.addRow( {3,4} );
+    BOOST_CHECK_THROW( table.addRow( {1,2,3}, "TableTested" ), std::invalid_argument);
+    table.addRow( {1,2}, "TableTested"  );
+    table.addRow( {3,4}, "TableTested"  );
 
     {
         const auto& col1 = table.getColumn( 0 );

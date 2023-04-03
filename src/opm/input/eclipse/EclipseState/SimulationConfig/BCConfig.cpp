@@ -38,6 +38,9 @@ BCType bctype(const std::string& s) {
     if (s == "DIRICHLET")
         return BCType::DIRICHLET;
 
+    if (s == "THERMAL")
+        return BCType::THERMAL;
+
     throw std::invalid_argument("Not recognized boundary condition type: " + s);
 }
 

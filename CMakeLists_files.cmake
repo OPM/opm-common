@@ -34,6 +34,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/ActiveGridCells.cpp
       src/opm/common/utility/Demangle.cpp
       src/opm/common/utility/FileSystem.cpp
+      src/opm/common/utility/MemPacker.cpp
       src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
       src/opm/common/utility/OpmInputError.cpp
       src/opm/common/utility/parameters/Parameter.cpp
@@ -99,6 +100,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Python/Python.cpp
     src/opm/input/eclipse/Schedule/Action/PyAction.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
+    src/opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/AquiferCT.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/Aquifetp.cpp
     src/opm/input/eclipse/EclipseState/Aquifer/Aquancon.cpp
@@ -113,6 +115,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/EndpointScaling.cpp
     src/opm/input/eclipse/EclipseState/Grid/Box.cpp
     src/opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
+    src/opm/input/eclipse/EclipseState/Grid/Carfin.cpp
+    src/opm/input/eclipse/EclipseState/Grid/CarfinManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
     src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
     src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
@@ -127,6 +131,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/Grid/NNC.cpp
     src/opm/input/eclipse/EclipseState/Grid/Operate.cpp
     src/opm/input/eclipse/EclipseState/Grid/PinchMode.cpp
+    src/opm/input/eclipse/EclipseState/Grid/readKeywordCarfin.cpp
     src/opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
     src/opm/input/eclipse/EclipseState/Grid/setKeywordBox.cpp
     src/opm/input/eclipse/EclipseState/Grid/TranCalculator.cpp
@@ -215,6 +220,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WList.cpp
     src/opm/input/eclipse/Schedule/Well/WListManager.cpp
     src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
+    src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
@@ -463,6 +469,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
     tests/parser/BoxTests.cpp
+    tests/parser/CarfinTests.cpp
     tests/parser/ColumnSchemaTests.cpp
     tests/parser/ConnectionTests.cpp
     tests/parser/COMPSEGUnits.cpp
@@ -710,6 +717,7 @@ endif()
 list( APPEND PUBLIC_HEADER_FILES
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
+      opm/common/TimingMacros.hpp
       opm/common/OpmLog/CounterLog.hpp
       opm/common/OpmLog/EclipsePRTLog.hpp
       opm/common/OpmLog/LogBackend.hpp
@@ -727,6 +735,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
       opm/common/utility/Serializer.hpp
+      opm/common/utility/MemPacker.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
@@ -1057,12 +1066,14 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp
        opm/input/eclipse/EclipseState/Grid/Fault.hpp
        opm/input/eclipse/EclipseState/Grid/Box.hpp
+       opm/input/eclipse/EclipseState/Grid/Carfin.hpp
        opm/input/eclipse/EclipseState/Grid/FieldProps.hpp
        opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp
        opm/input/eclipse/EclipseState/Grid/FaultFace.hpp
        opm/input/eclipse/EclipseState/Grid/NNC.hpp
        opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp
        opm/input/eclipse/EclipseState/Grid/BoxManager.hpp
+       opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp
        opm/input/eclipse/EclipseState/Grid/FaceDir.hpp
        opm/input/eclipse/EclipseState/Grid/MapAxes.hpp
        opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp
@@ -1135,6 +1146,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp
        opm/input/eclipse/EclipseState/Tables/OilvisctTable.hpp
        opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp
+       opm/input/eclipse/EclipseState/Tables/WsfTable.hpp
+       opm/input/eclipse/EclipseState/Tables/GsfTable.hpp
        opm/input/eclipse/EclipseState/Tables/MiscTable.hpp
        opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp
        opm/input/eclipse/EclipseState/Tables/PvdsTable.hpp
@@ -1157,6 +1170,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/EclipseConfig.hpp
        opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp
        opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp
+       opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp
        opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp
        opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp
        opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp

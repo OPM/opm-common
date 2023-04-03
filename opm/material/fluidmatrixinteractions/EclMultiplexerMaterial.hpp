@@ -33,6 +33,8 @@
 #include "EclStone2Material.hpp"
 #include "EclTwoPhaseMaterial.hpp"
 
+#include <opm/common/TimingMacros.hpp>
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -134,6 +136,7 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
+        OPM_TIMEBLOCK_LOCAL(capillaryPressures);
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::capillaryPressures(values,
@@ -406,6 +409,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
+        OPM_TIMEBLOCK_LOCAL(relativePermeabilities);
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::relativePermeabilities(values,

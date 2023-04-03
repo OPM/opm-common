@@ -117,6 +117,7 @@ public:
     Evaluation internalEnergy(unsigned,
                         const Evaluation&,
                         const Evaluation&,
+                        const Evaluation&,
                         const Evaluation&) const
     {
         throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
@@ -236,7 +237,7 @@ public:
     const std::vector<TabulatedOneDFunction>& gasMu() const
     { return gasMu_; }
 
-    const std::vector<TabulatedOneDFunction> inverseGasBMu() const
+    const std::vector<TabulatedOneDFunction>& inverseGasBMu() const
     { return inverseGasBMu_; }
 
 private:

@@ -33,7 +33,7 @@ namespace Opm { namespace data {
 
     enum class AquiferType
     {
-        Fetkovich, CarterTracy, Numerical,
+        Fetkovich, CarterTracy, ConstantFlux, Numerical,
     };
 
     struct FetkovichData

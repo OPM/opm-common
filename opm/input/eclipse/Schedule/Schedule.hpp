@@ -261,6 +261,8 @@ namespace Opm
         const Well& getWell(std::size_t well_index, std::size_t timeStep) const;
         const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
+        // get the list of the constant flux aquifer specified in the whole schedule
+        std::unordered_set<int> getAquiferFluxSchedule() const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
         void shut_well(const std::string& well_name, std::size_t report_step);
@@ -673,6 +675,9 @@ namespace Opm
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
 
+        void handleAQUCT     (HandlerContext&);
+        void handleAQUFETP   (HandlerContext&);
+        void handleAQUFLUX   (HandlerContext&);
         void handleBRANPROP  (HandlerContext&);
         void handleCOMPDAT   (HandlerContext&);
         void handleCOMPLUMP  (HandlerContext&);

@@ -302,10 +302,10 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         std::vector<double> tranx(3*3*3);
         std::vector<double> trany(3*3*3);
         std::vector<double> tranz(3*3*3);
-        data::Solution eGridProps {
-            { "TRANX", { measure::transmissibility, tranx, TargetType::INIT } },
-            { "TRANY", { measure::transmissibility, trany, TargetType::INIT } },
-            { "TRANZ", { measure::transmissibility, tranz, TargetType::INIT } },
+        const data::Solution eGridProps {
+            { "TRANX", data::CellData { measure::transmissibility, tranx, TargetType::INIT } },
+            { "TRANY", data::CellData { measure::transmissibility, trany, TargetType::INIT } },
+            { "TRANZ", data::CellData { measure::transmissibility, tranz, TargetType::INIT } },
         };
 
         std::map<std::string, std::vector<int>> int_data =  {{"STR_ULONGNAME" , {1,1,1,1,1,1,1,1} } };

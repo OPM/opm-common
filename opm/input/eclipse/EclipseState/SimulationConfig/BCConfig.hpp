@@ -36,7 +36,8 @@ class DeckRecord;
 enum class BCType {
      RATE,
      FREE,
-     DIRICHLET
+     DIRICHLET,
+     THERMAL
 };
 
 enum class BCComponent {
