@@ -142,7 +142,7 @@ public:
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    const Scalar waterReferenceDensity(unsigned regionIdx)
+    const Scalar waterReferenceDensity(unsigned regionIdx) const
     { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.waterReferenceDensity(regionIdx)); return 1000.; }
 
     /*!
