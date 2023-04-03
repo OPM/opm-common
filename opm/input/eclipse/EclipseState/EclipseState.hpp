@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/input/eclipse/EclipseState/MICPpara.hpp>
+#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -108,6 +109,7 @@ namespace Opm {
         const AquiferConfig& aquifer() const;
         const TracerConfig& tracer() const;
         const MICPpara& getMICPpara() const;
+        const WagHysteresisConfig& getWagHysteresis() const;
 
         void reset_actnum(const std::vector<int>& new_actnum);
         void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
@@ -136,6 +138,7 @@ namespace Opm {
             serializer(m_title);
             serializer(tracer_config);
             serializer(m_micppara);
+            serializer(wag_hyst_config);
         }
 
         static bool rst_cmp(const EclipseState& full_state, const EclipseState& rst_state);
@@ -169,6 +172,7 @@ namespace Opm {
         TransMult m_transMult;
         TracerConfig tracer_config;
         MICPpara m_micppara;
+        WagHysteresisConfig wag_hyst_config;
 
         std::string m_title{};
         FaultCollection m_faults{};

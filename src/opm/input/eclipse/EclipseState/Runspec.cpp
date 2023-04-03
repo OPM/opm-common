@@ -42,7 +42,6 @@
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
-
 #include <fmt/format.h>
 
 namespace {
@@ -102,7 +101,6 @@ namespace {
             (oil && ((threeP && deck.hasKeyword<Opm::ParserKeywords::SOF3>()) ||
                      (twoP && deck.hasKeyword<Opm::ParserKeywords::SOF2>()))) ||
             (wat && deck.hasKeyword<Opm::ParserKeywords::SWFN>());
-
         const auto family3 = //WSF, GSF gas-water CO2STORE case
             deck.hasKeyword<Opm::ParserKeywords::GSF>() &&
             deck.hasKeyword<Opm::ParserKeywords::WSF>();
@@ -194,6 +192,7 @@ Welldims::Welldims(const Deck& deck)
 
         // Maximum number of dynamic well lists
         this->nDynWlistMax = wd.getItem<WD::MAX_DYNAMIC_WELLIST>().get<int>(0);
+
 
         this->m_location = keyword.location();
     }
@@ -379,14 +378,14 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
             return;
         }
 	    /*!
-	* \brief Set the type of the hysteresis model which is used for relative permeability.
-	*
-	* -1: relperm hysteresis is disabled
-	* 0: use the Carlson model for relative permeability hysteresis of the non-wetting
-	*    phase and the drainage curve for the relperm of the wetting phase
-	* 1: use the Carlson model for relative permeability hysteresis of the non-wetting
-	*    phase and the imbibition curve for the relperm of the wetting phase
-	*/
+       * \brief Set the type of the hysteresis model which is used for relative permeability.
+       *
+       * -1: relperm hysteresis is disabled
+       * 0: use the Carlson model for relative permeability hysteresis of the non-wetting
+       *    phase and the drainage curve for the relperm of the wetting phase
+       * 1: use the Carlson model for relative permeability hysteresis of the non-wetting
+       *    phase and the imbibition curve for the relperm of the wetting phase
+       */
         const auto& ehystrKeyword = deck["EHYSTR"].back();
         std::string whereFlag = ehystrKeyword.getRecord(0).getItem("limiting_hyst_flag").getTrimmedString(0);
 
@@ -405,11 +404,11 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         // models with HYPC/NOHYPC and the fifth item of EHYSTR. Let's ignore that for
         // now.
             /*!
-	* \brief Return the type of the hysteresis model which is used for capillary pressure.
-	*
-	* -1: capillary pressure hysteresis is disabled
-	* 0: use the Killough model for capillary pressure hysteresis
-	*/
+       * \brief Return the type of the hysteresis model which is used for capillary pressure.
+       *
+       * -1: capillary pressure hysteresis is disabled
+       * 0: use the Killough model for capillary pressure hysteresis
+       */
         if (deck.hasKeyword("NOHYPC") || whereFlag == "KR")
             pcHystMod = -1;
         else {
@@ -426,6 +425,16 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         // Killough model: Regularisation for trapped critical saturation calculations
         if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3)
             modParamTrappedValue = ehystrKeyword.getRecord(0).getItem("mod_param_trapped").get<double>(0);
+
+        if (!deck.hasKeyword("WAGHYSTR"))
+            return;
+
+        if ( !(deck.hasKeyword<Opm::ParserKeywords::OIL>() &&
+               deck.hasKeyword<Opm::ParserKeywords::GAS>() &&
+               deck.hasKeyword<Opm::ParserKeywords::WATER>()) )
+            throw std::runtime_error("WAG hysteresis (kw 'WAGHYSTR') requires 'OIL', 'WATER' and 'GAS' present in model. ");
+
+        activeWagHyst = true;
     }
 
 EclHysterConfig EclHysterConfig::serializationTestObject()
@@ -436,6 +445,7 @@ EclHysterConfig EclHysterConfig::serializationTestObject()
     result.krHystMod = 2;
     result.modParamTrappedValue = 3;
     result.curvatureCapPrsValue = 4;
+    result.activeWagHyst = true;
 
     return result;
 }
@@ -455,12 +465,16 @@ double EclHysterConfig::modParamTrapped() const
 double EclHysterConfig::curvatureCapPrs() const
     { return curvatureCapPrsValue; }
 
+bool EclHysterConfig::activeWag() const
+    { return activeWagHyst; }
+
 bool EclHysterConfig::operator==(const EclHysterConfig& data) const {
     return this->active() == data.active() &&
            this->pcHysteresisModel() == data.pcHysteresisModel() &&
            this->krHysteresisModel() == data.krHysteresisModel() &&
            this->modParamTrapped() == data.modParamTrapped() &&
-           this->curvatureCapPrs() == data.curvatureCapPrs();
+           this->curvatureCapPrs() == data.curvatureCapPrs() &&
+           this->activeWag() == data.activeWag();
 }
 
 SatFuncControls::SatFuncControls()
