@@ -132,6 +132,7 @@ namespace Opm {
         , m_transMult(         GridDims(deck), deck, field_props)
         , tracer_config(       m_deckUnitSystem, deck)
         , m_micppara(          deck)
+        , wag_hyst_config(     deck)
     {
         this->assignRunTitle(deck);
         this->reportNumberOfActivePhases();
@@ -153,7 +154,7 @@ namespace Opm {
     catch (const OpmInputError& opm_error) {
         OpmLog::error(opm_error.what());
         throw;
-    } 
+    }
     catch (const std::exception& std_error) {
         OpmLog::error(fmt::format("\nAn error occurred while creating the reservoir properties\n"
                                   "Internal error: {}\n", std_error.what()));
@@ -236,6 +237,10 @@ namespace Opm {
 
     const MICPpara& EclipseState::getMICPpara() const {
         return m_micppara;
+    }
+
+    const WagHysteresisConfig& EclipseState::getWagHysteresis() const {
+        return wag_hyst_config;
     }
 
     const TransMult& EclipseState::getTransMult() const {
@@ -386,15 +391,16 @@ namespace Opm {
                        "MULTFLT(FLTNAME) equals {} and MULT(FLT-TRS) equals {}\n"
                        "Error creating reservoir properties: {}" , faultName, multFlt, std_error.what()));
                     error = true;
+
                 }
             }
         }
         // Throw if errors
         if (error) {
             throw std::invalid_argument("Error Processing MULTFLT");
-       }
-    } 
-    
+        }
+    }
+
 
     void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
         OpmLog::error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");

@@ -125,6 +125,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/Phase.cpp
     src/opm/input/eclipse/EclipseState/TracerConfig.cpp
     src/opm/input/eclipse/EclipseState/MICPpara.cpp
+    src/opm/input/eclipse/EclipseState/WagHysteresisConfig.cpp
     src/opm/input/eclipse/Schedule/Action/ActionAST.cpp
     src/opm/input/eclipse/Schedule/Action/ActionContext.cpp
     src/opm/input/eclipse/Schedule/Action/ActionResult.cpp
@@ -991,6 +992,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/EndpointScaling.hpp
        opm/input/eclipse/EclipseState/TracerConfig.hpp
        opm/input/eclipse/EclipseState/MICPpara.hpp
+       opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp
        opm/input/eclipse/EclipseState/Tables/DenT.hpp
        opm/input/eclipse/EclipseState/Tables/JouleThomson.hpp
        opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp

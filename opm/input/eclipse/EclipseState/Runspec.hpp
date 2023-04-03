@@ -31,7 +31,6 @@
 #include <string>
 
 namespace Opm {
-
 class Deck;
 
 class Phases {
@@ -294,6 +293,11 @@ public:
      */
     double curvatureCapPrs() const;
 
+    /*!
+     * \brief Wag hysteresis.
+     */
+    bool activeWag() const;
+
     bool operator==(const EclHysterConfig& data) const;
 
     template<class Serializer>
@@ -304,6 +308,7 @@ public:
         serializer(krHystMod);
         serializer(modParamTrappedValue);
         serializer(curvatureCapPrsValue);
+        serializer(activeWagHyst);
     }
 
 private:
@@ -317,6 +322,9 @@ private:
     double modParamTrappedValue { 0.1 };
     // curvature parameter for capillary pressure
     double curvatureCapPrsValue { 0.1 };
+
+    // enable WAG hysteresis
+    bool activeWagHyst  { false };
 };
 
 class SatFuncControls {
@@ -331,6 +339,7 @@ public:
         Family_I,               // SGOF, SWOF, SLGOF
         Family_II,              // SGFN, SOF{2,3}, SWFN
         Family_III,              // GSF, WSF
+
         Undefined,
     };
 
