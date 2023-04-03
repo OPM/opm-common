@@ -365,12 +365,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             m_pinchMaxEmptyGap = record.getItem<ParserKeywords::PINCH::MAX_EMPTY_GAP>().getSIDouble(0);
         }
 
-        if (deck.hasKeyword<ParserKeywords::MINPV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
-            throw std::invalid_argument("Can not have both MINPV and MINPVFIL in the deck.");
-        } else if(deck.hasKeyword<ParserKeywords::MINPORV>() && deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
-            throw std::invalid_argument("Can not have both MINPORV and MINPVFIL in the deck.");
-        }
-
         m_minpvVector.resize(getCartesianSize(), 0.0);
         if (deck.hasKeyword<ParserKeywords::MINPV>()) {
             const auto& record = deck.get<ParserKeywords::MINPV>( ).back().getRecord(0);
