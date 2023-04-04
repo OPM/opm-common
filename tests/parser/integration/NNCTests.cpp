@@ -234,8 +234,8 @@ DIMENS
 GRID
 
 NNC
-   7 1 1 3 1 1 0.1 / -- Transmissibility will be overwritten with 10 by EDITNNCR
-   3 1 1 5 1 1 0.1 /
+   7 1 1 3 1 1 0.1 / -- Will not be represented internally, because there is a corresponding EDITNNCR
+   3 1 1 5 1 1 0.1 / 
 /
 
 
@@ -268,9 +268,9 @@ EDITNNC
 
 EDITNNCR
 8 1 1 3 1 1 2.0 /
-1 1 1 1 2 1 0.01 / -- This is ignored because the two cells are ijk neighbours
+1 1 1 1 2 1 0.01 / -- This is ignored because the two cells are not ijk neighbours
 2 1 1 2 3 1 0.2 / -- Overwritten with 0.3 by next entry
-7 1 1 3 1 1 10 / -- Will overwrite entry in NNC
+7 1 1 3 1 1 10 / -- Will cause corresponding NNC to not be represented internally
 /
 
 EDITNNCR
@@ -413,18 +413,17 @@ BOOST_AUTO_TEST_CASE(readDeck_EDITR)
     const std::vector<NNCdata>& editr = nnc.editr();
     check_order(nnc);
 
-    BOOST_CHECK_EQUAL(input.size(), 2);
-    check_nnc(input, grid.getGlobalIndex(6,0,0), grid.getGlobalIndex(2,0,0), 10);
+    BOOST_CHECK_EQUAL(input.size(), 1);
     check_nnc(input, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(4,0,0), 0.1*2.0);
 
     BOOST_CHECK_EQUAL(edit.size(), 1);
     BOOST_CHECK(!has_nnc(edit, grid.getGlobalIndex(4,0,0), grid.getGlobalIndex(2,0,0)));
     check_edit_nnc(edit, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(0,0,0), 0.1);
 
-    BOOST_CHECK_EQUAL(editr.size(), 2);
+    BOOST_CHECK_EQUAL(editr.size(), 3);
     BOOST_CHECK(!has_nnc(editr, grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,1,0)));
-    BOOST_CHECK(!has_nnc(editr, grid.getGlobalIndex(6,0,0), grid.getGlobalIndex(2,0,0)));
     BOOST_CHECK(!has_nnc(editr, grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(1,0,0)));
+    check_nnc(editr, grid.getGlobalIndex(6,0,0), grid.getGlobalIndex(2,0,0), 10);
     check_nnc(editr, grid.getGlobalIndex(1,0,0), grid.getGlobalIndex(1,2,0), 0.3);
     check_nnc(editr, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(7,0,0), 2.0);
 }
