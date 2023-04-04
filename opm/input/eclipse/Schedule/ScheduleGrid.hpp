@@ -20,7 +20,6 @@
 #define SCHEDULE_GRID
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
 

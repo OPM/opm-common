@@ -547,14 +547,13 @@ namespace Opm {
         auto ecl_grid = grid.get_grid();
 
         // Calulate the x,y,z coordinates of the begin and end of a perforation
-        std::vector<double> coord_top{0,0,0};
-        std::vector<double> coord_bot{0,0,0};
+        external::cvf::Vec3d p_top;
+        external::cvf::Vec3d p_bot;
         for (size_t i = 0; i < 3 ; ++i) {
-            coord_top[i] =  Opm::linearInterpolation(this->md, this->coord[i], perf_top.getSIDouble(0));
-            coord_bot[i] =  Opm::linearInterpolation(this->md, this->coord[i], perf_bot.getSIDouble(0));
+             p_top[i] =  Opm::linearInterpolation(this->md, this->coord[i], perf_top.getSIDouble(0));
+             p_bot[i] =  Opm::linearInterpolation(this->md, this->coord[i], perf_bot.getSIDouble(0));
         }
-        external::cvf::Vec3d p_top(coord_top[0], coord_top[1], coord_top[2]);
-        external::cvf::Vec3d p_bot(coord_bot[0], coord_bot[1], coord_bot[2]);
+
         std::vector<external::cvf::Vec3d> points{p_top, p_bot};
         std::vector<double> md_interval{perf_top.getSIDouble(0), perf_bot.getSIDouble(0)};
         
@@ -604,9 +603,6 @@ namespace Opm {
                 return c.sameCoordinate( I,J,k );
             };
 
-            // if (r0Item.hasValue(0))
-            //     r0 = r0Item.getSIDouble(0);
-
             if (KhItem.hasValue(0) && KhItem.getSIDouble(0) > 0.0)
                 Kh = KhItem.getSIDouble(0);
 
@@ -615,47 +611,41 @@ namespace Opm {
 
             std::array<double,3> cell_size = cell.dimensions;
 
-            /* We start with the absolute happy path; both CF and Kh are explicitly given in the deck. */
-            if (CF > 0 && Kh > 0)
-                goto CF_done;
+            if (CF < 0 && Kh < 0) {
+                /* We must calculate CF and Kh from the items in the COMPTRAJ record and cell properties. */
+                ctf_kind = ::Opm::Connection::CTFKind::Defaulted;
 
-            {
-                /* We must calculate CF and Kh from the items in the COMPLTRAJ record and cell properties. */
-                if (CF < 0 && Kh < 0) {
-                    ctf_kind = ::Opm::Connection::CTFKind::Defaulted;
+                std::array<double,3> cell_perm = {{ props->permx,
+                                                    props->permy,
+                                                    props->permz}};
 
-                    std::array<double,3> cell_perm = {{ props->permx,
-                                                        props->permy,
-                                                        props->permz}};
+                const auto& perm_thickness =  permThickness(connection_vector,
+                                                            cell_perm,
+                                                            props->ntg);
 
-                    const auto& perm_thickness =  permThickness(connection_vector,
-                                                                cell_perm,
-                                                                props->ntg);
+                const auto& connection_factor = connectionFactor(connection_vector,
+                                                                 cell_perm,
+                                                                 cell_size,
+                                                                 props->ntg,
+                                                                 perm_thickness,
+                                                                 rw,
+                                                                 skin_factor);
 
-                    const auto& connection_factor = connectionFactor(connection_vector,
-                                                                     cell_perm,
-                                                                     cell_size,
-                                                                     props->ntg,
-                                                                     perm_thickness,
-                                                                     rw,
-                                                                     skin_factor);
-
-                    CF = std::sqrt(std::pow(connection_factor[0],2)+ std::pow(connection_factor[1],2)+std::pow(connection_factor[2],2));
-                    // std::cout<<"CF: " << CF << "; CFx: " << connection_factor[0] << " CFy: " << connection_factor[1] <<  " CFz: " << connection_factor[2] << "\n" <<std::endl;
-                    
-                    Kh = std::sqrt(std::pow(perm_thickness[0],2)+ std::pow(perm_thickness[1],2)+std::pow(perm_thickness[2],2));
-                    // std::cout<<"Kh: " << Kh << ";  Khx: " << perm_thickness[0] << " Khy: " << perm_thickness[1] <<  " Khz: " << perm_thickness[2] << "\n" <<std::endl;
-                }
-                else {
-                      auto msg = fmt::format("Problem with COMPTRAJ keyword\n"
-                                       "In {} line {}\n"
-                                       "CF and Kh items for well {} must both be specified or both defaulted/negative",
-                                        location.filename, location.lineno, wname);
-                     throw std::logic_error(msg);
-                }
+                CF = std::sqrt(std::pow(connection_factor[0],2)+ std::pow(connection_factor[1],2)+std::pow(connection_factor[2],2));
+                // std::cout<<"CF: " << CF << "; CFx: " << connection_factor[0] << " CFy: " << connection_factor[1] <<  " CFz: " << connection_factor[2] << "\n" <<std::endl;
+                
+                Kh = std::sqrt(std::pow(perm_thickness[0],2)+ std::pow(perm_thickness[1],2)+std::pow(perm_thickness[2],2));
+                // std::cout<<"Kh: " << Kh << ";  Khx: " << perm_thickness[0] << " Khy: " << perm_thickness[1] <<  " Khz: " << perm_thickness[2] << "\n" <<std::endl;
             }
-
-        CF_done:
+            else {
+                    if (! (CF > 0 && Kh > 0) ){
+                    auto msg = fmt::format("Problem with COMPTRAJ keyword\n"
+                                    "In {} line {}\n"
+                                    "CF and Kh items for well {} must both be specified or both defaulted/negative",
+                                    location.filename, location.lineno, wname);
+                    throw std::logic_error(msg);
+                    }
+            }
 
             // Todo: check what needs to be done for polymerMW module, see loadCOMPDAT
             // used by the PolymerMW module

@@ -57,13 +57,16 @@ private:
         calculateLengthInCell( size_t cellIndex, const cvf::Vec3d& startPoint, const cvf::Vec3d& endPoint ) const override;
 
     cvf::Vec3d calculateLengthInCell( const std::array<cvf::Vec3d, 8>& hexCorners,
-                                                                    const cvf::Vec3d&                startPoint,
-                                                                    const cvf::Vec3d&                endPoint ) const;
+                                      const cvf::Vec3d&                startPoint,
+                                      const cvf::Vec3d&                endPoint ) const;
+
+    void hexCornersOpmToResinsight( cvf::Vec3d    hexCorners[8],
+                                    size_t        cellIndex ) const;
 
     void findCellLocalXYZ( const std::array<cvf::Vec3d, 8>& hexCorners,
-                                             cvf::Vec3d&                      localXdirection,
-                                             cvf::Vec3d&                      localYdirection,
-                                             cvf::Vec3d&                      localZdirection ) const;
+                           cvf::Vec3d&                      localXdirection,
+                           cvf::Vec3d&                      localYdirection,
+                           cvf::Vec3d&                      localZdirection ) const;
     void buildCellSearchTree();
     void findIntersectingCells( const cvf::BoundingBox& inputBB, std::vector<size_t>* cellIndices ) const;
     void computeCachedData();

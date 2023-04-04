@@ -16,6 +16,14 @@
 //  for more details.
 //
 /////////////////////////////////////////////////////////////////////////////////
+
+// This file is based on the following files of ResInsight:
+//     ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp
+//     ApplicationLibCode\ReservoirDataModel\RigCellGeometryTools.cpp
+//     ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
+//     ApplicationLibCode\ReservoirDataModel\RigWellPathIntersectionTools.cpp
+
+
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
@@ -30,12 +38,12 @@
 
 #include <map>
 
-namespace external {
-//==================================================================================================
-///
-//==================================================================================================
 
- RigEclipseWellLogExtractor::RigEclipseWellLogExtractor(const RigWellPath* wellpath, const Opm::EclipseGrid& grid, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree)
+namespace external {
+
+ RigEclipseWellLogExtractor::RigEclipseWellLogExtractor( const RigWellPath* wellpath, 
+                                                         const Opm::EclipseGrid& grid, 
+                                                         cvf::ref<cvf::BoundingBoxTree>& cellSearchTree )
     : RigWellLogExtractor( wellpath, "" )
       ,m_grid(grid)
       ,m_cellSearchTree(cellSearchTree)
@@ -43,16 +51,15 @@ namespace external {
     calculateIntersection();
 }
 
-//--------------------------------------------------------------------------------------------------
-///
-//--------------------------------------------------------------------------------------------------
+
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp
 void RigEclipseWellLogExtractor::calculateIntersection()
 {
     std::map<RigMDCellIdxEnterLeaveKey, HexIntersectionInfo> uniqueIntersections;
 
-    bool isCellFaceNormalsOut = 1; //m_caseData->mainGrid()->isFaceNormalsOutwards();
-
     if ( m_wellPathGeometry->wellPathPoints().empty() ) return;
+
+    buildCellSearchTree();
 
     for ( size_t wpp = 0; wpp < m_wellPathGeometry->wellPathPoints().size() - 1; ++wpp )
     {
@@ -65,38 +72,13 @@ void RigEclipseWellLogExtractor::calculateIntersection()
         bb.add( p1 );
         bb.add( p2 );
 
-        buildCellSearchTree();
-        
         std::vector<size_t> closeCellIndices = findCloseCellIndices( bb );
 
-        cvf::Vec3d hexCorners_opm[8]; //opm numbering
-        std::array<double, 3> cornerPointArray;
         for ( const auto& globalCellIndex : closeCellIndices )
         {
-             const auto[i,j,k] = m_grid.getIJK(globalCellIndex);
-       
-            for (std::size_t l = 0; l < 8; l++) {
-                cornerPointArray = m_grid.getCornerPos(i,j,k,l);
-                hexCorners_opm[l] = cvf::Vec3d(cornerPointArray[0], cornerPointArray[1], cornerPointArray[2]);
-            }
-            cvf::Vec3d hexCorners[8]; //resinsight numbering, see RigCellGeometryTools.cpp
-            hexCorners[0] = hexCorners_opm[0];
-            hexCorners[1] = hexCorners_opm[1];
-            hexCorners[2] = hexCorners_opm[3];
-            hexCorners[3] = hexCorners_opm[2];
-            hexCorners[4] = hexCorners_opm[4];
-            hexCorners[5] = hexCorners_opm[5];
-            hexCorners[6] = hexCorners_opm[7];
-            hexCorners[7] = hexCorners_opm[6];
+            cvf::Vec3d    hexCorners[8];  //resinsight numbering, see RigCellGeometryTools.cpp
+            RigEclipseWellLogExtractor::hexCornersOpmToResinsight( hexCorners, globalCellIndex);
             RigHexIntersectionTools::lineHexCellIntersection( p1, p2, hexCorners, globalCellIndex, &intersections );
-        }
-
-        if ( !isCellFaceNormalsOut )
-        {
-            for ( auto& intersection : intersections )
-            {
-                intersection.m_isIntersectionEntering = !intersection.m_isIntersectionEntering;
-            }
         }
 
         // Now, with all the intersections of this piece of line, we need to
@@ -114,35 +96,25 @@ void RigEclipseWellLogExtractor::calculateIntersection()
     this->populateReturnArrays( uniqueIntersections );
 }
 
-
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp
 cvf::Vec3d RigEclipseWellLogExtractor::calculateLengthInCell( size_t            cellIndex,
-                                                                const cvf::Vec3d& startPoint,
-                                                                const cvf::Vec3d& endPoint ) const
+                                                              const cvf::Vec3d& startPoint,
+                                                              const cvf::Vec3d& endPoint ) const
 {
-    const auto[i,j,k] = m_grid.getIJK(cellIndex);
-    cvf::Vec3d hexCorners_opm[8]; //opm numbering
-    std::array<double, 3> cornerPointArray;
-    for (std::size_t l = 0; l < 8; l++) {
-         cornerPointArray = m_grid.getCornerPos(i,j,k,l);
-         hexCorners_opm[l] = cvf::Vec3d(cornerPointArray[0], cornerPointArray[1], cornerPointArray[2]);
-    } 
-    std::array<cvf::Vec3d, 8> hexCorners;  //resinsight numbering, see RigCellGeometryTools.cpp
-    hexCorners[0] = hexCorners_opm[0];
-    hexCorners[1] = hexCorners_opm[1];
-    hexCorners[2] = hexCorners_opm[3];
-    hexCorners[3] = hexCorners_opm[2];
-    hexCorners[4] = hexCorners_opm[4];
-    hexCorners[5] = hexCorners_opm[5];
-    hexCorners[6] = hexCorners_opm[7];
-    hexCorners[7] = hexCorners_opm[6];
+    cvf::Vec3d hexCorners[8];  //resinsight numbering, see RigCellGeometryTools.cpp
+    RigEclipseWellLogExtractor::hexCornersOpmToResinsight( hexCorners, cellIndex );
 
-    return RigEclipseWellLogExtractor::calculateLengthInCell( hexCorners, startPoint, endPoint );
+    std::array<cvf::Vec3d, 8> hexCorners2;
+    for (size_t i = 0; i < 8; i++)
+           hexCorners2[i] =  hexCorners[i];
+
+    return RigEclipseWellLogExtractor::calculateLengthInCell( hexCorners2, startPoint, endPoint );
 }
 
-
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigWellPathIntersectionTools.cpp
 cvf::Vec3d RigEclipseWellLogExtractor::calculateLengthInCell( const std::array<cvf::Vec3d, 8>& hexCorners,
-                                                                const cvf::Vec3d&                startPoint,
-                                                                const cvf::Vec3d&                endPoint ) const
+                                                              const cvf::Vec3d&                startPoint,
+                                                              const cvf::Vec3d&                endPoint ) const
 {
 
     cvf::Vec3d vec = endPoint - startPoint;
@@ -167,13 +139,11 @@ cvf::Vec3d RigEclipseWellLogExtractor::calculateLengthInCell( const std::array<c
     return { std::fabs( signedVector.x() ), std::fabs( signedVector.y() ), std::fabs( signedVector.z() ) };
 }
 
-//==================================================================================================
-///
-//==================================================================================================
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigCellGeometryTools.cpp
 void RigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d, 8>& hexCorners,
-                                             cvf::Vec3d&                      localXdirection,
-                                             cvf::Vec3d&                      localYdirection,
-                                             cvf::Vec3d&                      localZdirection ) const
+                                                   cvf::Vec3d&                      localXdirection,
+                                                   cvf::Vec3d&                      localYdirection,
+                                                   cvf::Vec3d&                      localZdirection ) const
 {
 
     cvf::Vec3d faceCenterNegI = cvf::GeometryTools::computeFaceCenter( hexCorners[0],
@@ -196,40 +166,6 @@ void RigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d, 
                                                                        hexCorners[6],
                                                                        hexCorners[2] );
 
-    // TODO: Should we use face centroids instead of face centers?          
-
-    // cvf::ubyte                         faceVertexIndices[4];
-    // cvf::StructGridInterface::FaceEnum face;
-
-    // face = cvf::StructGridInterface::NEG_I;
-    // cvf::StructGridInterface::cellFaceVertexIndices( face, faceVertexIndices );
-    // cvf::Vec3d faceCenterNegI = cvf::GeometryTools::computeFaceCenter( hexCorners[faceVertexIndices[0]],
-    //                                                                    hexCorners[faceVertexIndices[1]],
-    //                                                                    hexCorners[faceVertexIndices[2]],
-    //                                                                    hexCorners[faceVertexIndices[3]] );
-    // TODO: Should we use face centroids instead of face centers?
-
-    // face = cvf::StructGridInterface::POS_I;
-    // cvf::StructGridInterface::cellFaceVertexIndices( face, faceVertexIndices );
-    // cvf::Vec3d faceCenterPosI = cvf::GeometryTools::computeFaceCenter( hexCorners[faceVertexIndices[0]],
-    //                                                                    hexCorners[faceVertexIndices[1]],
-    //                                                                    hexCorners[faceVertexIndices[2]],
-    //                                                                    hexCorners[faceVertexIndices[3]] );
-
-    // face = cvf::StructGridInterface::NEG_J;
-    // cvf::StructGridInterface::cellFaceVertexIndices( face, faceVertexIndices );
-    // cvf::Vec3d faceCenterNegJ = cvf::GeometryTools::computeFaceCenter( hexCorners[faceVertexIndices[0]],
-    //                                                                    hexCorners[faceVertexIndices[1]],
-    //                                                                    hexCorners[faceVertexIndices[2]],
-    //                                                                    hexCorners[faceVertexIndices[3]] );
-
-    // face = cvf::StructGridInterface::POS_J;
-    // cvf::StructGridInterface::cellFaceVertexIndices( face, faceVertexIndices );
-    // cvf::Vec3d faceCenterPosJ = cvf::GeometryTools::computeFaceCenter( hexCorners[faceVertexIndices[0]],
-    //                                                                    hexCorners[faceVertexIndices[1]],
-    //                                                                    hexCorners[faceVertexIndices[2]],
-    //                                                                    hexCorners[faceVertexIndices[3]] );
-
     cvf::Vec3d faceCenterCenterVectorI = faceCenterPosI - faceCenterNegI;
     cvf::Vec3d faceCenterCenterVectorJ = faceCenterPosJ - faceCenterNegJ;
 
@@ -247,6 +183,20 @@ void RigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d, 
     localYdirection.normalize();
 }
 
+// Convert opm to resinsight numbering of cornerpoints, see RigCellGeometryTools.cpp
+void RigEclipseWellLogExtractor::hexCornersOpmToResinsight( cvf::Vec3d hexCorners[8], size_t cellIndex ) const
+{
+    const auto[i,j,k] = m_grid.getIJK(cellIndex);
+    std::array<std::size_t, 8> opm2resinsight = {0, 1, 3, 2, 4, 5, 7, 6};
+   
+    for (std::size_t l = 0; l < 8; l++) {
+         std::array<double, 3> cornerPointArray;
+         cornerPointArray = m_grid.getCornerPos(i,j,k,l);
+         hexCorners[opm2resinsight[l]]= cvf::Vec3d(cornerPointArray[0], cornerPointArray[1], cornerPointArray[2]);
+    } 
+}
+
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
 void RigEclipseWellLogExtractor::buildCellSearchTree()
 {
     if (m_cellSearchTree.isNull()) {
@@ -304,6 +254,7 @@ void RigEclipseWellLogExtractor::buildCellSearchTree()
     }
 }
 
+// From ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
 void RigEclipseWellLogExtractor::findIntersectingCells( const cvf::BoundingBox& inputBB, std::vector<size_t>* cellIndices ) const
 {
     CVF_ASSERT( m_cellSearchTree.notNull() );
@@ -311,6 +262,7 @@ void RigEclipseWellLogExtractor::findIntersectingCells( const cvf::BoundingBox& 
     m_cellSearchTree->findIntersections( inputBB, cellIndices );
 }
 
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp 
 std::vector<size_t> RigEclipseWellLogExtractor::findCloseCellIndices( const cvf::BoundingBox& bb )
 {
     std::vector<size_t> closeCells;

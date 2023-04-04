@@ -211,11 +211,11 @@ namespace {
         std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext );
+            auto wellnames = this->wellNames(wellNamePattern, handlerContext);
 
             for (const auto& name : wellnames) {
                 auto well2 = this->snapshots.back().wells.get(name);
-                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
+                auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
                 connections->loadWELTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
                     this->snapshots.back().wells.update( well2 );
@@ -237,7 +237,7 @@ namespace {
 
             for (const auto& name : wellnames) {
                 auto well2 = this->snapshots.back().wells.get(name);
-                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
+                auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
                 // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ 
                 connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
                 if (well2.updateConnections(connections, handlerContext.grid)) {
