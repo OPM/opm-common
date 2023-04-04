@@ -1,0 +1,10 @@
+{
+  "name": "PRATIO",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": ""
+  }
+}

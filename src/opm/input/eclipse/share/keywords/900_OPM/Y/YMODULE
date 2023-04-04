@@ -1,0 +1,10 @@
+{
+  "name": "YMODULE",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Energy/Length*Length"
+  }
+}

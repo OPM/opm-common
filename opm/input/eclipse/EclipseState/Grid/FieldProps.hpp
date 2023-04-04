@@ -147,6 +147,9 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"THCOIL",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCGAS",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCWATER",keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
+                                                                                      {"YMODULE", keyword_info<double>{}.unit_string("Energy/Length*Length")},
+                                                                                      {"PRATIO", keyword_info<double>{}.unit_string("Energy/Length*Length")},
+                                                                                      {"BIOTCOEF", keyword_info<double>{}.unit_string("Energy/Length*Length")},
                                                                                       {"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
@@ -268,6 +271,7 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 namespace SOLUTION {
 
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"PRESSURE", keyword_info<double>{}.unit_string("Pressure")},
+                                                                                      {"PRESDIFF", keyword_info<double>{}.unit_string("Pressure")},
                                                                                       {"SPOLY",    keyword_info<double>{}.unit_string("Density")},
                                                                                       {"SPOLYMW",  keyword_info<double>{}},
                                                                                       {"SSOL",     keyword_info<double>{}},
