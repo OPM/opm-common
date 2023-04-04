@@ -457,4 +457,23 @@ namespace Opm {
     }
 
 
+
+
+    bool Well::WellInjectionProperties::zeroRateConstraint() const {
+        if (this->hasInjectionControl(InjectorCMode::RATE)) {
+            if (!this->surfaceInjectionRate.is<std::string>() && this->surfaceInjectionRate.zero()) {
+                return true;
+            }
+        }
+
+        if (this->hasInjectionControl(InjectorCMode::RESV)) {
+            if (!this->reservoirInjectionRate.is<std::string>() && this->reservoirInjectionRate.zero()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
 }

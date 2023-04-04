@@ -306,6 +306,44 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
 
 
 
+    bool Well::WellProductionProperties::zeroRateConstraint() const {
+        // return whether there is zero rate constraint
+        const bool zero_oil_rate = !this->OilRate.is<std::string>() && this->OilRate.zero();
+        const bool zero_water_rate = !this->WaterRate.is<std::string>() && this->WaterRate.zero();
+        const bool zero_gas_rate = !this->GasRate.is<std::string>() && this->GasRate.zero();
+        if (this->hasProductionControl(ProducerCMode::ORAT) && zero_oil_rate) {
+            return true;
+        }
+        if (this->hasProductionControl(ProducerCMode::WRAT) && zero_water_rate) {
+            return true;
+        }
+        if (this->hasProductionControl(ProducerCMode::GRAT) && zero_gas_rate) {
+            return true;
+        }
+
+        if (this->predictionMode) { // prediction mode
+            const bool zero_lrat_rate = !this->LiquidRate.is<std::string>() && this->LiquidRate.zero();
+            if (this->hasProductionControl(ProducerCMode::LRAT) && zero_lrat_rate) {
+                return true;
+            }
+            const bool zero_resv_rate = !this->ResVRate.is<std::string>() && this->ResVRate.zero();
+            if (this->hasProductionControl(ProducerCMode::RESV) && zero_resv_rate) {
+                return true;
+            }
+        } else { // historic mode
+            if (this->hasProductionControl(ProducerCMode::LRAT) && (zero_oil_rate && zero_water_rate) ){
+                return true;
+            }
+            if ( (this->hasProductionControl(ProducerCMode::RESV) || this->hasProductionControl(ProducerCMode::CRAT)) &&
+                    (zero_water_rate && zero_gas_rate && zero_oil_rate) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
     bool Well::WellProductionProperties::operator==(const Well::WellProductionProperties& other) const {
         return OilRate              == other.OilRate
             && WaterRate            == other.WaterRate

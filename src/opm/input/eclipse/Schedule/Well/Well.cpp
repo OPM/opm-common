@@ -1361,37 +1361,12 @@ bool Well::canOpen() const {
     if (this->allow_cross_flow)
         return true;
 
-    /*
-      If the UDAValue is in string mode we return true unconditionally, without
-      evaluating the internal UDA value.
-    */
     if (this->wtype.producer()) {
         const auto& prod = *this->production;
-        if (prod.OilRate.is<std::string>())
-            return true;
-
-        if (prod.GasRate.is<std::string>())
-          return true;
-
-        if (prod.WaterRate.is<std::string>())
-          return true;
-
-        if (!prod.OilRate.zero())
-            return true;
-
-        if (!prod.GasRate.zero())
-            return true;
-
-        if (!prod.WaterRate.zero())
-            return true;
-
-        return false;
+        return !prod.zeroRateConstraint();
     } else {
         const auto& inj = *this->injection;
-        if (inj.surfaceInjectionRate.is<std::string>())
-            return true;
-
-        return !inj.surfaceInjectionRate.zero();
+        return !inj.zeroRateConstraint();
     }
 }
 

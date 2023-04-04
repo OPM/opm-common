@@ -191,6 +191,7 @@ public:
         bool updateUDQActive(const UDQConfig& udq_config, const WELTARGCMode cmode, UDQActive& active) const;
         void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
         void handleWTMULT(Well::WELTARGCMode cmode, double factor);
+        bool zeroRateConstraint() const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -278,6 +279,7 @@ public:
         void setBHPLimit(const double limit);
         int productionControls() const { return this->m_productionControls; }
         void handleWTMULT(Well::WELTARGCMode cmode, double factor);
+        bool zeroRateConstraint() const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
