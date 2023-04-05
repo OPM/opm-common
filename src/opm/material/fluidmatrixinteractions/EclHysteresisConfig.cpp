@@ -41,6 +41,8 @@ void EclHysteresisConfig::initFromState(const Runspec& runspec)
     pcHysteresisModel_ = runspec.hysterPar().pcHysteresisModel();
     modParamTrapped_ = runspec.hysterPar().modParamTrapped();
     curvatureCapPrs_ = runspec.hysterPar().curvatureCapPrs();
+    enableWagHyst_ = runspec.hysterPar().activeWag();
+
 }
 
 } // namespace Opm
