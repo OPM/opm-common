@@ -65,7 +65,7 @@ run() {
             unsigned satRegionIdx = satRegion_(*satnumArray[i], elemIdx);
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
             HystParams hystParams {*this};
-            hystParams.setConfig();
+            hystParams.setConfig(satRegionIdx);
             hystParams.setDrainageParamsOilGas(elemIdx, satRegionIdx);
             hystParams.setDrainageParamsOilWater(elemIdx, satRegionIdx);
             hystParams.setDrainageParamsGasWater(elemIdx, satRegionIdx);
