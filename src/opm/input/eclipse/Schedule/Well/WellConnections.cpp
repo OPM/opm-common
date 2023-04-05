@@ -599,7 +599,7 @@ namespace Opm {
             if (defaultSatTable)
                 satTableId = props->satnum;
 
-            auto same_ijk = [&]( const Connection& c ) {
+            auto same_ijk = [I, J, k]( const Connection& c ) {
                 return c.sameCoordinate( I,J,k );
             };
 

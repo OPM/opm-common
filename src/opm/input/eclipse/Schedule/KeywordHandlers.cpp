@@ -208,7 +208,6 @@ namespace {
     }
 
     void Schedule::handleWELTRAJ(HandlerContext& handlerContext)  {
-        std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, handlerContext);
@@ -219,7 +218,6 @@ namespace {
                 connections->loadWELTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
                     this->snapshots.back().wells.update( well2 );
-                    wells.insert( name );
                 }
                 this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
             }
