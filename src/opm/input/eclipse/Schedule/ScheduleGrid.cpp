@@ -33,7 +33,6 @@ Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells)
     : cells(completed_cells)
 {}
 
-
 namespace {
     double try_get_value(const Opm::FieldPropsManager& fp, const std::string& kw, std::size_t active_index) {
         if (fp.has_double(kw))
@@ -74,3 +73,6 @@ const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std:
         return this->cells.get(i,j,k);
 }
 
+const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const {
+      return this->grid;
+}

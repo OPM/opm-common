@@ -64,6 +64,25 @@ list (APPEND MAIN_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
+    external/resinsight/LibCore/cvfAssert.cpp
+    external/resinsight/LibCore/cvfAtomicCounter.cpp
+    external/resinsight/LibCore/cvfCharArray.cpp
+    external/resinsight/LibCore/cvfMath.cpp
+    external/resinsight/LibCore/cvfObject.cpp
+    external/resinsight/LibCore/cvfPlane.cpp
+    external/resinsight/LibCore/cvfString.cpp
+    external/resinsight/LibCore/cvfSystem.cpp
+    external/resinsight/LibCore/cvfVector3.cpp
+    external/resinsight/LibGeometry/cvfBoundingBox.cpp
+    external/resinsight/LibGeometry/cvfBoundingBoxTree.cpp
+    external/resinsight/LibGeometry/cvfRay.cpp
+    external/resinsight/ReservoirDataModel/cvfGeometryTools.cpp
+    external/resinsight/ReservoirDataModel/RigHexIntersectionTools.cpp
+    external/resinsight/ReservoirDataModel/RigWellLogExtractor.cpp
+    external/resinsight/ReservoirDataModel/RigWellPath.cpp
+    external/resinsight/CommonCode/cvfStructGrid.cpp
+    external/resinsight/cafPdmCore/cafSignal.cpp
+    external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
     src/opm/io/eclipse/SummaryNode.cpp
     src/opm/json/JsonObject.cpp
     src/opm/input/eclipse/Deck/Deck.cpp
@@ -196,10 +215,12 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestState.cpp
+    src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     src/opm/input/eclipse/Schedule/Well/WellTracerProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WList.cpp
     src/opm/input/eclipse/Schedule/Well/WListManager.cpp
     src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
+    src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
@@ -583,6 +604,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE1.SMSPEC
           tests/SPE1CASE1A.SMSPEC
           tests/SPE1CASE1B.DATA
+          tests/SPE1CASE1_WELTRAJ.DATA
           tests/props_spe1case1b.inc
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
@@ -940,8 +962,75 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/EclSpecrockLaw.hpp
       opm/material/thermal/NullSolidEnergyLaw.hpp
 )
+
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
+       external/resinsight/CommonCode/cvfStructGrid.h
+       external/resinsight/LibCore/cvfArray.h
+       external/resinsight/LibCore/cvfArrayWrapperConst.h
+       external/resinsight/LibCore/cvfAssert.h
+       external/resinsight/LibCore/cvfAtomicCounter.h
+       external/resinsight/LibCore/cvfBase.h
+       external/resinsight/LibCore/cvfBase64.h
+       external/resinsight/LibCore/cvfCharArray.h
+       external/resinsight/LibCore/cvfCodeLocation.h
+       external/resinsight/LibCore/cvfCollection.h
+       external/resinsight/LibCore/cvfColor3.h
+       external/resinsight/LibCore/cvfColor4.h
+       external/resinsight/LibCore/cvfConfigCore.h
+       external/resinsight/LibCore/cvfDebugTimer.h
+       external/resinsight/LibCore/cvfFlags.h
+       external/resinsight/LibCore/cvfFunctorRange.h
+       external/resinsight/LibCore/cvfLibCore.h
+       external/resinsight/LibCore/cvfLogDestination.h
+       external/resinsight/LibCore/cvfLogger.h
+       external/resinsight/LibCore/cvfMath.h
+       external/resinsight/LibCore/cvfMatrix3.h
+       external/resinsight/LibCore/cvfMatrix4.h
+       external/resinsight/LibCore/cvfObject.h
+       external/resinsight/LibCore/cvfPlane.h
+       external/resinsight/LibCore/cvfPropertySet.h
+       external/resinsight/LibCore/cvfQuat.h
+       external/resinsight/LibCore/cvfRect.h
+       external/resinsight/LibCore/cvfString.h
+       external/resinsight/LibCore/cvfSystem.h
+       external/resinsight/LibCore/cvfTBBControl.h
+       external/resinsight/LibCore/cvfTimer.h
+       external/resinsight/LibCore/cvfTrace.h
+       external/resinsight/LibCore/cvfValueArray.h
+       external/resinsight/LibCore/cvfVector2.h
+       external/resinsight/LibCore/cvfVector3.h
+       external/resinsight/LibCore/cvfVector4.h
+       external/resinsight/LibCore/cvfVersion.h
+       external/resinsight/LibGeometry/cvfBoundingBox.h
+       external/resinsight/LibGeometry/cvfBoundingBoxTree.h
+       external/resinsight/LibGeometry/cvfRay.h
+       external/resinsight/ReservoirDataModel/RigCellGeometryTools.h
+       #external/resinsight/ReservoirDataModel/RigEclipseCaseData.h
+       external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h
+       #external/resinsight/ReservoirDataModel/RigMainGrid.h
+       external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h
+       external/resinsight/ReservoirDataModel/RigWellLogExtractor.h
+       external/resinsight/ReservoirDataModel/RigWellPath.h
+       #external/resinsight/ReservoirDataModel/RigWellPathIntersectionTools.h
+       external/resinsight/ReservoirDataModel/cvfGeometryTools.h
+       external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
+       external/resinsight/cafPdmCore/cafAppEnum.h
+       external/resinsight/cafPdmCore/cafAssert.h
+       external/resinsight/cafPdmCore/cafSignal.h
+       external/resinsight/LibCore/cvfArray.inl
+       external/resinsight/LibCore/cvfCollection.inl
+       external/resinsight/LibCore/cvfFlags.inl
+       external/resinsight/LibCore/cvfMath.inl
+       external/resinsight/LibCore/cvfMatrix3.inl
+       external/resinsight/LibCore/cvfMatrix4.inl
+       external/resinsight/LibCore/cvfObject.inl
+       external/resinsight/LibCore/cvfQuat.inl
+       external/resinsight/LibCore/cvfRect.inl
+       external/resinsight/LibCore/cvfVector2.inl
+       external/resinsight/LibCore/cvfVector3.inl
+       external/resinsight/LibCore/cvfVector4.inl
+       external/resinsight/ReservoirDataModel/cvfGeometryTools.inl
        opm/io/eclipse/SummaryNode.hpp
        opm/json/JsonObject.hpp
        opm/input/eclipse/Utility/Functional.hpp
@@ -1132,6 +1221,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WellTestConfig.hpp
        opm/input/eclipse/Schedule/Well/WellTestState.hpp
        opm/input/eclipse/Schedule/Well/WellConnections.hpp
+       opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp
        opm/input/eclipse/Schedule/RPTConfig.hpp

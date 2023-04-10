@@ -1,0 +1,4 @@
+This directory contains a selection of files from ResInsight(https://github.com/OPM/ResInsight). 
+This part of the code of ResInsight is used within OPM-Flow to calculate, 
+given a geometric (thus grid-independent) well trajectory the I,J,K coordinates of intersected cells 
+and the well line segments within these cells.

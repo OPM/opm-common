@@ -1,0 +1,43 @@
+{
+  "name": "WELTRAJ",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "item": 1,
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "item": 2,
+      "name": "BRANCH_NUMBER",
+      "value_type": "INT",
+      "comment": "Not used"
+    },
+    {
+      "item": 3,
+      "name": "X",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 4,
+      "name": "Y",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 5,
+      "name": "TVD",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 5,
+      "name": "MD",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    }
+  ]
+}

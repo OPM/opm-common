@@ -650,3 +650,32 @@ BOOST_AUTO_TEST_CASE(testReAndConnectionLength) {
     BOOST_CHECK_CLOSE(conn0.re(), 171.96498506535622 , 2e-2);
     BOOST_CHECK_CLOSE(conn0.connectionLength(),15.239999999999782, 1e-6);
 }
+
+BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1) {
+    Opm::Parser parser;
+
+    const auto deck = parser.parseFile("SPE1CASE1_WELTRAJ.DATA");
+    auto python = std::make_shared<Opm::Python>();
+    Opm::EclipseState state(deck);
+    Opm::Schedule sched(deck, state, python);
+    const auto& units = deck.getActiveUnitSystem();
+
+    const auto& inj = sched.getWell("INJ", 0);
+    const auto& connections = inj.getConnections();
+
+    /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
+          WELLNAME: 'INJ1'
+          # X   Y    TVDMSL   MDMSL
+          500   500  -100.0   0.0 
+          500   500   8325.0  8325.0
+          2500  2500  8425.0  8450.0 
+       and adjusting the completion data in agreement with the COMPTRAJ data in the input file
+     */
+    const std::array<double, 4> connection_factor{311.783, 7.79428, 38.9674, 62.3465};
+    const std::array<int, 4> global_index{0, 100, 111, 211};
+    BOOST_CHECK_EQUAL(connections.size(), 4);
+    for (size_t i = 0 ; i < connections.size();  ++i ) {
+         BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
+         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);  
+    }
+}
