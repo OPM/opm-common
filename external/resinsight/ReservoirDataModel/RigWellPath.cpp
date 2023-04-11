@@ -32,9 +32,9 @@ RigWellPath::RigWellPath()
     : cvf::Object()
     , m_hasDatumElevation( false )
     , m_datumElevation( 0.0 )
+    , objectBeingDeleted( this )
     , m_uniqueStartIndex( 0u )
     , m_uniqueEndIndex( std::numeric_limits<size_t>::max() )
-    , objectBeingDeleted( this )
 {
 }
 
@@ -64,8 +64,8 @@ RigWellPath::RigWellPath( const std::vector<cvf::Vec3d>& wellPathPoints, const s
     , m_hasDatumElevation( false )
     , m_datumElevation( 0.0 )
     , m_uniqueStartIndex( 0u )
-    , m_uniqueEndIndex( std::numeric_limits<size_t>::max() )
     , objectBeingDeleted( this )
+    , m_uniqueEndIndex( std::numeric_limits<size_t>::max() )
 {
     CVF_ASSERT( m_wellPathPoints.size() == m_measuredDepths.size() );
 }
