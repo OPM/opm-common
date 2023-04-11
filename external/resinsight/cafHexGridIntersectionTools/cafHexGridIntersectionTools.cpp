@@ -102,11 +102,11 @@ bool HexGridIntersectionTools::planeLineIntersect( const cvf::Plane& plane,
 //    a) Should not be counted      b) May need a tolerance margin to intersect
 //       as intersecting:              both 1->3 and 2->3 as it is theoretically required to:
 //                                   3
-//        \        /\               /|\
-//         \      /  \             / | \
-//          \    /    \           /  |  \
-//           \  /      \         /   |   \
-//            \/________\       /____|____\
+//        \        /\               /|\      .
+//         \      /  \             / | \     .
+//          \    /    \           /  |  \    .
+//           \  /      \         /   |   \   .
+//            \/________\       /____|____\  .
 //             \               1     |     2
 
 //--------------------------------------------------------------------------------------------------
