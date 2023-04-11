@@ -185,10 +185,10 @@ namespace cvf {
             size_t fromIdx;
             size_t toIdx;
 
-            InternalNodeAndRange(AABBTreeNodeInternal* node, size_t fromIdx, size_t toIdx)
-                : node(node)
-                , fromIdx(fromIdx)
-                , toIdx(toIdx)
+            InternalNodeAndRange(AABBTreeNodeInternal* node_, size_t fromIdx_, size_t toIdx_)
+                : node(node_)
+                , fromIdx(fromIdx_)
+                , toIdx(toIdx_)
             {}
         };
 
