@@ -188,8 +188,8 @@ bool HexGridIntersectionTools::planeTriangleIntersection( const cvf::Plane& plan
         CVF_ASSERT( false );
     }
 
-    bool ok1 = false;
-    bool ok2 = false;
+    [[maybe_unused]] bool ok1 = false;
+    [[maybe_unused]] bool ok2 = false;
 
     if ( topVx == 1 )
     {
