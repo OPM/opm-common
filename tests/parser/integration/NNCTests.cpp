@@ -268,7 +268,7 @@ EDITNNC
 
 EDITNNCR
 8 1 1 3 1 1 2.0 /
-1 1 1 1 2 1 0.01 / -- This is ignored because the two cells are not ijk neighbours
+1 1 1 1 2 1 0.01 / -- This is ignored because the two cells are ijk neighbours
 2 1 1 2 3 1 0.2 / -- Overwritten with 0.3 by next entry
 7 1 1 3 1 1 10 /
 /
