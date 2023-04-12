@@ -234,7 +234,7 @@ DIMENS
 GRID
 
 NNC
-   7 1 1 3 1 1 0.1 / -- Will not be represented internally, because there is a corresponding EDITNNCR
+   7 1 1 3 1 1 0.1 /
    3 1 1 5 1 1 0.1 / 
 /
 
@@ -270,7 +270,7 @@ EDITNNCR
 8 1 1 3 1 1 2.0 /
 1 1 1 1 2 1 0.01 / -- This is ignored because the two cells are not ijk neighbours
 2 1 1 2 3 1 0.2 / -- Overwritten with 0.3 by next entry
-7 1 1 3 1 1 10 / -- Will cause corresponding NNC to not be represented internally
+7 1 1 3 1 1 10 /
 /
 
 EDITNNCR
@@ -413,8 +413,10 @@ BOOST_AUTO_TEST_CASE(readDeck_EDITR)
     const std::vector<NNCdata>& editr = nnc.editr();
     check_order(nnc);
 
-    BOOST_CHECK_EQUAL(input.size(), 1);
+    BOOST_CHECK_EQUAL(input.size(), 2);
     check_nnc(input, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(4,0,0), 0.1*2.0);
+    // Not checking value because of corresponding NNCR
+    BOOST_CHECK(has_nnc(input, grid.getGlobalIndex(6,0,0), grid.getGlobalIndex(2, 0, 0)));
 
     BOOST_CHECK_EQUAL(edit.size(), 1);
     BOOST_CHECK(!has_nnc(edit, grid.getGlobalIndex(4,0,0), grid.getGlobalIndex(2,0,0)));

@@ -234,14 +234,11 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
                             std::back_inserter(slim_edit));
         m_edit = std::move(slim_edit);
 
-        // Remove corresponding NNC entries in m_input as EDITNNCR
-        // will overwrite transmissibilities anyway
-        std::vector<NNCdata> slim_input;
-        slim_edit.reserve(m_input.size());
-        std::set_difference(m_input.begin(), m_input.end(),
-                            nnc_editr.begin(), nnc_editr.end(),
-                            std::back_inserter(slim_input));
-        m_input = std::move(slim_input);
+        // NNCs are left untouched as they are also needed for
+        // grid construction. Transmissibilities are overwritten
+        // in the simulator by EDITNNCR
+
+        // Create new container to not use excess memory
         m_editr = {nnc_editr.begin(), nnc_editr.end()};
     }
 
