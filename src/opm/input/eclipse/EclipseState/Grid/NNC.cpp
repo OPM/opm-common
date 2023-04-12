@@ -180,7 +180,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     void NNC::load_editr(const EclipseGrid& grid, const Deck& deck) {
         // Will contain EDITNNCR data in reverse order to be able
         // use unique to only keep the last one from the data file.
-        // For that we sort it later. This sort is stable and hence
+        // For that we stable_sort it later. This sort is stable and hence
         // entries for the cell pairs will be consecutive and the last
         // entry that was specified in the data file will come first and
         // will kept by std::unique.
@@ -221,11 +221,11 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         // Sort the deck to make entries for the same cell pair consecutive.
         // Will keep the insertion order of entries for same cell pair as sort
         // is stable.
-        std::sort(nnc_editr.begin(), nnc_editr.end());
+        std::stable_sort(nnc_editr.begin(), nnc_editr.end());
 
         // remove duplicates (based on only cell1 and cell2 members)
         // recall that entries for the same cell pairs are consecutive after
-        // the sort above, and that the last entry specified in the data file
+        // the stable_sort above, and that the last entry specified in the data file
         // comes first in the deck (because we used emplace_front, and sort is stable)
         auto equality = [](const NNCdata& d1, const NNCdata& d2){
             return d1.cell1 == d2.cell1 && d1.cell2 == d2.cell2;
