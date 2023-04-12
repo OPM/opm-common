@@ -111,7 +111,8 @@ public:
     Evaluation internalEnergy(unsigned,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
-                        const Evaluation&) const
+                        const Evaluation& /*rv*/,
+                        const Evaluation& /*rvw*/) const
     {
         return H2::gasInternalEnergy(temperature, pressure, extrapolate);
     }
