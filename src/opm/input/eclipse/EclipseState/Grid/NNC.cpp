@@ -248,7 +248,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
 
         // Create new container to not use excess memory
         // and convert to std::vector
-        m_editr = {nnc_editr.begin(), nnc_editr.end()};
+        m_editr.assign(nnc_editr.begin(), nnc_editr.end());
     }
 
     NNC NNC::serializationTestObject()
