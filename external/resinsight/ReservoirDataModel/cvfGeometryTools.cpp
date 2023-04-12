@@ -926,10 +926,10 @@ void EdgeSplitStorage::canonizeAddress( size_t& edgeP1Index, size_t& edgeP2Index
 ///
 //--------------------------------------------------------------------------------------------------
 EarClipTesselator::EarClipTesselator()
-    : m_X( -1 )
+    : m_nodeCoords( nullptr )
+    , m_X( -1 )
     , m_Y( -1 )
     , m_areaTolerance( 1e-12 )
-    , m_nodeCoords( nullptr )
 {
 }
 
