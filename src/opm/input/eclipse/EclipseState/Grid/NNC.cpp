@@ -18,6 +18,7 @@
 */
 #include <array>
 #include <deque>
+#include <cstddef>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -141,7 +142,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         std::sort(nnc_edit.begin(), nnc_edit.end());
 
         // If we have a corresponding NNC already, then we apply
-        // the multiplier from  EDITNNC to it. Otherwise we internalize
+        // the multiplier from EDITNNC to it. Otherwise we internalize
         // it into m_edit
         auto current_input = this->m_input.begin();
         for (const auto& current_edit : nnc_edit) {
@@ -296,7 +297,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
      keyword, but we should be ready for a more elaborate implementation without
      any API change.
     */
-    KeywordLocation NNC::input_location([[maybe_unused]] const NNCdata& nnc) const {
+    KeywordLocation NNC::input_location(const NNCdata& /* nnc */) const {
         if (this->m_nnc_location)
             return *this->m_nnc_location;
         else
@@ -304,14 +305,14 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     }
 
 
-    KeywordLocation NNC::edit_location([[maybe_unused]] const NNCdata& nnc) const {
+    KeywordLocation NNC::edit_location(const NNCdata& /* nnc */) const {
         if (this->m_edit_location)
             return *this->m_edit_location;
         else
             return {};
     }
 
-    KeywordLocation NNC::editr_location([[maybe_unused]] const NNCdata& nnc) const {
+    KeywordLocation NNC::editr_location(const NNCdata& /* nnc */) const {
         if (this->m_editr_location)
             return *this->m_editr_location;
         else
