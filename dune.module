@@ -10,4 +10,4 @@ Label: 2023.04-pre
 Maintainer: opm@opm-project.org
 MaintainerName: OPM community
 Url: http://opm-project.org
-Depends: dune-common
+Depends: dune-common (>= 2.7)

@@ -37,7 +37,6 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/common/version.hh>
 
 #include <limits>
 
@@ -143,10 +142,6 @@ public:
         typedef DenseAd::Evaluation<InputEval, numEq> FlashEval;
         typedef Dune::FieldVector<FlashEval, numEq> FlashDefectVector;
         typedef ImmiscibleFluidState<FlashEval, FluidSystem> FlashFluidState;
-
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,7)
-        Dune::FMatrixPrecision<InputEval>::set_singular_limit(1e-35);
-#endif
 
         if (tolerance <= 0)
             tolerance = std::min<Scalar>(1e-5,
