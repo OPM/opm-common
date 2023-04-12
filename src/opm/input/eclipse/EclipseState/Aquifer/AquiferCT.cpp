@@ -224,10 +224,14 @@ AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
     if (!deck.hasKeyword<AQUCT>())
         return;
 
-    const auto& aquctKeyword = deck.get<AQUCT>().back();
-    OpmLog::info(OpmInputError::format("Initializing Carter Tracey aquifers from {keyword} in {file} line {line}", aquctKeyword.location()));
-    for (auto& record : aquctKeyword)
-        this->m_aquct.emplace_back(record, tables);
+    const auto& aquct_keywords = deck.getKeywordList("AQUCT");
+    for (const auto* keyword : aquct_keywords) {
+        OpmLog::info(OpmInputError::format("Initializing Carter Tracey aquifers from {keyword} in {file} line {line}",
+                                           keyword->location()));
+        for (const auto& record: *keyword) {
+            this->m_aquct.emplace_back(record, tables);
+        }
+    }
 }
 
 AquiferCT::AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data) :
