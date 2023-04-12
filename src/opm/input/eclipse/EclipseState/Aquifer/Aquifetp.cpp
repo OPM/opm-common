@@ -28,7 +28,6 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -149,13 +148,10 @@ Aquifetp::Aquifetp(const TableManager& tables, const Deck& deck)
     if (!deck.hasKeyword<AQUFETP>())
         return;
 
-    const auto& aqufetp_keywords = SOLUTIONSection(deck).getKeywordList("AQUFETP");
-    for (const auto* keyword : aqufetp_keywords) {
-        OpmLog::info(OpmInputError::format("Initializing Fetkovich aquifers from {keyword} in {file} line {line}", keyword->location()));
-        for (const auto& record : *keyword) {
-            this->m_aqufetp.emplace_back(record, tables);
-        }
-    }
+    const auto& aqufetpKeyword = deck.get<AQUFETP>().back();
+    OpmLog::info(OpmInputError::format("Initializing Fetkovich aquifers from {keyword} in {file} line {line}", aqufetpKeyword.location()));
+    for (auto& record : aqufetpKeyword)
+        this->m_aqufetp.emplace_back(record, tables);
 }
 
 
