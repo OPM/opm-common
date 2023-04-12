@@ -35,7 +35,6 @@
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -225,13 +224,10 @@ AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
     if (!deck.hasKeyword<AQUCT>())
         return;
 
-    const auto& aquct_keywords = SOLUTIONSection(deck).getKeywordList("AQUCT");
-    for (const auto* keyword : aquct_keywords) {
-        OpmLog::info(OpmInputError::format("Initializing Fetkovich aquifers from {keyword} in {file} line {line}", keyword->location()));
-        for (const auto& record : *keyword) {
-            this->m_aquct.emplace_back(record, tables);
-        }
-    }
+    const auto& aquctKeyword = deck.get<AQUCT>().back();
+    OpmLog::info(OpmInputError::format("Initializing Carter Tracey aquifers from {keyword} in {file} line {line}", aquctKeyword.location()));
+    for (auto& record : aquctKeyword)
+        this->m_aquct.emplace_back(record, tables);
 }
 
 AquiferCT::AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data) :
