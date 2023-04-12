@@ -19,6 +19,7 @@
 #include <array>
 #include <deque>
 #include <cstddef>
+#include <algorithm>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
