@@ -1,5 +1,6 @@
 /*
   Copyright 2015 IRIS
+  Copyright 2018--2023 Equinor ASA
 
   This file is part of the Open Porous Media project (OPM).
 
