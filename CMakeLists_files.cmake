@@ -72,6 +72,7 @@ if(ENABLE_ECL_INPUT)
     external/resinsight/LibCore/cvfPlane.cpp
     external/resinsight/LibCore/cvfString.cpp
     external/resinsight/LibCore/cvfSystem.cpp
+    external/resinsight/LibCore/cvfTrace.cpp
     external/resinsight/LibCore/cvfVector3.cpp
     external/resinsight/LibGeometry/cvfBoundingBox.cpp
     external/resinsight/LibGeometry/cvfBoundingBoxTree.cpp
