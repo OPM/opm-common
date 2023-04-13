@@ -472,6 +472,7 @@ public:
     bool co2Storage() const noexcept;
     bool h2Storage() const noexcept;
     bool micp() const noexcept;
+    bool mech() const noexcept;
 
     bool operator==(const Runspec& data) const;
     static bool rst_cmp(const Runspec& full_state, const Runspec& rst_state);
@@ -496,6 +497,7 @@ public:
         serializer(m_co2storage);
         serializer(m_h2storage);
         serializer(m_micp);
+        serializer(m_mech);
     }
 
 private:
@@ -517,6 +519,7 @@ private:
     bool m_co2storage;
     bool m_h2storage;
     bool m_micp;
+    bool m_mech;
 };
 
 

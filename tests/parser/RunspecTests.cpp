@@ -1112,3 +1112,25 @@ BOOST_AUTO_TEST_CASE(NUPCOL) {
     BOOST_CHECK_EQUAL(np.value(), min_value);
 }
 
+BOOST_AUTO_TEST_CASE(Mech) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    GAS
+    WATER
+    MECH
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    const auto& phases = runspec.phases();
+    BOOST_CHECK_EQUAL( 3U, phases.size() );
+    BOOST_CHECK( phases.active( Phase::OIL ) );
+    BOOST_CHECK( phases.active( Phase::GAS ) );
+    BOOST_CHECK( phases.active( Phase::WATER ) );
+    BOOST_CHECK( runspec.mech() );
+}
+
