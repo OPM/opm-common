@@ -1,5 +1,6 @@
 /*
   Copyright 2015 IRIS
+  Copyright 2018--2023 Equinor ASA
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -17,6 +18,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <array>
+#include <deque>
+#include <cstddef>
+#include <algorithm>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -90,6 +94,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     NNC::NNC(const EclipseGrid& grid, const Deck& deck) {
         this->load_input(grid, deck);
         this->load_edit(grid, deck);
+        this->load_editr(grid, deck);
     }
 
 
@@ -138,6 +143,9 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
 
         std::sort(nnc_edit.begin(), nnc_edit.end());
 
+        // If we have a corresponding NNC already, then we apply
+        // the multiplier from EDITNNC to it. Otherwise we internalize
+        // it into m_edit
         auto current_input = this->m_input.begin();
         for (const auto& current_edit : nnc_edit) {
             if (current_input == this->m_input.end()) {
@@ -171,14 +179,89 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         }
     }
 
+    void NNC::load_editr(const EclipseGrid& grid, const Deck& deck) {
+        // Will contain EDITNNCR data in reverse order to be able
+        // use unique to only keep the last one from the data file.
+        // For that we stable_sort it later. This sort is stable and hence
+        // entries for the cell pairs will be consecutive and the last
+        // entry that was specified in the data file will come first and
+        // will kept by std::unique.
+        std::deque<NNCdata> nnc_editr;
+
+        const auto& keyword_list = deck.getKeywordList<ParserKeywords::EDITNNCR>();
+
+        if (keyword_list.empty()) {
+            return;
+        }
+
+        for (const auto& keyword_ptr : deck.getKeywordList<ParserKeywords::EDITNNCR>()) {
+            const auto& records = *keyword_ptr;
+            if (records.empty()) {
+                continue;
+            }
+            for (const auto& record : records) {
+                auto index_pair = make_index_pair(grid, record);
+                if (!index_pair)
+                    continue;
+
+                auto [g1, g2] = index_pair.value();
+                if (is_neighbor(grid, g1, g2))
+                    continue;
+
+                double trans = record.getItem(6).getSIDouble(0);
+                nnc_editr.emplace_front(g1, g2, trans);
+            }
+
+            if (!this->m_editr_location)
+                this->m_editr_location = keyword_ptr->location();
+        }
+
+        if (nnc_editr.empty()) {
+            return;
+        }
+
+        // Sort the deck to make entries for the same cell pair consecutive.
+        // Will keep the insertion order of entries for same cell pair as sort
+        // is stable.
+        std::stable_sort(nnc_editr.begin(), nnc_editr.end());
+
+        // remove duplicates (based on only cell1 and cell2 members)
+        // recall that entries for the same cell pairs are consecutive after
+        // the stable_sort above, and that the last entry specified in the data file
+        // comes first in the deck (because we used emplace_front, and sort is stable)
+        auto equality = [](const NNCdata& d1, const NNCdata& d2){
+            return d1.cell1 == d2.cell1 && d1.cell2 == d2.cell2;
+        };
+        auto new_end = std::unique(nnc_editr.begin(), nnc_editr.end(), equality);
+        nnc_editr.erase(new_end, nnc_editr.end());
+
+        // Remove corresponding EDITNNC entries in m_edit as EDITNNCR
+        // will overwrite transmissibilities anyway
+        std::vector<NNCdata> slim_edit;
+        slim_edit.reserve(m_edit.size());
+        std::set_difference(m_edit.begin(), m_edit.end(),
+                            nnc_editr.begin(), nnc_editr.end(),
+                            std::back_inserter(slim_edit));
+        m_edit = std::move(slim_edit);
+
+        // NNCs are left untouched as they are also needed for
+        // grid construction. Transmissibilities are overwritten
+        // in the simulator by EDITNNCR, anyway.
+
+        // Create new container to not use excess memory
+        // and convert to std::vector
+        m_editr.assign(nnc_editr.begin(), nnc_editr.end());
+    }
 
     NNC NNC::serializationTestObject()
     {
         NNC result;
         result.m_input= {{1,2,1.0},{2,3,2.0}};
         result.m_edit= {{1,2,1.0},{2,3,2.0}};
+        result.m_editr= {{1,2,1.0},{2,3,2.0}};
         result.m_nnc_location = {"NNC?", "File", 123};
         result.m_edit_location = {"EDITNNC?", "File", 123};
+        result.m_edit_location = {"EDITNNCR?", "File", 123};
         return result;
     }
 
@@ -195,7 +278,9 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     bool NNC::operator==(const NNC& data) const {
         return m_input == data.m_input &&
                m_edit == data.m_edit &&
+               m_editr == data.m_editr &&
                m_edit_location == data.m_edit_location &&
+               m_editr_location == data.m_editr_location &&
                m_nnc_location == data.m_nnc_location;
 
     }
@@ -222,7 +307,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
      keyword, but we should be ready for a more elaborate implementation without
      any API change.
     */
-    KeywordLocation NNC::input_location([[maybe_unused]] const NNCdata& nnc) const {
+    KeywordLocation NNC::input_location(const NNCdata& /* nnc */) const {
         if (this->m_nnc_location)
             return *this->m_nnc_location;
         else
@@ -230,12 +315,18 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     }
 
 
-    KeywordLocation NNC::edit_location([[maybe_unused]] const NNCdata& nnc) const {
+    KeywordLocation NNC::edit_location(const NNCdata& /* nnc */) const {
         if (this->m_edit_location)
             return *this->m_edit_location;
         else
             return {};
     }
 
+    KeywordLocation NNC::editr_location(const NNCdata& /* nnc */) const {
+        if (this->m_editr_location)
+            return *this->m_editr_location;
+        else
+            return {};
+    }
 } // namespace Opm
 

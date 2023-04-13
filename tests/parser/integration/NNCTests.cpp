@@ -220,6 +220,65 @@ EDITNNC
 /
 )";
 
+const std::string editnncr_input = R"(
+RUNSPEC
+
+OIL
+GAS
+WATER
+
+
+DIMENS
+   10 10  1  /
+
+GRID
+
+NNC
+   7 1 1 3 1 1 0.1 /
+   3 1 1 5 1 1 0.1 / 
+/
+
+
+DXV
+10*1000.0
+/
+
+DYV
+10*1000.0
+/
+
+DZ
+100*20.0
+/
+
+TOPS
+100*10
+/
+
+PORO
+   100*0.15 /
+
+EDIT
+
+EDITNNC
+5 1 1 3 1 1 2.0 / -- Will be removed after internalization as there is an NNC
+3 1 1 1 1 1 0.1 / -- stays internalized
+2 1 1 2 3 1 0.3 / -- Will be removed after internalization as there is an EDTNNCR
+/
+
+EDITNNCR
+8 1 1 3 1 1 2.0 /
+1 1 1 1 2 1 0.01 / -- This is ignored because the two cells are ijk neighbours
+2 1 1 2 3 1 0.2 / -- Overwritten with 0.3 by next entry
+7 1 1 3 1 1 10 /
+/
+
+EDITNNCR
+1 1 1 2 1 1 0.1 /  -- Ignored
+2 1 1 2 3 1 0.3 / -- Overwrites previous value
+/
+)";
+
 
 std::optional<NNCdata> find_nnc(const std::vector<NNCdata>& v, std::size_t c1, std::size_t c2) {
     if (c1 > c2)
@@ -270,6 +329,7 @@ void check_order(const std::vector<NNCdata>& d) {
 void check_order(const NNC& nnc) {
     check_order(nnc.input());
     check_order(nnc.edit());
+    check_order(nnc.editr());
 }
 
 
@@ -314,6 +374,7 @@ BOOST_AUTO_TEST_CASE(noNNC_EDIT)
     EclipseState eclipseState(deck);
     const auto& editnnc = eclipseState.getInputNNC();
     BOOST_CHECK(editnnc.edit().empty());
+    BOOST_CHECK(editnnc.editr().empty());
 }
 
 
@@ -324,6 +385,7 @@ BOOST_AUTO_TEST_CASE(readDeck_EDIT)
     EclipseGrid grid(10,10,10);
 
     NNC nnc(grid, deck);
+    BOOST_CHECK(nnc.editr().empty());
     const std::vector<NNCdata>& data = nnc.edit();
 
     BOOST_CHECK_EQUAL(data.size(), 2); //neighbouring connections in EDITNNC are ignored
@@ -339,6 +401,34 @@ BOOST_AUTO_TEST_CASE(readDeck_EDIT)
     check_nnc(input, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(6,0,0), 0.10);
 }
 
+BOOST_AUTO_TEST_CASE(readDeck_EDITR)
+{
+    Parser parser;
+    auto deck = parser.parseString(editnncr_input);
+    EclipseGrid grid(10,10,10);
+
+    NNC nnc(grid, deck);
+    const std::vector<NNCdata>& input = nnc.input();
+    const std::vector<NNCdata>& edit = nnc.edit();
+    const std::vector<NNCdata>& editr = nnc.editr();
+    check_order(nnc);
+
+    BOOST_CHECK_EQUAL(input.size(), 2);
+    check_nnc(input, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(4,0,0), 0.1*2.0);
+    // Not checking value because of corresponding NNCR
+    BOOST_CHECK(has_nnc(input, grid.getGlobalIndex(6,0,0), grid.getGlobalIndex(2, 0, 0)));
+
+    BOOST_CHECK_EQUAL(edit.size(), 1);
+    BOOST_CHECK(!has_nnc(edit, grid.getGlobalIndex(4,0,0), grid.getGlobalIndex(2,0,0)));
+    check_edit_nnc(edit, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(0,0,0), 0.1);
+
+    BOOST_CHECK_EQUAL(editr.size(), 3);
+    BOOST_CHECK(!has_nnc(editr, grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,1,0)));
+    BOOST_CHECK(!has_nnc(editr, grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(1,0,0)));
+    check_nnc(editr, grid.getGlobalIndex(6,0,0), grid.getGlobalIndex(2,0,0), 10);
+    check_nnc(editr, grid.getGlobalIndex(1,0,0), grid.getGlobalIndex(1,2,0), 0.3);
+    check_nnc(editr, grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(7,0,0), 2.0);
+}
 
 BOOST_AUTO_TEST_CASE(ACTNUM)
 {
