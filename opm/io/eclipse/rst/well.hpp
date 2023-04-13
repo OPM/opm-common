@@ -102,6 +102,8 @@ struct RstWell
     float resv_target;
     float thp_target;
     float bhp_target_float;
+    float vfp_bhp_adjustment;
+    float vfp_bhp_scaling_factor;
     float hist_lrat_target;
     float hist_grat_target;
     float hist_bhp_target;

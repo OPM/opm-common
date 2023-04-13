@@ -329,6 +329,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             WGrupConGRScaling = 84, // Guide rate scaling factor (WGRUPCON(5))
 
+            VfpBhpAdjustment  = 90, // Adjust well's BHP from VFP (WVFPDP(2))
+            VfpBhpScalingFact = 91, // Tubing pressure loss scaling factor (WVFPDP(3))
+
             LOincFac          = 115,
 
             TracerOffset      = 122, // Tracer data start at this index
