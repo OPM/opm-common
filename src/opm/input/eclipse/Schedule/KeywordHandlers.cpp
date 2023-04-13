@@ -1334,41 +1334,28 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
              */
             if (conn_defaulted(record)) {
                 const auto new_well_status = WellStatusFromString(status_str);
-
                 for (const auto& wname : well_names) {
-                    if ((new_well_status == open) && !this->getWell(wname, currentStep).canOpen()) {
-                        auto elapsed = this->snapshots[currentStep].start_time() - this->snapshots[0].start_time();
-                        auto days = std::chrono::duration_cast<std::chrono::hours>(elapsed).count() / 24;
-                        std::string msg = "Well " + wname
-                            + " where crossflow is banned has zero total rate."
-                            + " This well is prevented from opening at "
-                            + std::to_string( days ) + " days";
-                        OpmLog::note(msg);
+                    const auto did_update_well_status =
+                        this->updateWellStatus(wname, currentStep, new_well_status);
+
+                    if (handlerContext.sim_update) {
+                        handlerContext.sim_update->affected_wells.insert(wname);
                     }
-                    else {
-                        const auto did_update_well_status =
-                            this->updateWellStatus(wname, currentStep, new_well_status);
 
-                        if (handlerContext.sim_update) {
-                            handlerContext.sim_update->affected_wells.insert(wname);
-                        }
+                    if (did_update_well_status && (new_well_status == open)) {
+                        // Record possible well injection/production status change
+                        auto well2 = this->snapshots[currentStep].wells.get(wname);
 
-                        if (did_update_well_status && (new_well_status == open)) {
-                            // Record possible well injection/production status change
-                            auto well2 = this->snapshots[currentStep].wells.get(wname);
+                        const auto did_flow_update =
+                            (well2.isProducer() && well2.updateHasProduced())
+                            ||
+                            (well2.isInjector() && well2.updateHasInjected());
 
-                            const auto did_flow_update =
-                                (well2.isProducer() && well2.updateHasProduced())
-                                ||
-                                (well2.isInjector() && well2.updateHasInjected());
-
-                            if (did_flow_update) {
-                                this->snapshots[currentStep].wells.update(std::move(well2));
-                            }
+                        if (did_flow_update) {
+                            this->snapshots[currentStep].wells.update(std::move(well2));
                         }
                     }
                 }
-
                 continue;
             }
 
