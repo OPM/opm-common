@@ -57,6 +57,11 @@
       "name": "TEMPERATURE",
       "value_type": "DOUBLE",
       "dimension": "Temperature"
+    },
+    {
+      "name": "MECHTYPE",
+      "value_type": "STRING",
+      "default": "NONE"
     }
   ]
 }

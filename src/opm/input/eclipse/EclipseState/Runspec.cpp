@@ -624,6 +624,7 @@ Runspec::Runspec( const Deck& deck )
     , m_co2storage (false)
     , m_h2storage (false)
     , m_micp (false)
+    , m_mech (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -669,6 +670,12 @@ Runspec::Runspec( const Deck& deck )
             std::string msg = "The MICP option is given. Single phase (WATER) + 3 transported components + \n"
                               "3 solid phases are used. See https://doi.org/10.1016/j.ijggc.2021.103256 \n"
                               "for details on the used model.";
+            OpmLog::note(msg);
+        }
+
+        if (runspecSection.hasKeyword<ParserKeywords::MECH>()) {
+            m_mech = true;
+            std::string msg = "Simulation will solve for mechanical quantities";
             OpmLog::note(msg);
         }
     }
@@ -766,6 +773,11 @@ bool Runspec::micp() const noexcept
     return this->m_micp;
 }
 
+bool Runspec::mech() const noexcept
+{
+    return this->m_mech;
+}
+
 std::time_t Runspec::start_time() const noexcept
 {
     return this->m_start_time;
@@ -805,6 +817,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
         full_spec.m_co2storage == rst_spec.m_co2storage &&
         full_spec.m_h2storage == rst_spec.m_h2storage &&
         full_spec.m_micp == rst_spec.m_micp &&
+        full_spec.m_mech == rst_spec.m_mech &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
 
@@ -822,7 +835,8 @@ bool Runspec::operator==(const Runspec& data) const {
            this->m_nupcol == data.m_nupcol &&
            this->m_co2storage == data.m_co2storage &&
            this->m_h2storage == data.m_h2storage &&
-           this->m_micp == data.m_micp;
+           this->m_micp == data.m_micp &&
+           this->m_mech == data.m_mech;
 }
 
 
