@@ -233,7 +233,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
             return d1.cell1 == d2.cell1 && d1.cell2 == d2.cell2;
         };
         auto new_end = std::unique(nnc_editr.begin(), nnc_editr.end(), equality);
-        nnc_editr.resize(new_end - nnc_editr.begin());
+        nnc_editr.erase(new_end, nnc_editr.end());
 
         // Remove corresponding EDITNNC entries in m_edit as EDITNNCR
         // will overwrite transmissibilities anyway
