@@ -5436,3 +5436,46 @@ END
     BOOST_CHECK(wvfpexp2.prevent());
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithBC) {
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+
+SOLUTION
+
+
+SCHEDULE
+
+BC
+1 1 1 1 1 10 X- RATE GAS 100.0 /
+20 20 1 1 1 5 X FREE 4* /
+/
+
+DATES             -- 1
+ 10  OKT 2008 /
+/
+BC
+1 1 1 1 1 10 X- RATE GAS 200.0 /
+20 20 1 1 6 10 X FREE 4* /
+/
+)";
+
+    const auto& schedule = make_schedule(input);
+    {
+        size_t currentStep = 0;
+        const auto& bcconfig = schedule[currentStep].bcconfig;
+        BOOST_CHECK_EQUAL(bcconfig.size(), 2);
+        const auto& bcface0 = bcconfig[0];
+        BOOST_CHECK_EQUAL(bcface0.i1, 0);
+        BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 100, 1e-8 );
+    }
+
+    {
+        size_t currentStep = 1;
+        const auto& bcconfig = schedule[currentStep].bcconfig;
+        BOOST_CHECK_EQUAL(bcconfig.size(), 3);
+        const auto& bcface0 = bcconfig[0];
+        BOOST_CHECK_EQUAL(bcface0.i1, 0);
+        BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 200, 1e-8 );
+    }
+}

@@ -148,11 +148,30 @@ bool BCConfig::BCFace::operator==(const BCConfig::BCFace& other) const {
 
 BCConfig::BCConfig(const Deck& deck) {
     GridDims grid( deck );
+    this->m_gridDims = grid;
     for (const auto& kw: deck.getKeywordList<ParserKeywords::BC>()) {
         for (const auto& record : *kw)
             this->m_faces.emplace_back( record, grid );
     }
 }
+
+void BCConfig::updateBC(const DeckRecord& record) {
+    const BCConfig::BCFace bcnew( record, this->m_gridDims );
+    for (auto& bc : m_faces) {
+        if (bc.i1 == bcnew.i1 
+            && bc.i2 == bcnew.i2
+            && bc.j1 == bcnew.j1
+            && bc.j2 == bcnew.j2
+            && bc.k1 == bcnew.k1
+            && bc.k2 == bcnew.k2 )
+            {
+                bc = bcnew;
+                return;
+            }
+    }
+    this->m_faces.emplace_back( bcnew );   
+}
+
 
 
 BCConfig BCConfig::serializationTestObject()
@@ -174,6 +193,10 @@ std::vector<BCConfig::BCFace>::const_iterator BCConfig::begin() const {
 
 std::vector<BCConfig::BCFace>::const_iterator BCConfig::end() const {
     return this->m_faces.end();
+}
+
+BCConfig::BCFace BCConfig::operator[](std::size_t index) const {
+    return this->m_faces[index];
 }
 
 bool BCConfig::operator==(const BCConfig& other) const {

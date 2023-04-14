@@ -99,15 +99,20 @@ public:
     std::vector<BCFace>::const_iterator begin() const;
     std::vector<BCFace>::const_iterator end() const;
     bool operator==(const BCConfig& other) const;
+    BCFace operator[](std::size_t index) const;
+
+    void updateBC(const DeckRecord& record);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_faces);
+        serializer(m_gridDims);
     }
 
 private:
     std::vector<BCFace> m_faces;
+    GridDims m_gridDims;
 };
 
 } //namespace Opm

@@ -679,6 +679,7 @@ namespace Opm
         void handleAQUCT     (HandlerContext&);
         void handleAQUFETP   (HandlerContext&);
         void handleAQUFLUX   (HandlerContext&);
+        void handleBC        (HandlerContext&);
         void handleBRANPROP  (HandlerContext&);
         void handleCOMPDAT   (HandlerContext&);
         void handleCOMPLUMP  (HandlerContext&);
