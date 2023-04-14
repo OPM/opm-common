@@ -361,7 +361,6 @@ public:
     std::size_t firstTimeStep() const;
     const WellType& wellType() const;
     bool predictionMode() const;
-    bool canOpen() const;
     bool isProducer() const;
     bool isInjector() const;
     InjectorCMode injection_cmode() const;
