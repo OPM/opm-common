@@ -1,0 +1,116 @@
+/*
+  Copyright 2020 Equinor ASA.
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef OPM_BCCONFIG_HPP
+#define OPM_BCCONFIG_HPP
+
+#include <vector>
+#include <cstddef>
+#include <optional>
+
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+
+
+namespace Opm {
+
+class Deck;
+class DeckRecord;
+
+enum class BCMECHType {
+     RATE,
+     FREE,
+     DIRICHLET
+};
+
+// enum class BCMECHComponent {
+//      OIL,
+//      GAS,
+//      WATER,
+//      SOLVENT,
+//      POLYMER,
+//      NONE
+// };
+
+
+class BCMECHConfig {
+public:
+
+    struct BCFace {
+        int i1,i2;
+        int j1,j2;
+        int k1,k2;
+        BCType bctype;
+        FaceDir::DirEnum dir;
+        BCComponent component;
+        double rate;
+        std::optional<double> pressure;
+        std::optional<double> temperature;
+
+        BCFace() = default;
+        explicit BCFace(const DeckRecord& record, const GridDims& grid);
+
+        static BCFace serializationTestObject();
+
+        bool operator==(const BCFace& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(i1);
+            serializer(i2);
+            serializer(j1);
+            serializer(j2);
+            serializer(k1);
+            serializer(k2);
+            serializer(bctype);
+            serializer(dir);
+            serializer(component);
+            serializer(rate);
+            serializer(pressure);
+            serializer(temperature);
+        }
+    };
+
+
+    BCConfig() = default;
+    explicit BCConfig(const Deck& deck);
+
+    static BCConfig serializationTestObject();
+
+    std::size_t size() const;
+    std::vector<BCFace>::const_iterator begin() const;
+    std::vector<BCFace>::const_iterator end() const;
+    bool operator==(const BCConfig& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_faces);
+    }
+
+private:
+    std::vector<BCFace> m_faces;
+};
+
+} //namespace Opm
+
+
+
+#endif
