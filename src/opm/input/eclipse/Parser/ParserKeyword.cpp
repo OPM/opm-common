@@ -68,16 +68,18 @@ KeywordSize::KeywordSize()
 KeywordSize::KeywordSize(ParserKeywordSizeEnum size_type)
     : m_size_type(size_type)
 {
-    if (size_type == SLASH_TERMINATED)
+    if ((size_type == ParserKeywordSizeEnum::SLASH_TERMINATED) ||
+        (size_type == ParserKeywordSizeEnum::UNKNOWN) ||
+        (size_type == ParserKeywordSizeEnum::DOUBLE_SLASH_TERMINATED) ||
+        (size_type == ParserKeywordSizeEnum::SPECIAL_CASE_ROCK))
+    {
         return;
+    }
 
-    if (size_type == UNKNOWN)
-        return;
-
-    if (size_type == DOUBLE_SLASH_TERMINATED)
-        return;
-
-    throw std::logic_error("This constructor only allows size type UNKNOWN and SLASH_TERMINATED");
+    throw std::logic_error {
+        "This constructor only allows size types "
+        "UNKNOWN, SLASH_TERMINATED, and SPECIAL_CASE_ROCK"
+    };
 }
 
 KeywordSize::KeywordSize(std::size_t fixed_size)
@@ -161,8 +163,13 @@ void KeywordSize::min_size(int s) {
 
 std::string KeywordSize::construct() const
 {
-    if (this->m_size_type == UNKNOWN || this->m_size_type == DOUBLE_SLASH_TERMINATED || this->m_size_type == SLASH_TERMINATED)
+    if ((this->m_size_type == UNKNOWN) ||
+        (this->m_size_type == DOUBLE_SLASH_TERMINATED) ||
+        (this->m_size_type == SLASH_TERMINATED) ||
+        (this->m_size_type == SPECIAL_CASE_ROCK))
+    {
         return fmt::format("KeywordSize({})", ParserKeywordSizeEnum2String(this->m_size_type));
+    }
 
     if ((this->m_size_type == FIXED) || (this->m_size_type == FIXED_CODE)) {
         if (this->min_size().has_value()) {
@@ -770,9 +777,14 @@ void set_dimensions( ParserItem& item,
         return std::get<std::size_t>(max_size.value());
     }
 
-    bool ParserKeyword::hasFixedSize() const {
-        auto size_type = this->keyword_size.size_type();
-        return (size_type == FIXED || size_type == FIXED_CODE || this->m_records.empty());
+    bool ParserKeyword::hasFixedSize() const
+    {
+        const auto size_type = this->keyword_size.size_type();
+
+        return (size_type == FIXED)
+            || (size_type == FIXED_CODE)
+            || (size_type == SPECIAL_CASE_ROCK)
+            || this->m_records.empty();
     }
 
     enum ParserKeywordSizeEnum ParserKeyword::getSizeType() const {

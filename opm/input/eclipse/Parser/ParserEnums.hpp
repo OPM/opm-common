@@ -31,6 +31,7 @@ namespace Opm {
         UNKNOWN = 3,
         FIXED_CODE = 4,
         DOUBLE_SLASH_TERMINATED = 5,
+        SPECIAL_CASE_ROCK = 6,
     };
 
     enum ParserKeywordActionEnum {

@@ -71,6 +71,69 @@
 
 #include <fmt/format.h>
 
+namespace {
+    // If ROCKOPTS does NOT exist, then the number of records is NTPVT (= TABDIMS(2))
+    //
+    // Otherwise, the number of records depends on ROCKOPTS(3), (= TABLE_TYPE)
+    //
+    //  1) ROCKOPTS(3) == "SATNUM"  => NTSFUN (= TABDIMS( 1))
+    //  2) ROCKOPTS(3) == "ROCKNUM" => NTROCC (= TABDIMS(13))
+    //  3) ROCKOPTS(3) == "PVTNUM"  => NTPVT  (= TABDIMS( 2)) (default setting)
+    //
+    // Finally, if ROCKOPTS(3) == "ROCKNUM", but NTROCC is defaulted, then
+    // the number of records is NTPVT.
+    std::size_t targetSizeRockFromTabdims(const Opm::Deck& deck)
+    {
+        const auto& tabd = deck.get<Opm::ParserKeywords::TABDIMS>().back().getRecord(0);
+        const auto ntPvt = tabd.getItem<Opm::ParserKeywords::TABDIMS::NTPVT>().get<int>(0);
+
+        if (! deck.hasKeyword<Opm::ParserKeywords::ROCKOPTS>()) {
+            return ntPvt;
+        }
+
+        const auto& tableTypeItem = deck.get<Opm::ParserKeywords::ROCKOPTS>().back()
+            .getRecord(0).getItem<Opm::ParserKeywords::ROCKOPTS::TABLE_TYPE>();
+
+        if (tableTypeItem.defaultApplied(0)) {
+            return ntPvt;
+        }
+
+        const auto tableType = tableTypeItem.getTrimmedString(0);
+
+        if (tableType == Opm::ParserKeywords::PVTNUM::keywordName) {
+            return ntPvt;
+        }
+
+        if (tableType == Opm::ParserKeywords::SATNUM::keywordName) {
+            return tabd.getItem<Opm::ParserKeywords::TABDIMS::NTSFUN>().get<int>(0);
+        }
+
+        if (tableType == Opm::ParserKeywords::ROCKNUM::keywordName) {
+            const auto& ntrocc = tabd.getItem<Opm::ParserKeywords::TABDIMS::NTROCC>();
+
+            return ntrocc.defaultApplied(0) ? ntPvt : ntrocc.get<int>(0);
+        }
+
+        throw std::invalid_argument {
+            fmt::format("Unknown {} table type \"{}\"",
+                        Opm::ParserKeywords::ROCKOPTS::keywordName, tableType)
+        };
+    }
+
+    std::size_t defaultTargetSizeRock()
+    {
+        // No TABDIMS => NTSFUN == NTPVT == NTROCC
+        return Opm::ParserKeywords::TABDIMS::NTPVT::defaultValue;
+    }
+
+    std::size_t targetSizeRock(const Opm::Deck& deck)
+    {
+        return deck.hasKeyword<Opm::ParserKeywords::TABDIMS>()
+            ? targetSizeRockFromTabdims(deck)
+            : defaultTargetSizeRock();
+    }
+}
+
 namespace Opm {
 
 namespace {
@@ -690,6 +753,26 @@ newRawKeyword(const ParserKeyword& parserKeyword,
                               parserState.line(),
                               raw_string_keyword,
                               rawSizeType);
+    }
+
+    if (parserKeyword.getSizeType() == SPECIAL_CASE_ROCK) {
+        if (parserKeyword.getName() != ParserKeywords::ROCK::keywordName) {
+            throw std::logic_error {
+                fmt::format("Special case size handling for ROCK "
+                            "cannot be applied to keyword {}",
+                            parserKeyword.getName())
+            };
+        }
+
+        return new RawKeyword {
+            keywordString,
+            parserState.current_path().string(),
+            parserState.line(),
+            raw_string_keyword,
+            Raw::FIXED,
+            parserKeyword.min_size(),
+            targetSizeRock(parserState.deck)
+        };
     }
 
     if (parserKeyword.hasFixedSize()) {

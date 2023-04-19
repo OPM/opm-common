@@ -37,6 +37,7 @@ namespace Opm {
             { ParserKeywordSizeEnum::UNKNOWN                , "UNKNOWN"                 },
             { ParserKeywordSizeEnum::FIXED_CODE             , "FIXED_CODE"              },
             { ParserKeywordSizeEnum::DOUBLE_SLASH_TERMINATED, "DOUBLE_SLASH_TERMINATED" },
+            { ParserKeywordSizeEnum::SPECIAL_CASE_ROCK      , "SPECIAL_CASE_ROCK"       },
         };
 
         auto enumPos = enumMap.find(enumValue);
@@ -56,6 +57,7 @@ namespace Opm {
             { "UNKNOWN"                , ParserKeywordSizeEnum::UNKNOWN                 },
             { "FIXED_CODE"             , ParserKeywordSizeEnum::FIXED_CODE              },
             { "DOUBLE_SLASH_TERMINATED", ParserKeywordSizeEnum::DOUBLE_SLASH_TERMINATED },
+            { "SPECIAL_CASE_ROCK"      , ParserKeywordSizeEnum::SPECIAL_CASE_ROCK       },
         };
 
         auto enumPos = enumMap.find(stringValue);
