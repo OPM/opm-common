@@ -30,19 +30,18 @@ namespace Opm {
         OTHER_KEYWORD_IN_DECK = 2,
         UNKNOWN = 3,
         FIXED_CODE = 4,
-        DOUBLE_SLASH_TERMINATED = 5
+        DOUBLE_SLASH_TERMINATED = 5,
     };
-
 
     enum ParserKeywordActionEnum {
         INTERNALIZE = 0,
         IGNORE = 1,
         IGNORE_WARNING = 2,
-        THROW_EXCEPTION = 3
+        THROW_EXCEPTION = 3,
     };
 
-    const std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue);
-    const std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue);
+    std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue);
+    std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue);
 
     ParserKeywordSizeEnum ParserKeywordSizeEnumFromString(const std::string& stringValue);
     ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue);
