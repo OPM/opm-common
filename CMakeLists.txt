@@ -216,15 +216,15 @@ if (OPM_ENABLE_PYTHON)
     if(PYTHON_EXECUTABLE AND NOT Python3_EXECUTABLE)
       set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
     endif()
+    # We always need to search for Development as we use
+    # pybind11_add_module even if don't embed Python
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
     if (OPM_ENABLE_EMBEDDED_PYTHON)
-      find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
       get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
       set(PYTHON_LIBRARY ${_lib_path})
       set(PYTHON_LIBRARIES {PYTHON_LIBRARY})
       list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
       set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
-    else()
-      find_package(Python3 REQUIRED COMPONENTS Interpreter)
     endif()
     # Make sure we fail gracefully here without setuptool
     execute_process(COMMAND ${Python3_EXECUTABLE} -c "import setuptools"
