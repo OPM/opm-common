@@ -15,50 +15,61 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#include <cctype>
-#include <filesystem>
-#include <iterator>
-#include <iostream>
-#include <optional>
-#include <stack>
-#include <string>
-#include <utility>
-#include <vector>
-#include <algorithm>
-
-#include <fmt/format.h>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Deck/ImportContainer.hpp>
 
-#include <opm/json/JsonObject.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ParserItem.hpp>
+#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/input/eclipse/Parser/ParserRecord.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+#include <opm/input/eclipse/Deck/ImportContainer.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParserItem.hpp>
-#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/input/eclipse/Parser/ParserRecord.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/common/utility/String.hpp>
 
 #include "raw/RawConsts.hpp"
 #include "raw/RawEnums.hpp"
-#include "raw/RawRecord.hpp"
 #include "raw/RawKeyword.hpp"
+#include "raw/RawRecord.hpp"
 #include "raw/StarToken.hpp"
+
+#include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <filesystem>
+#include <iostream>
+#include <iterator>
+#include <optional>
+#include <stack>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -625,8 +636,12 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
     this->pathMap.emplace( alias, path );
 }
 
-
-RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
+RawKeyword*
+newRawKeyword(const ParserKeyword& parserKeyword,
+              const std::string&   keywordString,
+              ParserState&         parserState,
+              const Parser&        parser)
+{
     for (const auto& keyword : parserKeyword.prohibitedKeywords()) {
         if (parserState.deck.hasKeyword(keyword)) {
             parserState
@@ -653,14 +668,16 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
         }
     }
 
-    bool raw_string_keyword = parserKeyword.rawStringKeyword();
+    const bool raw_string_keyword = parserKeyword.rawStringKeyword();
 
-    if( parserKeyword.getSizeType() == SLASH_TERMINATED || parserKeyword.getSizeType() == UNKNOWN || parserKeyword.getSizeType() == DOUBLE_SLASH_TERMINATED) {
-
+    if ((parserKeyword.getSizeType() == SLASH_TERMINATED) ||
+        (parserKeyword.getSizeType() == UNKNOWN) ||
+        (parserKeyword.getSizeType() == DOUBLE_SLASH_TERMINATED))
+    {
         const auto size_type = parserKeyword.getSizeType();
         Raw::KeywordSizeEnum rawSizeType;
 
-        switch(size_type) {
+        switch (size_type) {
             case SLASH_TERMINATED:        rawSizeType = Raw::SLASH_TERMINATED; break;
             case UNKNOWN:                 rawSizeType = Raw::UNKNOWN; break;
             case DOUBLE_SLASH_TERMINATED: rawSizeType = Raw::DOUBLE_SLASH_TERMINATED; break;
@@ -668,87 +685,114 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
                 throw std::logic_error("Should not be here!");
         }
 
-        return new RawKeyword( keywordString,
-                               parserState.current_path().string(),
-                               parserState.line(),
-                               raw_string_keyword,
-                               rawSizeType);
+        return new RawKeyword(keywordString,
+                              parserState.current_path().string(),
+                              parserState.line(),
+                              raw_string_keyword,
+                              rawSizeType);
     }
 
-    if( parserKeyword.hasFixedSize() ) {
+    if (parserKeyword.hasFixedSize()) {
         auto size_type = Raw::FIXED;
-        if (parserKeyword.isCodeKeyword())
+        if (parserKeyword.isCodeKeyword()) {
             size_type = Raw::CODE;
+        }
 
-        return new RawKeyword( keywordString,
-                               parserState.current_path().string(),
-                               parserState.line(),
-                               raw_string_keyword,
-                               size_type,
-                               parserKeyword.min_size(),
-                               parserKeyword.getFixedSize());
+        return new RawKeyword(keywordString,
+                              parserState.current_path().string(),
+                              parserState.line(),
+                              raw_string_keyword,
+                              size_type,
+                              parserKeyword.min_size(),
+                              parserKeyword.getFixedSize());
     }
 
     const auto& keyword_size = parserKeyword.getKeywordSize();
     const auto& deck = parserState.deck;
-    auto size_type = parserKeyword.isTableCollection() ? Raw::TABLE_COLLECTION : Raw::FIXED;
+    const auto size_type = parserKeyword.isTableCollection()
+        ? Raw::TABLE_COLLECTION : Raw::FIXED;
 
-    if( deck.hasKeyword(keyword_size.keyword() ) ) {
+    if (deck.hasKeyword(keyword_size.keyword())) {
         const auto& sizeDefinitionKeyword = deck[keyword_size.keyword()].back();
         const auto& record = sizeDefinitionKeyword.getRecord(0);
-        auto targetSize = record.getItem( keyword_size.item() ).get< int >( 0 ) + keyword_size.size_shift();
-        if (parserKeyword.isAlternatingKeyword())
-            targetSize *= std::distance( parserKeyword.begin(), parserKeyword.end() );
 
-        return new RawKeyword( keywordString,
-                               parserState.current_path().string(),
-                               parserState.line(),
-                               raw_string_keyword,
-                               size_type,
-                               parserKeyword.min_size(),
-                               targetSize);
+        auto targetSize = record.getItem(keyword_size.item()).get<int>(0) + keyword_size.size_shift();
+        if (parserKeyword.isAlternatingKeyword()) {
+            targetSize *= std::distance(parserKeyword.begin(), parserKeyword.end());
+        }
+
+        return new RawKeyword(keywordString,
+                              parserState.current_path().string(),
+                              parserState.line(),
+                              raw_string_keyword,
+                              size_type,
+                              parserKeyword.min_size(),
+                              targetSize);
     }
 
-    std::string msg_fmt = fmt::format("Problem with {{keyword}} - missing {0}\n"
-                                      "In {{file}} line {{line}}\n"
-                                      "For the keyword {{keyword}} we expect to read the number of records from keyword {0}, {0} was not found", keyword_size.keyword());
-    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD ,
+    const auto msg_fmt = fmt::format("Problem with {{keyword}} - missing {0}\n"
+                                     "In {{file}} line {{line}}\n"
+                                     "For the keyword {{keyword}} we expect "
+                                     "to read the number of records from "
+                                     "keyword {0}, {0} was not found",
+                                     keyword_size.keyword());
+
+    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD,
                                          msg_fmt,
-                                         KeywordLocation{keywordString, parserState.current_path().string(), parserState.line()},
-                                         parserState.errors );
+                                         KeywordLocation {
+                                             keywordString,
+                                             parserState.current_path().string(),
+                                             parserState.line()
+                                         },
+                                         parserState.errors);
 
-    const auto& keyword = parser.getKeyword( keyword_size.keyword() );
-    const auto& record = keyword.getRecord(0);
-    const auto& int_item = record.get( keyword_size.item());
+    const auto& keyword  = parser.getKeyword(keyword_size.keyword());
+    const auto& record   = keyword.getRecord(0);
+    const auto& int_item = record.get(keyword_size.item());
 
-    const auto targetSize = int_item.getDefault< int >( ) + keyword_size.size_shift();
-    return new RawKeyword( keywordString,
-                           parserState.current_path().string(),
-                           parserState.line(),
-                           raw_string_keyword,
-                           size_type,
-                           parserKeyword.min_size(),
-                           targetSize);
+    const auto targetSize = int_item.getDefault<int>() + keyword_size.size_shift();
+    return new RawKeyword(keywordString,
+                          parserState.current_path().string(),
+                          parserState.line(),
+                          raw_string_keyword,
+                          size_type,
+                          parserKeyword.min_size(),
+                          targetSize);
 }
 
-
-RawKeyword * newRawKeyword( const std::string& deck_name, ParserState& parserState, const Parser& parser, const std::string_view& line ) {
+RawKeyword*
+newRawKeyword(const std::string&      deck_name,
+              ParserState&            parserState,
+              const Parser&           parser,
+              const std::string_view& line)
+{
     if (deck_name.size() > RawConsts::maxKeywordLength) {
         const std::string keyword8 = deck_name.substr(0, RawConsts::maxKeywordLength);
         if (parser.isRecognizedKeyword(keyword8)) {
-            std::string msg = "Keyword {keyword} to long - only eight first characters recognized\n"
-                              "In {file} line {line}\n";
+            const auto msg = std::string {
+                "Keyword {keyword} to long - only eight "
+                "first characters recognized\n"
+                "In {file} line {line}\n"
+            };
+
             parserState.parseContext.handleError(ParseContext::PARSE_LONG_KEYWORD,
                                                  msg,
-                                                 KeywordLocation{deck_name, parserState.current_path().string(), parserState.line()},
+                                                 KeywordLocation {
+                                                     deck_name,
+                                                     parserState.current_path().string(),
+                                                     parserState.line()
+                                                 },
                                                  parserState.errors);
 
             parserState.unknown_keyword = false;
-            const auto& parserKeyword = parser.getParserKeywordFromDeckName( keyword8 );
+            const auto& parserKeyword = parser.getParserKeywordFromDeckName(keyword8);
+
             return newRawKeyword(parserKeyword, keyword8, parserState, parser);
-        } else {
-            parserState.parseContext.handleUnknownKeyword( deck_name, KeywordLocation{}, parserState.errors );
+        }
+        else {
+            parserState.parseContext.handleUnknownKeyword(deck_name, KeywordLocation{}, parserState.errors);
             parserState.unknown_keyword = true;
+
             return nullptr;
         }
     }
@@ -756,17 +800,20 @@ RawKeyword * newRawKeyword( const std::string& deck_name, ParserState& parserSta
     if (parser.isRecognizedKeyword(deck_name)) {
         parserState.unknown_keyword = false;
         const auto& parserKeyword = parser.getParserKeywordFromDeckName(deck_name);
+
         return newRawKeyword(parserKeyword, deck_name, parserState, parser);
     }
 
-    if( ParserKeyword::validDeckName(deck_name) ) {
-        parserState.parseContext.handleUnknownKeyword( deck_name, KeywordLocation{}, parserState.errors );
+    if (ParserKeyword::validDeckName(deck_name)) {
+        parserState.parseContext.handleUnknownKeyword(deck_name, KeywordLocation{}, parserState.errors);
         parserState.unknown_keyword = true;
+
         return nullptr;
     }
 
-    if (!parserState.unknown_keyword)
+    if (! parserState.unknown_keyword) {
         parserState.handleRandomText(line);
+    }
 
     return nullptr;
 }

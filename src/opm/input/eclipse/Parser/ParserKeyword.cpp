@@ -63,8 +63,7 @@ KeywordSize::KeywordSize(std::size_t in_min_size, const std::string& in_keyword,
 
 KeywordSize::KeywordSize()
     : KeywordSize(SLASH_TERMINATED)
-{
-}
+{}
 
 KeywordSize::KeywordSize(ParserKeywordSizeEnum size_type)
     : m_size_type(size_type)
@@ -83,15 +82,13 @@ KeywordSize::KeywordSize(ParserKeywordSizeEnum size_type)
 
 KeywordSize::KeywordSize(std::size_t fixed_size)
     : KeywordSize(fixed_size, false)
-{
-}
+{}
 
 KeywordSize::KeywordSize(std::size_t fixed_size, bool code)
     : m_size_type(code ? FIXED_CODE : FIXED)
     , m_max_size(fixed_size)
     , is_code(code)
-{
-}
+{}
 
 KeywordSize::KeywordSize(std::size_t in_min_size, std::size_t fixed_size, bool code)
     : KeywordSize(fixed_size, code)
@@ -162,25 +159,34 @@ void KeywordSize::min_size(int s) {
     this->m_min_size = s;
 }
 
-std::string
-KeywordSize::construct() const
+std::string KeywordSize::construct() const
 {
     if (this->m_size_type == UNKNOWN || this->m_size_type == DOUBLE_SLASH_TERMINATED || this->m_size_type == SLASH_TERMINATED)
         return fmt::format("KeywordSize({})", ParserKeywordSizeEnum2String(this->m_size_type));
 
-    if (this->m_size_type == FIXED || this->m_size_type == FIXED_CODE) {
-        if (this->min_size().has_value())
-            return fmt::format("KeywordSize({}, {}, {})", this->min_size().value(), std::get<std::size_t>(this->m_max_size.value()), this->is_code);
-        else
-            return fmt::format("KeywordSize({}, {})", std::get<std::size_t>(this->m_max_size.value()), this->is_code);
+    if ((this->m_size_type == FIXED) || (this->m_size_type == FIXED_CODE)) {
+        if (this->min_size().has_value()) {
+            return fmt::format("KeywordSize({}, {}, {})",
+                               this->min_size().value(),
+                               std::get<std::size_t>(this->m_max_size.value()),
+                               this->is_code);
+        }
+
+        return fmt::format("KeywordSize({}, {})",
+                           std::get<std::size_t>(this->m_max_size.value()),
+                           this->is_code);
     }
 
     if (this->m_size_type == OTHER_KEYWORD_IN_DECK) {
         const auto& [size_kw, size_item] = std::get<1>(this->m_max_size.value());
-        if (this->min_size().has_value())
-            return fmt::format("KeywordSize({}, \"{}\", \"{}\", {}, {})", this->min_size().value(), size_kw, size_item, this->is_table_collection, this->shift);
-        else
-            return fmt::format("KeywordSize(\"{}\", \"{}\", {}, {})", size_kw, size_item, this->is_table_collection, this->shift);
+        if (this->min_size().has_value()) {
+            return fmt::format("KeywordSize({}, \"{}\", \"{}\", {}, {})",
+                               this->min_size().value(), size_kw, size_item,
+                               this->is_table_collection, this->shift);
+        }
+
+        return fmt::format("KeywordSize(\"{}\", \"{}\", {}, {})",
+                           size_kw, size_item, this->is_table_collection, this->shift);
     }
 
     throw std::logic_error("No string serialization known?");
