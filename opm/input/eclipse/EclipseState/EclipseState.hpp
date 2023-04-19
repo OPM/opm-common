@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
@@ -94,6 +95,9 @@ namespace Opm {
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
         const GridDims& gridDims() const;
+
+        virtual const CarfinManager& getInputGLgr() const;
+        bool hasInputLGR() const;
 
         // the unit system used by the deck. note that it is rarely needed
         // to convert units because internally to opm-parser everything is
@@ -166,6 +170,7 @@ namespace Opm {
         EclipseGrid m_inputGrid;
         NNC m_inputNnc;
         GridDims m_gridDims;
+        LgrCollection m_inputLgr;
         FieldPropsManager field_props;
         SimulationConfig m_simulationConfig;
         AquiferConfig aquifer_config;

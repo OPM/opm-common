@@ -119,6 +119,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
     src/opm/input/eclipse/EclipseState/Grid/Carfin.cpp
     src/opm/input/eclipse/EclipseState/Grid/CarfinManager.cpp
+    src/opm/input/eclipse/EclipseState/Grid/LgrCollection.cpp
     src/opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
     src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
     src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
@@ -1084,6 +1085,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/Fault.hpp
        opm/input/eclipse/EclipseState/Grid/Box.hpp
        opm/input/eclipse/EclipseState/Grid/Carfin.hpp
+       opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp
        opm/input/eclipse/EclipseState/Grid/FieldProps.hpp
        opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp
        opm/input/eclipse/EclipseState/Grid/FaultFace.hpp
