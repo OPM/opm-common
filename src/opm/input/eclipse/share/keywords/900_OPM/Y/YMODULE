@@ -5,6 +5,6 @@
   ],
   "data": {
     "value_type": "DOUBLE",
-    "dimension": "Energy/Length*Length"
+    "dimension": "ymodule"
   }
 }

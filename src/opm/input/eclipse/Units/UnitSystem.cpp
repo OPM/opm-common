@@ -139,6 +139,7 @@ namespace {
         1 / (1 / Metric::Time),
         1 / Metric::Moles,
         1 / Metric::PPM,
+        1 / Metric::Ymodule,
     };
 
     static const double from_metric[] = {
@@ -185,6 +186,7 @@ namespace {
         1 / Metric::Time,
         Metric::Moles,
         Metric::PPM,
+        Metric::Ymodule,
     };
 
     static constexpr const char* metric_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -231,6 +233,7 @@ namespace {
         "SM3/SM3/DAY",
         "KG-M",
         "PPM", /*Parts per million */
+        "GPa",
     };
 
     static_assert(numElems(from_metric_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -343,6 +346,7 @@ namespace {
         1 / (Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time),
         1 / Field::Moles,
         1 / Field::PPM,
+        1 / Field::Ymodule,
     };
 
     static const double from_field[] = {
@@ -389,6 +393,7 @@ namespace {
          Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time,
          Field::Moles,
          Field::PPM,
+         Field::Ymodule,
     };
 
     static constexpr const char* field_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -435,6 +440,7 @@ namespace {
         "MSCF/STB/DAY",
         "LB-M",
         "PPM",
+        "GPa",
     };
 
     static_assert(numElems(from_field_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -547,6 +553,7 @@ namespace {
         1 / (Lab::GasDissolutionFactor / Lab::Time),
         1 / Lab::Moles,
         1 / Lab::PPM,
+        1 / Lab::YModule,
     };
 
     static const double from_lab[] = {
@@ -593,6 +600,7 @@ namespace {
         Lab::GasDissolutionFactor / Lab::Time,
         Lab::Moles,
         Lab::PPM,
+        Lab::YModule,
     };
 
     static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -639,6 +647,7 @@ namespace {
         "SCC/SCC/HR",
         "g-M",
         "PPM",
+        "GPa",
     };
 
     static_assert(numElems(from_lab_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -751,6 +760,7 @@ namespace {
         1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time),
         1 / PVT_M::Moles,
         1 / PVT_M::PPM,
+        1 / PVT_M::Ymodule,
     };
 
     static const double from_pvt_m[] = {
@@ -797,6 +807,7 @@ namespace {
         PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time,
         PVT_M::Moles,
         PVT_M::PPM,
+        PVT_M::Ymodule,
     };
 
     static constexpr const char* pvt_m_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -843,6 +854,7 @@ namespace {
         "SM3/SM3/DAY",
         "KG-M",
         "PPM",
+        "GPa"
     };
 
     static_assert(numElems(from_pvt_m_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -1046,7 +1058,8 @@ namespace {
         "KG/SM3", /*salinity */
         "SM3/SM3/DAY",
         "g-M",
-        "PPM"
+        "PPM",
+        "GPa",
     };
 
     static_assert(numElems(from_input_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -1152,6 +1165,7 @@ namespace {
         this->addDimension("Energy", PVT_M::Energy);
         this->addDimension("PPM", PVT_M::PPM);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("Ymodule", PVT_M::Ymodule);
     }
 
 
@@ -1190,6 +1204,7 @@ namespace {
         this->addDimension("Energy", Lab::Energy);
         this->addDimension("PPM", Lab::PPM);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("Ymodule", Lab::Ymodule);
     }
 
 
@@ -1229,6 +1244,7 @@ namespace {
         this->addDimension("Energy", Metric::Energy);
         this->addDimension("PPM", Metric::PPM);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("Ymodule", Metric::Ymodule);
     }
 
     void UnitSystem::initFIELD() {
@@ -1266,6 +1282,7 @@ namespace {
         this->addDimension("Energy", Field::Energy);
         this->addDimension("PPM", Field::PPM);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("Ymodule", Field::Ymodule);
     }
 
 

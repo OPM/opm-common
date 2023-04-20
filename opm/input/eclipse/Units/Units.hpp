@@ -282,6 +282,7 @@ namespace Opm {
         constexpr const double Energy               = kilo*joule;
         constexpr const double Moles                = kilo*mol;
         constexpr const double PPM                  = 1./mega;
+        constexpr const double Ymodule              = giga*pascal;
     }
 
 
@@ -315,7 +316,7 @@ namespace Opm {
         constexpr const double Energy               = btu;
         constexpr const double Moles                = kilo*pound*mol;
         constexpr const double PPM                  = 1./mega;
-
+        constexpr const double Ymodule              = giga*pascal;
     }
 
 
@@ -349,7 +350,7 @@ namespace Opm {
         constexpr const double Energy               = joule;
         constexpr const double Moles                = mol;
         constexpr const double PPM                  = 1./mega;
-
+        constexpr const double Ymodule              = giga*pascal;
     }
 
 
@@ -383,6 +384,7 @@ namespace Opm {
         constexpr const double Energy               = kilo*joule;
         constexpr const double Moles                = kilo*mol;
         constexpr const double PPM                  = 1./mega;
+        constexpr const double Ymodule              = giga*pascal;
     }
 }
 
