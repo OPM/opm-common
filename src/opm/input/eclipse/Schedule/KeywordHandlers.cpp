@@ -146,7 +146,7 @@ namespace {
     }
 
     void Schedule::handleBC(Schedule::HandlerContext& handlerContext) {
-        auto& bc = this->snapshots.back().bcconfig;
+        auto& bc = this->snapshots.back().bc;
         for (const auto& record : handlerContext.keyword) {
             bc.updateBC(record);
         }

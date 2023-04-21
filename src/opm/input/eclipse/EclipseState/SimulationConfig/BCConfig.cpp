@@ -24,71 +24,18 @@
 #include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 
 namespace Opm {
-namespace {
 
-namespace fromstring {
-
-BCType bctype(const std::string& s) {
-    if (s == "RATE")
-        return BCType::RATE;
-
-    if (s == "FREE")
-        return BCType::FREE;
-
-    if (s == "DIRICHLET")
-        return BCType::DIRICHLET;
-
-    if (s == "THERMAL")
-        return BCType::THERMAL;
-
-    throw std::invalid_argument("Not recognized boundary condition type: " + s);
-}
-
-
-BCComponent component(const std::string& s) {
-    if (s == "OIL")
-        return BCComponent::OIL;
-
-    if (s == "GAS")
-        return BCComponent::GAS;
-
-    if (s == "WATER")
-        return BCComponent::WATER;
-
-    if (s == "SOLVENT")
-        return BCComponent::SOLVENT;
-
-    if (s == "POLYMER")
-        return BCComponent::POLYMER;
-
-    if (s == "NONE")
-        return BCComponent::NONE;
-
-    throw std::invalid_argument("Not recognized boundary condition compononet: " + s);
-}
-
-}
-}
-
-using BC = ParserKeywords::BC;
+using BC = ParserKeywords::BCCON;
 BCConfig::BCFace::BCFace(const DeckRecord& record, const GridDims& grid) :
+    index(record.getItem<BC::INDEX>().get<int>(0)),
     i1(0),
     i2(grid.getNX() - 1),
     j1(0),
     j2(grid.getNY() - 1),
     k1(0),
     k2(grid.getNZ() - 1),
-    bctype(fromstring::bctype(record.getItem<BC::TYPE>().get<std::string>(0))),
-    dir(FaceDir::FromString(record.getItem<BC::DIRECTION>().get<std::string>(0))),
-    component(fromstring::component(record.getItem<BC::COMPONENT>().get<std::string>(0))),
-    rate(record.getItem<BC::RATE>().getSIDouble(0))
+    dir(FaceDir::FromString(record.getItem<BC::DIRECTION>().get<std::string>(0)))
 {
-    if (const auto& P = record.getItem<BC::PRESSURE>(); ! P.defaultApplied(0)) {
-        pressure = P.getSIDouble(0);
-    }
-    if (const auto& T = record.getItem<BC::TEMPERATURE>(); ! T.defaultApplied(0)) {
-        temperature = T.getSIDouble(0);
-    }
     if (const auto& I1 = record.getItem<BC::I1>(); ! I1.defaultApplied(0)) {
         this->i1 = I1.get<int>(0) - 1;
     }
@@ -112,66 +59,38 @@ BCConfig::BCFace::BCFace(const DeckRecord& record, const GridDims& grid) :
 BCConfig::BCFace BCConfig::BCFace::serializationTestObject()
 {
     BCFace result;
-    result.i1 = 10;
-    result.i2 = 11;
-    result.j1 = 12;
-    result.j2 = 13;
-    result.k1 = 14;
-    result.k2 = 15;
-    result.bctype = BCType::RATE;
+    result.index = 10;
+    result.i1 = 12;
+    result.i2 = 13;
+    result.j1 = 13;
+    result.j2 = 14;
+    result.k1 = 15;
+    result.k2 = 16;
     result.dir = FaceDir::XPlus;
-    result.component = BCComponent::GAS;
-    result.rate = 100.0;
-    result.pressure = 101.0;
-    result.temperature = 102.0;
 
     return result;
 }
 
 
 bool BCConfig::BCFace::operator==(const BCConfig::BCFace& other) const {
-    return this->i1 == other.i1 &&
+    return this->index == other.index &&
+           this->i1 == other.i1 &&
            this->i2 == other.i2 &&
            this->j1 == other.j1 &&
            this->j2 == other.j2 &&
            this->k1 == other.k1 &&
            this->k2 == other.k2 &&
-           this->bctype == other.bctype &&
-           this->dir == other.dir &&
-           this->component == other.component &&
-           this->rate == other.rate &&
-           this->pressure == other.pressure &&
-           this->temperature == other.temperature;
+           this->dir == other.dir;
 }
-
 
 
 BCConfig::BCConfig(const Deck& deck) {
     GridDims grid( deck );
-    this->m_gridDims = grid;
-    for (const auto& kw: deck.getKeywordList<ParserKeywords::BC>()) {
+    for (const auto& kw: deck.getKeywordList<ParserKeywords::BCCON>()) {
         for (const auto& record : *kw)
             this->m_faces.emplace_back( record, grid );
     }
 }
-
-void BCConfig::updateBC(const DeckRecord& record) {
-    const BCConfig::BCFace bcnew( record, this->m_gridDims );
-    for (auto& bc : m_faces) {
-        if (bc.i1 == bcnew.i1 
-            && bc.i2 == bcnew.i2
-            && bc.j1 == bcnew.j1
-            && bc.j2 == bcnew.j2
-            && bc.k1 == bcnew.k1
-            && bc.k2 == bcnew.k2 )
-            {
-                bc = bcnew;
-                return;
-            }
-    }
-    this->m_faces.emplace_back( bcnew );   
-}
-
 
 
 BCConfig BCConfig::serializationTestObject()
@@ -193,10 +112,6 @@ std::vector<BCConfig::BCFace>::const_iterator BCConfig::begin() const {
 
 std::vector<BCConfig::BCFace>::const_iterator BCConfig::end() const {
     return this->m_faces.end();
-}
-
-BCConfig::BCFace BCConfig::operator[](std::size_t index) const {
-    return this->m_faces[index];
 }
 
 bool BCConfig::operator==(const BCConfig& other) const {

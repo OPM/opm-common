@@ -59,6 +59,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -5441,41 +5442,51 @@ BOOST_AUTO_TEST_CASE(createDeckWithBC) {
 START             -- 0
 19 JUN 2007 /
 
+DIMENS
+ 20 1 10 /
+
+GRID
+
+BCCON
+1 1 1 1 1 1 10 X- /
+2 20 20 1 1 6 10 X /
+/
+
 SOLUTION
 
 
 SCHEDULE
 
 BC
-1 1 1 1 1 10 X- RATE GAS 100.0 /
-20 20 1 1 1 5 X FREE 4* /
+1 RATE GAS 100.0 /
+2 FREE /
 /
 
 DATES             -- 1
  10  OKT 2008 /
 /
 BC
-1 1 1 1 1 10 X- RATE GAS 200.0 /
-20 20 1 1 6 10 X FREE 4* /
+1 RATE GAS 200.0 /
+2 FREE 4* /
 /
 )";
 
     const auto& schedule = make_schedule(input);
+    const auto& deck = Parser{}.parseString(input);
+    BCConfig bcconfig(deck);
     {
         size_t currentStep = 0;
-        const auto& bcconfig = schedule[currentStep].bcconfig;
-        BOOST_CHECK_EQUAL(bcconfig.size(), 2);
-        const auto& bcface0 = bcconfig[0];
-        BOOST_CHECK_EQUAL(bcface0.i1, 0);
+        const auto& bc = schedule[currentStep].bc;
+        BOOST_CHECK_EQUAL(bc.size(), 2);
+        const auto& bcface0 = bc[0];
         BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 100, 1e-8 );
     }
 
     {
         size_t currentStep = 1;
-        const auto& bcconfig = schedule[currentStep].bcconfig;
-        BOOST_CHECK_EQUAL(bcconfig.size(), 3);
-        const auto& bcface0 = bcconfig[0];
-        BOOST_CHECK_EQUAL(bcface0.i1, 0);
+        const auto& bc = schedule[currentStep].bc;
+        BOOST_CHECK_EQUAL(bc.size(), 2);
+        const auto& bcface0 = bc[0];
         BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 200, 1e-8 );
     }
 }
