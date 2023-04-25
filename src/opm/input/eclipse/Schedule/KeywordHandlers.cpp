@@ -1496,7 +1496,6 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
             if (groupName == "FIELD") {
                 fieldWells.push_back(wellName);
-                continue;
             }
 
             const auto fip_region_number = record.getItem<ParserKeywords::WELSPECS::FIP_REGION>().get<int>(0);
@@ -1565,12 +1564,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
         if (! fieldWells.empty()) {
             const auto* plural = (fieldWells.size() == 1) ? "" : "s";
-
-            throw OpmInputError {
-                fmt::format(R"(Well{0} cannot be parented directly to 'FIELD'.
-Well{0} entered with disallowed 'FIELD' parent group:
- * {1})", plural, fmt::join(fieldWells, "\n * ")), handlerContext.keyword.location()
-            };
+            const auto msg_fmt = fmt::format(R"(Well{0} is parented directly to 'FIELD', this is allowed but discouraged.
+Well{0} entered with 'FIELD' parent group:
+ * {1})", plural, fmt::join(fieldWells, "\n * "));
+            handlerContext.parseContext.handleError( ParseContext::SCHEDULE_WELL_IN_FIELD_GROUP,
+                                                     msg_fmt,
+                                                     handlerContext.keyword.location(),
+                                                     handlerContext.errors );
         }
     }
 
