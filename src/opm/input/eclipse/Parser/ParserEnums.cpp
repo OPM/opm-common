@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Parser/ParserEnums.hpp>
 
+#include <array>
+#include <cstddef>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -30,22 +32,24 @@ namespace Opm {
 
     std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue)
     {
-        const auto enumMap = std::map<ParserKeywordSizeEnum, std::string> {
-            { ParserKeywordSizeEnum::SLASH_TERMINATED       , "SLASH_TERMINATED"        },
-            { ParserKeywordSizeEnum::FIXED                  , "FIXED"                   },
-            { ParserKeywordSizeEnum::OTHER_KEYWORD_IN_DECK  , "OTHER_KEYWORD_IN_DECK"   },
-            { ParserKeywordSizeEnum::UNKNOWN                , "UNKNOWN"                 },
-            { ParserKeywordSizeEnum::FIXED_CODE             , "FIXED_CODE"              },
-            { ParserKeywordSizeEnum::DOUBLE_SLASH_TERMINATED, "DOUBLE_SLASH_TERMINATED" },
-            { ParserKeywordSizeEnum::SPECIAL_CASE_ROCK      , "SPECIAL_CASE_ROCK"       },
+        using namespace std::literals::string_literals;
+
+        const auto enumStrings = std::array { // Class template argument deduction
+            "SLASH_TERMINATED"s,
+            "FIXED"s,
+            "OTHER_KEYWORD_IN_DECK"s,
+            "UNKNOWN"s,
+            "FIXED_CODE"s,
+            "DOUBLE_SLASH_TERMINATED"s,
+            "SPECIAL_CASE_ROCK"s,
         };
 
-        auto enumPos = enumMap.find(enumValue);
-        if (enumPos == enumMap.end()) {
+        const auto ix = static_cast<std::size_t>(enumValue);
+        if (ix >= enumStrings.size()) {
             throw std::invalid_argument("Implementation error - should NOT be here");
         }
 
-        return enumPos->second;
+        return enumStrings[ix];
     }
 
     ParserKeywordSizeEnum ParserKeywordSizeEnumFromString(const std::string& stringValue)
@@ -74,19 +78,21 @@ namespace Opm {
 
     std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue)
     {
-        const auto enumMap = std::map <ParserKeywordActionEnum, std::string> {
-            { ParserKeywordActionEnum::INTERNALIZE    , "INTERNALIZE"     },
-            { ParserKeywordActionEnum::IGNORE         , "IGNORE"          },
-            { ParserKeywordActionEnum::IGNORE_WARNING , "IGNORE_WARNING"  },
-            { ParserKeywordActionEnum::THROW_EXCEPTION, "THROW_EXCEPTION" },
+        using namespace std::literals::string_literals;
+
+        const auto enumStrings = std::array { // Class template argument deduction
+            "INTERNALIZE"s,
+            "IGNORE"s,
+            "IGNORE_WARNING"s,
+            "THROW_EXCEPTION"s,
         };
 
-        auto enumPos = enumMap.find(enumValue);
-        if (enumPos == enumMap.end()) {
+        const auto ix = static_cast<std::size_t>(enumValue);
+        if (ix >= enumStrings.size()) {
             throw std::invalid_argument("Implementation error - should NOT be here");
         }
 
-        return enumPos->second;
+        return enumStrings[ix];
     }
 
     ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue)
