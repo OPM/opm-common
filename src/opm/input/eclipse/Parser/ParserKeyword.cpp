@@ -78,7 +78,9 @@ KeywordSize::KeywordSize(ParserKeywordSizeEnum size_type)
 
     throw std::logic_error {
         "This constructor only allows size types "
-        "UNKNOWN, SLASH_TERMINATED, and SPECIAL_CASE_ROCK"
+        "UNKNOWN, SLASH_TERMINATED, "
+        "DOUBLE_SLASH_TERMINATED, "
+        "and SPECIAL_CASE_ROCK"
     };
 }
 
