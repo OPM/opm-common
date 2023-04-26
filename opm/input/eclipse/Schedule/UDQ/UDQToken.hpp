@@ -30,15 +30,29 @@ namespace Opm {
 
 class UDQToken {
 public:
+    UDQToken() = default;
     UDQToken(const std::string& string_token, UDQTokenType token_type);
     UDQToken(const std::string& string_token, const std::vector<std::string>& selector);
+
+    static UDQToken serializationTestObject();
 
     const std::vector<std::string>& selector() const;
     const std::variant<std::string, double>& value() const;
     UDQTokenType type() const;
     std::string str() const;
+
+    bool operator==(const UDQToken&) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(token_type);
+        serializer(m_value);
+        serializer(m_selector);
+    }
+
 private:
-    UDQTokenType token_type;
+    UDQTokenType token_type{UDQTokenType::error};
     std::variant<std::string,double> m_value;
     std::vector<std::string> m_selector;
 };

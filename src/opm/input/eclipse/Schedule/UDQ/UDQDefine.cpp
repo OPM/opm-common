@@ -279,6 +279,7 @@ UDQDefine UDQDefine::serializationTestObject()
 {
     UDQDefine result;
     result.m_keyword = "test1";
+    result.m_tokens = {UDQToken::serializationTestObject()};
     result.ast = std::make_shared<UDQASTNode>(UDQASTNode::serializationTestObject());
     result.m_var_type = UDQVarType::SEGMENT_VAR;
     result.string_data = "test2";
@@ -404,6 +405,7 @@ bool UDQDefine::operator==(const UDQDefine& data) const
     }
 
     return (this->keyword() == data.keyword())
+        && (this->m_tokens == data.m_tokens)
         && (this->m_location == data.location())
         && (this->var_type() == data.var_type())
         && (this->status() == data.status())
