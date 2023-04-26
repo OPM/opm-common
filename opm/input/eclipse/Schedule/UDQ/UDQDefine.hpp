@@ -94,6 +94,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(m_keyword);
+        serializer(m_tokens);
         serializer(ast);
         serializer(m_var_type);
         serializer(m_location);
