@@ -89,4 +89,16 @@ std::string UDQToken::str() const
     }
 }
 
+UDQToken UDQToken::serializationTestObject()
+{
+    return UDQToken{"test1", {"test2", "test3"}};
+}
+
+bool UDQToken::operator==(const UDQToken& rhs) const
+{
+    return this->token_type == rhs.token_type &&
+           this->m_value == rhs.m_value &&
+           this->m_selector == rhs.m_selector;
+}
+
 } // namespace Opm
