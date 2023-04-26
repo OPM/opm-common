@@ -2398,6 +2398,28 @@ BOOST_AUTO_TEST_CASE( TestParseROCK ) {
     BOOST_CHECK_EQUAL( 8U , tables.numFIPRegions( ));
 }
 
+BOOST_AUTO_TEST_CASE( TestParseROCK_WithDefault )
+{
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+TABDIMS
+  1* 2 /
+PROPS
+ROCK
+  1.1 1.2 /
+/ -- Copy from region 1
+)");
+
+    const auto tables = Opm::TableManager { deck };
+    const auto& rock = tables.getRockTable();
+    BOOST_CHECK_EQUAL(rock.size(), std::size_t{2});
+
+    BOOST_CHECK_CLOSE(1.1e5,  rock[0].reference_pressure, 1.0e-8);
+    BOOST_CHECK_CLOSE(1.2e-5, rock[0].compressibility, 1.0e-8);
+
+    BOOST_CHECK_CLOSE(1.1e5,  rock[1].reference_pressure, 1.0e-8);
+    BOOST_CHECK_CLOSE(1.2e-5, rock[1].compressibility, 1.0e-8);
+}
+
 BOOST_AUTO_TEST_CASE( TestParsePVCDO ) {
     const std::string data = R"(
       TABDIMS

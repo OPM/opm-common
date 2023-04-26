@@ -20,6 +20,7 @@
 #ifndef OPM_ROCK_CONFIG_HPP
 #define OPM_ROCK_CONFIG_HPP
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -28,36 +29,36 @@ namespace Opm {
 class Deck;
 class FieldPropsManager;
 
-class RockConfig {
+class RockConfig
+{
 public:
-
-enum class Hysteresis {
-    REVERS = 1,
-    IRREVERS = 2,
-    HYSTER = 3,
-    BOBERG = 4,
-    REVLIMIT = 5,
-    PALM_MAN = 6,
-    NONE = 7
-};
-
-
-struct RockComp {
-    double pref;
-    double compressibility;
-
-    RockComp() = default;
-    RockComp(double pref_arg, double comp_arg);
-    bool operator==(const RockComp& other) const;
-
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
+    enum class Hysteresis
     {
-        serializer(pref);
-        serializer(compressibility);
-    }
-};
+        REVERS = 1,
+        IRREVERS = 2,
+        HYSTER = 3,
+        BOBERG = 4,
+        REVLIMIT = 5,
+        PALM_MAN = 6,
+        NONE = 7,
+    };
 
+    struct RockComp
+    {
+        double pref{};
+        double compressibility{};
+
+        RockComp() = default;
+        RockComp(double pref_arg, double comp_arg);
+        bool operator==(const RockComp& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(pref);
+            serializer(compressibility);
+        }
+    };
 
     RockConfig();
     RockConfig(const Deck& deck, const FieldPropsManager& fp);
@@ -95,4 +96,4 @@ private:
 
 } //namespace Opm
 
-#endif
+#endif // OPM_ROCK_CONFIG_HPP
