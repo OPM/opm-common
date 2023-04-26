@@ -339,6 +339,7 @@ class KeywordLocation;
 
         const static std::string SCHEDULE_GROUP_ERROR;
         const static std::string SCHEDULE_IGNORED_GUIDE_RATE;
+        const static std::string SCHEDULE_WELL_IN_FIELD_GROUP;
 
         const static std::string SCHEDULE_COMPSEGS_INVALID;
         const static std::string SCHEDULE_COMPSEGS_NOT_SUPPORTED;

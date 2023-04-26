@@ -656,7 +656,7 @@ bool Group::wellgroup() const {
 
 bool Group::addWell(const std::string& well_name) {
     if (!this->m_groups.empty())
-        throw std::logic_error("Groups can not mix group and well children. Trying to add well: " + well_name + " to group: " + this->name());
+        throw std::runtime_error("Groups can not mix group and well children. Trying to add well: " + well_name + " to group: " + this->name());
 
     if (this->m_wells.count(well_name) == 0) {
         this->m_wells.insert(well_name);
@@ -677,7 +677,7 @@ void Group::delWell(const std::string& well_name) {
 
 bool Group::addGroup(const std::string& group_name) {
     if (!this->m_wells.empty())
-        throw std::logic_error("Groups can not mix group and well children. Trying to add group: " + group_name + " to group: " + this->name());
+        throw std::runtime_error("Groups can not mix group and well children. Trying to add group: " + group_name + " to group: " + this->name());
 
     if (this->m_groups.count(group_name) == 0) {
         this->m_groups.insert(group_name);

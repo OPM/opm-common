@@ -43,7 +43,7 @@ std::string formatImpl(const std::string& msg_format, const KeywordLocation& loc
 std::string OpmInputError::formatException(const std::exception& e, const KeywordLocation& loc) {
     const std::string defaultMessage { R"(Problem with keyword {keyword}
 In {file} line {line}.
-Internal error: {})" } ;
+{})" } ;
 
     return formatImpl(defaultMessage, loc, e.what());
 }

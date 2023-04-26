@@ -246,8 +246,8 @@ BOOST_AUTO_TEST_CASE(GroupCreate) {
     BOOST_CHECK( g2.addGroup("G2") );
 
     // The children must be either all wells - or all groups.
-    BOOST_CHECK_THROW(g1.addGroup("G1"), std::logic_error);
-    BOOST_CHECK_THROW(g2.addWell("W1"), std::logic_error);
+    BOOST_CHECK_THROW(g1.addGroup("G1"), std::runtime_error);
+    BOOST_CHECK_THROW(g2.addWell("W1"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
