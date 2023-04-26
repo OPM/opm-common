@@ -2420,11 +2420,17 @@ Well{0} entered with disallowed 'FIELD' parent group:
             std::invoke(function_iterator->second, this, handlerContext);
         } catch (const OpmInputError&) {
             throw;
-        } catch (const std::exception& e) {
-            const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
-
+        } catch (const std::logic_error& e) {
+            // Rethrow as OpmInputError to provide more context,
+            // but add "Internal error: " to the string, as that
+            // is what logic_error signifies.
+            const OpmInputError opm_error { std::string("Internal error: ") + e.what(), handlerContext.keyword.location() } ;
             OpmLog::error(opm_error.what());
-
+            std::throw_with_nested(opm_error);
+        } catch (const std::exception& e) {
+            // Rethrow as OpmInputError to provide more context.
+            const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
+            OpmLog::error(opm_error.what());
             std::throw_with_nested(opm_error);
         }
 
