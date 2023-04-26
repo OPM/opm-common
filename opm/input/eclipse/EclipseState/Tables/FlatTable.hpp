@@ -96,12 +96,6 @@ struct GravityTable : public FlatTableWithCopy<GRAVITYRecord>
     {
         return GravityTable({{1.0, 2.0, 3.0}});
     }
-
-    template <class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        FlatTableWithCopy::serializeOp(serializer);
-    }
 };
 
 struct DENSITYRecord {
@@ -136,12 +130,6 @@ struct DensityTable : public FlatTableWithCopy<DENSITYRecord>
     static DensityTable serializationTestObject()
     {
         return DensityTable({{1.0, 2.0, 3.0}});
-    }
-
-    template <class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        FlatTableWithCopy::serializeOp(serializer);
     }
 };
 
@@ -286,12 +274,6 @@ struct PvtwTable : public FlatTableWithCopy<PVTWRecord>
     {
         return PvtwTable({{1.0, 2.0, 3.0, 4.0, 5.0}});
     }
-
-    template <class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        FlatTableWithCopy::serializeOp(serializer);
-    }
 };
 
 struct ROCKRecord {
@@ -322,12 +304,6 @@ struct RockTable : public FlatTableWithCopy<ROCKRecord>
     static RockTable serializationTestObject()
     {
         return RockTable({{1.0, 2.0}});
-    }
-
-    template <class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        FlatTableWithCopy::serializeOp(serializer);
     }
 };
 
