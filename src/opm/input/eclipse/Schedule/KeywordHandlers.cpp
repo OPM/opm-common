@@ -238,6 +238,8 @@ namespace {
                 auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
                 // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ 
                 connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
+                // In the case that defaults are used in WELSPECS for headI/J the headI/J are calculated based on the well trajectory data
+                well2.updateHead(connections->getHeadI(), connections->getHeadJ());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
                     this->snapshots.back().wells.update( well2 );
                     wells.insert( name );
