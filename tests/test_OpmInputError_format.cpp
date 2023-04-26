@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(positional) {
 BOOST_AUTO_TEST_CASE(exception_init) {
     const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
+Runtime Error)" };
 
     const std::string formatted { Opm::OpmInputError(std::runtime_error("Runtime Error"), location).what() } ;
 
@@ -66,7 +66,7 @@ Internal error: Runtime Error)" };
 BOOST_AUTO_TEST_CASE(exception_nest) {
     const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
+Runtime Error)" };
 
     try {
         try {
