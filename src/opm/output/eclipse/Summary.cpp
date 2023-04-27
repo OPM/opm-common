@@ -1792,6 +1792,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
     { "WGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
+    { "WWGR", div( rate< rt::wat, producer >, rate< rt::gas, producer > ) },
     { "GGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
     { "WGLR", div( rate< rt::gas, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
