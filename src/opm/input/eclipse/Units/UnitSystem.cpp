@@ -553,7 +553,7 @@ namespace {
         1 / (Lab::GasDissolutionFactor / Lab::Time),
         1 / Lab::Moles,
         1 / Lab::PPM,
-        1 / Lab::YModule,
+        1 / Lab::Ymodule,
     };
 
     static const double from_lab[] = {
@@ -600,7 +600,7 @@ namespace {
         Lab::GasDissolutionFactor / Lab::Time,
         Lab::Moles,
         Lab::PPM,
-        Lab::YModule,
+        Lab::Ymodule,
     };
 
     static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
