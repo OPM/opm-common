@@ -218,8 +218,10 @@ if (OPM_ENABLE_PYTHON)
     endif()
     # We always need to search for Development as we use
     # pybind11_add_module even if don't embed Python
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-    if (OPM_ENABLE_EMBEDDED_PYTHON)
+    if (NOT OPM_ENABLE_EMBEDDED_PYTHON)
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+    else()
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Embed Development.Module)
       get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
       set(PYTHON_LIBRARY ${_lib_path})
       set(PYTHON_LIBRARIES {PYTHON_LIBRARY})
