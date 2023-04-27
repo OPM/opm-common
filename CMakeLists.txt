@@ -228,17 +228,6 @@ if (OPM_ENABLE_PYTHON)
       list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
       set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
     endif()
-    # Make sure we fail gracefully here without setuptool
-    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import setuptools"
-      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-      ERROR_VARIABLE SETUPTOOL_ERROR OUTPUT_VARIABLE SETUPTOOL_OUT
-      RESULT_VARIABLE SETUPTOOL_RESULT)
-    if(SETUPTOOL_RESULT GREATER 0)
-      message(WARNING "Trying to test setuptools resulted in error message: ${SETUPTOOL_ERROR}")
-      message(SEND_ERROR "To build the python bindings you need to install setuptool. "
-        "Either use \"apt-get install python3-setuptools\" (on Debian/Ubuntu) "
-        "or \"pip install setuptools\"")
-    endif()
     if(Python3_VERSION_MINOR LESS 3)
       # Python native namespace packages requires python >= 3.3
       message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
