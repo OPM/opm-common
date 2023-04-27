@@ -8,11 +8,11 @@
 
 yum-config-manager --add-repo \
 https://www.opm-project.org/package/opm.repo
-yum install -y cmake3 ccache boost169-devel boost169-static tbb-devel
+yum install -y ccache boost169-devel boost169-static tbb-devel
 yum install -y blas-devel suitesparse-devel dune-common-devel
 
 for python_bin in ${python_versions[*]}
 do
   ${python_bin} -m pip install pip --upgrade
-  ${python_bin} -m pip install wheel setuptools twine pytest-runner auditwheel
+  ${python_bin} -m pip install wheel setuptools twine pytest-runner auditwheel scikit-build cmake
 done
