@@ -218,24 +218,15 @@ if (OPM_ENABLE_PYTHON)
     endif()
     # We always need to search for Development as we use
     # pybind11_add_module even if don't embed Python
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-    if (OPM_ENABLE_EMBEDDED_PYTHON)
+    if (NOT OPM_ENABLE_EMBEDDED_PYTHON)
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+    else()
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Embed Development.Module)
       get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
       set(PYTHON_LIBRARY ${_lib_path})
       set(PYTHON_LIBRARIES {PYTHON_LIBRARY})
       list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
       set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
-    endif()
-    # Make sure we fail gracefully here without setuptool
-    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import setuptools"
-      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-      ERROR_VARIABLE SETUPTOOL_ERROR OUTPUT_VARIABLE SETUPTOOL_OUT
-      RESULT_VARIABLE SETUPTOOL_RESULT)
-    if(SETUPTOOL_RESULT GREATER 0)
-      message(WARNING "Trying to test setuptools resulted in error message: ${SETUPTOOL_ERROR}")
-      message(SEND_ERROR "To build the python bindings you need to install setuptool. "
-        "Either use \"apt-get install python3-setuptools\" (on Debian/Ubuntu) "
-        "or \"pip install setuptools\"")
     endif()
     if(Python3_VERSION_MINOR LESS 3)
       # Python native namespace packages requires python >= 3.3
