@@ -1,4 +1,4 @@
-from setuptools import setup
+from skbuild import setup
 
 import os
 
@@ -32,7 +32,6 @@ setup(
     package_data={'opm' : ['$<TARGET_FILE_NAME:opmcommon_python>']},
     include_package_data=True,
     license='Open Source',
-    zip_safe=False,
     test_suite='tests',
     setup_requires=["pytest-runner", 'setuptools_scm'],
     python_requires='>=3.6',
