@@ -115,6 +115,7 @@ namespace Opm {
         PinchMode getMultzOption() const;
         PinchMode getPinchGapMode() const;
         double getPinchMaxEmptyGap() const;
+        bool maxEmptyGapDefaulted()const;
 
         MinpvMode getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;

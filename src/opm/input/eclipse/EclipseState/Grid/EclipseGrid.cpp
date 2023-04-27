@@ -556,6 +556,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return m_pinchMaxEmptyGap;
     }
 
+    bool EclipseGrid::maxEmptyGapDefaulted() const {
+        return m_pinchMaxEmptyGap ==
+            ParserKeywords::PINCH::MAX_EMPTY_GAP::defaultValue;
+    }
 
     const std::vector<double>& EclipseGrid::getMinpvVector( ) const {
         return m_minpvVector;
