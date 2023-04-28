@@ -30,9 +30,9 @@ namespace external {
 //--------------------------------------------------------------------------------------------------
 RigWellPath::RigWellPath()
     : cvf::Object()
+    , objectBeingDeleted( this )
     , m_hasDatumElevation( false )
     , m_datumElevation( 0.0 )
-    , objectBeingDeleted( this )
     , m_uniqueStartIndex( 0u )
     , m_uniqueEndIndex( std::numeric_limits<size_t>::max() )
 {
@@ -43,13 +43,13 @@ RigWellPath::RigWellPath()
 //--------------------------------------------------------------------------------------------------
 RigWellPath::RigWellPath( const RigWellPath& rhs )
     : cvf::Object()
+    , objectBeingDeleted( this )
     , m_wellPathPoints( rhs.m_wellPathPoints )
     , m_measuredDepths( rhs.m_measuredDepths )
     , m_hasDatumElevation( rhs.m_hasDatumElevation )
     , m_datumElevation( rhs.m_datumElevation )
     , m_uniqueStartIndex( rhs.m_uniqueStartIndex )
     , m_uniqueEndIndex( rhs.m_uniqueEndIndex )
-    , objectBeingDeleted( this )
 {
     CVF_ASSERT( m_wellPathPoints.size() == m_measuredDepths.size() );
 }
@@ -59,12 +59,12 @@ RigWellPath::RigWellPath( const RigWellPath& rhs )
 //--------------------------------------------------------------------------------------------------
 RigWellPath::RigWellPath( const std::vector<cvf::Vec3d>& wellPathPoints, const std::vector<double>& measuredDepths )
     : cvf::Object()
+    , objectBeingDeleted( this )
     , m_wellPathPoints( wellPathPoints )
     , m_measuredDepths( measuredDepths )
     , m_hasDatumElevation( false )
     , m_datumElevation( 0.0 )
     , m_uniqueStartIndex( 0u )
-    , objectBeingDeleted( this )
     , m_uniqueEndIndex( std::numeric_limits<size_t>::max() )
 {
     CVF_ASSERT( m_wellPathPoints.size() == m_measuredDepths.size() );

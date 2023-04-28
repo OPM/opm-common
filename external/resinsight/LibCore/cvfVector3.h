@@ -158,6 +158,11 @@ typedef Vector3<int>    Vec3i;  ///< A vector with int components
 typedef Vector3<uint>   Vec3ui;  ///< A vector with uint components
 typedef Vector3<size_t> Vec3st;  ///< A vector with size_t components
 
+template<> Vec3d const Vec3d::UNDEFINED;
+template<> Vec3f const Vec3f::UNDEFINED;
+template<> Vec3i const Vec3i::UNDEFINED;
+template<> Vec3st const Vec3st::UNDEFINED;
+
 }
 } //namespace external
 #include "cvfVector3.inl"
