@@ -77,6 +77,8 @@ namespace Opm {
 
         std::size_t size() const;
         bool empty() const;
+        int maxSegmentID() const;
+        int maxBranchID() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;
         double volumeTopSegment() const;

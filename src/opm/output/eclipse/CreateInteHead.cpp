@@ -237,6 +237,38 @@ namespace {
         });
     }
 
+    int maxNumSegments(const ::Opm::Schedule& sched,
+                       const std::size_t      report_step,
+                       const std::size_t      lookup_step)
+    {
+        if (report_step == 0) { return 0; }
+
+        const auto& wnames = sched.wellNames(lookup_step);
+
+        return std::accumulate(std::begin(wnames), std::end(wnames), 0,
+            [&sched, lookup_step](const int m, const std::string& wname) -> int
+        {
+            // maxSegmentID() returns 0 for standard (non-MS) wells.
+            return std::max(m, sched.getWell(wname, lookup_step).maxSegmentID());
+        });
+    }
+
+    int maxNumLateralBranches(const ::Opm::Schedule& sched,
+                              const std::size_t      report_step,
+                              const std::size_t      lookup_step)
+    {
+        if (report_step == 0) { return 0; }
+
+        const auto& wnames = sched.wellNames(lookup_step);
+
+        return std::accumulate(std::begin(wnames), std::end(wnames), 0,
+            [&sched, lookup_step](const int m, const std::string& wname) -> int
+        {
+            // maxBranchID() returns 0 for standard (non-MS) wells.
+            return std::max(m, sched.getWell(wname, lookup_step).maxBranchID());
+        });
+    }
+
     Opm::RestartIO::InteHEAD::WellTableDim
     getWellTableDims(const int              nwgmax,
                      const int              ngmax,
@@ -384,13 +416,18 @@ namespace {
     {
         const auto& wsd = rspec.wellSegmentDimensions();
 
+        const auto numMSW = numMultiSegWells(sched, report_step, lookup_step);
+        const auto maxNumSeg = maxNumSegments(sched, report_step, lookup_step);
+        const auto maxNumBr = maxNumLateralBranches(sched, report_step, lookup_step);
+
         return {
-            numMultiSegWells(sched, report_step, lookup_step),
-            wsd.maxSegmentedWells(),
-            wsd.maxSegmentsPerWell(),
-            wsd.maxLateralBranchesPerWell(),
+            numMSW,
+            std::max(numMSW, wsd.maxSegmentedWells()),
+            std::max(maxNumSeg, wsd.maxSegmentsPerWell()),
+            std::max(maxNumBr, wsd.maxLateralBranchesPerWell()),
             22,           // Number of entries per segment in ISEG (2017.2)
-            Opm::RestartIO::InteHEAD::numRsegElem(rspec.phases()) + 8*num_water_tracer, // Number of entries per segment in RSEG
+            Opm::RestartIO::InteHEAD::numRsegElem(rspec.phases())
+               + 8*num_water_tracer, // Number of entries per segment in RSEG
             10            // Number of entries per segment in ILBR (2017.2)
         };
     }
