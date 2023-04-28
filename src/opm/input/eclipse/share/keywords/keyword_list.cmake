@@ -1105,6 +1105,7 @@ set( keywords
 
      900_OPM/B/BC
      900_OPM/B/BCCON
+     900_OPM/B/BCPROP
      900_OPM/C/CO2STOR
      900_OPM/C/COMPTRAJ
      900_OPM/D/DISGASW

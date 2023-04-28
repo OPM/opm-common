@@ -5442,22 +5442,11 @@ BOOST_AUTO_TEST_CASE(createDeckWithBC) {
 START             -- 0
 19 JUN 2007 /
 
-DIMENS
- 20 1 10 /
-
-GRID
-
-BCCON
-1 1 1 1 1 1 10 X- /
-2 20 20 1 1 6 10 X /
-/
-
 SOLUTION
-
 
 SCHEDULE
 
-BC
+BCPROP
 1 RATE GAS 100.0 /
 2 FREE /
 /
@@ -5465,18 +5454,16 @@ BC
 DATES             -- 1
  10  OKT 2008 /
 /
-BC
+BCPROP
 1 RATE GAS 200.0 /
 2 FREE 4* /
 /
 )";
 
     const auto& schedule = make_schedule(input);
-    const auto& deck = Parser{}.parseString(input);
-    BCConfig bcconfig(deck);
     {
         size_t currentStep = 0;
-        const auto& bc = schedule[currentStep].bc;
+        const auto& bc = schedule[currentStep].bcprop;
         BOOST_CHECK_EQUAL(bc.size(), 2);
         const auto& bcface0 = bc[0];
         BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 100, 1e-8 );
@@ -5484,7 +5471,7 @@ BC
 
     {
         size_t currentStep = 1;
-        const auto& bc = schedule[currentStep].bc;
+        const auto& bc = schedule[currentStep].bcprop;
         BOOST_CHECK_EQUAL(bc.size(), 2);
         const auto& bcface0 = bc[0];
         BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 200, 1e-8 );

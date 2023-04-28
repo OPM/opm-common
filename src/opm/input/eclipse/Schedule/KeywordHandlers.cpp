@@ -145,10 +145,10 @@ namespace {
         }
     }
 
-    void Schedule::handleBC(Schedule::HandlerContext& handlerContext) {
-        auto& bc = this->snapshots.back().bc;
+    void Schedule::handleBCProp(Schedule::HandlerContext& handlerContext) {
+        auto& bcprop = this->snapshots.back().bcprop;
         for (const auto& record : handlerContext.keyword) {
-            bc.updateBC(record);
+            bcprop.updateBCProp(record);
         }
     }
 
@@ -2473,7 +2473,7 @@ Well{0} entered with 'FIELD' parent group:
             { "AQUCT",    &Schedule::handleAQUCT     },
             { "AQUFETP",  &Schedule::handleAQUFETP   },
             { "AQUFLUX",  &Schedule::handleAQUFLUX   },
-            { "BC",       &Schedule::handleBC        },
+            { "BCPROP",   &Schedule::handleBCProp    },
             { "BOX",      &Schedule::handleGEOKeyword},
             { "BRANPROP", &Schedule::handleBRANPROP  },
             { "COMPDAT" , &Schedule::handleCOMPDAT   },

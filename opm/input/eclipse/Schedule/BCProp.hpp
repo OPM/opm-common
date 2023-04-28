@@ -18,8 +18,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_BC_HPP
-#define OPM_BC_HPP
+#ifndef OPM_BC_PROP_HPP
+#define OPM_BC_PROP_HPP
 
 #include <vector>
 #include <cstddef>
@@ -53,7 +53,7 @@ enum class BCComponent {
 };
 
 
-class BCVAL {
+class BCPROP {
 public:
 
     struct BCFace {
@@ -84,18 +84,18 @@ public:
     };
 
 
-    BCVAL() = default;
-    explicit BCVAL(const Deck& deck);
+    BCPROP() = default;
+    explicit BCPROP(const Deck& deck);
 
-    static BCVAL serializationTestObject();
+    static BCPROP serializationTestObject();
 
     std::size_t size() const;
     std::vector<BCFace>::const_iterator begin() const;
     std::vector<BCFace>::const_iterator end() const;
-    bool operator==(const BCVAL& other) const;
-    BCFace operator[](std::size_t index) const;
+    bool operator==(const BCPROP& other) const;
+    BCFace operator[](int index) const;
 
-    void updateBC(const DeckRecord& record);
+    void updateBCProp(const DeckRecord& record);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

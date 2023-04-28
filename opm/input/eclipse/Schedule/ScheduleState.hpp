@@ -35,7 +35,7 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
-#include <opm/input/eclipse/Schedule/BC.hpp>
+#include <opm/input/eclipse/Schedule/BCProp.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
@@ -483,7 +483,7 @@ namespace Opm {
         map_member<std::string, Well> wells;
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
-        BCVAL bc;
+        BCPROP bcprop;
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 
@@ -512,7 +512,7 @@ namespace Opm {
             serializer(m_whistctl_mode);
             serializer(target_wellpi);
             serializer(aqufluxs);
-            serializer(bc);
+            serializer(bcprop);
         }
 
 

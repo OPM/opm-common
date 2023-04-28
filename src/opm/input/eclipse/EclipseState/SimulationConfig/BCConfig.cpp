@@ -22,6 +22,8 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 
 namespace Opm {
 
@@ -85,6 +87,17 @@ bool BCConfig::BCFace::operator==(const BCConfig::BCFace& other) const {
 
 
 BCConfig::BCConfig(const Deck& deck) {
+
+    if(deck.hasKeyword<ParserKeywords::BC>()){
+        for (const auto* keyword : deck.getKeywordList<ParserKeywords::BC>()) {
+            const std::string reason = "ERROR: The BC keyword is obsolute. \n "
+                            "Instead use BCCON in the GRID section to specify the connections. \n "
+                            "And BCPROP in the SCHEDULE section to specify the type and values. \n"
+                            "Check the OPM manual for details.";
+            throw OpmInputError { reason, keyword->location()};
+        }
+    }
+
     GridDims grid( deck );
     for (const auto& kw: deck.getKeywordList<ParserKeywords::BCCON>()) {
         for (const auto& record : *kw)

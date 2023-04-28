@@ -22,7 +22,7 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
-#include <opm/input/eclipse/Schedule/BC.hpp>
+#include <opm/input/eclipse/Schedule/BCProp.hpp>
 
 namespace Opm {
 namespace {
@@ -74,8 +74,8 @@ BCComponent component(const std::string& s) {
 }
 }
 
-using BCKEY = ParserKeywords::BC;
-BCVAL::BCFace::BCFace(const DeckRecord& record) :
+using BCKEY = ParserKeywords::BCPROP;
+BCPROP::BCFace::BCFace(const DeckRecord& record) :
     index(record.getItem<BCKEY::INDEX>().get<int>(0)),
     bctype(fromstring::bctype(record.getItem<BCKEY::TYPE>().get<std::string>(0))),
     component(fromstring::component(record.getItem<BCKEY::COMPONENT>().get<std::string>(0))),
@@ -89,7 +89,7 @@ BCVAL::BCFace::BCFace(const DeckRecord& record) :
     }
 }
 
-BCVAL::BCFace BCVAL::BCFace::serializationTestObject()
+BCPROP::BCFace BCPROP::BCFace::serializationTestObject()
 {
     BCFace result;
     result.index = 100;
@@ -103,7 +103,7 @@ BCVAL::BCFace BCVAL::BCFace::serializationTestObject()
 }
 
 
-bool BCVAL::BCFace::operator==(const BCVAL::BCFace& other) const {
+bool BCPROP::BCFace::operator==(const BCPROP::BCFace& other) const {
     return this->index == other.index &&
            this->bctype == other.bctype &&
            this->component == other.component &&
@@ -114,12 +114,12 @@ bool BCVAL::BCFace::operator==(const BCVAL::BCFace& other) const {
 
 
 
-BCVAL::BCVAL(const Deck& /*deck*/) {
+BCPROP::BCPROP(const Deck& /*deck*/) {
 // TODO Read the indices from BCCON and initial with NONE type???
 }
 
-void BCVAL::updateBC(const DeckRecord& record) {
-    const BCVAL::BCFace bcnew( record );
+void BCPROP::updateBCProp(const DeckRecord& record) {
+    const BCPROP::BCFace bcnew( record );
     for (auto& bc : m_faces) {
         if (bc.index == bcnew.index)
             {
@@ -132,28 +132,28 @@ void BCVAL::updateBC(const DeckRecord& record) {
 
 
 
-BCVAL BCVAL::serializationTestObject()
+BCPROP BCPROP::serializationTestObject()
 {
-    BCVAL result;
+    BCPROP result;
     result.m_faces = {BCFace::serializationTestObject()};
 
     return result;
 }
 
 
-std::size_t BCVAL::size() const {
+std::size_t BCPROP::size() const {
     return this->m_faces.size();
 }
 
-std::vector<BCVAL::BCFace>::const_iterator BCVAL::begin() const {
+std::vector<BCPROP::BCFace>::const_iterator BCPROP::begin() const {
     return this->m_faces.begin();
 }
 
-std::vector<BCVAL::BCFace>::const_iterator BCVAL::end() const {
+std::vector<BCPROP::BCFace>::const_iterator BCPROP::end() const {
     return this->m_faces.end();
 }
 
-BCVAL::BCFace BCVAL::operator[](std::size_t index) const {
+BCPROP::BCFace BCPROP::operator[](int index) const {
     for (auto& bc : m_faces) {
         if (bc.index == index)
             {
@@ -164,7 +164,7 @@ BCVAL::BCFace BCVAL::operator[](std::size_t index) const {
     return this->m_faces[0];
 }
 
-bool BCVAL::operator==(const BCVAL& other) const {
+bool BCPROP::operator==(const BCPROP& other) const {
     return this->m_faces == other.m_faces;
 }
 
