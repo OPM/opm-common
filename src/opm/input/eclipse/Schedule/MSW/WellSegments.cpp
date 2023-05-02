@@ -28,11 +28,19 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <map>
+#include <cstddef>
 #include <iterator>
+#include <map>
+#include <numeric>
+#include <set>
+#include <stdexcept>
+#include <string>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 #ifdef _WIN32
 #define _USE_MATH_DEFINES
@@ -74,6 +82,26 @@ namespace Opm {
 
     bool WellSegments::empty() const {
         return this->m_segments.empty();
+    }
+
+    int WellSegments::maxSegmentID() const
+    {
+        return std::accumulate(this->m_segments.begin(),
+                               this->m_segments.end(), 0,
+            [](const int maxID, const Segment& seg)
+        {
+            return std::max(maxID, seg.segmentNumber());
+        });
+    }
+
+    int WellSegments::maxBranchID() const
+    {
+        return std::accumulate(this->m_segments.begin(),
+                               this->m_segments.end(), 0,
+            [](const int maxID, const Segment& seg)
+        {
+            return std::max(maxID, seg.branchNumber());
+        });
     }
 
     const Segment& WellSegments::topSegment() const {
