@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2019 Equinor ASA
+  Copyright (c) 2019, 2023 Equinor ASA
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,6 +18,7 @@
 */
 
 #include <config.h>
+
 #include <opm/input/eclipse/Schedule/ArrayDimChecker.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -32,14 +33,95 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
-#include <fmt/format.h>
-
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <string>
+#include <string_view>
+
+#include <fmt/format.h>
 
 namespace {
+
+    void reportError(std::string_view         keyword,
+                     const std::size_t        schedVal,
+                     const std::size_t        item,
+                     std::string_view         entity,
+                     const std::string&       ctxtKey,
+                     const Opm::ParseContext& ctxt,
+                     Opm::ErrorGuard&         guard)
+    {
+        using namespace fmt::literals;
+
+        // Note: Number of leading blanks on line 2 affects the formatted output.
+        const auto message_fmt = fmt::format(R"(The case does not have a {keyword} keyword.
+  Please add a {keyword} keyword in the RUNSPEC section specifying at least {schedVal} {entity} in item {item})",
+                                             "keyword"_a = keyword,
+                                             "schedVal"_a = schedVal,
+                                             "entity"_a = entity,
+                                             "item"_a = item);
+
+        ctxt.handleError(ctxtKey, message_fmt, {}, guard);
+    }
+
+    void reportError(const Opm::KeywordLocation& location,
+                     const std::size_t           maxVal,
+                     const std::size_t           schedVal,
+                     const std::size_t           item,
+                     std::string_view            entity,
+                     const std::string&          ctxtKey,
+                     const Opm::ParseContext&    ctxt,
+                     Opm::ErrorGuard&            guard)
+    {
+        using namespace fmt::literals;
+
+        const auto* pl = (maxVal != 1) ? "are" : "is";
+
+        // Note: Number of leading blanks on lines 2-4 affects the formatted output.
+        const auto message_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+  In {{file}} line {{line}}
+  The case has {schedVal} {entity}, but at most {maxVal} {pl} allowed in {{keyword}}.
+  Please increase item {item} in {{keyword}} to at least {schedVal})",
+                                             "schedVal"_a = schedVal,
+                                             "maxVal"_a = maxVal,
+                                             "entity"_a = entity,
+                                             "item"_a = item,
+                                             "pl"_a = pl);
+
+        ctxt.handleError(ctxtKey, message_fmt, location, guard);
+    }
+
+    void reportError(const Opm::KeywordLocation& location,
+                     const std::size_t           maxVal,
+                     const std::size_t           schedVal,
+                     const std::size_t           item,
+                     std::string_view            hostEntity,
+                     std::string_view            entity,
+                     const std::string&          ctxtKey,
+                     const Opm::ParseContext&    ctxt,
+                     Opm::ErrorGuard&            guard)
+    {
+        using namespace fmt::literals;
+
+        const auto* pl = (maxVal != 1) ? "are" : "is";
+
+        // Note: Number of leading blanks on lines 2-4 affects the formatted output.
+        const auto message_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+  In {{file}} line {{line}}
+  The case has a {hostEntity} with {schedVal} {entity}, but at most {maxVal} {pl} allowed in {{keyword}}.
+  Please increase item {item} of {{keyword}} to at least {schedVal})",
+                                             "schedVal"_a = schedVal,
+                                             "maxVal"_a = maxVal,
+                                             "hostEntity"_a = hostEntity,
+                                             "entity"_a = entity,
+                                             "item"_a = item,
+                                             "pl"_a = pl);
+
+        ctxt.handleError(ctxtKey, message_fmt, location, guard);
+    }
+
     namespace WellDims {
+
         void checkNumWells(const Opm::Welldims&     wdims,
                            const Opm::Schedule&     sched,
                            const Opm::ParseContext& ctxt,
@@ -47,22 +129,20 @@ namespace {
         {
             const auto nWells = sched.numWells();
 
-            if (nWells > std::size_t(wdims.maxWellsInField()))
-            {
-                const auto& location = wdims.location();
-                if (location) {
-                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
-                                                          "In {{file}} line {{line}}\n"
-                                                          "The case has {0} wells - but only {1} are specified in WELLDIMS.\n"
-                                                          "Please increase item 1 in WELLDIMS to at least {1}", nWells, wdims.maxWellsInField());
+            if (nWells <= std::size_t(wdims.maxWellsInField())) {
+                return;
+            }
 
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE,
-                                     fmt_message, *location, guard);
-                } else {
-                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
-                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} wells in item 1.", nWells);
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, msg, {}, guard);
-                }
+            const auto item = 1; // MAXWELLS = WELLDIMS(1)
+            const auto* entity = (nWells == 1) ? "well" : "wells";
+
+            if (const auto& location = wdims.location(); location.has_value()) {
+                reportError(*location, wdims.maxWellsInField(), nWells, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, ctxt, guard);
+            }
+            else {
+                reportError("WELLDIMS", nWells, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, ctxt, guard);
             }
         }
 
@@ -77,22 +157,21 @@ namespace {
                 nconn = std::max(nconn, well.getConnections().size());
             }
 
-            if (nconn > static_cast<decltype(nconn)>(wdims.maxConnPerWell()))
-            {
-                const auto& location = wdims.location();
-                if (location) {
-                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
-                                                          "In {{file}} line {{line}}\n"
-                                                          "The case has a well with {0} connections, but {1} is specified as maxmimum in WELLDIMS.\n"
-                                                          "Please increase item 2 in WELLDIMS to at least {0}", nconn, wdims.maxConnPerWell());
+            if (nconn <= static_cast<decltype(nconn)>(wdims.maxConnPerWell())) {
+                return;
+            }
 
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE,
-                                     fmt_message, *location, guard);
-                } else {
-                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
-                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} connections in item 2.", nconn);
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, msg, {}, guard);
-                }
+            const auto item = 2; // MAXCONN = WELLDIMS(2)
+            const auto* entity = (nconn == 1) ? "connection" : "connections";
+            const auto* hostEntity = "well";
+
+            if (const auto& location = wdims.location(); location.has_value()) {
+                reportError(*location, wdims.maxConnPerWell(), nconn, item, hostEntity, entity,
+                            Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, ctxt, guard);
+            }
+            else {
+                reportError("WELLDIMS", nconn, item, entity,
+                            Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, ctxt, guard);
             }
         }
 
@@ -105,23 +184,22 @@ namespace {
 
             // Note: "1 +" to account for FIELD group being in 'sched.numGroups()'
             //   but excluded from WELLDIMS(3).
-            if (nGroups > 1U + wdims.maxGroupsInField())
-            {
-                const auto& location = wdims.location();
-                if (location) {
-                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
-                                                          "In {{file}} line {{line}}\n"
-                                                          "The case has {0} non-FIELD groups, the WELLDIMS keyword specifies {1}\n."
-                                                          "Please increase item 3 in WELLDIMS to at least {0}", nGroups - 1, wdims.maxGroupsInField());
+            if (nGroups <= 1U + wdims.maxGroupsInField()) {
+                return;
+            }
 
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE,
-                                     fmt_message, *location, guard);
-                } else {
-                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
-                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} groups in item 3.", nGroups - 1);
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE,
-                                     msg , {}, guard);
-                }
+            const auto item = 3; // MAXGROUPS = WELLDIMS(3)
+            const auto* entity = (nGroups == 1 + 1)
+                ? "non-FIELD group"
+                : "non-FIELD groups";
+
+            if (const auto& location = wdims.location(); location.has_value()) {
+                reportError(*location, wdims.maxGroupsInField(), nGroups - 1, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE, ctxt, guard);
+            }
+            else {
+                reportError("WELLDIMS", nGroups - 1, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE, ctxt, guard);
             }
         }
 
@@ -139,23 +217,22 @@ namespace {
                 size = std::max(size, static_cast<std::size_t>(nwgmax));
             }
 
-            if (size > static_cast<decltype(size)>(wdims.maxWellsPerGroup()))
-            {
-                const auto& location = wdims.location();
-                if (location) {
-                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
-                                                          "In {{file}} line {{line}}\n"
-                                                          "The case has a maximum group size of {0} wells/groups, the WELLDIMS keyword specifies {1}.\n"
-                                                          "Please increase item 4 in WELLDIMS to at least {0}", size, wdims.maxWellsPerGroup());
+            if (size <= static_cast<decltype(size)>(wdims.maxWellsPerGroup())) {
+                return;
+            }
 
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE,
-                                     fmt_message, *location, guard);
-                } else {
-                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
-                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} as max groupsize in item 4.", size);
-                    ctxt.handleError(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE,
-                                     msg, Opm::KeywordLocation{}, guard);
-                }
+            const auto item = 4; // MAX_GROUPSIZE = WELLDIMS(4)
+            const auto* entity = (size == 1) ? "child" : "children";
+            const auto* hostEntity = "group";
+
+            if (const auto& location = wdims.location(); location.has_value()) {
+                reportError(*location, wdims.maxWellsPerGroup(), size, item, hostEntity, entity,
+                            Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE, ctxt, guard);
+
+            }
+            else {
+                reportError("WELLDIMS", size, item, entity,
+                            Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE, ctxt, guard);
             }
         }
     } // WellDims
