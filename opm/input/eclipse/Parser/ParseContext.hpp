@@ -218,6 +218,18 @@ class KeywordLocation;
         /// RUNSPEC keyword WELLDIMS (item 4).
         const static std::string RUNSPEC_GROUPSIZE_TOO_LARGE;
 
+        /// Dynamic number of multi-segmented wells exceeds maximum declared
+        /// in RUNSPEC keyword WSEGDIMS (item 1).
+        const static std::string RUNSPEC_NUMMSW_TOO_LARGE;
+
+        /// Dynamic number of segments per MS well exceeds maximum declared
+        /// in RUNSPEC keyword WSEGDIMS (item 2).
+        const static std::string RUNSPEC_NUMSEG_PER_WELL_TOO_LARGE;
+
+        /// Dynamic number of branches exceeds maximum number declared in
+        /// RUNSPEC keyword WSEGDIMS (item 3).
+        const static std::string RUNSPEC_NUMBRANCH_TOO_LARGE;
+
         /*
           Should we allow keywords of length more than eight characters? If the
           keyword is too long it will be internalized using only the eight first

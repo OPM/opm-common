@@ -95,7 +95,8 @@ public:
         return this->nDynWlistMax;
     }
 
-    const std::optional<KeywordLocation>& location() const {
+    const std::optional<KeywordLocation>& location() const
+    {
         return this->m_location;
     }
 
@@ -112,7 +113,6 @@ public:
         return this->location() == data.location() &&
             rst_cmp(*this, data);
     }
-
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -143,7 +143,6 @@ public:
 
     static WellSegmentDims serializationTestObject();
 
-
     int maxSegmentedWells() const
     {
         return this->nSegWellMax;
@@ -159,6 +158,11 @@ public:
         return this->nLatBranchMax;
     }
 
+    const std::optional<KeywordLocation>& location() const
+    {
+        return this->location_;
+    }
+
     bool operator==(const WellSegmentDims& data) const;
 
     template<class Serializer>
@@ -167,12 +171,14 @@ public:
         serializer(nSegWellMax);
         serializer(nSegmentMax);
         serializer(nLatBranchMax);
+        serializer(location_);
     }
 
 private:
     int nSegWellMax;
     int nSegmentMax;
     int nLatBranchMax;
+    std::optional<KeywordLocation> location_;
 };
 
 class NetworkDims {

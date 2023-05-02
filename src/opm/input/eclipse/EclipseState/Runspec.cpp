@@ -212,38 +212,61 @@ Welldims Welldims::serializationTestObject()
     return result;
 }
 
-WellSegmentDims::WellSegmentDims() :
-    nSegWellMax( ParserKeywords::WSEGDIMS::NSWLMX::defaultValue ),
-    nSegmentMax( ParserKeywords::WSEGDIMS::NSEGMX::defaultValue ),
-    nLatBranchMax( ParserKeywords::WSEGDIMS::NLBRMX::defaultValue )
+WellSegmentDims::WellSegmentDims()
+    : nSegWellMax   { ParserKeywords::WSEGDIMS::NSWLMX::defaultValue }
+    , nSegmentMax   { ParserKeywords::WSEGDIMS::NSEGMX::defaultValue }
+    , nLatBranchMax { ParserKeywords::WSEGDIMS::NLBRMX::defaultValue }
 {}
 
-WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
+WellSegmentDims::WellSegmentDims(const Deck& deck)
+    : WellSegmentDims {}
 {
-    if (deck.hasKeyword("WSEGDIMS")) {
-        const auto& wsd = deck["WSEGDIMS"][0].getRecord(0);
+    using WSD = ParserKeywords::WSEGDIMS;
 
-        this->nSegWellMax   = wsd.getItem("NSWLMX").get<int>(0);
-        this->nSegmentMax   = wsd.getItem("NSEGMX").get<int>(0);
-        this->nLatBranchMax = wsd.getItem("NLBRMX").get<int>(0);
+    if (deck.hasKeyword<WSD>()) {
+        const auto& keyword = deck.get<WSD>().front();
+        const auto& wsd = keyword.getRecord(0);
+
+        if (const auto& maxMSW = wsd.getItem<WSD::NSWLMX>();
+            ! maxMSW.defaultApplied(0))
+        {
+            this->nSegWellMax = maxMSW.get<int>(0);
+        }
+
+        if (const auto& maxSeg = wsd.getItem<WSD::NSEGMX>();
+            ! maxSeg.defaultApplied(0))
+        {
+            this->nSegmentMax = maxSeg.get<int>(0);
+        }
+
+        if (const auto& maxBranch = wsd.getItem<WSD::NLBRMX>();
+            ! maxBranch.defaultApplied(0))
+        {
+            this->nLatBranchMax = maxBranch.get<int>(0);
+        }
+
+        this->location_ = keyword.location();
     }
 }
 
 WellSegmentDims WellSegmentDims::serializationTestObject()
 {
     WellSegmentDims result;
+
     result.nSegWellMax = 1;
     result.nSegmentMax = 2;
     result.nLatBranchMax = 3;
+    result.location_ = KeywordLocation::serializationTestObject();
 
     return result;
 }
 
 bool WellSegmentDims::operator==(const WellSegmentDims& data) const
 {
-    return this->maxSegmentedWells() == data.maxSegmentedWells() &&
-           this->maxSegmentsPerWell() == data.maxSegmentsPerWell() &&
-           this->maxLateralBranchesPerWell() == data.maxLateralBranchesPerWell();
+    return (this->maxSegmentedWells() == data.maxSegmentedWells())
+        && (this->maxSegmentsPerWell() == data.maxSegmentsPerWell())
+        && (this->maxLateralBranchesPerWell() == data.maxLateralBranchesPerWell())
+        && (this->location() == data.location());
 }
 
 NetworkDims::NetworkDims() :
