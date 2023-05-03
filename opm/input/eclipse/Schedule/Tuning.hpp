@@ -69,6 +69,7 @@ namespace Opm {
         double XXXTTE;
         double XXXCNV;
         double XXXMBE;
+        bool XXXMBE_has_nondefault_value = false;
         double XXXLCV;
         double XXXWFL;
         double TRGFIP;
@@ -130,6 +131,7 @@ namespace Opm {
             serializer(XXXTTE);
             serializer(XXXCNV);
             serializer(XXXMBE);
+            serializer(XXXMBE_has_nondefault_value);
             serializer(XXXLCV);
             serializer(XXXWFL);
             serializer(TRGFIP);
