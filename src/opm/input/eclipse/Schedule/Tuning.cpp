@@ -116,6 +116,7 @@ Tuning Tuning::serializationTestObject() {
     result.XXXTTE = 15.0;
     result.XXXCNV = 16.0;
     result.XXXMBE = 17.0;
+    result.XXXMBE_has_nondefault_value = true;
     result.XXXLCV = 18.0;
     result.XXXWFL = 19.0;
     result.TRGFIP = 20.0;
@@ -158,6 +159,7 @@ bool Tuning::operator==(const Tuning& data) const {
            XXXTTE == data.XXXTTE &&
            XXXCNV == data.XXXCNV &&
            XXXMBE == data.XXXMBE &&
+           XXXMBE_has_nondefault_value == data.XXXMBE_has_nondefault_value &&
            XXXLCV == data.XXXLCV &&
            XXXWFL == data.XXXWFL &&
            TRGFIP == data.TRGFIP &&
