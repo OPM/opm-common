@@ -121,8 +121,11 @@ public:
         TRY,   /* Try to enable Python extensions*/
         OFF    /* Do not enable Python */
     };
-
+#ifdef HAVE_PYTHON
     explicit Python(Enable enable = Enable::TRY);
+#else
+    explicit Python(Enable enable = Enable::OFF);
+#endif    
     bool exec(const std::string& python_code) const;
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck) const;
     bool exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const;

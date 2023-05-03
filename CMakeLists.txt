@@ -195,6 +195,7 @@ endmacro()
 # OpmLibMain function. Here only the library dependency is implemented, the
 # bulk of the python configuration is further down in the file.
 if (OPM_ENABLE_PYTHON)
+  set(HAVE_PYTHON 1)
   # We need to be compatible with older CMake versions
   # that do not offer FindPython3
   # e.g. Ubuntu LTS 18.04 uses cmake 3.10
