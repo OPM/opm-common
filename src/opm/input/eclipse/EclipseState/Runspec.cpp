@@ -344,9 +344,16 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         if (!activeHyst)
 	      return;
 
-        if (!deck.hasKeyword("EHYSTR"))
-            throw std::runtime_error("Enabling hysteresis via the HYST parameter for SATOPTS requires the "
-                                     "presence of the EHYSTR keyword");
+        if (!deck.hasKeyword("EHYSTR")) {
+            std::string msg = "Hysteresis is enabled via the HYST parameter for SATOPTS, but the EHYSTR " 
+                              "keyword is not present in the deck. \n"
+                              "Default values are used for the EHYSTR keyword.";
+
+            OpmLog::warning(msg);
+            krHystMod = 0;
+            pcHystMod = 0;
+            return;
+        }
 	    /*!
 	* \brief Set the type of the hysteresis model which is used for relative permeability.
 	*
