@@ -53,7 +53,7 @@ namespace Opm {
 
     private:
         double m_dp{0.0};
-        double m_fp{0.0};
+        double m_fp{1.0};
     };
 
 } // namespace Opm
