@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     if (argc > 6)
         rs = atof(argv[6]);
 
-    const double MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
+    const double MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
     std::vector<double> salinity = {0.0};
     if (molality > 0.0)

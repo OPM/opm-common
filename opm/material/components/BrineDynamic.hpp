@@ -79,9 +79,8 @@ public:
     static Evaluation molarMass(const Evaluation& salinity)
     {
         const Scalar M1 = H2O::molarMass();
-        constexpr Scalar M2 = 58e-3; // molar mass of NaCl [kg/mol]
         const Evaluation X2 = salinity; // mass fraction of salt in brine
-        return M1*M2/(M2 + X2*(M1 - M2));
+        return M1*mM_salt/(mM_salt + X2*(M1 - mM_salt));
     }
 
     /*!
@@ -347,6 +346,10 @@ public:
 
         return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
     }
+
+    //Molar mass salt (assumes pure NaCl) [kg/mol]
+    static constexpr Scalar mM_salt = 58.44e-3;
+
 };
 
 } // namespace Opm

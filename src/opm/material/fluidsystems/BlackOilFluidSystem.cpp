@@ -119,7 +119,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // when we are using the the CO2STORE option
     if (eclState.runspec().co2Storage()) {
         const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-        const Scalar MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
+        const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
         // convert to mass fraction
         const Scalar salinity = 1 / ( 1 + 1 / (molality*MmNaCl));
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {

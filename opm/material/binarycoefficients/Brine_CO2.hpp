@@ -216,7 +216,7 @@ private:
     static Evaluation salinityToMolFrac_(const Evaluation& salinity) {
 
         const Scalar Mw = H2O::molarMass(); /* molecular weight of water [kg/mol] */
-        const Scalar Ms = 58.8e-3; /* molecular weight of NaCl  [kg/mol] */
+        const Scalar Ms = 58.44e-3; /* molecular weight of NaCl  [kg/mol] */
 
         const Evaluation X_NaCl = salinity;
         /* salinity: conversion from mass fraction to mol fraction */
