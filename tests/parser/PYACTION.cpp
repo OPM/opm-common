@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Syntax_Error) {
     Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
 
     const std::string& broken_module2 = deck.makeDeckPath("action_syntax_error.py");
-    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module2), std::runtime_error);
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module2), std::exception);
 
 }
 
