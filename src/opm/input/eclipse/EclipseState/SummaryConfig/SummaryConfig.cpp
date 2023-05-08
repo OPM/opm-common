@@ -842,8 +842,33 @@ inline void keywordB( SummaryConfig::keyword_list& list,
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
 
+    auto isValid = [&dims](const std::array<int,3>& ijk)
+    {
+        return (static_cast<std::size_t>(ijk[0]) < dims.getNX())
+            && (static_cast<std::size_t>(ijk[1]) < dims.getNY())
+            && (static_cast<std::size_t>(ijk[2]) < dims.getNZ());
+    };
+
   for( const auto& record : keyword ) {
       auto ijk = getijk( record );
+
+      if (! isValid(ijk)) {
+          const auto msg_fmt =
+              fmt::format("Block level summary keyword "
+                          "{{keyword}}\n"
+                          "In {{file}} line {{line}}\n"
+                          "References invalid cell "
+                          "{},{},{} in grid of dimensions "
+                          "{},{},{}.\nThis block summary "
+                          "vector request is ignored.",
+                          ijk[0] + 1  , ijk[1] + 1  , ijk[2] + 1,
+                          dims.getNX(), dims.getNY(), dims.getNZ());
+
+          OpmLog::warning(OpmInputError::format(msg_fmt, keyword.location()));
+
+          continue;
+      }
+
       int global_index = 1 + dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
       list.push_back( param.number(global_index) );
   }
