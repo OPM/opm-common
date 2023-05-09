@@ -123,9 +123,9 @@ function build_module {
     TESTTHREADS=${TESTTHREADS:-1}
     if test -z "$CTEST_CONFIGURATION"
     then
-      ctest -T Test --no-compress-output -j$TESTTHREADS
+      ctest -T Test --no-compress-output -j$TESTTHREADS -LE "gpu_.*"
     else
-      ctest -j$TESTTHREADS -C $CTEST_CONFIGURATION --timeout 5000 -T Test --no-compress-output
+      ctest -j$TESTTHREADS -C $CTEST_CONFIGURATION --timeout 5000 -T Test --no-compress-output -LE "gpu_.*"
     fi
 
     # Convert to junit format
