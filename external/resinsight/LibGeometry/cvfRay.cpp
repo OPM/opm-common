@@ -284,7 +284,7 @@ bool Ray::boxIntersect(const BoundingBox& box, Vec3d* intersectionPoint) const
     // Find candidate planes; this loop can be avoided if rays cast all from the eye(assume perpsective view)
     bool inside = true;
     char quadrant[3];
-    double candidatePlane[3];
+    double candidatePlane[3] = {0.0, 0.0, 0.0};
 
     Vec3d min = box.min();
     Vec3d max = box.max();
