@@ -1025,13 +1025,13 @@ BOOST_AUTO_TEST_CASE(UDQASSIGN_NUMBERED_ITEMS_TEST) {
     BOOST_CHECK_MESSAGE(!us("PROD06",  8).defined(), R"(SUVTRIG("PROD06", 8) must not be defined)");
     BOOST_CHECK_MESSAGE(!us("PROD06", 10).defined(), R"(SUVTRIG("PROD06", 10) must not be defined)");
 
-    BOOST_CHECK_THROW(!us("PROD06", 3).defined(), std::out_of_range);
+    BOOST_CHECK_THROW(us("PROD06", 3).defined(), std::out_of_range);
 
     BOOST_CHECK_MESSAGE(!us("I-45", 1).defined(), R"(SUVTRIG("I-45", 1) must not be defined)");
     BOOST_CHECK_MESSAGE(!us("I-45", 2).defined(), R"(SUVTRIG("I-45", 2) must not be defined)");
     BOOST_CHECK_MESSAGE(!us("I-45", 3).defined(), R"(SUVTRIG("I-45", 3) must not be defined)");
 
-    BOOST_CHECK_THROW(!us("Hello", 42).defined(), std::out_of_range);
+    BOOST_CHECK_THROW(us("Hello", 42).defined(), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {

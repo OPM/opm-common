@@ -166,7 +166,7 @@ bool HexGridIntersectionTools::planeTriangleIntersection( const cvf::Plane& plan
         if ( onPosSide[2] ) topVx = 3;
 
         // Case 3a: Two negative distances and the last is within tolerance of zero.
-        if ( sqrSignedDistances[topVx - 1] < sqrDistanceTolerance )
+        if ( topVx > 0 && sqrSignedDistances[topVx - 1] < sqrDistanceTolerance )
         {
             return false;
         }
@@ -178,7 +178,7 @@ bool HexGridIntersectionTools::planeTriangleIntersection( const cvf::Plane& plan
         if ( !onPosSide[2] ) topVx = 3;
 
         // Case 3a: Two positive distances and the last is within tolerance of zero.
-        if ( sqrSignedDistances[topVx - 1] > -sqrDistanceTolerance )
+        if ( topVx > 0 && sqrSignedDistances[topVx - 1] > -sqrDistanceTolerance )
         {
             return false;
         }

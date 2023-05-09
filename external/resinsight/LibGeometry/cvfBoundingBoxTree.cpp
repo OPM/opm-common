@@ -243,7 +243,6 @@ int largestComponent(const cvf::Vec3d v)
 
     if (v.z() > maxLength)
     {
-        maxLength = v.z();
         idx = 2;
     }
 
