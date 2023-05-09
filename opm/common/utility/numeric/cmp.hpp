@@ -20,11 +20,12 @@
 #ifndef COMMON_UTIL_NUMERIC_CMP
 #define COMMON_UTIL_NUMERIC_CMP
 
-#include <cstddef>
-#include <vector>
-#include <type_traits>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstring>
+#include <type_traits>
+#include <vector>
 
 namespace Opm {
 
@@ -109,7 +110,7 @@ namespace Opm {
 
         template<typename T>
         bool array_equal(const T* p1, const T* p2, size_t num_elements, T abs_eps, T rel_eps) {
-            if (memcmp(p1 , p2 , num_elements * sizeof * p1) == 0)
+            if (std::memcmp(p1 , p2 , num_elements * sizeof * p1) == 0)
                 return true;
             else {
                 size_t index;
