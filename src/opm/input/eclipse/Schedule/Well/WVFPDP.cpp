@@ -31,8 +31,8 @@ namespace Opm {
     WVFPDP WVFPDP::serializationTestObject()
     {
         WVFPDP result;
-        result.m_dp = 0.0;
-        result.m_fp = 1.0;
+        result.m_dp = 1.23;
+        result.m_fp = 0.456;
 
         return result;
     }
@@ -52,7 +52,7 @@ namespace Opm {
         this->m_fp = rst_well.vfp_bhp_scaling_factor;
     }
 
-    double WVFPDP::getDP(double bhp_tab, double thp_limit) const {
+    double WVFPDP::getPressureLoss(double bhp_tab, double thp_limit) const {
         auto dpt = bhp_tab - thp_limit;
         return m_dp + (m_fp-1)*dpt;
     }

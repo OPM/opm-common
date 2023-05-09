@@ -35,9 +35,9 @@ namespace Opm {
     public:
         static WVFPDP serializationTestObject();
 
-        double getDP (double bhp_tab, double thp_limit) const;
-        double getDPDP() const { return m_dp; }
-        double getDPFP() const { return m_fp; }
+        double getPressureLoss (double bhp_tab, double thp_limit) const;
+        double getPressureAdjustment() const { return m_dp; }
+        double getPLossScalingFactor() const { return m_fp; }
         void update(const DeckRecord& record);
         void update(const RestartIO::RstWell& rst_well);
 

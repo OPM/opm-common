@@ -1038,8 +1038,8 @@ namespace {
 
             const auto& options = well.getWVFPDP();
 
-            sWell[Ix::VfpBhpAdjustment] = swprop(M::pressure, options.getDPDP());
-            sWell[Ix::VfpBhpScalingFact] = options.getDPFP();
+            sWell[Ix::VfpBhpAdjustment] = swprop(M::pressure, options.getPressureAdjustment());
+            sWell[Ix::VfpBhpScalingFact] = options.getPLossScalingFactor();
         }
 
         template <class SWellArray>
