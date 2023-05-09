@@ -21,6 +21,8 @@
 #include <ctime>
 #include <stdexcept>
 
+#include <fmt/format.h>
+
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -28,11 +30,25 @@
 namespace Opm {
 
 
-    WellTestState::WTestWell::WTestWell(const std::string& wname, WellTestConfig::Reason reason_, double sim_time)
+    WellTestState::WTestWell::WTestWell(const std::string& wname, WellTestConfig::Reason reason_, double sim_time, bool close_now)
         : name(wname)
         , reason(reason_)
         , last_test(sim_time)
-    {}
+    {
+        if (! close_now) {
+            close_on_next_step = true;
+            closed = false;
+            last_test = -1.0;
+        }
+    }
+
+    void WellTestState::WTestWell::close_now(double sim_time) {
+        if (close_on_next_step) {
+            close_on_next_step = false;
+            closed = true;
+            last_test = sim_time;
+        }
+    }
 
     int WellTestState::WTestWell::int_reason() const {
         if (!this->closed)
@@ -80,16 +96,38 @@ namespace Opm {
 
 
     void WellTestState::close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
+        OpmLog::debug(fmt::format("Closing well {} at time {.2f} days", well_name, sim_time/86400.0));
         auto well_iter = this->wells.find(well_name);
         if (well_iter == this->wells.end())
-            this->wells.emplace(well_name, WTestWell{well_name, reason, sim_time});
+            this->wells.emplace(well_name, WTestWell{well_name, reason, sim_time, true});
         else {
             well_iter->second.closed = true;
+            well_iter->second.close_on_next_step = false;
             well_iter->second.last_test = sim_time;
             well_iter->second.reason = reason;
         }
     }
-
+    
+    void WellTestState::close_well_on_next_step(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
+        OpmLog::debug(fmt::format("Time {.2f} days: Will close well {} on next time step", sim_time/86400.0, well_name));        
+        auto well_iter = this->wells.find(well_name);
+        if (well_iter == this->wells.end())
+            this->wells.emplace(well_name, WTestWell{well_name, reason, sim_time, false});
+        else {
+            well_iter->second.closed = false;
+            well_iter->second.close_on_next_step = true;
+            well_iter->second.last_test = -1.0;
+            well_iter->second.reason = reason;
+        }
+    }
+    
+    
+    // \Note: iterate and update last_test (time) for wells that that have close_on_next_step = true
+    void WellTestState::update_close_on_next_step_wells(double sim_time) {
+        for (auto& [wname, well] : this->wells) {
+            well.close_now(sim_time);
+        }
+    }
 
     void WellTestState::open_well(const std::string& well_name) {
         auto& well = this->wells.at(well_name);
