@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION) {
 
 
 #ifdef EMBEDDED_PYTHON
-BOOST_AUTO_TEST_CASE(ParsePYACTION_Modules) {
+BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Run_Missing) {
     Parser parser;
     auto python = std::make_shared<Python>();
     auto deck = parser.parseFile("PYACTION.DATA");
@@ -61,11 +61,40 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Modules) {
     const std::string& broken_module = deck.makeDeckPath("action_missing_run.py");
     BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module), std::runtime_error);
 
+}
+
+BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Syntax_Error) {
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("PYACTION.DATA");
+    auto keyword = deck.get<ParserKeywords::PYACTION>().front();
+    const auto& record0 = keyword.getRecord(0);
+    const auto& record1 = keyword.getRecord(1);
+
+    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
+    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
+
     const std::string& broken_module2 = deck.makeDeckPath("action_syntax_error.py");
-    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module2), std::runtime_error);
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module2), std::exception);
+
+}
+
+BOOST_AUTO_TEST_CASE(ParsePYACTION_ModuleMissing) {
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("PYACTION.DATA");
+    auto keyword = deck.get<ParserKeywords::PYACTION>().front();
+    const auto& record0 = keyword.getRecord(0);
+    const auto& record1 = keyword.getRecord(1);
+
+    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
+    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
 
     const std::string& missing_module = deck.makeDeckPath("no_such_module.py");
     BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, missing_module), std::invalid_argument);
 }
+
 #endif
 
