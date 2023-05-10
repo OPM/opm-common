@@ -96,7 +96,7 @@ namespace Opm {
 
 
     void WellTestState::close_well(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
-        OpmLog::debug(fmt::format("Closing well {} at time {.2f} days", well_name, sim_time/86400.0));
+        OpmLog::debug(fmt::format("Closing well {} at time {:.2f} days", well_name, sim_time/86400.0));
         auto well_iter = this->wells.find(well_name);
         if (well_iter == this->wells.end())
             this->wells.emplace(well_name, WTestWell{well_name, reason, sim_time, true});
@@ -109,7 +109,7 @@ namespace Opm {
     }
     
     void WellTestState::close_well_on_next_step(const std::string& well_name, WellTestConfig::Reason reason, double sim_time) {
-        OpmLog::debug(fmt::format("Time {.2f} days: Will close well {} on next time step", sim_time/86400.0, well_name));        
+        OpmLog::debug(fmt::format("Time {:.2f} days: Will close well {} on next time step", sim_time/86400.0, well_name));        
         auto well_iter = this->wells.find(well_name);
         if (well_iter == this->wells.end())
             this->wells.emplace(well_name, WTestWell{well_name, reason, sim_time, false});
