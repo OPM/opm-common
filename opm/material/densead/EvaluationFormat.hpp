@@ -47,10 +47,11 @@ struct fmt::formatter<Opm::DenseAd::Evaluation<ValueT,numDerivs,staticSize>>
     auto format(const Opm::DenseAd::Evaluation<ValueT,numDerivs,staticSize>& e,
                 FormatContext& ctx)
     {
-        std::array<ValueT,numDerivs> tmp;
-        for (int i = 0; i < numDerivs; ++i)
+        std::vector<ValueT> tmp(e.size());
+        for (int i = 0; i < e.size(); ++i)
             tmp[i] = e.derivative(i);
-        return fmt::format_to(ctx.out(), "v: "+ spec +" / d: [" + spec +"]", e.value(), fmt::join(tmp, ", "));
+        return fmt::format_to(ctx.out(), "v: "+ spec +" / d: [" + spec +"]",
+                              e.value(), fmt::join(tmp, ", "));
     }
 };
 
