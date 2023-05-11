@@ -1,0 +1,24 @@
+{
+  "name": "WELL_PROBE_COMP",
+  "sections": [
+    "SUMMARY"
+  ],
+  "deck_names": [
+    "WXMF",
+    "WYMF",
+    "WZMF",
+    "WCGMR",
+    "WCOMR"
+],
+"items": [
+  {
+    "name": "WELLS",
+    "value_type": "STRING",
+    "size_type": "ALL"
+  },
+  {
+    "name": "COMP_NUM",
+    "value_type": "INT"
+  }
+]
+}

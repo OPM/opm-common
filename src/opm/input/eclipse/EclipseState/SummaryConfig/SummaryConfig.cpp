@@ -384,6 +384,15 @@ struct SummaryConfigContext {
         return std::regex_match(keyword, well_compl_kw);
     }
 
+    bool is_well_comp(const std::string& keyword)
+    {
+        static const auto well_comp_kw = keyword_set {
+             "WXMF", "WYMF", "WZMF", "WCGMR", "WCOMR"
+        };
+
+        return is_in_set(well_comp_kw, keyword);
+    }
+
     bool is_node_keyword(const std::string& keyword)
     {
         static const auto nodekw = keyword_set {
@@ -1362,6 +1371,12 @@ inline void handleKW( SummaryConfig::keyword_list& list,
     const auto cat = parseKeywordCategory(name);
     switch (cat) {
     case Cat::Well:
+        if (is_well_comp(keyword.name())) {
+            Opm::OpmLog::warning(Opm::OpmInputError::format("Unhandled summary keyword {keyword}\n"
+                                                        "In {file} line {line}", keyword.location()));
+        return;
+        }
+
         keywordW(list, parseContext, errors, keyword, schedule);
         break;
 
