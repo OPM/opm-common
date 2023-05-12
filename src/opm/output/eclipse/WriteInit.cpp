@@ -447,6 +447,8 @@ namespace {
             {"YMODULE"   , ::Opm::UnitSystem::measure::ymodule },
             {"PRATIO"   , ::Opm::UnitSystem::measure::identity },
             {"BIOTCOEF"   , ::Opm::UnitSystem::measure::identity },
+            {"POELCOEF"   , ::Opm::UnitSystem::measure::identity },//NB units not done
+            {"THELCOEF"   , ::Opm::UnitSystem::measure::identity }//NB units not done
         };
 
         // The INIT file should always contain the NTG property, we

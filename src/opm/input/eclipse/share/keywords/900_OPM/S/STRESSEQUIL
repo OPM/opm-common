@@ -1,0 +1,56 @@
+{
+  "name": "STRESSEQUIL",
+  "sections": [
+    "SOLUTION"
+  ],
+  "size": {
+    "keyword": "STRESSEQLDIMS",
+    "item": "STRESSNTEQUL"
+  },
+  "description": "The EQUIL item is used when equilibrating the model. The item should consist of exactly one record for each EQUIL region",
+  "items": [
+    {
+      "item": 1,
+      "name": "DATUM_DEPTH",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Length"
+    },
+    {
+      "item": 2,
+      "name": "DATUM_STRESSX",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
+    },
+    {
+      "item": 3,
+      "name": "DATUM_STRESSXGRAD",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure/Length"
+    },
+    {
+      "item": 4,
+      "name": "DATUM_STRESSY",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
+    },
+    {
+      "item": 5,
+      "name": "DATUM_STRESSYGRAD",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure/Length"
+    },
+    {
+      "item": 6,
+      "name": "DATUM_STRESSZ",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
+    },
+    {
+      "item": 7,
+      "name": "DATUM_STRESSZGRAD",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure/Length"
+    }
+  ]
+}
