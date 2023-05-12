@@ -958,6 +958,14 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             tuning.TRGLCV = record2.getItem("TRGLCV").get< double >(0);
             tuning.XXXTTE = record2.getItem("XXXTTE").get< double >(0);
             tuning.XXXCNV = record2.getItem("XXXCNV").get< double >(0);
+            
+            const auto& XXXMBEdeckItem = record2.getItem("XXXMBE");
+            if (! XXXMBEdeckItem.defaultApplied(0)) {
+                tuning.XXXMBE_has_nondefault_value = true;
+            } else {
+                tuning.XXXMBE_has_nondefault_value = false;
+            }
+            
             tuning.XXXMBE = record2.getItem("XXXMBE").get< double >(0);
             tuning.XXXLCV = record2.getItem("XXXLCV").get< double >(0);
             tuning.XXXWFL = record2.getItem("XXXWFL").get< double >(0);
