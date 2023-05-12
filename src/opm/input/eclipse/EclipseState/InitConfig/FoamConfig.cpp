@@ -134,8 +134,8 @@ FoamConfig::FoamConfig(const Deck& deck)
         // do not store any data related to it.
         const auto& kw_foamopts = deck.get<ParserKeywords::FOAMOPTS>().back();
         this->transport_phase_ = get_phase(kw_foamopts.getRecord(0).getItem(0).get<std::string>(0));
-        if (!(this->transport_phase_ == Phase::GAS || this->transport_phase_ == Phase::WATER))
-            throw OpmInputError("Only WATER and GAS phases are allowed for foam transport", kw_foamopts.location());
+        if (!(this->transport_phase_ == Phase::GAS || this->transport_phase_ == Phase::WATER || this->transport_phase_ == Phase::SOLVENT))
+            throw OpmInputError("Only WATER, GAS or SOLVENT phases are allowed for foam transport", kw_foamopts.location());
 
         this->mobility_model_ = MobilityModel::TAB;
         if (this->transport_phase_ == Phase::WATER) {
