@@ -929,79 +929,87 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         const auto numrecords = handlerContext.keyword.size();
         auto tuning = this->snapshots.back().tuning();
 
+        // local helpers
+        auto nondefault_or_previous_double = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
+            const auto& deck_item = rec.getItem(item_name);
+            return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).get< double >(0);
+        };
+
+        auto nondefault_or_previous_int = [](const Opm::DeckRecord& rec, const std::string& item_name, int previous_value) {
+            const auto& deck_item = rec.getItem(item_name);
+            return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).get< int >(0);
+        };
+        
+        auto nondefault_or_previous_sidouble = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
+            const auto& deck_item = rec.getItem(item_name);
+            return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).getSIDouble(0);
+        };
+        
         if (numrecords > 0) {
             const auto& record1 = handlerContext.keyword.getRecord(0);
 
-            tuning.TSINIT = record1.getItem("TSINIT").getSIDouble(0);
-            tuning.TSMAXZ = record1.getItem("TSMAXZ").getSIDouble(0);
-            tuning.TSMINZ = record1.getItem("TSMINZ").getSIDouble(0);
-            tuning.TSMCHP = record1.getItem("TSMCHP").getSIDouble(0);
-            tuning.TSFMAX = record1.getItem("TSFMAX").get< double >(0);
-            tuning.TSFMIN = record1.getItem("TSFMIN").get< double >(0);
-            tuning.TSFCNV = record1.getItem("TSFCNV").get< double >(0);
-            tuning.TFDIFF = record1.getItem("TFDIFF").get< double >(0);
-            tuning.THRUPT = record1.getItem("THRUPT").get< double >(0);
-
+            tuning.TSINIT = nondefault_or_previous_sidouble(record1, "TSINIT", tuning.TSINIT); 
+            tuning.TSMAXZ = nondefault_or_previous_sidouble(record1, "TSMAXZ", tuning.TSMAXZ);
+            tuning.TSMINZ = nondefault_or_previous_sidouble(record1, "TSMINZ", tuning.TSMINZ);
+            tuning.TSMCHP = nondefault_or_previous_sidouble(record1, "TSMCHP", tuning.TSMCHP);
+            tuning.TSFMAX = nondefault_or_previous_double(record1, "TSFMAX", tuning.TSFMAX);
+            tuning.TSFMIN = nondefault_or_previous_double(record1, "TSFMIN", tuning.TSFMIN);
+            tuning.TSFCNV = nondefault_or_previous_double(record1, "TSFCNV", tuning.TSFCNV);
+            tuning.TFDIFF = nondefault_or_previous_double(record1, "TFDIFF", tuning.TFDIFF);
+            tuning.THRUPT = nondefault_or_previous_double(record1, "THRUPT", tuning.THRUPT);
+            
             const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
             if (TMAXWCdeckItem.hasValue(0)) {
                 tuning.TMAXWC_has_value = true;
-                tuning.TMAXWC = TMAXWCdeckItem.getSIDouble(0);
+                tuning.TMAXWC = nondefault_or_previous_sidouble(record1, "TMAXWC", tuning.TMAXWC);
             }
         }
 
         if (numrecords > 1) {
             const auto& record2 = handlerContext.keyword.getRecord(1);
 
-            tuning.TRGTTE = record2.getItem("TRGTTE").get< double >(0);
-            tuning.TRGCNV = record2.getItem("TRGCNV").get< double >(0);
-            tuning.TRGMBE = record2.getItem("TRGMBE").get< double >(0);
-            tuning.TRGLCV = record2.getItem("TRGLCV").get< double >(0);
-            tuning.XXXTTE = record2.getItem("XXXTTE").get< double >(0);
-            tuning.XXXCNV = record2.getItem("XXXCNV").get< double >(0);
+            tuning.TRGTTE = nondefault_or_previous_double(record2, "TRGTTE", tuning.TRGTTE);
+            tuning.TRGCNV = nondefault_or_previous_double(record2, "TRGCNV", tuning.TRGCNV);
+            tuning.TRGMBE = nondefault_or_previous_double(record2, "TRGMBE", tuning.TRGMBE);
+            tuning.TRGLCV = nondefault_or_previous_double(record2, "TRGLCV", tuning.TRGLCV);
+            tuning.XXXTTE = nondefault_or_previous_double(record2, "XXXTTE", tuning.XXXTTE);
+            tuning.XXXCNV = nondefault_or_previous_double(record2, "XXXCNV", tuning.XXXCNV);
+
+            tuning.XXXMBE = nondefault_or_previous_double(record2, "XXXMBE", tuning.XXXMBE);
             
-            const auto& XXXMBEdeckItem = record2.getItem("XXXMBE");
-            if (! XXXMBEdeckItem.defaultApplied(0)) {
-                tuning.XXXMBE_has_nondefault_value = true;
-            } else {
-                tuning.XXXMBE_has_nondefault_value = false;
-            }
-            
-            tuning.XXXMBE = record2.getItem("XXXMBE").get< double >(0);
-            tuning.XXXLCV = record2.getItem("XXXLCV").get< double >(0);
-            tuning.XXXWFL = record2.getItem("XXXWFL").get< double >(0);
-            tuning.TRGFIP = record2.getItem("TRGFIP").get< double >(0);
+            tuning.XXXLCV = nondefault_or_previous_double(record2, "XXXLCV", tuning.XXXLCV);
+            tuning.XXXWFL = nondefault_or_previous_double(record2, "XXXWFL", tuning.XXXWFL);
+            tuning.TRGFIP = nondefault_or_previous_double(record2, "TRGFIP", tuning.TRGFIP);
 
             const auto& TRGSFTdeckItem = record2.getItem("TRGSFT");
             if (TRGSFTdeckItem.hasValue(0)) {
                 tuning.TRGSFT_has_value = true;
-                tuning.TRGSFT = TRGSFTdeckItem.get< double >(0);
+                tuning.TRGSFT = nondefault_or_previous_double(record2, "TRGSFT", tuning.TRGSFT);
             }
 
-            tuning.THIONX = record2.getItem("THIONX").get< double >(0);
-            tuning.TRWGHT = record2.getItem("TRWGHT").get< int >(0);
+            tuning.THIONX = nondefault_or_previous_double(record2, "THIONX", tuning.THIONX);
+            tuning.TRWGHT = nondefault_or_previous_int(record2, "TRWGHT", tuning.TRWGHT);
         }
 
         if (numrecords > 2) {
             const auto& record3 = handlerContext.keyword.getRecord(2);
 
-            tuning.NEWTMX = record3.getItem("NEWTMX").get< int >(0);
-            tuning.NEWTMN = record3.getItem("NEWTMN").get< int >(0);
-            tuning.LITMAX = record3.getItem("LITMAX").get< int >(0);
-            tuning.LITMIN = record3.getItem("LITMIN").get< int >(0);
-            tuning.MXWSIT = record3.getItem("MXWSIT").get< int >(0);
-            tuning.MXWPIT = record3.getItem("MXWPIT").get< int >(0);
-            tuning.DDPLIM = record3.getItem("DDPLIM").getSIDouble(0);
-            tuning.DDSLIM = record3.getItem("DDSLIM").get< double >(0);
-            tuning.TRGDPR = record3.getItem("TRGDPR").getSIDouble(0);
+            tuning.NEWTMX = nondefault_or_previous_int(record3, "NEWTMX", tuning.NEWTMX);
+            tuning.NEWTMN = nondefault_or_previous_int(record3, "NEWTMN", tuning.NEWTMN);
+            tuning.LITMAX = nondefault_or_previous_int(record3, "LITMAX", tuning.LITMAX);
+            tuning.LITMIN = nondefault_or_previous_int(record3, "LITMIN", tuning.LITMIN);
+            tuning.MXWSIT = nondefault_or_previous_int(record3, "MXWSIT", tuning.MXWSIT);
+            tuning.MXWPIT = nondefault_or_previous_int(record3, "MXWPIT", tuning.MXWPIT);
+            tuning.DDPLIM = nondefault_or_previous_sidouble(record3, "DDPLIM", tuning.DDPLIM);
+            tuning.DDSLIM = nondefault_or_previous_double(record3, "DDSLIM", tuning.DDSLIM);
+            tuning.TRGDPR = nondefault_or_previous_sidouble(record3, "TRGDPR", tuning.TRGDPR);
 
             const auto& XXXDPRdeckItem = record3.getItem("XXXDPR");
             if (XXXDPRdeckItem.hasValue(0)) {
                 tuning.XXXDPR_has_value = true;
-                tuning.XXXDPR = XXXDPRdeckItem.getSIDouble(0);
+                tuning.XXXDPR = nondefault_or_previous_sidouble(record3, "XXXDPR", tuning.XXXDPR);
             }
-        } else {
-            tuning.MXWSIT = ParserKeywords::TUNING::MXWSIT::defaultValue;
-        }
+        } 
 
         this->snapshots.back().update_tuning( std::move( tuning ));
         this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
