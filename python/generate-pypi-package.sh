@@ -25,7 +25,7 @@ do
       rm -rf $tag
     fi
     mkdir $tag && pushd $tag
-    cmake -DPYTHON_EXECUTABLE=${python_versions[$tag]} -DBOOST_INCLUDEDIR=/usr/include/boost169 -DBOOST_LIBRARYDIR=/usr/lib64/boost169 -DWITH_NATIVE=0 \
+    cmake -DPYTHON_EXECUTABLE=${python_versions[$tag]} -DBOOST_INCLUDEDIR=/usr/include/boost169 -DBOOST_LIBRARYDIR=/usr/lib64/boost169 -DWITH_NATIVE=0 -DBoost_USE_STATIC_LIBS=1 \
     -DOPM_ENABLE_PYTHON=ON -DOPM_PYTHON_PACKAGE_VERSION_TAG=${VERSION_TAG} ..
 
     # make step is necessary until the generated ParserKeywords/*.hpp are generated in the Python step
