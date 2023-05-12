@@ -937,6 +937,10 @@ namespace Opm {
         return this->headJ;
     }
 
+    std::vector<double> WellConnections::getMD() const {
+        return this->md;
+    }
+
     std::optional<int>
     getCompletionNumberFromGlobalConnectionIndex(const WellConnections& connections,
                                                  const std::size_t      global_index)

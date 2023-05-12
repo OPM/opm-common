@@ -3,6 +3,7 @@
   "sections": [
     "SCHEDULE"
   ],
+  "requires": ["WELTRAJ"],
   "items": [
     {
       "item": 1,
