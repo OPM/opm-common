@@ -162,7 +162,7 @@ public:
 
         const Evaluation theta = temperature - 273.15;
 
-        const Evaluation& S = salinity;
+        Evaluation S = salinity;
         const Evaluation S_lSAT =
             f[0]
             + f[1]*theta
