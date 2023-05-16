@@ -52,7 +52,7 @@ class Flags
 public:
     inline Flags(); 
     inline Flags(const Flags& other);
-    inline Flags(FlagEnum flag);
+    explicit inline Flags(FlagEnum flag);
 
     inline Flags&  operator=(const Flags& rhs);
     inline Flags&  operator=(FlagEnum flag);

@@ -60,7 +60,7 @@ public:
     };
 
 public:
-    DebugTimer(const char* prefix, OperationMode operationMode = NORMAL);
+    explicit DebugTimer(const char* prefix, OperationMode operationMode = NORMAL);
     ~DebugTimer();
 
     void    restart(const char* msg = NULL);

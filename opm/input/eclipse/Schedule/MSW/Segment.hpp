@@ -90,7 +90,7 @@ namespace Opm {
                 const double x_in,
                 const double y_in);
 
-        Segment(const RestartIO::RstSegment& rst_segment);
+        explicit Segment(const RestartIO::RstSegment& rst_segment);
 
         static Segment serializationTestObject();
 

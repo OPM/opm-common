@@ -264,7 +264,7 @@ void AquiferCT::loadFromRestart(const RestartIO::RstAquifer& rst,
 
 AquiferCT AquiferCT::serializationTestObject()
 {
-    return { { AQUCT_data::serializationTestObject() } };
+    return AquiferCT{ { AQUCT_data::serializationTestObject() } };
 }
 
 std::size_t AquiferCT::size() const {

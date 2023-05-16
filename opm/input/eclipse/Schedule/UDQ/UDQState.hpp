@@ -38,7 +38,7 @@ class UDQState
 {
 public:
     UDQState() = default;
-    UDQState(double undefined);
+    explicit UDQState(double undefined);
 
     bool has(const std::string& key) const;
     void load_rst(const RestartIO::RstState& rst_state);

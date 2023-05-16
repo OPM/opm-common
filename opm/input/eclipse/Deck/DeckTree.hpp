@@ -38,7 +38,7 @@ namespace Opm {
 class DeckTree {
 public:
     DeckTree() = default;
-    DeckTree(const std::string&);
+    explicit DeckTree(const std::string&);
 
     const std::string& parent(const std::string& fname) const;
     bool includes(const std::string& parent_file, const std::string& include_file) const;

@@ -136,7 +136,7 @@ namespace {
             parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg_format, location, errors);
         }
 
-        return { std::move( items ), false };
+        return DeckRecord{ std::move( items ), false };
     }
 
     bool ParserRecord::equal(const ParserRecord& other) const {

@@ -30,7 +30,7 @@ namespace Opm {
     class KeywordGenerator {
 
     public:
-        KeywordGenerator(bool verbose);
+        explicit KeywordGenerator(bool verbose);
 
         static void ensurePath( const std::string& file_name);
         static std::string endTest();

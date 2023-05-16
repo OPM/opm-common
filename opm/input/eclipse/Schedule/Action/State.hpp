@@ -42,7 +42,7 @@ class State {
 struct RunState {
     RunState() = default;
 
-    RunState(std::time_t sim_time)
+    explicit RunState(std::time_t sim_time)
         : run_count(1)
         , last_run(sim_time)
     {}

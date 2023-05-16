@@ -35,7 +35,7 @@ namespace Opm {
     class AutoICD : public SICD {
     public:
         AutoICD() = default;
-        AutoICD(const DeckRecord& record);
+        explicit AutoICD(const DeckRecord& record);
 
         static AutoICD serializationTestObject();
 

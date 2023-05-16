@@ -30,7 +30,7 @@ namespace Network {
 class Node {
 public:
     Node() = default;
-    Node(const std::string& name);
+    explicit Node(const std::string& name);
 
     const std::string& name() const;
     const std::optional<double>& terminal_pressure() const;

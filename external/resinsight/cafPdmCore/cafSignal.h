@@ -108,7 +108,7 @@ public:
     using MemberCallbackAndActiveFlag = std::pair<MemberCallback, bool>;
 
 public:
-    Signal( const SignalEmitter* emitter )
+    explicit Signal( const SignalEmitter* emitter )
         : m_emitter( emitter )
     {
         m_emitter->addEmittedSignal( this );

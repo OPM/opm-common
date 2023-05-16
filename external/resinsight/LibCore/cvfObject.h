@@ -99,7 +99,7 @@ class ref
 public:
     ref(T* object = NULL);
     ref(const ref& other);
-    template<typename T2> ref(const ref<T2>& other);
+    template<typename T2> explicit ref(const ref<T2>& other);
     ~ref();
 
     ref&                        operator=(T* rhs);
@@ -150,7 +150,7 @@ class cref
 public:
     cref(const T* object = NULL);
     cref(const cref& other);
-    template<typename T2> cref(const cref<T2>& other);
+    template<typename T2> explicit cref(const cref<T2>& other);
     ~cref();
 
     cref&                       operator=(const T* rhs);

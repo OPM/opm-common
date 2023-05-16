@@ -121,7 +121,7 @@ public:
     };
 
     CompletedCells() = default;
-    CompletedCells(const GridDims& dims);
+    explicit CompletedCells(const GridDims& dims);
     CompletedCells(std::size_t nx, std::size_t ny, std::size_t nz);
     const Cell& get(std::size_t i, std::size_t j, std::size_t k) const;
     std::pair<bool, Cell&> try_get(std::size_t i, std::size_t j, std::size_t k);

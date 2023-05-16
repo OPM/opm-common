@@ -111,7 +111,7 @@ public:
         GuideRateModel::Target target { GuideRateModel::Target::NONE };
     };
 
-    GuideRate(const Schedule& schedule);
+    explicit GuideRate(const Schedule& schedule);
 
     void setSerializationTestData();
 

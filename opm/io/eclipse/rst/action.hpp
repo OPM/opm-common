@@ -39,8 +39,8 @@ struct RstAction {
 
         Quantity() = default;
         Quantity(const std::string * zacn, double sacn_value);
-        Quantity(const std::string& quantity);
-        Quantity(double value);
+        explicit Quantity(const std::string& quantity);
+        explicit Quantity(double value);
     };
 
 
