@@ -338,7 +338,7 @@ public:
         LhsEval xlCO2, xgCO2;
         BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
                                                     pressure,
-                                                    Brine_IAPWS::salinity,
+                                                    LhsEval(Brine_IAPWS::salinity),
                                                     /*knownPhaseIdx=*/-1,
                                                     xlCO2,
                                                     xgH2O);

@@ -49,6 +49,7 @@
 #include <opm/material/components/Mesitylene.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
 #include <opm/material/components/Brine.hpp>
+#include <opm/material/components/BrineDynamic.hpp>
 #include <opm/material/components/N2.hpp>
 #include <opm/material/components/Xylene.hpp>
 #include <opm/material/components/Air.hpp>
@@ -90,6 +91,44 @@ void testSimpleH2O()
 }
 
 template <class Scalar, class Evaluation>
+void testDynamicBrine()
+{
+    typedef Opm::SimpleHuDuanH2O<Scalar> SimpleHuDuanH2O;
+    typedef Opm::Brine<Scalar, SimpleHuDuanH2O> Brine;
+    typedef Opm::BrineDynamic<Scalar, SimpleHuDuanH2O> BrineDyn;
+    typedef Opm::MathToolbox<Evaluation> EvalToolbox;
+
+    Brine::salinity = 0.1;
+    Evaluation sal = Brine::salinity;
+
+    int numT = 67;
+    int numP = 45;
+    Evaluation T = 280;
+    Evaluation p = 1e6;
+
+    for (int iT = 0; iT < numT; ++iT) {
+        p = 1e6;
+        T += 5;
+        for (int iP = 0; iP < numP; ++iP) {
+            p *= 1.1;
+
+            if (!EvalToolbox::isSame(Brine::liquidDensity(T,p), BrineDyn::liquidDensity(T,p, sal), /*tolerance=*/1e-5))
+                throw std::logic_error("oops: the brine density differes between Brine and Brine dynamic");
+
+            if (!EvalToolbox::isSame(Brine::liquidViscosity(T,p), BrineDyn::liquidViscosity(T,p,sal), /*tolerance=*/1e-5))
+                throw std::logic_error("oops: the brine viscosity differes between Brine and Brine dynamic");
+
+            if (!EvalToolbox::isSame(Brine::liquidEnthalpy(T,p), BrineDyn::liquidEnthalpy(T,p,sal), /*tolerance=*/1e-5))
+                throw std::logic_error("oops: the brine liquidEnthalpy differes between Brine and Brine dynamic");
+
+            if (!EvalToolbox::isSame(Brine::molarMass(), BrineDyn::molarMass(sal), /*tolerance=*/1e-5))
+                throw std::logic_error("oops: the brine molar mass differes between Brine and Brine dynamic");
+
+        }
+    }
+
+}
+template <class Scalar, class Evaluation>
 void testAllComponents()
 {
     typedef Opm::H2O<Scalar> H2O;
@@ -122,6 +161,7 @@ inline void testAll()
     testAllComponents<Scalar, Scalar>();
     testAllComponents<Scalar, Evaluation>();
     testSimpleH2O<Scalar, Evaluation>();
+    testDynamicBrine<Scalar, Evaluation>();
 
 }
 

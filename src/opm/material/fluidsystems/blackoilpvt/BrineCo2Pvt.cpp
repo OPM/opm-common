@@ -56,15 +56,14 @@ initFromState(const EclipseState& eclState, const Schedule&)
     size_t regionIdx = 0;
     // Currently we only support constant salinity
     const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-    const Scalar MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
+    const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
-    Brine::salinity = 1 / ( 1 + 1 / (molality*MmNaCl)); //
-    salinity_[regionIdx] = Brine::salinity;
+    salinity_[regionIdx] = 1 / ( 1 + 1 / (molality*MmNaCl));
     // set the surface conditions using the STCOND keyword
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
 
-    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, extrapolate);
+    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
 }
 
