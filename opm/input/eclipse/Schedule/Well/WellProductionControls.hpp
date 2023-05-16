@@ -28,7 +28,7 @@ namespace Opm {
 
 struct WellProductionControls {
 public:
-    WellProductionControls(int controls_arg) :
+    explicit WellProductionControls(int controls_arg) :
         controls(controls_arg)
     {
     }

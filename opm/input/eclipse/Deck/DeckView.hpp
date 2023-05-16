@@ -33,7 +33,7 @@ public:
 
 
     struct Iterator : public storage_type::iterator {
-        Iterator(storage_type::const_iterator inner_iter) :
+        explicit Iterator(storage_type::const_iterator inner_iter) :
             inner(inner_iter)
         {}
 

@@ -56,7 +56,7 @@ struct Vector{
 
 
 public:
-    ERsm(const std::string& fname);
+    explicit ERsm(const std::string& fname);
 
     const std::vector<TimeStampUTC>& dates() const;
     const std::vector<double>& days() const;

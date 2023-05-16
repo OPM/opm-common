@@ -27,8 +27,8 @@ namespace Opm {
     class Dimension {
     public:
         Dimension();
-        Dimension(double SIfactor,
-                  double SIoffset = 0.0);
+        explicit Dimension(double SIfactor,
+                           double SIoffset = 0.0);
 
         static Dimension serializationTestObject();
 

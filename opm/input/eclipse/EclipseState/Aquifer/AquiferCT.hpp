@@ -124,7 +124,7 @@ namespace Opm {
 
         AquiferCT() = default;
         AquiferCT(const TableManager& tables, const Deck& deck);
-        AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data);
+        explicit AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data);
 
         void loadFromRestart(const RestartIO::RstAquifer& rst,
                              const TableManager&          tables);

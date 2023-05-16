@@ -28,7 +28,7 @@ namespace Opm {
 
 struct WellInjectionControls {
 public:
-    WellInjectionControls(int controls_arg) :
+    explicit WellInjectionControls(int controls_arg) :
         controls(controls_arg)
     {}
 

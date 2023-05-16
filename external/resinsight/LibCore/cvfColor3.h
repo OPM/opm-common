@@ -112,7 +112,7 @@ public:
     Color3f();
     Color3f(float r, float g, float b);
     Color3f(const Color3f& other);
-    Color3f(ColorIdent colorIdent);
+    explicit Color3f(ColorIdent colorIdent);
     explicit Color3f(const Color3ub& other);
 
     Color3f&        operator=(const Color3f& rhs);
@@ -158,7 +158,7 @@ public:
     Color3ub();
     Color3ub(ubyte r, ubyte g, ubyte b);
     Color3ub(const Color3ub& other);
-    Color3ub(ColorIdent colorIdent);
+    explicit Color3ub(ColorIdent colorIdent);
     explicit Color3ub(const Color3f& other);
 
     Color3ub&       operator=(const Color3ub& rhs);

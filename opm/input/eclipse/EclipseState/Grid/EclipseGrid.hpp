@@ -75,7 +75,7 @@ namespace Opm {
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
-        EclipseGrid(const Deck& deck, const int * actnum = nullptr);
+        explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
 
         static bool hasGDFILE(const Deck& deck);
         static bool hasCylindricalKeywords(const Deck& deck);

@@ -23,13 +23,13 @@
 
 namespace Opm {
 
-    class DeckReckord;
+    class DeckRecord;
 
     class PlyrockTable : public SimpleTable {
     public:
 
         // This is not really a table; every column has only one element.
-        PlyrockTable( const DeckRecord& record );
+        explicit PlyrockTable(const DeckRecord& record);
 
         // since this keyword is not necessarily monotonic, it cannot be evaluated!
         //using SimpleTable::evaluate;

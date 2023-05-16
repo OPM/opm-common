@@ -31,7 +31,7 @@ class GasLiftGroup {
 public:
     GasLiftGroup() = default;
 
-    GasLiftGroup(const std::string& name) :
+    explicit GasLiftGroup(const std::string& name) :
         m_name(name)
     {}
 
