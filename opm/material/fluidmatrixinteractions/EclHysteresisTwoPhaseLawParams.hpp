@@ -185,19 +185,18 @@ public:
         if (!config().enableHysteresis())
             return;
 
-        // Killough hysteresis model for nonw kr
-        if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0) {
-            if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
-                Sncri_ = info.Sgcr+info.Swl;
-            }
-            else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
-                Sncri_ = info.Sgcr;
-            }
-            else {
-                assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
-                Sncri_ = info.Sowcr;
-            }
+        // Store critical nonwetting saturation
+        if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
+            Sncri_ = info.Sgcr+info.Swl;
         }
+        else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+            Sncri_ = info.Sgcr;
+        }
+        else {
+            assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
+            Sncri_ = info.Sowcr;
+        }
+
 
         // Killough hysteresis model for pc
         if (config().pcHysteresisModel() == 0) {
@@ -338,6 +337,15 @@ public:
 
     Scalar Sncrt() const
     { return Sncrt_; }
+
+    Scalar SnTrapped() const
+    {
+        // For Killough the trapped saturation is already computed
+        if( config().krHysteresisModel() > 1 )
+            return Sncrt_;
+        else // For Carlson we use the shift to compute it from the critial saturation
+            return Sncri_ + deltaSwImbKrn_;
+    }
 
     Scalar Snmaxd() const
     { return Snmaxd_; }

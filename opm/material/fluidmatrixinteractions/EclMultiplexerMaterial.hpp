@@ -279,6 +279,27 @@ public:
         }
     }
 
+    static Scalar trappedGasSaturation(const Params& params)
+    {
+        switch (params.approach()) {
+        case EclMultiplexerApproach::Stone1:
+            return params.template getRealParams<EclMultiplexerApproach::Stone1>().gasOilParams().SnTrapped();
+        case EclMultiplexerApproach::Stone2:
+            return params.template getRealParams<EclMultiplexerApproach::Stone2>().gasOilParams().SnTrapped();
+        case EclMultiplexerApproach::Default:
+            return params.template getRealParams<EclMultiplexerApproach::Default>().gasOilParams().SnTrapped();
+        case EclMultiplexerApproach::TwoPhase:
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasOil)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasOilParams().SnTrapped();
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasWater)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasWaterParams().SnTrapped();
+            return 0.0; // oil-water case
+        case EclMultiplexerApproach::OnePhase:
+            return 0.0;
+        }
+        return 0.0;
+    }
+
     /*
      * Hysteresis parameters for gas-oil
      * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)
