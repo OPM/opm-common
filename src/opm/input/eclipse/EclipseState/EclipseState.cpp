@@ -151,7 +151,6 @@ namespace Opm {
         }
     }
     catch (const OpmInputError& opm_error) {
-        OpmLog::error(opm_error.what());
         throw;
     } 
     catch (const std::exception& std_error) {
