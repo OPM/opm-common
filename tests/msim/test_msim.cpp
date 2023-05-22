@@ -73,10 +73,11 @@ double inj_inj(const EclipseState&  es, const Schedule& /* sched */, const Summa
 }
 
 void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solution& sol, size_t /* report_step */, double seconds_elapsed) {
-    const auto& grid = es.getInputGrid();
     const auto& units = es.getUnits();
-    if (!sol.has("PRESSURE"))
+    if (!sol.has("PRESSURE")) {
+        const auto& grid = es.getInputGrid();
         sol.insert("PRESSURE", UnitSystem::measure::pressure, std::vector<double>(grid.getNumActive()), data::TargetType::RESTART_SOLUTION);
+    }
 
     auto& data = sol.data("PRESSURE");
     std::fill(data.begin(), data.end(), units.to_si(UnitSystem::measure::pressure, seconds_elapsed));
