@@ -327,7 +327,7 @@ namespace { namespace SatFunc {
 
                 // Pcgo(Sg)
                 {
-                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& pc = t.getPcogColumn();
                     std::transform(std::begin(pc), std::end(pc),
@@ -405,7 +405,7 @@ namespace { namespace SatFunc {
 
                 // Pcgo(Sg)
                 {
-                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& pc = t.getPcogColumn();
                     std::transform(std::begin(pc), std::end(pc),
@@ -483,7 +483,7 @@ namespace { namespace SatFunc {
 
                 // Pcgw(Sg)
                 {
-                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& pc = t.getPcgwColumn();
                     std::transform(std::begin(pc), std::end(pc),
@@ -1149,7 +1149,7 @@ namespace { namespace SatFunc {
 
                 // Pcow(Sw)
                 {
-                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& pc = t.getPcowColumn();
                     std::transform(std::begin(pc), std::end(pc),
@@ -1227,7 +1227,7 @@ namespace { namespace SatFunc {
 
                 // Pcow(Sw)
                 {
-                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& pc = t.getPcowColumn();
                     std::transform(std::begin(pc), std::end(pc),
@@ -1567,7 +1567,7 @@ namespace { namespace PVTFunc {
 
                 // Column 0: Pg
                 {
-                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& Pg = t.getPressureColumn();
 
@@ -1583,7 +1583,7 @@ namespace { namespace PVTFunc {
 
                 // Column 1: 1/Bg
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         gas_inverse_formation_volume_factor;
 
                     const auto& Bg = t.getFormationFactorColumn();
@@ -1597,10 +1597,10 @@ namespace { namespace PVTFunc {
 
                 // Column 2: 1/(Bg*mu_g)
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         gas_inverse_formation_volume_factor;
 
-                    const auto uVisc = ::Opm::UnitSystem::measure::viscosity;
+                    constexpr auto uVisc = ::Opm::UnitSystem::measure::viscosity;
 
                     const auto& Bg   = t.getFormationFactorColumn();
                     const auto& mu_g = t.getViscosityColumn();
@@ -1680,7 +1680,7 @@ namespace { namespace PVTFunc {
 
                 // Column 0: Rv
                 {
-                    const auto uRv = ::Opm::UnitSystem::measure::oil_gas_ratio;
+                    constexpr auto uRv = ::Opm::UnitSystem::measure::oil_gas_ratio;
 
                     const auto& Rv = t.getColumn(0);
 
@@ -1696,7 +1696,7 @@ namespace { namespace PVTFunc {
 
                 // Column 1: 1/Bg
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         gas_inverse_formation_volume_factor;
 
                     const auto& Bg = t.getColumn(1);
@@ -1711,10 +1711,10 @@ namespace { namespace PVTFunc {
 
                 // Column 2: 1/(Bg*mu_g)
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         gas_inverse_formation_volume_factor;
 
-                    const auto uVisc = ::Opm::UnitSystem::measure::viscosity;
+                    constexpr auto uVisc = ::Opm::UnitSystem::measure::viscosity;
 
                     const auto& Bg   = t.getColumn(1);
                     const auto& mu_g = t.getColumn(2);
@@ -1779,7 +1779,7 @@ namespace { namespace PVTFunc {
                                 Opm::LinearisedOutputTable& linTable)
                 -> std::size_t
             {
-                const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                 const auto& t  = pvtg[tableID].getSaturatedTable();
                 const auto& Pg = t.getColumn(0);
@@ -2002,7 +2002,7 @@ namespace { namespace PVTFunc {
 
                 // Column 0: Po
                 {
-                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& Po = t.getPressureColumn();
 
@@ -2018,7 +2018,7 @@ namespace { namespace PVTFunc {
 
                 // Column 1: 1/Bo
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         oil_inverse_formation_volume_factor;
 
                     const auto& Bo = t.getFormationFactorColumn();
@@ -2032,10 +2032,10 @@ namespace { namespace PVTFunc {
 
                 // Column 2: 1/(Bo*mu_o)
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         oil_inverse_formation_volume_factor;
 
-                    const auto uVisc = ::Opm::UnitSystem::measure::viscosity;
+                    constexpr auto uVisc = ::Opm::UnitSystem::measure::viscosity;
 
                     const auto& Bo   = t.getFormationFactorColumn();
                     const auto& mu_o = t.getViscosityColumn();
@@ -2116,7 +2116,7 @@ namespace { namespace PVTFunc {
 
                 // Column 0: Po
                 {
-                    const auto uPo = ::Opm::UnitSystem::measure::pressure;
+                    constexpr auto uPo = ::Opm::UnitSystem::measure::pressure;
 
                     const auto& Po = t.getColumn(0);
 
@@ -2132,7 +2132,7 @@ namespace { namespace PVTFunc {
 
                 // Column 1: 1/Bo
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         oil_inverse_formation_volume_factor;
 
                     const auto& Bo = t.getColumn(1);
@@ -2147,10 +2147,10 @@ namespace { namespace PVTFunc {
 
                 // Column 2: 1/(Bo*mu_o)
                 {
-                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                    constexpr auto uRecipFVF = ::Opm::UnitSystem::measure::
                         oil_inverse_formation_volume_factor;
 
-                    const auto uVisc = ::Opm::UnitSystem::measure::viscosity;
+                    constexpr auto uVisc = ::Opm::UnitSystem::measure::viscosity;
 
                     const auto& Bo   = t.getColumn(1);
                     const auto& mu_o = t.getColumn(2);
@@ -2214,7 +2214,7 @@ namespace { namespace PVTFunc {
                                 Opm::LinearisedOutputTable& linTable)
                 -> std::size_t
             {
-                const auto uRs = ::Opm::UnitSystem::measure::gas_oil_ratio;
+                constexpr auto uRs = ::Opm::UnitSystem::measure::gas_oil_ratio;
 
                 const auto& t  = pvto[tableID].getSaturatedTable();
                 const auto& Rs = t.getColumn(0);

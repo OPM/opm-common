@@ -431,7 +431,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         if (gridunit[0] != "METRES") {
 
-            const auto length = ::Opm::UnitSystem::measure::length;
+            constexpr auto length = ::Opm::UnitSystem::measure::length;
 
             if (gridunit[0] == "FEET"){
                 Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD );
