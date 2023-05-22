@@ -45,13 +45,15 @@ public:
 
     struct RstRecord {
 
-        RstRecord(UDAControl control_arg, UDAValue value_arg, std::string wgname_arg)
+        RstRecord(UDAControl control_arg, UDAValue value_arg,
+                  const std::string& wgname_arg)
             : control(control_arg)
             , value(value_arg)
             , wgname(wgname_arg)
         {};
 
-        RstRecord(UDAControl control_arg, UDAValue value_arg, std::string wgname_arg, Phase phase)
+        RstRecord(UDAControl control_arg, UDAValue value_arg,
+                  const std::string& wgname_arg, Phase phase)
             : RstRecord(control_arg, value_arg, wgname_arg)
         {
             this->ig_phase = phase;

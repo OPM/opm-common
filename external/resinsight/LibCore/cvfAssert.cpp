@@ -81,7 +81,7 @@ public:
 class AssertHandlerConsole : public AssertHandler
 {
 public:
-    virtual Assert::FailAction  handleAssert(const char* fileName, int lineNumber, const char* expr, const char* msg);
+    Assert::FailAction  handleAssert(const char* fileName, int lineNumber, const char* expr, const char* msg) override;
 
 private:
     static void reportToConsole(const char* fileName, int lineNumber, const char* expr, const char* msg);
@@ -272,7 +272,7 @@ void AssertHandlerConsole::winCreateConsoleAndRedirectIO(bool redirectInput)
 class AssertHandlerWinDialog : public AssertHandler
 {
 public:
-    virtual Assert::FailAction  handleAssert(const char* fileName, int lineNumber, const char* expr, const char* msg);
+    Assert::FailAction  handleAssert(const char* fileName, int lineNumber, const char* expr, const char* msg) override;
 
 private:
     static int  handleUsingDialog(const char* fileName, int lineNumber, const char* expr, const char* msg);

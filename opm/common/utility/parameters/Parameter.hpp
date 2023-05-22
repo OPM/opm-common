@@ -52,7 +52,7 @@ namespace Opm {
 	    /// @brief
 	    /// @todo Doc me!
 	    /// @return
-	    virtual std::string getTag() const {return ID_xmltag__param;}
+            std::string getTag() const override { return ID_xmltag__param; }
 	    /// @brief
 	    /// @todo Doc me!
 	    /// @param

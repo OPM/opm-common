@@ -57,7 +57,9 @@ const GConSump::GCONSUMPGroupProp GConSump::get(const std::string& name, const S
     return prop;
 }
 
-void GConSump::add(const std::string& name, const UDAValue& consumption_rate, const UDAValue& import_rate, const std::string network_node, double udq_undefined_arg, const UnitSystem& unit_system) {
+void GConSump::add(const std::string& name, const UDAValue& consumption_rate,
+                   const UDAValue& import_rate, const std::string& network_node,
+                   double udq_undefined_arg, const UnitSystem& unit_system) {
 
     GConSump::GCONSUMPGroup& group = groups[name];
 

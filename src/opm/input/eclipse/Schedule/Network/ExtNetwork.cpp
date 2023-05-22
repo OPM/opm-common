@@ -169,7 +169,7 @@ void ExtNetwork::add_indexed_node_name(std::string name)
     this->insert_indexed_node_names.emplace_back(name);
 }
 
-bool ExtNetwork::has_indexed_node_name(const std::string name) const
+bool ExtNetwork::has_indexed_node_name(const std::string& name) const
 {
     // Find given element in vector
     auto it = std::find(this->insert_indexed_node_names.begin(), this->insert_indexed_node_names.end(), name);

@@ -30,7 +30,10 @@ namespace SACN = Helpers::VectorItems::SACN;
 namespace ZACN = Helpers::VectorItems::ZACN;
 
 
-RstAction::RstAction(const std::string& name_arg, int max_run_arg, int run_count_arg, double min_wait_arg, std::time_t start_time_arg, std::time_t last_run_arg, std::vector<RstAction::Condition> conditions_arg)
+RstAction::RstAction(const std::string& name_arg, int max_run_arg,
+                     int run_count_arg, double min_wait_arg,
+                     std::time_t start_time_arg, std::time_t last_run_arg,
+                     const std::vector<RstAction::Condition>& conditions_arg)
     : name(name_arg)
     , max_run(max_run_arg)
     , run_count(run_count_arg)

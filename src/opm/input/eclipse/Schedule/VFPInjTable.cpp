@@ -289,7 +289,7 @@ void VFPInjTable::scaleValues(std::vector<double>& values,
 void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
                                   std::vector<double>& values,
                                   const UnitSystem& unit_system) {
-    double scaling_factor = 1.0;
+    double scaling_factor;
     switch (type) {
     case FLO_TYPE::FLO_OIL:
     case FLO_TYPE::FLO_WAT:

@@ -72,13 +72,13 @@ public:
     void                    assign(const std::vector<T>& data);
     void                    resize(size_t size);
     void                    clear();
-    inline virtual size_t   size() const;
+    inline size_t           size() const override;
 
     inline void             set(size_t index, const T& val);
     inline void             setAll(const T& val);
     inline void             setConsecutive(const T& startVal);
     inline const T&         get(size_t index) const;
-    inline virtual T        val(size_t index) const;
+    inline T                val(size_t index) const override;
 
     inline const T* ptr() const;
     inline T*       ptr();

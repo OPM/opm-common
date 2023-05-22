@@ -1306,7 +1306,6 @@ namespace {
                     const auto& wtpr = smry.get_well_var(well.name(), fmt::format("WTPR{}", tracer.name), 0);
                     xWell[output_index] = wtpr;
                 }
-                output_index++;
             }
 
 
@@ -1317,7 +1316,6 @@ namespace {
                     const auto& wtpr = smry.get_well_var(well.name(), fmt::format("WTPT{}", tracer.name), 0);
                     xWell[output_index] = wtpr;
                 }
-                output_index++;
             }
 
             for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {

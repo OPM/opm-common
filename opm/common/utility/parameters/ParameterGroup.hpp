@@ -93,7 +93,7 @@ namespace Opm {
 
 	    // From ParameterMapItem
 	    virtual ~ParameterGroup();
-	    virtual std::string getTag() const;
+            std::string getTag() const override;
 
 	    /// \brief A constructor typically used to initialize a
 	    ///        ParameterGroup from command-line arguments.
