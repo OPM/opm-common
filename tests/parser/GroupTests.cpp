@@ -264,6 +264,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
         GCONPROD
             'G1' 'ORAT' 10000 3* 'CON' /
             'G2' 'RESV' 10000 3* 'CON' /
+            'G3' 'ORAT' 10000 3*  1* /
         /)";
 
     auto schedule = create_schedule(input);
@@ -271,12 +272,15 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
 
     const auto& group1 = schedule.getGroup("G1", 0);
     const auto& group2 = schedule.getGroup("G2", 0);
+    const auto& group3 = schedule.getGroup("G3", 0);
 
     auto ctrl1 = group1.productionControls(st);
     auto ctrl2 = group2.productionControls(st);
+    auto ctrl3 = group3.productionControls(st);
 
     BOOST_CHECK(ctrl1.exceed_action == Group::ExceedAction::RATE);
     BOOST_CHECK(ctrl2.exceed_action == Group::ExceedAction::CON);
+    BOOST_CHECK(ctrl3.exceed_action == Group::ExceedAction::NONE);
 }
 
 
