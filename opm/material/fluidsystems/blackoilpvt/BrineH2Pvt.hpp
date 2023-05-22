@@ -34,6 +34,7 @@ copyright holders.
 #include <opm/material/components/Brine.hpp>
 #include <opm/material/components/H2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <vector>
 
