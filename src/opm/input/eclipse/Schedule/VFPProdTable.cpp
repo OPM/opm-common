@@ -436,7 +436,7 @@ void VFPProdTable::scaleValues(std::vector<double>& values,
 void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
                                   std::vector<double>& values,
                                   const UnitSystem& unit_system) {
-    double scaling_factor = 1.0;
+    double scaling_factor;
     const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
     const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
     const auto time                  = unit_system.getDimension(UnitSystem::measure::time).getSIScaling();
@@ -501,7 +501,7 @@ void VFPProdTable::convertWFRToSI(const WFR_TYPE& type,
 void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
                                   std::vector<double>& values,
                                   const UnitSystem& unit_system) {
-    double scaling_factor = 1.0;
+    double scaling_factor;
     const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
     const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
     switch (type) {
