@@ -82,11 +82,11 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     setEnableVaporizedWater(eclState.getSimulationConfig().hasVAPWAT());
 
     if (eclState.getSimulationConfig().hasDISGASW()) {
-        if (eclState.runspec().co2Storage())
+        if (eclState.runspec().co2Storage() || eclState.runspec().h2Storage())
             setEnableDissolvedGasInWater(eclState.getSimulationConfig().hasDISGASW());
         else
             OPM_THROW(std::runtime_error,
-                      "DISGASW only supported in combination with CO2STORE");
+                      "DISGASW only supported in combination with CO2STORE or H2STORE");
     }
 
     if (phaseIsActive(gasPhaseIdx)) {
@@ -132,6 +132,19 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                           "CO2STORE requires gas phase\n");
             }
             molarMass_[regionIdx][gasCompIdx] = BrineCo2Pvt<Scalar>::CO2::molarMass();
+        }
+    }
+
+    // Use molar mass of H2 and Brine as default in H2STORE keyword
+    if (eclState.runspec().h2Storage()) {
+        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+            if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
+                molarMass_[regionIdx][oilCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass();
+            if (!phaseIsActive(gasPhaseIdx)) {
+                OPM_THROW(std::runtime_error,
+                          "H2STORE requires gas phase\n");
+            }
+            molarMass_[regionIdx][gasCompIdx] = BrineH2Pvt<Scalar>::H2::molarMass();
         }
     }
 

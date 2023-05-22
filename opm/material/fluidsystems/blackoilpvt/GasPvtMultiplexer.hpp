@@ -33,6 +33,7 @@
 #include "WetGasPvt.hpp"
 #include "GasPvtThermal.hpp"
 #include "Co2GasPvt.hpp"
+#include "H2GasPvt.hpp"
 
 namespace Opm {
 
@@ -73,6 +74,11 @@ class Schedule;
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
+    case GasPvtApproach::H2Gas: {                                      \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::H2Gas>();           \
+        codeToCall;                                                       \
+        break;                                                            \
+    }                                                                     \
     case GasPvtApproach::NoGas:                                           \
         throw std::logic_error("Not implemented: Gas PVT of this deck!"); \
     }
@@ -84,7 +90,8 @@ enum class GasPvtApproach {
     WetHumidGas,
     WetGas,
     ThermalGas,
-    Co2Gas
+    Co2Gas,
+    H2Gas
 };
 
 /*!
@@ -144,6 +151,10 @@ public:
             delete &getRealPvt<GasPvtApproach::Co2Gas>();
             break;
         }
+        case GasPvtApproach::H2Gas: {
+            delete &getRealPvt<GasPvtApproach::H2Gas>();
+            break;
+        }
         case GasPvtApproach::NoGas:
             break;
         }
@@ -183,6 +194,10 @@ public:
 
         case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>;
+            break;
+
+	    case GasPvtApproach::H2Gas:
+            realGasPvt_ = new H2GasPvt<Scalar>;
             break;
 
         case GasPvtApproach::NoGas:
@@ -416,6 +431,20 @@ public:
         return *static_cast<const Co2GasPvt<Scalar>* >(realGasPvt_);
     }
 
+    template <GasPvtApproach approachV>
+    typename std::enable_if<approachV == GasPvtApproach::H2Gas, H2GasPvt<Scalar> >::type& getRealPvt()
+    {
+        assert(gasPvtApproach() == approachV);
+        return *static_cast<H2GasPvt<Scalar>* >(realGasPvt_);
+    }
+
+    template <GasPvtApproach approachV>
+    typename std::enable_if<approachV == GasPvtApproach::H2Gas, const H2GasPvt<Scalar> >::type& getRealPvt() const
+    {
+        assert(gasPvtApproach() == approachV);
+        return *static_cast<const H2GasPvt<Scalar>* >(realGasPvt_);
+    }
+
     const void* realGasPvt() const { return realGasPvt_; }
 
     GasPvtMultiplexer<Scalar,enableThermal>& operator=(const GasPvtMultiplexer<Scalar,enableThermal>& data)
@@ -439,6 +468,9 @@ public:
             break;
         case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>(*static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_));
+            break;
+	case GasPvtApproach::H2Gas:
+            realGasPvt_ = new H2GasPvt<Scalar>(*static_cast<const H2GasPvt<Scalar>*>(data.realGasPvt_));
             break;
         default:
             break;

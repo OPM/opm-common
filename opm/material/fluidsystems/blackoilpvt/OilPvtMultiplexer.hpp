@@ -32,6 +32,7 @@
 #include "LiveOilPvt.hpp"
 #include "OilPvtThermal.hpp"
 #include "BrineCo2Pvt.hpp"
+#include "BrineH2Pvt.hpp"
 
 namespace Opm {
 
@@ -67,6 +68,11 @@ class Schedule;
         codeToCall;                                                               \
         break;                                                                    \
     }                                                                             \
+    case OilPvtApproach::BrineH2: {                                               \
+        auto& pvtImpl = getRealPvt<OilPvtApproach::BrineH2>();                    \
+        codeToCall;                                                               \
+        break;                                                                    \
+    }                                                                             \
     case OilPvtApproach::NoOil:                                                   \
         throw std::logic_error("Not implemented: Oil PVT of this deck!");         \
     }
@@ -77,7 +83,8 @@ enum class OilPvtApproach {
     DeadOil,
     ConstantCompressibilityOil,
     ThermalOil,
-    BrineCo2
+    BrineCo2,
+    BrineH2
 };
 
 /*!
@@ -135,7 +142,10 @@ public:
             delete &getRealPvt<OilPvtApproach::BrineCo2>();
             break;
         }
-
+	    case OilPvtApproach::BrineH2: {
+            delete &getRealPvt<OilPvtApproach::BrineH2>();
+            break;
+        }
         case OilPvtApproach::NoOil:
             break;
         }
@@ -281,6 +291,10 @@ public:
             realOilPvt_ = new BrineCo2Pvt<Scalar>;
             break;
 
+        case OilPvtApproach::BrineH2:
+            realOilPvt_ = new BrineH2Pvt<Scalar>;
+            break;
+
         case OilPvtApproach::NoOil:
             throw std::logic_error("Not implemented: Oil PVT of this deck!");
         }
@@ -369,6 +383,20 @@ public:
 
     const void* realOilPvt() const { return realOilPvt_; }
 
+    template <OilPvtApproach approachV>
+    typename std::enable_if<approachV == OilPvtApproach::BrineH2, BrineH2Pvt<Scalar> >::type& getRealPvt()
+    {
+        assert(approach() == approachV);
+        return *static_cast<BrineH2Pvt<Scalar>* >(realOilPvt_);
+    }
+
+    template <OilPvtApproach approachV>
+    typename std::enable_if<approachV == OilPvtApproach::BrineH2, const BrineH2Pvt<Scalar> >::type& getRealPvt() const
+    {
+        assert(approach() == approachV);
+        return *static_cast<const BrineH2Pvt<Scalar>* >(realOilPvt_);
+    }
+
     OilPvtMultiplexer<Scalar,enableThermal>& operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data)
     {
         approach_ = data.approach_;
@@ -387,6 +415,9 @@ public:
             break;
         case OilPvtApproach::BrineCo2:
             realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
+            break;
+	    case OilPvtApproach::BrineH2:
+            realOilPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realOilPvt_));
             break;
         default:
             break;

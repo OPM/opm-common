@@ -31,6 +31,7 @@
 #include "ConstantCompressibilityBrinePvt.hpp"
 #include "WaterPvtThermal.hpp"
 #include "BrineCo2Pvt.hpp"
+#include "BrineH2Pvt.hpp"
 
 #define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall)                      \
     switch (approach_) {                                                \
@@ -54,6 +55,11 @@
         codeToCall;                                                                  \
         break;                                                                       \
     }                                                                    \
+    case WaterPvtApproach::BrineH2: {                                              \
+        auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineH2>();                   \
+        codeToCall;                                                                  \
+        break;                                                                       \
+    }                                                                    \
     case WaterPvtApproach::NoWater:                                  \
         throw std::logic_error("Not implemented: Water PVT of this deck!"); \
     }
@@ -65,7 +71,8 @@ enum class WaterPvtApproach {
     ConstantCompressibilityBrine,
     ConstantCompressibilityWater,
     ThermalWater,
-    BrineCo2
+    BrineCo2,
+    BrineH2
 };
 
 #if HAVE_ECL_INPUT
@@ -114,6 +121,10 @@ public:
         }
         case WaterPvtApproach::BrineCo2: {
             delete &getRealPvt<WaterPvtApproach::BrineCo2>();
+            break;
+        }
+        case WaterPvtApproach::BrineH2: {
+            delete &getRealPvt<WaterPvtApproach::BrineH2>();
             break;
         }
         case WaterPvtApproach::NoWater:
@@ -269,6 +280,10 @@ public:
             realWaterPvt_ = new BrineCo2Pvt<Scalar>;
             break;
 
+        case WaterPvtApproach::BrineH2:
+            realWaterPvt_ = new BrineH2Pvt<Scalar>;
+            break;
+
         case WaterPvtApproach::NoWater:
             throw std::logic_error("Not implemented: Water PVT of this deck!");
         }
@@ -341,6 +356,20 @@ public:
         return *static_cast<const BrineCo2Pvt<Scalar>* >(realWaterPvt_);
     }
 
+    template <WaterPvtApproach approachV>
+    typename std::enable_if<approachV == WaterPvtApproach::BrineH2, BrineH2Pvt<Scalar> >::type& getRealPvt()
+    {
+        assert(approach() == approachV);
+        return *static_cast<BrineH2Pvt<Scalar>* >(realWaterPvt_);
+    }
+
+    template <WaterPvtApproach approachV>
+    typename std::enable_if<approachV == WaterPvtApproach::BrineH2, const BrineH2Pvt<Scalar> >::type& getRealPvt() const
+    {
+        assert(approach() == approachV);
+        return *static_cast<const BrineH2Pvt<Scalar>* >(realWaterPvt_);
+    }
+
     const void* realWaterPvt() const { return realWaterPvt_; }
 
     WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data)
@@ -358,6 +387,9 @@ public:
             break;
         case WaterPvtApproach::BrineCo2:
             realWaterPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realWaterPvt_));
+            break;
+        case WaterPvtApproach::BrineH2:
+            realWaterPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realWaterPvt_));
             break;
         default:
             break;
