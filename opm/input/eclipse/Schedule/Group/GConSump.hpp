@@ -69,7 +69,9 @@ namespace Opm {
         bool has(const std::string& name) const;
         const GCONSUMPGroup& get(const std::string& name) const;
         const GCONSUMPGroupProp get(const std::string& name, const SummaryState& st) const;
-        void add(const std::string& name, const UDAValue& consumption_rate, const UDAValue& import_rate, const std::string network_node, double udq_undefined_arg, const UnitSystem& unit_system);
+        void add(const std::string& name, const UDAValue& consumption_rate,
+                 const UDAValue& import_rate, const std::string& network_node,
+                 double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
 
         bool operator==(const GConSump& data) const;

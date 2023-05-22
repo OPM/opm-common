@@ -51,12 +51,12 @@ namespace cvf {
 class Trace
 {
 public:
-    static void show(String message);
+    static void show(const String& message);
     static void show(const char* format, ...);
     static void showFileLineNumber(const String& file, int line, const String& message);
 
 private:
-    static void showTraceOutput(String text, bool addNewLine);
+    static void showTraceOutput(const String& text, bool addNewLine);
 };
 
 

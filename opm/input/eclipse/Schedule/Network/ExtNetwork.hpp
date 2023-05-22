@@ -64,7 +64,7 @@ private:
     std::vector<Branch> m_branches;
     std::vector<std::string> insert_indexed_node_names;
     std::map<std::string, Node> m_nodes;
-    bool has_indexed_node_name(const std::string name) const;
+    bool has_indexed_node_name(const std::string& name) const;
     void add_indexed_node_name(std::string name);
 };
 

@@ -144,7 +144,10 @@ void msim::run_step(WellTestState& wtest_state, UDQState& udq_state, data::Solut
 
 
 
-void msim::output(WellTestState& wtest_state, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupAndNetworkValues& group_nwrk_data, EclipseIO& io) {
+void msim::output(const WellTestState& wtest_state, const UDQState& udq_state,
+                  size_t report_step, bool substep, double seconds_elapsed,
+                  const data::Solution& sol, const data::Wells& well_data,
+                  const data::GroupAndNetworkValues& group_nwrk_data, EclipseIO& io) {
     RestartValue value(sol, well_data, group_nwrk_data, {});
     io.writeTimeStep(this->action_state,
                      wtest_state,

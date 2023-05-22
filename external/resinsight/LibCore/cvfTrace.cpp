@@ -72,7 +72,7 @@ namespace cvf {
 //--------------------------------------------------------------------------------------------------
 /// Write debug text to console, DevStudio output window and file (future)
 //--------------------------------------------------------------------------------------------------
-void Trace::show(String message)
+void Trace::show(const String& message)
 {
     showTraceOutput(message, true);
 }
@@ -124,7 +124,7 @@ void Trace::showFileLineNumber(const String& file, int line, const String& messa
 //--------------------------------------------------------------------------------------------------
 /// Show the trace output in console and DevStudio output window
 //--------------------------------------------------------------------------------------------------
-void Trace::showTraceOutput(String text, bool addNewLine)
+void Trace::showTraceOutput(const String& text, bool addNewLine)
 {
 #ifdef WIN32
     AllocConsole();
