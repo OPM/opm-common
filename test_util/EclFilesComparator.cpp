@@ -102,15 +102,13 @@ ECLFilesComparator::ECLFilesComparator(const std::string& basename1,
     absTolerance(absToleranceArg), relTolerance(relToleranceArg) {
 }
 
-
+// Relative deviation > 1 indicates different signs of val1 and val2
 Deviation ECLFilesComparator::calculateDeviations(double val1, double val2) {
-    val1 = std::abs(val1);
-    val2 = std::abs(val2);
     Deviation deviation;
     if (val1 != 0 || val2 != 0) {
         deviation.abs = std::abs(val1 - val2);
         if (val1 != 0 && val2 != 0) {
-            deviation.rel = deviation.abs/(std::max(val1, val2));
+            deviation.rel = deviation.abs/(std::max(std::abs(val1), std::abs(val2)));
         }
     }
     return deviation;
