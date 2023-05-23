@@ -53,7 +53,7 @@ Tuning::Tuning() {
     using WsegIterKW = ParserKeywords::WSEGITER;
 
     // Record1
-    TSINIT = TuningKw::TSINIT::defaultValue * Metric::Time;
+		TSINIT = std::nullopt; // Let simulator choose initial step if not specified
     TSMAXZ = TuningKw::TSMAXZ::defaultValue * Metric::Time;
     TSMINZ = TuningKw::TSMINZ::defaultValue * Metric::Time;
     TSMCHP = TuningKw::TSMCHP::defaultValue * Metric::Time;
@@ -97,7 +97,7 @@ Tuning::Tuning() {
 
 Tuning Tuning::serializationTestObject() {
     Tuning result;
-    result.TSINIT = 1.0;
+		result.TSINIT = std::optional<double>{1.0};
     result.TSMAXZ = 2.0;
     result.TSMINZ = 3.0;
     result.TSMCHP = 4.0;

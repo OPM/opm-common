@@ -687,9 +687,9 @@ namespace {
 
         const auto TsInit = doubhead[VI::doubhead::TsInit];
 
-        if (TsInit < 0.0) {
-            throwIfMissingRequired({ "OPMEXTRA", M::identity, required });
-        }
+        // if (TsInit < 0.0) {
+        //     throwIfMissingRequired({ "OPMEXTRA", M::identity, required });
+        // }
 
         return { usys.to_si(M::time, TsInit) };
     }

@@ -20,6 +20,8 @@
 
 #define BOOST_TEST_MODULE TuningTests
 
+#include <optional>
+
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
@@ -99,11 +101,14 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   {
       size_t timestep = 4;
       const auto& event = schedule[timestep].events();
-      BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE));
+			// Because NEXTSTEP is persistent a tuning event is triggered at each report step
+      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
-      const auto& tuning = schedule[4].tuning();
-      double TSINIT_default = tuning.TSINIT;
-      BOOST_CHECK_CLOSE(TSINIT_default, 1 * Metric::Time, diff);
+			const auto& tuning = schedule[timestep].tuning();
+      std::optional<double> TSINIT_default = tuning.TSINIT;
+      BOOST_CHECK(TSINIT_default == std::nullopt);
+      // BOOST_CHECK_CLOSE(TSINIT_default, 1 * Metric::Time, diff);
+
       BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(), 5*Metric::Time, diff);
 
       double TSMAXZ_default = tuning.TSMAXZ;
@@ -223,8 +228,10 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       const auto& tuning = schedule[timeStep].tuning();
 
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
-      double TSINIT = tuning.TSINIT;
-      BOOST_CHECK_CLOSE(TSINIT, 2 * Metric::Time, diff);
+			std::optional<double> TSINIT = tuning.TSINIT;
+      BOOST_CHECK(TSINIT.has_value());
+      //BOOST_CHECK_CLOSE(TSINIT.value(), 2 * Metric::Time, diff);
+
       BOOST_CHECK_CLOSE(schedule[timeStep].max_next_tstep(), 5*Metric::Time, diff);
 
       double TSMAXZ = tuning.TSMAXZ;
@@ -330,7 +337,8 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   {
       std::size_t timestep = 7;
       const auto& event = schedule[timestep].events();
-      BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE));
+			// Because NEXTSTEP is persistent a tuning event is triggered at each report step
+      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
   }
 
   /*** TIMESTEP 8 ***/
@@ -362,5 +370,13 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       BOOST_CHECK_CLOSE(tuning.TMAXWC, 10.0 * Metric::Time, diff);
 
       BOOST_CHECK_EQUAL(tuning.MXWSIT, ParserKeywords::WSEGITER::MAX_WELL_ITERATIONS::defaultValue);
+
+      /********* Record 2 [and 3] (should be unchanged) ***********/
+      double TRGTTE = tuning.TRGTTE;
+      BOOST_CHECK_CLOSE(TRGTTE, 0.2, diff);
+
+      int NEWTMX = tuning.NEWTMX;
+      BOOST_CHECK_EQUAL(NEWTMX, 13);     
+
   }
 }

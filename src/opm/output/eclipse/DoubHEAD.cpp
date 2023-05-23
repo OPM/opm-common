@@ -567,7 +567,7 @@ Opm::RestartIO::DoubHEAD::tuningParameters(const Tuning&     tuning,
                                            const double      cnvT)
 {
     // Record 1
-    this->data_[Index::TsInit] = tuning.TSINIT / cnvT;
+		this->data_[Index::TsInit] = tuning.TSINIT.has_value() ? tuning.TSINIT.value() / cnvT : -1.0;
     this->data_[Index::TsMaxz] = tuning.TSMAXZ / cnvT;
     this->data_[Index::TsMinz] = tuning.TSMINZ / cnvT;
     this->data_[Index::TsMchp] = tuning.TSMCHP / cnvT;
