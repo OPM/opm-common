@@ -88,7 +88,6 @@ void ensureBlackoilApi()
         Evaluation XgO = 0.0;
         Evaluation Rs = 0.0;
         Evaluation Rv = 0.0;
-        Evaluation dummy;
 
         // some additional typedefs
         typedef typename FluidSystem::OilPvt OilPvt;
@@ -134,30 +133,26 @@ void ensureBlackoilApi()
         [[maybe_unused]] bool b2 = FluidSystem::enableVaporizedOil();
         [[maybe_unused]] Scalar rhoRefOil = FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx,
                                                                     /*regionIdx=*/0);
-        dummy = FluidSystem::convertXoGToRs(XoG, /*regionIdx=*/0);
-        dummy = FluidSystem::convertXwGToRsw(XwG, /*regionIdx=*/0);
-        dummy = FluidSystem::convertXgOToRv(XgO, /*regionIdx=*/0);
-        dummy = FluidSystem::convertXoGToxoG(XoG, /*regionIdx=*/0);
-        dummy = FluidSystem::convertXgOToxgO(XgO, /*regionIdx=*/0);
-        dummy = FluidSystem::convertRsToXoG(Rs, /*regionIdx=*/0);
-        dummy = FluidSystem::convertRvToXgO(Rv, /*regionIdx=*/0);
+        std::cout << FluidSystem::convertXoGToRs(XoG, /*regionIdx=*/0);
+        std::cout << FluidSystem::convertXwGToRsw(XwG, /*regionIdx=*/0);
+        std::cout << FluidSystem::convertXgOToRv(XgO, /*regionIdx=*/0);
+        std::cout << FluidSystem::convertXoGToxoG(XoG, /*regionIdx=*/0);
+        std::cout << FluidSystem::convertXgOToxgO(XgO, /*regionIdx=*/0);
+        std::cout << FluidSystem::convertRsToXoG(Rs, /*regionIdx=*/0);
+        std::cout << FluidSystem::convertRvToXgO(Rv, /*regionIdx=*/0);
 
         for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++ phaseIdx) {
-            dummy = FluidSystem::density(fluidState, phaseIdx, /*regionIdx=*/0);
-            dummy = FluidSystem::saturatedDensity(fluidState, phaseIdx, /*regionIdx=*/0);
-            dummy = FluidSystem::inverseFormationVolumeFactor(fluidState, phaseIdx, /*regionIdx=*/0);
-            dummy = FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, phaseIdx, /*regionIdx=*/0);
-            dummy = FluidSystem::viscosity(fluidState, phaseIdx, /*regionIdx=*/0);
-            dummy = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, /*regionIdx=*/0);
-            dummy = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, /*regionIdx=*/0, /*maxSo=*/1.0);
-            dummy = FluidSystem::saturationPressure(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::density(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::saturatedDensity(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::inverseFormationVolumeFactor(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::viscosity(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, /*regionIdx=*/0, /*maxSo=*/1.0);
+            std::cout << FluidSystem::saturationPressure(fluidState, phaseIdx, /*regionIdx=*/0);
             for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++ compIdx)
-                dummy = FluidSystem::fugacityCoefficient(fluidState, phaseIdx, compIdx,  /*regionIdx=*/0);
+                std::cout << FluidSystem::fugacityCoefficient(fluidState, phaseIdx, compIdx,  /*regionIdx=*/0);
         }
-
-        // prevent GCC from producing a "variable assigned but unused" warning
-        dummy = 2.0*dummy;
-
 
         // the "not considered safe to use directly" API
         [[maybe_unused]] const OilPvt& oilPvt2 = FluidSystem::oilPvt();
