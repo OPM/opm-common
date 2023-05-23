@@ -222,7 +222,7 @@ namespace {
                 this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
                 const auto& md = connections->getMD();
                 if (!std::is_sorted(std::begin(md), std::end(md))) {
-                    auto msg = fmt::format("Well {} has no increasing measured depth column", name);
+                    auto msg = fmt::format("Well {} measured depth column is not strictly increasing", name);
                     throw OpmInputError(msg, handlerContext.keyword.location());
                 }
             }
