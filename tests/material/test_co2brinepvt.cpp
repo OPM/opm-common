@@ -49,6 +49,8 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <iostream>
+
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
 // real world it does not make much sense to specify a fluid phase using more than a
 // single keyword, but for a unit test, this saves a lot of boiler-plate code.
@@ -130,24 +132,20 @@ void ensurePvtApiBrine(const BrinePvt& brinePvt)
         Evaluation pressure = 1e5;
         Evaluation saltconcentration = 0.0;
         Evaluation rs = 0.0;
-        Evaluation tmp;
 
         ////
         // Water PVT API
         /////
-        tmp = brinePvt.viscosity(/*regionIdx=*/0,
-                                 temperature,
-                                 pressure,
-                                 rs,
-                                 saltconcentration);
-        tmp = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure,
-                                                    rs,
-                                                    saltconcentration);
-
-        // prevent GCC from producing a "variable assigned but unused" warning
-        tmp = 2.0*tmp;
+        std::cout << brinePvt.viscosity(/*regionIdx=*/0,
+                                        temperature,
+                                        pressure,
+                                        rs,
+                                        saltconcentration);
+        std::cout << brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure,
+                                                           rs,
+                                                           saltconcentration);
     }
 }
 
@@ -162,41 +160,37 @@ void ensurePvtApiGas(const Co2Pvt& co2Pvt)
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        Evaluation tmp;
 
         /////
         // co2 PVT API
         /////
-        tmp = co2Pvt.viscosity(/*regionIdx=*/0,
-                               temperature,
-                               pressure,
-                               Rv,
-                               Rvw);
-        tmp = co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                  temperature,
-                                                  pressure,
-                                                  Rv,
-                                                  Rvw);
-        tmp = co2Pvt.saturatedViscosity(/*regionIdx=*/0,
-                                        temperature,
-                                        pressure);
-        tmp = co2Pvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+        std::cout << co2Pvt.viscosity(/*regionIdx=*/0,
+                                      temperature,
+                                      pressure,
+                                      Rv,
+                                      Rvw);
+        std::cout << co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                         temperature,
+                                                         pressure,
+                                                         Rv,
+                                                         Rvw);
+        std::cout << co2Pvt.saturatedViscosity(/*regionIdx=*/0,
+                                               temperature,
+                                               pressure);
+        std::cout << co2Pvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                  temperature,
+                                                                  pressure);
+        std::cout << co2Pvt.saturationPressure(/*regionIdx=*/0,
+                                               temperature,
+                                               Rv);
+        std::cout << co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
                                                            temperature,
                                                            pressure);
-        tmp = co2Pvt.saturationPressure(/*regionIdx=*/0,
-                                        temperature,
-                                        Rv);
-        tmp = co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure);
-        tmp = co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure,
-                                                    So,
-                                                    maxSo);
-
-        // prevent GCC from producing a "variable assigned but unused" warning
-        tmp = 2.0*tmp;
+        std::cout << co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure,
+                                                           So,
+                                                           maxSo);
     }
 }
 
@@ -210,36 +204,35 @@ void ensurePvtApiBrineOil(const BrinePvt& brinePvt)
         Evaluation Rs = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        Evaluation tmp;
 
         /////
         // brine PVT API
         /////
-        tmp = brinePvt.viscosity(/*regionIdx=*/0,
-                               temperature,
-                               pressure,
-                               Rs);
-        tmp = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                  temperature,
-                                                  pressure,
-                                                  Rs);
-        tmp = brinePvt.saturatedViscosity(/*regionIdx=*/0,
+        std::cout << brinePvt.viscosity(/*regionIdx=*/0,
                                         temperature,
-                                        pressure);
-        tmp = brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                           temperature,
-                                                           pressure);
-        tmp = brinePvt.saturationPressure(/*regionIdx=*/0,
-                                        temperature,
+                                        pressure,
                                         Rs);
-        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure);
-        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure,
-                                                   So,
-                                                   maxSo);
+        std::cout << brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure,
+                                                           Rs);
+        std::cout << brinePvt.saturatedViscosity(/*regionIdx=*/0,
+                                                 temperature,
+                                                 pressure);
+        std::cout << brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                    temperature,
+                                                                    pressure);
+        std::cout << brinePvt.saturationPressure(/*regionIdx=*/0,
+                                                 temperature,
+                                                 Rs);
+        std::cout << brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
+                                                            temperature,
+                                                            pressure);
+        std::cout << brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
+                                                            temperature,
+                                                            pressure,
+                                                            So,
+                                                            maxSo);
     }
 }
 
