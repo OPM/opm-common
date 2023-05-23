@@ -29,6 +29,9 @@
  */
 #include "config.h"
 
+#define BOOST_TEST_MODULE Co2BrinePvt
+#include <boost/test/unit_test.hpp>
+
 #if !HAVE_ECL_INPUT
 #error "The test for the co2 brine PVT classes requires eclipse input support in opm-common"
 #endif
@@ -54,7 +57,7 @@
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
 // real world it does not make much sense to specify a fluid phase using more than a
 // single keyword, but for a unit test, this saves a lot of boiler-plate code.
-static const char* deckString1 =
+constexpr const char* deckString1 =
     "RUNSPEC\n"
     "\n"
     "DIMENS\n"
@@ -89,7 +92,7 @@ static const char* deckString1 =
     "\n";
 
 
-static const char* deckString2 =
+constexpr const char* deckString2 =
     "RUNSPEC\n"
     "\n"
     "DIMENS\n"
@@ -236,44 +239,44 @@ void ensurePvtApiBrineOil(const BrinePvt& brinePvt)
     }
 }
 
-template <class Scalar>
-inline void testAll()
+using Types = std::tuple<float,double>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(Oil, Scalar, Types)
 {
     Opm::Parser parser;
     auto python = std::make_shared<Opm::Python>();
 
-    auto deck1 = parser.parseString(deckString1);
-    Opm::EclipseState eclState1(deck1);
-    Opm::Schedule schedule1(deck1, eclState1, python);
+    auto deck = parser.parseString(deckString1);
+    Opm::EclipseState eclState(deck);
+    Opm::Schedule schedule(deck, eclState, python);
 
     Opm::GasPvtMultiplexer<Scalar> co2Pvt_oil;
     Opm::OilPvtMultiplexer<Scalar> brinePvt_oil;
 
-    co2Pvt_oil.initFromState(eclState1, schedule1);
-    brinePvt_oil.initFromState(eclState1, schedule1);
+    BOOST_CHECK_NO_THROW(co2Pvt_oil.initFromState(eclState, schedule));
+    BOOST_CHECK_NO_THROW(brinePvt_oil.initFromState(eclState, schedule));
 
-    typedef Opm::DenseAd::Evaluation<Scalar, 1> FooEval;
+    using Eval = Opm::DenseAd::Evaluation<Scalar,1>;
     ensurePvtApiGas<Scalar>(co2Pvt_oil);
-    ensurePvtApiBrineOil<FooEval>(brinePvt_oil);
+    ensurePvtApiBrineOil<Eval>(brinePvt_oil);
+}
 
-    auto deck2 = parser.parseString(deckString2);
-    Opm::EclipseState eclState2(deck2);
-    Opm::Schedule schedule2(deck2, eclState2, python);
+BOOST_AUTO_TEST_CASE_TEMPLATE(Water, Scalar, Types)
+{
+    Opm::Parser parser;
+    auto python = std::make_shared<Opm::Python>();
+
+    auto deck = parser.parseString(deckString2);
+    Opm::EclipseState eclState(deck);
+    Opm::Schedule schedule(deck, eclState, python);
 
     Opm::GasPvtMultiplexer<Scalar> co2Pvt;
     Opm::WaterPvtMultiplexer<Scalar> brinePvt;
 
-    co2Pvt.initFromState(eclState2, schedule2);
-    brinePvt.initFromState(eclState2, schedule2);
+    BOOST_CHECK_NO_THROW(co2Pvt.initFromState(eclState, schedule));
+    BOOST_CHECK_NO_THROW(brinePvt.initFromState(eclState, schedule));
 
-    typedef Opm::DenseAd::Evaluation<Scalar, 1> FooEval;
+    using Eval = Opm::DenseAd::Evaluation<Scalar,1>;
     ensurePvtApiGas<Scalar>(co2Pvt);
-    ensurePvtApiBrine<FooEval>(brinePvt);
-}
-
-int main()
-{
-    testAll<double>();
-    testAll<float>();
-    return 0;
+    ensurePvtApiBrine<Eval>(brinePvt);
 }
