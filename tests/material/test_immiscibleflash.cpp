@@ -203,6 +203,7 @@ struct Fixture {
 
     static Fixture& getInstance()
     {
+        // we use a pointer to make sure data is in the heap and not the bss
         static std::unique_ptr<Fixture> instance;
         if (!instance) {
             instance = std::make_unique<Fixture>();

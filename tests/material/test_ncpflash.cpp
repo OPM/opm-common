@@ -32,6 +32,9 @@
  */
 #include "config.h"
 
+#define BOOST_TEST_MODULE NcpFlash
+#include <boost/test/unit_test.hpp>
+
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -59,37 +62,30 @@ void checkSame(const FluidState& fsRef, const FluidState& fsFlash)
 
         // check the pressures
         error = 1 - fsRef.pressure(phaseIdx)/fsFlash.pressure(phaseIdx);
-        if (std::abs(error) > tol) {
-            std::ostringstream oss;
-            oss << "pressure error for phase " << phaseIdx << " exceeds tolerance"
-                << " (" << fsFlash.pressure(phaseIdx)  << " flash vs "
-                << fsRef.pressure(phaseIdx) << " reference,"
-                << " error=" << error << ")";
-            throw std::runtime_error(oss.str());
-        }
+        BOOST_CHECK_MESSAGE(std::abs(error) <= tol,
+                            "pressure error phase " << phaseIdx <<
+                            " is incorrect: " << fsFlash.pressure(phaseIdx) <<
+                            " flash vs " << fsRef.pressure(phaseIdx) <<
+                            " reference error=" << error);
 
         // check the saturations
         error = fsRef.saturation(phaseIdx) - fsFlash.saturation(phaseIdx);
-        if (std::abs(error) > tol) {
-            std::ostringstream oss;
-            oss << "saturation error for phase " << phaseIdx << " exceeds tolerance"
-                << " (" << fsFlash.saturation(phaseIdx) << " flash vs "
-                << fsRef.saturation(phaseIdx) << " reference,"
-                << " error=" << error << ")";
-            throw std::runtime_error(oss.str());
-        }
+        BOOST_CHECK_MESSAGE(std::abs(error) <= tol,
+                            "saturation error phase " << phaseIdx <<
+                            " is incorrect: " << fsFlash.saturation(phaseIdx) <<
+                            " flash vs " << fsRef.saturation(phaseIdx) <<
+                            " reference error=" << error);
 
         // check the compositions
         for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx) {
             error = fsRef.moleFraction(phaseIdx, compIdx) - fsFlash.moleFraction(phaseIdx, compIdx);
-            if (std::abs(error) > tol) {
-                std::ostringstream oss;
-                oss << "composition error phase " << phaseIdx << ", component " << compIdx << " exceeds tolerance"
-                    << " (" << fsFlash.moleFraction(phaseIdx, compIdx) << " flash vs "
-                    << fsRef.moleFraction(phaseIdx, compIdx) << " reference,"
-                    << " error=" << error << ")";
-                throw std::runtime_error(oss.str());
-            }
+            BOOST_CHECK_MESSAGE(std::abs(error) <= tol,
+                                "composition error phase " << phaseIdx <<
+                                ", component " <<  compIdx <<
+                                " is incorrect: " <<
+                                fsFlash.moleFraction(phaseIdx, compIdx) <<
+                                " flash vs " << fsRef.moleFraction(phaseIdx, compIdx) <<
+                                " reference error=" << error);
         }
     }
 }
@@ -100,8 +96,8 @@ void checkNcpFlash(const FluidState& fsRef,
 {
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef typename FluidSystem::template ParameterCache<typename FluidState::Scalar> ParameterCache;
+    using ComponentVector = Dune::FieldVector<Scalar, numComponents>;
+    using ParameterCache = typename FluidSystem::template ParameterCache<typename FluidState::Scalar>;
 
     // calculate the total amount of stuff in the reference fluid
     // phase
@@ -114,7 +110,7 @@ void checkNcpFlash(const FluidState& fsRef,
     }
 
     // initialize the fluid state for the flash calculation
-    typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
+    using NcpFlash = Opm::NcpFlash<Scalar, FluidSystem>;
     FluidState fsFlash;
 
     fsFlash.setTemperature(fsRef.temperature(/*phaseIdx=*/0));
@@ -137,8 +133,8 @@ void completeReferenceFluidState(FluidState& fs,
 {
     enum { numPhases = FluidSystem::numPhases };
 
-    typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    using ComputeFromReferencePhase = Opm::ComputeFromReferencePhase<Scalar, FluidSystem>;
+    using PhaseVector = Dune::FieldVector<Scalar, numPhases>;
 
     unsigned otherPhaseIdx = 1 - refPhaseIdx;
 
@@ -162,12 +158,10 @@ void completeReferenceFluidState(FluidState& fs,
                                      /*setEnthalpy=*/false);
 }
 
-
-template <class Scalar>
-inline void testAll()
-{
-    typedef Opm::H2ON2FluidSystem<Scalar> FluidSystem;
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem> CompositionalFluidState;
+template<class Scalar>
+struct Fixture {
+    using FluidSystem = Opm::H2ON2FluidSystem<Scalar>;
+    using CompositionalFluidState = Opm::CompositionalFluidState<Scalar, FluidSystem>;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
@@ -177,39 +171,92 @@ inline void testAll()
     enum { H2OIdx = FluidSystem::H2OIdx };
     enum { N2Idx = FluidSystem::N2Idx };
 
-    typedef Opm::TwoPhaseMaterialTraits<Scalar, liquidPhaseIdx, gasPhaseIdx> MaterialTraits;
-    typedef Opm::RegularizedBrooksCorey<MaterialTraits> EffMaterialLaw;
-    typedef Opm::EffToAbsLaw<EffMaterialLaw> MaterialLaw;
-    typedef typename MaterialLaw::Params MaterialLawParams;
+    using MaterialLawTraits = Opm::TwoPhaseMaterialTraits<Scalar, liquidPhaseIdx, gasPhaseIdx>;
+    using EffMaterialLaw = Opm::RegularizedBrooksCorey<MaterialLawTraits>;
+    using MaterialLaw = Opm::EffToAbsLaw<EffMaterialLaw>;
+    using MaterialLawParams = typename MaterialLaw::Params;
 
-    std::cout << "---- using " << Dune::className<Scalar>() << " as scalar ----\n";
-    Scalar T = 273.15 + 25;
+    Fixture()
+    {
+        Scalar T = 273.15 + 25;
 
-    // initialize the tables of the fluid system
-    Scalar Tmin = T - 1.0;
-    Scalar Tmax = T + 1.0;
-    unsigned nT = 3;
+        // initialize the tables of the fluid system
+        Scalar Tmin = T - 1.0;
+        Scalar Tmax = T + 1.0;
+        unsigned nT = 3;
 
-    Scalar pmin = 0.0;
-    Scalar pmax = 1.25 * 2e6;
-    unsigned np = 100;
+        Scalar pmin = 0.0;
+        Scalar pmax = 1.25 * 2e6;
+        unsigned np = 100;
 
-    FluidSystem::init(Tmin, Tmax, nT, pmin, pmax, np);
+        FluidSystem::init(Tmin, Tmax, nT, pmin, pmax, np);
 
-    // set the parameters for the capillary pressure law
-    MaterialLawParams matParams;
-    matParams.setResidualSaturation(MaterialLaw::wettingPhaseIdx, 0.0);
-    matParams.setResidualSaturation(MaterialLaw::nonWettingPhaseIdx, 0.0);
-    matParams.setEntryPressure(0);
-    matParams.setLambda(2.0);
-    matParams.finalize();
+        // set the parameters for the capillary pressure law
+        matParams.setResidualSaturation(MaterialLaw::wettingPhaseIdx, 0.0);
+        matParams.setResidualSaturation(MaterialLaw::nonWettingPhaseIdx, 0.0);
+        matParams.setEntryPressure(0);
+        matParams.setLambda(2.0);
+        matParams.finalize();
+
+        // create an fluid state which is consistent
+
+        // set the fluid temperatures
+        fsRef.setTemperature(T);
+    }
+
+    static Fixture& getInstance()
+    {
+        // we use a pointer to make sure data is in the heap and not the bss
+        static std::unique_ptr<Fixture> instance;
+        if (!instance) {
+            instance = std::make_unique<Fixture>();
+        }
+
+        return *instance;
+    }
 
     CompositionalFluidState fsRef;
+    MaterialLawParams matParams;
+};
 
-    // create an fluid state which is consistent
+using Types = std::tuple<float,double>;
 
-    // set the fluid temperatures
-    fsRef.setTemperature(T);
+BOOST_AUTO_TEST_CASE_TEMPLATE(SinglePhaseGas, Scalar, Types)
+{
+    auto& fixture = Fixture<Scalar>::getInstance();
+    using FluidSystem = typename Fixture<Scalar>::FluidSystem;
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+
+    // only gas
+    ////////////////
+    std::cout << "testing single-phase gas\n";
+
+    // set gas saturation
+    fixture.fsRef.setSaturation(fixture.gasPhaseIdx, 1.0);
+
+    // set pressure of the gas phase
+    fixture.fsRef.setPressure(fixture.gasPhaseIdx, 1e6);
+
+    // set the gas composition to 99.9% nitrogen and 0.1% water
+    fixture.fsRef.setMoleFraction(fixture.gasPhaseIdx,
+                                  fixture.N2Idx, 0.999);
+    fixture.fsRef.setMoleFraction(fixture.gasPhaseIdx,
+                                  fixture.H2OIdx, 0.001);
+
+    // "complete" the fluid state
+    completeReferenceFluidState<Scalar, FluidSystem, MaterialLaw>(fixture.fsRef,
+                                                                  fixture.matParams,
+                                                                  fixture.gasPhaseIdx);
+
+    // check the flash calculation
+    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fixture.fsRef, fixture.matParams);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(SinglePhaseLiquid, Scalar, Types)
+{
+    auto& fixture = Fixture<Scalar>::getInstance();
+    using FluidSystem = typename Fixture<Scalar>::FluidSystem;
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
 
     ////////////////
     // only liquid
@@ -217,40 +264,32 @@ inline void testAll()
     std::cout << "testing single-phase liquid\n";
 
     // set liquid saturation
-    fsRef.setSaturation(liquidPhaseIdx, 1.0);
+    fixture.fsRef.setSaturation(fixture.liquidPhaseIdx, 1.0);
 
     // set pressure of the liquid phase
-    fsRef.setPressure(liquidPhaseIdx, 2e5);
+    fixture.fsRef.setPressure(fixture.liquidPhaseIdx, 2e5);
 
     // set the liquid composition to pure water
-    fsRef.setMoleFraction(liquidPhaseIdx, N2Idx, 0.0);
-    fsRef.setMoleFraction(liquidPhaseIdx, H2OIdx, 1.0 - fsRef.moleFraction(liquidPhaseIdx, N2Idx));
+    fixture.fsRef.setMoleFraction(fixture.liquidPhaseIdx,
+                                  fixture.N2Idx, 0.0);
+    fixture.fsRef.setMoleFraction(fixture.liquidPhaseIdx,
+                                  fixture.H2OIdx,
+                                  1.0 - fixture.fsRef.moleFraction(fixture.liquidPhaseIdx, fixture.N2Idx));
 
     // "complete" the fluid state
-    completeReferenceFluidState<Scalar, FluidSystem, MaterialLaw>(fsRef, matParams, liquidPhaseIdx);
+    completeReferenceFluidState<Scalar, FluidSystem, MaterialLaw>(fixture.fsRef,
+                                                                  fixture.matParams,
+                                                                  fixture.liquidPhaseIdx);
 
     // check the flash calculation
-    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fsRef, matParams);
+    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fixture.fsRef, fixture.matParams);
+}
 
-    ////////////////
-    // only gas
-    ////////////////
-    std::cout << "testing single-phase gas\n";
-    // set gas saturation
-    fsRef.setSaturation(gasPhaseIdx, 1.0);
-
-    // set pressure of the gas phase
-    fsRef.setPressure(gasPhaseIdx, 1e6);
-
-    // set the gas composition to 99.9% nitrogen and 0.1% water
-    fsRef.setMoleFraction(gasPhaseIdx, N2Idx, 0.999);
-    fsRef.setMoleFraction(gasPhaseIdx, H2OIdx, 0.001);
-
-    // "complete" the fluid state
-    completeReferenceFluidState<Scalar, FluidSystem, MaterialLaw>(fsRef, matParams, gasPhaseIdx);
-
-    // check the flash calculation
-    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fsRef, matParams);
+BOOST_AUTO_TEST_CASE_TEMPLATE(TwoPhase, Scalar, Types)
+{
+    auto& fixture = Fixture<Scalar>::getInstance();
+    using FluidSystem = typename Fixture<Scalar>::FluidSystem;
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
 
     ////////////////
     // both phases
@@ -258,21 +297,29 @@ inline void testAll()
     std::cout << "testing two-phase\n";
 
     // set saturations
-    fsRef.setSaturation(liquidPhaseIdx, 0.5);
-    fsRef.setSaturation(gasPhaseIdx, 0.5);
+    fixture.fsRef.setSaturation(fixture.liquidPhaseIdx, 0.5);
+    fixture.fsRef.setSaturation(fixture.gasPhaseIdx, 0.5);
 
     // set pressures
-    fsRef.setPressure(liquidPhaseIdx, 1e6);
-    fsRef.setPressure(gasPhaseIdx, 1e6);
+    fixture.fsRef.setPressure(fixture.liquidPhaseIdx, 1e6);
+    fixture.fsRef.setPressure(fixture.gasPhaseIdx, 1e6);
 
     typename FluidSystem::template ParameterCache<Scalar> paramCache;
-    typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
-    MiscibleMultiPhaseComposition::solve(fsRef, paramCache,
+    using MiscibleMultiPhaseComposition = Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem>;
+    MiscibleMultiPhaseComposition::solve(fixture.fsRef, paramCache,
                                          /*setViscosity=*/false,
                                          /*setEnthalpy=*/false);
 
     // check the flash calculation
-    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fsRef, matParams);
+    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fixture.fsRef, fixture.matParams);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(TwoPhaseCapillaryPressure, Scalar, Types)
+{
+    auto& fixture = Fixture<Scalar>::getInstance();
+    using FluidSystem = typename Fixture<Scalar>::FluidSystem;
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawParams = typename Fixture<Scalar>::MaterialLawParams;
 
     ////////////////
     // with capillary pressure
@@ -285,34 +332,26 @@ inline void testAll()
     matParams2.finalize();
 
     // set gas saturation
-    fsRef.setSaturation(gasPhaseIdx, 0.5);
-    fsRef.setSaturation(liquidPhaseIdx, 0.5);
+    fixture.fsRef.setSaturation(fixture.gasPhaseIdx, 0.5);
+    fixture.fsRef.setSaturation(fixture.liquidPhaseIdx, 0.5);
 
     // set pressure of the liquid phase
-    fsRef.setPressure(liquidPhaseIdx, 1e6);
+    fixture.fsRef.setPressure(fixture.liquidPhaseIdx, 1e6);
 
     // calulate the capillary pressure
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    using PhaseVector = Dune::FieldVector<Scalar, Fixture<Scalar>::numPhases>;
     PhaseVector pC;
-    MaterialLaw::capillaryPressures(pC, matParams2, fsRef);
-    fsRef.setPressure(gasPhaseIdx,
-                      fsRef.pressure(liquidPhaseIdx)
-                      + (pC[gasPhaseIdx] - pC[liquidPhaseIdx]));
+    MaterialLaw::capillaryPressures(pC, matParams2, fixture.fsRef);
+    fixture.fsRef.setPressure(fixture.gasPhaseIdx,
+                              fixture.fsRef.pressure(fixture.liquidPhaseIdx) +
+                              (pC[fixture.gasPhaseIdx] - pC[fixture.liquidPhaseIdx]));
 
-    typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
-    MiscibleMultiPhaseComposition::solve(fsRef, paramCache,
+    using MiscibleMultiPhaseComposition = Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem>;
+    typename FluidSystem::template ParameterCache<Scalar> paramCache;
+    MiscibleMultiPhaseComposition::solve(fixture.fsRef, paramCache,
                                          /*setViscosity=*/false,
                                          /*setEnthalpy=*/false);
 
-
     // check the flash calculation
-    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fsRef, matParams2);
-}
-
-int main()
-{
-    testAll<double>();
-    testAll<float>();
-
-    return 0;
+    checkNcpFlash<Scalar, FluidSystem, MaterialLaw>(fixture.fsRef, matParams2);
 }
