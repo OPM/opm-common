@@ -268,7 +268,10 @@ void checkFluidState(const BaseFluidState& fs)
 template <class Scalar, class FluidSystem, class RhsEval, class LhsEval>
 void checkFluidSystem()
 {
-    std::cout << "Testing fluid system '" << Opm::demangle(typeid(FluidSystem).name()) << "'\n";
+    std::cout << "Testing fluid system '"
+              << Opm::demangle(typeid(FluidSystem).name())
+              << ", RhsEval = " << Opm::demangle(typeid(RhsEval).name())
+              << ", LhsEval = " << Opm::demangle(typeid(LhsEval).name()) << "'\n";
 
     // make sure the fluid system provides the number of phases and
     // the number of components
@@ -375,8 +378,6 @@ void checkFluidSystem()
         val = FluidSystem::molarMass(compIdx);
         std::string name = FluidSystem::componentName(compIdx);
     }
-
-    std::cout << "----------------------------------\n";
 }
 
 #endif
