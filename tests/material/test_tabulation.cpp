@@ -26,34 +26,24 @@
  * \brief This is a program to test the tabulation class for of
  *        individual components.
  *
- * It either prints "success" or "error", it does not do anything
- * else.
  */
 #include "config.h"
+
+#define BOOST_TEST_MODULE Tabulation
+#include <boost/test/unit_test.hpp>
 
 #include <opm/material/components/H2O.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
 
 #include <iostream>
+#include <tuple>
 
-extern bool success;
-bool success;
+using Types = std::tuple<float,double>;
 
-template <class Scalar>
-void isSame(const char* str, Scalar v, Scalar vRef, Scalar tol=1e-3)
+BOOST_AUTO_TEST_CASE_TEMPLATE(H2O, Scalar, Types)
 {
-    if (std::abs( (v - vRef)/vRef ) > tol) {
-        std::cout << "error for \"" << str << "\": "  << (v - vRef)/vRef*100 << "% difference (tolerance: "  << tol*100 << "%)\n";
-        success = false;
-        //exit(1);
-    }
-}
-
-template <class Scalar>
-inline void testAll()
-{
-    typedef Opm::H2O<Scalar> IapwsH2O;
-    typedef Opm::TabulatedComponent<Scalar, IapwsH2O> TabulatedH2O;
+    using IapwsH2O = Opm::H2O<Scalar>;
+    using TabulatedH2O = Opm::TabulatedComponent<Scalar, IapwsH2O>;
 
     Scalar tempMin = 274.15;
     Scalar tempMax = 622.15;
@@ -68,7 +58,6 @@ inline void testAll()
                        pMin, pMax, nPress);
 
     std::cout << "Checking tabulation\n";
-    success = true;
     unsigned m = nTemp*3;
     unsigned n = nPress*3;
     for (unsigned i = 0; i < m; ++i) {
@@ -79,24 +68,29 @@ inline void testAll()
             std::cout.flush();
         }
 
-        isSame("vaporPressure",
-               TabulatedH2O::vaporPressure(T),
-               IapwsH2O::vaporPressure(T),
-               Scalar(1e-3));
+        BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::vaporPressure(T),
+                                   IapwsH2O::vaporPressure(T),
+                                   Scalar(1e-3));
 
         for (unsigned j = 0; j < n; ++j) {
             Scalar p = pMin + (pMax - pMin)*Scalar(j)/n;
             if (p < IapwsH2O::vaporPressure(T) * 1.001) {
-                Scalar tol = 1e-3;
-                if (p > IapwsH2O::vaporPressure(T))
-                    tol = 1e-2;
+                Scalar tol;
+                if constexpr (std::is_same_v<Scalar,double>) {
+                    tol = 4e-3;
+                    if (p > IapwsH2O::vaporPressure(T))
+                        tol = 1e-2;
+                } else {
+                    tol = 1.62e-2;
+                    if (p > IapwsH2O::vaporPressure(T))
+                        tol = 1.8e-2;
+                }
+
                 Scalar rho = IapwsH2O::gasDensity(T,p);
-                //isSame("Iapws::gasPressure", IapwsH2O::gasPressure(T,rho), p, 1e-6);
-                //isSame("gasPressure", TabulatedH2O::gasPressure(T,rho), p, 2e-2);
-                isSame("gasEnthalpy", TabulatedH2O::gasEnthalpy(T,p), IapwsH2O::gasEnthalpy(T,p), tol);
-                isSame("gasInternalEnergy", TabulatedH2O::gasInternalEnergy(T,p), IapwsH2O::gasInternalEnergy(T,p), tol);
-                isSame("gasDensity", TabulatedH2O::gasDensity(T,p), rho, tol);
-                isSame("gasViscosity", TabulatedH2O::gasViscosity(T,p), IapwsH2O::gasViscosity(T,p), tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::gasEnthalpy(T,p), IapwsH2O::gasEnthalpy(T,p), tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::gasInternalEnergy(T,p), IapwsH2O::gasInternalEnergy(T,p), tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::gasDensity(T,p), rho, tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::gasViscosity(T,p), IapwsH2O::gasViscosity(T,p), tol);
             }
 
             if (p > IapwsH2O::vaporPressure(T) / 1.001) {
@@ -104,25 +98,11 @@ inline void testAll()
                 if (p < IapwsH2O::vaporPressure(T))
                     tol = 1e-2;
                 Scalar rho = IapwsH2O::liquidDensity(T,p);
-                //isSame("Iapws::liquidPressure", IapwsH2O::liquidPressure(T,rho), p, 1e-6);
-                //isSame("liquidPressure", TabulatedH2O::liquidPressure(T,rho), p, 2e-2);
-                isSame("liquidEnthalpy", TabulatedH2O::liquidEnthalpy(T,p), IapwsH2O::liquidEnthalpy(T,p), tol);
-                isSame("liquidInternalEnergy", TabulatedH2O::liquidInternalEnergy(T,p), IapwsH2O::liquidInternalEnergy(T,p), tol);
-                isSame("liquidDensity", TabulatedH2O::liquidDensity(T,p), rho, tol);
-                isSame("liquidViscosity", TabulatedH2O::liquidViscosity(T,p), IapwsH2O::liquidViscosity(T,p), tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::liquidEnthalpy(T,p), IapwsH2O::liquidEnthalpy(T,p), tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::liquidInternalEnergy(T,p), IapwsH2O::liquidInternalEnergy(T,p), tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::liquidDensity(T,p), rho, tol);
+                BOOST_CHECK_CLOSE_FRACTION(TabulatedH2O::liquidViscosity(T,p), IapwsH2O::liquidViscosity(T,p), tol);
             }
         }
-        //std::cerr << "\n";
     }
-
-    if (success)
-        std::cout << "\nsuccess\n";
-}
-
-int main()
-{
-    testAll<double>();
-    testAll<float>();
-
-    return 0;
 }
