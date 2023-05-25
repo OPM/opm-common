@@ -2670,11 +2670,6 @@ namespace Evaluator {
                              static_cast<int>(sim_step), input.reg)
                 : std::vector<const Opm::Well*>{};
 
-            if (get_wells && wells.empty())
-                // Parameter depends on well information, but no active
-                // wells apply at this sim_step.  Nothing to do.
-                return;
-
             EfficiencyFactor efac{};
             efac.setFactors(this->node_, input.sched, wells, sim_step);
 
