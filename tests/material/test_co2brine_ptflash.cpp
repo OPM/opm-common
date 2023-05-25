@@ -30,6 +30,10 @@
  */
 #include "config.h"
 
+#define BOOST_TEST_MODULE Co2BrinePtFlash
+#include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/fluidsystems/Co2BrineFluidSystem.hh>
 
@@ -46,35 +50,14 @@ using FluidSystem = Opm::Co2BrineFluidSystem<Scalar>;
 
 constexpr auto numComponents = FluidSystem::numComponents;
 using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
-typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
-typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
+using ComponentVector = Dune::FieldVector<Evaluation, numComponents>;
+using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 
-bool result_okay_twophase(const FluidState& fluid_state);
-bool result_okay_singlephase(const FluidState& fluid_state, const ComponentVector& z);
+std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
 
-bool eval_almost_equal(const Evaluation& val, const Evaluation& ref) {
-    auto almost_equal = [](const double x, const double y, const double rel_tol = 2.e-3, const double abs_tol = 1.e-3)->bool {
-        return std::fabs(x - y) <= rel_tol * std::fabs(x + y) * 2 || std::fabs(x - y) < abs_tol;
-    };
-    bool equal_okay = true;
-    if (!almost_equal(val.value(), ref.value())) {
-        equal_okay = false;
-        std::cout << " the value are different with " << val.value() << " against the reference " << ref.value() << std::endl;
-    }
-
-    for (int i = 0; i < val.size(); ++i) {
-        if (!almost_equal(val.derivative(i), ref.derivative(i))) {
-            equal_okay = false;
-            std::cout << " the " << i << "th derivative is different with value " << val.derivative(i) << " against the reference " << ref.derivative(i) << std::endl;
-        }
-    }
-
-    return equal_okay;
-};
-
-bool testPTFlash(const std::string& flash_twophase_method)
+BOOST_DATA_TEST_CASE(PtFlash, test_methods)
 {
-// Initial: the primary variables are, pressure, molar fractions of the first and second component
+    // Initial: the primary variables are, pressure, molar fractions of the first and second component
     Evaluation p_init = Evaluation::createVariable(10e5, 0); // 10 bar
     ComponentVector comp;
     comp[0] = Evaluation::createVariable(0.5, 1);
@@ -85,7 +68,6 @@ bool testPTFlash(const std::string& flash_twophase_method)
     // We assume that currently everything is in the oil phase
     sat[0] = 1.0; sat[1] = 1.0-sat[0];
     Scalar temp = 300.0;
-
 
     // FluidState will be the input for the flash calculation
     FluidState fluid_state;
@@ -147,14 +129,8 @@ bool testPTFlash(const std::string& flash_twophase_method)
 
     const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, flash_twophase_method, flash_tolerance, flash_verbosity);
+    Flash::solve(fluid_state, z, spatialIdx, sample, flash_tolerance, flash_verbosity);
 
-    return result_okay_twophase(fluid_state);
-}
-
-bool result_okay_twophase(const FluidState& fluid_state)
-{
-    bool res_okay = true;
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
     for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
@@ -184,29 +160,18 @@ bool result_okay_twophase(const FluidState& fluid_state)
     ref_y[1].setDerivative(0, -3.0239852847431828e-9);
     ref_y[1].setDerivative(1, -8.673617379884035e-19);
 
-
     for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-        if (!eval_almost_equal(x[comp_idx], ref_x[comp_idx])) {
-            res_okay = false;
-            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
-        }
-        if (!eval_almost_equal(y[comp_idx], ref_y[comp_idx])) {
-            res_okay = false;
-            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
-        }
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(x[comp_idx], ref_x[comp_idx], 2e-3),
+                            "component " + std::to_string(comp_idx) + " of x does not match");
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(y[comp_idx], ref_y[comp_idx], 2e-3),
+                            "component " + std::to_string(comp_idx) + " of y does not match");
     }
 
-    if (!eval_almost_equal(L, ref_L)) {
-        res_okay = false;
-        std::cout << " the L does not match" << std::endl;
-    }
-
-    // TODO: we should also check densities, viscosities, saturations and so on
-
-    return res_okay;
+    BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(L, ref_L, 2e-3),
+                        "L does not match");
 }
 
-bool testPTFlashSingle(const std::string& flash_twophase_method)
+BOOST_DATA_TEST_CASE(PtFlashSingle, test_methods)
 {
     // setting up a system that we know activates the calculations for a single-phase system
     // Initial: the primary variables are, pressure, molar fractions of the first and second component
@@ -278,14 +243,7 @@ bool testPTFlashSingle(const std::string& flash_twophase_method)
 
     const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, flash_twophase_method, flash_tolerance, flash_verbosity);
-
-    return result_okay_singlephase(fluid_state, z);
-}
-
-bool result_okay_singlephase(const FluidState& fluid_state, const ComponentVector& z)
-{
-    bool res_okay = true;
+    Flash::solve(fluid_state, z, spatialIdx, sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -294,63 +252,20 @@ bool result_okay_singlephase(const FluidState& fluid_state, const ComponentVecto
         y[comp_idx] = fluid_state.moleFraction(FluidSystem::gasPhaseIdx, comp_idx);
     }
 
-
     Evaluation ref_L = 1.;
 
     ComponentVector ref_x = z;
     ComponentVector ref_y = z;
 
     for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-        if (!eval_almost_equal(x[comp_idx], ref_x[comp_idx])) {
-            res_okay = false;
-            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
-        }
-        if (!eval_almost_equal(y[comp_idx], ref_y[comp_idx])) {
-            res_okay = false;
-            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
-        }
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(x[comp_idx], ref_x[comp_idx], 2e-3),
+                            "component " + std::to_string(comp_idx) + " of x does not match");
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(y[comp_idx], ref_y[comp_idx], 2e-3),
+                            "component " + std::to_string(comp_idx) + " of y does not match");
     }
 
-    if (!eval_almost_equal(L, ref_L)) {
-        res_okay = false;
-        std::cout << " the L does not match" << std::endl;
-    }
+    BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(L, ref_L, 2e-3),
+                        "L does not match");
 
     // TODO: we should also check densities, viscosities, saturations and so on
-
-    return res_okay;
-}
-
-int main()
-{
-    bool test_passed_two = true;
-    bool test_passed_single = true;
-
-    std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
-
-    for (const auto& method : test_methods) {
-        if (!testPTFlash(method) ) {
-            std::cout << method << " solution for PTFlash two-phase case failed " << std::endl;
-            test_passed_two = false;
-        } else {
-            std::cout << method << " solution for PTFlash two-phase case passed " << std::endl;
-        }
-
-        if (!testPTFlashSingle(method) ) {
-            std::cout << method << " solution for PTFlash single-phase failed " << std::endl;
-            test_passed_single = false;
-        } else {
-            std::cout << method << " solution for PTFlash single-phase passed " << std::endl;
-        }
-    }
-
-    if (!test_passed_two) {
-        throw std::runtime_error(" PTFlash tests two-phase case failed");
-    }
-
-    if (!test_passed_single) {
-        throw std::runtime_error(" PTFlash tests single-phase case failed");
-    }
-
-    return 0;
 }
