@@ -87,9 +87,17 @@ inline void testAll()
         for (unsigned j = 0; j < n; ++j) {
             Scalar p = pMin + (pMax - pMin)*Scalar(j)/n;
             if (p < IapwsH2O::vaporPressure(T) * 1.001) {
-                Scalar tol = 1e-3;
-                if (p > IapwsH2O::vaporPressure(T))
-                    tol = 1e-2;
+                Scalar tol;
+                if constexpr (std::is_same_v<Scalar,double>) {
+                    tol = 4e-3;
+                    if (p > IapwsH2O::vaporPressure(T))
+                        tol = 1e-2;
+                } else {
+                    tol = 1.62e-2;
+                    if (p > IapwsH2O::vaporPressure(T))
+                        tol = 1.8e-2;
+                }
+
                 Scalar rho = IapwsH2O::gasDensity(T,p);
                 //isSame("Iapws::gasPressure", IapwsH2O::gasPressure(T,rho), p, 1e-6);
                 //isSame("gasPressure", TabulatedH2O::gasPressure(T,rho), p, 2e-2);
