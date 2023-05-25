@@ -33,6 +33,9 @@
 #error "The test for the black oil PVT classes requires eclipse input support in opm-common"
 #endif
 
+#define BOOST_TEST_MODULE EclBlackOilPvt
+#include <boost/test/unit_test.hpp>
+
 #include <opm/material/fluidsystems/blackoilpvt/LiveOilPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DeadOilPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.hpp>
@@ -56,7 +59,7 @@
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
 // real world it does not make much sense to specify a fluid phase using more than a
 // single keyword, but for a unit test, this saves a lot of boiler-plate code.
-static const char* deckString1 =
+static constexpr const char* deckString1 =
     "RUNSPEC\n"
     "\n"
     "DIMENS\n"
@@ -226,28 +229,43 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
     }
 }
 
-template <class Scalar>
-inline void testAll()
+struct Fixture {
+    Fixture()
+        : python(std::make_shared<Opm::Python>())
+        , deck(Opm::Parser().parseString(deckString1))
+        , eclState(deck)
+        , schedule(deck, eclState, python)
+    {
+    }
+
+    std::shared_ptr<Opm::Python> python;
+    Opm::Deck deck;
+    Opm::EclipseState eclState;
+    Opm::Schedule schedule;
+};
+
+BOOST_FIXTURE_TEST_SUITE(Generic, Fixture)
+
+using Types = std::tuple<float,double>;
+BOOST_AUTO_TEST_CASE_TEMPLATE(ApiConformance, Scalar, Types)
 {
-    static const Scalar tolerance = std::numeric_limits<Scalar>::epsilon()*1e3;
+    Opm::GasPvtMultiplexer<Scalar> gasPvt;
+    Opm::OilPvtMultiplexer<Scalar> oilPvt;
+    Opm::WaterPvtMultiplexer<Scalar> waterPvt;
 
-    Opm::Parser parser;
-    auto python = std::make_shared<Opm::Python>();
+    gasPvt.initFromState(eclState, schedule);
+    oilPvt.initFromState(eclState, schedule);
+    waterPvt.initFromState(eclState, schedule);
 
-    auto deck = parser.parseString(deckString1);
-    Opm::EclipseState eclState(deck);
-    Opm::Schedule schedule(deck, eclState, python);
+    using FooEval = Opm::DenseAd::Evaluation<Scalar, 1>;
+    ensurePvtApi<Scalar>(oilPvt, gasPvt, waterPvt);
+    ensurePvtApi<FooEval>(oilPvt, gasPvt, waterPvt);
+}
 
-    const auto& pvtwKeyword = deck["PVTW"].back();
-    size_t numPvtRegions = pvtwKeyword.size();
+BOOST_AUTO_TEST_CASE_TEMPLATE(ConstantCompressibilityWater, Scalar, Types)
+{
+    constexpr Scalar tolerance = std::numeric_limits<Scalar>::epsilon()*1e3;
 
-    if (numPvtRegions != 2)
-        throw std::logic_error("The number of PVT regions of the test deck must be 2. (is "
-                               +std::to_string(numPvtRegions)+")");
-
-    //////////
-    // constant compressibility water
-    //////////
     Opm::ConstantCompressibilityWaterPvt<Scalar> constCompWaterPvt;
     constCompWaterPvt.initFromState(eclState, schedule);
 
@@ -261,9 +279,9 @@ inline void testAll()
                                       /*pressure=*/1e5,
                                       /*disgas_in_water*/0.0,
                                       /*saltconcentration=*/0.0);
-    if (std::abs(tmp - refTmp)  > tolerance)
-        throw std::logic_error("The reference water viscosity at region 0 is supposed to be "+std::to_string(refTmp)
-                               +". (is "+std::to_string(tmp)+")");
+    BOOST_CHECK_MESSAGE(std::abs(tmp - refTmp) <= tolerance,
+                        "The reference water viscosity at region 0 is supposed to be " <<
+                        refTmp << ". (is " << tmp << ")");
 
     refTmp = 1.2e-3;
     tmp = constCompWaterPvt.viscosity(/*regionIdx=*/1,
@@ -271,33 +289,9 @@ inline void testAll()
                                       /*pressure=*/2e5,
                                       /*disgas_in_water*/0.0,
                                       /*saltconcentration=*/0.0);
-    if (std::abs(tmp - refTmp)  > tolerance)
-        throw std::logic_error("The reference water viscosity at region 1 is supposed to be "+std::to_string(refTmp)
-                               +". (is "+std::to_string(tmp)+")");
-
-    //////////
-    // the gas and oil PVT classes.
-    //
-    // TODO: check the results
-    //////////
-    Opm::GasPvtMultiplexer<Scalar> gasPvt;
-    Opm::OilPvtMultiplexer<Scalar> oilPvt;
-    Opm::WaterPvtMultiplexer<Scalar> waterPvt;
-
-    gasPvt.initFromState(eclState, schedule);
-    oilPvt.initFromState(eclState, schedule);
-    waterPvt.initFromState(eclState, schedule);
-
-    typedef Opm::DenseAd::Evaluation<Scalar, 1> FooEval;
-    ensurePvtApi<Scalar>(oilPvt, gasPvt, waterPvt);
-    ensurePvtApi<FooEval>(oilPvt, gasPvt, waterPvt);
+    BOOST_CHECK_MESSAGE(std::abs(tmp - refTmp) <= tolerance,
+                        "The reference water viscosity at region 1 is supposed to be " <<
+                        refTmp << ". (is " << tmp << ")");
 }
 
-
-int main()
-{
-    testAll<double>();
-    testAll<float>();
-
-    return 0;
-}
+BOOST_AUTO_TEST_SUITE_END()
