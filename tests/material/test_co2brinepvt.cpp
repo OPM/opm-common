@@ -29,6 +29,9 @@
  */
 #include "config.h"
 
+#define BOOST_TEST_MODULE Co2BrinePvt
+#include <boost/test/unit_test.hpp>
+
 #if !HAVE_ECL_INPUT
 #error "The test for the co2 brine PVT classes requires eclipse input support in opm-common"
 #endif
@@ -49,10 +52,12 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <iostream>
+
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
 // real world it does not make much sense to specify a fluid phase using more than a
 // single keyword, but for a unit test, this saves a lot of boiler-plate code.
-static const char* deckString1 =
+constexpr const char* deckString1 =
     "RUNSPEC\n"
     "\n"
     "DIMENS\n"
@@ -87,7 +92,7 @@ static const char* deckString1 =
     "\n";
 
 
-static const char* deckString2 =
+constexpr const char* deckString2 =
     "RUNSPEC\n"
     "\n"
     "DIMENS\n"
@@ -130,24 +135,20 @@ void ensurePvtApiBrine(const BrinePvt& brinePvt)
         Evaluation pressure = 1e5;
         Evaluation saltconcentration = 0.0;
         Evaluation rs = 0.0;
-        Evaluation tmp;
 
         ////
         // Water PVT API
         /////
-        tmp = brinePvt.viscosity(/*regionIdx=*/0,
-                                 temperature,
-                                 pressure,
-                                 rs,
-                                 saltconcentration);
-        tmp = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure,
-                                                    rs,
-                                                    saltconcentration);
-
-        // prevent GCC from producing a "variable assigned but unused" warning
-        tmp = 2.0*tmp;
+        std::cout << brinePvt.viscosity(/*regionIdx=*/0,
+                                        temperature,
+                                        pressure,
+                                        rs,
+                                        saltconcentration);
+        std::cout << brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure,
+                                                           rs,
+                                                           saltconcentration);
     }
 }
 
@@ -162,41 +163,37 @@ void ensurePvtApiGas(const Co2Pvt& co2Pvt)
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        Evaluation tmp;
 
         /////
         // co2 PVT API
         /////
-        tmp = co2Pvt.viscosity(/*regionIdx=*/0,
-                               temperature,
-                               pressure,
-                               Rv,
-                               Rvw);
-        tmp = co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                  temperature,
-                                                  pressure,
-                                                  Rv,
-                                                  Rvw);
-        tmp = co2Pvt.saturatedViscosity(/*regionIdx=*/0,
-                                        temperature,
-                                        pressure);
-        tmp = co2Pvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+        std::cout << co2Pvt.viscosity(/*regionIdx=*/0,
+                                      temperature,
+                                      pressure,
+                                      Rv,
+                                      Rvw);
+        std::cout << co2Pvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                         temperature,
+                                                         pressure,
+                                                         Rv,
+                                                         Rvw);
+        std::cout << co2Pvt.saturatedViscosity(/*regionIdx=*/0,
+                                               temperature,
+                                               pressure);
+        std::cout << co2Pvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                  temperature,
+                                                                  pressure);
+        std::cout << co2Pvt.saturationPressure(/*regionIdx=*/0,
+                                               temperature,
+                                               Rv);
+        std::cout << co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
                                                            temperature,
                                                            pressure);
-        tmp = co2Pvt.saturationPressure(/*regionIdx=*/0,
-                                        temperature,
-                                        Rv);
-        tmp = co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure);
-        tmp = co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure,
-                                                    So,
-                                                    maxSo);
-
-        // prevent GCC from producing a "variable assigned but unused" warning
-        tmp = 2.0*tmp;
+        std::cout << co2Pvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure,
+                                                           So,
+                                                           maxSo);
     }
 }
 
@@ -210,77 +207,76 @@ void ensurePvtApiBrineOil(const BrinePvt& brinePvt)
         Evaluation Rs = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        Evaluation tmp;
 
         /////
         // brine PVT API
         /////
-        tmp = brinePvt.viscosity(/*regionIdx=*/0,
-                               temperature,
-                               pressure,
-                               Rs);
-        tmp = brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                  temperature,
-                                                  pressure,
-                                                  Rs);
-        tmp = brinePvt.saturatedViscosity(/*regionIdx=*/0,
+        std::cout << brinePvt.viscosity(/*regionIdx=*/0,
                                         temperature,
-                                        pressure);
-        tmp = brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                           temperature,
-                                                           pressure);
-        tmp = brinePvt.saturationPressure(/*regionIdx=*/0,
-                                        temperature,
+                                        pressure,
                                         Rs);
-        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure);
-        tmp = brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure,
-                                                   So,
-                                                   maxSo);
+        std::cout << brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure,
+                                                           Rs);
+        std::cout << brinePvt.saturatedViscosity(/*regionIdx=*/0,
+                                                 temperature,
+                                                 pressure);
+        std::cout << brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                    temperature,
+                                                                    pressure);
+        std::cout << brinePvt.saturationPressure(/*regionIdx=*/0,
+                                                 temperature,
+                                                 Rs);
+        std::cout << brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
+                                                            temperature,
+                                                            pressure);
+        std::cout << brinePvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
+                                                            temperature,
+                                                            pressure,
+                                                            So,
+                                                            maxSo);
     }
 }
 
-template <class Scalar>
-inline void testAll()
+using Types = std::tuple<float,double>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(Oil, Scalar, Types)
 {
     Opm::Parser parser;
     auto python = std::make_shared<Opm::Python>();
 
-    auto deck1 = parser.parseString(deckString1);
-    Opm::EclipseState eclState1(deck1);
-    Opm::Schedule schedule1(deck1, eclState1, python);
+    auto deck = parser.parseString(deckString1);
+    Opm::EclipseState eclState(deck);
+    Opm::Schedule schedule(deck, eclState, python);
 
     Opm::GasPvtMultiplexer<Scalar> co2Pvt_oil;
     Opm::OilPvtMultiplexer<Scalar> brinePvt_oil;
 
-    co2Pvt_oil.initFromState(eclState1, schedule1);
-    brinePvt_oil.initFromState(eclState1, schedule1);
+    BOOST_CHECK_NO_THROW(co2Pvt_oil.initFromState(eclState, schedule));
+    BOOST_CHECK_NO_THROW(brinePvt_oil.initFromState(eclState, schedule));
 
-    typedef Opm::DenseAd::Evaluation<Scalar, 1> FooEval;
+    using Eval = Opm::DenseAd::Evaluation<Scalar,1>;
     ensurePvtApiGas<Scalar>(co2Pvt_oil);
-    ensurePvtApiBrineOil<FooEval>(brinePvt_oil);
+    ensurePvtApiBrineOil<Eval>(brinePvt_oil);
+}
 
-    auto deck2 = parser.parseString(deckString2);
-    Opm::EclipseState eclState2(deck2);
-    Opm::Schedule schedule2(deck2, eclState2, python);
+BOOST_AUTO_TEST_CASE_TEMPLATE(Water, Scalar, Types)
+{
+    Opm::Parser parser;
+    auto python = std::make_shared<Opm::Python>();
+
+    auto deck = parser.parseString(deckString2);
+    Opm::EclipseState eclState(deck);
+    Opm::Schedule schedule(deck, eclState, python);
 
     Opm::GasPvtMultiplexer<Scalar> co2Pvt;
     Opm::WaterPvtMultiplexer<Scalar> brinePvt;
 
-    co2Pvt.initFromState(eclState2, schedule2);
-    brinePvt.initFromState(eclState2, schedule2);
+    BOOST_CHECK_NO_THROW(co2Pvt.initFromState(eclState, schedule));
+    BOOST_CHECK_NO_THROW(brinePvt.initFromState(eclState, schedule));
 
-    typedef Opm::DenseAd::Evaluation<Scalar, 1> FooEval;
+    using Eval = Opm::DenseAd::Evaluation<Scalar,1>;
     ensurePvtApiGas<Scalar>(co2Pvt);
-    ensurePvtApiBrine<FooEval>(brinePvt);
-}
-
-int main()
-{
-    testAll<double>();
-    testAll<float>();
-    return 0;
+    ensurePvtApiBrine<Eval>(brinePvt);
 }
