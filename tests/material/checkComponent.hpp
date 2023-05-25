@@ -41,7 +41,9 @@
 template <class Component, class Evaluation>
 void checkComponent()
 {
-    std::cout << "Testing component '" << Opm::demangle(typeid(Component).name()) << "'\n";
+    std::cout << "Testing component '"
+              << Opm::demangle(typeid(Component).name()) << "', Evaluation='"
+              << Opm::demangle(typeid(Evaluation).name()) << "'\n";
 
     // make sure the necessary typedefs exist
     typedef typename Component::Scalar Scalar;
