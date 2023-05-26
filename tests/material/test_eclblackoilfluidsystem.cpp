@@ -33,6 +33,9 @@
 #error "The test for the black oil fluid system classes requires ecl input support in opm-common"
 #endif
 
+#define BOOST_TEST_MODULE EclBlackOilFluidSystem
+#include <boost/test/unit_test.hpp>
+
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/densead/Evaluation.hpp>
@@ -49,7 +52,7 @@
 #include <cmath>
 
 // values of strings based on the SPE1 and NORNE cases of opm-data.
-static const char* deckString1 =
+static constexpr const char* deckString1 =
     "RUNSPEC\n"
     "\n"
     "DIMENS\n"
@@ -608,14 +611,15 @@ static const char* deckString1 =
     "      860.04 1033.0    0.853  /\n"
     "\n";
 
-template <class Evaluation>
-inline void testAll()
+using Types = std::tuple<double,Opm::DenseAd::Evaluation<double,2>>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
 {
     // test the black-oil specific methods of BlackOilFluidSystem. The generic methods
     // for fluid systems are already tested by the generic test for all fluidsystems.
 
-    typedef typename Opm::MathToolbox<Evaluation>::Scalar Scalar;
-    typedef Opm::BlackOilFluidSystem<double> FluidSystem;
+    using Scalar = typename Opm::MathToolbox<Evaluation>::Scalar;
+    using FluidSystem = Opm::BlackOilFluidSystem<double>;
 
     static constexpr int numPhases = FluidSystem::numPhases;
 
@@ -637,51 +641,30 @@ inline void testAll()
     FluidSystem::initFromState(eclState, schedule);
 
     // create a parameter cache
-    typedef typename FluidSystem::template ParameterCache<Scalar> ParamCache;
+    using ParamCache = typename FluidSystem::template ParameterCache<Scalar>;
     ParamCache paramCache(/*maxOilSat=*/0.5, /*regionIdx=*/1);
-    if (paramCache.regionIndex() != 1)
-        std::abort();
+    BOOST_CHECK_EQUAL(paramCache.regionIndex(), 1);
 
-    if (Opm::abs(paramCache.maxOilSat() - 0.5) > 1e-10)
-        std::abort();
-
-    if (Opm::abs(FluidSystem::reservoirTemperature() - (273.15 + 15.555)) > 1e-10)
-        std::abort();
-
-    if (!FluidSystem::enableDissolvedGas())
-        std::abort();
-
-    if (!FluidSystem::enableVaporizedOil())
-        std::abort();
-
-    if (FluidSystem::numRegions() != 2)
-        std::abort();
-
-    if (FluidSystem::numActivePhases() != 3)
-        std::abort();
+    BOOST_CHECK_SMALL(Opm::abs(paramCache.maxOilSat() - 0.5), 1e-10);
+    BOOST_CHECK_SMALL(Opm::abs(FluidSystem::reservoirTemperature() - (273.15 + 15.555)), 1e-10);
+    BOOST_CHECK(FluidSystem::enableDissolvedGas());
+    BOOST_CHECK(FluidSystem::enableVaporizedOil());
+    BOOST_CHECK_EQUAL(FluidSystem::numRegions(), 2);
+    BOOST_CHECK_EQUAL(FluidSystem::numActivePhases(), 3);
 
     for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
-        if (!FluidSystem::phaseIsActive(phaseIdx))
-            std::abort();
+        BOOST_CHECK(FluidSystem::phaseIsActive(phaseIdx));
 
-    if (FluidSystem::solventComponentIndex(oilPhaseIdx) != oilCompIdx)
-        std::abort();
-    if (FluidSystem::solventComponentIndex(gasPhaseIdx) != gasCompIdx)
-        std::abort();
-    if (FluidSystem::solventComponentIndex(waterPhaseIdx) != waterCompIdx)
-        std::abort();
+    BOOST_CHECK_EQUAL(FluidSystem::solventComponentIndex(oilPhaseIdx), oilCompIdx);
+    BOOST_CHECK_EQUAL(FluidSystem::solventComponentIndex(gasPhaseIdx), gasCompIdx);
+    BOOST_CHECK_EQUAL(FluidSystem::solventComponentIndex(waterPhaseIdx), waterCompIdx);
 
-    if (FluidSystem::soluteComponentIndex(oilPhaseIdx) != gasCompIdx)
-        std::abort();
-    if (FluidSystem::soluteComponentIndex(gasPhaseIdx) != oilCompIdx)
-        std::abort();
+    BOOST_CHECK_EQUAL(FluidSystem::soluteComponentIndex(oilPhaseIdx), gasCompIdx);
+    BOOST_CHECK_EQUAL(FluidSystem::soluteComponentIndex(gasPhaseIdx), oilCompIdx);
 
-    if (std::abs(FluidSystem::referenceDensity(oilPhaseIdx, /*regionIdx=*/1) - 860.04) > 1e-10)
-        std::abort();
-    if (std::abs(FluidSystem::referenceDensity(gasPhaseIdx, /*regionIdx=*/1) - 0.853) > 1e-10)
-        std::abort();
-    if (std::abs(FluidSystem::referenceDensity(waterPhaseIdx, /*regionIdx=*/1) - 1033) > 1e-10)
-        std::abort();
+    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(oilPhaseIdx, /*regionIdx=*/1) - 860.04), 1e-10);
+    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(gasPhaseIdx, /*regionIdx=*/1) - 0.853), 1e-10);
+    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(waterPhaseIdx, /*regionIdx=*/1) - 1033), 1e-10);
 
     Opm::BlackOilFluidState<Scalar, FluidSystem> fluidState;
     Opm::Valgrind::SetUndefined(fluidState);
@@ -709,55 +692,35 @@ inline void testAll()
             // thermdynamic properties return the same value as the generic ones and that
             // the generic methods return the same value as the ones for the saturated
             // quantities (we specify the fluid state to be on the saturation line)
-            if (Opm::abs(FluidSystem::density(fluidState, paramCache, phaseIdx)
-                         - FluidSystem::density(fluidState, phaseIdx, regionIdx)) > eps)
-                std::abort();
+            BOOST_CHECK_SMALL(Opm::abs(FluidSystem::density(fluidState, paramCache, phaseIdx) -
+                                       FluidSystem::density(fluidState, phaseIdx, regionIdx)), eps);
 
-            if (Opm::abs(FluidSystem::density(fluidState, paramCache, phaseIdx)
-                         - FluidSystem::saturatedDensity(fluidState, phaseIdx, regionIdx)) > eps)
-                std::abort();
+            BOOST_CHECK_SMALL(Opm::abs(FluidSystem::density(fluidState, paramCache, phaseIdx) -
+                                       FluidSystem::saturatedDensity(fluidState, phaseIdx, regionIdx)), eps);
 
             Scalar b = FluidSystem::inverseFormationVolumeFactor(fluidState, phaseIdx, regionIdx);
             Scalar bSat = FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, phaseIdx, regionIdx);
-            if (Opm::abs(b - bSat) > eps)
-                std::abort();
+            BOOST_CHECK_SMALL(Opm::abs(b - bSat), eps);
 
-            if (Opm::abs(FluidSystem::viscosity(fluidState, paramCache, phaseIdx)
-                         - FluidSystem::viscosity(fluidState, phaseIdx, regionIdx)) > 1e-10)
-                std::abort();
+            BOOST_CHECK_SMALL(Opm::abs(FluidSystem::viscosity(fluidState, paramCache, phaseIdx) -
+                                       FluidSystem::viscosity(fluidState, phaseIdx, regionIdx)), 1e-10);
 
             Scalar R = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, regionIdx);
             Scalar R2 = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, regionIdx);
-            if (Opm::abs(R - R2) > eps)
-                // seems like there is a problem with D2
-                std::abort();
+            BOOST_CHECK_SMALL(Opm::abs(R - R2), eps);
 
-            if (phaseIdx != waterPhaseIdx && // water is immiscible and thus there is no saturation pressure
-                Opm::abs(FluidSystem::saturationPressure(fluidState, phaseIdx, regionIdx) - p) > eps*p)
-                std::abort();
+            // water is immiscible and thus there is no saturation pressure
+            if (phaseIdx != waterPhaseIdx) {
+                BOOST_CHECK_SMALL(Opm::abs(FluidSystem::saturationPressure(fluidState, phaseIdx, regionIdx) - p), eps*p);
+            }
         }
 
-        if (Opm::abs(FluidSystem::bubblePointPressure(fluidState, regionIdx) - p) > eps*p)
-            std::abort();
-
-        if (Opm::abs(FluidSystem::dewPointPressure(fluidState, regionIdx) - p) > eps*p)
-            std::abort();
-
+        BOOST_CHECK_SMALL(Opm::abs(FluidSystem::bubblePointPressure(fluidState, regionIdx) - p), eps*p);
+        BOOST_CHECK_SMALL(Opm::abs(FluidSystem::dewPointPressure(fluidState, regionIdx) - p), eps*p);
     }
 
     // make sure that the {oil,gas,water}Pvt() methods are available
     [[maybe_unused]] const auto& gPvt = FluidSystem::gasPvt();
     [[maybe_unused]] const auto& oPvt = FluidSystem::oilPvt();
     [[maybe_unused]] const auto& wPvt = FluidSystem::waterPvt();
-}
-
-int main()
-{
-    typedef Opm::DenseAd::Evaluation<double, 2> TestEval;
-
-    testAll<double>();
-    //testAll<float>();
-    testAll<TestEval>();
-
-    return 0;
 }
