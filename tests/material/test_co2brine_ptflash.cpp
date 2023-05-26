@@ -162,9 +162,9 @@ BOOST_DATA_TEST_CASE(PtFlash, test_methods)
 
     for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
         BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(x[comp_idx], ref_x[comp_idx], 2e-3),
-                            "component " + std::to_string(comp_idx) + " of x does not match");
+                            "component " << comp_idx << " of x does not match");
         BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(y[comp_idx], ref_y[comp_idx], 2e-3),
-                            "component " + std::to_string(comp_idx) + " of y does not match");
+                            "component " << comp_idx << " of y does not match");
     }
 
     BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(L, ref_L, 2e-3),
