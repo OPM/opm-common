@@ -38,15 +38,18 @@ gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
 */
 #include "config.h"
 
+#define BOOST_TEST_MODULE Spline
+#include <boost/test/unit_test.hpp>
+
 #include <opm/material/common/Spline.hpp>
 
 #include <array>
 #include <iostream>
 
-template <class Spline>
+template <class Spline, class Array>
 void testCommon(const Spline& sp,
-                const double* x,
-                const double* y)
+                const Array& x,
+                const Array& y)
 {
     static double eps = 1e-10;
     static double epsFD = 1e-7;
@@ -56,17 +59,17 @@ void testCommon(const Spline& sp,
         double y0 = (i>0)?sp.eval(x[i]-eps):y[0];
         double y1 = sp.eval(x[i]);
         double y2 = (i<n-1)?sp.eval(x[i]+eps):y[n-1];
-        if (std::abs(y0 - y[i]) > 100*eps || std::abs(y2 - y[i]) > 100*eps)
-            throw std::runtime_error("Spline seems to be discontinuous at sampling point "+std::to_string(i)+"!");
-        if (std::abs(y1 - y[i]) > eps)
-            throw std::runtime_error("Spline does not capture sampling point "+std::to_string(i)+"!");
+        BOOST_CHECK_MESSAGE(std::abs(y0 - y[i]) <= 100*eps && std::abs(y2 - y[i]) <= 100*eps,
+                            "Spline seems to be discontinuous at sampling point " << i);
+        BOOST_CHECK_MESSAGE(std::abs(y1 - y[i]) <= eps,
+                            "Spline does not capture sampling point " << i);
         // make sure the derivative is continuous (assuming that the
         // second derivative is smaller than 1000)
         double d1 = sp.evalDerivative(x[i]);
         double d0 = (i>0)?sp.evalDerivative(x[i]-eps):d1;
         double d2 = (i<n-1)?sp.evalDerivative(x[i]+eps):d1;
-        if (std::abs(d1 - d0) > 1000*eps || std::abs(d2 - d0) > 1000*eps)
-            throw std::runtime_error("Spline seems to exhibit a discontinuous derivative at sampling point "+std::to_string(i)+"!");
+        BOOST_CHECK_MESSAGE(std::abs(d1 - d0) <= 1000*eps && std::abs(d2 - d0) <= 1000*eps,
+                            "Spline seems to exhibit a discontinuous derivative at sampling point " << i);
     }
     // make sure the derivatives are consistent with the curve
     size_t np = 3*n;
@@ -79,33 +82,32 @@ void testCommon(const Spline& sp,
         double y0 = sp.eval(xval);
         double mFD = (y1 - y0)/epsFD;
         double m = sp.evalDerivative(xval);
-        if (std::abs( mFD - m ) > 1000*epsFD)
-            throw std::runtime_error("Derivative of spline seems to be inconsistent with cuve"
-                                     " ("+std::to_string(mFD)+" - "+std::to_string(m)+" = "
-                                     +std::to_string(mFD - m)+")!");
+        BOOST_CHECK_MESSAGE(std::abs(mFD - m) <= 1000*epsFD,
+                            "Derivative of spline seems to be inconsistent with curve"
+                            " (" << mFD << " - " << m << " = " << mFD - m);
         // second derivative
         y1 = sp.evalDerivative(xval+epsFD);
         y0 = sp.evalDerivative(xval);
         mFD = (y1 - y0)/epsFD;
         m = sp.evalSecondDerivative(xval);
-        if (std::abs( mFD - m ) > 1000*epsFD)
-            throw std::runtime_error("Second derivative of spline seems to be inconsistent with cuve"
-                                     " ("+std::to_string(mFD)+" - "+std::to_string(m)+" = "+std::to_string(mFD - m)+")!");
+        BOOST_CHECK_MESSAGE(std::abs(mFD - m) <= 1000*epsFD,
+                            "Second derivative of spline seems to be inconsistent with curve"
+                            " (" << mFD << " - " << m << " = " << mFD - m);
         // Third derivative
         y1 = sp.evalSecondDerivative(xval+epsFD);
         y0 = sp.evalSecondDerivative(xval);
         mFD = (y1 - y0)/epsFD;
         m = sp.evalThirdDerivative(xval);
-        if (std::abs( mFD - m ) > 1000*epsFD)
-            throw std::runtime_error("Third derivative of spline seems to be inconsistent with cuve"
-                                     " ("+std::to_string(mFD)+" - "+std::to_string(m)+" = "+std::to_string(mFD - m)+")!");
+        BOOST_CHECK_MESSAGE(std::abs(mFD - m) <= 1000*epsFD,
+                            "Third derivative of spline seems to be inconsistent with curve"
+                            " (" << mFD << " - " << m << " = " << mFD - m);
     }
 }
 
-template <class Spline>
+template <class Spline, class Array>
 void testFull(const Spline& sp,
-              const double* x,
-              const double* y,
+              const Array& x,
+              const Array& y,
               double m0,
               double m1)
 {
@@ -116,18 +118,18 @@ void testFull(const Spline& sp,
     // make sure the derivative at both end points is correct
     double d0 = sp.evalDerivative(x[0]);
     double d1 = sp.evalDerivative(x[n-1]);
-    if (std::abs(d0 - m0) > eps)
-        throw std::runtime_error("Invalid derivative at beginning of interval: is "
-                                 +std::to_string(d0)+" ought to be "+std::to_string(m0));
-    if (std::abs(d1 - m1) > eps)
-        throw std::runtime_error("Invalid derivative at end of interval: is "
-                                 +std::to_string(d1)+" ought to be "+std::to_string(m1));
+    BOOST_CHECK_MESSAGE(std::abs(d0 - m0) <= eps,
+                        "Invalid derivative at beginning of interval: is " << d0 <<
+                            " ought to be " << m0);
+    BOOST_CHECK_MESSAGE(std::abs(d1 - m1) <= eps,
+                        "Invalid derivative at end of interval: is " << d1 <<
+                        " ought to be " << m1);
 }
 
-template <class Spline>
+template <class Spline, class Array>
 void testNatural(const Spline& sp,
-                 const double* x,
-                 const double* y)
+                 const Array& x,
+                 const Array& y)
 {
     // test the common properties of splines
     testCommon(sp, x, y);
@@ -138,18 +140,18 @@ void testNatural(const Spline& sp,
     double d1 = sp.evalDerivative(x[0] + eps);
     double d2 = sp.evalDerivative(x[n-1] - eps);
     double d3 = sp.evalDerivative(x[n-1]);
-    if (std::abs(d1 - d0)/eps > 1000*eps)
-        throw std::runtime_error("Invalid second derivative at beginning of interval: is "
-                                 +std::to_string((d1 - d0)/eps)+" ought to be 0");
-    if (std::abs(d3 - d2)/eps > 1000*eps)
-        throw std::runtime_error("Invalid second derivative at end of interval: is "
-                                 +std::to_string((d3 - d2)/eps)+" ought to be 0");
+    BOOST_CHECK_MESSAGE(std::abs(d1 - d0)/eps <= 1000*eps,
+                        "Invalid second derivative at beginning of interval: is " <<
+                        (d1 - d0)/eps << " ought to be 0");
+    BOOST_CHECK_MESSAGE(std::abs(d3 - d2)/eps <= 1000*eps,
+                        "Invalid second derivative at end of interval: is " <<
+                        (d3 - d2)/eps << " ought to be 0");
 }
 
-template <class Spline>
+template <class Spline, class Array>
 void testMonotonic(const Spline& sp,
-                   const double* x,
-                   const double* y)
+                   const Array& x,
+                   const Array& y)
 {
     // test the common properties of splines
     testCommon(sp, x, y);
@@ -157,52 +159,46 @@ void testMonotonic(const Spline& sp,
     for (size_t i = 0; i < n - 1; ++ i) {
         // make sure that the spline is monotonic for each interval
         // between sampling points
-        if (!sp.monotonic(x[i], x[i + 1]))
-            throw std::runtime_error("Spline says it is not monotonic in interval "
-                                     +std::to_string(i)+" where it should be");
+        BOOST_CHECK_MESSAGE(sp.monotonic(x[i], x[i + 1]),
+                            "Spline says it is not monotonic in interval " <<
+                            i << " where it should be");
         // test the intersection methods
         double d = (y[i] + y[i+1])/2;
         double interX = sp.template intersectInterval<double>(x[i], x[i+1],
                                                               /*a=*/0, /*b=*/0, /*c=*/0, d);
         double interY = sp.eval(interX);
-        if (std::abs(interY - d) > 1e-5)
-            throw std::runtime_error("Spline::intersectInterval() seems to be broken: "
-                                     +std::to_string(sp.eval(interX))+" - "+std::to_string(d)+
-                                     " = "+std::to_string(sp.eval(interX) - d)+"!");
+        BOOST_CHECK_MESSAGE(std::abs(interY - d) <= 1e-5,
+                            "Spline::intersectInterval() seems to be broken: " <<
+                            sp.eval(interX) << " - " << d << " = " << sp.eval(interX) - d);
     }
     // make sure the spline says to be monotonic on the (extrapolated)
     // left and right sides
-    if (!sp.monotonic(x[0] - 1.0, (x[0] + x[1])/2, /*extrapolate=*/true))
-        throw std::runtime_error("Spline says it is not monotonic on left side where it should be");
-    if (!sp.monotonic((x[n - 2]+ x[n - 1])/2, x[n-1] + 1.0, /*extrapolate=*/true))
-        throw std::runtime_error("Spline says it is not monotonic on right side where it should be");
+    BOOST_CHECK_MESSAGE(sp.monotonic(x[0] - 1.0, (x[0] + x[1])/2, /*extrapolate=*/true),
+                       "Spline says it is not monotonic on left side where it should be");
+    BOOST_CHECK_MESSAGE(sp.monotonic((x[n - 2]+ x[n - 1])/2, x[n-1] + 1.0, /*extrapolate=*/true),
+                       "Spline says it is not monotonic on right side where it should be");
     for (size_t i = 0; i < n - 2; ++ i) {
         // make sure that the spline says that it is non-monotonic for
         // if extrema are within the queried interval
-        if (sp.monotonic((x[i] + x[i + 1])/2, (x[i + 1] + x[i + 2])/2))
-            throw std::runtime_error("Spline says it is monotonic in interval "
-                                     +std::to_string(i)+" where it should not be");
+        BOOST_CHECK_MESSAGE(!sp.monotonic((x[i] + x[i + 1])/2, (x[i + 1] + x[i + 2])/2),
+                            "Spline says it is monotonic in interval " <<
+                            i << " where it should not be");
     }
 }
 
-// function prototype to prevent some compilers producing a warning
-void testAll();
-void testAll()
-{
-    double x[] = { 0, 5, 7.5, 8.75, 9.375 };
-    double y[] = { 10, 0, 10, 0, 10 };
-    double m0 = 10;
-    double m1 = -10;
-    double points[][2] =
-        {
-            {x[0], y[0]},
-            {x[1], y[1]},
-            {x[2], y[2]},
-            {x[3], y[3]},
-            {x[4], y[4]},
-        };
+struct Fixture {
+    Fixture()
+    {
+        for (int i = 0; i < 5; ++i) {
+            xVec.push_back(x[i]);
+            yVec.push_back(y[i]);
+            pointVec.push_back(points[i]);
+        }
+    }
 
-    std::initializer_list<const std::pair<double, double> > pointsInitList =
+    std::array<double,5> x{0.0, 5.0, 7.5, 8.75, 9.375};
+    std::array<double,5> y{10.0, 0.0, 10.0, 0.0, 10.0};
+    double points[5][2] =
         {
             {x[0], y[0]},
             {x[1], y[1]},
@@ -213,81 +209,151 @@ void testAll()
 
     std::vector<double> xVec;
     std::vector<double> yVec;
+    static constexpr double m0 = 10;
+    static constexpr double m1 = -10;
     std::vector<double*> pointVec;
-    for (int i = 0; i < 5; ++i) {
-        xVec.push_back(x[i]);
-        yVec.push_back(y[i]);
-        pointVec.push_back(points[i]);
-    }
-    /////////
-    // test spline with two sampling points
-    /////////
-    // full spline
-    { Opm::Spline<double> sp(x[0], x[1], y[0], y[1], m0, m1); sp.set(x[0],x[1],y[0],y[1],m0, m1); testFull(sp, x, y, m0, m1); };
-    { Opm::Spline<double> sp(2, x, y, m0, m1); sp.setXYArrays(2, x, y, m0, m1); testFull(sp, x, y, m0, m1);  };
-    { Opm::Spline<double> sp(static_cast<size_t>(2), points, m0, m1); sp.setArrayOfPoints(2, points, m0, m1); testFull(sp, x, y, m0, m1); };
-    /////////
-    // test variable length splines
-    /////////
-    // full spline
-    { Opm::Spline<double> sp(5, x, y, m0, m1); sp.setXYArrays(5,x,y,m0, m1); testFull(sp, x, y, m0, m1);  };
-    { Opm::Spline<double> sp(xVec, yVec, m0, m1); sp.setXYContainers(xVec,yVec,m0, m1); testFull(sp, x, y, m0, m1);  };
-    { Opm::Spline<double> sp; sp.setArrayOfPoints(5,points,m0, m1); testFull(sp, x, y, m0, m1); };
-    { Opm::Spline<double> sp; sp.setContainerOfPoints(pointVec,m0, m1); testFull(sp, x, y, m0, m1);  };
-    { Opm::Spline<double> sp; sp.setContainerOfTuples(pointsInitList,m0, m1); testFull(sp, x, y, m0, m1); };
-    // natural spline
-    { Opm::Spline<double> sp(5, x, y); sp.setXYArrays(5,x,y); testNatural(sp, x, y);  };
-    { Opm::Spline<double> sp(xVec, yVec); sp.setXYContainers(xVec,yVec); testNatural(sp, x, y); };
-    { Opm::Spline<double> sp; sp.setArrayOfPoints(5,points); testNatural(sp, x, y); };
-    { Opm::Spline<double> sp; sp.setContainerOfPoints(pointVec); testNatural(sp, x, y); };
-    { Opm::Spline<double> sp; sp.setContainerOfTuples(pointsInitList); testNatural(sp, x, y); };
+};
+
+BOOST_FIXTURE_TEST_SUITE(Generic, Fixture)
+
+BOOST_AUTO_TEST_CASE(TwoPointSeparate)
+{
+    Opm::Spline<double> sp(x[0], x[1], y[0], y[1], m0, m1);
+    sp.set(x[0],x[1],y[0],y[1], m0, m1);
+    testFull(sp, x, y, m0, m1);
 }
 
-// function prototype to prevent some compilers producing a warning
-void plot();
-void plot()
+BOOST_AUTO_TEST_CASE(TwoPointArray)
 {
-    const int numSamples = 5;
-    const int n = numSamples - 1;
-    typedef std::array<double, numSamples> FV;
-    double x_[] = { 0, 5, 7.5, 8.75, 10 };
-    double y_[] = { 10, 0, 10, 0, 10 };
-    double m1 = 10;
-    double m2 = -10;
-    FV& xs = *reinterpret_cast<FV*>(x_);
-    FV& ys = *reinterpret_cast<FV*>(y_);
-    Opm::Spline<double> spFull(xs, ys, m1, m2);
-    Opm::Spline<double> spNatural(xs, ys);
-    Opm::Spline<double> spPeriodic(xs, ys, /*type=*/Opm::Spline<double>::Periodic);
-    Opm::Spline<double> spMonotonic(xs, ys, /*type=*/Opm::Spline<double>::Monotonic);
-    testMonotonic(spMonotonic, x_, y_);
-    spFull.printCSV(x_[0] - 1.00001,
-                    x_[n] + 1.00001,
+    Opm::Spline<double> sp(2, x.data(), y.data(), m0, m1);
+    sp.setXYArrays(2, x.data(), y.data(), m0, m1);
+    testFull(sp, x, y, m0, m1);
+}
+
+BOOST_AUTO_TEST_CASE(TwoPoint2DArray)
+{
+    Opm::Spline<double> sp(static_cast<size_t>(2), points, m0, m1);
+    sp.setArrayOfPoints(2, points, m0, m1);
+    testFull(sp, x, y, m0, m1);
+}
+
+BOOST_AUTO_TEST_CASE(FullSplineArray)
+{
+    Opm::Spline<double> sp(5, x.data(), y.data(), m0, m1);
+    sp.setXYArrays(5, x.data(), y.data(), m0, m1);
+    testFull(sp, x, y, m0, m1);
+}
+
+BOOST_AUTO_TEST_CASE(FullSplineVector)
+{
+    Opm::Spline<double> sp(xVec, yVec, m0, m1);
+    sp.setXYContainers(xVec, yVec, m0, m1);
+    testFull(sp, x, y, m0, m1);
+}
+
+BOOST_AUTO_TEST_CASE(FullSpline2DArray)
+{
+    Opm::Spline<double> sp;
+    sp.setArrayOfPoints(5, points,m0, m1);
+    testFull(sp, x, y, m0, m1);
+}
+
+BOOST_AUTO_TEST_CASE(FullSplinePointVector)
+{
+    Opm::Spline<double> sp;
+    sp.setContainerOfPoints(pointVec, m0, m1);
+    testFull(sp, x, y, m0, m1);
+}
+
+BOOST_AUTO_TEST_CASE(FullSplineInitList)
+{
+    std::initializer_list<const std::pair<double, double> > pointsInitList =
+        {
+            {x[0], y[0]},
+            {x[1], y[1]},
+            {x[2], y[2]},
+            {x[3], y[3]},
+            {x[4], y[4]},
+        };
+
+    Opm::Spline<double> sp;
+    sp.setContainerOfTuples(pointsInitList, m0, m1);
+    testFull(sp, x, y, m0, m1);
+}
+
+BOOST_AUTO_TEST_CASE(NaturalSplineArray)
+{
+    Opm::Spline<double> sp(5, x.data(), y.data());
+    sp.setXYArrays(5, x.data(), y.data());
+    testNatural(sp, x, y);
+}
+
+BOOST_AUTO_TEST_CASE(NaturalSplineVector)
+{
+    Opm::Spline<double> sp(xVec, yVec);
+    sp.setXYContainers(xVec, yVec);
+    testNatural(sp, x, y);
+}
+
+BOOST_AUTO_TEST_CASE(NaturalSpline2DArray)
+{
+    Opm::Spline<double> sp;
+    sp.setArrayOfPoints(5, points);
+    testNatural(sp, x, y);
+}
+
+BOOST_AUTO_TEST_CASE(NaturalSplinePointsVector)
+{
+    Opm::Spline<double> sp;
+    sp.setContainerOfPoints(pointVec);
+    testNatural(sp, x, y);
+}
+
+BOOST_AUTO_TEST_CASE(NaturalSplineInitList)
+{
+    std::initializer_list<const std::pair<double, double> > pointsInitList =
+        {
+            {x[0], y[0]},
+            {x[1], y[1]},
+            {x[2], y[2]},
+            {x[3], y[3]},
+            {x[4], y[4]},
+        };
+    Opm::Spline<double> sp;
+    sp.setContainerOfTuples(pointsInitList);
+    testNatural(sp, x, y);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(Monotonic)
+{
+    static constexpr int numSamples = 5;
+    static constexpr int n = numSamples - 1;
+    std::array<double, numSamples> x{0.0, 5.0, 7.5, 8.75, 10.0 };
+    std::array<double, numSamples> y{10.0, 0.0, 10.0, 0.0, 10.0 };
+    static constexpr double m1 = 10;
+    static constexpr double m2 = -10;
+    Opm::Spline<double> spFull(x, y, m1, m2);
+    Opm::Spline<double> spNatural(x, y);
+    Opm::Spline<double> spPeriodic(x, y, /*type=*/Opm::Spline<double>::Periodic);
+    Opm::Spline<double> spMonotonic(x, y, /*type=*/Opm::Spline<double>::Monotonic);
+    testMonotonic(spMonotonic, x, y);
+
+    spFull.printCSV(x[0] - 1.00001,
+                    x[n] + 1.00001,
                     1000, std::cout);
     std::cout << "\n";
-    spNatural.printCSV(x_[0] - 1.00001,
-                       x_[n] + 1.00001,
+    spNatural.printCSV(x[0] - 1.00001,
+                       x[n] + 1.00001,
                        1000, std::cout);
     std::cout << "\n";
-    spPeriodic.printCSV(x_[0] - 1.00001,
-                        x_[n] + 1.00001,
+    spPeriodic.printCSV(x[0] - 1.00001,
+                        x[n] + 1.00001,
                         1000, std::cout);
     std::cout << "\n";
-    spMonotonic.printCSV(x_[0] - 1.00001,
-                         x_[n] + 1.00001,
+    spMonotonic.printCSV(x[0] - 1.00001,
+                         x[n] + 1.00001,
                          1000, std::cout);
     std::cout << "\n";
-}
-
-int main()
-{
-    try {
-        testAll();
-        plot();
-    }
-    catch (const std::exception& e) {
-        std::cout << "Caught OPM exception: " << e.what() << "\n";
-    }
-
-    return 0;
 }
