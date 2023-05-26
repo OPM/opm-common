@@ -28,43 +28,25 @@
  */
 #include "config.h"
 
+#define BOOST_TEST_MODULE BlackOilFluidState
+#include <boost/test/unit_test.hpp>
+
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/checkFluidSystem.hpp>
 
-int main()
+using Types = std::tuple<float,double>;
+BOOST_AUTO_TEST_CASE_TEMPLATE(ApiConformance, Scalar, Types)
 {
-    {
-        typedef double Scalar;
-        typedef double Evaluation;
-        typedef typename Opm::BlackOilFluidSystem<Scalar> FluidSystem;
-        typedef Opm::BlackOilFluidState<Scalar, FluidSystem> FluidState;
+    using FluidSystem = Opm::BlackOilFluidSystem<Scalar>;
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 2>;
+    using FluidStateScalar = Opm::BlackOilFluidState<Scalar, FluidSystem>;
+    using FluidState = Opm::BlackOilFluidState<Evaluation, FluidSystem>;
 
-        FluidState fs{};
-        checkFluidState<Evaluation>(fs);
-    }
-
-    {
-        typedef float Scalar;
-        typedef float Evaluation;
-        typedef typename Opm::BlackOilFluidSystem<Scalar> FluidSystem;
-        typedef Opm::BlackOilFluidState<Scalar, FluidSystem> FluidState;
-
-        FluidState fs{};
-        checkFluidState<Evaluation>(fs);
-    }
-
-    {
-        typedef float Scalar;
-        typedef Opm::DenseAd::Evaluation<Scalar, 2> Evaluation;
-        typedef typename Opm::BlackOilFluidSystem<Scalar> FluidSystem;
-        typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
-
-        FluidState fs{};
-        checkFluidState<Evaluation>(fs);
-    }
-
-    return 0;
+    FluidStateScalar fss{};
+    checkFluidState<Scalar>(fss);
+    FluidState fs{};
+    checkFluidState<Evaluation>(fs);
 }
