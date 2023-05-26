@@ -29,6 +29,10 @@
  */
 #include "config.h"
 
+#define BOOST_TEST_MODULE PtFlash
+#include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
 
@@ -37,22 +41,20 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 
-#include <stdexcept>
-
 // It is a three component system
 using Scalar = double;
 using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
 
 constexpr auto numComponents = FluidSystem::numComponents;
 using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
-typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
-typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
+using ComponentVector = Dune::FieldVector<Evaluation, numComponents>;
+using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 
-bool result_okay(const FluidState& fluid_state);
+std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
 
-bool testPTFlash(const std::string& flash_twophase_method)
+BOOST_DATA_TEST_CASE(PtFlash, test_methods)
 {
-// Initial: the primary variables are, pressure, molar fractions of the first and second component
+    // Initial: the primary variables are, pressure, molar fractions of the first and second component
     Evaluation p_init = Evaluation::createVariable(10e5, 0); // 10 bar
     ComponentVector comp;
     comp[0] = Evaluation::createVariable(0.5, 1);
@@ -64,7 +66,6 @@ bool testPTFlash(const std::string& flash_twophase_method)
     // We assume that currently everything is in the oil phase
     sat[0] = 1.0; sat[1] = 1.0-sat[0];
     Scalar temp = 300.0;
-
 
     // FluidState will be the input for the flash calculation
     FluidState fluid_state;
@@ -128,34 +129,7 @@ bool testPTFlash(const std::string& flash_twophase_method)
 
     const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, flash_twophase_method, flash_tolerance, flash_verbosity);
-
-    return result_okay(fluid_state);
-}
-
-bool result_okay(const FluidState& fluid_state)
-{
-    bool res_okay = true;
-    auto almost_equal = [](const double x, const double y, const double rel_tol = 2.e-3, const double abs_tol = 1.e-5)->bool {
-        return std::fabs(x - y) <= rel_tol * std::fabs(x + y) * 2 || std::fabs(x - y) < abs_tol;
-    };
-
-    auto eval_almost_equal = [almost_equal](const Evaluation& val, const Evaluation& ref) -> bool {
-        bool equal_okay = true;
-        if (!almost_equal(val.value(), ref.value())) {
-            equal_okay = false;
-            std::cout << " the value are different with " << val.value() << " against the reference " << ref.value() << std::endl;
-        }
-
-        for (int i = 0; i < val.size(); ++i) {
-            if (!almost_equal(val.derivative(i), ref.derivative(i))) {
-                equal_okay = false;
-                std::cout << " the " << i << "th derivative is different with value " << val.derivative(i) << " against the reference " << ref.derivative(i) << std::endl;
-            }
-        }
-
-        return equal_okay;
-    };
+    Flash::solve(fluid_state, z, spatialIdx, sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -163,7 +137,6 @@ bool result_okay(const FluidState& fluid_state)
         x[comp_idx] = fluid_state.moleFraction(FluidSystem::oilPhaseIdx, comp_idx);
         y[comp_idx] = fluid_state.moleFraction(FluidSystem::gasPhaseIdx, comp_idx);
     }
-
 
     Evaluation ref_L = 1 - 0.763309246;
     ref_L.setDerivative(0, 4.072857907696467e-8);
@@ -203,46 +176,14 @@ bool result_okay(const FluidState& fluid_state)
     ref_y[2].setDerivative(2, 5.490200967341757e-6);
 
     for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-        if (!eval_almost_equal(x[comp_idx], ref_x[comp_idx])) {
-            res_okay = false;
-            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
-        }
-        if (!eval_almost_equal(y[comp_idx], ref_y[comp_idx])) {
-            res_okay = false;
-            std::cout << " the " << comp_idx << "th x does not match" << std::endl;
-        }
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(x[comp_idx],
+                                                                 ref_x[comp_idx], 2e-3),
+                            "component " << comp_idx << " of x does not match");
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(y[comp_idx],
+                                                                 ref_y[comp_idx], 2e-3),
+                            "component " << comp_idx << " of y does not match");
     }
 
-    if (!eval_almost_equal(L, ref_L)) {
-        res_okay = false;
-        std::cout << " the L does not match" << std::endl;
-    }
-
-    // TODO: we should also check densities, viscosities, saturations and so on
-
-    return res_okay;
-}
-
-int main()
-{
-    bool test_passed = true;
-
-    std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
-
-    for (const auto& method : test_methods) {
-        if (!testPTFlash(method) ) {
-            std::cout << method << " solution for PTFlash failed " << std::endl;
-            test_passed = false;
-        } else {
-            std::cout << method << " solution for PTFlash passed " << std::endl;
-        }
-    }
-
-    if (!test_passed) {
-        throw std::runtime_error(" test_threecomponents_ptflash tests FAILED");
-    } else {
-        std::cout << "test_threecomponents_ptflash testing is SUCCESSFUL";
-    }
-
-    return 0;
+    BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(L, ref_L, 2e-3),
+                        "L does not match");
 }
