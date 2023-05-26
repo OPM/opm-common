@@ -483,7 +483,7 @@ namespace Opm {
         map_member<std::string, Well> wells;
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
-        BCPROP bcprop;
+        BCProp bcprop;
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 

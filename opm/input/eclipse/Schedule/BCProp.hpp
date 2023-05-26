@@ -1,5 +1,5 @@
 /*
-  Copyright 2020 Equinor ASA.
+  Copyright 2023 Equinor ASA.
   Copyright 2023 Norce.
 
   This file is part of the Open Porous Media project (OPM).
@@ -53,7 +53,7 @@ enum class BCComponent {
 };
 
 
-class BCPROP {
+class BCProp {
 public:
 
     struct BCFace {
@@ -84,16 +84,15 @@ public:
     };
 
 
-    BCPROP() = default;
-    explicit BCPROP(const Deck& deck);
+    BCProp() = default;
 
-    static BCPROP serializationTestObject();
+    static BCProp serializationTestObject();
 
     std::size_t size() const;
     std::vector<BCFace>::const_iterator begin() const;
     std::vector<BCFace>::const_iterator end() const;
-    bool operator==(const BCPROP& other) const;
-    BCFace operator[](int index) const;
+    bool operator==(const BCProp& other) const;
+    const BCFace& operator[](int index) const;
 
     void updateBCProp(const DeckRecord& record);
 

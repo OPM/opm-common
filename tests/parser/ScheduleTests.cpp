@@ -71,6 +71,7 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
@@ -5466,7 +5467,7 @@ BCPROP
         const auto& bc = schedule[currentStep].bcprop;
         BOOST_CHECK_EQUAL(bc.size(), 2);
         const auto& bcface0 = bc[0];
-        BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 100, 1e-8 );
+        BOOST_CHECK_CLOSE(bcface0.rate * Opm::unit::day, 100, 1e-8 );
     }
 
     {
@@ -5474,6 +5475,6 @@ BCPROP
         const auto& bc = schedule[currentStep].bcprop;
         BOOST_CHECK_EQUAL(bc.size(), 2);
         const auto& bcface0 = bc[0];
-        BOOST_CHECK_CLOSE(bcface0.rate * 3600 * 24, 200, 1e-8 );
+        BOOST_CHECK_CLOSE(bcface0.rate * Opm::unit::day, 200, 1e-8 );
     }
 }

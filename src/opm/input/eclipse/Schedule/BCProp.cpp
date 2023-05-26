@@ -1,5 +1,5 @@
 /*
-  Copyright 2020 Equinor ASA.
+  Copyright 2023 Equinor ASA.
   Copyright 2023 Norce.
 
   This file is part of the Open Porous Media project (OPM).
@@ -75,7 +75,7 @@ BCComponent component(const std::string& s) {
 }
 
 using BCKEY = ParserKeywords::BCPROP;
-BCPROP::BCFace::BCFace(const DeckRecord& record) :
+BCProp::BCFace::BCFace(const DeckRecord& record) :
     index(record.getItem<BCKEY::INDEX>().get<int>(0)),
     bctype(fromstring::bctype(record.getItem<BCKEY::TYPE>().get<std::string>(0))),
     component(fromstring::component(record.getItem<BCKEY::COMPONENT>().get<std::string>(0))),
@@ -89,7 +89,7 @@ BCPROP::BCFace::BCFace(const DeckRecord& record) :
     }
 }
 
-BCPROP::BCFace BCPROP::BCFace::serializationTestObject()
+BCProp::BCFace BCProp::BCFace::serializationTestObject()
 {
     BCFace result;
     result.index = 100;
@@ -103,7 +103,7 @@ BCPROP::BCFace BCPROP::BCFace::serializationTestObject()
 }
 
 
-bool BCPROP::BCFace::operator==(const BCPROP::BCFace& other) const {
+bool BCProp::BCFace::operator==(const BCProp::BCFace& other) const {
     return this->index == other.index &&
            this->bctype == other.bctype &&
            this->component == other.component &&
@@ -114,14 +114,10 @@ bool BCPROP::BCFace::operator==(const BCPROP::BCFace& other) const {
 
 
 
-BCPROP::BCPROP(const Deck& /*deck*/) {
-// TODO Read the indices from BCCON and initial with NONE type???
-}
-
-void BCPROP::updateBCProp(const DeckRecord& record) {
-    const BCPROP::BCFace bcnew( record );
+void BCProp::updateBCProp(const DeckRecord& record) {
+    const BCProp::BCFace bcnew( record );
     for (auto& bc : m_faces) {
-        if (bc.index == bcnew.index)
+        if (bc.index == bcnew.index && bc.component == bcnew.component)
             {
                 bc = bcnew;
                 return;
@@ -132,28 +128,28 @@ void BCPROP::updateBCProp(const DeckRecord& record) {
 
 
 
-BCPROP BCPROP::serializationTestObject()
+BCProp BCProp::serializationTestObject()
 {
-    BCPROP result;
+    BCProp result;
     result.m_faces = {BCFace::serializationTestObject()};
 
     return result;
 }
 
 
-std::size_t BCPROP::size() const {
+std::size_t BCProp::size() const {
     return this->m_faces.size();
 }
 
-std::vector<BCPROP::BCFace>::const_iterator BCPROP::begin() const {
+std::vector<BCProp::BCFace>::const_iterator BCProp::begin() const {
     return this->m_faces.begin();
 }
 
-std::vector<BCPROP::BCFace>::const_iterator BCPROP::end() const {
+std::vector<BCProp::BCFace>::const_iterator BCProp::end() const {
     return this->m_faces.end();
 }
 
-BCPROP::BCFace BCPROP::operator[](int index) const {
+const BCProp::BCFace& BCProp::operator[](int index) const {
     for (auto& bc : m_faces) {
         if (bc.index == index)
             {
@@ -164,7 +160,7 @@ BCPROP::BCFace BCPROP::operator[](int index) const {
     return this->m_faces[0];
 }
 
-bool BCPROP::operator==(const BCPROP& other) const {
+bool BCProp::operator==(const BCProp& other) const {
     return this->m_faces == other.m_faces;
 }
 

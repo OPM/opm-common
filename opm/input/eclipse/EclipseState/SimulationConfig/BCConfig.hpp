@@ -36,19 +36,19 @@ class DeckRecord;
 class BCConfig {
 public:
 
-    struct BCFace {
+    struct BCRegion {
         int index;
         int i1,i2;
         int j1,j2;
         int k1,k2;
         FaceDir::DirEnum dir;
 
-        BCFace() = default;
-        explicit BCFace(const DeckRecord& record, const GridDims& grid);
+        BCRegion() = default;
+        explicit BCRegion(const DeckRecord& record, const GridDims& grid);
 
-        static BCFace serializationTestObject();
+        static BCRegion serializationTestObject();
 
-        bool operator==(const BCFace& other) const;
+        bool operator==(const BCRegion& other) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -71,8 +71,8 @@ public:
     static BCConfig serializationTestObject();
 
     std::size_t size() const;
-    std::vector<BCFace>::const_iterator begin() const;
-    std::vector<BCFace>::const_iterator end() const;
+    std::vector<BCRegion>::const_iterator begin() const;
+    std::vector<BCRegion>::const_iterator end() const;
     bool operator==(const BCConfig& other) const;
 
     template<class Serializer>
@@ -82,7 +82,7 @@ public:
     }
 
 private:
-    std::vector<BCFace> m_faces;
+    std::vector<BCRegion> m_faces;
 };
 
 } //namespace Opm

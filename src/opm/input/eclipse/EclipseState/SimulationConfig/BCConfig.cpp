@@ -28,7 +28,7 @@
 namespace Opm {
 
 using BC = ParserKeywords::BCCON;
-BCConfig::BCFace::BCFace(const DeckRecord& record, const GridDims& grid) :
+BCConfig::BCRegion::BCRegion(const DeckRecord& record, const GridDims& grid) :
     index(record.getItem<BC::INDEX>().get<int>(0)),
     i1(0),
     i2(grid.getNX() - 1),
@@ -58,9 +58,9 @@ BCConfig::BCFace::BCFace(const DeckRecord& record, const GridDims& grid) :
     }
 }
 
-BCConfig::BCFace BCConfig::BCFace::serializationTestObject()
+BCConfig::BCRegion BCConfig::BCRegion::serializationTestObject()
 {
-    BCFace result;
+    BCRegion result;
     result.index = 10;
     result.i1 = 12;
     result.i2 = 13;
@@ -74,7 +74,7 @@ BCConfig::BCFace BCConfig::BCFace::serializationTestObject()
 }
 
 
-bool BCConfig::BCFace::operator==(const BCConfig::BCFace& other) const {
+bool BCConfig::BCRegion::operator==(const BCConfig::BCRegion& other) const {
     return this->index == other.index &&
            this->i1 == other.i1 &&
            this->i2 == other.i2 &&
@@ -90,7 +90,7 @@ BCConfig::BCConfig(const Deck& deck) {
 
     if(deck.hasKeyword<ParserKeywords::BC>()){
         for (const auto* keyword : deck.getKeywordList<ParserKeywords::BC>()) {
-            const std::string reason = "ERROR: The BC keyword is obsolute. \n "
+            const std::string reason = "ERROR: The BC keyword is obsolete. \n "
                             "Instead use BCCON in the GRID section to specify the connections. \n "
                             "And BCPROP in the SCHEDULE section to specify the type and values. \n"
                             "Check the OPM manual for details.";
@@ -109,7 +109,7 @@ BCConfig::BCConfig(const Deck& deck) {
 BCConfig BCConfig::serializationTestObject()
 {
     BCConfig result;
-    result.m_faces = {BCFace::serializationTestObject()};
+    result.m_faces = {BCRegion::serializationTestObject()};
 
     return result;
 }
@@ -119,11 +119,11 @@ std::size_t BCConfig::size() const {
     return this->m_faces.size();
 }
 
-std::vector<BCConfig::BCFace>::const_iterator BCConfig::begin() const {
+std::vector<BCConfig::BCRegion>::const_iterator BCConfig::begin() const {
     return this->m_faces.begin();
 }
 
-std::vector<BCConfig::BCFace>::const_iterator BCConfig::end() const {
+std::vector<BCConfig::BCRegion>::const_iterator BCConfig::end() const {
     return this->m_faces.end();
 }
 
