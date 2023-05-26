@@ -367,6 +367,15 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         if (!activeHyst)
 	      return;
 
+        if (deck.hasKeyword("WAGHYSTR")) {
+            if ( !(deck.hasKeyword<Opm::ParserKeywords::OIL>() &&
+                   deck.hasKeyword<Opm::ParserKeywords::GAS>() &&
+                   deck.hasKeyword<Opm::ParserKeywords::WATER>()) )
+                throw std::runtime_error("WAG hysteresis (kw 'WAGHYSTR') requires 'OIL', 'WATER' and 'GAS' present in model. ");
+
+            activeWagHyst = true;
+        }
+
         if (!deck.hasKeyword("EHYSTR")) {
             std::string msg = "Hysteresis is enabled via the HYST parameter for SATOPTS, but the EHYSTR " 
                               "keyword is not present in the deck. \n"
@@ -425,16 +434,6 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         // Killough model: Regularisation for trapped critical saturation calculations
         if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3)
             modParamTrappedValue = ehystrKeyword.getRecord(0).getItem("mod_param_trapped").get<double>(0);
-
-        if (!deck.hasKeyword("WAGHYSTR"))
-            return;
-
-        if ( !(deck.hasKeyword<Opm::ParserKeywords::OIL>() &&
-               deck.hasKeyword<Opm::ParserKeywords::GAS>() &&
-               deck.hasKeyword<Opm::ParserKeywords::WATER>()) )
-            throw std::runtime_error("WAG hysteresis (kw 'WAGHYSTR') requires 'OIL', 'WATER' and 'GAS' present in model. ");
-
-        activeWagHyst = true;
     }
 
 EclHysterConfig EclHysterConfig::serializationTestObject()

@@ -452,7 +452,7 @@ public:
             
             changed = changed || oilchanged;
 
-            boool gaschanged = params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
+            bool gaschanged = params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
                                          /*krwSw=*/ 1.0 - std::max(Swco, Sw) - Sg, //(Three phase behavior ...)
                                          /*krnSw=*/ 1.0 - Swco - Sg);
             changed = changed || gaschanged;

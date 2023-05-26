@@ -293,10 +293,6 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
-        // if no relperm hysteresis is enabled, use the drainage curve
-        if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
-            return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
-
         // If WAG hysteresis is enabled, the convential hysteresis model is ignored.
         // (Two-phase model, non-wetting: only gas in oil.)
         if (params.gasOilHysteresisWAG()) {
@@ -333,6 +329,11 @@ public:
                 return KrgDrainNxt;
             }
         }
+
+        // if no relperm hysteresis is enabled, use the drainage curve
+        if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
+            return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+
 
         // if it is enabled, use either the drainage or the imbibition curve. if the
         // imbibition curve is used, the saturation must be shifted.

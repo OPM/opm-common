@@ -1,5 +1,5 @@
 /*
-  Copyright 2021 NORCE.
+  Copyright 2023 Equinor.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -104,6 +104,7 @@ class DeckRecord;
           static WagHysteresisConfigRecord serializationTestObject()
           {
               WagHysteresisConfigRecord result;
+              result.wagLandsParamValue = 0;
               result.wagSecondaryDrainageReductionValue = 1;
               result.wagGasFlagValue = true;
               result.wagResidualOilFlagValue = false;
@@ -125,6 +126,11 @@ class DeckRecord;
       const std::vector<WagHysteresisConfigRecord>::const_iterator begin() const;
       const std::vector<WagHysteresisConfigRecord>::const_iterator end() const;
 
+      template<class Serializer>
+      void serializeOp(Serializer& serializer)
+      {
+        serializer(wagrecords);
+      }
       bool operator==(const WagHysteresisConfig& other) const;
 
       const WagHysteresisConfigRecord& operator[](std::size_t index) const;
