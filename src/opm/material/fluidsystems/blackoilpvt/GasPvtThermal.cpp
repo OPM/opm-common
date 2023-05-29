@@ -85,8 +85,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
             viscrefPress_[regionIdx] = viscrefTable[regionIdx].reference_pressure;
 
-            // temperature used to calculate the reference viscosity [K]. 
+            // Temperature used to calculate the reference viscosity [K]. 
+            // The value dooes not matter as the underlying PVT object is isothermal.
             constexpr const Scalar Tref = 273.15 + 20;
+            //TODO: For now I just assumed the default references RV and RVW = 0, 
+            // we could add these two parameters to a new item keyword VISCREF 
+            //or create a new keyword for gas. 
             constexpr const Scalar Rvref = 0.0;
             constexpr const Scalar Rvwref = 0.0;
             // compute the reference viscosity using the isothermal PVT object.
