@@ -86,10 +86,16 @@ namespace Opm {
 
         addKey(UNIT_SYSTEM_MISMATCH, InputErrorAction::THROW_EXCEPTION);
 
+        // WELLDIMS actions
         this->addKey(RUNSPEC_NUMWELLS_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
         this->addKey(RUNSPEC_CONNS_PER_WELL_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
         this->addKey(RUNSPEC_NUMGROUPS_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
         this->addKey(RUNSPEC_GROUPSIZE_TOO_LARGE, InputErrorAction::THROW_EXCEPTION);
+
+        // WSEGDIMS actions (default is to emit a warning and continue)
+        this->addKey(RUNSPEC_NUMMSW_TOO_LARGE, InputErrorAction::WARN);
+        this->addKey(RUNSPEC_NUMSEG_PER_WELL_TOO_LARGE, InputErrorAction::WARN);
+        this->addKey(RUNSPEC_NUMBRANCH_TOO_LARGE, InputErrorAction::WARN);
 
         addKey(UNSUPPORTED_INITIAL_THPRES, InputErrorAction::THROW_EXCEPTION);
         addKey(UNSUPPORTED_TERMINATE_IF_BHP, InputErrorAction::THROW_EXCEPTION);
@@ -337,6 +343,10 @@ namespace Opm {
     const std::string ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE = "RUNSPEC_CONNS_PER_WELL_TOO_LARGE";
     const std::string ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE = "RUNSPEC_NUMGROUPS_TOO_LARGE";
     const std::string ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE = "RUNSPEC_GROUPSIZE_TOO_LARGE";
+
+    const std::string ParseContext::RUNSPEC_NUMMSW_TOO_LARGE = "RUNSPEC_NUMMSW_TOO_LARGE";
+    const std::string ParseContext::RUNSPEC_NUMSEG_PER_WELL_TOO_LARGE = "RUNSPEC_NUMSEG_PER_WELL_TOO_LARGE";
+    const std::string ParseContext::RUNSPEC_NUMBRANCH_TOO_LARGE = "RUNSPEC_NUMBRANCH_TOO_LARGE";
 
     const std::string ParseContext::UNSUPPORTED_INITIAL_THPRES = "UNSUPPORTED_INITIAL_THPRES";
     const std::string ParseContext::UNSUPPORTED_TERMINATE_IF_BHP = "UNSUPPORTED_TERMINATE_IF_BHP";

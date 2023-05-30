@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
@@ -81,7 +82,7 @@ namespace {
         const auto message_fmt = fmt::format(R"(Problem with keyword {{keyword}}
   In {{file}} line {{line}}
   The case has {schedVal} {entity}, but at most {maxVal} {pl} allowed in {{keyword}}.
-  Please increase item {item} in {{keyword}} to at least {schedVal})",
+  Please increase item {item} of {{keyword}} to at least {schedVal})",
                                              "schedVal"_a = schedVal,
                                              "maxVal"_a = maxVal,
                                              "entity"_a = entity,
@@ -237,6 +238,144 @@ namespace {
         }
     } // WellDims
 
+    namespace WellSegDims {
+        std::size_t numMultisegWells(const Opm::Schedule& sched,
+                                     const std::size_t    reportStep)
+        {
+            const auto& wnames = sched.wellNames(reportStep);
+
+            return std::count_if(std::begin(wnames), std::end(wnames),
+                [&sched, reportStep](const std::string& wname) -> bool
+            {
+                return sched.getWell(wname, reportStep).isMultiSegment();
+            });
+        }
+
+        int maxSegmentID(const Opm::Schedule& sched,
+                         const std::size_t    reportStep)
+        {
+            const auto& wnames = sched.wellNames(reportStep);
+
+            return std::accumulate(std::begin(wnames), std::end(wnames), 0,
+                [&sched, reportStep](const int m, const std::string& wname) -> int
+            {
+                // maxSegmentID() returns 0 for standard (non-MS) wells.
+                return std::max(m, sched.getWell(wname, reportStep).maxSegmentID());
+            });
+        }
+
+        int maxBranchID(const Opm::Schedule& sched,
+                        const std::size_t    reportStep)
+        {
+            const auto& wnames = sched.wellNames(reportStep);
+
+            return std::accumulate(std::begin(wnames), std::end(wnames), 0,
+                [&sched, reportStep](const int m, const std::string& wname) -> int
+            {
+                // maxBranchID() returns 0 for standard (non-MS) wells.
+                return std::max(m, sched.getWell(wname, reportStep).maxBranchID());
+            });
+        }
+
+        void checkNumMultisegWells(const Opm::WellSegmentDims& wsdims,
+                                   const Opm::Schedule&        sched,
+                                   const Opm::ParseContext&    ctxt,
+                                   Opm::ErrorGuard&            guard)
+        {
+            const auto numSteps = sched.size() - 1;
+
+            auto numMSW = std::size_t{0};
+            for (auto step = 0*numSteps; step < numSteps; ++step) {
+                numMSW = std::max(numMSW, numMultisegWells(sched, step));
+            }
+
+            if (static_cast<int>(numMSW) <= wsdims.maxSegmentedWells()) {
+                return;
+            }
+
+            const auto item = 1; // NSWLMX = WSEGDIMS(1)
+            const auto* entity = (numMSW == 1)
+                ? "multi-segmented well"
+                : "multi-segmented wells";
+
+            if (const auto& location = wsdims.location(); location.has_value()) {
+                reportError(*location, wsdims.maxSegmentedWells(), numMSW, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMMSW_TOO_LARGE, ctxt, guard);
+            }
+            else {
+                reportError("WSEGDIMS", numMSW, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMMSW_TOO_LARGE, ctxt, guard);
+            }
+        }
+
+        void checkNumSegments(const Opm::WellSegmentDims& wsdims,
+                              const Opm::Schedule&        sched,
+                              const Opm::ParseContext&    ctxt,
+                              Opm::ErrorGuard&            guard)
+        {
+            const auto numSteps = sched.size() - 1;
+
+            auto numSeg = 0;
+            for (auto step = 0*numSteps; step < numSteps; ++step) {
+                numSeg = std::max(numSeg, maxSegmentID(sched, step));
+            }
+
+            if (numSeg <= wsdims.maxSegmentsPerWell()) {
+                return;
+            }
+
+            const auto item = 2; // NSEGMX = WSEGDIMS(2)
+            const auto* entity = (numSeg == 1)
+                ? "well segment"
+                : "well segments";
+
+            const auto* hostEntity = "multi-segmented well";
+
+            if (const auto& location = wsdims.location(); location.has_value()) {
+                reportError(*location, wsdims.maxSegmentsPerWell(), numSeg, item, hostEntity, entity,
+                            Opm::ParseContext::RUNSPEC_NUMSEG_PER_WELL_TOO_LARGE, ctxt, guard);
+            }
+            else {
+                reportError("WSEGDIMS", numSeg, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMSEG_PER_WELL_TOO_LARGE, ctxt, guard);
+            }
+        }
+
+        void checkNumBranches(const Opm::WellSegmentDims& wsdims,
+                              const Opm::Schedule&        sched,
+                              const Opm::ParseContext&    ctxt,
+                              Opm::ErrorGuard&            guard)
+        {
+            const auto numSteps = sched.size() - 1;
+
+            auto numBranch = 0;
+            for (auto step = 0*numSteps; step < numSteps; ++step) {
+                numBranch = std::max(numBranch, maxBranchID(sched, step));
+            }
+
+            if (numBranch <= wsdims.maxLateralBranchesPerWell()) {
+                return;
+            }
+
+            const auto item = 3; // NLBRMX = WSEGDIMS(3)
+            const auto* entity = (numBranch == 1)
+                ? "lateral branch"
+                : "lateral branches";
+
+            const auto* hostEntity = "multi-segmented well";
+
+            if (const auto& location = wsdims.location(); location.has_value()) {
+                reportError(*location, wsdims.maxLateralBranchesPerWell(),
+                            numBranch, item, hostEntity, entity,
+                            Opm::ParseContext::RUNSPEC_NUMBRANCH_TOO_LARGE, ctxt, guard);
+            }
+            else {
+                reportError("WSEGDIMS", numBranch, item, entity,
+                            Opm::ParseContext::RUNSPEC_NUMBRANCH_TOO_LARGE, ctxt, guard);
+            }
+        }
+    } // WellSegmentDims
+
     void consistentWellDims(const Opm::Welldims&     wdims,
                             const Opm::Schedule&     sched,
                             const Opm::ParseContext& ctxt,
@@ -247,6 +386,16 @@ namespace {
         WellDims::checkNumGroups  (wdims, sched, ctxt, guard);
         WellDims::checkGroupSize  (wdims, sched, ctxt, guard);
     }
+
+    void consistentSegmentDimentions(const Opm::WellSegmentDims& wsdims,
+                                     const Opm::Schedule&        sched,
+                                     const Opm::ParseContext&    ctxt,
+                                     Opm::ErrorGuard&            guard)
+    {
+        WellSegDims::checkNumMultisegWells(wsdims, sched, ctxt, guard);
+        WellSegDims::checkNumSegments     (wsdims, sched, ctxt, guard);
+        WellSegDims::checkNumBranches     (wsdims, sched, ctxt, guard);
+    }
 } // Anonymous
 
 void
@@ -255,7 +404,10 @@ Opm::checkConsistentArrayDimensions(const EclipseState& es,
                                     const ParseContext& ctxt,
                                     ErrorGuard&         guard)
 {
-    consistentWellDims(es.runspec().wellDimensions(), sched, ctxt, guard);
+    const auto& rspec = es.runspec();
+
+    consistentWellDims(rspec.wellDimensions(), sched, ctxt, guard);
+    consistentSegmentDimentions(rspec.wellSegmentDimensions(), sched, ctxt, guard);
 }
 
 
