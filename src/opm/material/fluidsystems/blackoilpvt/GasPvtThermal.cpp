@@ -61,14 +61,45 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     // viscosity
     if (enableThermalViscosity_) {
+        if (tables.getViscrefTable().empty())
+            OPM_THROW(std::runtime_error, "VISCREF is required when GASVISCT is present");
+
         const auto& gasvisctTables = tables.getGasvisctTables();
-        auto gasCompIdx = tables.gas_comp_index();
-        std::string gasvisctColumnName = "Viscosity" + std::to_string(static_cast<long long>(gasCompIdx));
+        const auto& viscrefTable = tables.getViscrefTable();
+
+        if (gasvisctTables.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Tables sizes mismatch. GASVISCT: {}, NumRegions: {}\n",
+                                  gasvisctTables.size(), numRegions));
+        }
+        if (viscrefTable.size() != numRegions) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Tables sizes mismatch. VISCREF: {}, NumRegions: {}\n",
+                                  viscrefTable.size(), numRegions));
+        }
 
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-            const auto& T = gasvisctTables[regionIdx].getColumn("Temperature").vectorCopy();
-            const auto& mu = gasvisctTables[regionIdx].getColumn(gasvisctColumnName).vectorCopy();
-            gasvisctCurves_[regionIdx].setXYContainers(T, mu);
+            const auto& TCol = gasvisctTables[regionIdx].getColumn("Temperature").vectorCopy();
+            const auto& muCol = gasvisctTables[regionIdx].getColumn("Viscosity").vectorCopy();
+            gasvisctCurves_[regionIdx].setXYContainers(TCol, muCol);
+
+            viscrefPress_[regionIdx] = viscrefTable[regionIdx].reference_pressure;
+
+            // Temperature used to calculate the reference viscosity [K]. 
+            // The value dooes not matter as the underlying PVT object is isothermal.
+            constexpr const Scalar Tref = 273.15 + 20;
+            //TODO: For now I just assumed the default references RV and RVW = 0, 
+            // we could add these two parameters to a new item keyword VISCREF 
+            //or create a new keyword for gas. 
+            constexpr const Scalar Rvref = 0.0;
+            constexpr const Scalar Rvwref = 0.0;
+            // compute the reference viscosity using the isothermal PVT object.
+            viscRef_[regionIdx] =
+                isothermalPvt_->viscosity(regionIdx,
+                                          Tref,
+                                          viscrefPress_[regionIdx],
+                                          Rvref, 
+                                          Rvwref);
         }
     }
 

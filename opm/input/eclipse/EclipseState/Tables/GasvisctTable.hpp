@@ -24,15 +24,14 @@
 
 namespace Opm {
 
-    class Deck;
     class DeckItem;
 
     class GasvisctTable : public SimpleTable {
     public:
-        GasvisctTable( const Deck& deck, const DeckItem& deckItem );
+        GasvisctTable( const DeckItem& item, const int tableID  );
 
         const TableColumn& getTemperatureColumn() const;
-        const TableColumn& getGasViscosityColumn(size_t compIdx) const;
+        const TableColumn& getGasViscosityColumn() const;
     };
 }
 

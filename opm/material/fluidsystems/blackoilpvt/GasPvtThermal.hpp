@@ -57,11 +57,14 @@ public:
         enableThermalDensity_ = false;
         enableJouleThomson_ = false;
         enableThermalViscosity_ = false;
+        enableInternalEnergy_ = false;
         isothermalPvt_ = nullptr;
     }
 
     GasPvtThermal(IsothermalPvt* isothermalPvt,
                   const std::vector<TabulatedOneDFunction>& gasvisctCurves,
+                  const std::vector<Scalar>& viscrefPress,
+                  const std::vector<Scalar>& viscRef,
                   const std::vector<Scalar>& gasdentRefTemp,
                   const std::vector<Scalar>& gasdentCT1,
                   const std::vector<Scalar>& gasdentCT2,
@@ -74,6 +77,8 @@ public:
                   bool enableInternalEnergy)
         : isothermalPvt_(isothermalPvt)
         , gasvisctCurves_(gasvisctCurves)
+        , viscrefPress_(viscrefPress)
+        , viscRef_(viscRef)
         , gasdentRefTemp_(gasdentRefTemp)
         , gasdentCT1_(gasdentCT1)
         , gasdentCT2_(gasdentCT2)
@@ -105,6 +110,8 @@ public:
     void setNumRegions(size_t numRegions)
     {
         gasvisctCurves_.resize(numRegions);
+        viscrefPress_.resize(numRegions);
+        viscRef_.resize(numRegions);
         internalEnergyCurves_.resize(numRegions);
         gasdentRefTemp_.resize(numRegions);
         gasdentCT1_.resize(numRegions);
@@ -119,9 +126,6 @@ public:
      */
     void initEnd()
     { }
-
-    size_t numRegions() const
-    { return gasvisctCurves_.size(); }
 
     /*!
      * \brief Returns true iff the density of the gas phase is temperature dependent.
@@ -140,6 +144,10 @@ public:
      */
     bool enableThermalViscosity() const
     { return enableThermalViscosity_; }
+
+    size_t numRegions() const
+    { return viscrefPress_.size(); }
+ 
 
     /*!
      * \brief Returns the specific internal energy [J/kg] of gas given a set of parameters.
@@ -216,12 +224,14 @@ public:
                          const Evaluation& Rv,
                          const Evaluation& Rvw) const
     {
+        
+        const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rv, Rvw);
         if (!enableThermalViscosity())
-            return isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rv, Rvw);
+            return isothermalMu;
 
-        // compute the viscosity deviation due to temperature
-        const auto& muGasvisct = gasvisctCurves_[regionIdx].eval(temperature);
-        return muGasvisct;
+        // compute the viscosity deviation due to temperature        
+        const auto& muGasvisct = gasvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+        return muGasvisct/viscRef_[regionIdx]*isothermalMu;
     }
 
     /*!
@@ -232,12 +242,13 @@ public:
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
+        const auto& isothermalMu = isothermalPvt_->saturatedViscosity(regionIdx, temperature, pressure);
         if (!enableThermalViscosity())
-            return isothermalPvt_->saturatedViscosity(regionIdx, temperature, pressure);
+            return isothermalMu;
 
         // compute the viscosity deviation due to temperature
         const auto& muGasvisct = gasvisctCurves_[regionIdx].eval(temperature, true);
-        return muGasvisct;
+        return muGasvisct/viscRef_[regionIdx]*isothermalMu;
     }
 
     /*!
@@ -379,6 +390,12 @@ public:
     const std::vector<TabulatedOneDFunction>& gasvisctCurves() const
     { return gasvisctCurves_; }
 
+    const std::vector<Scalar>& viscrefPress() const
+    { return viscrefPress_; }
+
+    const std::vector<Scalar>& viscRef() const
+    { return viscRef_; }
+
     const std::vector<Scalar>& gasdentRefTemp() const
     { return gasdentRefTemp_; }
 
@@ -409,6 +426,8 @@ public:
             return false;
 
         return  this->gasvisctCurves() == data.gasvisctCurves() &&
+                this->viscrefPress() == data.viscrefPress() &&
+                this->viscRef() == data.viscRef() &&
                 this->gasdentRefTemp() == data.gasdentRefTemp() &&
                 this->gasdentCT1() == data.gasdentCT1() &&
                 this->gasdentCT2() == data.gasdentCT2() &&
@@ -428,6 +447,8 @@ public:
         else
             isothermalPvt_ = nullptr;
         gasvisctCurves_ = data.gasvisctCurves_;
+        viscrefPress_ = data.viscrefPress_;
+        viscRef_ = data.viscRef_;
         gasdentRefTemp_ = data.gasdentRefTemp_;
         gasdentCT1_ = data.gasdentCT1_;
         gasdentCT2_ = data.gasdentCT2_;
@@ -448,6 +469,8 @@ private:
     // The PVT properties needed for temperature dependence of the viscosity. We need
     // to store one value per PVT region.
     std::vector<TabulatedOneDFunction> gasvisctCurves_;
+    std::vector<Scalar> viscrefPress_;
+    std::vector<Scalar> viscRef_;
 
     std::vector<Scalar> gasdentRefTemp_;
     std::vector<Scalar> gasdentCT1_;

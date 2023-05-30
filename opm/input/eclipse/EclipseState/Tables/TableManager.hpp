@@ -289,7 +289,6 @@ namespace Opm {
         void initRTempTables(const Deck& deck);
         void initDims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
-        void initGasvisctTables(const Deck& deck);
 
         void initPlymaxTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);

@@ -52,6 +52,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     const auto& tables = eclState.getTableManager();
 
     enableThermalDensity_ = tables.OilDenT().size() > 0;
+    enableJouleThomson_ = tables.OilJT().size() > 0;
     enableThermalViscosity_ = tables.hasTables("OILVISCT");
     enableInternalEnergy_ = tables.hasTables("SPECHEAT");
 

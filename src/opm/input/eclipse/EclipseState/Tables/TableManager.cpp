@@ -581,6 +581,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initSimpleTableContainer<SpecheatTable>(deck, "SPECHEAT", m_tabdims.getNumPVTTables());
         initSimpleTableContainer<SpecrockTable>(deck, "SPECROCK", m_tabdims.getNumSatTables());
         initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<GasvisctTable>(deck, "GASVISCT", m_tabdims.getNumPVTTables());
         initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims.getNumPVTTables());
 
         initSimpleTableContainer<PlyadsTable>(deck, "PLYADS", m_tabdims.getNumSatTables());
@@ -592,7 +593,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         initPlyrockTables(deck);
         initPlymaxTables(deck);
-        initGasvisctTables(deck);
         initRTempTables(deck);
         initRocktabTables(deck);
         initPlyshlogTables(deck);
@@ -618,34 +618,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         } else if (hasRTEMPVD) {
             initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
         }
-    }
-
-
-    void TableManager::initGasvisctTables(const Deck& deck) {
-
-        const std::string keywordName = "GASVISCT";
-        size_t numTables = m_tabdims.getNumPVTTables();
-
-        if (!deck.hasKeyword(keywordName))
-            return; // the table is not featured by the deck...
-
-        auto& container = forceGetTables(keywordName , numTables);
-
-        if (deck.count(keywordName) > 1) {
-            complainAboutAmbiguousKeyword(deck, keywordName);
-            return;
-        }
-
-        const auto& tableKeyword = deck[keywordName].back();
-        for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-            const auto& tableRecord = tableKeyword.getRecord( tableIdx );
-            const auto& dataItem = tableRecord.getItem( 0 );
-            if (dataItem.data_size() > 0) {
-                std::shared_ptr<GasvisctTable> table = std::make_shared<GasvisctTable>( deck , dataItem );
-                container.addTable( tableIdx , table );
-            }
-        }
-    }
+    }   
 
 
     void TableManager::initPlyshlogTables(const Deck& deck) {

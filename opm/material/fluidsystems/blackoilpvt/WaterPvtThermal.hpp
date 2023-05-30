@@ -55,6 +55,7 @@ public:
     WaterPvtThermal()
     {
         enableThermalDensity_ = false;
+        enableJouleThomson_ = false;
         enableThermalViscosity_ = false;
         enableInternalEnergy_ = false;
         isothermalPvt_ = nullptr;

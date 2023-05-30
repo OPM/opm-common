@@ -1170,46 +1170,12 @@ WatvisctTable::getWaterViscosityColumn() const
     return SimpleTable::getColumn(1);
 }
 
-GasvisctTable::GasvisctTable(const Deck& deck, const DeckItem& deckItem)
+GasvisctTable::GasvisctTable(const DeckItem& item, const int tableID)
 {
-    int numComponents = deck.get<ParserKeywords::COMPS>().back().getRecord(0).getItem(0).get<int>(0);
-
-    auto temperatureDimension = deck.getActiveUnitSystem().getDimension("Temperature");
-    auto viscosityDimension = deck.getActiveUnitSystem().getDimension("Viscosity");
 
     m_schema.addColumn(ColumnSchema("Temperature", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-        std::string columnName = "Viscosity" + std::to_string(compIdx);
-        m_schema.addColumn(ColumnSchema(columnName, Table::INCREASING, Table::DEFAULT_NONE));
-    }
-
-    SimpleTable::addColumns();
-
-    if (deckItem.data_size() % numColumns() != 0)
-        throw std::runtime_error("Number of columns in the data file is inconsistent "
-                                 "with the expected number for keyword GASVISCT");
-
-    size_t rows = deckItem.data_size() / m_schema.size();
-    for (size_t columnIndex = 0; columnIndex < m_schema.size(); columnIndex++) {
-        auto& column = getColumn(columnIndex);
-        for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
-            size_t deckIndex = rowIdx * m_schema.size() + columnIndex;
-
-            if (deckItem.defaultApplied(deckIndex))
-                column.addDefault("GASVISCT");
-            else {
-                double rawValue = deckItem.get<double>(deckIndex);
-                double SIValue;
-
-                if (columnIndex == 0)
-                    SIValue = temperatureDimension.convertRawToSi(rawValue);
-                else
-                    SIValue = viscosityDimension.convertRawToSi(rawValue);
-
-                column.addValue(SIValue, "GASVISCT");
-            }
-        }
-    }
+    m_schema.addColumn(ColumnSchema("Viscosity", Table::RANDOM, Table::DEFAULT_NONE));
+    SimpleTable::init("GASVISCT", item, tableID);
 }
 
 const TableColumn&
@@ -1219,17 +1185,16 @@ GasvisctTable::getTemperatureColumn() const
 }
 
 const TableColumn&
-GasvisctTable::getGasViscosityColumn(size_t compIdx) const
+GasvisctTable::getGasViscosityColumn() const
 {
-    return SimpleTable::getColumn(1 + compIdx);
+    return SimpleTable::getColumn(1);
 }
 
 RtempvdTable::RtempvdTable(const DeckItem& item, const int tableID)
 {
     m_schema.addColumn(ColumnSchema("Depth", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     m_schema.addColumn(ColumnSchema("Temperature", Table::RANDOM, Table::DEFAULT_NONE));
-
-    SimpleTable::init("GASVISCT", item, tableID);
+    SimpleTable::init("RTEMPVD", item, tableID);
 }
 
 const TableColumn&
