@@ -937,7 +937,7 @@ namespace Opm {
         return this->headJ;
     }
 
-    std::vector<double> WellConnections::getMD() const {
+    const std::vector<double>& WellConnections::getMD() const {
         return this->md;
     }
 

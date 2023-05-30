@@ -95,7 +95,7 @@ namespace Opm {
 
         int getHeadI() const;
         int getHeadJ() const;
-        std::vector<double> getMD() const;
+        const std::vector<double>& getMD() const;
         void add(Connection);
         std::size_t size() const;
         bool empty() const;
