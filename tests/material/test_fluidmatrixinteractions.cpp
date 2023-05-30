@@ -29,6 +29,9 @@
  */
 #include "config.h"
 
+#define BOOST_TEST_MODULE FluidMatrixInteractions
+#include <boost/test/unit_test.hpp>
+
 #include <opm/common/TimingMacros.hpp>
 
 // include the local AD framwork
@@ -80,20 +83,20 @@ void testGenericApi()
 {
     while (0) {
         // ensure the presence of the required values
-        static const int numPhases = MaterialLaw::numPhases;
+        static constexpr int numPhases = MaterialLaw::numPhases;
 
         // check for the presence of the is*Dependent values
-        [[maybe_unused]] static const bool isSaturationDependent = MaterialLaw::isSaturationDependent;
-        [[maybe_unused]] static const bool isPressureDependent = MaterialLaw::isPressureDependent;
-        [[maybe_unused]] static const bool isTemperatureDependent = MaterialLaw::isTemperatureDependent;
-        [[maybe_unused]] static const bool isCompositionDependent = MaterialLaw::isCompositionDependent;
+        [[maybe_unused]] static constexpr bool isSaturationDependent = MaterialLaw::isSaturationDependent;
+        [[maybe_unused]] static constexpr bool isPressureDependent = MaterialLaw::isPressureDependent;
+        [[maybe_unused]] static constexpr bool isTemperatureDependent = MaterialLaw::isTemperatureDependent;
+        [[maybe_unused]] static constexpr bool isCompositionDependent = MaterialLaw::isCompositionDependent;
 
         // Make sure that the Traits, Params and Scalar typedefs are
         // exported by the material law
-        typedef typename MaterialLaw::Params Params;
-        typedef typename MaterialLaw::Traits Traits;
-        typedef typename MaterialLaw::Scalar Scalar;
-        typedef typename MaterialLaw::Traits::Scalar TraitsScalar;
+        using Params = typename MaterialLaw::Params;
+        using Traits = typename MaterialLaw::Traits;
+        using Scalar = typename MaterialLaw::Scalar;
+        using TraitsScalar = typename MaterialLaw::Traits::Scalar;
 
         static_assert(std::is_same<Scalar, TraitsScalar>::value,
                       "The traits and the material law must use the same type as scalar value");
@@ -135,10 +138,10 @@ void testGenericApi()
 template <class MaterialLaw, class FluidState>
 void testTwoPhaseApi()
 {
-    typedef typename MaterialLaw::Scalar Scalar;
+    using Scalar = typename MaterialLaw::Scalar;
 
     while (0) {
-        static const int numPhases = MaterialLaw::numPhases;
+        static constexpr int numPhases = MaterialLaw::numPhases;
         static_assert(numPhases == 2,
                       "The number of fluid phases for a twophase "
                       "capillary pressure law must be 2");
@@ -146,8 +149,8 @@ void testTwoPhaseApi()
                       "This material law is expected to implement "
                       "the two-phase API!");
 
-        [[maybe_unused]] static const int wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
-        [[maybe_unused]] static const int nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
+        [[maybe_unused]] static constexpr int wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
+        [[maybe_unused]] static constexpr int nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
 
         // make sure the two-phase specific methods are present
         const FluidState fs;
@@ -173,7 +176,7 @@ void testTwoPhaseApi()
 template <class MaterialLaw, class FluidState>
 void testTwoPhaseSatApi()
 {
-    typedef typename MaterialLaw::Scalar Scalar;
+    using Scalar = typename MaterialLaw::Scalar;
 
     while (0) {
         static_assert(MaterialLaw::implementsTwoPhaseSatApi,
@@ -189,7 +192,7 @@ void testTwoPhaseSatApi()
                       "Capillary pressure laws which implement the twophase saturation only "
                       "API cannot be dependent on the phase compositions!");
 
-         [[maybe_unused]] static const int numPhases = MaterialLaw::numPhases;
+         [[maybe_unused]] static constexpr int numPhases = MaterialLaw::numPhases;
 
         // make sure the two-phase specific methods are present
         const typename MaterialLaw::Params params;
@@ -215,17 +218,17 @@ void testTwoPhaseSatApi()
 template <class MaterialLaw, class FluidState>
 void testThreePhaseApi()
 {
-    typedef typename MaterialLaw::Scalar Scalar;
+    using Scalar = typename MaterialLaw::Scalar;
 
     while (0) {
-        static const int numPhases = MaterialLaw::numPhases;
+        static constexpr int numPhases = MaterialLaw::numPhases;
         static_assert(numPhases == 3,
                       "The number of fluid phases for a threephase "
                       "capillary pressure law must be 3");
 
-        [[maybe_unused]] static const int wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
-        [[maybe_unused]] static const int nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
-        [[maybe_unused]] static const int gasPhaseIdx = MaterialLaw::gasPhaseIdx;
+        [[maybe_unused]] static constexpr int wettingPhaseIdx = MaterialLaw::wettingPhaseIdx;
+        [[maybe_unused]] static constexpr int nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx;
+        [[maybe_unused]] static constexpr int gasPhaseIdx = MaterialLaw::gasPhaseIdx;
 
         // make sure the two-phase specific methods are present
         const FluidState fs;
@@ -251,192 +254,171 @@ void testThreePhaseApi()
     }
 }
 
-template <class MaterialLaw>
-void testThreePhaseSatApi()
+using Types = std::tuple<float,double>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(ApiConformance, Scalar, Types)
 {
-}
+    using H2O = Opm::SimpleH2O<Scalar>;
+    using N2 = Opm::N2<Scalar>;
 
-template <class Scalar>
-inline void testAll()
-{
-    typedef Opm::SimpleH2O<Scalar> H2O;
-    typedef Opm::N2<Scalar> N2;
+    using Liquid = Opm::LiquidPhase<Scalar, H2O>;
+    using Gas = Opm::GasPhase<Scalar, N2>;
 
-    typedef Opm::LiquidPhase<Scalar, H2O> Liquid;
-    typedef Opm::GasPhase<Scalar, N2> Gas;
+    using TwoPFluidSystem = Opm::TwoPhaseImmiscibleFluidSystem<Scalar, Liquid, Gas>;
+    using ThreePFluidSystem = Opm::BlackOilFluidSystem<Scalar>;
 
-    typedef Opm::TwoPhaseImmiscibleFluidSystem<Scalar, Liquid, Gas> TwoPFluidSystem;
-    typedef Opm::BlackOilFluidSystem<Scalar> ThreePFluidSystem;
+    using TwoPhaseTraits = Opm::TwoPhaseMaterialTraits<Scalar,
+                                                       TwoPFluidSystem::wettingPhaseIdx,
+                                                       TwoPFluidSystem::nonWettingPhaseIdx>;
 
-    typedef Opm::TwoPhaseMaterialTraits<Scalar,
-                                        TwoPFluidSystem::wettingPhaseIdx,
-                                        TwoPFluidSystem::nonWettingPhaseIdx> TwoPhaseTraits;
+    using ThreePhaseTraits = Opm::ThreePhaseMaterialTraits<Scalar,
+                                                           ThreePFluidSystem::waterPhaseIdx,
+                                                           ThreePFluidSystem::oilPhaseIdx,
+                                                           ThreePFluidSystem::gasPhaseIdx>;
 
-    typedef Opm::ThreePhaseMaterialTraits<Scalar,
-                                          ThreePFluidSystem::waterPhaseIdx,
-                                          ThreePFluidSystem::oilPhaseIdx,
-                                          ThreePFluidSystem::gasPhaseIdx> ThreePhaseTraits;
-
-    typedef Opm::DenseAd::Evaluation<Scalar, 3> Evaluation;
-    typedef Opm::ImmiscibleFluidState<Evaluation, TwoPFluidSystem> TwoPhaseFluidState;
-    typedef Opm::ImmiscibleFluidState<Evaluation, ThreePFluidSystem> ThreePhaseFluidState;
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using TwoPhaseFluidState = Opm::ImmiscibleFluidState<Evaluation, TwoPFluidSystem>;
+    using ThreePhaseFluidState = Opm::ImmiscibleFluidState<Evaluation, ThreePFluidSystem>;
 
     // test conformance to the capillary pressure APIs
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::BrooksCorey<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::LinearMaterial<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::LinearMaterial<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
 
-        typedef Opm::EffToAbsLaw<MaterialLaw> TwoPAbsLaw;
+        using TwoPAbsLaw = Opm::EffToAbsLaw<MaterialLaw>;
         testGenericApi<TwoPAbsLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<TwoPAbsLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<TwoPAbsLaw, TwoPhaseFluidState>();
 
-        typedef Opm::LinearMaterial<ThreePhaseTraits> ThreePMaterialLaw;
+        using ThreePMaterialLaw = Opm::LinearMaterial<ThreePhaseTraits>;
         testGenericApi<ThreePMaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<ThreePMaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<ThreePMaterialLaw, ThreePhaseFluidState>();
 
-        typedef Opm::EffToAbsLaw<ThreePMaterialLaw> ThreePAbsLaw;
+        using ThreePAbsLaw = Opm::EffToAbsLaw<ThreePMaterialLaw>;
         testGenericApi<ThreePAbsLaw, ThreePhaseFluidState>();
         testThreePhaseApi<ThreePAbsLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<ThreePAbsLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> TwoPhaseMaterial;
-        typedef Opm::EclDefaultMaterial<ThreePhaseTraits,
-                                        /*GasOilMaterial=*/TwoPhaseMaterial,
-                                        /*OilWaterMaterial=*/TwoPhaseMaterial> MaterialLaw;
+        using TwoPhaseMaterial = Opm::BrooksCorey<TwoPhaseTraits>;
+        using MaterialLaw = Opm::EclDefaultMaterial<ThreePhaseTraits,
+                                                    /*GasOilMaterial=*/TwoPhaseMaterial,
+                                                    /*OilWaterMaterial=*/TwoPhaseMaterial>;
         testGenericApi<MaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<MaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<MaterialLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> TwoPhaseMaterial;
-        typedef Opm::EclStone1Material<ThreePhaseTraits,
-                                       /*GasOilMaterial=*/TwoPhaseMaterial,
-                                       /*OilWaterMaterial=*/TwoPhaseMaterial> MaterialLaw;
+        using TwoPhaseMaterial = Opm::BrooksCorey<TwoPhaseTraits>;
+        using MaterialLaw = Opm::EclStone1Material<ThreePhaseTraits,
+                                                  /*GasOilMaterial=*/TwoPhaseMaterial,
+                                                   /*OilWaterMaterial=*/TwoPhaseMaterial>;
         testGenericApi<MaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<MaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<MaterialLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> TwoPhaseMaterial;
-        typedef Opm::EclStone2Material<ThreePhaseTraits,
-                                       /*GasOilMaterial=*/TwoPhaseMaterial,
-                                       /*OilWaterMaterial=*/TwoPhaseMaterial> MaterialLaw;
+        using TwoPhaseMaterial = Opm::BrooksCorey<TwoPhaseTraits>;
+        using MaterialLaw = Opm::EclStone2Material<ThreePhaseTraits,
+                                                  /*GasOilMaterial=*/TwoPhaseMaterial,
+                                                   /*OilWaterMaterial=*/TwoPhaseMaterial>;
         testGenericApi<MaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<MaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<MaterialLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> TwoPhaseMaterial;
-        typedef Opm::EclTwoPhaseMaterial<ThreePhaseTraits,
-                                         /*GasOilMaterial=*/TwoPhaseMaterial,
-                                         /*OilWaterMaterial=*/TwoPhaseMaterial,
-                                         /*GasWaterMaterial=*/TwoPhaseMaterial> MaterialLaw;
+        using TwoPhaseMaterial = Opm::BrooksCorey<TwoPhaseTraits>;
+        using MaterialLaw = Opm::EclTwoPhaseMaterial<ThreePhaseTraits,
+                                                     /*GasOilMaterial=*/TwoPhaseMaterial,
+                                                     /*OilWaterMaterial=*/TwoPhaseMaterial,
+                                                     /*GasWaterMaterial=*/TwoPhaseMaterial>;
         testGenericApi<MaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<MaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<MaterialLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> TwoPhaseMaterial;
-        typedef Opm::EclMultiplexerMaterial<ThreePhaseTraits,
-                                            /*GasOilMaterial=*/TwoPhaseMaterial,
-                                            /*OilWaterMaterial=*/TwoPhaseMaterial,
-                                            /*GasWaterMaterial=*/TwoPhaseMaterial> MaterialLaw;
+        using TwoPhaseMaterial = Opm::BrooksCorey<TwoPhaseTraits>;
+        using MaterialLaw = Opm::EclMultiplexerMaterial<ThreePhaseTraits,
+                                                        /*GasOilMaterial=*/TwoPhaseMaterial,
+                                                        /*OilWaterMaterial=*/TwoPhaseMaterial,
+                                                        /*GasWaterMaterial=*/TwoPhaseMaterial>;
         testGenericApi<MaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<MaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<MaterialLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::ThreePhaseParkerVanGenuchten<ThreePhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::ThreePhaseParkerVanGenuchten<ThreePhaseTraits>;
         testGenericApi<MaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<MaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<MaterialLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::NullMaterial<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::NullMaterial<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::NullMaterial<ThreePhaseTraits> ThreePMaterialLaw;
+        using ThreePMaterialLaw = Opm::NullMaterial<ThreePhaseTraits>;
         testGenericApi<ThreePMaterialLaw, ThreePhaseFluidState>();
         testThreePhaseApi<ThreePMaterialLaw, ThreePhaseFluidState>();
-        //testThreePhaseSatApi<ThreePMaterialLaw, ThreePhaseFluidState>();
     }
     {
-        typedef Opm::ParkerLenhard<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::ParkerLenhard<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::PiecewiseLinearTwoPhaseMaterial<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::PiecewiseLinearTwoPhaseMaterial<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::TwoPhaseLETCurves<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::TwoPhaseLETCurves<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::SplineTwoPhaseMaterial<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::SplineTwoPhaseMaterial<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::VanGenuchten<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::VanGenuchten<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::RegularizedBrooksCorey<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::RegularizedBrooksCorey<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::RegularizedVanGenuchten<TwoPhaseTraits> MaterialLaw;
+        using MaterialLaw = Opm::RegularizedVanGenuchten<TwoPhaseTraits>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
 
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> RawMaterialLaw;
-        typedef Opm::EclEpsTwoPhaseLaw<RawMaterialLaw> MaterialLaw;
+        using RawMaterialLaw = Opm::BrooksCorey<TwoPhaseTraits>;
+        using MaterialLaw = Opm::EclEpsTwoPhaseLaw<RawMaterialLaw>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
     {
-        typedef Opm::BrooksCorey<TwoPhaseTraits> RawMaterialLaw;
-        typedef Opm::EclHysteresisTwoPhaseLaw<RawMaterialLaw> MaterialLaw;
+        using RawMaterialLaw = Opm::BrooksCorey<TwoPhaseTraits>;
+        using MaterialLaw = Opm::EclHysteresisTwoPhaseLaw<RawMaterialLaw>;
         testGenericApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
-}
-
-int main()
-{
-    testAll<double>();
-    testAll<float>();
-
-    return 0;
 }
