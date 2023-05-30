@@ -3,6 +3,7 @@
   "sections": [
     "SCHEDULE"
   ],
+  "requires": ["WELTRAJ"],
   "items": [
     {
       "item": 1,
@@ -13,6 +14,7 @@
       "item": 2,
       "name": "BRANCH_NUMBER",
       "value_type": "INT",
+      "default": 1,
       "comment": "Not used"
     },
     {
@@ -31,12 +33,14 @@
       "item": 5,
       "name": "PERF_REF",
       "value_type": "STRING",
+      "default": "TVD",
       "comment": "Not used"
     },
     {
       "item": 6,
       "name": "COMPLETION_NUMBER",
       "value_type": "INT",
+      "default": 1,
       "comment": "Not used"
     },
     {

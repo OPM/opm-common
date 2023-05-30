@@ -13,6 +13,7 @@
       "item": 2,
       "name": "BRANCH_NUMBER",
       "value_type": "INT",
+      "default": 1,
       "comment": "Not used"
     },
     {

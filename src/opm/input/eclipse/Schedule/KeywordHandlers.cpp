@@ -220,6 +220,11 @@ namespace {
                     this->snapshots.back().wells.update( well2 );
                 }
                 this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+                const auto& md = connections->getMD();
+                if (!std::is_sorted(std::begin(md), std::end(md))) {
+                    auto msg = fmt::format("Well {} measured depth column is not strictly increasing", name);
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
             }
         }
         this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
@@ -238,6 +243,8 @@ namespace {
                 auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
                 // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ 
                 connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
+                // In the case that defaults are used in WELSPECS for headI/J the headI/J are calculated based on the well trajectory data
+                well2.updateHead(connections->getHeadI(), connections->getHeadJ());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
                     this->snapshots.back().wells.update( well2 );
                     wells.insert( name );

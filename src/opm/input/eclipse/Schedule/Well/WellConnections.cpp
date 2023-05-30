@@ -577,9 +577,18 @@ namespace Opm {
             I = ijk[0];
             J = ijk[1];
             k = ijk[2];
-            // std::cout<< "I: " << I << " J: " << J << " K: " << k << std::endl;
-            external::cvf::Vec3d connection_vector = intersections[is].intersectionLengthsInCellCS;
 
+            // When using WELTRAJ & COMPTRAJ one may use default settings in WELSPECS for headI/J and let the 
+            // headI/J be calculated by the trajectory data.
+            // If these defaults are used the headI/J are set to the first intersection.
+            if (is == 0) {
+                if (this->headI == -1)
+                    this->headI = I;
+                if (this->headJ == -1)
+                    this->headJ = J;
+            }
+
+            external::cvf::Vec3d connection_vector = intersections[is].intersectionLengthsInCellCS;
 
             const CompletedCells::Cell& cell = grid.get_cell(I, J, k);
 
@@ -918,6 +927,18 @@ namespace Opm {
             }
         }
         return perf_length;
+    }
+
+    int WellConnections::getHeadI() const {
+        return this->headI;
+    }
+
+    int WellConnections::getHeadJ() const {
+        return this->headJ;
+    }
+
+    const std::vector<double>& WellConnections::getMD() const {
+        return this->md;
     }
 
     std::optional<int>

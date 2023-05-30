@@ -17,12 +17,14 @@
     {
       "item": 3,
       "name": "HEAD_I",
-      "value_type": "INT"
+      "value_type": "INT",
+      "default": 0
     },
     {
       "item": 4,
       "name": "HEAD_J",
-      "value_type": "INT"
+      "value_type": "INT",
+      "default": 0
     },
     {
       "item": 5,

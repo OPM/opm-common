@@ -93,6 +93,9 @@ namespace Opm {
 
         void loadWELTRAJ(const DeckRecord& record, const ScheduleGrid& grid, const std::string& wname, const KeywordLocation& location);
 
+        int getHeadI() const;
+        int getHeadJ() const;
+        const std::vector<double>& getMD() const;
         void add(Connection);
         std::size_t size() const;
         bool empty() const;
