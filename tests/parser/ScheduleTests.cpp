@@ -1684,6 +1684,8 @@ VAPPARS
 )";
 
     const auto& schedule = make_schedule(input);
+    const OilVaporizationProperties& ovap0 = schedule[0].oilvap();
+    BOOST_CHECK(ovap0.getType() == OilVaporizationProperties::OilVaporization::UNDEF);
     size_t currentStep = 1;
     const OilVaporizationProperties& ovap = schedule[currentStep].oilvap();
     BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
@@ -1691,9 +1693,37 @@ VAPPARS
     BOOST_CHECK_EQUAL(2, vap1);
     double vap2 =  ovap.vap2();
     BOOST_CHECK_EQUAL(0.100, vap2);
-    BOOST_CHECK_EQUAL(false,   ovap.drsdtActive());
-    BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
+    BOOST_CHECK_EQUAL(false, ovap.drsdtActive());
+    BOOST_CHECK_EQUAL(false, ovap.drvdtActive());
 
+}
+
+BOOST_AUTO_TEST_CASE(createDeckWithVAPPARSInSOLUTION) {
+    std::string input = R"(
+SOLUTION
+VAPPARS
+2 0.100
+/
+
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+)";
+
+    const auto& schedule = make_schedule(input);
+    for (int i = 0; i < 2; ++i) {
+        const OilVaporizationProperties& ovap = schedule[i].oilvap();
+        BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
+        double vap1 =  ovap.vap1();
+        BOOST_CHECK_EQUAL(2, vap1);
+        double vap2 =  ovap.vap2();
+        BOOST_CHECK_EQUAL(0.100, vap2);
+        BOOST_CHECK_EQUAL(false,   ovap.drsdtActive());
+        BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {

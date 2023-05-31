@@ -139,6 +139,19 @@ namespace {
 
         return rptonly;
     }
+
+    std::optional<Opm::OilVaporizationProperties>
+    vappars_solution_section(const Opm::SOLUTIONSection& section, const int numpvt) {
+        if (section.hasKeyword("VAPPARS")) {
+            const auto& record = section.getKeyword("VAPPARS").getRecord(0);
+            Opm::OilVaporizationProperties ovp(numpvt);
+            double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
+            double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
+            Opm::OilVaporizationProperties::updateVAPPARS(ovp, vap1, vap2);
+            return ovp;
+        }
+        return std::nullopt;
+    }
 }
 
 namespace Opm {
@@ -160,7 +173,9 @@ namespace Opm {
         output_interval(output_interval_),
         sumthin(sumthin_summary_section(SUMMARYSection{ deck })),
         rptonly(rptonly_summary_section(SUMMARYSection{ deck })),
-        gaslift_opt_active(deck.hasKeyword<ParserKeywords::LIFTOPT>())
+        gaslift_opt_active(deck.hasKeyword<ParserKeywords::LIFTOPT>()),
+        oilVap(vappars_solution_section(SOLUTIONSection{deck},
+                                        runspec.tabdims().getNumPVTTables()))
     {
     }
 
@@ -2247,7 +2262,11 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     const auto& runspec = this->m_static.m_runspec;
     auto& sched_state = snapshots.back();
     sched_state.init_nupcol( runspec.nupcol() );
-    sched_state.update_oilvap( OilVaporizationProperties( runspec.tabdims().getNumPVTTables() ));
+    if (this->m_static.oilVap.has_value()) {
+        sched_state.update_oilvap(*this->m_static.oilVap);
+    } else {
+        sched_state.update_oilvap( OilVaporizationProperties( runspec.tabdims().getNumPVTTables() ));
+    }
     sched_state.update_message_limits( this->m_static.m_deck_message_limits );
     sched_state.pavg.update( PAvg() );
     sched_state.wtest_config.update( WellTestConfig() );
