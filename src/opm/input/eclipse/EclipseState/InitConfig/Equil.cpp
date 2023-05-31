@@ -2,6 +2,7 @@
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
 #include <vector>
 
@@ -100,6 +101,82 @@ namespace Opm {
                humid_gas_init_proc == data.humid_gas_init_proc;
     }
 
+    StressEquilRecord::StressEquilRecord(const DeckRecord& record)
+        : datum_depth(record.getItem<ParserKeywords::STREQUIL::DATUM_DEPTH>().getSIDouble(0))
+        , datum_posx(record.getItem<ParserKeywords::STREQUIL::DATUM_POSX>().getSIDouble(0))
+        , datum_posy(record.getItem<ParserKeywords::STREQUIL::DATUM_POSY>().getSIDouble(0))
+        , stress_xx(record.getItem<ParserKeywords::STREQUIL::STRESSXX>().getSIDouble(0))
+        , stress_xx_grad(record.getItem<ParserKeywords::STREQUIL::STRESSXXGRAD>().getSIDouble(0))
+        , stress_yy(record.getItem<ParserKeywords::STREQUIL::STRESSYY>().getSIDouble(0))
+        , stress_yy_grad(record.getItem<ParserKeywords::STREQUIL::STRESSYYGRAD>().getSIDouble(0))
+        , stress_zz(record.getItem<ParserKeywords::STREQUIL::STRESSZZ>().getSIDouble(0))
+        , stress_zz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSZZGRAD>().getSIDouble(0))
+    {}
+
+    StressEquilRecord StressEquilRecord::serializationTestObject()
+    {
+        StressEquilRecord result;
+        result.datum_depth = 1.0;
+        result.datum_posx = 2.0;
+        result.datum_posy = 3.0;
+        result.stress_xx = 4.0;
+        result.stress_xx_grad = 5.0;
+        result.stress_yy = 6.0;
+        result.stress_yy_grad = 7.0;
+        result.stress_zz = 8.0;
+        result.stress_zz_grad = 9.0;
+
+        return result;
+    }
+
+    double StressEquilRecord::datumDepth() const {
+        return this->datum_depth;
+    }
+
+    double StressEquilRecord::datumPosX() const {
+        return this->datum_posx;
+    }
+
+    double StressEquilRecord::datumPosY() const {
+        return this->datum_posy;
+    }
+
+    double StressEquilRecord::stressXX() const {
+        return this->stress_xx;
+    }
+
+    double StressEquilRecord::stressXX_grad() const {
+        return this->stress_xx_grad;
+    }
+
+    double StressEquilRecord::stressYY() const {
+        return this->stress_yy;
+    }
+
+    double StressEquilRecord::stressYY_grad() const {
+        return this->stress_yy_grad;
+    }
+
+    double StressEquilRecord::stressZZ() const {
+        return this->stress_zz;
+    }
+
+    double StressEquilRecord::stressZZ_grad() const {
+        return this->stress_zz_grad;
+    }
+
+    bool StressEquilRecord::operator==(const StressEquilRecord& data) const {
+        return datum_depth == data.datum_depth &&
+               datum_posx == data.datum_posx &&
+               datum_posy == data.datum_posy &&
+               stress_xx == data.stress_xx &&
+               stress_xx_grad == data.stress_xx_grad &&
+               stress_yy == data.stress_yy &&
+               stress_yy_grad == data.stress_yy_grad &&
+               stress_zz == data.stress_zz &&
+               stress_zz_grad == data.stress_zz_grad;
+    }
+
     /* ----------------------------------------------------------------- */
 
     template<class RecordType>
@@ -155,4 +232,5 @@ namespace Opm {
     }
 
     template class EquilContainer<EquilRecord>;
+    template class EquilContainer<StressEquilRecord>;
 }

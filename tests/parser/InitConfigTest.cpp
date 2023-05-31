@@ -185,6 +185,25 @@ const std::string& deckWithEquil =
     "SCHEDULE\n"
     "SKIPREST \n";
 
+const std::string& deckWithStrEquil =
+    "RUNSPEC\n"
+    "DIMENS\n"
+    " 10 10 10 /\n"
+    "EQLDIMS\n"
+    "1  100  20  1  1  /\n"
+    "SOLUTION\n"
+    "RESTART\n"
+    "BASE 5\n"
+    "/\n"
+    "STREQUIL\n"
+    "1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 /\n"
+    "/\n"
+    "GRID\n"
+    "START             -- 0 \n"
+    "19 JUN 2007 / \n"
+    "SCHEDULE\n"
+    "SKIPREST \n";
+
 static Deck createDeck(const std::string& input) {
     Opm::Parser parser;
     auto deck = parser.parseString(input);
@@ -247,6 +266,14 @@ BOOST_AUTO_TEST_CASE( InitConfigWithEquil )  {
     BOOST_CHECK_NO_THROW( config.getEquil() );
 }
 
+BOOST_AUTO_TEST_CASE( InitConfigWithStrEquil )  {
+    auto deck = createDeck( deckWithStrEquil );
+    InitConfig config( deck );
+
+    BOOST_CHECK( config.hasStressEquil() );
+    BOOST_CHECK_NO_THROW( config.getStressEquil() );
+}
+
 BOOST_AUTO_TEST_CASE( EquilOperations ) {
     auto deck = createDeck( deckWithEquil );
     InitConfig config( deck );
@@ -269,6 +296,30 @@ BOOST_AUTO_TEST_CASE( EquilOperations ) {
     BOOST_CHECK( !record.liveOilInitConstantRs() );
     BOOST_CHECK( !record.wetGasInitConstantRv() );
     BOOST_CHECK_EQUAL( 20, record.initializationTargetAccuracy() );
+}
+
+BOOST_AUTO_TEST_CASE( StrEquilOperations ) {
+    auto deck = createDeck( deckWithStrEquil );
+    InitConfig config( deck );
+
+    const auto& equil = config.getStressEquil();
+
+    BOOST_CHECK( !equil.empty() );
+    BOOST_CHECK_EQUAL( 1U, equil.size() );
+
+    BOOST_CHECK_NO_THROW( equil.getRecord( 0 ) );
+    BOOST_CHECK_THROW( equil.getRecord( 1 ), std::out_of_range );
+
+    const auto& record = equil.getRecord( 0 );
+    BOOST_CHECK_CLOSE(1.0, record.datumDepth(), 1.0 );
+    BOOST_CHECK_CLOSE(2.0, record.datumPosX(), 1e-12 );
+    BOOST_CHECK_CLOSE(3.0, record.datumPosY(), 1e-12 );
+    BOOST_CHECK_CLOSE(4.0 * unit::barsa, record.stressXX(), 1e-12 );
+    BOOST_CHECK_CLOSE(5.0 * unit::barsa, record.stressXX_grad(), 1e-12 );
+    BOOST_CHECK_CLOSE(6.0 * unit::barsa, record.stressYY(), 1e-12 );
+    BOOST_CHECK_CLOSE(7.0 * unit::barsa, record.stressYY_grad(), 1e-12 );
+    BOOST_CHECK_CLOSE(8.0 * unit::barsa, record.stressZZ(), 1e-12 );
+    BOOST_CHECK_CLOSE(9.0 * unit::barsa, record.stressZZ_grad(), 1e-12 );
 }
 
 BOOST_AUTO_TEST_CASE(RestartCWD) {

@@ -38,6 +38,11 @@ namespace Opm {
         return Equil( deck.get<ParserKeywords::EQUIL>( ).back() );
     }
 
+    static inline DeckKeyword stressequils( const Deck& deck ) {
+        if( !deck.hasKeyword<ParserKeywords::STREQUIL>( ) ) return {};
+        return deck.get<ParserKeywords::STREQUIL>( ).back();
+    }
+
     InitConfig::InitConfig()
         : m_filleps(false)
     {
@@ -45,6 +50,7 @@ namespace Opm {
 
     InitConfig::InitConfig(const Deck& deck)
         : equil(equils(deck))
+        , stress_equil(stressequils(deck))
         , foamconfig(deck)
         , m_filleps(PROPSSection{deck}.hasKeyword("FILLEPS"))
     {
@@ -82,6 +88,7 @@ namespace Opm {
     {
         InitConfig result;
         result.equil = Equil::serializationTestObject();
+        result.stress_equil = StressEquil::serializationTestObject();
         result.foamconfig = FoamConfig::serializationTestObject();
         result.m_filleps = true;
         result.m_gravity = false;
@@ -121,6 +128,17 @@ namespace Opm {
         return this->equil;
     }
 
+    bool InitConfig::hasStressEquil() const {
+        return !this->stress_equil.empty();
+    }
+
+    const StressEquil& InitConfig::getStressEquil() const {
+        if( !this->hasStressEquil() )
+            throw std::runtime_error( "Error: No 'STREQUIL' present" );
+
+        return this->stress_equil;
+    }
+
     bool InitConfig::hasGravity() const {
         return m_gravity;
     }
@@ -139,6 +157,7 @@ namespace Opm {
 
     bool InitConfig::operator==(const InitConfig& data) const {
         return equil == data.equil &&
+               stress_equil == data.stress_equil &&
                foamconfig == data.foamconfig &&
                m_filleps == data.m_filleps &&
                m_gravity == data.m_gravity &&

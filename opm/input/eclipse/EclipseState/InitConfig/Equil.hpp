@@ -64,6 +64,51 @@ namespace Opm {
             bool humid_gas_init_proc = false;
     };
 
+    class StressEquilRecord {
+        public:
+            StressEquilRecord() = default;
+            explicit StressEquilRecord(const DeckRecord& record);
+
+            static StressEquilRecord serializationTestObject();
+
+            bool operator==(const StressEquilRecord& data) const;
+
+            double datumDepth() const;
+            double datumPosX() const;
+            double datumPosY() const;
+            double stressXX() const;
+            double stressXX_grad() const;
+            double stressYY() const;
+            double stressYY_grad() const;
+            double stressZZ() const;
+            double stressZZ_grad() const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(datum_depth);
+                serializer(datum_posx);
+                serializer(datum_posy);
+                serializer(stress_xx);
+                serializer(stress_xx_grad);
+                serializer(stress_yy);
+                serializer(stress_yy_grad);
+                serializer(stress_zz);
+                serializer(stress_zz_grad);
+            }
+
+        private:
+            double datum_depth = 0.0;
+            double datum_posx = 0.0;
+            double datum_posy = 0.0;
+            double stress_xx = 0.0;
+            double stress_xx_grad = 0.0;
+            double stress_yy = 0.0;
+            double stress_yy_grad = 0.0;
+            double stress_zz = 0.0;
+            double stress_zz_grad = 0.0;
+    };
+
     template<class RecordType>
     class EquilContainer {
         public:
@@ -95,6 +140,7 @@ namespace Opm {
     };
 
     using Equil = EquilContainer<EquilRecord>;
+    using StressEquil = EquilContainer<StressEquilRecord>;
 }
 
 #endif //OPM_EQUIL_HPP
