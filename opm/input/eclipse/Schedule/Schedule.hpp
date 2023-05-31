@@ -91,6 +91,7 @@ namespace Opm
         double sumthin{-1.0};
         bool rptonly{false};
         bool gaslift_opt_active{false};
+        std::optional<OilVaporizationProperties> oilVap;
 
         ScheduleStatic() = default;
 
