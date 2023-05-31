@@ -21,7 +21,7 @@
 #define OPM_INIT_CONFIG_HPP
 
 #include <string>
-
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 
@@ -45,6 +45,9 @@ namespace Opm {
         bool hasEquil() const;
         const Equil& getEquil() const;
 
+        bool hasStressEquil() const;
+        const DeckKeyword& getStressEquil() const;
+        
         bool hasGravity() const;
 
         bool hasFoamConfig() const;
@@ -74,6 +77,7 @@ namespace Opm {
 
     private:
         Equil equil;
+        DeckKeyword stressequil;
         FoamConfig foamconfig;
         bool m_filleps;
         bool m_gravity = true;

@@ -14,37 +14,51 @@
     },
     {
       "item": 2,
+      "name": "DATUM_POSX",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Length"
+    },
+    {
+      "item": 3,
+      "name": "DATUM_POSY",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Length"
+    },
+    {
+      "item": 4,
       "name": "STRESSXX",
       "value_type": "DOUBLE",
       "dimension": "Pressure"
     },
     {
-      "item": 3,
+      "item": 5,
       "name": "STRESSXXGRAD",
       "value_type": "DOUBLE",
       "dimension": "Pressure/Length"
     },
     {
-      "item": 4,
-      "name": "DATUM_STRESSY",
-      "value_type": "DOUBLE",
-      "dimension": "Pressure"
-    },
-    {
-      "item": 5,
-      "name": "DATUM_STRESSYGRAD",
-      "value_type": "DOUBLE",
-      "dimension": "Pressure/Length"
-    },
-    {
       "item": 6,
-      "name": "DATUM_STRESSZ",
+      "name": "STRESSYY",
       "value_type": "DOUBLE",
       "dimension": "Pressure"
     },
     {
       "item": 7,
-      "name": "DATUM_STRESSZGRAD",
+      "name": "STRESSYYGRAD",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure/Length"
+    },
+    {
+      "item": 8,
+      "name": "STRESSZZ",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
+    },
+    {
+      "item": 8,
+      "name": "STRESSZZGRAD",
       "value_type": "DOUBLE",
       "dimension": "Pressure/Length"
     }
