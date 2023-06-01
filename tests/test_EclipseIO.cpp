@@ -130,8 +130,6 @@ void compareErtData(const std::vector<int> &src, const std::vector<int> &dst)
 void checkEgridFile( const EclipseGrid& eclGrid ) {
     auto egridFile = EclIO::EGrid("FOO.EGRID");
 
-    const auto numCells = eclGrid.getNX() * eclGrid.getNY() * eclGrid.getNZ();
-
     {
         const auto& coord  = egridFile.get<float>("COORD");
         const auto& expect = eclGrid.getCOORD();
@@ -148,8 +146,10 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
         const auto& actnum = egridFile.get<int>("ACTNUM");
         auto expect = eclGrid.getACTNUM();
 
-        if (expect.empty())
+        if (expect.empty()) {
+            const auto numCells = eclGrid.getNX() * eclGrid.getNY() * eclGrid.getNZ();
             expect.assign(numCells, 1);
+        }
 
         compareErtData(expect, actnum);
     }

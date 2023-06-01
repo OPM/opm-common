@@ -1399,7 +1399,7 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
     BOOST_CHECK_THROW(zmp.index(0,1,nz,0) , std::invalid_argument);
     BOOST_CHECK_THROW(zmp.index(0,1,2,8) , std::invalid_argument);
 
-    auto points_adjusted = grid.fixupZCORN();
+    grid.fixupZCORN();
 
     std::vector<int> actnum = grid.getACTNUM();
     std::vector<double> zcorn = grid.getZCORN();
@@ -1408,7 +1408,7 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
     zcorn[96] = zcorn[96] + 2.0;
 
     Opm::EclipseGrid grid2(grid , zcorn.data() , actnum );
-    points_adjusted = grid2.getZcornFixed();
+    auto points_adjusted = grid2.getZcornFixed();
     BOOST_CHECK_EQUAL( points_adjusted , 4U );
 
     points_adjusted = grid2.fixupZCORN();

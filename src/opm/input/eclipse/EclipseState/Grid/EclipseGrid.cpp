@@ -1719,7 +1719,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     void EclipseGrid::save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const {
 
         Opm::UnitSystem::UnitType unitSystemType = units.getType();
-        const auto length = ::Opm::UnitSystem::measure::length;
+        constexpr auto length = ::Opm::UnitSystem::measure::length;
 
         const std::array<int, 3> dims = getNXYZ();
 

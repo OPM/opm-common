@@ -374,7 +374,7 @@ bool Plane::intersect(const Plane& other, Vec3d* point, Vec3d* direction) const
 
     CVF_ASSERT(point);
 
-    double invdet = UNDEFINED_DOUBLE;  
+    double invdet;
 
     Vec3d normal1 = this->normal();
     Vec3d normal2 = other.normal();

@@ -1084,7 +1084,7 @@ int HexGridIntersectionTools::planeHexIntersectionMC( const cvf::Plane&    plane
     }
 
     cvf::Vec3d edgeIntersections[12];
-    double     normDistAlongEdge[12];
+    double     normDistAlongEdge[12]{};
 
     // Compute vertex coordinates on the edges where we have intersections
     if ( cubeIdxToCutEdgeBitfield[cubeIndex] & 1 )
