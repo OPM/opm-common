@@ -148,7 +148,7 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        Evaluation tmp;
+        [[maybe_unused]] Evaluation tmp;
 
         /////
         // water PVT API
