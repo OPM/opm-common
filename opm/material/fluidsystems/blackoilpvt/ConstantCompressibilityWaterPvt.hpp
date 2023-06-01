@@ -70,6 +70,10 @@ public:
         }
     }
 
+    void setVapPars(const Scalar, const Scalar)
+    {
+    }
+
     /*!
      * \brief Set the water reference density [kg / m^3]
      */

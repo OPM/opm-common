@@ -79,6 +79,10 @@ public:
         gasReferenceDensity_.resize(numRegions);
     }
 
+    void setVapPars(const Scalar, const Scalar)
+    {
+    }
+
 
     /*!
     * \brief Initialize the reference densities of all fluids for a given PVT region

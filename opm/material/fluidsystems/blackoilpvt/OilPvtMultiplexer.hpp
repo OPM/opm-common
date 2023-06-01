@@ -170,6 +170,11 @@ public:
     unsigned numRegions() const
     { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); return 1; }
 
+    void setVapPars(const Scalar par1, const Scalar par2)
+    {
+        OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2));
+    }
+
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */

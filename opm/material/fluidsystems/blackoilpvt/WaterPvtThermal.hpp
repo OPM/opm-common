@@ -132,6 +132,11 @@ public:
         internalEnergyCurves_.resize(numRegions);
     }
 
+    void setVapPars(const Scalar par1, const Scalar par2)
+    {
+        isothermalPvt_->setVapPars(par1, par2);
+    }
+
     /*!
      * \brief Finish initializing the thermal part of the water phase PVT properties.
      */
