@@ -88,7 +88,7 @@ void Trace::show(const char* format, ...)
     va_list argList;
     va_start(argList, format);
 
-    const int maxFormatLength = 4000;
+    constexpr int maxFormatLength = 4000;
     char temp[maxFormatLength + 1];
 
 #ifdef WIN32
