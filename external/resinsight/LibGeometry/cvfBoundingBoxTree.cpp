@@ -786,8 +786,11 @@ void AABBTree::deleteInternalNodesBottomUp(AABBTreeNode* node)
     auto internalNode = dynamic_cast<AABBTreeNodeInternal*>(node);
     CVF_ASSERT(internalNode);
 
-    AABBTree::deleteInternalNodesBottomUp(internalNode->left());
-    AABBTree::deleteInternalNodesBottomUp(internalNode->right());
+    if (internalNode)
+    {
+        AABBTree::deleteInternalNodesBottomUp(internalNode->left());
+        AABBTree::deleteInternalNodesBottomUp(internalNode->right());
+    }
 
     delete internalNode;
 }
