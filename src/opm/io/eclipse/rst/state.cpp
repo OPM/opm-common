@@ -321,10 +321,11 @@ void RstState::add_actions(const Parser& parser,
         for (std::size_t icond = 0; icond < actdims.max_conditions(); icond++) {
             const auto zacn_offset = index * zacn_action_size + icond * zacn_cond_size;
             const auto iacn_offset = index * iacn_action_size + icond * iacn_cond_size;
-            const auto sacn_offset = index * sacn_action_size + icond * sacn_cond_size;
 
-            if (RstAction::Condition::valid(&zacn[zacn_offset], &iacn[iacn_offset]))
+            if (RstAction::Condition::valid(&zacn[zacn_offset], &iacn[iacn_offset])) {
+                const auto sacn_offset = index * sacn_action_size + icond * sacn_cond_size;
                 conditions.emplace_back(&zacn[zacn_offset], &iacn[iacn_offset], &sacn[sacn_offset]);
+            }
         }
 
         const auto& name = zact[index * zact_action_size + 0];
