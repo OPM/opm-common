@@ -306,6 +306,19 @@ public:
     static void setWaterPvt(std::shared_ptr<WaterPvt> pvtObj)
     { waterPvt_ = pvtObj; }
 
+    static void setVapPars(const Scalar par1, const Scalar par2)
+    {
+        if (gasPvt_) {
+            gasPvt_->setVapPars(par1, par2);
+        }
+        if (oilPvt_) {
+            oilPvt_->setVapPars(par1, par2);
+        }
+        if (waterPvt_) {
+            waterPvt_->setVapPars(par1, par2);
+        }
+    }
+
     /*!
      * \brief Initialize the values of the reference densities
      *

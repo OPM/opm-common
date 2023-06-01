@@ -74,6 +74,11 @@ public:
 
     void setNumRegions(size_t numRegions);
 
+    void setVapPars(const Scalar par1, const Scalar)
+    {
+        vapPar1_ = par1;
+    }
+
     /*!
      * \brief Initialize the reference densities of all fluids for a given PVT region
      */

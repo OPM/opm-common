@@ -61,6 +61,10 @@ public:
 
     void setNumRegions(size_t numRegions);
 
+    void setVapPars(const Scalar, const Scalar)
+    {
+    }
+
     /*!
      * \brief Initialize the reference density of the solvent gas for a given PVT region
      */
