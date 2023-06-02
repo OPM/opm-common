@@ -78,6 +78,8 @@ namespace Opm {
         explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
 
         static bool hasGDFILE(const Deck& deck);
+        static bool hasRADIAL(const Deck& deck);
+        static bool hasSPIDER(const Deck& deck);
         static bool hasCylindricalKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);

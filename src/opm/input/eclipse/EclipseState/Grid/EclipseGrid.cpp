@@ -61,6 +61,7 @@
 #include <initializer_list>
 #include <numeric>
 #include <tuple>
+#include <map>
 
 #include <fmt/format.h>
 
@@ -332,22 +333,59 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return this->m_circle;
     }
 
+
     void EclipseGrid::initGrid(const Deck& deck, const int* actnum)
     {
-        if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
-            initCylindricalGrid(deck );
-        } else if (deck.hasKeyword<ParserKeywords::SPIDER>()) {
-            initSpiderwebGrid(deck );
-        } else {
-            if (hasCornerPointKeywords(deck)) {
-                initCornerPointGrid(deck);
-            } else if (hasCartesianKeywords(deck)) {
-                initCartesianGrid(deck);
-            } else if (hasGDFILE(deck)) {
-                initBinaryGrid(deck);
-            } else {
-                throw std::invalid_argument("EclipseGrid needs cornerpoint or cartesian keywords.");
+        const std::map<const std::string, const std::string> grid_keyword_messages = {
+            {"COORD",  "COORD with ZCORN creates a corner-point grid"}, 
+            {"DEPTHZ", "DEPTHZ with DXV, DYV, DZX creates a cartesian grid"},
+            {"TOPS",   "TOPS with DX/DXV, DY/DYV, DX/DZX creates a cartesian grid"},
+            {"RADIAL", "RADIAL creates a cylindrical grid"},
+            {"SPIDER", "SPIDER creates a spider grid"},
+            {"GDFILE", "GDFILE reads a grid from file"}
+        };
+        std::vector<std::string> grid_keywords_found;
+
+        if (hasCornerPointKeywords(deck)) {
+            grid_keywords_found.push_back("COORD");
+        } else if (hasDVDEPTHZKeywords(deck)) {
+            grid_keywords_found.push_back("DEPTHZ");
+        } else if (hasDTOPSKeywords(deck)) {
+            grid_keywords_found.push_back("TOPS");
+        } else if (hasRADIAL(deck)) {
+            grid_keywords_found.push_back("RADIAL");
+        } else if (hasSPIDER(deck)) {
+            grid_keywords_found.push_back("SPIDER");
+        } else if (hasGDFILE(deck)) {
+            grid_keywords_found.push_back("GDFILE");
+        }
+        
+        if (grid_keywords_found.size() == 0) {
+            std::string message = "The grid must be specified using one of these options:";
+            for (const auto& item: grid_keyword_messages) {
+                message += "\n  " + item.second;
             }
+            throw std::invalid_argument(message);
+        }
+
+        if (grid_keywords_found.size() > 1) {
+            std::string message = "The specification of the grid is ambiguous:";
+            for (const auto& item: grid_keywords_found) {
+                message += "\n  " + grid_keyword_messages.at(item);
+            }
+            throw std::invalid_argument(message);
+        }
+
+        if (grid_keywords_found[0] == "COORD") {
+            initCornerPointGrid(deck);
+        } else if (grid_keywords_found[0] == "DEPTHZ" || grid_keywords_found[0] == "TOPS") {
+            initCartesianGrid(deck);
+        } else if (grid_keywords_found[0] == "RADIAL") {
+            initCylindricalGrid(deck );
+        } else if (grid_keywords_found[0] == "SPIDER") {
+            initSpiderwebGrid(deck );
+        } else if (grid_keywords_found[0] == "GDFILE") {
+            initBinaryGrid(deck);
         }
 
         if (deck.hasKeyword<ParserKeywords::PINCH>()) {
@@ -1230,12 +1268,16 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return deck.hasKeyword<ParserKeywords::GDFILE>();
     }
 
-    bool EclipseGrid::hasCartesianKeywords(const Deck& deck) {
-        if (hasDVDEPTHZKeywords( deck ))
-            return true;
-        else
-            return hasDTOPSKeywords(deck);
+
+    bool EclipseGrid::hasRADIAL(const Deck& deck) {
+        return deck.hasKeyword<ParserKeywords::RADIAL>();
     }
+
+
+    bool EclipseGrid::hasSPIDER(const Deck& deck) {
+        return deck.hasKeyword<ParserKeywords::SPIDER>();
+    }
+
 
     bool EclipseGrid::hasCylindricalKeywords(const Deck& deck) {
         if (deck.hasKeyword<ParserKeywords::INRAD>() &&
