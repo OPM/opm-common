@@ -325,9 +325,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             EconLimitMaxWct_2 = 71, // Well's secondary maximum water cut economic limit (WECON(11)).
 
-            EconLimitMinLiq   = 82, // Well's minimum liquid production rate economic limit (WECON(14)).
+            VfpBhpAdjustment  = 78, // Adjust well's BHP from VFP (WVFPDP(2))
 
+            EconLimitMinLiq   = 82, // Well's minimum liquid production rate economic limit (WECON(14)).
+            VfpBhpScalingFact = 83, // Tubing pressure loss scaling factor (WVFPDP(3))
             WGrupConGRScaling = 84, // Guide rate scaling factor (WGRUPCON(5))
+
 
             LOincFac          = 115,
 

@@ -36,6 +36,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -305,6 +306,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
+    wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(explicitTHPOptions(rst_well)),
     status(status_from_int(rst_well.well_status)),
     well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
@@ -483,6 +485,7 @@ Well::Well(const std::string& wname_arg,
     connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
+    wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(std::make_shared<WVFPEXP>()),
     status(Status::SHUT),
     well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
@@ -619,6 +622,15 @@ bool Well::updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_prop
 bool Well::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits_arg) {
     if (*this->econ_limits != *econ_limits_arg) {
         this->econ_limits = econ_limits_arg;
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp_arg) {
+    if (*this->wvfpdp != *wvfpdp_arg) {
+        this->wvfpdp = std::move(wvfpdp_arg);
         return true;
     }
 
@@ -1101,6 +1113,10 @@ const WellBrineProperties& Well::getBrineProperties() const {
 
 const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
+}
+
+const WVFPDP& Well::getWVFPDP() const {
+    return *this->wvfpdp;
 }
 
 const WVFPEXP& Well::getWVFPEXP() const {

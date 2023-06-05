@@ -42,6 +42,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
@@ -1027,6 +1028,20 @@ namespace {
             sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
         }
 
+        template <class SWProp, class SWellArray>
+        void assignBhpVfpAdjustment(const Opm::Well& well,
+                                    SWProp&&         swprop,
+                                    SWellArray&      sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            const auto& options = well.getWVFPDP();
+
+            sWell[Ix::VfpBhpAdjustment] = swprop(M::pressure, options.getPressureAdjustment());
+            sWell[Ix::VfpBhpScalingFact] = options.getPLossScalingFactor();
+        }
+
         template <class SWellArray>
         void assignTracerData(const Opm::TracerConfig& tracers,
                               const Opm::SummaryState& smry,
@@ -1082,6 +1097,7 @@ namespace {
             assignEconomicLimits(well, swprop, sWell);
             assignWellTest(well.name(), sched, wtest_state, sim_step, swprop, sWell);
             assignTracerData(tracers, smry, well.name(), sWell);
+            assignBhpVfpAdjustment(well, swprop, sWell);
         }
     } // SWell
 

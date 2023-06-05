@@ -88,6 +88,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
@@ -2140,6 +2141,23 @@ Well{0} entered with 'FIELD' parent group:
         sched_state.pavg.update(std::move(wpave));
     }
 
+    void Schedule::handleWVFPDP(HandlerContext& handlerContext) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                this->invalidNamePattern(wellNamePattern, handlerContext);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells.get(well_name);
+                auto wvfpdp = std::make_shared<WVFPDP>(well.getWVFPDP());
+                wvfpdp->update( record );
+                if (well.updateWVFPDP(std::move(wvfpdp)))
+                    this->snapshots.back().wells.update( std::move(well) );
+            }
+        }
+    }
+
     void Schedule::handleWVFPEXP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2414,6 +2432,7 @@ Well{0} entered with 'FIELD' parent group:
             { "WMICP"   , &Schedule::handleWMICP     },
             { "WPAVE"   , &Schedule::handleWPAVE     },
             { "WPAVEDEP", &Schedule::handleWPAVEDEP  },
+            { "WVFPDP",   &Schedule::handleWVFPDP    },
             { "WVFPEXP" , &Schedule::handleWVFPEXP   },
             { "WWPAVE"  , &Schedule::handleWWPAVE    },
             { "WPIMULT" , &Schedule::handleWPIMULT   },

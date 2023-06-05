@@ -66,6 +66,7 @@ struct WellPolymerProperties;
 class WellSegments;
 class WellTracerProperties;
 class WVFPEXP;
+class WVFPDP;
 
 namespace RestartIO {
 struct RstWell;
@@ -398,6 +399,7 @@ public:
     const WellMICPProperties& getMICPProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
+    const WVFPDP& getWVFPDP() const;
     const WVFPEXP& getWVFPEXP() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
@@ -462,6 +464,7 @@ public:
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
     bool updateWPAVE(const PAvg& pavg);
     void updateWPaveRefDepth(double ref_depth);
+    bool updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp);
     bool updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
@@ -532,6 +535,7 @@ public:
         serializer(production);
         serializer(injection);
         serializer(segments);
+        serializer(wvfpdp);
         serializer(wvfpexp);
         serializer(m_pavg);
         serializer(well_temperature);
@@ -576,6 +580,7 @@ private:
     std::shared_ptr<WellProductionProperties> production;
     std::shared_ptr<WellInjectionProperties> injection;
     std::shared_ptr<WellSegments> segments;
+    std::shared_ptr<WVFPDP> wvfpdp;
     std::shared_ptr<WVFPEXP> wvfpexp;
     Status status;
     PAvg m_pavg;
