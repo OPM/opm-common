@@ -17,53 +17,102 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <unordered_set>
-#include <fmt/format.h>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <initializer_list>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
-bool PAvgCalculatorCollection::empty() const {
-    return true;
-}
-
-bool PAvgCalculatorCollection::has(const std::string& wname) const {
-    return this->calculators.count(wname) > 0;
-}
-
-const PAvgCalculator& PAvgCalculatorCollection::get(const std::string& wname) const {
-    auto iter = this->calculators.find(wname);
-    if (iter == this->calculators.end())
-        throw std::logic_error(fmt::format("No PAvgCalculator registered for well: {}", wname));
-
-    return iter->second;
-}
-
-void PAvgCalculatorCollection::add(const PAvgCalculator& calculator) {
-    this->calculators.emplace( calculator.wname(), calculator );
-    this->indexlist.reset();
-}
-
-const std::vector<std::size_t>& PAvgCalculatorCollection::index_list() const {
-    if (!this->indexlist.has_value()) {
-        std::unordered_set<std::size_t> il;
-        for ( const auto&[_, calculator] : this->calculators) {
-            (void)_;
-            const auto& calc_il = calculator.index_list();
-            il.insert(calc_il.begin(), calc_il.end());
-        }
-        this->indexlist = std::vector<std::size_t>{ il.begin(), il.end() };
+std::size_t
+PAvgCalculatorCollection::setCalculator(const std::size_t wellID,
+                                        CalculatorPtr     calculator)
+{
+    if (auto indexPos = this->index_.find(wellID);
+        indexPos != this->index_.end())
+    {
+        this->calculators_[indexPos->second] = std::move(calculator);
+        return indexPos->second;
     }
-    return this->indexlist.value();
-}
+    else {
+        const auto ix = this->calculators_.size();
+        this->index_.insert_or_assign(wellID, ix);
 
-void PAvgCalculatorCollection::add_pressure(std::size_t index, double pressure) {
-    for (auto& [_, calculator] : this->calculators) {
-        (void)_;
-        calculator.add_pressure(index, pressure);
+        this->calculators_.push_back(std::move(calculator));
+
+        return ix;
     }
 }
 
+void PAvgCalculatorCollection::pruneInactiveWBPCells(ActivePredicate isActive)
+{
+    auto wbpCells = std::vector<std::size_t>{};
+    auto calcCellSize = std::vector<std::vector<bool>::size_type>{};
+    calcCellSize.reserve(this->calculators_.size());
 
+    for (const auto& calculatorPtr : this->calculators_) {
+        const auto& calcWBPCells = calculatorPtr->allWBPCells();
+        wbpCells.insert(wbpCells.end(), calcWBPCells.begin(), calcWBPCells.end());
+
+        calcCellSize.push_back(calcWBPCells.size());
+    }
+
+    const auto cellIsActive = isActive(wbpCells);
+
+    auto calcIndex = 0 * this->calculators_.size();
+    auto end       = cellIsActive.begin();
+    for (auto& calculatorPtr : this->calculators_) {
+        auto begin = end;
+        end += calcCellSize[calcIndex++];
+
+        calculatorPtr->pruneInactiveWBPCells({ begin, end });
+    }
 }
+
+PAvgCalculator&
+PAvgCalculatorCollection::operator[](const std::size_t i)
+{
+    return *this->calculators_[i];
+}
+
+const PAvgCalculator&
+PAvgCalculatorCollection::operator[](const std::size_t i) const
+{
+    return *this->calculators_[i];
+}
+
+bool PAvgCalculatorCollection::empty() const
+{
+    return this->calculators_.empty();
+}
+
+std::size_t PAvgCalculatorCollection::numCalculators() const
+{
+    return this->calculators_.size();
+}
+
+std::vector<std::size_t> PAvgCalculatorCollection::allWBPCells() const
+{
+    auto wbpCells = std::vector<std::size_t>{};
+
+    for (const auto& calculatorPtr : this->calculators_) {
+        const auto& calcWBPCells = calculatorPtr->allWBPCells();
+        wbpCells.insert(wbpCells.end(), calcWBPCells.begin(), calcWBPCells.end());
+    }
+
+    std::sort(wbpCells.begin(), wbpCells.end());
+
+    return { wbpCells.begin(), std::unique(wbpCells.begin(), wbpCells.end()) };
+}
+
+} // namespace Opm
