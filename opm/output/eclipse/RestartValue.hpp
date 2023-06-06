@@ -18,17 +18,17 @@
 #ifndef RESTART_VALUE_HPP
 #define RESTART_VALUE_HPP
 
+#include <opm/output/data/Aquifer.hpp>
+#include <opm/output/data/Groups.hpp>
+#include <opm/output/data/Solution.hpp>
+#include <opm/output/data/Wells.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-
-#include <opm/output/data/Aquifer.hpp>
-#include <opm/output/data/Solution.hpp>
-#include <opm/output/data/Wells.hpp>
-#include <opm/output/data/Groups.hpp>
 
 namespace Opm {
 

@@ -46,7 +46,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -214,34 +213,35 @@ static data::GroupAndNetworkValues result_group_network() {
     return grp_nwrk;
 }
 
-
-struct setup {
+struct setup
+{
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
-    std::shared_ptr<Python> python;
     Schedule schedule;
     SummaryConfig config;
     data::Wells wells;
+    data::WellBlockAveragePressures wbp;
     data::GroupAndNetworkValues grp_nwrk;
     std::string name;
     WorkArea ta;
 
-    /*-----------------------------------------------------------------*/
+    // ------------------------------------------------------------------------
 
-    setup(std::string fname, const std::string& path = "UDQ_ACTIONX_TEST1_U.DATA") :
-        deck( Parser().parseFile( path) ),
-        es( deck ),
-        grid( es.getInputGrid() ),
-        python( std::make_shared<Python>() ),
-        schedule( deck, es, python),
-        config( deck, schedule, es.fieldProps(), es.aquifer() ),
-        wells( result_wells() ),
-        grp_nwrk( result_group_network() ),
-        name( toupper(std::move(fname)) ),
-        ta( "test_summary_group_constraints" )
+    setup(std::string        case_name,
+          const std::string& path = "UDQ_ACTIONX_TEST1_U.DATA")
+        : deck     { Parser{}.parseFile(path) }
+        , es       { deck }
+        , grid     { es.getInputGrid() }
+        , schedule { deck, es, std::make_shared<Python>() }
+        , config   { deck, schedule, es.fieldProps(), es.aquifer() }
+        , wells    { result_wells() }
+        , wbp      {}
+        , grp_nwrk { result_group_network() }
+        , name     { toupper(std::move(case_name)) }
+        , ta       { "test_summary_group_constraints" }
     {}
-    };
+};
 } // Anonymous namespace
 
 // =====================================================================
@@ -262,10 +262,10 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     SummaryState st(TimeService::now());
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
-    writer.eval(st, 0, 0*day, cfg.wells, cfg.grp_nwrk, {}, {}, {}, {});
+    writer.eval(st, 0, 0*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
     writer.add_timestep( st, 0, false);
 
-    writer.eval(st, 1, 1*day, cfg.wells, cfg.grp_nwrk, {}, {}, {}, {});
+    writer.eval(st, 1, 1*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
     writer.add_timestep( st, 1, false);
 
     writer.write();
