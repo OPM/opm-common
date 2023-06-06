@@ -150,7 +150,7 @@ namespace Opm {
         void initFaults(const Deck& deck);
         void initPara(const Deck& deck);
 
-        void setMULTFLT(const Opm::DeckSection& section);
+        void setMULTFLT(const Opm::DeckSection& section, bool edit = false);
 
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);

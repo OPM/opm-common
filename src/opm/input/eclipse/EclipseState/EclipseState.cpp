@@ -357,16 +357,17 @@ namespace Opm {
         setMULTFLT(gridSection);
 
         if (DeckSection::hasEDIT(deck)) {
-            setMULTFLT(EDITSection ( deck ));
+            setMULTFLT(EDITSection(deck), true);
         }
 
         m_transMult.applyMULTFLT( m_faults );
     }
 
 
-    void EclipseState::setMULTFLT(const DeckSection& section) {
+    void EclipseState::setMULTFLT(const DeckSection& section, bool edit) {
         // Set error to false
         bool error = false;
+        std::map<std::string,double> prev;
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
             OpmLog::info(OpmInputError::format("\nApplying {keyword} in {file} line {line}", faultsKeyword.location()));
@@ -377,7 +378,18 @@ namespace Opm {
                 double multFlt = faultRecord.getItem(1).get< double >(0);
                 try
                 {
-                    m_faults.setTransMult( faultName , multFlt );
+                    if (edit) {
+                        if (m_faults.hasFault(faultName)) {
+                            const auto it = prev.find(faultName);
+                            const auto& fault = m_faults.getFault(faultName);
+                            if (it == prev.end()) {
+                                prev[faultName] = fault.getTransMult();
+                                multFlt *= m_faults.getFault(faultName).getTransMult();
+                            } else
+                                multFlt *= it->second;
+                        }
+                    }
+                    m_faults.setTransMult(faultName, multFlt);
                     logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
                 }
                 catch(const std::exception& std_error)
