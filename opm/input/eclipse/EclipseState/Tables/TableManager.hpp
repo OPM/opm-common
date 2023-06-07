@@ -57,6 +57,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Ppcwmax.hpp>
 
 namespace Opm {
 
@@ -78,6 +79,7 @@ namespace Opm {
         const Aqudims& getAqudims() const;
         const Regdims& getRegdims() const;
         const TLMixpar& getTLMixpar() const;
+        const Ppcwmax& getPpcwmax() const;
         /*
           WIll return max{ Tabdims::NTFIP , Regdims::NTFIP }.
         */
@@ -260,6 +262,7 @@ namespace Opm {
             serializer(m_rtemp);
             serializer(m_salinity);
             serializer(m_tlmixpar);
+            serializer(m_ppcwmax);
             if (!serializer.isSerializing()) {
                 m_simpleTables = simpleTables;
                 if (split.plyshMax > 0) {
@@ -391,6 +394,7 @@ namespace Opm {
         Eqldims m_eqldims;
         Aqudims m_aqudims;
         TLMixpar m_tlmixpar;
+        Ppcwmax m_ppcwmax;
 
         bool hasImptvd = false;// if deck has keyword IMPTVD
         bool hasEnptvd = false;// if deck has keyword ENPTVD

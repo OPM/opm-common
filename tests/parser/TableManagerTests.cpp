@@ -2374,6 +2374,29 @@ BOOST_AUTO_TEST_CASE( TestParseDIFFCWATGAS ) {
 }
 
 
+BOOST_AUTO_TEST_CASE(TestParsePPCWMAX) {
+    const std::string data = R"(
+        TABDIMS
+        2 /
+
+        PPCWMAX
+        10.0 /
+        1* YES/
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(data);
+    Opm::TableManager tables(deck);
+
+    const auto& ppcwmax = tables.getPpcwmax();
+    BOOST_CHECK_CLOSE(10.0e5, ppcwmax[0].max_cap_pres, epsilon());
+    BOOST_CHECK_EQUAL(false, ppcwmax[0].option);
+
+    BOOST_CHECK_CLOSE(1e+25, ppcwmax[1].max_cap_pres, epsilon());
+    BOOST_CHECK_EQUAL(true, ppcwmax[1].option);
+}
+
+
 BOOST_AUTO_TEST_CASE( TestParseROCK ) {
     const std::string data = R"(
       TABDIMS
