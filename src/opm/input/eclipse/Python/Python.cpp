@@ -16,16 +16,17 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include "config.h"
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 #include "PythonInterp.hpp"
 
 namespace Opm {
 
-Python::Python(Enable enable) :
+Python::Python([[maybe_unused]] Enable enable) :
     interp( std::make_shared<PythonInterp>(false))
 {
+#ifdef EMBEDDED_PYTHON
     if (enable == Enable::OFF)
         return;
 
@@ -36,24 +37,41 @@ Python::Python(Enable enable) :
             this->interp = std::make_shared<PythonInterp>(true);
         } catch(const std::logic_error &exc) {}
     }
+#endif
 }
 
 bool Python::supported() {
+#ifdef EMBEDDED_PYTHON
     return PythonInterp::supported();
+#else
+    return false;
+#endif
 }
 
 
 bool Python::exec(const std::string& python_code) const {
+#ifdef EMBEDDED_PYTHON
     return this->interp->exec(python_code);
+#else
+    return false;
+#endif
 }
 
 
 bool Python::exec(const std::string& python_code, const Parser& parser, Deck& deck) const {
+#ifdef EMBEDDED_PYTHON
     return this->interp->exec(python_code, parser, deck);
+#else
+    return false;
+#endif
 }
 
 bool Python::enabled() const {
+#ifdef EMBEDDED_PYTHON
     return bool( *this->interp );
+#else
+    return false;
+#endif
 }
 
 }
