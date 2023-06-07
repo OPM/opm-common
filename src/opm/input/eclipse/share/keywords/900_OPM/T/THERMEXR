@@ -1,10 +1,10 @@
 {
-  "name": "THERMEXP",
+  "name": "THERMEXR",
   "sections": [
     "GRID"
   ],
   "data": {
     "value_type": "DOUBLE",
-    "dimension": "1/Temperature""
+    "dimension": "1/Temperature"
   }
 }

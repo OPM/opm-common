@@ -449,7 +449,7 @@ namespace {
             {"BIOTCOEF"   , ::Opm::UnitSystem::measure::identity },
             {"POELCOEF"   , ::Opm::UnitSystem::measure::identity },//NB units not done
             {"THELCOEF"   , ::Opm::UnitSystem::measure::identity },//NB units not done
-            {"THERMEXP"   , ::Opm::UnitSystem::measure::identity },
+            {"THERMEXR"   , ::Opm::UnitSystem::measure::identity },
             {"THCONR"   , ::Opm::UnitSystem::measure::identity } //NB units not done
         };
 
