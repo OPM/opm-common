@@ -379,6 +379,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
 endif()
 if(BUILD_EXAMPLES)
   target_link_libraries(co2brinepvt dunecommon)
+  install(TARGETS co2brinepvt DESTINATION bin)
 endif()
 
 # Install build system files and documentation
