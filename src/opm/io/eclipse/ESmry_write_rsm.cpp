@@ -16,30 +16,33 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#include <opm/io/eclipse/ESmry.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/output/eclipse/WStat.hpp>
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iomanip>
 #include <list>
+#include <optional>
 #include <ostream>
 #include <regex>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
-
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/utility/TimeService.hpp>
-#include <opm/io/eclipse/ESmry.hpp>
-#include <opm/output/eclipse/WStat.hpp>
-
-#include "project-version.h"
 
 namespace {
 
@@ -52,6 +55,7 @@ namespace {
     constexpr std::size_t total_width  { total_column * column_count } ;
 
     const std::string block_separator_line { } ;
+
     // the fact that the dashed header line has 127 rather than 130 dashes has no provenance
     const std::string divider_line { std::string(total_width - 3, '-') } ;
 
@@ -64,11 +68,10 @@ namespace {
         return std::string(buffer, 11);
     }
 
-    const std::string block_header_line(const std::string& run_name) {
-        std::string date_string = format_date( Opm::TimeService::from_time_t( std::time(nullptr)));
-        return "SUMMARY OF RUN " + run_name + " at: " + date_string + "  OPM FLOW " + PROJECT_VERSION_NAME;
+    std::string block_header_line(const std::string& run_name) {
+        std::string date_string = format_date(Opm::TimeService::from_time_t(std::time(nullptr)));
+        return "SUMMARY OF RUN " + run_name + " at: " + date_string;
     }
-
 
     void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
         os << prefix << std::setw(total_width) << std::left << line << '\n';
@@ -128,8 +131,6 @@ namespace {
         return wstat_map.at(static_cast<int>(numeric_wstat));
     }
 
-
-
     void write_data_row(std::ostream& os, const std::vector<std::string>& time_column, const std::vector<Opm::EclIO::SummaryNode>& summary_nodes, const std::vector<std::pair<std::vector<float>, int>>& data, std::size_t time_index, char prefix = ' ') {
         os << prefix;
 
@@ -164,13 +165,15 @@ namespace {
         os << '\n';
     }
 
-
-
 }
 
-namespace Opm::EclIO {
+namespace Opm { namespace EclIO {
 
-void ESmry::write_block(std::ostream& os, bool write_dates, const std::vector<std::string>& time_column, const std::vector<SummaryNode>& vectors) const {
+void ESmry::write_block(std::ostream& os,
+                        bool write_dates,
+                        const std::vector<std::string>& time_column,
+                        const std::vector<SummaryNode>& vectors) const
+{
     write_line(os, block_separator_line, '1');
     write_line(os, divider_line);
     write_line(os, block_header_line(inputFileName.stem()));
@@ -218,7 +221,8 @@ void ESmry::write_block(std::ostream& os, bool write_dates, const std::vector<st
     os << std::flush;
 }
 
-void ESmry::write_rsm(std::ostream& os) const {
+void ESmry::write_rsm(std::ostream& os) const
+{
     bool write_dates = false;
     std::vector<SummaryNode> data_vectors;
     std::remove_copy_if(summaryNodes.begin(), summaryNodes.end(), std::back_inserter(data_vectors), [](const SummaryNode& node){
@@ -264,14 +268,15 @@ void ESmry::write_rsm(std::ostream& os) const {
     }
 }
 
-void ESmry::write_rsm_file(std::optional<std::filesystem::path> filename) const {
+void ESmry::write_rsm_file(std::optional<std::filesystem::path> filename) const
+{
     std::filesystem::path summary_file_name { filename.value_or(inputFileName) } ;
     summary_file_name.replace_extension("RSM");
 
     std::ofstream rsm_file { summary_file_name } ;
 
     if (!rsm_file.is_open()) {
-        OPM_THROW(std::runtime_error, "Could not open file " + std::string(summary_file_name));
+        OPM_THROW(std::runtime_error, "Could not open file " + summary_file_name.generic_string() + " for writing");
     }
 
     write_rsm(rsm_file);
@@ -279,4 +284,4 @@ void ESmry::write_rsm_file(std::optional<std::filesystem::path> filename) const 
     rsm_file.close();
 }
 
-} // namespace Opm::EclIO
+}} // namespace Opm::EclIO
