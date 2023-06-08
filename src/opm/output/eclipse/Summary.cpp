@@ -2232,6 +2232,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
   {"FGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"FPR"      , Opm::UnitSystem::measure::pressure },
+  {"FPRP"     , Opm::UnitSystem::measure::pressure },
   {"FGCDI"    , Opm::UnitSystem::measure::moles },
   {"FGCDM"    , Opm::UnitSystem::measure::moles },
   {"FWCD"     , Opm::UnitSystem::measure::moles },
@@ -2241,6 +2242,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_v
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_units = {
   {"RPR"      , Opm::UnitSystem::measure::pressure},
+  {"RPRP"     , Opm::UnitSystem::measure::pressure},
   {"RRPV"     , Opm::UnitSystem::measure::volume },
   {"ROIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
   {"ROIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
