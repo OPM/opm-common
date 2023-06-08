@@ -196,8 +196,8 @@ namespace Opm {
         // Meaningless value to indicate unspecified values.
         const double invalid_value = Segment::invalidValue();
 
-        const double depth_top = record1.getItem("DEPTH").getSIDouble(0);
-        const double length_top = record1.getItem("LENGTH").getSIDouble(0);
+        const double depth_top = record1.getItem("TOP_DEPTH").getSIDouble(0);
+        const double length_top = record1.getItem("TOP_LENGTH").getSIDouble(0);
         const double volume_top = record1.getItem("WELLBORE_VOLUME").getSIDouble(0);
         const LengthDepth length_depth_type = LengthDepthFromString(record1.getItem("INFO_TYPE").getTrimmedString(0));
         m_comp_pressure_drop = CompPressureDropFromString(record1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
@@ -258,6 +258,13 @@ namespace Opm {
                 };
             }
 
+            if ((segment1 != segment2) && (length_depth_type == LengthDepth::ABS)) {
+                throw std::logic_error{
+                    fmt::format("In WELSEGS, it is not supported to enter multiple segments in one record "
+                                     "with ABS type of tubing length and depth information")
+                };
+            }
+
             const int branch = record.getItem("BRANCH").get<int>(0);
             if (branch < 1) {
                 throw std::logic_error {
@@ -275,15 +282,13 @@ namespace Opm {
                 }
             }
 
-            // If the values are incremental values, then we can just use
-            // the values if the values are absolute values, then we need to
-            // calculate them during the next process only the value for the
-            // last segment in the range is recorded
-            const double segment_length = record.getItem("SEGMENT_LENGTH").getSIDouble(0);
+            // If the length_depth_type is INC, then the length is the length of the segment,
+            // If the length_depth_type is ABS, then the length is the length of the last segment node in the range.
+            const double length = record.getItem("LENGTH").getSIDouble(0);
 
-            // The naming is a little confusing here.  Naming following the
-            // definition from the current keyword for the moment.
-            const double depth_change = record.getItem("DEPTH_CHANGE").getSIDouble(0);
+            // If the length_depth_type is INC, then the depth is the depth change of the segment from the outlet segment.
+            // If the length_depth_type is ABS, then the depth is the absolute depth of last the segment node in the range.
+            const double depth = record.getItem("DEPTH").getSIDouble(0);
 
             double volume = invalid_value;
             {
@@ -292,7 +297,7 @@ namespace Opm {
                     volume = itemVolume.getSIDouble(0);
                 }
                 else if (length_depth_type == LengthDepth::INC) {
-                    volume = area * segment_length;
+                    volume = area * length;
                 }
             }
 
@@ -314,7 +319,7 @@ namespace Opm {
                     && (segment_number == segment2);
 
                 this->addSegment(segment_number, branch, outlet_segment,
-                                 segment_length, depth_change, diameter,
+                                 length, depth, diameter,
                                  roughness, area, volume, data_ready,
                                  node_X, node_Y);
             }
