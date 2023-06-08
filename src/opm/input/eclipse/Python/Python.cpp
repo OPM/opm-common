@@ -49,7 +49,7 @@ bool Python::supported() {
 }
 
 
-bool Python::exec(const std::string& python_code) const {
+bool Python::exec([[maybe_unused]] const std::string& python_code) const {
 #ifdef EMBEDDED_PYTHON
     return this->interp->exec(python_code);
 #else
@@ -58,7 +58,9 @@ bool Python::exec(const std::string& python_code) const {
 }
 
 
-bool Python::exec(const std::string& python_code, const Parser& parser, Deck& deck) const {
+bool Python::exec([[maybe_unused]] const std::string& python_code,
+                  [[maybe_unused]] const Parser& parser,
+                  [[maybe_unused]] Deck& deck) const {
 #ifdef EMBEDDED_PYTHON
     return this->interp->exec(python_code, parser, deck);
 #else
