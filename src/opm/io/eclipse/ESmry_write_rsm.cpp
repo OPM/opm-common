@@ -44,8 +44,6 @@
 
 #include <fmt/format.h>
 
-#include "project-version.h"
-
 namespace {
 
     constexpr std::size_t column_width { 8 } ;
@@ -72,7 +70,7 @@ namespace {
 
     std::string block_header_line(const std::string& run_name) {
         std::string date_string = format_date(Opm::TimeService::from_time_t(std::time(nullptr)));
-        return "SUMMARY OF RUN " + run_name + " at: " + date_string + "  OPM FLOW " + PROJECT_VERSION_NAME;
+        return "SUMMARY OF RUN " + run_name + " at: " + date_string;
     }
 
     void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
