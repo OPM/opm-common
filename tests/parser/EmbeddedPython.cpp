@@ -51,11 +51,10 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(INSTANTIATE)
 {
     Python python;
-    BOOST_CHECK(!python.enabled());
-    BOOST_CHECK_THROW(python.exec("print('Hello world')"), std::logic_error);
-    BOOST_CHECK(! Python::supported() );
+    BOOST_CHECK_MESSAGE(!python.enabled(), "Python must not be enabled in a default-constructed Python object unless we have Embedded Python support");
+    BOOST_CHECK_MESSAGE(!python.exec("print('Hello world')"), "Default-constructed Python object must not run Python code unless we have Embedded Python support");
+    BOOST_CHECK_MESSAGE(!Python::supported(), "Python must not be supported unless we have Embedded Python support");
 
-    BOOST_CHECK_THROW( Python{Python::Enable::ON}, std::logic_error );
     Python python_cond(Python::Enable::TRY);
     BOOST_CHECK(!python_cond.enabled());
 
