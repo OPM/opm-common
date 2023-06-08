@@ -571,15 +571,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
                     production.available_group_control = availableForGroupControl;
-
-                    if ((production.cmode == Group::ProductionCMode::ORAT) ||
-                        (production.cmode == Group::ProductionCMode::WRAT) ||
-                        (production.cmode == Group::ProductionCMode::GRAT) ||
-                        (production.cmode == Group::ProductionCMode::LRAT))
-                        production.exceed_action = Group::ExceedAction::RATE;
-                    else
-                        production.exceed_action = exceedAction;
-
+                    production.exceed_action = exceedAction;
                     production.production_controls = 0;
 
                     if (!apply_default_oil_target)

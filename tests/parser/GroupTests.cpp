@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
         /
 
         GCONPROD
-            'G1' 'ORAT' 10000 3* 'CON' /
+            'G1' 'ORAT' 10000 3* 'RATE' /
             'G2' 'RESV' 10000 3* 'CON' /
         /)";
 
