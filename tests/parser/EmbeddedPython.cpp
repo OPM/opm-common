@@ -83,44 +83,51 @@ context.deck.add(kw)
     BOOST_CHECK(deck.hasKeyword("FIELD"));
 }
 
+BOOST_AUTO_TEST_CASE(PYINPUT_BASIC)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+START             -- 0
+31 AUG 1993 /
 
+PYINPUT
+kw = context.DeckKeyword(context.parser['FIELD'])
+context.deck.add(kw)
+PYEND
 
-BOOST_AUTO_TEST_CASE(PYINPUT_BASIC) {
+DIMENS
+2 2 1 /
 
-    Parser parser;
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        RUNSPEC
-        PYINPUT
-        kw = context.DeckKeyword( context.parser['FIELD'] )
-        context.deck.add(kw)
-        PYEND
-        DIMENS
-        2 2 1 /
-        PYINPUT
-        import numpy as np
-        dx = np.array([0.25, 0.25, 0.25, 0.25])
-        active_unit_system = context.deck.active_unit_system()
-        default_unit_system = context.deck.default_unit_system()
-        kw = context.DeckKeyword( context.parser['DX'], dx, active_unit_system, default_unit_system )
-        context.deck.add(kw)
-        PYEND
-        DY
-        4*0.25 /
-        )";
+PYINPUT
+try:
+    import numpy as np
+    dx = np.array([0.25, 0.25, 0.25, 0.25])
+    active_unit_system = context.deck.active_unit_system()
+    default_unit_system = context.deck.default_unit_system()
+    kw = context.DeckKeyword(context.parser['DX'], dx, active_unit_system, default_unit_system)
+    context.deck.add(kw)
+except ImportError:
+    # NumPy might not be available on host. Nothing to do in this case.
+    pass
+PYEND
 
-    Deck deck = parser.parseString(input);
-    BOOST_CHECK( deck.hasKeyword("START") );
-    BOOST_CHECK( deck.hasKeyword("FIELD") );
-    BOOST_CHECK( deck.hasKeyword("DIMENS") );
-    BOOST_CHECK( deck.hasKeyword("DX") );
-    auto DX = deck["DX"].back();
-    std::vector<double> dx_data = DX.getSIDoubleData();
-    BOOST_CHECK_EQUAL( dx_data.size(), 4 );
-    BOOST_CHECK_EQUAL( dx_data[2], 0.25 * 0.3048 );
-    BOOST_CHECK( deck.hasKeyword("DY") );
+DY
+4*0.25 /
 
+END
+)");
+
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("START"), "START keyword must be present");
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("FIELD"), "FIELD keyword must be present");
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("DIMENS"), "DIMENS keyword must be present");
+
+    if (deck.hasKeyword("DX")) {
+        auto DX = deck["DX"].back();
+        std::vector<double> dx_data = DX.getSIDoubleData();
+        BOOST_CHECK_EQUAL(dx_data.size(), 4);
+        BOOST_CHECK_EQUAL(dx_data[2], 0.25 * 0.3048);
+    }
+
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("DY"), "DY keyword must be present");
 }
 
 BOOST_AUTO_TEST_CASE(PYACTION)
