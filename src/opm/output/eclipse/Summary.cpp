@@ -44,7 +44,6 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -503,6 +502,7 @@ struct fn_args
     const std::optional<std::variant<std::string, int>> extra_data;
     const Opm::SummaryState& st;
     const Opm::data::Wells& wells;
+    const Opm::data::WellBlockAveragePressures& wbp;
     const Opm::data::GroupAndNetworkValues& grp_nwrk;
     const Opm::out::RegionCache& regionCache;
     const Opm::EclipseGrid& grid;
@@ -2626,6 +2626,7 @@ namespace Evaluator {
     struct SimulatorResults
     {
         const Opm::data::Wells& wellSol;
+        const Opm::data::WellBlockAveragePressures& wbp;
         const Opm::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
         const Opm::Inplace inplace;
@@ -2655,7 +2656,7 @@ namespace Evaluator {
             , fcn_ (std::move(fcn))
         {
             if (this->use_number()) {
-                this->number_ = this->node_.number;
+                this->number_ = std::max(0, this->node_.number);
             }
         }
 
@@ -2665,9 +2666,7 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Opm::SummaryState&      st) const override
         {
-            const auto get_wells = need_wells(this->node_);
-
-            const auto wells = get_wells
+            const auto wells = need_wells(this->node_)
                 ? find_wells(input.sched, this->node_,
                              static_cast<int>(sim_step), input.reg)
                 : std::vector<const Opm::Well*>{};
@@ -2676,12 +2675,14 @@ namespace Evaluator {
             efac.setFactors(this->node_, input.sched, wells, sim_step);
 
             const fn_args args {
-                wells, this->group_name(), this->node_.keyword, stepSize, static_cast<int>(sim_step),
-                std::max(0, this->number_),
-                this->node_.fip_region,
-                st, simRes.wellSol, simRes.grpNwrkSol,
+                wells, this->group_name(), this->node_.keyword,
+                stepSize, static_cast<int>(sim_step),
+                this->number_, this->node_.fip_region,
+                st,
+                simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
                 input.reg, input.grid, input.sched,
-                std::move(efac.factors), input.initial_inplace, simRes.inplace,
+                std::move(efac.factors),
+                input.initial_inplace, simRes.inplace,
                 input.sched.getUnits()
             };
 
@@ -3502,21 +3503,28 @@ namespace Evaluator {
 
     std::string Factory::functionUnitString() const
     {
+        const auto unit_string_tracer = this->es_.tracer()
+            .get_unit_string(this->es_.getUnits(),
+                             this->node_->keyword);
+
+        if (! unit_string_tracer.empty()) {
+            // Non-default unit for tracer amount.
+            return unit_string_tracer;
+        }
+
         const auto reg = Opm::out::RegionCache{};
 
         const fn_args args {
-            {}, "", this->node_->keyword, 0.0, 0, std::max(0, this->node_->number),
-            this->node_->fip_region,
-            this->st_, {}, {}, reg, this->grid_, this->sched_,
-            {}, {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)
+            {}, "", this->node_->keyword, 0.0, 0,
+            this->node_->number, this->node_->fip_region,
+            this->st_,
+            {}, {}, {},
+            reg, this->grid_, this->sched_,
+            {}, {}, {},
+            Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)
         };
 
         const auto prm = this->paramFunction_(args);
-
-        std::string unit_string_tracer = this->es_.tracer().get_unit_string(this->es_.getUnits(), this->node_->keyword);
-        if (unit_string_tracer != "") { //Non-default unit for tracer amount.
-            return unit_string_tracer;
-        }
 
         return this->es_.getUnits().name(prm.unit);
     }
@@ -3757,22 +3765,22 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
-    void eval(const int                          sim_step,
-              const double                       secs_elapsed,
-              const data::Wells&                 well_solution,
-              const data::GroupAndNetworkValues& grp_nwrk_solution,
-              GlobalProcessParameters&           single_values,
-              const Inplace&                     initial_inplace,
-              const Opm::Inplace&                inplace,
-              const RegionParameters&            region_values,
-              const BlockValues&                 block_values,
-              const data::Aquifers&              aquifer_values,
-              const InterRegFlowValues&          interreg_flows,
-              SummaryState&                      st) const;
+    void eval(const int                              sim_step,
+              const double                           secs_elapsed,
+              const data::Wells&                     well_solution,
+              const data::WellBlockAveragePressures& wbp,
+              const data::GroupAndNetworkValues&     grp_nwrk_solution,
+              GlobalProcessParameters                single_values,
+              const Inplace&                         initial_inplace,
+              const Opm::Inplace&                    inplace,
+              const RegionParameters&                region_values,
+              const BlockValues&                     block_values,
+              const data::Aquifers&                  aquifer_values,
+              const InterRegFlowValues&              interreg_flows,
+              SummaryState&                          st) const;
 
     void internal_store(const SummaryState& st, const int report_step, bool isSubstep);
     void write(const bool is_final_summary);
-    PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 
 private:
     struct MiniStep
@@ -3789,7 +3797,6 @@ private:
     std::reference_wrapper<const Opm::EclipseState> es_;
     std::reference_wrapper<const Opm::Schedule> sched_;
     Opm::out::RegionCache regCache_;
-    std::unordered_set<std::string> wbp_wells;
 
     std::unique_ptr<SMSpecStreamDeferredCreation> deferredSMSpec_;
 
@@ -3867,9 +3874,6 @@ SummaryImplementation(const EclipseState&  es,
                                              sched, evaluatorFactory);
     this->configureUDQ(es, sumcfg, sched);
 
-    for (const auto& config_node : sumcfg.keywords("WBP*"))
-        this->wbp_wells.insert( config_node.namedEntity() );
-
     std::string esmryFileName = EclIO::OutputStream::outputFileName(this->rset_, "ESMRY");
 
     if (std::filesystem::exists(esmryFileName))
@@ -3899,43 +3903,25 @@ internal_store(const SummaryState& st, const int report_step, bool isSubstep)
     }
 }
 
-Opm::PAvgCalculatorCollection
-Opm::out::Summary::SummaryImplementation::wbp_calculators(std::size_t report_step) const
-{
-    if (this->wbp_wells.empty())
-        return {};
-
-    Opm::PAvgCalculatorCollection calculators;
-    const auto& porv = this->es_.get().globalFieldProps().porv(true);
-    for (const auto& wname : this->wbp_wells) {
-        if (this->sched_.get().hasWell(wname, report_step)) {
-            const auto& well = this->sched_.get().getWell(wname, report_step);
-            if (well.getStatus() == Opm::Well::Status::OPEN)
-                calculators.add(well.pavg_calculator(this->grid_, porv));
-        }
-    }
-
-    return calculators;
-}
-
 void
 Opm::out::Summary::SummaryImplementation::
-eval(const int                          sim_step,
-     const double                       secs_elapsed,
-     const data::Wells&                 well_solution,
-     const data::GroupAndNetworkValues& grp_nwrk_solution,
-     GlobalProcessParameters&           single_values,
-     const Inplace&                     initial_inplace,
-     const Opm::Inplace&                inplace,
-     const RegionParameters&            region_values,
-     const BlockValues&                 block_values,
-     const data::Aquifers&              aquifer_values,
-     const InterRegFlowValues&          interreg_flows,
-     Opm::SummaryState&                 st) const
+eval(const int                              sim_step,
+     const double                           secs_elapsed,
+     const data::Wells&                     well_solution,
+     const data::WellBlockAveragePressures& wbp,
+     const data::GroupAndNetworkValues&     grp_nwrk_solution,
+     GlobalProcessParameters                single_values,
+     const Inplace&                         initial_inplace,
+     const Opm::Inplace&                    inplace,
+     const RegionParameters&                region_values,
+     const BlockValues&                     block_values,
+     const data::Aquifers&                  aquifer_values,
+     const InterRegFlowValues&              interreg_flows,
+     Opm::SummaryState&                     st) const
 {
     validateElapsedTime(secs_elapsed, this->es_, st);
 
-    const double duration = secs_elapsed - st.get_elapsed();
+    const auto duration = secs_elapsed - st.get_elapsed();
     single_values["TIMESTEP"] = duration;
     st.update("TIMESTEP", this->es_.get().getUnits().from_si(Opm::UnitSystem::measure::time, duration));
 
@@ -3944,7 +3930,7 @@ eval(const int                          sim_step,
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, grp_nwrk_solution, single_values, inplace,
+        well_solution, wbp, grp_nwrk_solution, single_values, inplace,
         region_values, block_values, aquifer_values, interreg_flows
     };
 
@@ -4370,22 +4356,22 @@ Summary::Summary(const EclipseState&  es,
                  const Schedule&      sched,
                  const std::string&   basename,
                  const bool           writeEsmry)
-    : pImpl_(new SummaryImplementation(es, sumcfg, grid, sched, basename, writeEsmry))
+    : pImpl_ { std::make_unique<SummaryImplementation>(es, sumcfg, grid, sched, basename, writeEsmry) }
 {}
 
-void Summary::eval(SummaryState&                      st,
-                   const int                          report_step,
-                   const double                       secs_elapsed,
-                   const data::Wells&                 well_solution,
-                   const data::GroupAndNetworkValues& grp_nwrk_solution,
-                   GlobalProcessParameters            single_values,
-                   const Inplace&                     initial_inplace,
-                   const Inplace&                     inplace,
-                   const PAvgCalculatorCollection&    ,
-                   const RegionParameters&            region_values,
-                   const BlockValues&                 block_values,
-                   const Opm::data::Aquifers&         aquifer_values,
-                   const InterRegFlowValues&          interreg_flows) const
+void Summary::eval(SummaryState&                          st,
+                   const int                              report_step,
+                   const double                           secs_elapsed,
+                   const data::Wells&                     well_solution,
+                   const data::WellBlockAveragePressures& wbp,
+                   const data::GroupAndNetworkValues&     grp_nwrk_solution,
+                   const GlobalProcessParameters&         single_values,
+                   const Inplace&                         initial_inplace,
+                   const Inplace&                         inplace,
+                   const RegionParameters&                region_values,
+                   const BlockValues&                     block_values,
+                   const Opm::data::Aquifers&             aquifer_values,
+                   const InterRegFlowValues&              interreg_flows) const
 {
     // Report_step is the one-based sequence number of the containing report.
     // Report_step = 0 for the initial condition, before simulation starts.
@@ -4398,17 +4384,14 @@ void Summary::eval(SummaryState&                      st,
     // wells, groups, connections &c in the Schedule object.
     const auto sim_step = std::max(0, report_step - 1);
 
+    auto process_values = single_values;
+
     this->pImpl_->eval(sim_step, secs_elapsed,
-                       well_solution, grp_nwrk_solution, single_values,
+                       well_solution, wbp, grp_nwrk_solution,
+                       std::move(process_values),
                        initial_inplace, inplace,
                        region_values, block_values,
                        aquifer_values, interreg_flows, st);
-}
-
-PAvgCalculatorCollection
-Summary::wbp_calculators(std::size_t report_step) const
-{
-    return this->pImpl_->wbp_calculators(report_step);
 }
 
 void Summary::add_timestep(const SummaryState& st, const int report_step, bool isSubstep)

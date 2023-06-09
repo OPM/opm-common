@@ -549,6 +549,73 @@ namespace Opm {
         }
     };
 
+    class WellBlockAvgPress
+    {
+    public:
+        enum class Quantity { WBP, WBP4, WBP5, WBP9 };
+
+        double& operator[](const Quantity q)
+        {
+            return this->wbp_[static_cast<std::size_t>(q)];
+        }
+
+        double operator[](const Quantity q) const
+        {
+            return this->wbp_[static_cast<std::size_t>(q)];
+        }
+
+        bool operator==(const WellBlockAvgPress& that) const
+        {
+            return this->wbp_ == that.wbp_;
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->wbp_);
+        }
+
+        static WellBlockAvgPress serializationTestObject()
+        {
+            auto wbp = WellBlockAvgPress{};
+
+            wbp[Quantity::WBP]  = 17.29;
+            wbp[Quantity::WBP4] =  2.718;
+            wbp[Quantity::WBP5] =  3.1415;
+            wbp[Quantity::WBP9] =  1.618;
+
+            return wbp;
+        }
+
+    private:
+        static constexpr auto NumQuantities =
+            static_cast<std::size_t>(Quantity::WBP9) + 1;
+
+        std::array<double, NumQuantities> wbp_{};
+
+        std::string quantityName(const Quantity quantity) const
+        {
+            switch (quantity) {
+            case Quantity::WBP : return "WBP";
+            case Quantity::WBP4: return "WBP4";
+            case Quantity::WBP5: return "WBP5";
+            case Quantity::WBP9: return "WBP9";
+            }
+
+            throw std::invalid_argument {
+                "Unkown WBP quantity '" +
+                std::to_string(static_cast<int>(quantity)) +
+                "'"
+            };
+        }
+    };
+
     struct Well {
         Rates rates{};
         double bhp{0.0};
@@ -597,16 +664,17 @@ namespace Opm {
 
         bool operator==(const Well& well2) const
         {
-            return rates == well2.rates &&
-                   bhp == well2.bhp &&
-                   thp == well2.thp &&
-                   temperature == well2.temperature &&
-                   control == well2.control &&
-                   dynamicStatus == well2.dynamicStatus &&
-                   connections == well2.connections &&
-                   segments == well2.segments &&
-                   current_control == well2.current_control &&
-                   guide_rates == well2.guide_rates;
+            return (this->rates == well2.rates)
+                && (this->bhp == well2.bhp)
+                && (this->thp == well2.thp)
+                && (this->temperature == well2.temperature)
+                && (this->control == well2.control)
+                && (this->dynamicStatus == well2.dynamicStatus)
+                && (this->connections == well2.connections)
+                && (this->segments == well2.segments)
+                && (this->current_control == well2.current_control)
+                && (this->guide_rates == well2.guide_rates)
+                ;
         }
 
         template<class Serializer>
@@ -626,20 +694,20 @@ namespace Opm {
 
         static Well serializationTestObject()
         {
-            return Well{Rates::serializationTestObject(),
-                        1.0,
-                        2.0,
-                        3.0,
-                        4,
-                        ::Opm::WellStatus::SHUT,
-                        {Connection::serializationTestObject()},
-                        {{0, Segment::serializationTestObject()}},
-                        CurrentControl::serializationTestObject(),
-                        GuideRateValue::serializationTestObject()
-                   };
+            return Well {
+                Rates::serializationTestObject(),
+                1.0,
+                2.0,
+                3.0,
+                4,
+                ::Opm::WellStatus::SHUT,
+                {Connection::serializationTestObject()},
+                {{0, Segment::serializationTestObject()}},
+                CurrentControl::serializationTestObject(),
+                GuideRateValue::serializationTestObject()
+            };
         }
     };
-
 
     class Wells: public std::map<std::string , Well> {
     public:
@@ -728,6 +796,34 @@ namespace Opm {
         }
     };
 
+    struct WellBlockAveragePressures
+    {
+        std::unordered_map<std::string, WellBlockAvgPress> values{};
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
+
+        bool operator==(const WellBlockAveragePressures& that) const
+        {
+            return this->values == that.values;
+        }
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->values);
+        }
+
+        static WellBlockAveragePressures serializationTestObject()
+        {
+            return {
+                { { "I-45", WellBlockAvgPress::serializationTestObject() } },
+            };
+        }
+    };
 
     /* IMPLEMENTATIONS */
 
@@ -979,6 +1075,14 @@ namespace Opm {
     }
 
     template <class MessageBufferType>
+    void WellBlockAvgPress::write(MessageBufferType& buffer) const
+    {
+        for (const auto& quantity : this->wbp_) {
+            buffer.write(quantity);
+        }
+    }
+
+    template <class MessageBufferType>
     void Well::write(MessageBufferType& buffer) const {
         this->rates.write(buffer);
         buffer.write(this->bhp);
@@ -1008,6 +1112,17 @@ namespace Opm {
 
         this->current_control.write(buffer);
         this->guide_rates.write(buffer);
+    }
+
+    template <class MessageBufferType>
+    void WellBlockAveragePressures::write(MessageBufferType& buffer) const
+    {
+        buffer.write(this->values.size());
+
+        for (const auto& [well, value] : this->values) {
+            buffer.write(well);
+            value.write(buffer);
+        }
     }
 
     template <class MessageBufferType>
@@ -1083,6 +1198,14 @@ namespace Opm {
     }
 
     template <class MessageBufferType>
+    void WellBlockAvgPress::read(MessageBufferType& buffer)
+    {
+        for (auto& quantity : this->wbp_) {
+            buffer.read(quantity);
+        }
+    }
+
+    template <class MessageBufferType>
     void Well::read(MessageBufferType& buffer) {
         this->rates.read(buffer);
         buffer.read(this->bhp);
@@ -1125,6 +1248,25 @@ namespace Opm {
 
         this->current_control.read(buffer);
         this->guide_rates.read(buffer);
+    }
+
+    template <class MessageBufferType>
+    void WellBlockAveragePressures::read(MessageBufferType& buffer)
+    {
+        const auto numWells = [&buffer, this]()
+        {
+            auto size = 0*this->values.size();
+            buffer.read(size);
+
+            return size;
+        }();
+
+        auto wellName = std::string{};
+        for (auto well = 0*numWells; well < numWells; ++well) {
+            buffer.read(wellName);
+
+            this->values[wellName].read(buffer);
+        }
     }
 
     void Well::init_json(Json::JsonObject& json_data) const {

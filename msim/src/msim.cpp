@@ -33,7 +33,6 @@
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
@@ -122,11 +121,11 @@ void msim::run_step(WellTestState& wtest_state, UDQState& udq_state, data::Solut
                           report_step,
                           seconds_elapsed,
                           well_data,
+                          /* wbp = */ {},
                           group_nwrk_data,
-                          {},
-                          {},
-                          {},
-                          {});
+                          /* sing_values = */ {},
+                          /* initial_inplace = */ {},
+                          /* inplace = */ {});
 
         this->schedule.getUDQConfig( report_step ).eval(report_step, schedule.wellMatcher(report_step), this->st, udq_state);
 
