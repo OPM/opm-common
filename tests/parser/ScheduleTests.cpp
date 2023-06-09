@@ -1509,6 +1509,18 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         GCONPROD
         'G*' 'ORAT' 2000 0 0 0 'NONE' 'YES' 148 'OIL'/
         /
+        DATES             -- 3
+         10  DEC 2008 /
+        /
+        GCONPROD
+        'G*' 'ORAT' 2000 1000 0 0 'NONE' 'YES' 148 'OIL'/
+        /
+        DATES             -- 4
+         10  JAN 2009 /
+        /
+        GCONPROD
+        'G*' 'ORAT' 2000 1000 0 0 'RATE' 'YES' 148 'OIL'/
+        /
         )";
 
         const auto& schedule = make_schedule(input);
@@ -1529,6 +1541,19 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
             BOOST_CHECK_CLOSE(g.productionControls(st).oil_target, 2000 * siFactorL, 1e-13);
             BOOST_CHECK_EQUAL(g.productionControls(st).guide_rate, 148);
             BOOST_CHECK_EQUAL(true, g.productionControls(st).guide_rate_def == Group::GuideRateProdTarget::OIL);
+        }
+        {
+            auto g = schedule.getGroup("G1", 3);
+            BOOST_CHECK_CLOSE(g.productionControls(st).oil_target, 2000 * siFactorL, 1e-13);
+            BOOST_CHECK(g.has_control(Group::ProductionCMode::ORAT));
+            BOOST_CHECK(!g.has_control(Group::ProductionCMode::WRAT));
+        }
+        {
+            auto g = schedule.getGroup("G1", 4);
+            BOOST_CHECK_CLOSE(g.productionControls(st).oil_target, 2000 * siFactorL, 1e-13);
+            BOOST_CHECK(g.has_control(Group::ProductionCMode::ORAT));
+            BOOST_CHECK_CLOSE(g.productionControls(st).water_target, 1000 * siFactorL, 1e-13);
+            BOOST_CHECK(g.has_control(Group::ProductionCMode::WRAT));
         }
 
         auto g2 = schedule.getGroup("G2", 2);

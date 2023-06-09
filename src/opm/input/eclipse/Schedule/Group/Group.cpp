@@ -130,6 +130,7 @@ namespace {
         production.exceed_action = Opm::Group::ExceedActionFromInt(rst_group.exceed_action);
         production.guide_rate_def = Opm::Group::GuideRateProdTargetFromInt(rst_group.prod_guide_rate_def);
 
+        //TODO allow also for ExceedAction::NONE (item 7 of GCONPROD)
         if ((production.cmode == Opm::Group::ProductionCMode::ORAT) ||
             (production.cmode == Opm::Group::ProductionCMode::WRAT) ||
             (production.cmode == Opm::Group::ProductionCMode::GRAT) ||
