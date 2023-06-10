@@ -204,6 +204,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/PAvg.cpp
     src/opm/input/eclipse/Schedule/Well/PAvgCalculator.cpp
     src/opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.cpp
+    src/opm/input/eclipse/Schedule/Well/PAvgDynamicSourceData.cpp
     src/opm/input/eclipse/Schedule/Well/Well.cpp
     src/opm/input/eclipse/Schedule/Well/WellConnections.cpp
     src/opm/input/eclipse/Schedule/Well/WellMatcher.cpp
@@ -460,11 +461,12 @@ if(ENABLE_ECL_INPUT)
     tests/test_RestartFileView.cpp
     tests/test_EclIO.cpp
     tests/test_EGrid.cpp
+    tests/test_EInit.cpp
     tests/test_ERft.cpp
     tests/test_ERst.cpp
     tests/test_ESmry.cpp
-    tests/test_EInit.cpp
     tests/test_ExtESmry.cpp
+    tests/test_PAvgDynamicSourceData.cpp
     tests/test_Serialization.cpp
     tests/material/test_co2brinepvt.cpp
     tests/material/test_eclblackoilfluidsystem.cpp
@@ -1212,6 +1214,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/PAvg.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp
+       opm/input/eclipse/Schedule/Well/PAvgDynamicSourceData.hpp
        opm/input/eclipse/Schedule/Well/Well.hpp
        opm/input/eclipse/Schedule/Well/WellEnums.hpp
        opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp
