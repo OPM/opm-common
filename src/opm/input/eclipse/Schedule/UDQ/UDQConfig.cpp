@@ -24,6 +24,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
@@ -440,20 +441,23 @@ namespace Opm {
     }
 
     void UDQConfig::eval_assign(const std::size_t report_step,
-                                SummaryState&     st,
+                                const Schedule&   sched,
                                 UDQState&         udq_state,
                                 UDQContext&       context) const
     {
+        const auto wells  = sched.wellNames(report_step);
+        const auto groups = sched.groupNames(report_step);
+
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {
-                auto ws = assign.eval(st.wells());
+                auto ws = assign.eval(wells);
                 context.update_assign(report_step, assign.keyword(), ws);
             }
         }
 
         for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {
-                auto ws = assign.eval(st.groups());
+                auto ws = assign.eval(groups);
                 context.update_assign(report_step, assign.keyword(), ws);
             }
         }
@@ -505,22 +509,24 @@ namespace Opm {
     }
 
     void UDQConfig::eval(const std::size_t  report_step,
+                         const Schedule&    sched,
                          const WellMatcher& wm,
                          SummaryState&      st,
                          UDQState&          udq_state) const
     {
         UDQContext context(this->function_table(), wm, st, udq_state);
-        this->eval_assign(report_step, st, udq_state, context);
+        this->eval_assign(report_step, sched, udq_state, context);
         this->eval_define(report_step, udq_state, context);
     }
 
     void UDQConfig::eval_assign(const std::size_t  report_step,
+                                const Schedule&    sched,
                                 const WellMatcher& wm,
                                 SummaryState&      st,
                                 UDQState&          udq_state) const
     {
         UDQContext context(this->function_table(), wm, st, udq_state);
-        this->eval_assign(report_step, st, udq_state, context);
+        this->eval_assign(report_step, sched, udq_state, context);
     }
 
     void UDQConfig::required_summary(std::unordered_set<std::string>& summary_keys) const

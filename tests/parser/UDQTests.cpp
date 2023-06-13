@@ -1949,7 +1949,7 @@ UDQ
     SummaryState st(TimeService::now());
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    udq.eval(0, {}, st, udq_state);
+    udq.eval(0, schedule, {}, st, udq_state);
 
     BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
 
@@ -1975,7 +1975,7 @@ DEFINE FU_PAR2 FU_PAR3 /
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
     st.update("FMWPR", 100);
-    udq.eval(0, {}, st, udq_state);
+    udq.eval(0, schedule, {}, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
 }
@@ -1993,7 +1993,7 @@ DEFINE FU_PAR3 FU_PAR2 + 1/
     SummaryState st(TimeService::now());
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    udq.eval(0, {}, st, udq_state);
+    udq.eval(0, schedule, {}, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), undefined_value);
     BOOST_CHECK_EQUAL(st.get("FU_PAR3"), undefined_value);
@@ -2103,7 +2103,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
 
     NameOrder wo({"W1", "W2", "W3"});
     WellMatcher wm(wo);
-    udq.eval(0, wm, st, udq_state);
+    udq.eval(0, schedule, wm, st, udq_state);
     {
         std::unordered_set<std::string> required_keys;
         udq.required_summary(required_keys);
@@ -2307,7 +2307,7 @@ DEFINE FU_VAR91 GOPR TEST  /
     st.update_well_var("W3", "WGLIR", 3);
     st.update_group_var("TEST", "GOPR", 1);
 
-    udq.eval(0, {}, st, udq_state);
+    udq.eval(0, schedule, {}, st, udq_state);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_KEY_ERROR) {
@@ -2326,7 +2326,7 @@ UDQ
     UDQState udq_state(undefined_value);
     SummaryState st(TimeService::now());
 
-    BOOST_CHECK_THROW(udq.eval(0, {}, st, udq_state), std::exception);
+    BOOST_CHECK_THROW(udq.eval(0, schedule, {}, st, udq_state), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
@@ -2351,7 +2351,7 @@ UDQ
         BOOST_CHECK(required_keys.empty());
     }
 
-    udq.eval(0, {}, st, udq_state);
+    udq.eval(0, schedule, {}, st, udq_state);
     BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);
 }
 
@@ -2392,7 +2392,7 @@ TSTEP
     // Counting: 1,2,3,4,5
     for (std::size_t report_step = 0; report_step < 5; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
-        udq.eval(report_step, schedule.wellMatcher(report_step), st, udq_state);
+        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, report_step + 1);
     }
@@ -2400,7 +2400,7 @@ TSTEP
     // Reset to zero and count: 1,2,3,4,5
     for (std::size_t report_step = 5; report_step < 10; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
-        udq.eval(report_step, schedule.wellMatcher(report_step), st, udq_state);
+        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, report_step - 4);
     }
@@ -2408,7 +2408,7 @@ TSTEP
     // Reset to zero and stay there.
     for (std::size_t report_step = 10; report_step < 15; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
-        udq.eval(report_step, schedule.wellMatcher(report_step),st, udq_state);
+        udq.eval(report_step, schedule, schedule.wellMatcher(report_step),st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, 0);
     }
@@ -2459,7 +2459,7 @@ UDQ
     SummaryState st(TimeService::now());
 
     const auto& udq = schedule.getUDQConfig(0);
-    udq.eval(0, {}, st, udq_state);
+    udq.eval(0, schedule, {}, st, udq_state);
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
     auto fu_var3 = st.get("FU_VAR3");
@@ -2504,7 +2504,7 @@ UDQ
     st.update_well_var("P3", "WOPR", 3);
     st.update_well_var("P4", "WOPR", 4);
 
-    udq.eval(0, schedule.wellMatcher(0), st, udq_state);
+    udq.eval(0, schedule, schedule.wellMatcher(0), st, udq_state);
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
     auto fu_var3 = st.get("FU_VAR3");
@@ -2530,7 +2530,7 @@ UDQ
     UDQState udq_state(0);
     SummaryState st(TimeService::now());
     const auto& udq = schedule.getUDQConfig(0);
-    udq.eval(0, schedule.wellMatcher(0), st, udq_state);
+    udq.eval(0, schedule, schedule.wellMatcher(0), st, udq_state);
 
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
