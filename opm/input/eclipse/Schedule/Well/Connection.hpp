@@ -148,8 +148,9 @@ namespace RestartIO {
         double connectionLength() const;
         double skinFactor() const;
         CTFKind kind() const;
-        InjMult injmult() const;
+        const InjMult& injmult() const;
         void setInjMult(const InjMult& inj_mult);
+        // remove the injMult setting and INJMULT is not active for this connection
         void clearInjMult();
 
         void setState(State state);

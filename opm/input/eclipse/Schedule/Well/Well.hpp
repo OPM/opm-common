@@ -83,7 +83,7 @@ public:
         NONE,
     };
 
-    static InjMultMode injMultModeFromString(const std::string& str);
+    static InjMultMode injMultModeFromString(const std::string& str, const KeywordLocation& location);
 
     /*
       The elements in this enum are used as bitmasks to keep track
@@ -549,6 +549,7 @@ public:
         serializer(wvfpexp);
         serializer(m_pavg);
         serializer(well_temperature);
+        serializer(inj_mult_mode);
     }
 
 private:

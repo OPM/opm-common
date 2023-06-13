@@ -1786,6 +1786,25 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
+    void Schedule::handleWINJMULT(Opm::Schedule::HandlerContext& handlerContext) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells( well_name );
+                if (well.isProducer()) {
+                    const std::string reason = fmt::format("Keyword WINJMULT can only apply to injectors,"
+                                                           " but Well {} is a producer", well_name);
+                    throw OpmInputError(reason, handlerContext.keyword.location());
+                }
+                if (well.handleWINJMULT(record, handlerContext.keyword.location())) {
+                    this->snapshots.back().wells.update(std::move(well));
+                }
+            }
+        }
+    }
+
     void Schedule::handleWINJTEMP(HandlerContext& handlerContext) {
         // we do not support the "enthalpy" field yet. how to do this is a more difficult
         // question.
@@ -1945,24 +1964,6 @@ Well{0} entered with 'FIELD' parent group:
             for (const auto& wname : well_names) {
                 auto well = this->snapshots.back().wells( wname );
                 if (well.handleWPIMULT(record))
-                    this->snapshots.back().wells.update( std::move(well));
-            }
-        }
-    }
-
-    void Schedule::handleWINJMULT(Opm::Schedule::HandlerContext& handlerContext) {
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
-
-            for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
-                if (well.isProducer()) {
-                    const std::string reason = fmt::format("Keyword WINJMULT can only apply to injectors,"
-                                                           " but Well {} is a producer", well_name);
-                    throw OpmInputError(reason, handlerContext.keyword.location());
-                }
-                if (well.handleWINJMULT(record, handlerContext.keyword.location()))
                     this->snapshots.back().wells.update( std::move(well));
             }
         }
@@ -2486,6 +2487,7 @@ Well{0} entered with 'FIELD' parent group:
             { "WFOAM"   , &Schedule::handleWFOAM     },
             { "WGRUPCON", &Schedule::handleWGRUPCON  },
             { "WHISTCTL", &Schedule::handleWHISTCTL  },
+            { "WINJMULT", &Schedule::handleWINJMULT  },
             { "WINJTEMP", &Schedule::handleWINJTEMP  },
             { "WLIFTOPT", &Schedule::handleWLIFTOPT  },
             { "WLIST"   , &Schedule::handleWLIST     },
@@ -2496,7 +2498,6 @@ Well{0} entered with 'FIELD' parent group:
             { "WVFPEXP" , &Schedule::handleWVFPEXP   },
             { "WWPAVE"  , &Schedule::handleWWPAVE    },
             { "WPIMULT" , &Schedule::handleWPIMULT   },
-            { "WINJMULT", &Schedule::handleWINJMULT  },
             { "WPMITAB" , &Schedule::handleWPMITAB   },
             { "WPOLYMER", &Schedule::handleWPOLYMER  },
             { "WRFT"    , &Schedule::handleWRFT      },

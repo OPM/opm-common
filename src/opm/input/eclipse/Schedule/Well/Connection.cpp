@@ -444,7 +444,7 @@ Connection::CTFKind Connection::kind() const {
     return m_ctfkind;
 }
 
-Connection::InjMult Connection::injmult() const {
+const Connection::InjMult& Connection::injmult() const {
     return m_injmult;
 }
 
