@@ -449,14 +449,14 @@ namespace Opm {
         const auto groups = sched.groupNames(report_step);
 
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
-            if (udq_state.assign(report_step, assign.keyword())) {
+            if (udq_state.assign(assign.report_step(), assign.keyword())) {
                 auto ws = assign.eval(wells);
                 context.update_assign(report_step, assign.keyword(), ws);
             }
         }
 
         for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
-            if (udq_state.assign(report_step, assign.keyword())) {
+            if (udq_state.assign(assign.report_step(), assign.keyword())) {
                 auto ws = assign.eval(groups);
                 context.update_assign(report_step, assign.keyword(), ws);
             }
