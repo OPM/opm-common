@@ -55,6 +55,8 @@ public:
     static Ppcwmax serializationTestObject();
     std::size_t size() const;
     bool empty() const;
+    std::vector< PpcwmaxRecord >::const_iterator begin() const;
+    std::vector< PpcwmaxRecord >::const_iterator end() const;
     const PpcwmaxRecord& operator[](const std::size_t index) const;
 
     bool operator==(const Ppcwmax& other) const {

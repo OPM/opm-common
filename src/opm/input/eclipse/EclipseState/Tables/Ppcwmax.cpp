@@ -57,6 +57,14 @@ std::size_t Ppcwmax::size() const {
     return this->data.size();
 }
 
+std::vector< PpcwmaxRecord >::const_iterator Ppcwmax::begin() const {
+    return this->data.begin();
+}
+
+std::vector< PpcwmaxRecord >::const_iterator Ppcwmax::end() const {
+    return this->data.end();
+}
+
 Ppcwmax Ppcwmax::serializationTestObject() {
     Ppcwmax ppcwmax;
     return ppcwmax;

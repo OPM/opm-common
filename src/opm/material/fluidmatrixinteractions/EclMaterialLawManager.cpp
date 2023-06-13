@@ -33,6 +33,7 @@
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
 #include <algorithm>
+#include <iostream>
 
 namespace Opm {
 
@@ -81,6 +82,22 @@ initFromState(const EclipseState& eclState)
                 stoneEtas_.push_back(table.eta);
             }
         }
+        
+        const auto& ppcwmaxTables = tables.getPpcwmax();
+        this->enablePpcwmax_ = !ppcwmaxTables.empty() ? true : false;
+
+        if (this->enablePpcwmax_) {
+            maxAllowPc_.clear();
+            modifySwl_.clear();
+
+            maxAllowPc_.reserve(numSatRegions);
+            modifySwl_.reserve(numSatRegions);
+
+            for (const auto& table : ppcwmaxTables) {
+                maxAllowPc_.push_back(table.max_cap_pres);
+                modifySwl_.push_back(table.option);
+            }
+        }
     }
 
     this->unscaledEpsInfo_.resize(numSatRegions);
@@ -112,12 +129,13 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems)
 }
 
 template<class TraitsT>
-typename TraitsT::Scalar EclMaterialLawManager<TraitsT>::
+std::tuple<typename TraitsT::Scalar, bool> EclMaterialLawManager<TraitsT>::
 applySwatinit(unsigned elemIdx,
               Scalar pcow,
               Scalar Sw)
 {
     auto& elemScaledEpsInfo = oilWaterScaledEpsInfoDrainage_[elemIdx];
+    bool newSwatInit = false;
 
     // TODO: Mixed wettability systems - see ecl kw OPTIONS switch 74
 
@@ -152,7 +170,27 @@ applySwatinit(unsigned elemIdx,
         constexpr const Scalar pcowAtSwThreshold = 1.0; //Pascal
         // avoid divison by very small number
         if (std::abs(pcowAtSw) > pcowAtSwThreshold) {
-            elemScaledEpsInfo.maxPcow *= pcow/pcowAtSw;
+            // Scale max. capillary pressure to honor SWATINIT value
+            Scalar newMaxPcow = elemScaledEpsInfo.maxPcow * (pcow/pcowAtSw);
+
+            // Limit max. capillary pressure with PPCWMAX
+            int satRegionIdx = satnumRegionIdx(elemIdx);
+            if (enablePpcwmax() && (newMaxPcow > maxAllowPc_[satRegionIdx])) {
+                // Two options in PPCWMAX to modify connate Sw or not.  In both cases, init. Sw needs to be
+                // re-calculated (done in opm-simulators)
+                newSwatInit = true;
+                if (modifySwl_[satRegionIdx] == false) {
+                    // Max. cap. pressure set to PCWO in PPCWMAX
+                    elemScaledEpsInfo.maxPcow = maxAllowPc_[satRegionIdx];
+                }
+                else {
+                    // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
+                    elemScaledEpsInfo.Swl = Sw;
+                }
+            }
+            // Max. cap. pressure adjusted from SWATINIT data
+            else
+                elemScaledEpsInfo.maxPcow = newMaxPcow;
             auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
             elemEclEpsScalingPoints.init(elemScaledEpsInfo,
                                          *oilWaterEclEpsConfig_,
@@ -160,7 +198,7 @@ applySwatinit(unsigned elemIdx,
         }
     }
 
-    return Sw;
+    return {Sw, newSwatInit};
 }
 
 template<class TraitsT>
