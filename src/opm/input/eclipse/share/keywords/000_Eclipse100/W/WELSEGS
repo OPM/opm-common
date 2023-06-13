@@ -10,12 +10,12 @@
         "value_type": "STRING"
       },
       {
-        "name": "DEPTH",
+        "name": "TOP_DEPTH",
         "value_type": "DOUBLE",
         "dimension": "Length"
       },
       {
-        "name": "LENGTH",
+        "name": "TOP_LENGTH",
         "value_type": "DOUBLE",
         "dimension": "Length",
         "default": 0
@@ -71,12 +71,12 @@
         "value_type": "INT"
       },
       {
-        "name": "SEGMENT_LENGTH",
+        "name": "LENGTH",
         "value_type": "DOUBLE",
         "dimension": "Length"
       },
       {
-        "name": "DEPTH_CHANGE",
+        "name": "DEPTH",
         "value_type": "DOUBLE",
         "dimension": "Length"
       },

@@ -469,8 +469,8 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         const auto& rec1 = kw.getRecord(0); // top segment
 
         const std::string well_name = rec1.getItem("WELL").getTrimmedString(0);
-        const double depth_top = rec1.getItem("DEPTH").get< double >(0);
-        const double length_top = rec1.getItem("LENGTH").get< double >(0);
+        const double depth_top = rec1.getItem("TOP_DEPTH").get< double >(0);
+        const double length_top = rec1.getItem("TOP_LENGTH").get< double >(0);
         const double volume_top = rec1.getItem("WELLBORE_VOLUME").get< double >(0);
         const WellSegments::LengthDepth length_depth_type = WellSegments::LengthDepthFromString(rec1.getItem("INFO_TYPE").getTrimmedString(0));
         const WellSegments::CompPressureDrop comp_pressure_drop = WellSegments::CompPressureDropFromString(rec1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
@@ -498,8 +498,8 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL( 2, segment2 );
         const int branch = rec2.getItem("BRANCH").get< int >(0);
         const int outlet_segment = rec2.getItem("JOIN_SEGMENT").get< int >(0);
-        const double segment_length = rec2.getItem("SEGMENT_LENGTH").get< double >(0);
-        const double depth_change = rec2.getItem("DEPTH_CHANGE").get< double >(0);
+        const double segment_length = rec2.getItem("LENGTH").get< double >(0);
+        const double depth_change = rec2.getItem("DEPTH").get< double >(0);
         const double diameter = rec2.getItem("DIAMETER").get< double >(0);
         const double roughness = rec2.getItem("ROUGHNESS").get< double >(0);
         BOOST_CHECK_EQUAL( 1, branch );
@@ -518,8 +518,8 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL( 6, segment2 );
         const int branch = rec6.getItem("BRANCH").get< int >(0);
         const int outlet_segment = rec6.getItem("JOIN_SEGMENT").get< int >(0);
-        const double segment_length = rec6.getItem("SEGMENT_LENGTH").get< double >(0);
-        const double depth_change = rec6.getItem("DEPTH_CHANGE").get< double >(0);
+        const double segment_length = rec6.getItem("LENGTH").get< double >(0);
+        const double depth_change = rec6.getItem("DEPTH").get< double >(0);
         const double diameter = rec6.getItem("DIAMETER").get< double >(0);
         const double roughness = rec6.getItem("ROUGHNESS").get< double >(0);
         BOOST_CHECK_EQUAL( 2, branch );
@@ -538,8 +538,8 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL( 8, segment2 );
         const int branch = rec7.getItem("BRANCH").get< int >(0);
         const int outlet_segment = rec7.getItem("JOIN_SEGMENT").get< int >(0);
-        const double segment_length = rec7.getItem("SEGMENT_LENGTH").get< double >(0);
-        const double depth_change = rec7.getItem("DEPTH_CHANGE").get< double >(0);
+        const double segment_length = rec7.getItem("LENGTH").get< double >(0);
+        const double depth_change = rec7.getItem("DEPTH").get< double >(0);
         const double diameter = rec7.getItem("DIAMETER").get< double >(0);
         const double roughness = rec7.getItem("ROUGHNESS").get< double >(0);
         BOOST_CHECK_EQUAL( 3, branch );
