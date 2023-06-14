@@ -17,6 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "opm/input/eclipse/Deck/Deck.hpp"
+#include "opm/input/eclipse/EclipseState/EclipseState.hpp"
+#include "opm/input/eclipse/Parser/Parser.hpp"
 #include <stdexcept>
 #include <ostream>
 
@@ -135,4 +138,149 @@ BOOST_AUTO_TEST_CASE(AddFaultsToCollection) {
     BOOST_CHECK_EQUAL( faults.size() , 2U );
     BOOST_CHECK(faults.hasFault("FAULTX"));
     BOOST_CHECK_EQUAL( faultx.getName() , faults.getFault(1).getName());
+}
+
+BOOST_AUTO_TEST_CASE(GridOnly) {
+    const std::string deck_string = R"(
+RUNSPEC
+DIMENS
+  10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'FLT1' 3 3 1 4 1 7 'X' /
+  'FLT2' 1 8 4 4 1 7 'Y' /
+/
+MULTFLT
+  'FLT1' 0.0001 /
+  'FLT2' 0.0005 /
+/
+MULTFLT
+  'FLT1' 0.001 /
+/
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    const auto& flt1 = state.getFaults().getFault("FLT1");
+    BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.001);
+    const auto& flt2 = state.getFaults().getFault("FLT2");
+    BOOST_CHECK_EQUAL(flt2.getTransMult(), 0.0005);
+}
+
+BOOST_AUTO_TEST_CASE(EditOnly) {
+    const std::string deck_string = R"(
+RUNSPEC
+DIMENS
+  10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'FLT1' 3 3 1 4 1 7 'X' /
+  'FLT2' 1 8 4 4 1 7 'Y' /
+/
+EDIT
+MULTFLT
+  'FLT1' 0.0001 /
+  'FLT2' 0.0005 /
+/
+MULTFLT
+  'FLT1' 0.001 /
+/
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    const auto& flt1 = state.getFaults().getFault("FLT1");
+    BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.001);
+    const auto& flt2 = state.getFaults().getFault("FLT2");
+    BOOST_CHECK_EQUAL(flt2.getTransMult(), 0.0005);
+}
+
+BOOST_AUTO_TEST_CASE(GridAndEdit) {
+    const std::string deck_string = R"(
+RUNSPEC
+DIMENS
+  10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'FLT1' 3 3 1 4 1 7 'X' /
+  'FLT2' 1 8 4 4 1 7 'Y' /
+/
+MULTFLT
+  'FLT1' 0.0001 /
+/
+EDIT
+MULTFLT
+  'FLT1' 20 /
+  'FLT2' 0.0005 /
+/
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    const auto& flt1 = state.getFaults().getFault("FLT1");
+    BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.002);
+    const auto& flt2 = state.getFaults().getFault("FLT2");
+    BOOST_CHECK_EQUAL(flt2.getTransMult(), 0.0005);
+}
+
+BOOST_AUTO_TEST_CASE(GridAndEdit2) {
+    const std::string deck_string = R"(
+RUNSPEC
+DIMENS
+  10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'FLT1' 3 3 1 4 1 7 'X' /
+/
+MULTFLT
+  'FLT1' 5.0 /
+  'FLT1' 0.0001 /
+/
+EDIT
+MULTFLT
+  'FLT1' 0.0005 /
+  'FLT1' 20 /
+/
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    const auto& flt1 = state.getFaults().getFault("FLT1");
+    BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.002);
 }
