@@ -127,7 +127,8 @@ void msim::run_step(WellTestState& wtest_state, UDQState& udq_state, data::Solut
                           /* initial_inplace = */ {},
                           /* inplace = */ {});
 
-        this->schedule.getUDQConfig( report_step ).eval(report_step, schedule.wellMatcher(report_step), this->st, udq_state);
+        this->schedule.getUDQConfig(report_step)
+            .eval(report_step, this->schedule, schedule.wellMatcher(report_step), this->st, udq_state);
 
         this->output(wtest_state,
                      udq_state,

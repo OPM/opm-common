@@ -419,7 +419,11 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
     const auto& udq = setup.schedule.getUDQConfig(report_step);
     RestartValue restart_value(sol, wells, groups, {});
 
-    udq.eval(report_step, setup.schedule.wellMatcher(report_step), st, udq_state);
+    udq.eval(report_step,
+             setup.schedule,
+             setup.schedule.wellMatcher(report_step),
+             st, udq_state);
+
     eclWriter.writeTimeStep( action_state,
                              wtest_state,
                              st,
