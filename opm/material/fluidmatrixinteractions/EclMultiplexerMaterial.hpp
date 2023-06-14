@@ -565,31 +565,33 @@ public:
      * error. (But not calling it will still work.)
      */
     template <class FluidState>
-    static void updateHysteresis(Params& params, const FluidState& fluidState)
+    static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
-            Stone1Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone1>(),
+            return Stone1Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone1>(),
                                              fluidState);
             break;
 
         case EclMultiplexerApproach::Stone2:
-            Stone2Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone2>(),
+            return Stone2Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone2>(),
                                              fluidState);
             break;
 
         case EclMultiplexerApproach::Default:
-            DefaultMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Default>(),
+            return DefaultMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Default>(),
                                               fluidState);
             break;
 
         case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
+            return TwoPhaseMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
                                                fluidState);
             break;
         case EclMultiplexerApproach::OnePhase:
+            return false;
             break;
         }
+        return false;
     }
 };
 

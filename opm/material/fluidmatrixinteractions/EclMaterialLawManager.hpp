@@ -314,20 +314,21 @@ public:
     { return imbnumRegionArray_[elemIdx]; }
 
     template <class FluidState>
-    void updateHysteresis(const FluidState& fluidState, unsigned elemIdx)
+    bool updateHysteresis(const FluidState& fluidState, unsigned elemIdx)
     {
         if (!enableHysteresis())
-            return;
-
-        MaterialLaw::updateHysteresis(materialLawParams(elemIdx), fluidState);
+            return false;
+        bool changed = MaterialLaw::updateHysteresis(materialLawParams(elemIdx), fluidState);
         if (hasDirectionalRelperms() || hasDirectionalImbnum()) {
             using Dir = FaceDir::DirEnum;
             constexpr int ndim = 3;
             Dir facedirs[ndim] = {Dir::XPlus, Dir::YPlus, Dir::ZPlus};
             for (int i = 0; i<ndim; i++) {
-                MaterialLaw::updateHysteresis(materialLawParams(elemIdx, facedirs[i]), fluidState);
+                bool ischanged =  MaterialLaw::updateHysteresis(materialLawParams(elemIdx, facedirs[i]), fluidState);
+                changed = changed || ischanged;
             }
         }
+        return changed;
     }
 
     void oilWaterHysteresisParams(Scalar& pcSwMdc,

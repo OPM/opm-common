@@ -401,16 +401,17 @@ public:
      * error. (But not calling it will still work.)
      */
     template <class FluidState>
-    static void updateHysteresis(Params& params, const FluidState& fluidState)
+    static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
         const Scalar Swco = params.Swl();
         const Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
         const Scalar Sg = scalarValue(fluidState.saturation(gasPhaseIdx));
-
-        params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
-        params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
-                                     /*krwSw=*/ 1.0 - Swco - Sg,
-                                     /*krnSw=*/ 1.0 - Swco - Sg);
+        bool changed = false;
+        changed = changed || params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
+        changed = changed || params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
+                                                          /*krwSw=*/ 1.0 - Swco - Sg,
+                                                          /*krnSw=*/ 1.0 - Swco - Sg);
+        return changed;
     }
 };
 

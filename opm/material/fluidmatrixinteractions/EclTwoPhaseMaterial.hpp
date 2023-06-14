@@ -390,27 +390,27 @@ public:
      * error. (But not calling it will still work.)
      */
     template <class FluidState>
-    static void updateHysteresis(Params& params, const FluidState& fluidState)
+    static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
         switch (params.approach()) {
         case EclTwoPhaseApproach::GasOil: {
             Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));
 
-            params.gasOilParams().update(/*pcSw=*/So, /*krwSw=*/So, /*krnSw=*/So);
+            return params.gasOilParams().update(/*pcSw=*/So, /*krwSw=*/So, /*krnSw=*/So);
             break;
         }
 
         case EclTwoPhaseApproach::OilWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
 
-            params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
+            return params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
             break;
         }
 
         case EclTwoPhaseApproach::GasWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
            
-            params.gasWaterParams().update(/*pcSw=*/1.0, /*krwSw=*/0.0, /*krnSw=*/Sw);
+            return params.gasWaterParams().update(/*pcSw=*/1.0, /*krwSw=*/0.0, /*krnSw=*/Sw);
             break;
         }
         }
