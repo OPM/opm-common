@@ -199,6 +199,12 @@ public:
         Valgrind::CheckDefined(krnSwMdc);
     }
 
+
+    static Scalar trappedGasSaturation(const Params& params)
+    {
+     
+        return params.gasOilParams().SnTrapped();
+    }
     /*
      * Hysteresis parameters for gas-oil
      * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)
