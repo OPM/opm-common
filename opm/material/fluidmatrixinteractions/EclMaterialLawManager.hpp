@@ -324,7 +324,8 @@ public:
             constexpr int ndim = 3;
             Dir facedirs[ndim] = {Dir::XPlus, Dir::YPlus, Dir::ZPlus};
             for (int i = 0; i<ndim; i++) {
-                changed = changed || MaterialLaw::updateHysteresis(materialLawParams(elemIdx, facedirs[i]), fluidState);
+                bool ischanged =  MaterialLaw::updateHysteresis(materialLawParams(elemIdx, facedirs[i]), fluidState);
+                changed = changed || ischanged;
             }
         }
         return changed;
