@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <limits>
 
 namespace Opm {
 
@@ -77,6 +78,33 @@ namespace RestartIO {
         };
 
 
+
+        struct InjMult {
+            bool is_active {false};
+            double fracture_pressure {std::numeric_limits<double>::max()};
+            double multiplier_gradient {0.};
+
+            bool active() const
+            {
+                return is_active;
+            }
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(is_active);
+                serializer(fracture_pressure);
+                serializer(multiplier_gradient);
+            }
+
+            bool operator==( const InjMult& rhs ) const {
+                return is_active == rhs.is_active
+                   &&  fracture_pressure == rhs.fracture_pressure
+                   &&  multiplier_gradient == rhs.multiplier_gradient;
+            }
+        };
+
+
         Connection();
         Connection(int i, int j , int k ,
                    std::size_t global_index,
@@ -120,6 +148,10 @@ namespace RestartIO {
         double connectionLength() const;
         double skinFactor() const;
         CTFKind kind() const;
+        const InjMult& injmult() const;
+        void setInjMult(const InjMult& inj_mult);
+        // remove the injMult setting and INJMULT is not active for this connection
+        void clearInjMult();
 
         void setState(State state);
         void setComplnum(int compnum);
@@ -163,6 +195,7 @@ namespace RestartIO {
             serializer(ijk);
             serializer(m_global_index);
             serializer(m_ctfkind);
+            serializer(m_injmult);
             serializer(m_sort_value);
             serializer(m_perf_range);
             serializer(m_defaultSatTabId);
@@ -186,6 +219,7 @@ namespace RestartIO {
 
         std::array<int,3> ijk;
         CTFKind m_ctfkind;
+        InjMult m_injmult;
         std::size_t m_global_index;
         /*
           The sort_value member is a peculiar quantity. The connections are

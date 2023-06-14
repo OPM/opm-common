@@ -76,6 +76,15 @@ class Well {
 public:
     using Status = WellStatus;
 
+    enum class InjMultMode {
+        WREV,
+        CREV,
+        CIRR,
+        NONE,
+    };
+
+    static InjMultMode injMultModeFromString(const std::string& str, const KeywordLocation& location);
+
     /*
       The elements in this enum are used as bitmasks to keep track
       of which controls are present, i.e. the 2^n structure must
@@ -383,6 +392,7 @@ public:
     Status getStatus() const;
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
+    InjMultMode getInjMultMode() const;
 
     bool hasConnections() const;
     const std::vector<const Connection *> getConnections(int completion) const;
@@ -472,6 +482,7 @@ public:
     bool handleWELOPENConnections(const DeckRecord& record, Connection::State status);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
+    bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
     bool applyGlobalWPIMULT(double scale_factor);
 
     void filterConnections(const ActiveGridCells& grid);
@@ -538,6 +549,7 @@ public:
         serializer(wvfpexp);
         serializer(m_pavg);
         serializer(well_temperature);
+        serializer(inj_mult_mode);
     }
 
 private:
@@ -584,6 +596,7 @@ private:
     Status status;
     PAvg m_pavg;
     double well_temperature;
+    InjMultMode inj_mult_mode = InjMultMode::NONE;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

@@ -311,6 +311,7 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
             && this->m_re == rhs.m_re
             && this->m_connection_length == rhs.m_connection_length
             && this->m_skin_factor == rhs.m_skin_factor
+            && this->m_injmult == rhs.m_injmult
             && this->m_Kh == rhs.m_Kh
             && this->sat_tableId == rhs.sat_tableId
             && this->open_state == rhs.open_state
@@ -353,6 +354,7 @@ Connection::State Connection::StateFromString( const std::string& stringValue ) 
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
+
 
 
 std::string Connection::Direction2String(const Direction enumValue)
@@ -440,6 +442,18 @@ std::string Connection::CTFKindToString(const CTFKind ctf_kind)
 
 Connection::CTFKind Connection::kind() const {
     return m_ctfkind;
+}
+
+const Connection::InjMult& Connection::injmult() const {
+    return m_injmult;
+}
+
+void Connection::setInjMult(const Connection::InjMult& inj_mult) {
+    m_injmult = inj_mult;
+}
+
+void Connection::clearInjMult() {
+    this->setInjMult({});
 }
 
 }

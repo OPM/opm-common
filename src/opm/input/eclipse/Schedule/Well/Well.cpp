@@ -41,6 +41,7 @@
 
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/shmatch.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
@@ -562,6 +563,17 @@ bool Well::updateWellGuideRate(double guide_rate_arg) {
     }
 
     return false;
+}
+
+Well::InjMultMode Well::injMultModeFromString(const std::string& str, const KeywordLocation& location) {
+    if (str == "WREV")
+        return InjMultMode::WREV;
+    else if (str == "CREV")
+        return InjMultMode::CREV;
+    else if (str == "CIRR")
+        return InjMultMode::CIRR;
+    else
+        throw OpmInputError(fmt::format("Unknown mode {} is specified in WINJMULT keyword", str), location);
 }
 
 
@@ -1300,6 +1312,63 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
 }
 
 
+bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& location) {
+    // for this keyword, the default for I, J, K will be negative
+    // it is not totally clear how specifying 0 or a negative values will work
+    // current match_eq function only treats 0 and default values for all connections,
+    // we might need to revisit this part later when complication regarding this occurs.
+    // it is possible that changing (item.get<int>(0) == 0); to (item.get<int>(0) <= 0) is solution to go
+    // while it remains to be discussed.
+    auto match = [=] ( const Connection& c) -> bool {
+        if (!match_eq(c.getI()  , record, "I", -1)) return false;
+        if (!match_eq(c.getJ()  , record, "J", -1)) return false;
+        if (!match_eq(c.getK()  , record, "K", -1)) return false;
+
+        return true;
+    };
+
+    // check whether it was under WREV previously.
+    // if yes, we need to reset all the connections for INJMULT specification
+    const bool is_prev_wrev = this->inj_mult_mode == InjMultMode::WREV;
+    using Kw = ParserKeywords::WINJMULT;
+    const InjMultMode mode = injMultModeFromString(record.getItem<Kw::MODE>().getTrimmedString(0), location);
+    const bool mode_change = (this->inj_mult_mode != mode);
+    if (mode_change) {
+        this->inj_mult_mode = mode;
+    }
+    const double fracture_pressure = record.getItem<Kw::FRACTURING_PRESSURE>().getSIDouble(0);
+    const double multiple_gradient = record.getItem<Kw::MULTIPLIER_GRADIENT>().getSIDouble(0);
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    const Connection::InjMult inj_mult {true, fracture_pressure, multiple_gradient};
+
+    if (mode == InjMultMode::WREV) {
+        // all the connections will share the same INJMULT setup
+        for (auto c : *this->connections) {
+            c.setInjMult(inj_mult);
+            new_connections->add(c);
+        }
+    } else if (mode == InjMultMode::CREV || mode == InjMultMode::CIRR){
+        for (auto c : *this->connections) {
+            if (match(c)) {
+                c.setInjMult(inj_mult);
+            } else {
+                // if previously defined with WREV for the well, for all the connections
+                // not specified in the new CREV or CIRR records, we do not consider they have
+                // an active WINJMULT setup
+                if (is_prev_wrev) {
+                    // reset the injMult information for this connection
+                    // basically, disable the injMult for this connection
+                    c.clearInjMult();
+                }
+            }
+            new_connections->add(c);
+        }
+    }
+
+    return this->updateConnections(std::move(new_connections), false) || mode_change;
+}
+
+
 bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor)
 {
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
@@ -1565,6 +1634,7 @@ bool Well::operator==(const Well& data) const {
         && (this->m_pavg == data.m_pavg)
         && (this->getInjectionProperties() == data.getInjectionProperties())
         && (this->well_temperature == data.well_temperature)
+        && (this->inj_mult_mode == data.inj_mult_mode)
         ;
 }
 
@@ -1644,4 +1714,8 @@ int Opm::Well::eclipseControlMode(const Well&         well,
 
         return eclipseControlMode(ctrl.cmode, well.injectorType());
     }
+}
+
+Opm::Well::InjMultMode Opm::Well::getInjMultMode() const {
+    return this->inj_mult_mode;
 }
