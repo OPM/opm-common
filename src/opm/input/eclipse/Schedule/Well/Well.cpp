@@ -1332,7 +1332,10 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
     const bool is_prev_wrev = this->inj_mult_mode == InjMultMode::WREV;
     using Kw = ParserKeywords::WINJMULT;
     const InjMultMode mode = injMultModeFromString(record.getItem<Kw::MODE>().getTrimmedString(0), location);
-    this->inj_mult_mode = mode;
+    const bool mode_change = (this->inj_mult_mode != mode);
+    if (mode_change) {
+        this->inj_mult_mode = mode;
+    }
     const double fracture_pressure = record.getItem<Kw::FRACTURING_PRESSURE>().getSIDouble(0);
     const double multiple_gradient = record.getItem<Kw::MULTIPLIER_GRADIENT>().getSIDouble(0);
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
@@ -1362,7 +1365,7 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
         }
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), false) || mode_change;
 }
 
 
