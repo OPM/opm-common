@@ -3520,8 +3520,7 @@ namespace Evaluator {
             this->st_,
             {}, {}, {},
             reg, this->grid_, this->sched_,
-            {}, {}, {},
-            Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)
+            {}, {}, {}, this->es_.getUnits()
         };
 
         const auto prm = this->paramFunction_(args);

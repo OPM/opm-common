@@ -228,8 +228,8 @@ struct setup
 
     // ------------------------------------------------------------------------
 
-    setup(std::string        case_name,
-          const std::string& path = "UDQ_ACTIONX_TEST1_U.DATA")
+    explicit setup(std::string        case_name,
+                   const std::string& path = "UDQ_ACTIONX_TEST1_U.DATA")
         : deck     { Parser{}.parseFile(path) }
         , es       { deck }
         , grid     { es.getInputGrid() }

@@ -45,7 +45,7 @@ namespace Opm {
 namespace Opm { namespace data {
     class GroupAndNetworkValues;
     class InterRegFlowMap;
-    class WellBlockAveragePressures;
+    struct WellBlockAveragePressures;
     class Wells;
 }} // namespace Opm::data
 

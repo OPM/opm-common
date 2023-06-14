@@ -414,6 +414,9 @@ public:
             break;
         }
         }
+
+        // Should not get here...
+        return false;
     }
 };
 
