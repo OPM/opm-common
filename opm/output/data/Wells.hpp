@@ -598,22 +598,6 @@ namespace Opm {
             static_cast<std::size_t>(Quantity::WBP9) + 1;
 
         std::array<double, NumQuantities> wbp_{};
-
-        std::string quantityName(const Quantity quantity) const
-        {
-            switch (quantity) {
-            case Quantity::WBP : return "WBP";
-            case Quantity::WBP4: return "WBP4";
-            case Quantity::WBP5: return "WBP5";
-            case Quantity::WBP9: return "WBP9";
-            }
-
-            throw std::invalid_argument {
-                "Unkown WBP quantity '" +
-                std::to_string(static_cast<int>(quantity)) +
-                "'"
-            };
-        }
     };
 
     struct Well {
