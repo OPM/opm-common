@@ -35,6 +35,7 @@
 
 #include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp>
+#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
@@ -170,7 +171,7 @@ private:
             std::shared_ptr<GasOilTwoPhaseHystParams> getGasOilParams();
             std::shared_ptr<OilWaterTwoPhaseHystParams> getOilWaterParams();
             std::shared_ptr<GasWaterTwoPhaseHystParams> getGasWaterParams();
-            void setConfig();
+            void setConfig(unsigned satRegionIdx);
             void setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx);
             void setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx);
             void setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx);
@@ -375,6 +376,8 @@ private:
 
     bool enableEndPointScaling_;
     std::shared_ptr<EclHysteresisConfig> hysteresisConfig_;
+    std::vector<std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
+
 
     std::shared_ptr<EclEpsConfig> oilWaterEclEpsConfig_;
     std::vector<EclEpsScalingPointsInfo<Scalar>> unscaledEpsInfo_;

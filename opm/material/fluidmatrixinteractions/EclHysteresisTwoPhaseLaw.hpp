@@ -293,9 +293,47 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
+        // If WAG hysteresis is enabled, the convential hysteresis model is ignored.
+        // (Two-phase model, non-wetting: only gas in oil.)
+        if (params.gasOilHysteresisWAG()) {
+
+            // Primary drainage
+            if (Sw <= params.krnSwMdc()+params.tolWAG() && params.nState()==1) {
+                Evaluation krn =  EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+                return krn;
+            }
+
+            // Imbibition or reversion to two-phase drainage retracing imb curve
+            // (Shift along primary drainage curve.)
+            if (params.nState()==1) {
+                Evaluation Swf = params.computeSwf(Sw);
+                Evaluation krn = EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Swf);
+                return krn;
+            }
+
+            // Three-phase drainage along current secondary drainage curve
+            if (Sw <= params.krnSwDrainRevert()+params.tolWAG() /*&& params.nState()>=1 */) {
+                Evaluation Krg = EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+                Evaluation KrgDrain2 = (Krg-params.krnDrainStart())*params.reductionDrain() + params.krnImbStart();
+                return KrgDrain2;
+            }
+
+            // Subsequent imbibition: Scanning curve derived from previous secondary drainage
+            if (Sw >= params.krnSwWAG()-params.tolWAG() /*&& Sw > params.krnSwDrainRevert() && params.nState()>=1 */) {
+                Evaluation KrgImb2 = params.computeKrImbWAG(Sw);
+                return KrgImb2;
+            }
+            else {/* Sw < params.krnSwWAG() */  // Reversion along "next" drainage curve
+                Evaluation Krg = EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+                Evaluation KrgDrainNxt = (Krg-params.krnDrainStartNxt())*params.reductionDrainNxt() + params.krnImbStartNxt();
+                return KrgDrainNxt;
+            }
+        }
+
         // if no relperm hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
             return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+
 
         // if it is enabled, use either the drainage or the imbibition curve. if the
         // imbibition curve is used, the saturation must be shifted.

@@ -113,6 +113,12 @@ public:
     double curvatureCapPrs() const
     { return curvatureCapPrs_; }
 
+    /*!
+     * \brief Returns whether hysteresis is enabled.
+     */
+    bool enableWagHysteresis() const
+    { return enableWagHyst_; }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Reads all relevant material parameters form a cell of a parsed ECL deck.
@@ -131,6 +137,9 @@ private:
     int krHysteresisModel_{-1};
     double modParamTrapped_{};
     double curvatureCapPrs_{};
+
+    // WAG hysteresis
+    bool enableWagHyst_{false};
 };
 
 } // namespace Opm

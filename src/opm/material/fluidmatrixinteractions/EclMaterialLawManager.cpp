@@ -101,6 +101,17 @@ initFromState(const EclipseState& eclState)
         this->unscaledEpsInfo_[satRegionIdx]
             .extractUnscaled(rtep, rfunc, satRegionIdx);
     }
+
+    // WAG hysteresis parameters per SATNUM.
+    if (eclState.runspec().hysterPar().activeWag()) {
+        if (numSatRegions != eclState.getWagHysteresis().size())
+            throw std::runtime_error("Inconsistent Wag-hysteresis data");
+        wagHystersisConfig_.resize(numSatRegions);
+        for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
+            wagHystersisConfig_[satRegionIdx] = std::make_shared<WagHysteresisConfig::
+                WagHysteresisConfigRecord >(eclState.getWagHysteresis()[satRegionIdx]);
+        }
+    }
 }
 
 template<class TraitsT>

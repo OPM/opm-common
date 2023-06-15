@@ -78,11 +78,18 @@ getGasWaterParams()
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-setConfig()
+setConfig(unsigned satRegionIdx)
 {
     this->gasOilParams_->setConfig(this->parent_.hysteresisConfig_);
     this->oilWaterParams_->setConfig(this->parent_.hysteresisConfig_);
     this->gasWaterParams_->setConfig(this->parent_.hysteresisConfig_);
+
+    if (this->parent_.hysteresisConfig_->enableWagHysteresis()) {
+        this->gasOilParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
+        this->oilWaterParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
+        this->gasWaterParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
+    }
+
 } // namespace Opm
 
 template <class Traits>
