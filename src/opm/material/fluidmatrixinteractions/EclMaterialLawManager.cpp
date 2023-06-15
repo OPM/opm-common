@@ -33,7 +33,6 @@
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
 #include <algorithm>
-#include <iostream>
 
 namespace Opm {
 

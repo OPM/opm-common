@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2023 NORCE
+  Copyright (C) 2023 Equinor
 
   This file is part of the Open Porous Media project (OPM).
 
