@@ -96,7 +96,7 @@ namespace Opm {
         const EclipseConfig& cfg() const;
         const GridDims& gridDims() const;
 
-        virtual const CarfinManager& getInputGLgr() const;
+        const LgrCollection& getLgrs() const;
         bool hasInputLGR() const;
 
         // the unit system used by the deck. note that it is rarely needed
@@ -170,7 +170,7 @@ namespace Opm {
         EclipseGrid m_inputGrid;
         NNC m_inputNnc;
         GridDims m_gridDims;
-        LgrCollection m_inputLgr;
+        LgrCollection m_lgrs;
         FieldPropsManager field_props;
         SimulationConfig m_simulationConfig;
         AquiferConfig aquifer_config;

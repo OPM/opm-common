@@ -16,12 +16,11 @@
 #ifndef OPM_PARSER_LGR_COLLECTION_HPP
 #define OPM_PARSER_LGR_COLLECTION_HPP
 
-#include <cstddef>
 #include <string>
 
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 
 namespace Opm {
 
@@ -33,21 +32,13 @@ namespace Opm {
 class LgrCollection {
 public:
     LgrCollection();
-    LgrCollection(const GRIDSection& gridSection, const GridDims& grid);
+    LgrCollection(const GRIDSection& gridSection, const GridDims& gridDims);
 
-    static LgrCollection serializationTestObject();
 
     size_t size() const;
     bool hasLgr(const std::string& lgrName) const;
     Carfin& getLgr(const std::string& lgrName);
     const Carfin& getLgr(const std::string& lgrName) const;
-    Carfin& getLgr(size_t lgrIndex);
-    const Carfin& getLgr(size_t lgrIndex) const;
-
-
-    void addLgr(const std::string& lgrName);
-
-    bool operator==(const LgrCollection& data) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -56,8 +47,8 @@ public:
     }
 
 private:
+    OrderedMap<Carfin, 8> m_lgrs;
 
-OrderedMap<Carfin, 8> m_lgrs;
 };
 }
 
