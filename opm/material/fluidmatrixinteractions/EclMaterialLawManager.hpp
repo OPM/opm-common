@@ -251,7 +251,7 @@ public:
      * that the capillary pressure given depends on the particuars of how the simulator
      * calculates its initial condition.
      */
-    std::tuple<Scalar, bool>
+    std::pair<Scalar, bool>
     applySwatinit(unsigned elemIdx,
                          Scalar pcow,
                          Scalar Sw);

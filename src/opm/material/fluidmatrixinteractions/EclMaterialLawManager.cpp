@@ -128,7 +128,7 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems)
 }
 
 template<class TraitsT>
-std::tuple<typename TraitsT::Scalar, bool> EclMaterialLawManager<TraitsT>::
+std::pair<typename TraitsT::Scalar, bool> EclMaterialLawManager<TraitsT>::
 applySwatinit(unsigned elemIdx,
               Scalar pcow,
               Scalar Sw)
