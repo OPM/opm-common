@@ -70,7 +70,7 @@ std::vector< PpcwmaxRecord >::const_iterator Ppcwmax::end() const {
 }
 
 Ppcwmax Ppcwmax::serializationTestObject() {
-    return Ppcwmax({{45.0, "YES"}});
+    return Ppcwmax({{45.0, true}});
 }
 
 
