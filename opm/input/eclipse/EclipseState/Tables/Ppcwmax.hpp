@@ -52,6 +52,7 @@ class Ppcwmax {
 public:
     Ppcwmax() = default;
     explicit Ppcwmax(const Deck& deck);
+    explicit Ppcwmax(std::initializer_list<PpcwmaxRecord> records);
     static Ppcwmax serializationTestObject();
     std::size_t size() const;
     bool empty() const;

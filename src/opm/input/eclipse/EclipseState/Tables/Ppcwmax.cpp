@@ -49,6 +49,10 @@ Ppcwmax::Ppcwmax(const Deck& deck) {
     }
 }
 
+Ppcwmax::Ppcwmax(std::initializer_list<PpcwmaxRecord> records)
+    : data{ records }
+{}
+
 bool Ppcwmax::empty() const {
     return this->data.empty();
 }
@@ -66,8 +70,7 @@ std::vector< PpcwmaxRecord >::const_iterator Ppcwmax::end() const {
 }
 
 Ppcwmax Ppcwmax::serializationTestObject() {
-    Ppcwmax ppcwmax;
-    return ppcwmax;
+    return Ppcwmax({{45.0, "YES"}});
 }
 
 
