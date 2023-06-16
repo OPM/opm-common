@@ -11,6 +11,7 @@
     {
       "name": "MAXIMUM_CAPILLARY_PRESSURE",
       "value_type": "DOUBLE",
+      "dimension": "Pressure",
       "default": 1e+20
     },
     {

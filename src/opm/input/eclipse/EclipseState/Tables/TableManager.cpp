@@ -135,6 +135,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         m_tabdims( Tabdims(deck)),
         m_aqudims( Aqudims(deck)),
         m_tlmixpar( deck ),
+        m_ppcwmax( deck ),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM")),
@@ -322,6 +323,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         result.m_rtemp = 1.0;
         result.m_salinity = 1.0;
         result.m_tlmixpar = TLMixpar::serializationTestObject();
+        result.m_ppcwmax = Ppcwmax::serializationTestObject();
         return result;
     }
 
@@ -1174,6 +1176,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return m_tlmixpar;
     }
 
+    const Ppcwmax& TableManager::getPpcwmax() const {
+        return m_ppcwmax;
+    }
+
     const JFunc& TableManager::getJFunc() const {
         if (!this->jfunc.has_value())
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
@@ -1275,6 +1281,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&
                m_tlmixpar == data.m_tlmixpar &&
+               m_ppcwmax == data.m_ppcwmax &&
                m_tabdims == data.m_tabdims &&
                m_regdims == data.m_regdims &&
                m_eqldims == data.m_eqldims &&

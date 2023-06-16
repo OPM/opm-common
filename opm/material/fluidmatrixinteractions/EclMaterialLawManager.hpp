@@ -252,12 +252,16 @@ public:
      * that the capillary pressure given depends on the particuars of how the simulator
      * calculates its initial condition.
      */
-    Scalar applySwatinit(unsigned elemIdx,
+    std::pair<Scalar, bool>
+    applySwatinit(unsigned elemIdx,
                          Scalar pcow,
                          Scalar Sw);
 
     bool enableEndPointScaling() const
     { return enableEndPointScaling_; }
+
+    bool enablePpcwmax() const
+    { return enablePpcwmax_; }
 
     bool enableHysteresis() const
     { return hysteresisConfig_->enableHysteresis(); }
@@ -409,6 +413,10 @@ private:
     std::vector<int> imbnumZArray_;
     std::vector<int> imbnumRegionArray_;
     std::vector<Scalar> stoneEtas_;
+
+    bool enablePpcwmax_;
+    std::vector<Scalar> maxAllowPc_;
+    std::vector<bool> modifySwl_;
 
     bool hasGas;
     bool hasOil;
