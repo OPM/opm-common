@@ -83,7 +83,7 @@ initFromState(const EclipseState& eclState)
         }
         
         const auto& ppcwmaxTables = tables.getPpcwmax();
-        this->enablePpcwmax_ = !ppcwmaxTables.empty() ? true : false;
+        this->enablePpcwmax_ = !ppcwmaxTables.empty();
 
         if (this->enablePpcwmax_) {
             maxAllowPc_.clear();
