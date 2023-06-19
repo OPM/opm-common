@@ -29,7 +29,6 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 namespace Opm {
@@ -131,6 +130,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
         result.m_ctfkind = CTFKind::Defaulted;
         result.m_global_index = 12;
         result.m_perf_range = std::make_pair(14,15);
+        result.m_injmult = InjMult::serializationTestObject();
         result.m_sort_value = 14;
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
@@ -297,6 +297,7 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
         ss << "sort_value" << this->m_sort_value<< std::endl;
+        ss << "INJMULT " << InjMult::InjMultToString(this->m_injmult) << std::endl;
 
         return ss.str();
 }
@@ -444,16 +445,12 @@ Connection::CTFKind Connection::kind() const {
     return m_ctfkind;
 }
 
-const Connection::InjMult& Connection::injmult() const {
+const InjMult& Connection::injmult() const {
     return m_injmult;
 }
 
-void Connection::setInjMult(const Connection::InjMult& inj_mult) {
+void Connection::setInjMult(const InjMult& inj_mult) {
     m_injmult = inj_mult;
-}
-
-void Connection::clearInjMult() {
-    this->setInjMult({});
 }
 
 }

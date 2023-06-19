@@ -30,6 +30,8 @@
 #include <optional>
 #include <limits>
 
+#include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
+
 namespace Opm {
 
 namespace RestartIO {
@@ -77,34 +79,6 @@ namespace RestartIO {
             Defaulted,
         };
 
-
-
-        struct InjMult {
-            bool is_active {false};
-            double fracture_pressure {std::numeric_limits<double>::max()};
-            double multiplier_gradient {0.};
-
-            bool active() const
-            {
-                return is_active;
-            }
-
-            template<class Serializer>
-            void serializeOp(Serializer& serializer)
-            {
-                serializer(is_active);
-                serializer(fracture_pressure);
-                serializer(multiplier_gradient);
-            }
-
-            bool operator==( const InjMult& rhs ) const {
-                return is_active == rhs.is_active
-                   &&  fracture_pressure == rhs.fracture_pressure
-                   &&  multiplier_gradient == rhs.multiplier_gradient;
-            }
-        };
-
-
         Connection();
         Connection(int i, int j , int k ,
                    std::size_t global_index,
@@ -150,8 +124,6 @@ namespace RestartIO {
         CTFKind kind() const;
         const InjMult& injmult() const;
         void setInjMult(const InjMult& inj_mult);
-        // remove the injMult setting and INJMULT is not active for this connection
-        void clearInjMult();
 
         void setState(State state);
         void setComplnum(int compnum);
