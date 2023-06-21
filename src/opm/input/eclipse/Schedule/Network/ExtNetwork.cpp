@@ -27,6 +27,9 @@ namespace Network {
 
 ExtNetwork ExtNetwork::serializationTestObject() {
     ExtNetwork object;
+    object.m_branches = {Branch::serializationTestObject()};
+    object.insert_indexed_node_names = {"test1", "test2"};
+    object.m_nodes = {{"test3", Node::serializationTestObject()}};
     return object;
 }
 
