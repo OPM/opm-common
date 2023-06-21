@@ -27,6 +27,9 @@ namespace Network {
 
 ExtNetwork ExtNetwork::serializationTestObject() {
     ExtNetwork object;
+    object.m_branches = {Branch::serializationTestObject()};
+    object.insert_indexed_node_names = {"test1", "test2"};
+    object.m_nodes = {{"test3", Node::serializationTestObject()}};
     return object;
 }
 
@@ -34,8 +37,10 @@ bool ExtNetwork::active() const {
     return !this->m_branches.empty() && !this->m_nodes.empty();
 }
 
-bool ExtNetwork::operator==(const ExtNetwork&) const {
-    return true;
+bool ExtNetwork::operator==(const ExtNetwork& rhs) const {
+    return this->m_branches == rhs.m_branches
+        && this->insert_indexed_node_names == rhs.insert_indexed_node_names
+        && this->m_nodes == rhs.m_nodes;
 }
 
 
