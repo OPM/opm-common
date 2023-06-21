@@ -1220,35 +1220,58 @@ inline quantity node_pressure(const fn_args& args)
     return { nodePos->second.pressure, measure::pressure };
 }
 
-template< Opm::Phase phase >
-inline quantity production_history( const fn_args& args )
+template <Opm::Phase phase>
+inline quantity production_history(const fn_args& args)
 {
-    /*
-     * For well data, looking up historical rates (both for production and
-     * injection) before simulation actually starts is impossible and
-     * nonsensical. We therefore default to writing zero (which is what eclipse
-     * seems to do as well).
-     */
+    // Looking up historical well production rates before simulation starts
+    // or the well is flowing is meaningless.  We therefore default to
+    // outputting zero in this case.
 
     double sum = 0.0;
     for (const auto* sched_well : args.schedule_wells) {
-        const double eff_fac = efac( args.eff_factors, sched_well->name() );
-        sum += sched_well->production_rate( args.st, phase ) * eff_fac;
+        const auto& name = sched_well->name();
+
+        auto xwPos = args.wells.find(name);
+        if ((xwPos == args.wells.end()) ||
+            (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        {
+            // Well's not flowing.  Ignore contribution regardless of what's
+            // in WCONHIST.
+            continue;
+        }
+
+        const double eff_fac = efac(args.eff_factors, name);
+        sum += sched_well->production_rate(args.st, phase) * eff_fac;
     }
 
-    return { sum, rate_unit< phase >() };
+    return { sum, rate_unit<phase>() };
 }
 
-template< Opm::Phase phase >
-inline quantity injection_history( const fn_args& args )
+template <Opm::Phase phase>
+inline quantity injection_history(const fn_args& args)
 {
+    // Looking up historical well injection rates before simulation starts
+    // or the well is flowing is meaningless.  We therefore default to
+    // outputting zero in this case.
+
     double sum = 0.0;
     for (const auto* sched_well : args.schedule_wells) {
-        const double eff_fac = efac( args.eff_factors, sched_well->name() );
-        sum += sched_well->injection_rate( args.st, phase ) * eff_fac;
+        const auto& name = sched_well->name();
+
+        auto xwPos = args.wells.find(name);
+        if ((xwPos == args.wells.end()) ||
+            (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+        {
+            // Well's not flowing.  Ignore contribution regardless of what's
+            // in WCONINJH.
+            continue;
+        }
+
+        const double eff_fac = efac(args.eff_factors, name);
+        sum += sched_well->injection_rate(args.st, phase) * eff_fac;
     }
 
-    return { sum, rate_unit< phase >() };
+    return { sum, rate_unit<phase>() };
 }
 
 template< bool injection >

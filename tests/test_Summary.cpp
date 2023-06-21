@@ -883,14 +883,34 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close) {
                        ecl_sum_get_well_var( resp, 2, "W_2", "WVPT" ), 1e-5 );
 
     /* Production rates (history) */
-    BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPRH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 0, "W_2", "WWPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 0, "W_2", "WOPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 0, "W_2", "WGPRH" ), 1e-5 );
+
+    // Historical rates are zero in shut/stopped wells
+    BOOST_CHECK_CLOSE(  0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 2, "W_2", "WWPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 2, "W_2", "WOPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 2, "W_2", "WGPRH" ), 1e-5 );
 
     /* Production totals (history) */
-    BOOST_CHECK_CLOSE( 2 * 20.0, ecl_sum_get_well_var( resp, 2, "W_2", "WWPTH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 20.1, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 20.2, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTH" ), 1e-5 );
+    // Step 0: Elapsed time = 0
+    BOOST_CHECK_CLOSE( 0.0 * 20.0, ecl_sum_get_well_var( resp, 0, "W_2", "WWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0 * 20.1, ecl_sum_get_well_var( resp, 0, "W_2", "WOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0 * 20.2, ecl_sum_get_well_var( resp, 0, "W_2", "WGPTH" ), 1e-5 );
+
+    // Step 1: Elapsed time = 1 day, flow rates = 0.0
+    BOOST_CHECK_CLOSE( 0.0*20.0 + 1.0*0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0*20.1 + 1.0*0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0*20.2 + 1.0*0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WGPTH" ), 1e-5 );
+
+    // Step 2: Elapsed time = 2 day, flow rates = 20.x
+    BOOST_CHECK_CLOSE( 0.0*20.0 + 1.0*0.0 + 1.0*20.0, ecl_sum_get_well_var( resp, 2, "W_2", "WWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0*20.1 + 1.0*0.0 + 1.0*20.1, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0*20.2 + 1.0*0.0 + 1.0*20.2, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTH" ), 1e-5 );
 
     /* WWCT - water cut */
     const double wwcut = 20.0 / ( 20.0 + 20.1 );
