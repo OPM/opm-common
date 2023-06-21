@@ -17,42 +17,64 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef PAVE_HPP
 #define PAVE_HPP
 
+namespace Opm {
+    class DeckRecord;
+} // Namespace Opm
 
 namespace Opm {
-class DeckRecord;
 
-class PAvg {
+class PAvg
+{
 public:
-    enum class DepthCorrection {
+    enum class DepthCorrection
+    {
         WELL = 1,
         RES  = 2,
-        NONE = 3
+        NONE = 3,
     };
 
     PAvg();
     explicit PAvg(const DeckRecord& record);
-    PAvg(double inner_weight, double conn_weight, DepthCorrection depth_correction, bool use_open_connections);
-
-    double inner_weight() const;
-    double conn_weight() const;
-    bool use_porv() const;
-    bool open_connections() const;
-    DepthCorrection depth_correction() const;
-
-
-    template<class Serializer>
-    void serializeOp(Serializer& serializer) {
-        serializer(m_inner_weight);
-        serializer(m_conn_weight);
-        serializer(m_depth_correction);
-        serializer(m_open_connections);
-    }
+    PAvg(double          inner_weight,
+         double          conn_weight,
+         DepthCorrection depth_correction,
+         bool            use_open_connections);
 
     static PAvg serializationTestObject();
+
+    double inner_weight() const
+    {
+        return this->m_inner_weight;
+    }
+
+    double conn_weight() const
+    {
+        return this->m_conn_weight;
+    }
+
+    bool open_connections() const
+    {
+        return this->m_open_connections;
+    }
+
+    DepthCorrection depth_correction() const
+    {
+        return this->m_depth_correction;
+    }
+
+    bool use_porv() const;
+
+    template <class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->m_inner_weight);
+        serializer(this->m_conn_weight);
+        serializer(this->m_depth_correction);
+        serializer(this->m_open_connections);
+    }
 
     bool operator==(const PAvg& other) const;
     bool operator!=(const PAvg& other) const;
@@ -64,5 +86,6 @@ private:
     bool m_open_connections;
 };
 
-}
-#endif
+} // namespace Opm
+
+#endif // PAVE_HPP
