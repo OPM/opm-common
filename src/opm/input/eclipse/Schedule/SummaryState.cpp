@@ -27,6 +27,7 @@
 #include <cstring>
 #include <ctime>
 #include <iomanip>
+#include <limits>
 #include <ostream>
 #include <set>
 #include <string>
@@ -305,7 +306,8 @@ namespace Opm
     {
         const auto iter = this->values.find(key);
         if (iter == this->values.end())
-            throw std::out_of_range("No such key: " + key);
+            // Avoid throwing to alleviate pains with PYACTION-ACTIONX callbacks
+            return std::numeric_limits<double>::quiet_NaN();
 
         return iter->second;
     }

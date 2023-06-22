@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(PYACTION)
     SummaryState st(TimeService::now());
     const auto& pyaction_kw = deck.get<ParserKeywords::PYACTION>().front();
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
-    Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));
+    Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, Action::PyAction::RunWhen::post_step, deck.makeDeckPath(fname));
     auto actionx_callback = [] (const std::string&, const std::vector<std::string>&) { ;};
     Action::State action_state;
 

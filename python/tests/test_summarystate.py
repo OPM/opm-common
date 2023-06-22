@@ -1,5 +1,6 @@
 import datetime
 import unittest
+import math
 
 import opm.io.sim
 
@@ -15,8 +16,7 @@ class TestSummaryState(unittest.TestCase):
         self.assertTrue("FOPT" in st)
         self.assertFalse("FWPR" in st)
 
-        with self.assertRaises(IndexError):
-            x = st["FWPR"]
+        self.assertTrue( math.isnan(st["FWPR"]) )            
 
         st.update_well_var("OP1", "WOPR", 100)
         st.update_well_var("OP2", "WOPR", 200)

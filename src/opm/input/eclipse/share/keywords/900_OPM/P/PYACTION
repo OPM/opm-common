@@ -14,7 +14,12 @@
         "name": "RUN_COUNT",
         "value_type": "STRING",
         "default": "SINGLE"
-      }
+      },
+      {
+        "name": "RUN_WHEN",
+        "value_type": "STRING",
+        "default": "POST_STEP"
+      }      
     ],
     [
       {
