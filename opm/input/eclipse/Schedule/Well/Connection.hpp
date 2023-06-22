@@ -123,6 +123,7 @@ namespace RestartIO {
         double skinFactor() const;
         CTFKind kind() const;
         const InjMult& injmult() const;
+        bool activeInjMult() const;
         void setInjMult(const InjMult& inj_mult);
 
         void setState(State state);
@@ -191,7 +192,7 @@ namespace RestartIO {
 
         std::array<int,3> ijk;
         CTFKind m_ctfkind;
-        InjMult m_injmult;
+        std::optional<InjMult> m_injmult;
         std::size_t m_global_index;
         /*
           The sort_value member is a peculiar quantity. The connections are

@@ -391,6 +391,7 @@ public:
     Phase getPreferredPhase() const;
     InjMultMode getInjMultMode() const;
     const InjMult& getWellInjMult() const;
+    bool aciveWellInjMult() const;
 
     bool hasConnections() const;
     const std::vector<const Connection *> getConnections(int completion) const;
@@ -596,7 +597,7 @@ private:
     PAvg m_pavg;
     double well_temperature;
     InjMultMode inj_mult_mode = InjMultMode::NONE;
-    InjMult well_inj_mult;
+    std::optional<InjMult> well_inj_mult;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

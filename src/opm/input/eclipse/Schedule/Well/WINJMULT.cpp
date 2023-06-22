@@ -39,22 +39,15 @@ InjMult::InjMultMode InjMult::injMultModeFromString(const std::string& str, cons
 }
 
 
-bool InjMult::active() const
-{
-    return this->is_active;
-}
-
 bool InjMult::operator==(const InjMult& rhs) const
 {
-    return is_active == rhs.is_active
-        && fracture_pressure == rhs.fracture_pressure
+    return fracture_pressure == rhs.fracture_pressure
         && multiplier_gradient == rhs.multiplier_gradient;
 }
 
 
 InjMult InjMult::serializationTestObject() {
     InjMult result;
-    result.is_active = false;
     result.fracture_pressure = 1.e9;
     result.multiplier_gradient = 2.;
     return result;
@@ -62,8 +55,8 @@ InjMult InjMult::serializationTestObject() {
 
 
 std::string InjMult::InjMultToString(const InjMult& mult) {
-    std::string ss = fmt::format("active? {}, fracture_pressure {}, multiplier_gradient {}",
-                                 mult.is_active, mult.fracture_pressure, mult.multiplier_gradient);
+    std::string ss = fmt::format("fracture_pressure {}, multiplier_gradient {}",
+                                       mult.fracture_pressure, mult.multiplier_gradient);
     return ss;
 }
 

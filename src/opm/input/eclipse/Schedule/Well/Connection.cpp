@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 namespace Opm {
@@ -297,7 +298,9 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
         ss << "sort_value" << this->m_sort_value<< std::endl;
-        ss << "INJMULT " << InjMult::InjMultToString(this->m_injmult) << std::endl;
+        if (this->m_injmult.has_value()) {
+            ss << "INJMULT " << InjMult::InjMultToString(this->m_injmult.value()) << std::endl;
+        }
 
         return ss.str();
 }
@@ -446,7 +449,12 @@ Connection::CTFKind Connection::kind() const {
 }
 
 const InjMult& Connection::injmult() const {
-    return m_injmult;
+    assert(this->activeInjMult());
+    return m_injmult.value();
+}
+
+bool Connection::activeInjMult() const {
+    return this->m_injmult.has_value();
 }
 
 void Connection::setInjMult(const InjMult& inj_mult) {

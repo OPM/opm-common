@@ -36,18 +36,14 @@ struct InjMult {
         NONE,
     };
 
-    bool is_active {false};
     double fracture_pressure {std::numeric_limits<double>::max()};
     double multiplier_gradient {0.};
 
     static InjMultMode injMultModeFromString(const std::string& str, const KeywordLocation& location);
 
-    bool active() const;
-
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(is_active);
         serializer(fracture_pressure);
         serializer(multiplier_gradient);
     }

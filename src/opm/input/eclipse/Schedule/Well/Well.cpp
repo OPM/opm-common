@@ -52,6 +52,7 @@
 
 #include "../MSW/Compsegs.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -310,7 +311,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(explicitTHPOptions(rst_well)),
     status(status_from_int(rst_well.well_status)),
-    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
+    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
+    well_inj_mult(std::nullopt)
 {
     if (this->wtype.producer()) {
         auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
@@ -489,7 +491,8 @@ Well::Well(const std::string& wname_arg,
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(std::make_shared<WVFPEXP>()),
     status(Status::SHUT),
-    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
+    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
+    well_inj_mult(std::nullopt)
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
@@ -1325,7 +1328,7 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
     const double fracture_pressure = record.getItem<Kw::FRACTURING_PRESSURE>().getSIDouble(0);
     const double multiple_gradient = record.getItem<Kw::MULTIPLIER_GRADIENT>().getSIDouble(0);
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
-    const InjMult inj_mult {true, fracture_pressure, multiple_gradient};
+    const InjMult inj_mult {fracture_pressure, multiple_gradient};
     bool connections_update = false;
     bool well_inj_update = false;
 
@@ -1614,7 +1617,7 @@ bool Well::operator==(const Well& data) const {
         && (this->getInjectionProperties() == data.getInjectionProperties())
         && (this->well_temperature == data.well_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
-        && (this->getWellInjMult() == data.getWellInjMult())
+        && (this->well_inj_mult == data.well_inj_mult)
         ;
 }
 
@@ -1701,7 +1704,12 @@ Opm::Well::InjMultMode Opm::Well::getInjMultMode() const {
 }
 
 const Opm::InjMult& Opm::Well::getWellInjMult() const {
-    return this->well_inj_mult;
+    assert(this->aciveWellInjMult());
+    return this->well_inj_mult.value();
+}
+
+bool Opm::Well::aciveWellInjMult() const {
+   return this->well_inj_mult.has_value();
 }
 
 
