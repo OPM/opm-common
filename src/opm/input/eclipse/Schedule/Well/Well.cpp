@@ -52,6 +52,7 @@
 
 #include "../MSW/Compsegs.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -310,7 +311,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(explicitTHPOptions(rst_well)),
     status(status_from_int(rst_well.well_status)),
-    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
+    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
+    well_inj_mult(std::nullopt)
 {
     if (this->wtype.producer()) {
         auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
@@ -489,8 +491,8 @@ Well::Well(const std::string& wname_arg,
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(std::make_shared<WVFPEXP>()),
     status(Status::SHUT),
-    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue)
-
+    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
+    well_inj_mult(std::nullopt)
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
@@ -533,6 +535,7 @@ Well Well::serializationTestObject()
     result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
     result.m_pavg = PAvg();
     result.well_temperature = 10.0;
+    result.well_inj_mult = InjMult::serializationTestObject();
 
     return result;
 }
@@ -563,17 +566,6 @@ bool Well::updateWellGuideRate(double guide_rate_arg) {
     }
 
     return false;
-}
-
-Well::InjMultMode Well::injMultModeFromString(const std::string& str, const KeywordLocation& location) {
-    if (str == "WREV")
-        return InjMultMode::WREV;
-    else if (str == "CREV")
-        return InjMultMode::CREV;
-    else if (str == "CIRR")
-        return InjMultMode::CIRR;
-    else
-        throw OpmInputError(fmt::format("Unknown mode {} is specified in WINJMULT keyword", str), location);
 }
 
 
@@ -1327,11 +1319,8 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
         return true;
     };
 
-    // check whether it was under WREV previously.
-    // if yes, we need to reset all the connections for INJMULT specification
-    const bool is_prev_wrev = this->inj_mult_mode == InjMultMode::WREV;
     using Kw = ParserKeywords::WINJMULT;
-    const InjMultMode mode = injMultModeFromString(record.getItem<Kw::MODE>().getTrimmedString(0), location);
+    const InjMultMode mode = InjMult::injMultModeFromString(record.getItem<Kw::MODE>().getTrimmedString(0), location);
     const bool mode_change = (this->inj_mult_mode != mode);
     if (mode_change) {
         this->inj_mult_mode = mode;
@@ -1339,33 +1328,26 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
     const double fracture_pressure = record.getItem<Kw::FRACTURING_PRESSURE>().getSIDouble(0);
     const double multiple_gradient = record.getItem<Kw::MULTIPLIER_GRADIENT>().getSIDouble(0);
     auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
-    const Connection::InjMult inj_mult {true, fracture_pressure, multiple_gradient};
+    const InjMult inj_mult {fracture_pressure, multiple_gradient};
+    bool connections_update = false;
+    bool well_inj_update = false;
 
     if (mode == InjMultMode::WREV) {
-        // all the connections will share the same INJMULT setup
-        for (auto c : *this->connections) {
-            c.setInjMult(inj_mult);
-            new_connections->add(c);
-        }
+        // all the connections will share the same INJMULT setup when under WREV
+        // it is stored in the Well object
+        this->well_inj_mult = inj_mult;
+        well_inj_update = true;
     } else if (mode == InjMultMode::CREV || mode == InjMultMode::CIRR){
         for (auto c : *this->connections) {
             if (match(c)) {
                 c.setInjMult(inj_mult);
-            } else {
-                // if previously defined with WREV for the well, for all the connections
-                // not specified in the new CREV or CIRR records, we do not consider they have
-                // an active WINJMULT setup
-                if (is_prev_wrev) {
-                    // reset the injMult information for this connection
-                    // basically, disable the injMult for this connection
-                    c.clearInjMult();
-                }
             }
             new_connections->add(c);
         }
+        connections_update = this->updateConnections(std::move(new_connections), false);
     }
 
-    return this->updateConnections(std::move(new_connections), false) || mode_change;
+    return mode_change || connections_update || well_inj_update;
 }
 
 
@@ -1635,6 +1617,7 @@ bool Well::operator==(const Well& data) const {
         && (this->getInjectionProperties() == data.getInjectionProperties())
         && (this->well_temperature == data.well_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
+        && (this->well_inj_mult == data.well_inj_mult)
         ;
 }
 
@@ -1719,3 +1702,14 @@ int Opm::Well::eclipseControlMode(const Well&         well,
 Opm::Well::InjMultMode Opm::Well::getInjMultMode() const {
     return this->inj_mult_mode;
 }
+
+const Opm::InjMult& Opm::Well::getWellInjMult() const {
+    assert(this->aciveWellInjMult());
+    return this->well_inj_mult.value();
+}
+
+bool Opm::Well::aciveWellInjMult() const {
+   return this->well_inj_mult.has_value();
+}
+
+

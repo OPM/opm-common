@@ -39,6 +39,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellProductionControls.hpp>
+#include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
@@ -76,14 +77,10 @@ class Well {
 public:
     using Status = WellStatus;
 
-    enum class InjMultMode {
-        WREV,
-        CREV,
-        CIRR,
-        NONE,
-    };
-
-    static InjMultMode injMultModeFromString(const std::string& str, const KeywordLocation& location);
+    /*
+     * The mode for the keyword WINJMULT.  It can have four different values: WREV, CREV, CIRR and NONE.
+     */
+    using InjMultMode = InjMult::InjMultMode;
 
     /*
       The elements in this enum are used as bitmasks to keep track
@@ -393,6 +390,8 @@ public:
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
     InjMultMode getInjMultMode() const;
+    const InjMult& getWellInjMult() const;
+    bool aciveWellInjMult() const;
 
     bool hasConnections() const;
     const std::vector<const Connection *> getConnections(int completion) const;
@@ -550,6 +549,7 @@ public:
         serializer(m_pavg);
         serializer(well_temperature);
         serializer(inj_mult_mode);
+        serializer(well_inj_mult);
     }
 
 private:
@@ -597,6 +597,7 @@ private:
     PAvg m_pavg;
     double well_temperature;
     InjMultMode inj_mult_mode = InjMultMode::NONE;
+    std::optional<InjMult> well_inj_mult;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
