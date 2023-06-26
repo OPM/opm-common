@@ -15,26 +15,44 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
+*/
 
 #define BOOST_TEST_MODULE PAvgTests
 
-#include <exception>
 #include <boost/test/unit_test.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <exception>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(DEFAULT_PAVG) {
+BOOST_AUTO_TEST_SUITE(Basic)
+
+BOOST_AUTO_TEST_CASE(DEFAULT_PAVG)
+{
     PAvg pavg;
     BOOST_CHECK_EQUAL(pavg.inner_weight(), 0.50);
     BOOST_CHECK_EQUAL(pavg.conn_weight(), 1.00);
@@ -43,19 +61,21 @@ BOOST_AUTO_TEST_CASE(DEFAULT_PAVG) {
     BOOST_CHECK(pavg.open_connections());
 }
 
+namespace {
 
-void invalid_deck(const std::string& deck_string, const std::string& kw) {
-    Parser parser;
-    auto deck = parser.parseString(deck_string);
-    BOOST_CHECK_THROW( PAvg(deck[kw].back().getRecord(0)), std::exception );
+void invalid_deck(const std::string& deck_string, const std::string& kw)
+{
+    const auto deck = Parser{}.parseString(deck_string);
+    BOOST_CHECK_THROW(PAvg(deck[kw].back().getRecord(0)), std::exception);
 }
 
-void valid_deck(const std::string& deck_string, const std::string& kw) {
-    Parser parser;
-    auto deck = parser.parseString(deck_string);
+void valid_deck(const std::string& deck_string, const std::string& kw)
+{
+    auto deck = Parser{}.parseString(deck_string);
     BOOST_CHECK_NO_THROW( PAvg(deck[kw].back().getRecord(0)));
 }
 
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(PAVG_FROM_DECK) {
     std::string invalid_deck1 = R"(
@@ -100,16 +120,22 @@ WWPAVE
     BOOST_CHECK( pavg.use_porv() );
 }
 
+namespace {
 
-
-bool contains(const std::vector<std::size_t>& index_list, std::size_t global_index) {
-    auto find_iter = std::find(index_list.begin(), index_list.end(), global_index);
-    return (find_iter != index_list.end());
+bool contains(const std::vector<std::size_t>& index_list,
+              const std::size_t               global_index)
+{
+    return std::any_of(index_list.begin(), index_list.end(),
+                       [global_index](const std::size_t gi)
+                       {
+                           return gi == global_index;
+                       });
 }
 
+} // Anonymous namespace
 
-
-BOOST_AUTO_TEST_CASE(WPAVE_CALCULATOR) {
+BOOST_AUTO_TEST_CASE(WPAVE_CALCULATOR)
+{
     const std::string deck_string = R"(
 START
 7 OCT 2020 /
@@ -192,14 +218,14 @@ END
     const auto deck = Parser{}.parseString(deck_string);
     const auto es    = EclipseState{ deck };
     const auto grid  = es.getInputGrid();
-    auto       sched = Schedule{ deck, es };
-    auto       summary_config = SummaryConfig{deck, sched, es.fieldProps(), es.aquifer()};
+    const auto sched = Schedule{ deck, es };
+    const auto summary_config = SummaryConfig{deck, sched, es.fieldProps(), es.aquifer()};
+
     const auto& w1 = sched.getWell("P1", 0);
-    const auto& porv = es.globalFieldProps().porv(true);
-    auto calc = PAvgCalculator(w1.name(), w1.getWPaveRefDepth(), grid, porv, w1.getConnections(), w1.pavg());
+    auto calc = PAvgCalculator { grid, w1.getConnections() };
 
     {
-        const auto& index_list = calc.index_list();
+        const auto& index_list = calc.allWBPCells();
         for (std::size_t k = 0; k < 3; k++) {
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 4, k)));
 
@@ -214,31 +240,14 @@ END
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(3, 5, k)));
         }
     }
-    BOOST_CHECK( !calc.add_pressure(grid.getGlobalIndex(6, 7, 8), 100));
-    BOOST_CHECK_THROW(calc.wbp(), std::exception);
-
-    for (std::size_t k = 0; k < 3; k++) {
-        calc.add_pressure(grid.getGlobalIndex(4,4,k), 1);
-    }
-    BOOST_CHECK_EQUAL(calc.wbp(), 1);
-
-    BOOST_CHECK_THROW(calc.wbp4(), std::exception);
-    for (std::size_t k=0; k < 3; k++) {
-        calc.add_pressure(grid.getGlobalIndex(5,4,k), 1);
-        calc.add_pressure(grid.getGlobalIndex(3,4,k), 1);
-        calc.add_pressure(grid.getGlobalIndex(4,5,k), 1);
-        calc.add_pressure(grid.getGlobalIndex(4,3,k), 1);
-    }
-    BOOST_CHECK_EQUAL(calc.wbp4(), 1);
-    BOOST_CHECK_EQUAL(calc.wbp5(), 1);
 
     //----------------------------------------------------
 
     const auto& w5 = sched.getWell("P5", 0);
-    auto calc5 = PAvgCalculator(w5.name(), w5.getWPaveRefDepth(), grid, porv, w5.getConnections(), w5.pavg());
+    auto calc5 = PAvgCalculator { grid, w5.getConnections() };
 
     {
-        const auto& index_list = calc5.index_list();
+        const auto& index_list = calc5.allWBPCells();
         BOOST_CHECK_EQUAL(index_list.size(), 12);
         for (std::size_t k = 0; k < 3; k++) {
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(0, 0, k)));
@@ -246,46 +255,19 @@ END
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(1,0, k)));
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(0,1, k)));
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(1,1, k)));
-
-            calc5.add_pressure(grid.getGlobalIndex(0,0,k), 1);
-            calc5.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
-            calc5.add_pressure(grid.getGlobalIndex(0,1,k), 2.0);
-            calc5.add_pressure(grid.getGlobalIndex(1,1,k), 4.0);
         }
-
-        BOOST_CHECK_EQUAL( calc5.wbp(), 1.0 );
-        BOOST_CHECK_EQUAL( calc5.wbp4(), 2.0 );
-        double inner_weight = 0.50;
-        BOOST_CHECK_EQUAL( calc5.wbp5(), inner_weight * 1 + (1 - inner_weight) * (2 + 2) / 2 );
-        BOOST_CHECK_EQUAL( calc5.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 + 2 + 4) / 3);
     }
 
-
-    // We emulate MPI and calc1 and calc2 are on two different processors
-    {
-        auto calc1 = PAvgCalculator(w5.name(), w5.getWPaveRefDepth(), grid, porv, w5.getConnections(), w5.pavg());
-        auto calc2 = PAvgCalculator(w5.name(), w5.getWPaveRefDepth(), grid, porv, w5.getConnections(), w5.pavg());
-        for (std::size_t k = 0; k < 3; k++) {
-            calc1.add_pressure(grid.getGlobalIndex(0,0,k), 1);
-            calc2.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
-            calc2.add_pressure(grid.getGlobalIndex(0,1,k), 2.0);
-            calc2.add_pressure(grid.getGlobalIndex(1,1,k), 4.0);
-        }
-        BOOST_CHECK_THROW(calc1.wbp9(), std::exception);
-    }
-
-
-
-    PAvgCalculatorCollection calculators;
-    calculators.add(PAvgCalculator(w1.name(), w1.getWPaveRefDepth(), grid, porv, w1.getConnections(), w1.pavg()));
-    calculators.add(PAvgCalculator(w5.name(), w5.getWPaveRefDepth(), grid, porv, w5.getConnections(), w5.pavg()));
-
-    BOOST_CHECK( calculators.has("P1"));
-    BOOST_CHECK( calculators.has("P5"));
-    BOOST_CHECK( !calculators.has("P100"));
+    PAvgCalculatorCollection calculators {};
+    BOOST_CHECK_EQUAL(calculators.setCalculator(0, std::make_unique<PAvgCalculator>(grid, w1.getConnections())),
+                      std::size_t{0});
+    BOOST_CHECK_EQUAL(calculators.setCalculator(1, std::make_unique<PAvgCalculator>(grid, w5.getConnections())),
+                      std::size_t{1});
+    BOOST_CHECK_EQUAL(calculators.setCalculator(0, std::make_unique<PAvgCalculator>(grid, w1.getConnections())),
+                      std::size_t{0});
 
     {
-        const auto& index_list = calculators.index_list();
+        const auto& index_list = calculators.allWBPCells();
         for (std::size_t k = 0; k < 3; k++) {
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 4, k)));
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(5, 4, k)));
@@ -303,34 +285,13 @@ END
             BOOST_CHECK(contains(index_list, grid.getGlobalIndex(1,1, k)));
         }
     }
-
-    BOOST_CHECK_NO_THROW( calculators.add_pressure(100000000, 1) );
-    for (std::size_t k = 0; k < 3; k++) {
-        calculators.add_pressure(grid.getGlobalIndex(0,0,k), 1);
-        calculators.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
-        calculators.add_pressure(grid.getGlobalIndex(0,1,k), 2.0);
-        calculators.add_pressure(grid.getGlobalIndex(1,1,k), 4.0);
-
-        calculators.add_pressure(grid.getGlobalIndex(4,4,k), 1);
-        calculators.add_pressure(grid.getGlobalIndex(5,4,k), 1);
-        calculators.add_pressure(grid.getGlobalIndex(3,4,k), 1);
-        calculators.add_pressure(grid.getGlobalIndex(4,5,k), 1);
-        calculators.add_pressure(grid.getGlobalIndex(4,3,k), 1);
-    }
-
-
-    {
-        const auto& c5 = calculators.get("P5");
-        double inner_weight = 0.50;
-        BOOST_CHECK_EQUAL( c5.wbp5(), inner_weight * 1 + (1 - inner_weight) * 2 );
-        BOOST_CHECK_EQUAL( c5.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 * 2 + 4) / 3);
-    }
 }
 
+BOOST_AUTO_TEST_CASE(CalcultorCollection)
+{
+    PAvgCalculatorCollection calc_list{};
 
-BOOST_AUTO_TEST_CASE(CalcultorCollection) {
-    PAvgCalculatorCollection calc_list;
-
-    BOOST_CHECK(calc_list.empty());
+    BOOST_CHECK_MESSAGE(calc_list.empty(), "Default-constructed Calculator Collection must be empty");
 }
 
+BOOST_AUTO_TEST_SUITE_END()     // Basic

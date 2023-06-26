@@ -2195,6 +2195,32 @@ Well{0} entered with 'FIELD' parent group:
 
     void Schedule::handleWPAVE(HandlerContext& handlerContext) {
         auto wpave = PAvg( handlerContext.keyword.getRecord(0) );
+
+        if (wpave.inner_weight() > 1.0) {
+            const auto reason =
+                fmt::format("Inner block weighting F1 "
+                            "must not exceed 1.0. Got {}",
+                            wpave.inner_weight());
+
+            throw OpmInputError {
+                reason, handlerContext.keyword.location()
+            };
+        }
+
+        if ((wpave.conn_weight() < 0.0) ||
+            (wpave.conn_weight() > 1.0))
+        {
+            const auto reason =
+                fmt::format("Connection weighting factor F2 "
+                            "must be between zero and one "
+                            "inclusive. Got {} instead.",
+                            wpave.conn_weight());
+
+            throw OpmInputError {
+                reason, handlerContext.keyword.location()
+            };
+        }
+
         for (const auto& wname : this->wellNames(handlerContext.currentStep))
             this->updateWPAVE(wname, handlerContext.currentStep, wpave );
 
@@ -2245,6 +2271,32 @@ Well{0} entered with 'FIELD' parent group:
                 this->invalidNamePattern(wellNamePattern, handlerContext);
 
             auto wpave = PAvg(record);
+
+            if (wpave.inner_weight() > 1.0) {
+                const auto reason =
+                    fmt::format("Inner block weighting F1 "
+                                "must not exceed one. Got {}",
+                                wpave.inner_weight());
+
+                throw OpmInputError {
+                    reason, handlerContext.keyword.location()
+                };
+            }
+
+            if ((wpave.conn_weight() < 0.0) ||
+                (wpave.conn_weight() > 1.0))
+            {
+                const auto reason =
+                    fmt::format("Connection weighting factor F2 "
+                                "must be between zero and one, "
+                                "inclusive. Got {} instead.",
+                                wpave.conn_weight());
+
+                throw OpmInputError {
+                    reason, handlerContext.keyword.location()
+                };
+            }
+
             for (const auto& well_name : well_names)
                 this->updateWPAVE(well_name, handlerContext.currentStep, wpave);
         }
