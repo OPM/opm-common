@@ -1969,6 +1969,20 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
+    void Schedule::handleWINJDAM(HandlerContext& handlerContext) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells(well_name);
+                if (well.handleWINJDAM(record)) {
+                    this->snapshots.back().wells.update( std::move(well) );
+                }
+            }
+        }
+    }
+
     void Schedule::handleWPMITAB(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2550,6 +2564,7 @@ Well{0} entered with 'FIELD' parent group:
             { "WVFPEXP" , &Schedule::handleWVFPEXP   },
             { "WWPAVE"  , &Schedule::handleWWPAVE    },
             { "WPIMULT" , &Schedule::handleWPIMULT   },
+            { "WINJDAM" , &Schedule::handleWINJDAM   },
             { "WPMITAB" , &Schedule::handleWPMITAB   },
             { "WPOLYMER", &Schedule::handleWPOLYMER  },
             { "WRFT"    , &Schedule::handleWRFT      },

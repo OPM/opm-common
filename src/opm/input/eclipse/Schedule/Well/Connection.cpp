@@ -460,5 +460,18 @@ bool Connection::activeInjMult() const {
 void Connection::setInjMult(const InjMult& inj_mult) {
     m_injmult = inj_mult;
 }
+Connection::FilterCakeGeometry
+Connection::filterCakeGeometryFromString(const std::string& str)
+{
+    if (str == "LINEAR")
+        return Connection::FilterCakeGeometry::LINEAR;
+    else if (str == "RADIAL")
+        return Connection::FilterCakeGeometry::RADIAL;
+    else if (str == "NONE")
+        return Connection::FilterCakeGeometry::NONE;
+    else
+        throw std::invalid_argument("Unknow enum INJMultMode string: " + str);
+
+}
 
 }

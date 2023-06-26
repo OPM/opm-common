@@ -79,6 +79,19 @@ namespace RestartIO {
             Defaulted,
         };
 
+
+        // TODO: the following related to filter cake modeling should probably go to its own files
+        enum class FilterCakeGeometry {
+            LINEAR,
+            RADIAL,
+            NONE,
+        };
+
+        static FilterCakeGeometry filterCakeGeometryFromString(const std::string& str);
+
+        // TODO: the end of the filter cake model
+
+
         Connection();
         Connection(int i, int j , int k ,
                    std::size_t global_index,

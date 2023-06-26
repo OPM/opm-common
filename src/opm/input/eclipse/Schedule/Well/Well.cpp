@@ -1303,6 +1303,11 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
     return this->updateConnections(std::move(new_connections), false);
 }
 
+bool Well::handleWINJDAM(const Opm::DeckRecord& record)
+{
+    return false;
+}
+
 
 bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& location) {
     // for this keyword, the default for I, J, K will be negative
