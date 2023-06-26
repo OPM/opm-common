@@ -89,6 +89,35 @@ namespace RestartIO {
 
         static FilterCakeGeometry filterCakeGeometryFromString(const std::string& str);
 
+        struct FilterCake {
+            FilterCakeGeometry geometry {FilterCakeGeometry::NONE};
+            double perm{0.};
+            double poro{0.};
+            double radius{0.};
+            double flow_area{0.};
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(geometry);
+                serializer(perm);
+                serializer(poro);
+                serializer(radius);
+                serializer(flow_area);
+            }
+
+            bool operator==( const FilterCake& other ) const {
+                return geometry == other.geometry
+                &&     perm == other.perm
+                &&     poro == other.poro
+                &&     radius == other.radius
+                &&     flow_area == other.flow_area;
+            }
+
+            bool active() const {
+                return this->geometry != FilterCakeGeometry::NONE;
+            }
+        };
         // TODO: the end of the filter cake model
 
 
@@ -138,6 +167,7 @@ namespace RestartIO {
         const InjMult& injmult() const;
         bool activeInjMult() const;
         void setInjMult(const InjMult& inj_mult);
+        void setFilterCake(const FilterCake& filter_cake);
 
         void setState(State state);
         void setComplnum(int compnum);
@@ -269,6 +299,8 @@ namespace RestartIO {
 
         // Whether or not this Connection is subject to WELPI scaling.
         bool m_subject_to_welpi = false;
+
+        FilterCake m_filter_cake;
 
         static std::string CTFKindToString(const CTFKind);
     };

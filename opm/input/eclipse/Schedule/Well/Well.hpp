@@ -481,8 +481,7 @@ public:
     bool handleWELOPENConnections(const DeckRecord& record, Connection::State status);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
-    // TODO: not sure need to return bool
-    bool handleWINJDAM(const DeckRecord& record);
+    bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
     bool applyGlobalWPIMULT(double scale_factor);
 

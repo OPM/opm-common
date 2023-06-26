@@ -474,4 +474,8 @@ Connection::filterCakeGeometryFromString(const std::string& str)
 
 }
 
+void Connection::setFilterCake(const Connection::FilterCake& filter_cake) {
+        this->m_filter_cake = filter_cake;
+}
+
 }

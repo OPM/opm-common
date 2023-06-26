@@ -31,7 +31,7 @@
     {
       "name": "FILTER_CAKE_AREA",
       "value_type": "DOUBLE",
-      "dimension": "Length"
+      "dimension": "Length*Length"
     },
     {
       "name": "I",

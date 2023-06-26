@@ -1303,8 +1303,32 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
     return this->updateConnections(std::move(new_connections), false);
 }
 
-bool Well::handleWINJDAM(const Opm::DeckRecord& record)
+bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& /* location */)
 {
+    auto match = [=] ( const Connection& c) -> bool {
+        if (!match_eq(c.getI()  , record, "I", -1)) return false;
+        if (!match_eq(c.getJ()  , record, "J", -1)) return false;
+        if (!match_eq(c.getK()  , record, "K", -1)) return false;
+
+        return true;
+    };
+
+    const Connection::FilterCakeGeometry geomerty = Connection::filterCakeGeometryFromString(record.getItem("GEOMETRY").getTrimmedString(0));
+    const double perm = record.getItem("FILTER_CAKE_PERM").getSIDouble(0);
+    const double poro = record.getItem("FILTER_CAKE_PORO").getSIDouble(0);
+    // TODO: The following two can be defaulted and needs to be calculated later
+    const double radius = record.getItem("FILTER_CAKE_RADIUS").getSIDouble(0);
+    const double flow_area = record.getItem("FILTER_CAKE_AREA").getSIDouble(0);
+    // TODO: we can make a function to generate FilterCake from the record.
+    const Connection::FilterCake filter_cake {geomerty, perm, poro, radius, flow_area};
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    for (auto c : *(this->connections)) {
+        if (match(c)) {
+            c.setFilterCake(filter_cake);
+            new_connections->add(c);
+        }
+    }
+    return this->updateConnections(std::move(new_connections), false);
     return false;
 }
 

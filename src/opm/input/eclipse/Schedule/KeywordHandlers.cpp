@@ -1976,7 +1976,7 @@ Well{0} entered with 'FIELD' parent group:
 
             for (const auto& well_name : well_names) {
                 auto well = this->snapshots.back().wells(well_name);
-                if (well.handleWINJDAM(record)) {
+                if (well.handleWINJDAM(record, handlerContext.keyword.location())) {
                     this->snapshots.back().wells.update( std::move(well) );
                 }
             }
