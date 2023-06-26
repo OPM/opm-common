@@ -56,6 +56,39 @@ BCConfig::BCRegion::BCRegion(const DeckRecord& record, const GridDims& grid) :
     if (const auto& K2 = record.getItem<BC::K2>(); ! K2.defaultApplied(0)) {
         this->k2 = K2.get<int>(0) - 1;
     }
+    //
+    MechBCValue mechbcvaluetmp;
+    if (const auto& P = record.getItem<BC::STRESSXX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[0] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::STRESSYY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[1] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::STRESSZZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[2] = P.getSIDouble(0);
+    }
+    mechbcvaluetmp.stress[3] = 0;
+    mechbcvaluetmp.stress[4] = 0;
+    mechbcvaluetmp.stress[5] = 0;
+    if (const auto& P = record.getItem<BC::DISPX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[0] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::DISPY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[1] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::DISPZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[2] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::FIXEDX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[0] = P.get<int>(0);
+    }
+    if (const auto& P = record.getItem<BC::FIXEDY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[1] = P.get<int>(0);
+    }
+    if (const auto& P = record.getItem<BC::FIXEDZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[2] = P.get<int>(0);
+    }
+    mechbcvalue = mechbcvaluetmp;
 }
 
 BCConfig::BCRegion BCConfig::BCRegion::serializationTestObject()

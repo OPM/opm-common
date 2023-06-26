@@ -62,6 +62,57 @@
       "name": "MECHTYPE",
       "value_type": "STRING",
       "default": "NONE"
-    }
+    },
+    {
+      "name": "FIXEDX",
+      "value_type": "INT",
+      "default": 1
+    },
+    {
+      "name": "FIXEDY",
+      "value_type": "INT",
+      "default": 1
+    },
+    {
+      "name": "FIXEDZ",
+      "value_type": "INT",
+      "default": 1
+    },
+    {
+      "name": "STRESSXX",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Pressure"
+    },
+    {
+      "name": "STRESSYY",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Pressure"
+    },
+    {
+      "name": "STRESSZZ",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Pressure"
+    },
+    {
+      "name": "DISPX",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Length" 
+    },
+    {
+      "name": "DISPY",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Length"
+    },
+    {   
+      "name": "DISPZ",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Length"
+    }              
   ]
 }
