@@ -627,9 +627,30 @@ std::ostream& ParserItem::inlineClass( std::ostream& stream, const std::string& 
            << local_indent << "static const std::string itemName;" << '\n';
 
     if( this->hasDefault() ) {
-        stream << local_indent << "static const "
-               << tag_name( this->data_type )
-               << " defaultValue;" << '\n';
+                
+        auto defval = [this]() -> std::string {
+            switch( this->data_type ) {
+                case type_tag::integer:
+                    return std::to_string( this->getDefault< int >() );
+                case type_tag::fdouble:
+                    return as_string( this->getDefault< double >() );
+                default:
+                    throw std::logic_error( "ParserItem::inlineClass: Fatal error; should not be reachable" );
+            }
+        };
+        
+        if ( this->data_type==type_tag::integer || this->data_type==type_tag::fdouble ) {
+            stream << local_indent << "static " << "constexpr "
+                   << tag_name( this->data_type )
+                   << " defaultValue = " 
+                   << defval() 
+                   << ';' << '\n';
+        } else {
+            stream << local_indent << "static " << "const "
+                   << tag_name( this->data_type )
+                   << " defaultValue;" 
+                   << '\n';
+        }
     }
 
     return stream << indent << "};" << '\n';
@@ -644,16 +665,12 @@ std::string ParserItem::inlineClassInit(const std::string& parentClass,
        << "::itemName = \"" << this->name()
        << "\";" << '\n';
 
-    if( !this->hasDefault() ) return ss.str();
+    if( !this->hasDefault() || this->data_type==type_tag::integer || this->data_type==type_tag::fdouble ) return ss.str();
 
     auto typestring = tag_name( this->data_type );
 
     auto defval = [this]() -> std::string {
         switch( this->data_type ) {
-            case type_tag::integer:
-                return std::to_string( this->getDefault< int >() );
-            case type_tag::fdouble:
-                return as_string( this->getDefault< double >() );
             case type_tag::uda:
                 {
                     double value = this->getDefault<UDAValue>().get<double>();
