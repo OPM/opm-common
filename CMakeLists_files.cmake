@@ -200,6 +200,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Tuning.cpp
     src/opm/input/eclipse/Schedule/WriteRestartFileEvents.cpp
     src/opm/input/eclipse/Schedule/Well/Connection.cpp
+    src/opm/input/eclipse/Schedule/Well/FilterCake.cpp
     src/opm/input/eclipse/Schedule/Well/injection.cpp
     src/opm/input/eclipse/Schedule/Well/NameOrder.cpp
     src/opm/input/eclipse/Schedule/Well/PAvg.cpp
@@ -1217,6 +1218,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/VFPInjTable.hpp
        opm/input/eclipse/Schedule/VFPProdTable.hpp
        opm/input/eclipse/Schedule/Well/Connection.hpp
+       opm/input/eclipse/Schedule/Well/FilterCake.hpp
        opm/input/eclipse/Schedule/Well/PAvg.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp

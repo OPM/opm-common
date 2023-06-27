@@ -746,9 +746,9 @@ namespace Opm
         void handleWVFPEXP   (HandlerContext&);
         void handleWWPAVE    (HandlerContext&);
         void handleWPIMULT   (HandlerContext&);
+        void handleWINJCLN   (HandlerContext&);
         void handleWINJDAM   (HandlerContext&);
         void handleWINJFCNC  (HandlerContext&);
-        void handleWINJCLN   (HandlerContext&);
         void handleWINJMULT  (HandlerContext&);
         void handleWPMITAB   (HandlerContext&);
         void handleWPOLYMER  (HandlerContext&);

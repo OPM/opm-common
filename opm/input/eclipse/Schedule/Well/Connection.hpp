@@ -30,6 +30,7 @@
 #include <optional>
 #include <limits>
 
+#include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 
 namespace Opm {
@@ -79,60 +80,6 @@ namespace RestartIO {
             Defaulted,
         };
 
-
-        // TODO: the following related to filter cake modeling should probably go to its own files
-        enum class FilterCakeGeometry {
-            LINEAR,
-            RADIAL,
-            NONE,
-        };
-
-        static FilterCakeGeometry filterCakeGeometryFromString(const std::string& str);
-
-        struct FilterCake {
-            FilterCakeGeometry geometry {FilterCakeGeometry::NONE};
-            double perm{0.};
-            double poro{0.};
-            std::optional<double> radius;
-            std::optional<double> flow_area;
-            // skin factor multiplier
-            // it is controlled by keyword WINJCLN
-            double sf_multiplier {1.};
-
-            FilterCake() = default;
-            explicit FilterCake(const DeckRecord& record);
-
-            template<class Serializer>
-            void serializeOp(Serializer& serializer)
-            {
-                serializer(geometry);
-                serializer(perm);
-                serializer(poro);
-                serializer(radius);
-                serializer(flow_area);
-                serializer(sf_multiplier);
-            }
-
-            bool operator==( const FilterCake& other ) const {
-                return geometry == other.geometry
-                &&     perm == other.perm
-                &&     poro == other.poro
-                &&     radius == other.radius
-                &&     flow_area == other.flow_area
-                &&     sf_multiplier == other.sf_multiplier;
-            }
-
-            bool active() const {
-                return this->geometry != FilterCakeGeometry::NONE;
-            }
-
-            void applyCleanMultiplier(const double factor) {
-                this->sf_multiplier *= factor;
-            }
-        };
-        // TODO: the end of the filter cake model
-
-
         Connection();
         Connection(int i, int j , int k ,
                    std::size_t global_index,
@@ -181,7 +128,7 @@ namespace RestartIO {
         void setInjMult(const InjMult& inj_mult);
         void setFilterCake(const FilterCake& filter_cake);
         const FilterCake& getFilterCake() const;
-        // TODO: make these two functions members of FilterCake class
+        bool filterCakeActive() const;
         double getFilterCakeRadius() const;
         double getFilterCakeArea() const;
 
@@ -316,7 +263,7 @@ namespace RestartIO {
         // Whether or not this Connection is subject to WELPI scaling.
         bool m_subject_to_welpi = false;
 
-        FilterCake m_filter_cake;
+        std::optional<FilterCake> m_filter_cake;
 
         static std::string CTFKindToString(const CTFKind);
     };

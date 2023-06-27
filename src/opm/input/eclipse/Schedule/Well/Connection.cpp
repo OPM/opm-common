@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 namespace Opm {
@@ -461,33 +462,25 @@ bool Connection::activeInjMult() const {
 void Connection::setInjMult(const InjMult& inj_mult) {
     m_injmult = inj_mult;
 }
-Connection::FilterCakeGeometry
-Connection::filterCakeGeometryFromString(const std::string& str)
-{
-    if (str == "LINEAR")
-        return Connection::FilterCakeGeometry::LINEAR;
-    else if (str == "RADIAL")
-        return Connection::FilterCakeGeometry::RADIAL;
-    else if (str == "NONE")
-        return Connection::FilterCakeGeometry::NONE;
-    else
-        throw std::invalid_argument("Unknow enum INJMultMode string: " + str);
 
-}
 
-void Connection::setFilterCake(const Connection::FilterCake& filter_cake) {
+void Connection::setFilterCake(const FilterCake& filter_cake) {
         this->m_filter_cake = filter_cake;
 }
 
+bool Connection::filterCakeActive() const {
+    return this->m_filter_cake.has_value();
+}
 
-const Connection::FilterCake& Connection::getFilterCake() const {
-        return this->m_filter_cake;
+const FilterCake& Connection::getFilterCake() const {
+        assert(this->filterCakeActive());
+        return this->m_filter_cake.value();
 }
 
 
 double Connection::getFilterCakeRadius() const {
-    if (this->m_filter_cake.radius) {
-        return *this->m_filter_cake.radius;
+    if (this->getFilterCake().radius.has_value()) {
+        return this->getFilterCake().radius.value();
     } else {
         return this->m_rw;
     }
@@ -495,8 +488,8 @@ double Connection::getFilterCakeRadius() const {
 
 
 double Connection::getFilterCakeArea() const {
-    if (this->m_filter_cake.flow_area) {
-        return *(this->m_filter_cake.flow_area);
+    if (this->getFilterCake().flow_area.has_value()) {
+        return this->getFilterCake().flow_area.value();
     } else {
         const double radius = this->getFilterCakeRadius();
         const double length = this->m_connection_length;
@@ -505,16 +498,6 @@ double Connection::getFilterCakeArea() const {
     }
 }
 
-Connection::FilterCake::FilterCake(const DeckRecord& record) {
-    this->geometry = Connection::filterCakeGeometryFromString(record.getItem("GEOMETRY").getTrimmedString(0));
-    this->perm = record.getItem("FILTER_CAKE_PERM").getSIDouble(0);
-    this->poro = record.getItem("FILTER_CAKE_PORO").getSIDouble(0);
-    if (!record.getItem("FILTER_CAKE_RADIUS").defaultApplied(0)) {
-        this->radius = record.getItem("FILTER_CAKE_RADIUS").getSIDouble(0);
-    }
-    if (!record.getItem("FILTER_CAKE_AREA").defaultApplied(0)) {
-        this->flow_area = record.getItem("FILTER_CAKE_AREA").getSIDouble(0);
-    }
-}
+
 
 } // end of namespace Opm

@@ -481,10 +481,9 @@ public:
     bool handleWELOPENConnections(const DeckRecord& record, Connection::State status);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
-    bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);
+    bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
-    // TODO: makes it a handleWINJFCNC?
     void setFilterConc(const double conc);
     double getFilterConc() const;
     bool applyGlobalWPIMULT(double scale_factor);
