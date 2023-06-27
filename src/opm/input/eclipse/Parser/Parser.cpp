@@ -681,7 +681,10 @@ std::optional<std::filesystem::path> ParserState::getIncludeFilePath( std::strin
         OpmLog::warning("Replaced one or more backslash with a slash in an INCLUDE path.");
     }
 
-    std::filesystem::path includeFilePath(path);
+    // trim leading and trailing whitespace just like the other simulator
+    std::regex trim_regex("^\\s+|\\s+$");
+    const auto& trimmed_path = std::regex_replace(path, trim_regex, "");
+    std::filesystem::path includeFilePath(trimmed_path);
 
     if (includeFilePath.is_relative())
         includeFilePath = this->rootPath / includeFilePath;
@@ -689,18 +692,10 @@ std::optional<std::filesystem::path> ParserState::getIncludeFilePath( std::strin
     try {
         includeFilePath = std::filesystem::canonical(includeFilePath);
     } catch (const std::filesystem::filesystem_error& fs_error) {
-        const auto& str_rep = includeFilePath.string();
-        std::regex trim_regex("^\\s+|\\s+$");
-        const auto& trimmed_rep = std::regex_replace(str_rep, trim_regex, "");
-        std::string extra_info;
-        if (str_rep.size() != trimmed_rep.size()) {
-            extra_info = " Note that the file name contains trailing whitespace.";
-        }
         parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE ,
                                   fmt::format("File '{}' included via INCLUDE"
-                                              " directive does not exist.{}",
-                                              str_rep,
-                                              extra_info),
+                                              " directive does not exist.",
+                                              trimmed_path),
                                   {}, errors);
         return {};
     }
