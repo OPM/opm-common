@@ -13,7 +13,7 @@
     {
       "name": "DEPTH_NODES_P",
       "value_type": "INT",
-      "default": 100
+      "default": 2000
     },
     {
       "name": "DEPTH_NODES_TAB",
