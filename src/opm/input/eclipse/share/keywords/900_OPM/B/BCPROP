@@ -1,0 +1,38 @@
+{
+  "name": "BCPROP",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "name": "INDEX",
+      "value_type": "INT"
+    },
+    {
+      "name": "TYPE",
+      "value_type": "STRING"
+    },
+    {
+      "name": "COMPONENT",
+      "value_type": "STRING",
+      "default": "NONE"
+    },
+    {
+      "name": "RATE",
+      "value_type": "DOUBLE",
+      "dimension": "Mass/Time*Length*Length",
+      "default": 0
+    },
+    {
+      "name": "PRESSURE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "default": 1
+    },
+    {
+      "name": "TEMPERATURE",
+      "value_type": "DOUBLE",
+      "dimension": "Temperature"
+    }
+  ]
+}

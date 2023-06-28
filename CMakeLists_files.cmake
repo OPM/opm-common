@@ -161,6 +161,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Action/State.cpp
     src/opm/input/eclipse/Schedule/Action/WGNames.cpp
     src/opm/input/eclipse/Schedule/ArrayDimChecker.cpp
+    src/opm/input/eclipse/Schedule/BCProp.cpp
     src/opm/input/eclipse/Schedule/CompletedCells.cpp
     src/opm/input/eclipse/Schedule/eval_uda.cpp
     src/opm/input/eclipse/Schedule/Events.cpp
@@ -1209,6 +1210,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Action/State.hpp
        opm/input/eclipse/Schedule/Action/WGNames.hpp
        opm/input/eclipse/Schedule/ArrayDimChecker.hpp
+       opm/input/eclipse/Schedule/BCProp.hpp
        opm/input/eclipse/Schedule/GasLiftOpt.hpp
        opm/input/eclipse/Schedule/Network/Balance.hpp
        opm/input/eclipse/Schedule/Network/Branch.hpp

@@ -1,0 +1,40 @@
+{
+  "name": "BCCON",
+  "sections": [
+    "GRID"
+  ],
+  "items": [
+    {
+        "name": "INDEX",
+        "value_type": "INT"
+    },
+    {
+      "name": "I1",
+      "value_type": "INT"
+    },
+    {
+      "name": "I2",
+      "value_type": "INT"
+    },
+    {
+      "name": "J1",
+      "value_type": "INT"
+    },
+    {
+      "name": "J2",
+      "value_type": "INT"
+    },
+    {
+      "name": "K1",
+      "value_type": "INT"
+    },
+    {
+      "name": "K2",
+      "value_type": "INT"
+    },
+    {
+      "name": "DIRECTION",
+      "value_type": "STRING"
+    }
+  ]
+}

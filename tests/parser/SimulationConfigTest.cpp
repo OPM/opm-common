@@ -119,6 +119,30 @@ GRID
 REGIONS
 )";
 
+const std::string& inputStr_bc = R"(
+RUNSPEC
+DIMENS
+ 10 3 4 /
+GRID
+SOLUTION
+BC
+1 1 1 1 1 10 X- FREE GAS/
+/
+REGIONS
+)";
+
+const std::string& inputStr_bccon = R"(
+RUNSPEC
+DIMENS
+ 10 3 4 /
+GRID
+BCCON
+1 1 1 1 1 1 1 X- /
+2 10 10 4* X /
+/
+REGIONS
+)";
+
 namespace {
     std::string simDeckStringTEMP()
     {
@@ -148,6 +172,23 @@ DIMENS
 static Deck createDeck(const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input);
+}
+
+BOOST_AUTO_TEST_CASE(SimulationConfigBCCON) {
+    auto deck = createDeck(inputStr_bccon);
+    BCConfig bcconfig(deck);
+    std::vector<int> i1s = { 1, 10};
+    std::vector<int> k2s = { 1, 4};
+    std::vector<Opm::FaceDir::DirEnum> dirs = { Opm::FaceDir::XMinus , Opm::FaceDir::XPlus};
+    for (const auto bc : bcconfig) {
+        BOOST_CHECK(bc.i1 == (i1s[bc.index - 1 ]) - 1);
+        BOOST_CHECK(bc.k2 == (k2s[bc.index - 1 ]) - 1);
+        BOOST_CHECK(bc.dir == dirs[bc.index -1 ]);
+    }
+
+}
+BOOST_AUTO_TEST_CASE(SimulationConfigBC) {
+    BOOST_CHECK_THROW( BCConfig(createDeck(inputStr_bc)), OpmInputError );
 }
 
 

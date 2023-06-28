@@ -1,5 +1,6 @@
 /*
-  Copyright 2020 Equinor ASA.
+  Copyright 2023 Equinor ASA.
+  Copyright 2023 Norce.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -17,8 +18,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_BCCONFIG_HPP
-#define OPM_BCCONFIG_HPP
+#ifndef OPM_BC_PROP_HPP
+#define OPM_BC_PROP_HPP
 
 #include <vector>
 #include <cstddef>
@@ -33,47 +34,67 @@ namespace Opm {
 class Deck;
 class DeckRecord;
 
-class BCConfig {
+enum class BCType {
+     RATE,
+     FREE,
+     DIRICHLET,
+     THERMAL,
+     CLOSED,
+     NONE
+};
+
+enum class BCComponent {
+     OIL,
+     GAS,
+     WATER,
+     SOLVENT,
+     POLYMER,
+     NONE
+};
+
+
+class BCProp {
 public:
 
-    struct BCRegion {
+    struct BCFace {
         int index;
-        int i1,i2;
-        int j1,j2;
-        int k1,k2;
-        FaceDir::DirEnum dir;
+        BCType bctype;
+        BCComponent component;
+        double rate;
+        std::optional<double> pressure;
+        std::optional<double> temperature;
 
-        BCRegion() = default;
-        explicit BCRegion(const DeckRecord& record, const GridDims& grid);
+        BCFace() = default;
+        explicit BCFace(const DeckRecord& record);
 
-        static BCRegion serializationTestObject();
+        static BCFace serializationTestObject();
 
-        bool operator==(const BCRegion& other) const;
+        bool operator==(const BCFace& other) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(index);
-            serializer(i1);
-            serializer(i2);
-            serializer(j1);
-            serializer(j2);
-            serializer(k1);
-            serializer(k2);
-            serializer(dir);
+            serializer(bctype);
+            serializer(component);
+            serializer(rate);
+            serializer(pressure);
+            serializer(temperature);
         }
     };
 
 
-    BCConfig() = default;
-    explicit BCConfig(const Deck& deck);
+    BCProp() = default;
 
-    static BCConfig serializationTestObject();
+    static BCProp serializationTestObject();
 
     std::size_t size() const;
-    std::vector<BCRegion>::const_iterator begin() const;
-    std::vector<BCRegion>::const_iterator end() const;
-    bool operator==(const BCConfig& other) const;
+    std::vector<BCFace>::const_iterator begin() const;
+    std::vector<BCFace>::const_iterator end() const;
+    bool operator==(const BCProp& other) const;
+    const BCFace& operator[](int index) const;
+
+    void updateBCProp(const DeckRecord& record);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -82,7 +103,7 @@ public:
     }
 
 private:
-    std::vector<BCRegion> m_faces;
+    std::vector<BCFace> m_faces;
 };
 
 } //namespace Opm
