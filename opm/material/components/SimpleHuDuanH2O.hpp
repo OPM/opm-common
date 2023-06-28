@@ -183,6 +183,8 @@ public:
 
     /*!
      * \brief Specific enthalpy of liquid water \f$\mathrm{[J/kg]}\f$.
+     *        Made by fitting a 2nd-degree polynomial to Coolprop data
+     *        for temperatures in the liquid range at 1 atm.
      *
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
@@ -190,7 +192,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidEnthalpy(const Evaluation& temperature,
                                      const Evaluation& /*pressure*/)
-    { return 4180*temperature; }
+    { return 4173.90253918*temperature + 0.11463337*pow(temperature, 2); }
 
     /*!
      * \copydoc Component::liquidHeatCapacity
@@ -231,11 +233,12 @@ public:
      */
     template <class Evaluation>
     static Evaluation liquidInternalEnergy(const Evaluation& temperature,
-                                           const Evaluation& pressure)
+                                           const Evaluation& pressure,
+                                           bool extrapolate)
     {
         return
             liquidEnthalpy(temperature, pressure) -
-            pressure/liquidDensity(temperature, pressure);
+            pressure/liquidDensity(temperature, pressure, extrapolate);
     }
 
     /*!
