@@ -21,8 +21,8 @@
 
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
@@ -31,39 +31,51 @@
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
-#include <fmt/format.h>
-
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <ctime>
+#include <optional>
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
-namespace Opm {
+#include <fmt/format.h>
 
 namespace {
 
-/*
-  This is to ensure that only time_points which can be represented with
-  std::time_t are used. The reason for clamping to std::time_t resolution is
-  that the serialization code in
-  opm-simulators:opm/simulators/utils/ParallelRestart.cpp goes via std::time_t.
-*/
-time_point clamp_time(time_point t) {
-    return TimeService::from_time_t( TimeService::to_time_t( t ) );
-}
+    // This is to ensure that only time_points which can be represented with
+    // std::time_t are used. The reason for clamping to std::time_t
+    // resolution is that the serialization code in
+    // opm-simulators:opm/simulators/utils/ParallelRestart.cpp goes via
+    // std::time_t.
+    Opm::time_point clamp_time(Opm::time_point t)
+    {
+        return Opm::TimeService::from_time_t(Opm::TimeService::to_time_t(t));
+    }
 
-std::pair<std::size_t, std::size_t> date_diff(const time_point& t2, const time_point& t1) {
-    auto ts1 = TimeStampUTC(TimeService::to_time_t(t1));
-    auto ts2 = TimeStampUTC(TimeService::to_time_t(t2));
-    auto year_diff  = ts2.year() - ts1.year();
-    auto month_diff = year_diff*12 + ts2.month() - ts1.month();
-    return { year_diff, month_diff };
-}
+    std::pair<std::size_t, std::size_t>
+    date_diff(const Opm::time_point& t2, const Opm::time_point& t1)
+    {
+        const auto ts1 = Opm::TimeStampUTC { Opm::TimeService::to_time_t(t1) };
+        const auto ts2 = Opm::TimeStampUTC { Opm::TimeService::to_time_t(t2) };
 
-}
+        const auto year_diff  = ts2.year() - ts1.year();
+        const auto month_diff = year_diff*12 + ts2.month() - ts1.month();
+
+        return { year_diff, month_diff };
+    }
+
+} // Anonymous namespace
+
+namespace Opm {
 
 void ScheduleState::updateSAVE(bool save) {
     this->m_save_step = save;
@@ -73,27 +85,23 @@ bool ScheduleState::save() const {
     return this->m_save_step;
 }
 
-
-
-
-
-
-ScheduleState::ScheduleState(const time_point& t1):
-    m_start_time(clamp_time(t1)),
-    m_first_in_month(true),
-    m_first_in_year(true)
+ScheduleState::ScheduleState(const time_point& t1)
+    : m_start_time(clamp_time(t1))
+    , m_first_in_month(true)
+    , m_first_in_year(true)
 {
     auto ts1 = TimeStampUTC(TimeService::to_time_t(this->m_start_time));
     this->m_month_num = ts1.month() - 1;
 }
 
-ScheduleState::ScheduleState(const time_point& start_time, const time_point& end_time) :
-    ScheduleState(start_time)
+ScheduleState::ScheduleState(const time_point& start_time, const time_point& end_time)
+    : ScheduleState(start_time)
 {
     this->m_end_time = clamp_time(end_time);
 }
 
-void ScheduleState::update_date(const time_point& prev_time) {
+void ScheduleState::update_date(const time_point& prev_time)
+{
     auto [year_diff, month_diff] = date_diff(this->m_start_time, prev_time);
     this->m_year_num += year_diff;
     this->m_first_in_month = (month_diff > 0);
@@ -103,11 +111,8 @@ void ScheduleState::update_date(const time_point& prev_time) {
     this->m_month_num = ts1.month() - 1;
 }
 
-
-
-
-ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time) :
-    ScheduleState(src)
+ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time)
+    : ScheduleState { src }     // Copy constructor
 {
     this->m_start_time = clamp_time(start_time);
     this->m_end_time = std::nullopt;
@@ -118,15 +123,22 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     this->target_wellpi.clear();
     this->m_save_step = false;
 
-    auto next_rft = this->rft_config().next();
-    if (next_rft.has_value())
-        this->rft_config.update( std::move(*next_rft) );
+    {
+        auto next_rft = this->rft_config().next();
 
-    this->update_date(src.m_start_time);
-    if (this->rst_config().save) {
-        auto new_rst = this->rst_config();
-        new_rst.save = false;
-        this->rst_config.update( std::move(new_rst) );
+        if (next_rft.has_value()) {
+            this->rft_config.update(std::move(*next_rft));
+        }
+    }
+
+    {
+        this->update_date(src.m_start_time);
+
+        if (this->rst_config().save) {
+            auto new_rst = this->rst_config();
+            new_rst.save = false;
+            this->rst_config.update(std::move(new_rst));
+        }
     }
 
     if (this->next_tstep.has_value()) {
@@ -136,15 +148,25 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     // Need to signal an event also for the persistance to take effect
     this->events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
+
+    {
+        auto new_udq = this->udq();
+
+        if (new_udq.clear_pending_assignments()) {
+            // New report step.  All ASSIGNments from previous report steps
+            // have been performed.
+            this->udq.update(std::move(new_udq));
+        }
+    }
 }
 
-
-ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time, const time_point& end_time) :
-    ScheduleState(src, start_time)
+ScheduleState::ScheduleState(const ScheduleState& src,
+                             const time_point& start_time,
+                             const time_point& end_time)
+    : ScheduleState { src, start_time }
 {
     this->m_end_time = end_time;
 }
-
 
 time_point ScheduleState::start_time() const {
     return this->m_start_time;

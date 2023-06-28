@@ -101,6 +101,8 @@ namespace Opm {
                         const std::vector<std::string>& expression,
                         std::size_t                     report_step);
 
+        bool clear_pending_assignments();
+
         void eval_assign(std::size_t           report_step,
                          const Schedule&       sched,
                          const WellMatcher&    wm,
@@ -147,6 +149,7 @@ namespace Opm {
             serializer(units);
             serializer(input_index);
             serializer(type_count);
+            serializer(pending_assignments_);
 
             // The UDQFunction table is constant up to udq_params, so we can
             // just construct a new instance here.
@@ -174,12 +177,13 @@ namespace Opm {
         OrderedMap<UDQIndex> input_index;
         std::map<UDQVarType, std::size_t> type_count;
 
+        mutable std::vector<std::string> pending_assignments_{};
+
         void add_node(const std::string& quantity, UDQAction action);
         UDQAction action_type(const std::string& udq_key) const;
 
         void eval_assign(std::size_t     report_step,
                          const Schedule& sched,
-                         UDQState&       udq_state,
                          UDQContext&     context) const;
 
         void eval_define(std::size_t report_step,

@@ -218,11 +218,10 @@ namespace Opm {
         return this->udqft;
     }
 
-    void UDQContext::update_assign(const std::size_t  report_step,
-                                   const std::string& keyword,
+    void UDQContext::update_assign(const std::string& keyword,
                                    const UDQSet&      udq_result)
     {
-        this->udq_state.add_assign(report_step, keyword, udq_result);
+        this->udq_state.add_assign(keyword, udq_result);
         this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
     }
 

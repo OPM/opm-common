@@ -176,6 +176,7 @@ namespace Opm {
         result.units = {{"test3", "test4"}};
         result.input_index.insert({"test5", UDQIndex::serializationTestObject()});
         result.type_count = {{UDQVarType::SCALAR, 5}};
+        result.pending_assignments_.push_back("test2");
 
         return result;
     }
@@ -218,6 +219,10 @@ namespace Opm {
         default:
             this->add_named_assign(quantity, selector, value, report_step);
             break;
+        }
+
+        if (this->m_assignments.find(quantity) != this->m_assignments.end()) {
+            this->pending_assignments_.push_back(quantity);
         }
     }
 
@@ -331,6 +336,14 @@ namespace Opm {
                 "Unknown UDQ Operation " + std::to_string(static_cast<int>(action))
             };
         }
+    }
+
+    bool UDQConfig::clear_pending_assignments()
+    {
+        const auto update = ! this->pending_assignments_.empty();
+        this->pending_assignments_.clear();
+
+        return update;
     }
 
     const UDQAssign& UDQConfig::assign(const std::string& key) const
@@ -522,14 +535,18 @@ namespace Opm {
             && (this->units == data.units)
             && (this->input_index == data.input_index)
             && (this->type_count == data.type_count)
+            && (this->pending_assignments_ == data.pending_assignments_)
             ;
     }
 
     void UDQConfig::eval_assign(const std::size_t report_step,
                                 const Schedule&   sched,
-                                UDQState&         udq_state,
                                 UDQContext&       context) const
     {
+        if (this->pending_assignments_.empty()) {
+            return;             // Nothing to do
+        }
+
         const auto handlers = std::map<UDQVarType, EvalAssign> {
             { UDQVarType::FIELD_VAR  , EvalAssign::field()                   },
             { UDQVarType::GROUP_VAR  , EvalAssign::group(report_step, sched) },
@@ -537,24 +554,30 @@ namespace Opm {
             { UDQVarType::SEGMENT_VAR, EvalAssign::segment(context)          },
         };
 
-        for (const auto& index_pair : this->input_index) {
-            const auto& keyword = index_pair.first;
-            auto asgn_pos = this->m_assignments.find(keyword);
-            if ((asgn_pos == this->m_assignments.end()) ||
-                ! udq_state.assign(asgn_pos->second.report_step(), keyword))
-            {
-                // No such ASSIGN or ASSIGN not active
+        // Recall: pending_assignments_ is mutable.
+        auto pending = std::vector<std::string>{};
+        this->pending_assignments_.swap(pending);
+
+        {
+            std::sort(pending.begin(), pending.end());
+            auto u = std::unique(pending.begin(), pending.end());
+            pending.erase(u, pending.end());
+        }
+
+        for (const auto& assignment : pending) {
+            auto asgn_pos = this->m_assignments.find(assignment);
+            if (asgn_pos == this->m_assignments.end()) {
+                // No such ASSIGNment.  Unexpected.
                 continue;
             }
 
             auto handler = handlers.find(asgn_pos->second.var_type());
             if (handler == handlers.end()) {
-                // Unhandled variable type.
+                // Unhandled/unsupported variable type.
                 continue;
             }
 
-            context.update_assign(report_step, keyword,
-                                  handler->second(asgn_pos->second));
+            context.update_assign(assignment, handler->second(asgn_pos->second));
         }
     }
 
@@ -607,7 +630,7 @@ namespace Opm {
         UDQContext context {
             this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
         };
-        this->eval_assign(report_step, sched, udq_state, context);
+        this->eval_assign(report_step, sched, context);
         this->eval_define(report_step, udq_state, context);
     }
 
@@ -621,7 +644,7 @@ namespace Opm {
         UDQContext context {
             this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
         };
-        this->eval_assign(report_step, sched, udq_state, context);
+        this->eval_assign(report_step, sched, context);
     }
 
     void UDQConfig::required_summary(std::unordered_set<std::string>& summary_keys) const

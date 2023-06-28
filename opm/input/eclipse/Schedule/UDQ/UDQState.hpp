@@ -53,8 +53,7 @@ public:
     double get_segment_var(const std::string& well, const std::string& var, const std::size_t segment) const;
 
     void add_define(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
-    void add_assign(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
-    bool assign(std::size_t report_step, const std::string& udq_key) const;
+    void add_assign(const std::string& udq_key, const UDQSet& result);
     bool define(const std::string& udq_key, const std::pair<UDQUpdate, std::size_t>& update_status) const;
     double undefined_value() const;
 
@@ -70,7 +69,6 @@ public:
         serializer(this->well_values);
         serializer(this->group_values);
         serializer(this->segment_values);
-        serializer(this->assignments);
         serializer(this->defines);
     }
 
@@ -87,7 +85,6 @@ private:
     // [var][well][segment] -> double
     std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> segment_values{};
 
-    std::unordered_map<std::string, std::size_t> assignments;
     std::unordered_map<std::string, std::size_t> defines;
 
     void add(const std::string& udq_key, const UDQSet& result);
