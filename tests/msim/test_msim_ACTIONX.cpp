@@ -346,18 +346,20 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
         {
             const auto& fu_time = ecl_sum.get_at_rstep("FU_TIME");
             BOOST_CHECK_CLOSE(fu_time[7 - 1], 212, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[8 - 1], 243, 1e-5);
             // UPDATE OFF
-            BOOST_CHECK_CLOSE(fu_time[8 - 1], 212, 1e-5);
-            BOOST_CHECK_CLOSE(fu_time[9 - 1] , 212, 1e-5);
-            BOOST_CHECK_CLOSE(fu_time[10 - 1], 212, 1e-5);
-            BOOST_CHECK_CLOSE(fu_time[11 - 1], 212, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[9 - 1] , 243, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[10 - 1], 243, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[11 - 1], 243, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[12 - 1], 243, 1e-5);
             // UPDATE NEXT
-            BOOST_CHECK_CLOSE(fu_time[12 - 1], 342, 1e-5);
-            BOOST_CHECK_CLOSE(fu_time[13 - 1], 342, 1e-5);
-            BOOST_CHECK_CLOSE(fu_time[14 - 1], 342, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[13 - 1], 372, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[14 - 1], 372, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[15 - 1], 372, 1e-5);
             // UPDATE ON
-            BOOST_CHECK_CLOSE(fu_time[15 - 1], 456, 1e-5);
             BOOST_CHECK_CLOSE(fu_time[16 - 1], 487, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[17 - 1], 517, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[18 - 1], 548, 1e-5);
         }
     }
 }
