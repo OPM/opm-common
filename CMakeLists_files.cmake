@@ -594,6 +594,13 @@ list(APPEND TEST_SOURCE_FILES ${DUNE_TEST_SOURCE_FILES})
 
 list (APPEND TEST_DATA_FILES
       tests/testdata.param
+      tests/material/brine_unittest.json
+      tests/material/co2_unittest_part1.json
+      tests/material/co2_unittest_part2.json
+      tests/material/co2_unittest_above_sat.json
+      tests/material/co2_unittest_below_sat.json
+      tests/material/h2o_unittest.json
+      tests/material/h2_unittest.json
 )
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES
