@@ -159,7 +159,7 @@ namespace Opm {
     void GridDims::binary_init(const Deck& deck)
     {
         const DeckKeyword& gdfile_kw = deck["GDFILE"].back();
-        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
+        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").getTrimmedString(0);
         const EclIO::EGrid egrid( deck.makeDeckPath(gdfile_arg) );
 
         const auto& dimens = egrid.dimension();
