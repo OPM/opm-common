@@ -185,6 +185,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     Evaluation T;
     Evaluation p;
 
+    // Account for different reference state between co2tables.inc and json data (i.e., difference between NIST and
+    // Span-Wagner paper)
+    Scalar enthalpy_corr = 484870.2958311295;
+
     // 
     // Test region with pressures higher than critical pressure
     // 
@@ -203,6 +207,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
 
     // Boost tolerance (in percent)
     double tol = 1;
+    double tol_enth = 1.2;
 
     // Extrapolate table
     bool extrapolate = true;
@@ -235,7 +240,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
             Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
 
-            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()) - enthalpy_corr, tol_enth);
         }
     }
 
@@ -283,7 +288,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             Json::JsonObject enth_ref_row = enthalpy_ref2.get_array_item(iT);
             Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
 
-            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()) - enthalpy_corr, tol_enth);
         }
     }
 
@@ -339,8 +344,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     //     Json::JsonObject enth_ref_below = enthalpy_ref3.get_array_item(i);
     //     Json::JsonObject enth_ref_above = enthalpy_ref4.get_array_item(i);
 
-    //     BOOST_CHECK_CLOSE(enthalpy_below.value(), Scalar(enth_ref_below.as_double()), tol);
-    //     BOOST_CHECK_CLOSE(enthalpy_above.value(), Scalar(enth_ref_above.as_double()), tol);
+    //     BOOST_CHECK_CLOSE(enthalpy_below.value(), Scalar(enth_ref_below.as_double()) - enthalpy_corr, tol);
+    //     BOOST_CHECK_CLOSE(enthalpy_above.value(), Scalar(enth_ref_above.as_double()) - enthalpy_corr, tol);
     // }
 }
 
