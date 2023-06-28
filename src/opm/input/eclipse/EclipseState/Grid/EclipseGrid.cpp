@@ -564,7 +564,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     void EclipseGrid::initBinaryGrid(const Deck& deck) {
 
         const DeckKeyword& gdfile_kw = deck["GDFILE"].back();
-        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
+        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").getTrimmedString(0);
         std::string filename = deck.makeDeckPath(gdfile_arg);
 
         std::unique_ptr<Opm::EclIO::EclFile> egridfile;

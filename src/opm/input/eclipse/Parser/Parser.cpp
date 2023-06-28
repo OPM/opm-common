@@ -66,6 +66,7 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
+#include <regex>
 #include <utility>
 #include <vector>
 
@@ -680,7 +681,10 @@ std::optional<std::filesystem::path> ParserState::getIncludeFilePath( std::strin
         OpmLog::warning("Replaced one or more backslash with a slash in an INCLUDE path.");
     }
 
-    std::filesystem::path includeFilePath(path);
+    // trim leading and trailing whitespace just like the other simulator
+    std::regex trim_regex("^\\s+|\\s+$");
+    const auto& trimmed_path = std::regex_replace(path, trim_regex, "");
+    std::filesystem::path includeFilePath(trimmed_path);
 
     if (includeFilePath.is_relative())
         includeFilePath = this->rootPath / includeFilePath;
@@ -688,7 +692,11 @@ std::optional<std::filesystem::path> ParserState::getIncludeFilePath( std::strin
     try {
         includeFilePath = std::filesystem::canonical(includeFilePath);
     } catch (const std::filesystem::filesystem_error& fs_error) {
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , fmt::format("No such file: {}", includeFilePath.string()), {}, errors);
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE ,
+                                  fmt::format("File '{}' included via INCLUDE"
+                                              " directive does not exist.",
+                                              trimmed_path),
+                                  {}, errors);
         return {};
     }
 
@@ -1186,7 +1194,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
                     if (deck_keyword.name() == ParserKeywords::IMPORT::keywordName) {
                         bool formatted = deck_keyword.getRecord(0).getItem(1).get<std::string>(0)[0] == 'F';
-                        const auto& import_file = parserState.getIncludeFilePath(deck_keyword.getRecord(0).getItem(0).get<std::string>(0));
+                        const auto& import_file = parserState.getIncludeFilePath(deck_keyword.getRecord(0).getItem(0).getTrimmedString(0));
 
                         ImportContainer import(parser, parserState.deck.getActiveUnitSystem(), import_file.value().string(), formatted, parserState.deck.size());
                         for (auto kw : import)
