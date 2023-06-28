@@ -63,6 +63,8 @@
 
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
+#include <opm/json/JsonObject.hpp>
+
 template <class Scalar, class Evaluation>
 void testAllComponents()
 {
@@ -171,6 +173,494 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(DynamicBrine, Scalar, Types)
                                                     BrineDyn::molarMass(sal),
                                                     1e-5),
                                 "oops: the brine molar mass differs between Brine and Brine dynamic");
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using CO2 = Opm::CO2<Scalar>;
+
+    Evaluation T;
+    Evaluation p;
+
+    // 
+    // Test region with pressures higher than critical pressure
+    // 
+    // Read JSON file with reference values
+    std::filesystem::path jsonFile("co2_unittest_part1.json");
+    Json::JsonObject parser(jsonFile);
+    Json::JsonObject density_ref = parser.get_item("density");
+    Json::JsonObject viscosity_ref = parser.get_item("viscosity");
+    Json::JsonObject enthalpy_ref = parser.get_item("enthalpy");
+    Json::JsonObject temp_ref = parser.get_item("temp");
+    Json::JsonObject pres_ref = parser.get_item("pres");
+    
+    // Setup pressure and temperature values
+    int numT = temp_ref.size();
+    int numP = pres_ref.size();
+
+    // Boost tolerance (in percent)
+    double tol = 1;
+
+    // Extrapolate table
+    bool extrapolate = true;
+    
+    // Loop over temperature and pressure, and compare to reference values
+    for (int iT = 0; iT < numT; ++iT) {
+        // Get temperature from reference data
+        T = Evaluation(temp_ref.get_array_item(iT).as_double());
+
+        for (int iP = 0; iP < numP; ++iP) {
+            // Get pressure value from reference data
+            p = Evaluation(pres_ref.get_array_item(iP).as_double());
+
+            // Density
+            Evaluation dens = CO2::gasDensity(T, p, extrapolate);
+            Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
+            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            
+            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+
+            // Viscosity
+            Evaluation visc = CO2::gasViscosity(T, p, extrapolate);
+            Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
+            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+
+            // Enthalpy
+            Evaluation enthalpy = CO2::gasEnthalpy(T, p, extrapolate);
+            Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
+            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+        }
+    }
+
+    // 
+    // Test region with temperatures higher than critical temperature
+    // 
+    // Read JSON file with reference values
+    std::filesystem::path jsonFile2("co2_unittest_part2.json");
+    Json::JsonObject parser2(jsonFile2);
+    Json::JsonObject density_ref2 = parser2.get_item("density");
+    Json::JsonObject viscosity_ref2 = parser2.get_item("viscosity");
+    Json::JsonObject enthalpy_ref2 = parser2.get_item("enthalpy");
+    Json::JsonObject temp_ref2 = parser2.get_item("temp");
+    Json::JsonObject pres_ref2 = parser2.get_item("pres");
+
+    // Setup pressure and temperature values
+    int numT2 = temp_ref2.size();
+    int numP2 = pres_ref2.size();
+
+    // Loop over temperature and pressure, and compare to reference values
+    for (int iT = 0; iT < numT2; ++iT) {
+        // Get temperature from reference data
+        T = Evaluation(temp_ref2.get_array_item(iT).as_double());
+
+        for (int iP = 0; iP < numP2; ++iP) {
+            // Get pressure value from reference data
+            p = Evaluation(pres_ref2.get_array_item(iP).as_double());
+
+            // Density
+            Evaluation dens = CO2::gasDensity(T, p, extrapolate);
+            Json::JsonObject dens_ref_row = density_ref2.get_array_item(iT);
+            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            
+            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+
+            // Viscosity
+            Evaluation visc = CO2::gasViscosity(T, p, extrapolate);
+            Json::JsonObject visc_ref_row = viscosity_ref2.get_array_item(iT);
+            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+
+            // Enthalpy
+            Evaluation enthalpy = CO2::gasEnthalpy(T, p, extrapolate);
+            Json::JsonObject enth_ref_row = enthalpy_ref2.get_array_item(iT);
+            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+        }
+    }
+
+    // 
+    // Test around saturation curve
+    // 
+    ///////////////
+    // OBS: Interpolation from co2table.inc cannot capture the liquid/vapor jump to a reasonable tolerance, but we leave
+    //  the code here for possible future testing.
+    ///////////////
+    // Above
+    // std::filesystem::path jsonFile3("co2_unittest_below_sat.json");
+    // Json::JsonObject parser3(jsonFile3);
+    // Json::JsonObject density_ref3 = parser3.get_item("density");
+    // Json::JsonObject enthalpy_ref3 = parser3.get_item("enthalpy");
+    // Json::JsonObject temp_ref3 = parser3.get_item("temp");
+    // Json::JsonObject pres_ref3 = parser3.get_item("pres");
+
+    // // Below
+    // std::filesystem::path jsonFile4("co2_unittest_above_sat.json");
+    // Json::JsonObject parser4(jsonFile4);
+    // Json::JsonObject density_ref4 = parser4.get_item("density");
+    // Json::JsonObject enthalpy_ref4 = parser4.get_item("enthalpy");
+    // Json::JsonObject pres_ref4 = parser4.get_item("pres");
+
+    // // Number of data
+    // int numSat = temp_ref3.size();
+
+    // // Compare
+    // Evaluation p_below;
+    // Evaluation p_above;
+    // for (int i = 0; i < numSat; ++i) {
+    //     // Same temeperature above and below saturation curve, but different pressures
+    //     Json::JsonObject t_ref = temp_ref3.get_array_item(i);
+    //     Json::JsonObject p_ref = pres_ref3.get_array_item(i);
+    //     Json::JsonObject p_ref2 = pres_ref4.get_array_item(i);
+    //     T = Evaluation(t_ref.as_double());
+    //     p_below = Evaluation(p_ref.as_double());
+    //     p_above = Evaluation(p_ref2.as_double());
+
+    //     // Density
+    //     Evaluation dens_below = CO2::gasDensity(T, p_below, extrapolate);
+    //     Evaluation dens_above = CO2::gasDensity(T, p_above, extrapolate);
+    //     Json::JsonObject dens_ref_below = density_ref3.get_array_item(i);
+    //     Json::JsonObject dens_ref_above = density_ref4.get_array_item(i);
+
+    //     BOOST_CHECK_CLOSE(dens_below.value(), Scalar(dens_ref_below.as_double()), tol);
+    //     BOOST_CHECK_CLOSE(dens_above.value(), Scalar(dens_ref_above.as_double()), tol);
+
+    //     // Enthalpy
+    //     Evaluation enthalpy_below = CO2::gasEnthalpy(T, p_below, extrapolate);
+    //     Evaluation enthalpy_above = CO2::gasEnthalpy(T, p_above, extrapolate);
+    //     Json::JsonObject enth_ref_below = enthalpy_ref3.get_array_item(i);
+    //     Json::JsonObject enth_ref_above = enthalpy_ref4.get_array_item(i);
+
+    //     BOOST_CHECK_CLOSE(enthalpy_below.value(), Scalar(enth_ref_below.as_double()), tol);
+    //     BOOST_CHECK_CLOSE(enthalpy_above.value(), Scalar(enth_ref_above.as_double()), tol);
+    // }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(SimpleHuDuanClass, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using SimpleHuDuanH2O = Opm::SimpleHuDuanH2O<Scalar>;
+
+    // Read JSON file with reference values
+    std::filesystem::path jsonFile("h2o_unittest.json");
+    Json::JsonObject parser(jsonFile);
+    Json::JsonObject density_ref = parser.get_item("density");
+    Json::JsonObject viscosity_ref = parser.get_item("viscosity");
+    // Json::JsonObject enthalpy_ref = parser.get_item("enthalpy");  // test values below instead
+    Json::JsonObject temp_ref = parser.get_item("temp");
+    Json::JsonObject pres_ref = parser.get_item("pres");
+
+    // For enthalpy reference data we used Coolprop with reference state T = 273.153, p = 101325 
+    // (same reference state that was used for the polynomial liquid enthalpy in SimpleHuDuanH2O class)
+    std::vector<Scalar> enthalpy_ref = {28821.733588, 37219.685214, 45610.534781, 53995.301524, 62374.877164, 
+    70750.044307, 79121.491631, 87489.826575, 95855.586059, 104219.245636, 112581.227382, 120941.906746, 129301.618530, 
+    137660.662171, 146019.306378, 154377.793252, 162736.341952, 171095.151947, 179454.405916, 187814.272334, 
+    196174.907772, 204536.458950, 212899.064560, 221262.856885, 229627.963240, 237994.507243, 246362.609938, 
+    254732.390790, 263103.968553, 271477.462034, 279852.990758, 288230.675554, 296610.639055, 304993.006130, 
+    313377.904263, 321765.463872, 330155.818578, 338549.105443, 346945.465159, 355345.042215, 363747.985033, 
+    372154.446080, 380564.581963, 388978.553507, 397396.525817};
+    
+    // Setup pressure and temperature values
+    int numT = temp_ref.size();
+    int numP = pres_ref.size();
+    Evaluation T;
+    Evaluation p;
+
+    // Boost tolerance (in percent)
+    double tol = 1;
+
+    // Extrapolate
+    bool extrapolate = true;
+    
+    // Loop over temperature and pressure, and compare to reference values in JSON file
+    for (int iT = 0; iT < numT; ++iT) {
+        // Get temperature from reference data
+        T = Evaluation(temp_ref.get_array_item(iT).as_double());
+
+        for (int iP = 0; iP < numP; ++iP) {
+            // Get pressure value from reference data
+            p = Evaluation(pres_ref.get_array_item(iP).as_double());
+
+            // Density
+            Evaluation dens = SimpleHuDuanH2O::liquidDensity(T, p, extrapolate);
+            Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
+            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            
+            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+
+            // Viscosity
+            Evaluation visc = SimpleHuDuanH2O::liquidViscosity(T, p, extrapolate);
+            Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
+            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+        }
+        // Enthalpy
+        Evaluation enthalpy = SimpleHuDuanH2O::liquidEnthalpy(T - 273.153, Evaluation(101325.0));
+        BOOST_CHECK_CLOSE(enthalpy.value(), enthalpy_ref[iT], tol);
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(H2OClass, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using H2O = Opm::H2O<Scalar>;
+
+    // Read JSON file with reference values
+    std::filesystem::path jsonFile("h2o_unittest.json");
+    Json::JsonObject parser(jsonFile);
+    Json::JsonObject density_ref = parser.get_item("density");
+    Json::JsonObject viscosity_ref = parser.get_item("viscosity");
+    Json::JsonObject enthalpy_ref = parser.get_item("enthalpy");
+    Json::JsonObject temp_ref = parser.get_item("temp");
+    Json::JsonObject pres_ref = parser.get_item("pres");
+    
+    // Setup pressure and temperature values
+    int numT = temp_ref.size();
+    int numP = pres_ref.size();
+    Evaluation T;
+    Evaluation p;
+
+    // Boost tolerance (in percent)
+    double tol = 1;
+
+    // Loop over temperature and pressure, and compare to values in JSON file
+    for (int iT = 0; iT < numT; ++iT) {
+        // Get temperature from reference data
+        T = Evaluation(temp_ref.get_array_item(iT).as_double());
+
+        for (int iP = 0; iP < numP; ++iP) {
+            // Get pressure value from reference data
+            p = Evaluation(pres_ref.get_array_item(iP).as_double());
+
+            // Density
+            Evaluation dens = H2O::liquidDensity(T, p);
+            Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
+            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            
+            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+
+            // Viscosity
+            Evaluation visc = H2O::liquidViscosity(T, p);
+            Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
+            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+
+            // Enthalpy
+            Evaluation enthalpy = H2O::liquidEnthalpy(T, p);
+            Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
+            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithH2OClass, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using H2O = Opm::H2O<Scalar>;
+    using BrineDyn = Opm::BrineDynamic<Scalar, H2O>;
+
+    // Read JSON file with reference values
+    std::filesystem::path jsonFile("brine_unittest.json");
+    Json::JsonObject parser(jsonFile);
+    Json::JsonObject density_ref = parser.get_item("density");
+    // Json::JsonObject viscosity_ref = parser.get_item("viscosity");  // no values here at the moment
+    Json::JsonObject enthalpy_ref = parser.get_item("enthalpy");
+    Json::JsonObject temp_ref = parser.get_item("temp");
+    Json::JsonObject pres_ref = parser.get_item("pres");
+    Json::JsonObject salinity_ref = parser.get_item("salinity");
+    
+    // Setup pressure and temperature values
+    int numT = temp_ref.size();
+    int numP = pres_ref.size();
+    int numS = salinity_ref.size();
+    Evaluation T;
+    Evaluation p;
+    Evaluation S;
+
+    // Boost tolerance (in percent)
+    double tol = 1;
+    double tol_enth = 3.0;
+
+    // Extrapolation
+    bool extrapolate = true;
+
+    // Loop over temperature and pressure, and compare to Coolprop values in JSON file
+    for (int iS = 0; iS < numS; ++iS){
+        // Get salinity from reference data (mass fraction)
+        S = Evaluation(salinity_ref.get_array_item(iS).as_double());
+
+        for (int iT = 0; iT < numT; ++iT) {
+            // Get temperature from reference data
+            T = Evaluation(temp_ref.get_array_item(iT).as_double());
+
+            for (int iP = 0; iP < numP; ++iP) {
+                // Get pressure value from reference data
+                p = Evaluation(pres_ref.get_array_item(iP).as_double());
+
+                // Density
+                Evaluation dens = BrineDyn::liquidDensity(T, p, S, extrapolate);
+                Json::JsonObject dens_ref_ax1 = density_ref.get_array_item(iS);
+                Json::JsonObject dens_ref_ax2 = dens_ref_ax1.get_array_item(iT);
+                Json::JsonObject dens_ref = dens_ref_ax2.get_array_item(iP);
+                
+                BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+
+                // Viscosity
+                // Evaluation visc = BrineDyn::liquidViscosity(T, p, S);
+                // Json::JsonObject visc_ref_ax1 = viscosity_ref.get_array_item(iS);
+                // Json::JsonObject visc_ref_ax2 = visc_ref_ax1.get_array_item(iT);
+                // Json::JsonObject visc_ref = visc_ref_ax2.get_array_item(iP);
+
+                // BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+
+                // Enthalpy
+                Evaluation enthalpy = BrineDyn::liquidEnthalpy(T, p, S);
+                Json::JsonObject enth_ref_ax1 = enthalpy_ref.get_array_item(iS);
+                Json::JsonObject enth_ref_ax2 = enth_ref_ax1.get_array_item(iT);
+                Json::JsonObject enth_ref = enth_ref_ax2.get_array_item(iP);
+
+                BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol_enth);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithSimpleHuDuanH2OClass, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using SimpleHuDuanH2O = Opm::SimpleHuDuanH2O<Scalar>;
+    using BrineDyn = Opm::BrineDynamic<Scalar, SimpleHuDuanH2O>;
+
+    // Read JSON file with reference values
+    std::filesystem::path jsonFile("brine_unittest.json");
+    Json::JsonObject parser(jsonFile);
+    Json::JsonObject density_ref = parser.get_item("density");
+    // Json::JsonObject viscosity_ref = parser.get_item("viscosity");  // no values here at the moment
+    // Json::JsonObject enthalpy_ref = parser.get_item("enthalpy");  // don't test these at the moment
+    Json::JsonObject temp_ref = parser.get_item("temp");
+    Json::JsonObject pres_ref = parser.get_item("pres");
+    Json::JsonObject salinity_ref = parser.get_item("salinity");
+    
+    // Setup pressure, temperature and salinity values
+    int numT = temp_ref.size();
+    int numP = pres_ref.size();
+    int numS = salinity_ref.size();
+    Evaluation T;
+    Evaluation p;
+    Evaluation S;
+
+    // Boost tolerance (in percent)
+    double tol = 1;
+
+    // Extrapolation
+    bool extrapolate = true;
+
+    // Loop over temperature, pressure and salinity, and compare to reference values in JSON file
+    for (int iS = 0; iS < numS; ++iS){
+        // Get salinity from reference data (mass fraction)
+        S = Evaluation(salinity_ref.get_array_item(iS).as_double());
+        
+        for (int iT = 0; iT < numT; ++iT) {
+            // Get temperature from reference data
+            T = Evaluation(temp_ref.get_array_item(iT).as_double());
+
+            for (int iP = 0; iP < numP; ++iP) {
+                // Get pressure value from reference data
+                p = Evaluation(pres_ref.get_array_item(iP).as_double());
+
+                // Density
+                Evaluation dens = BrineDyn::liquidDensity(T, p, S, extrapolate);
+                Json::JsonObject dens_ref_ax1 = density_ref.get_array_item(iS);
+                Json::JsonObject dens_ref_ax2 = dens_ref_ax1.get_array_item(iT);
+                Json::JsonObject dens_ref = dens_ref_ax2.get_array_item(iP);
+                
+                BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+
+                // Viscosity
+                // Evaluation visc = BrineDyn::liquidViscosity(T, p, S);
+                // Json::JsonObject visc_ref_ax1 = viscosity_ref.get_array_item(iS);
+                // Json::JsonObject visc_ref_ax2 = visc_ref_ax1.get_array_item(iT);
+                // Json::JsonObject visc_ref = visc_ref_ax2.get_array_item(iP);
+
+                // BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+
+                // Enthalpy
+                // Evaluation enthalpy = BrineDyn::liquidEnthalpy(T, p, S);
+                // Json::JsonObject enth_ref_ax1 = enthalpy_ref.get_array_item(iS);
+                // Json::JsonObject enth_ref_ax2 = enth_ref_ax1.get_array_item(iT);
+                // Json::JsonObject enth_ref = enth_ref_ax2.get_array_item(iP);
+
+                // BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using H2 = Opm::H2<Scalar>;
+
+    // Read JSON file with reference values
+    std::filesystem::path jsonFile("h2_unittest.json");
+    Json::JsonObject parser(jsonFile);
+    Json::JsonObject density_ref = parser.get_item("density");
+    Json::JsonObject viscosity_ref = parser.get_item("viscosity");
+    Json::JsonObject enthalpy_ref = parser.get_item("enthalpy");
+    Json::JsonObject temp_ref = parser.get_item("temp");
+    Json::JsonObject pres_ref = parser.get_item("pres");
+    
+    // Setup pressure and temperature values
+    int numT = temp_ref.size();
+    int numP = pres_ref.size();
+    Evaluation T;
+    Evaluation p;
+
+    // Boost tolerance (in percent)
+    double tol = 1;
+    double tol_visc = 30;  // use tol once a better viscosity model is implemented
+    
+    // Loop over temperature and pressure, and compare to reference values in JSON file
+    for (int iT = 0; iT < numT; ++iT) {
+        // Get temperature from reference data
+        T = Evaluation(temp_ref.get_array_item(iT).as_double());
+
+        for (int iP = 0; iP < numP; ++iP) {
+            // Get pressure value from reference data
+            p = Evaluation(pres_ref.get_array_item(iP).as_double());
+
+            // Density
+            Evaluation dens = H2::gasDensity(T, p);
+            Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
+            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            
+            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+
+            // Viscosity
+            Evaluation visc = H2::gasViscosity(T, p);
+            Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
+            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol_visc);
+
+            // Enthalpy
+            Evaluation enthalpy = H2::gasEnthalpy(T, p);
+            Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
+            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+
+            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
         }
     }
 }
