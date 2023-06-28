@@ -126,6 +126,21 @@ public:
      * \param state The fluid state
      */
     template <class ContainerT, class FluidState>
+    static Scalar relpermOilInOilGasSystem(const Params& params,
+                                           const FluidState& fluidState){
+        throw std::logic_error {
+            "relpermOilInOilGasSystem() is specific to three phases"
+                };
+    }
+    template <class ContainerT, class FluidState>
+    static Scalar relpermOilInOilWaterSystem(const Params& params,
+                                                 const FluidState& fluidState){
+        throw std::logic_error {
+                "relpermOilInOilWaterSystem() is specific to three phases"
+                    };
+    }
+  
+    template <class ContainerT, class FluidState>
     static void capillaryPressures(ContainerT& values,
                                    const Params& params,
                                    const FluidState& fluidState)
@@ -225,6 +240,13 @@ public:
         params.gasOilParams().update(pcSwMdc, krwSw, krnSwMdc);
     }
 
+    static Scalar trappedGasSaturation(const Params& params){
+        if(params.approach() == EclTwoPhaseApproach::GasOil)
+            return params.gasOilParams().SnTrapped();
+        if(params.approach() == EclTwoPhaseApproach::GasWater)
+            return params.gasWaterParams().SnTrapped();
+        return 0.0; // oil-water case
+    }
     /*!
      * \brief Capillary pressure between the gas and the non-wetting
      *        liquid (i.e., oil) phase.
