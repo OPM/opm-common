@@ -96,7 +96,7 @@ void Trace::show(const char* format, ...)
 #elif defined(CVF_ANDROID)
     __android_log_print(ANDROID_LOG_DEBUG, "CVF_TAG", format, argList);
 #else
-    vsprintf(temp, format, argList);
+    vsnprintf(temp, maxFormatLength, format, argList);
 #endif
 
     va_end(argList);    
