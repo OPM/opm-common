@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     // Test region with pressures higher than critical pressure
     // 
     // Read JSON file with reference values
-    std::filesystem::path jsonFile("co2_unittest_part1.json");
+    std::filesystem::path jsonFile("material/co2_unittest_part1.json");
     Json::JsonObject parser(jsonFile);
     Json::JsonObject density_ref = parser.get_item("density");
     Json::JsonObject viscosity_ref = parser.get_item("viscosity");
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     // Test region with temperatures higher than critical temperature
     // 
     // Read JSON file with reference values
-    std::filesystem::path jsonFile2("co2_unittest_part2.json");
+    std::filesystem::path jsonFile2("material/co2_unittest_part2.json");
     Json::JsonObject parser2(jsonFile2);
     Json::JsonObject density_ref2 = parser2.get_item("density");
     Json::JsonObject viscosity_ref2 = parser2.get_item("viscosity");
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     //  the code here for possible future testing.
     ///////////////
     // Above
-    // std::filesystem::path jsonFile3("co2_unittest_below_sat.json");
+    // std::filesystem::path jsonFile3("material/co2_unittest_below_sat.json");
     // Json::JsonObject parser3(jsonFile3);
     // Json::JsonObject density_ref3 = parser3.get_item("density");
     // Json::JsonObject enthalpy_ref3 = parser3.get_item("enthalpy");
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     // Json::JsonObject pres_ref3 = parser3.get_item("pres");
 
     // // Below
-    // std::filesystem::path jsonFile4("co2_unittest_above_sat.json");
+    // std::filesystem::path jsonFile4("material/co2_unittest_above_sat.json");
     // Json::JsonObject parser4(jsonFile4);
     // Json::JsonObject density_ref4 = parser4.get_item("density");
     // Json::JsonObject enthalpy_ref4 = parser4.get_item("enthalpy");
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SimpleHuDuanClass, Scalar, Types)
     using SimpleHuDuanH2O = Opm::SimpleHuDuanH2O<Scalar>;
 
     // Read JSON file with reference values
-    std::filesystem::path jsonFile("h2o_unittest.json");
+    std::filesystem::path jsonFile("material/h2o_unittest.json");
     Json::JsonObject parser(jsonFile);
     Json::JsonObject density_ref = parser.get_item("density");
     Json::JsonObject viscosity_ref = parser.get_item("viscosity");
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2OClass, Scalar, Types)
     using H2O = Opm::H2O<Scalar>;
 
     // Read JSON file with reference values
-    std::filesystem::path jsonFile("h2o_unittest.json");
+    std::filesystem::path jsonFile("material/h2o_unittest.json");
     Json::JsonObject parser(jsonFile);
     Json::JsonObject density_ref = parser.get_item("density");
     Json::JsonObject viscosity_ref = parser.get_item("viscosity");
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithH2OClass, Scalar, Types)
     using BrineDyn = Opm::BrineDynamic<Scalar, H2O>;
 
     // Read JSON file with reference values
-    std::filesystem::path jsonFile("brine_unittest.json");
+    std::filesystem::path jsonFile("material/brine_unittest.json");
     Json::JsonObject parser(jsonFile);
     Json::JsonObject density_ref = parser.get_item("density");
     // Json::JsonObject viscosity_ref = parser.get_item("viscosity");  // no values here at the moment
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithSimpleHuDuanH2OClass, Scalar, Types)
     using BrineDyn = Opm::BrineDynamic<Scalar, SimpleHuDuanH2O>;
 
     // Read JSON file with reference values
-    std::filesystem::path jsonFile("brine_unittest.json");
+    std::filesystem::path jsonFile("material/brine_unittest.json");
     Json::JsonObject parser(jsonFile);
     Json::JsonObject density_ref = parser.get_item("density");
     // Json::JsonObject viscosity_ref = parser.get_item("viscosity");  // no values here at the moment
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
     using H2 = Opm::H2<Scalar>;
 
     // Read JSON file with reference values
-    std::filesystem::path jsonFile("h2_unittest.json");
+    std::filesystem::path jsonFile("material/h2_unittest.json");
     Json::JsonObject parser(jsonFile);
     Json::JsonObject density_ref = parser.get_item("density");
     Json::JsonObject viscosity_ref = parser.get_item("viscosity");
