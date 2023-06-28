@@ -873,7 +873,12 @@ newRawKeyword(const std::string&      deck_name,
             return newRawKeyword(parserKeyword, keyword8, parserState, parser);
         }
         else {
-            parserState.parseContext.handleUnknownKeyword(deck_name, KeywordLocation{}, parserState.errors);
+            parserState.parseContext.handleUnknownKeyword(deck_name,
+                                                          KeywordLocation{
+                                                              deck_name,
+                                                              parserState.current_path().string(),
+                                                              parserState.line()
+                                                          }, parserState.errors);
             parserState.unknown_keyword = true;
 
             return nullptr;
@@ -888,7 +893,12 @@ newRawKeyword(const std::string&      deck_name,
     }
 
     if (ParserKeyword::validDeckName(deck_name)) {
-        parserState.parseContext.handleUnknownKeyword(deck_name, KeywordLocation{}, parserState.errors);
+        parserState.parseContext.handleUnknownKeyword(deck_name,
+                                                      KeywordLocation{
+                                                          deck_name,
+                                                          parserState.current_path().string(),
+                                                          parserState.line()},
+                                                      parserState.errors);
         parserState.unknown_keyword = true;
 
         return nullptr;
