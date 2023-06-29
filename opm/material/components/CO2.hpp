@@ -169,7 +169,10 @@ public:
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
-        return tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
+        // TEST 2nd degree polynomial fitted with Coolprop data in temperature
+        // range (273.15, 403.15) with reference state T=273.153 and p = 101325 Pa
+        return temperature * (828.68818132 + 0.45451377 * temperature);
+        // return tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
     }
 
     /*!
