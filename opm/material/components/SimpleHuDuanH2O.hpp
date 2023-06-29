@@ -192,7 +192,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidEnthalpy(const Evaluation& temperature,
                                      const Evaluation& /*pressure*/)
-    { return 4173.90253918*temperature + 0.11463337*pow(temperature, 2); }
+    { return temperature*(4173.90253918 + 0.11463337*temperature); }
 
     /*!
      * \copydoc Component::liquidHeatCapacity
