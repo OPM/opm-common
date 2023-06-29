@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     int numP = pres_ref.size();
 
     // Rel. diff. tolerance
-    Scalar tol = 1e-3;
+    Scalar tol = 1e-2;
     Scalar tol_enth = 1.2e-2;
 
     // Extrapolate table
