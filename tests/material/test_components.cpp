@@ -29,6 +29,7 @@
 
 #define BOOST_TEST_MODULE Components
 #include <boost/test/unit_test.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
@@ -87,6 +88,13 @@ void testAllComponents()
     checkComponent<Opm::TabulatedComponent<Scalar, H2O>, Evaluation>();
     checkComponent<Opm::Unit<Scalar>, Evaluation>();
     checkComponent<Opm::Xylene<Scalar>, Evaluation>();
+}
+
+template<class Scalar>
+bool close_at_tolerance(Scalar n1, Scalar n2, Scalar tolerance)
+{
+    auto comp = boost::math::fpc::close_at_tolerance<Scalar>(tolerance);
+    return comp(n1, n2);
 }
 
 using Types = std::tuple<float,double>;
@@ -205,9 +213,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     int numT = temp_ref.size();
     int numP = pres_ref.size();
 
-    // Boost tolerance (in percent)
-    double tol = 1;
-    double tol_enth = 1.2;
+    // Rel. diff. tolerance
+    Scalar tol = 1e-3;
+    Scalar tol_enth = 1.2e-2;
 
     // Extrapolate table
     bool extrapolate = true;
@@ -222,25 +230,31 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
             // Density
-            Evaluation dens = CO2::gasDensity(T, p, extrapolate);
+            Scalar dens = CO2::gasDensity(T, p, extrapolate).value();
             Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
-            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
-            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol), 
+                "relative difference between density {"<<dens<<"} and reference {"<<dens_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Viscosity
-            Evaluation visc = CO2::gasViscosity(T, p, extrapolate);
+            Scalar visc = CO2::gasViscosity(T, p, extrapolate).value();
             Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
-            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+            Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol), 
+                "relative difference between viscosity {"<<visc<<"} and reference {"<<visc_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Enthalpy
-            Evaluation enthalpy = CO2::gasEnthalpy(T, p, extrapolate);
+            Scalar enthalpy = CO2::gasEnthalpy(T, p, extrapolate).value();
             Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
-            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+            Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double()) - enthalpy_corr;
 
-            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()) - enthalpy_corr, tol_enth);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol_enth), 
+                "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
+                "} exceeds tolerance {"<<tol_enth<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
         }
     }
 
@@ -270,25 +284,32 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             p = Evaluation(pres_ref2.get_array_item(iP).as_double());
 
             // Density
-            Evaluation dens = CO2::gasDensity(T, p, extrapolate);
+            Scalar dens = CO2::gasDensity(T, p, extrapolate).value();
             Json::JsonObject dens_ref_row = density_ref2.get_array_item(iT);
-            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
-            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol), 
+                "relative difference between density {"<<dens<<"} and reference {"<<dens_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Viscosity
-            Evaluation visc = CO2::gasViscosity(T, p, extrapolate);
+            Scalar visc = CO2::gasViscosity(T, p, extrapolate).value();
             Json::JsonObject visc_ref_row = viscosity_ref2.get_array_item(iT);
-            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+            Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol), 
+                "relative difference between viscosity {"<<visc<<"} and reference {"<<visc_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
+
 
             // Enthalpy
-            Evaluation enthalpy = CO2::gasEnthalpy(T, p, extrapolate);
+            Scalar enthalpy = CO2::gasEnthalpy(T, p, extrapolate).value();
             Json::JsonObject enth_ref_row = enthalpy_ref2.get_array_item(iT);
-            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+            Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double()) - enthalpy_corr;
 
-            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()) - enthalpy_corr, tol_enth);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol_enth), 
+                "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
+                "} exceeds tolerance {"<<tol_enth<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
         }
     }
 
@@ -330,22 +351,34 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
     //     p_above = Evaluation(p_ref2.as_double());
 
     //     // Density
-    //     Evaluation dens_below = CO2::gasDensity(T, p_below, extrapolate);
-    //     Evaluation dens_above = CO2::gasDensity(T, p_above, extrapolate);
-    //     Json::JsonObject dens_ref_below = density_ref3.get_array_item(i);
-    //     Json::JsonObject dens_ref_above = density_ref4.get_array_item(i);
+    //     Scalar dens_below = CO2::gasDensity(T, p_below, extrapolate).value();
+    //     Scalar dens_above = CO2::gasDensity(T, p_above, extrapolate).value();
+    //     Scalar dens_ref_below = Scalar(density_ref3.get_array_item(i).as_double());
+    //     Scalar dens_ref_above = Scalar(density_ref4.get_array_item(i).as_double());
 
-    //     BOOST_CHECK_CLOSE(dens_below.value(), Scalar(dens_ref_below.as_double()), tol);
-    //     BOOST_CHECK_CLOSE(dens_above.value(), Scalar(dens_ref_above.as_double()), tol);
+    //     BOOST_CHECK_MESSAGE(close_at_tolerance(dens_below, dens_ref_below, tol), 
+    //             "relative difference between density {"<<dens_below<<"} and reference {"<<dens_ref_below<<
+    //             "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p_below.value()<<
+    //             ") below saturation curve");
+    //     BOOST_CHECK_MESSAGE(close_at_tolerance(dens_above, dens_ref_above, tol), 
+    //             "relative difference between density {"<<dens_above<<"} and reference {"<<dens_ref_above<<
+    //             "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p_above.value()<<
+    //             ") above saturation curve");
 
     //     // Enthalpy
-    //     Evaluation enthalpy_below = CO2::gasEnthalpy(T, p_below, extrapolate);
-    //     Evaluation enthalpy_above = CO2::gasEnthalpy(T, p_above, extrapolate);
-    //     Json::JsonObject enth_ref_below = enthalpy_ref3.get_array_item(i);
-    //     Json::JsonObject enth_ref_above = enthalpy_ref4.get_array_item(i);
+    //     Scalar enthalpy_below = CO2::gasEnthalpy(T, p_below, extrapolate).value();
+    //     Scalar enthalpy_above = CO2::gasEnthalpy(T, p_above, extrapolate).value();
+    //     Scalar enth_ref_below = Scalar(enthalpy_ref3.get_array_item(i).as_double()) - enthalpy_corr;
+    //     Scalar enth_ref_above = Scalar(enthalpy_ref4.get_array_item(i).as_double()) - enthalpy_corr;
 
-    //     BOOST_CHECK_CLOSE(enthalpy_below.value(), Scalar(enth_ref_below.as_double()) - enthalpy_corr, tol);
-    //     BOOST_CHECK_CLOSE(enthalpy_above.value(), Scalar(enth_ref_above.as_double()) - enthalpy_corr, tol);
+    //     BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy_below, enth_ref_below, tol), 
+    //             "relative difference between enthalpy {"<<enthalpy_below<<"} and reference {"<<enth_ref_below<<
+    //             "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p_below.value()<<
+    //             ") below saturation curve");
+    //     BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy_above, enth_ref_above, tol), 
+    //             "relative difference between enthalpy {"<<enthalpy_above<<"} and reference {"<<enth_ref_above<<
+    //             "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p_above.value()<<
+    //             ") above saturation curve");
     // }
 }
 
@@ -379,8 +412,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SimpleHuDuanClass, Scalar, Types)
     Evaluation T;
     Evaluation p;
 
-    // Boost tolerance (in percent)
-    double tol = 1;
+    // Rel. diff. tolerance
+    Scalar tol = 1e-2;
 
     // Extrapolate
     bool extrapolate = true;
@@ -395,22 +428,29 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SimpleHuDuanClass, Scalar, Types)
             p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
             // Density
-            Evaluation dens = SimpleHuDuanH2O::liquidDensity(T, p, extrapolate);
+            Scalar dens = SimpleHuDuanH2O::liquidDensity(T, p, extrapolate).value();
             Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
-            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
-            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
-
+            BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol), 
+                "relative difference between density {"<<dens<<"} and reference {"<<dens_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
+            
             // Viscosity
-            Evaluation visc = SimpleHuDuanH2O::liquidViscosity(T, p, extrapolate);
+            Scalar visc = SimpleHuDuanH2O::liquidViscosity(T, p, extrapolate).value();
             Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
-            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+            Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol), 
+                "relative difference between viscosity {"<<visc<<"} and reference {"<<visc_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
         }
         // Enthalpy
-        Evaluation enthalpy = SimpleHuDuanH2O::liquidEnthalpy(T - 273.153, Evaluation(101325.0));
-        BOOST_CHECK_CLOSE(enthalpy.value(), enthalpy_ref[iT], tol);
+        Scalar enthalpy = SimpleHuDuanH2O::liquidEnthalpy(T - 273.153, Evaluation(101325.0)).value();
+        Scalar enth_ref = enthalpy_ref[iT];
+        BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol), 
+                "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
     }
 }
 
@@ -434,8 +474,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2OClass, Scalar, Types)
     Evaluation T;
     Evaluation p;
 
-    // Boost tolerance (in percent)
-    double tol = 1;
+    // Rel. diff. tolerance
+    Scalar tol = 1e-2;
 
     // Loop over temperature and pressure, and compare to values in JSON file
     for (int iT = 0; iT < numT; ++iT) {
@@ -447,25 +487,31 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2OClass, Scalar, Types)
             p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
             // Density
-            Evaluation dens = H2O::liquidDensity(T, p);
+            Scalar dens = H2O::liquidDensity(T, p).value();
             Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
-            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
-            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol), 
+                "relative difference between density {"<<dens<<"} and reference {"<<dens_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Viscosity
-            Evaluation visc = H2O::liquidViscosity(T, p);
+            Scalar visc = H2O::liquidViscosity(T, p).value();
             Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
-            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+            Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol), 
+                "relative difference between viscosity {"<<visc<<"} and reference {"<<visc_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Enthalpy
-            Evaluation enthalpy = H2O::liquidEnthalpy(T, p);
+            Scalar enthalpy = H2O::liquidEnthalpy(T, p).value();
             Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
-            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+            Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol), 
+                "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
         }
     }
 }
@@ -494,9 +540,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithH2OClass, Scalar, Types)
     Evaluation p;
     Evaluation S;
 
-    // Boost tolerance (in percent)
-    double tol = 1;
-    double tol_enth = 3.0;
+    // Rel. diff. tolerance
+    Scalar tol = 1e-2;
+    Scalar tol_enth = 3.0e-2;
 
     // Extrapolation
     bool extrapolate = true;
@@ -515,28 +561,37 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithH2OClass, Scalar, Types)
                 p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
                 // Density
-                Evaluation dens = BrineDyn::liquidDensity(T, p, S, extrapolate);
+                Scalar dens = BrineDyn::liquidDensity(T, p, S, extrapolate).value();
                 Json::JsonObject dens_ref_ax1 = density_ref.get_array_item(iS);
                 Json::JsonObject dens_ref_ax2 = dens_ref_ax1.get_array_item(iT);
-                Json::JsonObject dens_ref = dens_ref_ax2.get_array_item(iP);
+                Scalar dens_ref = Scalar(dens_ref_ax2.get_array_item(iP).as_double());
                 
-                BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+                BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol), 
+                    "relative difference between density {"<<dens<<"} and reference {"<<dens_ref<<
+                    "} exceeds tolerance {"<<tol<<"} at (T, p, S) = ("<<T.value()<<", "<<p.value()<<", "<<
+                    S.value()<<")");
 
                 // Viscosity
-                // Evaluation visc = BrineDyn::liquidViscosity(T, p, S);
+                // Scalar visc = BrineDyn::liquidViscosity(T, p, S).value();
                 // Json::JsonObject visc_ref_ax1 = viscosity_ref.get_array_item(iS);
                 // Json::JsonObject visc_ref_ax2 = visc_ref_ax1.get_array_item(iT);
-                // Json::JsonObject visc_ref = visc_ref_ax2.get_array_item(iP);
+                // Scalar visc_ref = Scalar(visc_ref_ax2.get_array_item(iP).as_double());
 
-                // BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+                // BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol), 
+                //     "relative difference between viscosity {"<<visc<<"} and reference {"<<visc_ref<<
+                //     "} exceeds tolerance {"<<tol<<"} at (T, p, S) = ("<<T.value()<<", "<<p.value()<<", "<<
+                //     S.value()<<")");
 
                 // Enthalpy
-                Evaluation enthalpy = BrineDyn::liquidEnthalpy(T, p, S);
+                Scalar enthalpy = BrineDyn::liquidEnthalpy(T, p, S).value();
                 Json::JsonObject enth_ref_ax1 = enthalpy_ref.get_array_item(iS);
                 Json::JsonObject enth_ref_ax2 = enth_ref_ax1.get_array_item(iT);
-                Json::JsonObject enth_ref = enth_ref_ax2.get_array_item(iP);
+                Scalar enth_ref = Scalar(enth_ref_ax2.get_array_item(iP).as_double());
 
-                BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol_enth);
+                BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol_enth), 
+                    "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
+                    "} exceeds tolerance {"<<tol_enth<<"} at (T, p, S) = ("<<T.value()<<", "<<p.value()<<", "<<
+                    S.value()<<")");
             }
         }
     }
@@ -566,8 +621,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithSimpleHuDuanH2OClass, Scalar, Types)
     Evaluation p;
     Evaluation S;
 
-    // Boost tolerance (in percent)
-    double tol = 1;
+    // Rel. diff. tolerance
+    Scalar tol = 1e-2;
 
     // Extrapolation
     bool extrapolate = true;
@@ -586,28 +641,37 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithSimpleHuDuanH2OClass, Scalar, Types)
                 p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
                 // Density
-                Evaluation dens = BrineDyn::liquidDensity(T, p, S, extrapolate);
+                Scalar dens = BrineDyn::liquidDensity(T, p, S, extrapolate).value();
                 Json::JsonObject dens_ref_ax1 = density_ref.get_array_item(iS);
                 Json::JsonObject dens_ref_ax2 = dens_ref_ax1.get_array_item(iT);
-                Json::JsonObject dens_ref = dens_ref_ax2.get_array_item(iP);
+                Scalar dens_ref = Scalar(dens_ref_ax2.get_array_item(iP).as_double());
                 
-                BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+                BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol), 
+                    "relative difference between density {"<<dens<<"} and reference {"<<dens_ref<<
+                    "} exceeds tolerance {"<<tol<<"} at (T, p, S) = ("<<T.value()<<", "<<p.value()<<", "<<
+                    S.value()<<")");
 
                 // Viscosity
-                // Evaluation visc = BrineDyn::liquidViscosity(T, p, S);
+                // Scalar visc = BrineDyn::liquidViscosity(T, p, S).value();
                 // Json::JsonObject visc_ref_ax1 = viscosity_ref.get_array_item(iS);
                 // Json::JsonObject visc_ref_ax2 = visc_ref_ax1.get_array_item(iT);
-                // Json::JsonObject visc_ref = visc_ref_ax2.get_array_item(iP);
+                // Scalar visc_ref = Scalar(visc_ref_ax2.get_array_item(iP).as_double());
 
-                // BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol);
+                // BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol), 
+                //     "relative difference between viscosity {"<<visc<<"} and reference {"<<visc_ref<<
+                //     "} exceeds tolerance {"<<tol<<"} at (T, p, S) = ("<<T.value()<<", "<<p.value()<<", "<<
+                //     S.value()<<")");
 
                 // Enthalpy
-                // Evaluation enthalpy = BrineDyn::liquidEnthalpy(T, p, S);
+                // Scalar enthalpy = BrineDyn::liquidEnthalpy(T, p, S).value();
                 // Json::JsonObject enth_ref_ax1 = enthalpy_ref.get_array_item(iS);
                 // Json::JsonObject enth_ref_ax2 = enth_ref_ax1.get_array_item(iT);
-                // Json::JsonObject enth_ref = enth_ref_ax2.get_array_item(iP);
+                // Scalar enth_ref = Scalar(enth_ref_ax2.get_array_item(iP).as_double());
 
-                // BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+                // BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol), 
+                //     "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
+                //     "} exceeds tolerance {"<<tol<<"} at (T, p, S) = ("<<T.value()<<", "<<p.value()<<", "<<
+                //     S.value()<<")");
             }
         }
     }
@@ -633,9 +697,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
     Evaluation T;
     Evaluation p;
 
-    // Boost tolerance (in percent)
-    double tol = 1;
-    double tol_visc = 30;  // use tol once a better viscosity model is implemented
+    // Rel. diff. tolerance
+    Scalar tol = 1e-2;
+    Scalar tol_visc = 30e-2;  // use tol once a better viscosity model is implemented
     
     // Loop over temperature and pressure, and compare to reference values in JSON file
     for (int iT = 0; iT < numT; ++iT) {
@@ -647,25 +711,31 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
             p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
             // Density
-            Evaluation dens = H2::gasDensity(T, p);
+            Scalar dens = H2::gasDensity(T, p).value();
             Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
-            Json::JsonObject dens_ref = dens_ref_row.get_array_item(iP);
+            Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
-            BOOST_CHECK_CLOSE(dens.value(), Scalar(dens_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol), 
+                "relative difference between density {"<<dens<<"} and reference {"<<dens_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Viscosity
-            Evaluation visc = H2::gasViscosity(T, p);
+            Scalar visc = H2::gasViscosity(T, p).value();
             Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
-            Json::JsonObject visc_ref = visc_ref_row.get_array_item(iP);
+            Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_CLOSE(visc.value(), Scalar(visc_ref.as_double()), tol_visc);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol_visc), 
+                "relative difference between viscosity {"<<visc<<"} and reference {"<<visc_ref<<
+                "} exceeds tolerance {"<<tol_visc<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Enthalpy
-            Evaluation enthalpy = H2::gasEnthalpy(T, p);
+            Scalar enthalpy = H2::gasEnthalpy(T, p).value();
             Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
-            Json::JsonObject enth_ref = enth_ref_row.get_array_item(iP);
+            Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_CLOSE(enthalpy.value(), Scalar(enth_ref.as_double()), tol);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol), 
+                "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
+                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
         }
     }
 }
