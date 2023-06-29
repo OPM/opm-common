@@ -139,6 +139,15 @@ public:
     { enableDissolution_ = yesno; }
 
     /*!
+     * \brief Specify whether the PVT model should consider salt concentration from
+     * the fluidstate or a fixed salinty
+     *
+     * By default, fixed salinity is considered
+     */
+    void setEnableSaltConcentration(bool yesno)
+    { enableSaltConcentration_ = yesno; }
+
+    /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
     unsigned numRegions() const
@@ -154,7 +163,7 @@ public:
                               const Evaluation& Rs,
                               const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         const Evaluation xlCO2 = convertRsToXoG_(Rs,regionIdx);
         return (liquidEnthalpyBrineCO2_(temperature,
                                        pressure,
@@ -197,12 +206,12 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned /*regionIdx*/,
+    Evaluation saturatedViscosity(unsigned regionIdx,
                                  const Evaluation& temperature,
                                  const Evaluation& pressure,
                                  const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         return Brine::liquidViscosity(temperature, pressure, salinity);
     }
 
@@ -241,7 +250,7 @@ public:
                                                      const Evaluation& pressure,
                                                      const Evaluation& saltconcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltconcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltconcentration);
         Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, salinity);
         return (1.0 - convertRsToXoG_(rsSat,regionIdx)) * density_(regionIdx, temperature, pressure, rsSat, salinity)/brineReferenceDensity_[regionIdx];
     }
@@ -255,7 +264,7 @@ public:
                                             const Evaluation& Rs,
                                             const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density_(regionIdx, temperature, pressure, Rs, salinity)/brineReferenceDensity_[regionIdx];
     }
     /*!
@@ -334,7 +343,7 @@ public:
                                              const Evaluation& pressure,
                                              const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         return rsSat_(regionIdx, temperature, pressure, salinity);
     }
 
@@ -383,6 +392,7 @@ private:
     std::vector<Scalar> co2ReferenceDensity_;
     std::vector<Scalar> salinity_;
     bool enableDissolution_ = true;
+    bool enableSaltConcentration_ = false;
 
     template <class LhsEval>
     LhsEval density_(unsigned regionIdx,
@@ -612,8 +622,13 @@ private:
     }
 
     template <class LhsEval>
-    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P, const LhsEval& saltConcentration) const
-    { return saltConcentration/H2O::liquidDensity(T, P, true); }
+    const LhsEval salinityFromConcentration(unsigned regionIdx, const LhsEval&T, const LhsEval& P, const LhsEval& saltConcentration) const
+    {
+        if (enableSaltConcentration_)
+            return saltConcentration/H2O::liquidDensity(T, P, true);
+
+        return salinity(regionIdx);
+    }
 };
 
 } // namespace Opm

@@ -49,7 +49,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
-
+    setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
     // We only supported single pvt region for the co2-brine module
     size_t numRegions = 1;
     setNumRegions(numRegions);
