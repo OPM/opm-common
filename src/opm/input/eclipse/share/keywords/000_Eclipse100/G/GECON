@@ -11,12 +11,14 @@
     {
       "name": "MIN_OIL_RATE",
       "value_type": "UDA",
-      "default": 0
+      "default": 0,
+      "dimension": "LiquidSurfaceVolume/Time"
     },
     {
       "name": "MIN_GAS_RATE",
       "value_type": "UDA",
-      "default": 0
+      "default": 0,
+      "dimension": "GasSurfaceVolume/Time"
     },
     {
       "name": "MAX_WCT",

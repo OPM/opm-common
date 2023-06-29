@@ -40,6 +40,7 @@
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
@@ -2293,6 +2294,7 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.wtest_config.update( WellTestConfig() );
     sched_state.gconsale.update( GConSale() );
     sched_state.gconsump.update( GConSump() );
+    sched_state.gecon.update( GroupEconProductionLimits() );
     sched_state.wlist_manager.update( WListManager() );
     sched_state.network.update( Network::ExtNetwork() );
     sched_state.rpt_config.update( RPTConfig() );

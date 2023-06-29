@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
@@ -318,6 +319,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.wtest_config.update( WellTestConfig::serializationTestObject() );
     ts.gconsump.update( GConSump::serializationTestObject() );
     ts.gconsale.update( GConSale::serializationTestObject() );
+    ts.gecon.update( GroupEconProductionLimits::serializationTestObject() );
     ts.wlist_manager.update( WListManager::serializationTestObject() );
     ts.rpt_config.update( RPTConfig::serializationTestObject() );
     ts.actions.update( Action::Actions::serializationTestObject() );

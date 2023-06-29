@@ -53,6 +53,7 @@
 
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
 
@@ -227,6 +228,11 @@ GCONSALE
 'G1' 50000 55000 45000 WELL /
 /
 
+GECON
+ 'G1'  1*  200000.0  /
+ 'G2'  1*  200000.0  /
+/
+
 GCONSUMP
 'G1' 20 50 'a_node' /
 'G2' 30 60 /
@@ -385,6 +391,21 @@ BOOST_AUTO_TEST_CASE(SerializeWList) {
     BOOST_CHECK( wlm2 == sched0[5].wlist_manager());
 }
 
+BOOST_AUTO_TEST_CASE(SerializeGECON) {
+    auto sched  = make_schedule(GCONSALE_deck);
+    auto sched0 = make_schedule(deck0);
+    auto gecon1 = sched[0].gecon.get();
+
+    {
+        std::vector<Opm::GroupEconProductionLimits> value_list;
+        std::vector<std::size_t> index_list;
+        sched.pack_state<Opm::GroupEconProductionLimits>( value_list, index_list );
+        BOOST_CHECK_EQUAL( value_list.size(), 1 );
+        sched0.unpack_state<Opm::GroupEconProductionLimits>( value_list, index_list );
+    }
+    BOOST_CHECK( gecon1 == sched0[0].gecon());
+    BOOST_CHECK( gecon1 == sched0[1].gecon());
+}
 
 
 BOOST_AUTO_TEST_CASE(SerializeGCONSALE) {

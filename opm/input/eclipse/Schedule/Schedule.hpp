@@ -350,6 +350,7 @@ namespace Opm
             this->template pack_unpack<WellTestConfig>(serializer);
             this->template pack_unpack<GConSale>(serializer);
             this->template pack_unpack<GConSump>(serializer);
+            this->template pack_unpack<GroupEconProductionLimits>(serializer);
             this->template pack_unpack<WListManager>(serializer);
             this->template pack_unpack<Network::ExtNetwork>(serializer);
             this->template pack_unpack<Network::Balance>(serializer);
@@ -697,6 +698,7 @@ namespace Opm
         void handleGCONPROD  (HandlerContext&);
         void handleGCONSALE  (HandlerContext&);
         void handleGCONSUMP  (HandlerContext&);
+        void handleGECON     (HandlerContext&);
         void handleGEFAC     (HandlerContext&);
         void handleGEOKeyword(HandlerContext&);
         void handleGLIFTOPT  (HandlerContext&);

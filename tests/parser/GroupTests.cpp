@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
@@ -316,6 +317,11 @@ GRUPTREE
   'G2'  'FIELD' /
 /
 
+GECON
+ 'G1'  1*  200000.0  /
+ 'G2'  100000.0 1* 0.5 3* 'YES'  /
+/
+
 GCONSALE
   'G1' 50000 55000 45000 WELL /
 /
@@ -327,20 +333,59 @@ GCONSUMP
 
     auto schedule = create_schedule(input);
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
+    SummaryState st(TimeService::now());
 
-    const auto& gconsale = schedule[0].gconsale.get();
-    BOOST_CHECK_EQUAL(gconsale.size(), 1U);
-    BOOST_CHECK(gconsale.has("G1"));
-    BOOST_CHECK(!gconsale.has("G2"));
-    const GConSale::GCONSALEGroup& group = gconsale.get("G1");
-    BOOST_CHECK_EQUAL(group.sales_target.get<double>(),   50000);
-    BOOST_CHECK_EQUAL(group.max_sales_rate.get<double>(), 55000);
-    BOOST_CHECK_EQUAL(group.min_sales_rate.get<double>(), 45000);
-    BOOST_CHECK_EQUAL(group.sales_target.getSI(),   50000 * metric_to_si);
-    BOOST_CHECK_EQUAL(group.max_sales_rate.getSI(), 55000 * metric_to_si);
-    BOOST_CHECK_EQUAL(group.min_sales_rate.getSI(), 45000 * metric_to_si);
-    BOOST_CHECK(group.max_proc == GConSale::MaxProcedure::WELL);
-
+    {
+        const auto& gconsale = schedule[0].gconsale.get();
+        BOOST_CHECK_EQUAL(gconsale.size(), 1U);
+        BOOST_CHECK(gconsale.has("G1"));
+        BOOST_CHECK(!gconsale.has("G2"));
+        const GConSale::GCONSALEGroup& group = gconsale.get("G1");
+        BOOST_CHECK_EQUAL(group.sales_target.get<double>(),   50000);
+        BOOST_CHECK_EQUAL(group.max_sales_rate.get<double>(), 55000);
+        BOOST_CHECK_EQUAL(group.min_sales_rate.get<double>(), 45000);
+        BOOST_CHECK_EQUAL(group.sales_target.getSI(),   50000 * metric_to_si);
+        BOOST_CHECK_EQUAL(group.max_sales_rate.getSI(), 55000 * metric_to_si);
+        BOOST_CHECK_EQUAL(group.min_sales_rate.getSI(), 45000 * metric_to_si);
+        BOOST_CHECK(group.max_proc == GConSale::MaxProcedure::WELL);
+    }
+    {
+        const auto& gecon = schedule[0].gecon.get();
+        BOOST_CHECK_EQUAL(gecon.size(), 2U);
+        BOOST_CHECK(gecon.has_group("G1"));
+        BOOST_CHECK(gecon.has_group("G2"));
+        {
+            const GroupEconProductionLimits::GEconGroupProp group = gecon.get_group_prop(schedule, st, "G1");
+            BOOST_CHECK(group.minOilRate().has_value() == false);
+            BOOST_CHECK(group.minGasRate().has_value() == true);
+            if (group.minGasRate()) {
+                BOOST_CHECK_EQUAL(group.minGasRate().value(), 200000.0 * metric_to_si);
+            }
+            BOOST_CHECK(group.maxWaterCut().has_value() == false);
+            BOOST_CHECK(group.maxGasOilRatio().has_value() == false);
+            BOOST_CHECK(group.maxWaterGasRatio().has_value() == false);
+            BOOST_CHECK(group.workover() == GroupEconProductionLimits::EconWorkover::NONE);
+            BOOST_CHECK(group.endRun() == false);
+            BOOST_CHECK_EQUAL(group.maxOpenWells(), 0);
+        }
+        {
+            const GroupEconProductionLimits::GEconGroupProp group = gecon.get_group_prop(schedule, st, "G2");
+            BOOST_CHECK(group.minOilRate().has_value() == true);
+            if (group.minOilRate()) {
+                BOOST_CHECK_EQUAL(group.minOilRate().value(), 100000.0 * metric_to_si);
+            }
+            BOOST_CHECK(group.minGasRate().has_value() == false);
+            BOOST_CHECK(group.maxWaterCut().has_value() == true);
+            if (group.maxWaterCut()) {
+                BOOST_CHECK_EQUAL(group.maxWaterCut().value(), 0.5);
+            }
+            BOOST_CHECK(group.maxGasOilRatio().has_value() == false);
+            BOOST_CHECK(group.maxWaterGasRatio().has_value() == false);
+            BOOST_CHECK(group.workover() == GroupEconProductionLimits::EconWorkover::NONE);
+            BOOST_CHECK(group.endRun() == true);
+            BOOST_CHECK_EQUAL(group.maxOpenWells(), 0);
+        }
+    }
     const auto& gconsump = schedule[0].gconsump.get();
     BOOST_CHECK_EQUAL(gconsump.size(), 2U);
     BOOST_CHECK(gconsump.has("G1"));

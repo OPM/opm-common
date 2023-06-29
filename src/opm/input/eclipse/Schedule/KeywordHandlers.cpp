@@ -63,6 +63,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
@@ -688,6 +689,25 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->m_static.m_unit_system);
         }
         this->snapshots.back().gconsump.update( std::move(new_gconsump) );
+    }
+
+    void
+    Schedule::handleGECON(HandlerContext& handlerContext)
+    {
+        auto gecon = this->snapshots.back().gecon();
+        const auto& keyword = handlerContext.keyword;
+        auto report_step = handlerContext.currentStep;
+        for (const auto& record : keyword) {
+            const std::string& groupNamePattern
+                = record.getItem<ParserKeywords::GECON::GROUP>().getTrimmedString(0);
+            const auto group_names = this->groupNames(groupNamePattern);
+            if (group_names.empty())
+                this->invalidNamePattern(groupNamePattern, handlerContext);
+            for (const auto& gname : group_names) {
+                gecon.add_group(report_step, gname, record);
+            }
+        }
+        this->snapshots.back().gecon.update(std::move(gecon));
     }
 
     void Schedule::handleGEFAC(HandlerContext& handlerContext) {
@@ -2566,6 +2586,7 @@ Well{0} entered with 'FIELD' parent group:
             { "GCONPROD", &Schedule::handleGCONPROD  },
             { "GCONSALE", &Schedule::handleGCONSALE  },
             { "GCONSUMP", &Schedule::handleGCONSUMP  },
+            { "GECON",    &Schedule::handleGECON     },
             { "GEFAC"   , &Schedule::handleGEFAC     },
             { "GLIFTOPT", &Schedule::handleGLIFTOPT  },
             { "GPMAINT" , &Schedule::handleGPMAINT   },
