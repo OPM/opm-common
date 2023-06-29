@@ -536,6 +536,7 @@ Well Well::serializationTestObject()
     result.m_pavg = PAvg();
     result.well_temperature = 10.0;
     result.well_inj_mult = InjMult::serializationTestObject();
+    result.m_filter_concentration = 0.1;
 
     return result;
 }

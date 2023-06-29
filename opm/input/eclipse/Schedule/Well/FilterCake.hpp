@@ -37,6 +37,7 @@ namespace Opm {
         };
 
         static FilterCakeGeometry filterCakeGeometryFromString(const std::string& str, const KeywordLocation& location);
+        static std::string filterCakeGeometryToString(const FilterCakeGeometry& geometry);
 
         FilterCakeGeometry geometry{FilterCakeGeometry::NONE};
         double perm{0.};
@@ -61,11 +62,13 @@ namespace Opm {
             serializer(sf_multiplier);
         }
 
+        static FilterCake serializationTestObject();
+
         bool operator==(const FilterCake& other) const;
 
-        bool active() const;
-
         void applyCleanMultiplier(const double factor);
+
+        static std::string filterCakeToString(const FilterCake& fc);
     };
 
 }

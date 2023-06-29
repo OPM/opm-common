@@ -180,6 +180,7 @@ namespace RestartIO {
             serializer(m_defaultSatTabId);
             serializer(segment_number);
             serializer(m_subject_to_welpi);
+            serializer(m_filter_cake);
         }
 
     private:

@@ -1973,7 +1973,6 @@ Well{0} entered with 'FIELD' parent group:
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJCLN::WELL_NAME>().getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
-            // TODO: will check whether we should put all the filter cake related to a separate property
             for (const auto& well_name: well_names) {
                 auto well = this->snapshots.back().wells(well_name);
                 well.handleWINJCLN(record, handlerContext.keyword.location());
@@ -1996,14 +1995,13 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWINJFCNC(Schedule::HandlerContext& handlerContext) {
+    void Schedule::handleWINJFCNC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJFCNC::WELL>().getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
-            // TODO: will check whether we should put all the filter cake related to a separate property
             for (const auto& well_name: well_names) {
                 auto well = this->snapshots.back().wells(well_name);
-                const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<UDAValue>(0).get<double>();
+                const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<double>(0);
                 // the unit is ppm_vol
                 well.setFilterConc(filter_conc/1.e6);
                 this->snapshots.back().wells.update(std::move(well));

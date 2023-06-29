@@ -137,6 +137,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
         result.m_subject_to_welpi = true;
+        result.m_filter_cake = FilterCake::serializationTestObject();
 
         return result;
     }
@@ -301,6 +302,9 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         ss << "sort_value" << this->m_sort_value<< std::endl;
         if (this->m_injmult.has_value()) {
             ss << "INJMULT " << InjMult::InjMultToString(this->m_injmult.value()) << std::endl;
+        }
+        if (this->m_filter_cake.has_value()) {
+            ss << "FilterCake " << FilterCake::filterCakeToString(this->m_filter_cake.value()) << std::endl;
         }
 
         return ss.str();
